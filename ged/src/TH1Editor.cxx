@@ -358,7 +358,19 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
    
-   if (obj == 0 || !obj->InheritsFrom("TH1") /*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
+   if (obj == 0 || !obj->InheritsFrom("TH1") || ((TH1*)obj)->GetDimension()!=1/*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
+   SetActive(kFALSE);
+      for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
+         if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {
+            fTab->GetTabContainer(i)->UnmapWindow();
+	    fTab->GetTabTab(i)->UnmapWindow();
+	    fTab->SetEnabled(i,kFALSE);
+//	    fTab->SetTab(0);
+	 } 
+      }
+      return;                 
+   } 
+/*   if (obj == 0 || !obj->InheritsFrom("TH1") ) {
       SetActive(kFALSE);
       fTab->SetEnabled(1, kFALSE);  // deactivate the second tab (tab id is 1)
 //      fTab->SetEnabled(2, kFALSE);  // deactivate the third tab (tab id is 2]
@@ -368,7 +380,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fTab->RemoveTab(2);     // in case of a TH2/TH3 the TH1 binning tab is removed 
       return;                 // bad solution of deleting the Tab.
                               // should be somehow possible to identify the tab 
-   }                          // in a unique way!!
+   }                          // in a unique way!!*/
 
 
    TGFrameElement *el;
@@ -389,8 +401,12 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
                      fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
       delete fBinHist; fBinHist = 0;
-      if (fPad) {fPad->Modified(); fPad->Update();}
+      if (fPad) {
+         fPad->Modified(); 
+	 fPad->Update();
+      }
    }
+
    fModel = obj;
    fPad = pad;
    TGListBox* lb;
@@ -622,6 +638,15 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, fHist->GetXaxis()->GetBinWidth(1));
 
+   for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
+      if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
+	 fTab->GetTabContainer(i)->MapWindow();
+	 fTab->GetTabTab(i)->MapWindow();
+         fTab->SetEnabled(i, kTRUE);  
+      } else fTab->SetEnabled(i,kFALSE);
+   }
+   if (!fTab->IsEnabled(fTab->GetCurrent())) fTab->SetTab(0);
+   
    Layout();
    fTab->Layout();   
    
@@ -1721,10 +1746,10 @@ void TH1Editor::DoCancel()
    // Slot connected to the Cancel Button in the Rebinned histogram Window
    
    if (fBinHist) {
-      delete fHist;
-      fHist = 0;
       fPad->cd();
-      fHist = (TH1*)fBinHist->Clone(fName);
+      fHist->Reset();
+      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
+      fHist->Add(fBinHist);
       fHist->Draw(fDrawOpt);
       delete fBinHist;
       fBinHist = 0;
@@ -2014,8 +2039,8 @@ void TH1Editor::CreateBinTab()
 {
    // Creates the BinTab
   
-   TGCompositeFrame *cf = fTab->AddTab("Binning");
-   fBin = new TGCompositeFrame(cf, 80, 20, kVerticalFrame);
+   fBinContainer = fTab->AddTab("Binning");
+   fBin = new TGCompositeFrame(fBinContainer, 80, 20, kVerticalFrame);
    fBin->AddFrame(new TGedNameFrame(fBin, 1000), new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10, kHorizontalFrame | 
@@ -2147,7 +2172,7 @@ void TH1Editor::CreateBinTab()
    f17->AddFrame(fDelaydraw, new TGLayoutHints(kLHintsLeft, 6, 1, 2, 0));
    SldCont->AddFrame(f17, new TGLayoutHints(kLHintsTop, 1, 1, 5, 0)); 
    fBin->AddFrame(SldCont, new TGLayoutHints(kLHintsTop));
-   cf->AddFrame(fBin, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+   fBinContainer->AddFrame(fBin, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 }
    
 //______________________________________________________________________________
@@ -2156,8 +2181,8 @@ void TH1Editor::CreateFitTab()
 {   
    // Creates the Fit Tab
 
-   TGCompositeFrame *cf1 = fTab->AddTab("Fitting");
-   fFit = new TGCompositeFrame(cf1, 80, 20, kVerticalFrame);
+   fFitContainer = fTab->AddTab("Fitting");
+   fFit = new TGCompositeFrame(fFitContainer, 80, 20, kVerticalFrame);
    fFit->AddFrame(new TGedNameFrame(fFit, 1001), new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
 
    TGCompositeFrame *title3 = new TGCompositeFrame(fFit, 145, 10, kHorizontalFrame | 
@@ -2166,5 +2191,5 @@ void TH1Editor::CreateFitTab()
    title3->AddFrame(new TGHorizontal3DLine(title3), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    fFit->AddFrame(title3, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 
-   cf1->AddFrame(fFit, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
+   fFitContainer->AddFrame(fFit, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 }

@@ -56,6 +56,7 @@ protected:
    TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
+   TGCompositeFrame    *fBinContainer;             // Container for fBin
    TGTextEntry         *fTitle;           // histogram title input field
    TGComboBox	       *fTypeCombo;       // histogram type combo box
    TGComboBox 	       *fCoordsCombo;     // Coordinate System combo box

@@ -54,7 +54,9 @@ protected:
    TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
-   TGCompositeFrame    *fStyle;           // Contains the Style Widgets   
+   TGCompositeFrame    *fStyle;           // Contains the Style Widgets  
+   TGCompositeFrame    *fBinContainer;    // Container for fBin
+   TGCompositeFrame    *fFitContainer;    // Container for fFit
    Int_t                fTitlePrec;       // font precision level
    TGTextEntry         *fTitle;           // histogram title input field
    TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot

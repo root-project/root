@@ -256,12 +256,12 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    fTab = (TGTab *)(p->GetParent()->GetParent());
-   while (fTab->GetNumberOfTabs()>1) {
+/*   while (fTab->GetNumberOfTabs()>1) {
      if (!fTab->IsEnabled(1)) fTab->SetEnabled(1);
      fTab->RemoveTab(1);
-   }
-   TGCompositeFrame *cf = fTab->AddTab("Binning");
-   fBin = new TGCompositeFrame(cf, 80, 20, kVerticalFrame);
+   }*/
+   fBinContainer = fTab->AddTab("Binning");
+   fBin = new TGCompositeFrame(fBinContainer, 80, 20, kVerticalFrame);
 // create the TGedNameFrame with name and type of the activated object
    fBin->AddFrame(new TGedNameFrame(fBin, 1000), new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 4, 2));
 
@@ -498,7 +498,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
    f20->AddFrame(fDelaydraw, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    fBin->AddFrame(f20, new TGLayoutHints(kLHintsTop, 2, 1, 5, 3)); 
    
-   cf->AddFrame(fBin, new TGLayoutHints(kLHintsTop));
+   fBinContainer->AddFrame(fBin, new TGLayoutHints(kLHintsTop));
  
    fXBinOffsetSld->SetRange(0,100);
    fXBinOffsetSld->SetPosition(0);
@@ -611,7 +611,6 @@ void TH2Editor::ConnectSignals2Slots()
    fSldYMax->Connect("ReturnPressed()", "TH2Editor", this, "DoYAxisRange()");   
    fFrameColor->Connect("ColorSelected(Pixel_t)", "TH2Editor", this, "DoFillColor(Pixel_t)");
    fFramePattern->Connect("PatternSelected(Style_t)", "TH2Editor", this, "DoFillPattern(Style_t)");
-   fTab->SetTab(0);
    fInit = kFALSE;
 } 
 
@@ -623,20 +622,50 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    if (obj == 0 || !obj->InheritsFrom("TH2")) {
       SetActive(kFALSE);
+      for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
+         if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
+            fTab->GetTabContainer(i)->UnmapWindow();
+	    fTab->GetTabTab(i)->UnmapWindow();
+	    fTab->SetEnabled(i,kFALSE);
+//	    fTab->SetTab(0);
+	 }
+      }
+      return;                 
+   }
+/*   if (obj == 0 || !obj->InheritsFrom("TH2")) {
+      SetActive(kFALSE);
       fTab->SetEnabled(1,kFALSE);
       return;
-   }      
+   }      */
 
-   fModel = obj;
-   fPad = pad;
-   fHist = (TH2*) fModel;
-   
    TGFrameElement *el;   
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
       if ((el->fFrame)->InheritsFrom("TGedFrame")) 
         ((TGedFrame *)(el->fFrame))->SetModel(pad, obj, 0);
    } 
+   if (fBinHist && (obj != fHist)) {
+      //we have probably moved to a different pad.
+      //let's restore the original histogram
+      fHist->Reset();
+      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
+                     fBinHist->GetXaxis()->GetXmin(),
+                     fBinHist->GetXaxis()->GetXmax(),
+		     fBinHist->GetYaxis()->GetNbins(),
+                     fBinHist->GetYaxis()->GetXmin(),
+                     fBinHist->GetYaxis()->GetXmax());
+      fHist->Add(fBinHist);
+      delete fBinHist; 
+      fBinHist = 0;
+      if (fPad) {
+         fPad->Modified(); 
+	 fPad->Update();
+      }
+   }
+  
+   fModel = obj;
+   fPad = pad;
+   fHist = (TH2*) fModel;
    
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
@@ -855,6 +884,15 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fXOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, fHist->GetXaxis()->GetBinWidth(1));
    fYOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, fHist->GetYaxis()->GetBinWidth(1));
+
+   for (Int_t i=1; i < fTab->GetNumberOfTabs(); i++) {
+      if (fTab->GetTabContainer(i)==fBinContainer /*|| fTab->GetTabContainer(i)==fFitContainer*/) {
+         fTab->GetTabContainer(i)->MapWindow(); 
+	 fTab->GetTabTab(i)->MapWindow();    
+         fTab->SetEnabled(i, kTRUE);  
+      } else fTab->SetEnabled(i,kFALSE); 
+   }
+   if (!fTab->IsEnabled(fTab->GetCurrent())) fTab->SetTab(0);
 
    Layout();
    fTab->Layout();   
@@ -1304,8 +1342,6 @@ void TH2Editor::DoBinReleased()
          fBinHist = (TH2*)fHist->Clone("BinHist");
          fDrawOpt = GetDrawOption();
          fName = fHist->GetName();
-         delete fHist;
-         fHist=0;
       }
       TString str ="";
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1318,18 +1354,16 @@ void TH2Editor::DoBinReleased()
       if (divy[0]==2) fBinYSlider->SetPosition(2);
       if (divx[0]==2 && divy[0]==2) return;
       // delete the histogram which is on the screen
-      if (fPad->GetPrimitive(fName)) {
-        delete fHist; 
-        fHist=0;
-      }      
       fPad->cd();
-      fHist = (TH2*)fBinHist->Clone(fName + "_Bin");
+      fHist->Reset();
+      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax(),
+                     ny,fBinHist->GetYaxis()->GetXmin(),fBinHist->GetYaxis()->GetXmax());
+      fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
-      fHist->Rebin2D(divx[numx],divy[numy]);
+      fHist->Rebin2D(divx[numx], divy[numy]);
       if (fDim->GetState() == kButtonDown) str = GetHistContLabel()+GetHistAdditiveLabel();
       else str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
       fHist->Draw(str);
-      fHist->SetName(fName + "_Bin");
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1389,10 +1423,6 @@ void TH2Editor::DoBinMoved()
       // save the drawoption and the name
       fDrawOpt = GetDrawOption();
       fName = fHist->GetName();
-      if (fDelaydraw->GetState()!=kButtonDown) {
-         delete fHist;
-         fHist=0;
-      }
    }
    // if the slider already has been moved and the clone is saved
    Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1415,18 +1445,16 @@ void TH2Editor::DoBinMoved()
    if (maxy==1) maxy=2;
    if (fDelaydraw->GetState()==kButtonUp){
       // delete the histogram which is on the screen
-      if (fPad->GetPrimitive(fName)) {
-        delete fHist; 
-        fHist=0;
-      }      
       fPad->cd();
-      fHist = (TH2*)fBinHist->Clone(fName + "_Bin");
+      fHist->Reset();
+      fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax(),
+                     ny,fBinHist->GetYaxis()->GetXmin(),fBinHist->GetYaxis()->GetXmax());
+      fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
-      fHist->Rebin2D(divx[numx],divy[numy]);
+      fHist->Rebin2D(divx[numx], divy[numy]);
       if (fDim->GetState() == kButtonDown) str = GetHistContLabel()+GetHistAdditiveLabel();
       else str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
       fHist->Draw(str);
-      fHist->SetName(fName + "_Bin");
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1544,10 +1572,11 @@ void TH2Editor::DoCancel()
    // Slot connected to the Cancel Button in the Rebinned histogram Window
    
    if (fBinHist) {
-      delete fHist;
-      fHist = 0;
       fPad->cd();
-      fHist = (TH2*)fBinHist->Clone(fName);
+      fHist->Reset();
+      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax(),
+                     fBinHist->GetYaxis()->GetNbins(),fBinHist->GetYaxis()->GetXmin(),fBinHist->GetYaxis()->GetXmax());
+      fHist->Add(fBinHist);
       fHist->Draw(fDrawOpt);
       delete fBinHist;
       fBinHist = 0;
