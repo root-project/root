@@ -919,7 +919,7 @@ void  TGWin32::Lock()
 {
    //
 
-  ::EnterCriticalSection(gMainThread->fCritSec);
+  if (gMainThread && gMainThread->fCritSec) ::EnterCriticalSection(gMainThread->fCritSec);
 }
 
 //______________________________________________________________________________
@@ -927,7 +927,7 @@ void TGWin32::Unlock()
 {
    //
 
-   ::LeaveCriticalSection(gMainThread->fCritSec);
+   if (gMainThread && gMainThread->fCritSec) ::LeaveCriticalSection(gMainThread->fCritSec);
 }
 
 //______________________________________________________________________________
@@ -1227,7 +1227,6 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
          dotcnt = 0;
          for (y = 0; y < (int) source->rows; y++) {
             for (x = 0; x < (int) source->width; x++, bc++) {
-///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::GetAscent() + y);
                bc->pixel = GetPixel((Drawable_t)xim, bx + x, by + y);
                if (++dotcnt >= maxdots) break;
             }
@@ -1735,8 +1734,7 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
    if (fPenModified) UpdateLineStyle();
 
    if (gLineStyle == GDK_LINE_SOLID) {
-      gdk_draw_line((GdkDrawable *) gCws->drawing, gGCline, 
-                    x1, y1, x2, y2);
+      gdk_draw_line(gCws->drawing, gGCline, x1, y1, x2, y2);
    } else {
       int i;
       gint8 dashes[32];
@@ -1772,7 +1770,7 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 
    if (n > 1) {
       if (gLineStyle == GDK_LINE_SOLID) {
-         gdk_win32_draw_lines( gCws->drawing, gGCline, (GdkPoint *)xy, n);
+         gdk_win32_draw_lines(gCws->drawing, gGCline, (GdkPoint *)xy, n);
       } else {
          int i;
          gint8 dashes[32];
@@ -1784,7 +1782,7 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
             dashes[i] = (gint8) 0;
          }
 
-         gdk_gc_set_dashes((GdkGC*)gGCdash, gDashOffset, dashes, gDashSize);
+         gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
          gdk_win32_draw_lines(gCws->drawing, (GdkGC*)gGCdash, (GdkPoint *)xy, n);
 
          // calculate length of line to update dash offset
@@ -2270,14 +2268,12 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          break;
 
       case 3:
-         radius = (int) TMath::Sqrt((double)
-                  ((xloc - xlocp) * (xloc - xlocp) +
-                   (yloc - ylocp) * (yloc - ylocp)));
+         radius = (int) TMath::Sqrt((double)((xloc - xlocp) * (xloc - xlocp) +
+                                             (yloc - ylocp) * (yloc - ylocp)));
 
          gdk_win32_draw_arc(gCws->window, gGCecho, kFALSE, 
-                      xlocp - radius, ylocp - radius,
-                      2 * radius, 2 * radius, 
-                      0, 23040);
+                            xlocp - radius, ylocp - radius,
+                            2 * radius, 2 * radius, 0, 23040);
          break;
 
       case 4:
@@ -2286,8 +2282,8 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
 
       case 5:
          gdk_win32_draw_rectangle( gCws->window, gGCecho, kFALSE, 
-                              TMath::Min(xlocp, xloc), TMath::Min(ylocp, yloc), 
-                              TMath::Abs(xloc - xlocp), TMath::Abs(yloc - ylocp));
+                                 TMath::Min(xlocp, xloc), TMath::Min(ylocp, yloc), 
+                                 TMath::Abs(xloc - xlocp), TMath::Abs(yloc - ylocp));
          break;
 
       default:
@@ -2618,13 +2614,14 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
          gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(),	// NULL,
                                        w, h, gdk_visual_get_best_depth());
       }
-      for (i = 0; i < kMAXGC; i++)
+      for (i = 0; i < kMAXGC; i++) {
          gdk_gc_set_clip_mask(gGClist[i], None);
+      }
       SetColor(gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
       SetColor(gGCpxmp, 1);
-      if (gTws->double_buffer)
-         gTws->drawing = gTws->buffer;
+
+      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
    }
    gTws->width = w;
    gTws->height = h;
@@ -2659,8 +2656,7 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    if (gTws->width < wval || gTws->height < hval) {
       gdk_pixmap_unref((GdkPixmap *)gTws->window);
       depth = gdk_visual_get_best_depth();
-      gTws->window = gdk_pixmap_new(GDK_ROOT_PARENT(),
-                                    wval, hval, depth);
+      gTws->window = gdk_pixmap_new(GDK_ROOT_PARENT(), wval, hval, depth);
    }
    
    gdk_drawable_get_size(gTws->window, &ww, &hh);
@@ -2893,7 +2889,6 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
          color.red = gColors[!ci].color.red;
          color.green = gColors[!ci].color.green;
          color.blue = gColors[!ci].color.blue;
-
          gdk_gc_set_background(gc, &color);
       }
    } 
