@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.16 2002/08/13 21:17:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.17 2002/10/04 17:59:04 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -432,6 +432,7 @@ void THStack::Paint(Option_t *option)
    }
 
    if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
+   //if (nostack) {strncpy(nostack,"       ",7);}
    else fHistogram->GetPainter()->SetStack(fHists);
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
@@ -443,18 +444,20 @@ void THStack::Paint(Option_t *option)
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
 
+   char noption[32];
+   strcpy(noption,loption);
    Int_t nhists = fHists->GetSize();
    if (nostack) {
       TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
       for (Int_t i=0;i<nhists;i++) {
-         sprintf(loption,"%ssame%s",opt.Data(),lnk->GetOption());
+         sprintf(loption,"%ssame%s",noption,lnk->GetOption());
          fHists->At(i)->Paint(loption);
          lnk = (TObjOptLink*)lnk->Next();
       }
    } else {
       TObjOptLink *lnk = (TObjOptLink*)fHists->LastLink();
       for (Int_t i=0;i<nhists;i++) {
-         sprintf(loption,"%ssame%s",opt.Data(),lnk->GetOption());
+         sprintf(loption,"%ssame%s",noption,lnk->GetOption());
          fStack->At(nhists-i-1)->Paint(loption);
          lnk = (TObjOptLink*)lnk->Prev();
       }
