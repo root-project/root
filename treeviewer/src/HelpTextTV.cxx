@@ -35,7 +35,7 @@ or, to load the tree Mytree from the file Myfile :\n\
    root [1] TFile file(\"Myfile\");\n\
    root [2] new TTreeView(\"Mytree\");\n\n\
 This will work if uou have the path to the library TTreeView defined in your\n\
-.rootrc file.\n\n 
+.rootrc file.\n\n\
  ";
 
 
@@ -74,7 +74,7 @@ be loaded, double-click on them and they will be mapped in a new item called\n\
    Browsing trees :\n\n\
 Left-clicking on trees from the TreeList will expand their content on the list\n\
 from the right side. Double-clicking them will also open their content on the\n\
-left, where you can click on branches to expand them on the right.\n\n\ 
+left, where you can click on branches to expand them on the right.\n\n\
  ";
 
 
@@ -100,7 +100,7 @@ The editor usage is the following :\n\
   - you can write C expressions made of leaf names by hand or you can insert\n\
   any item from the right panel by clicking on it (recommandable);\n\
   - you should write the item alias by hand since it not ony make the expression\n\
-  meaningfull, but it also highly improve the layout for big expressions\n\n\ 
+  meaningfull, but it also highly improve the layout for big expressions\n\n\
  ";
 
 
@@ -111,7 +111,7 @@ from the upper-left toolbar by typing and pressing Enter at the end.\n\
 All commands can be interrupted at any time by pressing the STOP button\n\
 from the bottom-left (not yet)\n\n\
 You can toggle recording of the current command in the history file by\n\
-checking the Rec button from the top-right\n\n\ 
+checking the Rec button from the top-right\n\n\
  ";
 
 
@@ -131,7 +131,7 @@ right-clicks the right panel. Commands are :\n\
   - ExecuteCommand  : execute a user command;\n\
   - MakeSelector    : equivalent of TTree::MakeSelector();\n\
   - Process         : equivalent of TTree::Process();\n\
-  - RemoveExpression: removes clicked item from the list;\n\n\ 
+  - RemoveExpression: removes clicked item from the list;\n\n\
  ";
 
 
@@ -147,7 +147,7 @@ the Option menu. When using this menu, only the options compatible with the\n\
 current histogram dimension will be available. You can check multiple options\n\
 and reset them by checking the Default entries.\n\n\
   After completing the previous operations you can issue the draw command by\n\
-pressing the DRAW button.\n\n\ 
+pressing the DRAW button.\n\n\
  ";
 
 
