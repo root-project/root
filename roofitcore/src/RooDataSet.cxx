@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.27 2001/06/12 19:06:27 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.28 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -81,6 +81,18 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   loadValues(t,cuts);
 }
 
+
+RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
+                       const RooArgSet& vars, Bool_t copyCache) :
+  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0), 
+  _blindString(t->_blindString)
+{
+  // Constructor from existing data set with list of variables that preserves the cache
+  initialize(vars);
+  initCache(t->_cachedVars) ;
+  loadValues(t,"");
+}
+
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
   TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
@@ -144,6 +156,22 @@ void RooDataSet::initialize(const RooArgSet& vars) {
 }
 
 
+void RooDataSet::initCache(const RooArgSet& cachedVars) 
+{
+  // Initialize cache of dataset: attach variables of ArgSet cache
+  // to the corresponding TTree branches
+
+  // iterate over the cache variables for this dataset
+  TIterator* iter = cachedVars.MakeIterator() ;
+  RooAbsArg *var;
+  while(0 != (var= (RooAbsArg*)iter->Next())) {
+    var->attachToTree(*this) ;
+    _cachedVars.add(*var) ;
+  }
+  delete iter ;
+}
+
+
 void RooDataSet::loadValues(const char *filename, const char *treename,
 			    const char *cuts) {
   // Load the value of a TTree stored in given file
@@ -163,7 +191,8 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
   // Load values of given ttree
 
   // Clone source tree
-  TTree* tClone = (TTree*) t->Clone() ;
+  //TTree* tClone = (TTree*) t->Clone() ;
+  TTree* tClone = t->CloneTree() ;
   
   // Clone list of variables
   RooArgSet sourceArgSet(_vars,"sourceArgSet") ;
@@ -518,6 +547,9 @@ void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) con
       TString deeper(indent);
       deeper.Append("  ");
       _vars.printToStream(os,Standard,deeper);
+      os << indent << "  Caches ";
+      _cachedVars.printToStream(os,Standard,deeper);
+      
       if(_truth.GetSize() > 0) {
 	os << indent << "  Generated with ";
 	_truth.printToStream(os,Shape,deeper);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.9 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooFitContext.cc,v 1.10 2001/05/31 21:21:36 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,7 @@ static TVirtualFitter *_theFitter(0);
 
 
 RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
-  TNamed(*pdf)
+  TNamed(*pdf), _origLeafNodeList("origLeafNodeList")
 {
   // Constructor
 
@@ -73,6 +73,9 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
   // Cache parameter list
   _paramList = _pdfClone->getParameters(_dataClone) ;
   _nPar      = _paramList->GetSize() ;  
+
+  // Store the original leaf node list
+  pdf->leafNodeServerList(&_origLeafNodeList) ;  
 }
 
 
@@ -140,13 +143,56 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 
 
 
-Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset) 
+Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData) 
 {
-  // PDF caching optimizer entry point
+  // PDF/Dataset optimizer entry point
+
+  // Find PDF nodes that can be cached in the data set
   RooArgSet cacheList("cacheList") ;
-  findCacheableBranches(pdf,dset,cacheList) ;
+
+  if (doPdf) {
+    findCacheableBranches(_pdfClone,_dataClone,cacheList) ;
   
-  dset->cacheArgs(cacheList) ;
+    // Add cached branches from the data set
+    _dataClone->cacheArgs(cacheList) ;
+  }
+
+
+  if (doData) {
+    // Find unused/unnecessary branches from the data set
+    RooArgSet pruneList("pruneList") ;
+    findUnusedDataVariables(_pdfClone,_dataClone,pruneList) ;
+
+    if (doPdf)
+      findRedundantCacheServers(_pdfClone,_dataClone,cacheList,pruneList) ;
+    
+    if (pruneList.GetSize()!=0) {
+      // Created trimmed list of data variables
+      RooArgSet newVarList(*_dataClone->get()) ;
+      TIterator* iter = pruneList.MakeIterator() ;
+      RooAbsArg* arg ;
+      while (arg = (RooAbsArg*) iter->Next()) {
+	cout << "RooFitContext::optimizePDF: dropping variable " 
+	     << arg->GetName() << " from context data set" << endl ;
+	newVarList.remove(*arg) ;      
+      }      
+      delete iter ;
+      
+      // Create trimmed data set
+      RooDataSet *trimData = new RooDataSet("trimData","Reduced data set for fit context",
+					    _dataClone,newVarList,kTRUE) ;
+      
+      // Unattach PDF clone from previous dataset
+      _pdfClone->recursiveRedirectServers(_origLeafNodeList,kFALSE);
+      
+      // Reattach PDF clone to newly trimmed dataset
+      _pdfClone->attachDataSet(*trimData) ;
+      
+      // Substitute new data for old data 
+      delete _dataClone ;
+      _dataClone = trimData ;
+    }
+  }
 }
 
 
@@ -165,10 +211,6 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
       // Check if this branch node is eligible for precalculation
       Bool_t canOpt(kTRUE) ;
 
-      // WVE additional checks: branch must have dependents 
-      //                        mother pdf must allow optimization / branch must be PDF-type
-      //                        or branch is blinding-type (how do we check that?)
-
       RooArgSet* branchParamList = server->getParameters(dset) ;
       TIterator* pIter = branchParamList->MakeIterator() ;
       RooAbsArg* param ;
@@ -186,11 +228,55 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
 
       } else {
 	// Recurse if we cannot optimize at this level
-	optimizePdf(server,dset) ;
+	findCacheableBranches(server,dset,cacheList) ;
       }
     }
   }
   delete sIter ;
+}
+
+
+
+void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& pruneList) 
+{
+  TIterator* vIter = dset->get()->MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*) vIter->Next()) {
+    if (!pdf->dependsOn(*arg)) pruneList.add(*arg) ;
+  }
+  delete vIter ;
+}
+
+
+void RooFitContext::findRedundantCacheServers(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
+{
+  TIterator* vIter = dset->get()->MakeIterator() ;
+  RooAbsArg *var ;
+  while (var=(RooAbsArg*) vIter->Next()) {
+    if (allClientsCached(var,cacheList)) pruneList.add(*var) ;
+  }
+  delete vIter ;
+}
+
+
+
+Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
+{
+  Bool_t ret(kTRUE), anyClient(kFALSE) ;
+
+  TIterator* cIter = var->valueClientIterator() ;    
+  RooAbsArg* client ;
+  while (client=(RooAbsArg*) cIter->Next()) {
+
+    anyClient = kTRUE ;
+    if (!cacheList.FindObject(client)) {
+      // If client is not cached recurse
+      ret = allClientsCached(client,cacheList) ;
+    }
+  }
+  delete cIter ;
+
+  return anyClient?ret:kFALSE ;
 }
 
 
@@ -209,7 +295,8 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   Bool_t saveLog       = opts.Contains("l") ;
   Bool_t profileTimer  = opts.Contains("t") ;
          _extendedMode = opts.Contains("e") ;
-  Bool_t optimize      = opts.Contains("o") ;
+  Bool_t doOptPdf      = opts.Contains("o") ;
+  Bool_t doOptData     = opts.Contains("oo") ;
 
   // Check if an extended ML fit is possible
   if(_extendedMode) {
@@ -230,9 +317,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   }
 
   // Run the optimizer if requested
-  if (optimize) optimizePdf(_pdfClone,_dataClone) ;
-  //_dataClone->Scan() ;
-
+  if (doOptPdf||doOptData) optimize(doOptPdf,doOptData) ;
 
   // Create a log file if requested
   if(saveLog) {

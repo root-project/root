@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.35 2001/06/12 19:06:26 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.36 2001/06/16 20:28:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -440,19 +440,24 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
     return ;
   }
 
-  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() 
-			  << "," << (void*)this << "): dirty flag " << (flag?"raised":"cleared") << endl ;
+  if (_verboseDirty) {
+    cout << "RooAbsArg::setValueDirty(" << GetName() 
+	 << "," << (void*)this << "): dirty flag " 
+	 << ((flag==_valueDirty)?"already ":"") 
+	 << (flag?"raised":"cleared") << endl ;
+  }
 
-  _valueDirty=flag ; 
-
+  // Propagate dirty flag to all clients if this is a down->up transition
+  //if (flag==kTRUE && (!_valueDirty || isFundamental())) {
   if (flag==kTRUE) {
-    // Set 'dirty' flag for all clients of this object
     _clientValueIter->Reset() ;
     RooAbsArg* client ;
     while (client=(RooAbsArg*)_clientValueIter->Next()) {
       client->setValueDirty(kTRUE,source) ;
     }
   }
+
+  _valueDirty=flag ; 
 } 
 
 
@@ -468,18 +473,23 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
     return ;
   }
 
-  if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
-			  << "," << (void*)this << "): dirty flag " << (flag?"raised":"cleared") << endl ;
-  _shapeDirty=flag ; 
+  if (_verboseDirty) {
+    cout << "RooAbsArg::setShapeDirty(" << GetName() 
+	 << "," << (void*)this << "): dirty flag " 
+	 << ((flag==_shapeDirty)?" already ":"") 
+	 << (flag?"raised":"cleared") << endl ;
+  }
 
+  // Propagate dirty flag to all clients if this is a down->up transition
   if (flag==kTRUE) {
-    // Set 'dirty' flag for all clients of this object
     _clientShapeIter->Reset() ;
     RooAbsArg* client ;
     while (client=(RooAbsArg*)_clientShapeIter->Next()) {
       client->setShapeDirty(kTRUE,source) ;
     }
   }
+
+  _shapeDirty=flag ; 
 } 
 
 

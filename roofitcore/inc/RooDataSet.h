@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.17 2001/05/14 22:54:20 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.18 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,7 +45,9 @@ public:
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);  
-  RooDataSet(RooDataSet const & other);
+  RooDataSet(RooDataSet const & other) ;
+  // WVE Circular call caveat: Clone() cannot be overloaded to use 
+  // the copy ctor as the copy ctor needs to use clone to initialize the copy
   inline virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
@@ -82,6 +84,10 @@ public:
   void dump() ;
   void origPrint() { TTree::Print() ; }
 
+  // Cache copy feature is not publicly accessible
+  RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
+	     const RooArgSet& vars, Bool_t copyCache);
+
 protected:
 
   void cacheArg(RooAbsArg& var) ;
@@ -104,6 +110,8 @@ protected:
 private:
 
   void initialize(const RooArgSet& vars);
+  void initCache(const RooArgSet& cachedVars) ; 
+
   TIterator *_iterator;    //! don't make this data member persistent
   TIterator *_cacheIter ;  //! don't make this data member persistent
   TBranch *_branch; //! don't make this data member persistent

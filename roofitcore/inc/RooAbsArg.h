@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.31 2001/06/12 19:06:26 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.32 2001/06/16 20:28:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,6 +44,8 @@ public:
   Bool_t dependsOn(const RooAbsArg& server) const ;
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
+  inline TIterator* valueClientIterator() const { return _clientListValue.MakeIterator() ; }
+  inline TIterator* shapeClientIterator() const { return _clientListShape.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
   inline RooAbsArg* findServer(const char *name) const { return (RooAbsArg*)_serverList.FindObject(name); }
   inline RooAbsArg* findServer(Int_t index) const { return (RooAbsArg*)_serverList.At(index); }
@@ -108,6 +110,7 @@ protected:
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
+  friend class RooFitContext ;
   THashList _serverList       ; //! list of server objects
   THashList _clientList       ; //! list of client objects
   TList     _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
