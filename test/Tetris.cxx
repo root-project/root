@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.14 2003/01/31 16:20:59 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.15 2003/02/02 16:25:38 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -726,7 +726,7 @@ void QuitButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 {
    // Action after mouse click
 
-   if (event == kButton1Up) gApplication->Terminate(0);  //gTetris->Quit();
+   if (event == kButton1Up) gTetris->Quit();
 }
 
 
@@ -832,7 +832,6 @@ KeyHandler::~KeyHandler()
    TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
 
    // remove binding of arrow keys and space-bar key
-printf("Remove key bindings\n");
    main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
    main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
    main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
@@ -911,6 +910,8 @@ Tetris::Tetris() :
 
    gTetris = this;
 
+   fCurrentPiece = 0;
+
    //-----------  play board ------------
    fBoard            = new  TetrisBoard(0.35,0.05,0.7,0.95);
    fBoard->Draw();
@@ -981,6 +982,7 @@ void Tetris::Quit()
 {
    // Stop game and delete canvas (i.e. tetris itself)
 
+   delete fKeyHandler; fKeyHandler = 0;
    StopGame();
    ((TRootCanvas*)fCanvasImp)->CloseWindow();
 }
@@ -992,7 +994,7 @@ void Tetris::NewGame()
    if (IsGameOn()) StopGame();       // stop privious game
    fScore->Reset();
    fLinesRemoved->Reset();
-   fPiecesDropped=0;
+   fPiecesDropped = 0;
    SetLevel(1);
    fUpdateLevelTimer->Start();
    fBoard->Clear();
