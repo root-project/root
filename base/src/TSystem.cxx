@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.50 2003/01/31 17:19:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.51 2003/02/20 07:08:40 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1590,7 +1590,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
             builddep += stderrfile;
             builddep += " 2>&1 ";
 
-            if (1||gDebug>4)  ::Info("ACLiC",builddep.Data());
+            if (gDebug > 4)  ::Info("ACLiC",builddep.Data());
             
             Int_t depbuilt = !gSystem->Exec(touch);
             if (depbuilt) depbuilt = !gSystem->Exec(builddep);
