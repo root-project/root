@@ -2276,6 +2276,9 @@ void G__set_stdio()
 #ifdef G__SHAREDLIB
   sprintf(temp,"G__SHAREDLIB=1"); G__getexpr(temp);
 #endif
+#if defined(G__P2FCAST) || defined(G__P2FDECL)
+  sprintf(temp,"G__P2F=1"); G__getexpr(temp);
+#endif
 #ifndef G__OLDIMPLEMENTATION893
   G__platformMacro();
 #endif

@@ -1160,6 +1160,9 @@ char* funcname;
 	  }
 	  if(G__parenthesisovldobj(&result3,presult,"operator()"
 				   ,&fpara,G__TRYNORMAL)) {
+#ifndef G__OLDIMPLEMENTATION1883
+	    *known3=1;
+#endif
 	    return(G__operatorfunction(&result3,item+ig15+1,known3
 				       ,result7,funcname));
 	  }
@@ -1592,6 +1595,9 @@ int memfunc_flag;
 	    fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
 	  }
 	  if(G__parenthesisovld(&result3,funcname,&fpara,G__TRYNORMAL)) {
+#ifndef G__OLDIMPLEMENTATION1883
+	    *known3=1;
+#endif
 	    return(G__operatorfunction(&result3,item+ig15+2,known3
 				       ,result7,funcname));
 	  }

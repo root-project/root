@@ -1183,7 +1183,11 @@ char *name;
      || strchr(name,'(')
 #endif
 #ifndef G__OLDIMPLEMENTATION1810
+#ifndef G__PHILIPPE35
+     || isdigit(name[0]) || (!isalpha(name[0]) && '_'!=name[0] && ':'!=name[0])
+#else
      || isdigit(name[0]) || (!isalpha(name[0]) && '_'!=name[0])
+#endif
 #endif
      )
      return((struct G__Definedtemplateclass *)NULL);
@@ -2264,7 +2268,11 @@ char *tagnamein;
    }
    else {
      *(patom-2) = 0;
+#ifndef G__PHILIPPE35
+     if(strlen(atom_name)==0||strcmp(atom_name,"::")==0) scope_tagnum = -1;
+#else
      if(strcmp(atom_name,"::")==0) scope_tagnum = -1;
+#endif
      else scope_tagnum = G__defined_tagname(atom_name,0);
      p = atom_name;
      while(*patom) *p++ = *patom++;

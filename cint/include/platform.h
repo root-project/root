@@ -117,6 +117,7 @@ typedef struct { } PRINTDLG, *LPPRINTDLG;
 
 //#define __BEGIN_DECLS
 #define __extension__
+#define  __attribute__(x)  
 
 /**************************************************************************
 * KAI C++ compiler

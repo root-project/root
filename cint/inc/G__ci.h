@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015093
-#define G__CINTVERSIONSTR  "5.15.93, June 22 2003"
+#define G__CINTVERSION      5015094
+#define G__CINTVERSIONSTR  "5.15.94, June 30 2003"
 
 
 /**********************************************************************
@@ -1862,6 +1862,8 @@ extern G__EXPORT void G__reset_lasterror G__P((void));
 extern G__EXPORT int G__gettempfilenum G__P((void));
 #endif
 extern G__EXPORT void G__LockCpp G__P((void));
+extern G__EXPORT void G__set_sym_underscore G__P((int x));
+extern G__EXPORT int G__get_sym_underscore G__P((void));
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 

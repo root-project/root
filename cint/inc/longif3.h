@@ -1,8 +1,8 @@
 /********************************************************************
-* longif.h
+* longif3.h
 ********************************************************************/
 #ifdef __CINT__
-#error longif.h/C is only for compilation. Abort cint.
+#error longif3.h/C is only for compilation. Abort cint.
 #endif
 #include <stddef.h>
 #include <stdio.h>

@@ -74,7 +74,7 @@ void G__castclass G__P((G__value *result3,int tagnum,int castflag,int *ptype));
 #endif
 G__value G__castvalue G__P((char *casttype,G__value result3));
 void G__asm_cast G__P((int type,G__value *buf,int tagnum,int reftype));
-void G__setdebugcond G__P((void));
+  /* void G__setdebugcond G__P((void)); */
 int G__findposition G__P((char *string,struct G__input_file view,int *pline,int *pfnum));
 int G__findfuncposition G__P((char *func,int *pline,int *pfnum));
 int G__beforelargestep G__P((char *statement,int *piout,int *plargestep));
@@ -120,7 +120,7 @@ int G__pushdumpinput G__P((FILE *fp,int exflag));
 int G__popdumpinput G__P((void));
 int G__dumpinput G__P((char *line));
 char *G__xdumpinput G__P((char *prompt));
-void G__scratch_all G__P((void));
+  /* void G__scratch_all G__P((void)); */
 int G__free_ifunc_table G__P((struct G__ifunc_table *ifunc));
 int G__free_member_table G__P((struct G__var_array *mem));
 int G__free_ipath G__P((struct G__includepath *ipath));
@@ -162,7 +162,7 @@ int G__assignmenterror G__P((char *item));
 int G__parenthesiserror G__P((char *expression,char *funcname));
 int G__commenterror G__P((void));
 int G__changeconsterror G__P((char *item,char *categ));
-int G__printlinenum G__P((void));
+  /* int G__printlinenum G__P((void)); */
 int G__autocc G__P((void));
 int G__init_readline G__P((void));
 int G__using_namespace G__P((void));
@@ -233,15 +233,15 @@ int G__ispublicbase G__P((int basetagnum,int derivedtagnum));
 int G__isanybase G__P((int basetagnum,int derivedtagnum));
 #endif
 int G__find_virtualoffset G__P((int virtualtag));
-int G__main G__P((int argc,char **argv));
+  /* int G__main G__P((int argc,char **argv)); */
 int G__init_globals G__P((void));
 void G__set_stdio G__P((void));
 int G__cintrevision G__P((FILE *fp));
-char *G__input G__P((char *prompt));
+  /* char *G__input G__P((char *prompt)); */
 char *G__strrstr G__P((char *string1,char *string2));
 void G__set_sym_underscore G__P((int x));
 
-void G__breakkey G__P((int signame));
+  /* void G__breakkey G__P((int signame)); */
 void G__floatexception G__P((int signame));
 void G__segmentviolation G__P((int signame));
 void G__outofmemory G__P((int signame));
@@ -455,7 +455,7 @@ G__value G__exec_else_if G__P((void));
 G__value G__exec_statement G__P((void));
 int G__readpointer2function G__P((char *new_name,char *pvar_type));
 int G__search_gotolabel G__P((char *label,fpos_t *pfpos,int line,int *pmparen));
-int G__pause G__P((void));
+  /* int G__pause G__P((void)); */
 int G__setaccess G__P((char *statement,int iout));
 int G__class_conversion_operator G__P((int tagnum,G__value *presult,char* ttt));
 int G__fundamental_conversion_operator G__P((int type,int tagnum,int typenum,int reftype,int constvar,G__value *presult,char* ttt));

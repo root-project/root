@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.137 2003/06/25 14:27:57 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.138 2003/07/10 06:19:44 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -390,7 +390,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
       Error(0,
-            "In this version of ROOT, the option '!' used in a linkdef file\n"
+            "in this version of ROOT, the option '!' used in a linkdef file\n"
             "       implies the actual existence of customized operators.\n"
             "       The following declaration is now required:\n"
             "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
@@ -408,7 +408,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
       Error(0,
-            "In this version of ROOT, the option '!' used in a linkdef file\n"
+            "in this version of ROOT, the option '!' used in a linkdef file\n"
             "       implies the actual existence of customized operator.\n"
             "       The following declaration is now required:\n"
             "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
@@ -614,7 +614,7 @@ string GetLong64_Name(const string& original)
 {
    // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
 
-   static const string longlong_s  = "long long"; 
+   static const string longlong_s  = "long long";
    static const string ulonglong_s = "unsigned long long";
 
    string result = original;
@@ -781,13 +781,13 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
 
    G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto,&offset);
    G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto,&offset);
-   
+
    if (methodinfo.IsValid()) {
       /*
         fprintf(stderr,"found a constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
                cl.Name(),methodinfo.GetPrototype(),
                cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
-               methodinfo.NArg(),methodinfo.NDefaultArg());  
+               methodinfo.NArg(),methodinfo.NDefaultArg());
       */
       // proto = methodinfo.GetPrototype();
       // if ( proto[strlen(proto)-2]!='(' && error) *error = true;
@@ -810,23 +810,23 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
         fprintf(stderr,"found a template constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
                cl.Name(),tmethodinfo.GetPrototype(),
                cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
-               tmethodinfo.NArg(),tmethodinfo.NDefaultArg());  
+               tmethodinfo.NArg(),tmethodinfo.NDefaultArg());
       */
       // exactly same as above with a function with the full template name
-      
+
       if (tmethodinfo.NArg()!=tmethodinfo.NDefaultArg()) result = false;
       if (!(tmethodinfo.Property() & G__BIT_ISPUBLIC)) {
          if (!NeedConstructor(cl) ) result = false;
          else result = false;
       }
-      
+
    } else {
       /*
         fprintf(stderr,"did not find a constructor for %s %s and %s and %s\n",
               cl.TmpltName(), cl.Name(),
               cl.HasMethod(cl.TmpltName())? "has constructor" : "has no constructor",
               cl.HasMethod(cl.Name())? "has template constructor" : "has no template constructor"
-              ); 
+              );
       */
       if (cl.HasMethod(cl.TmpltName())) result = false;
       if (cl.HasMethod(cl.Name())) result = false;
@@ -1662,7 +1662,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                      fprintf(fp,"            R__str.Streamer(R__b);\n");
                   } else {
                      if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                        Error(0, "Cannot process template argument1 %s\n",tmparg);
+                        Error(0, "cannot process template argument1 %s\n",tmparg);
                         fprintf(fp, "            //R__b << *R__k;\n");
                      } else {
                         fprintf(fp, "            R__b << *R__k;\n");
@@ -1697,7 +1697,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                   fprintf(fp,"            R__str.Streamer(R__b);\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                    Error(0, "Cannot process template argument2 %s\n",tmparg);
+                    Error(0, "cannot process template argument2 %s\n",tmparg);
                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
                   } else {
                     fprintf(fp, "R__b.StreamObject(R__k,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
@@ -1968,7 +1968,7 @@ const char *ShortTypeName(const char *typeDesc)
      if (lev==0 && *s=='*') continue;
      if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0
                     ||strcmp(constwdend,s)==0 ) ) {
-        s+=strlen(constwd)-1; // -1 because the loop adds 1  
+        s+=strlen(constwd)-1; // -1 because the loop adds 1
         continue;
      }
      if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}

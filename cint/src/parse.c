@@ -1523,6 +1523,9 @@ char *macro;
     }
   } while((var=var->next)) ;
   if(682==hash && strcmp(macro,"__CINT__")==0) return(1);
+#ifndef G__OLDIMPLEMENTATION1883
+  if(1316==hash && strcmp(macro,"__CINT_PREPROC__")==0) return(1);
+#endif
   if(G__iscpp && 1193==hash && strcmp(macro,"__cplusplus")==0) return(1);
 #ifndef G__OLDIMPLEMENTATION869
   { /* Following fix is not completely correct. It confuses typedef names
@@ -4212,6 +4215,15 @@ G__value G__exec_statement()
 #ifndef G__OLDIMPLEMENTATION872
 	    if(strcmp(statement,"R__EXTERN")==0) { 
 	      if(G__externignore(&iout,&spaceflag,mparen)) return(G__null);
+	      break;
+	    }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1882
+	  case 13:
+	    if(strcmp(statement,"__extension__")==0) { 
+	      spaceflag = -1;
+	      iout = 0;
 	      break;
 	    }
 #endif
