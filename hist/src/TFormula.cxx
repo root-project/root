@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.76 2004/04/06 16:34:13 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.77 2004/05/12 22:43:06 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -50,10 +50,13 @@ ClassImp(TFormula)
 //*-*     -  x^2 + y^2
 //*-*     -  [0]*pow([1],4)
 //*-*     -  2*pi*sqrt(x/y)
-//*-*     -  gaus(0)*expo(3) + ypol3(5)*x
+//*-*     -  gaus(0)*expo(3)  + ypol3(5)*x
+//*-*     -  gausn(0)*expo(3) + ypol3(5)*x
 //*-*
 //*-*  In the last example above:
 //*-*     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
+//*-*        and (0) means start numbering parameters at 0
+//*-*     gausn(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)/sqrt(2*pi*[2])
 //*-*        and (0) means start numbering parameters at 0
 //*-*     expo(3) is a substitute for exp([3]+[4])*x)
 //*-*     pol3(5) is a substitute for par[5]+par[6]*x+par[7]*x**2+par[8]*x**3
@@ -172,11 +175,22 @@ TFormula::TFormula(const char *name,const char *expression) :
       expr[j] = expression[i]; j++;
    }
    expr[j] = 0;
-   if (j) SetTitle(expr);
+  Bool_t gausNorm = kFALSE;
+  if (j) {
+     TString chaine = expr;
+     // special case for normalized gaus
+     if (chaine.Contains("gausn")) {
+        gausNorm = kTRUE;
+        chaine.ReplaceAll("gausn","gaus");
+     }
+     SetTitle(chaine.Data());
+  }
    delete [] expr;
 
    if (Compile()) return;
-
+   
+   if (gausNorm) SetBit(kNormalized);
+   
 //*-*- Store formula in linked list of formula in ROOT
 
    TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
@@ -408,15 +422,15 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     sinh        71                  asinh        74
 //*-*     tanh        72                  atanh        75
 //*-*
-//*-*     expo       100                  gaus        110
-//*-*     expo(0)    100 0                gaus(0)     110 0
-//*-*     expo(1)    100 1                gaus(1)     110 1
-//*-*     xexpo      100 x                xgaus       110 x
-//*-*     yexpo      101 x                ygaus       111 x
-//*-*     zexpo      102 x                zgaus       112 x
-//*-*     xyexpo     105 x                xygaus      115 x
-//*-*     yexpo(5)   102 5                ygaus(5)    111 5
-//*-*     xyexpo(2)  105 2                xygaus(2)   115 2
+//*-*     expo       100                  gaus        110     gausn  (see note below)
+//*-*     expo(0)    100 0                gaus(0)     110 0   gausn(0)
+//*-*     expo(1)    100 1                gaus(1)     110 1   gausn(1)
+//*-*     xexpo      100 x                xgaus       110 x   xgausn
+//*-*     yexpo      101 x                ygaus       111 x   ygausn
+//*-*     zexpo      102 x                zgaus       112 x   zgausn
+//*-*     xyexpo     105 x                xygaus      115 x   xygausn
+//*-*     yexpo(5)   102 5                ygaus(5)    111 5   ygausn(5)
+//*-*     xyexpo(2)  105 2                xygaus(2)   115 2   xygausn(2)
 //*-*
 //*-*     landau      120 x
 //*-*     landau(0)   120 0
@@ -465,7 +479,16 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     [2]        140 2
 //*-*     etc.
 //*-*
-//*-*   * boolean optimization (kBoolOptmize) :
+//*-*   special cases for normalized gaussians
+//*-*   ======================================
+//*-*   the expression "gaus" is a substitute for
+//*-*     [0]*exp(-0.5*((x-[1])/[2])**2)
+//*-*   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
+//*-*   the expression "gausn" is a substitute for
+//*-*     [0]*exp(-0.5*((x-[1])/[2])**2)/sqrt(2*pi*[2])
+//*-*
+//*-*   boolean optimization (kBoolOptmize) :
+//*-*   =====================================
 //*-*
 //*-*     Those pseudo operation are used to implement lazy evaluation of
 //*-*     && and ||.  When the left hand of the expression if false
@@ -479,7 +502,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*
 //*-*    f0 145  0  f1 145  1  etc..
 //*-*
-//*-*   * errors :
+//*-*   errors :
+//*-*   ========
 //*-*
 //*-*     1  : Division By Zero
 //*-*     2  : Invalid Floating Point Operation
@@ -517,7 +541,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*  -----------------
 //*-*  By default, the formula is assigned fNumber=0. However, the following
 //*-*  formula built with simple functions are assigned  fNumber:
-//*-*    "gaus"    100
+//*-*    "gaus"    100  (or gausn)
 //*-*    "expo"    200
 //*-*    "polN"    300+N
 //*-*    "landau"  400
@@ -2409,18 +2433,13 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 
         #define R__GAUS(var)                                                    \
         {                                                                       \
-           pos++; int param = (oper & kTFOperMask); Double_t intermede2;        \
-           if (fParams[param+2] == 0) {                                         \
-              intermede2=1e10;                                                  \
-           } else {                                                             \
-              intermede2=Double_t((x[var]-fParams[param+1])/fParams[param+2]);  \
-           }                                                                    \
-           tab[pos-1] = fParams[param]*TMath::Exp(-0.5*intermede2*intermede2);  \
+           pos++; int param = (oper & kTFOperMask);                             \
+           tab[pos-1] = fParams[param]*TMath::Gaus(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
            continue;                                                            \
         }
 
         // case kgaus:
-        case kxgaux: R__GAUS(0);
+        case kxgaus: R__GAUS(0);
         case kygaus: R__GAUS(1);
         case kzgaus: R__GAUS(2);
         case kxygaus: { pos++; int param = (oper & kTFOperMask);

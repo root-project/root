@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.24 2004/01/12 16:08:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.25 2004/01/13 18:46:39 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -114,7 +114,7 @@ protected:
       kLeftShift = 80, kRightShift = 81,
       
       kexpo   = 100 , kxexpo   = 100, kyexpo   = 101, kzexpo   = 102, kxyexpo   = 105,
-      kgaus   = 110 , kxgaux   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,
+      kgaus   = 110 , kxgaus   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,
       klandau = 120 , kxlandau = 120, kylandau = 121, kzlandau = 122, kxylandau = 125,
       kpol    = 130 , kxpol    = 130, kypol    = 131, kzpol    = 132,
 
@@ -134,7 +134,8 @@ public:
    // TFormula status bits
    enum {
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
-      kInitialized   = BIT(12)   // set to true once the formula has been 'compiled'
+      kInitialized   = BIT(12),  // set to true once the formula has been 'compiled'
+      kNormalized    = BIT(14)   // set to true if the function (ex gausn) is normalized
    };
  
               TFormula();
@@ -164,6 +165,7 @@ public:
    virtual void        GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
    virtual const char *GetParName(Int_t ipar) const;
    virtual Int_t       GetParNumber(const char *name) const;
+   virtual Bool_t      IsNormalized() {return TestBit(kNormalized);}
    virtual void        Print(Option_t *option="") const; // *MENU*
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);

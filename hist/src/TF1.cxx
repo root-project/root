@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.85 2004/08/02 11:22:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.86 2004/08/02 13:17:56 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1662,9 +1662,10 @@ void TF1::InitStandardFunctions()
 
    TF1 *f1;
    if (!gROOT->GetListOfFunctions()->FindObject("gaus")) {
-      f1 = new TF1("gaus","gaus",-1,1); f1->SetParameters(1,0,1);
+      f1 = new TF1("gaus","gaus",-1,1);     f1->SetParameters(1,0,1);
+      f1 = new TF1("gausn","gausn",-1,1);   f1->SetParameters(1,0,1);
       f1 = new TF1("landau","landau",-1,1); f1->SetParameters(1,0,1);
-      f1 = new TF1("expo","expo",-1,1); f1->SetParameters(1,1);
+      f1 = new TF1("expo","expo",-1,1);     f1->SetParameters(1,1);
       for (Int_t i=0;i<10;i++) {
          f1 = new TF1(Form("pol%d",i),Form("pol%d",i),-1,1);
          f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
