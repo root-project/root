@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.141 2003/11/20 15:03:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.142 2003/11/20 15:09:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -757,9 +757,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       if (action == 4) {
          if (draw) fHistogram->Draw(option);
       } else {
-         Int_t noscat = opt.Length();
-         if (opt.Contains("same")) noscat -= 4;
-         if (noscat) {
+         Bool_t graph = kFALSE;
+         Int_t l = opt.Length();
+         if (l == 0 || opt == "same") graph = kTRUE;
+         if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
+         if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
+         if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
+         if (!graph) {
             if (draw) fHistogram->Draw(option);
          } else {
             if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);

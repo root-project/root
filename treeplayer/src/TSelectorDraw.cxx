@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.16 2003/11/20 15:03:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.17 2003/11/20 15:09:21 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -21,7 +21,8 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TView.h"
-#include "TPolyMarker.h"
+//#include "TPolyMarker.h"
+#include "TGraph.h"
 #include "TPolyMarker3D.h"
 #include "TDirectory.h"
 #include "TVirtualPad.h"
@@ -530,10 +531,14 @@ void TSelectorDraw::Begin(TTree *tree)
          }
          fVar1->SetAxis(h2->GetYaxis());
          fVar2->SetAxis(h2->GetXaxis());
-         Int_t noscat = strlen(option);
-         if (opt.Contains("same")) noscat -= 4;
+         Bool_t graph = kFALSE;
+         Int_t l = opt.Length();
+         if (l == 0 || opt == "same") graph = kTRUE;
+         if (opt.Contains("p")     || opt.Contains("*")    || opt.Contains("l"))    graph = kTRUE;
+         if (opt.Contains("surf")  || opt.Contains("lego") || opt.Contains("cont")) graph = kFALSE;
+         if (opt.Contains("col")   || opt.Contains("hist") || opt.Contains("scat")) graph = kFALSE;
          fObject = h2;
-         if (!noscat) {
+         if (graph) {
             fAction = 12;
             if (!fOldHistogram && !opt.Contains("same")) fAction = -12;
          }
@@ -1042,7 +1047,8 @@ void TSelectorDraw::TakeAction()
    }
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
-      TPolyMarker *pm = new TPolyMarker(fNfill);
+      TGraph *pm = new TGraph(fNfill);
+      pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
@@ -1062,7 +1068,8 @@ void TSelectorDraw::TakeAction()
          pm->SetPoint(i,u,v);
       }
 
-      pm->Draw();
+   if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
+      else                                          pm->Draw(fOption.Data());
       TH2 *h2 = (TH2*)fObject;
       for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
    }
@@ -1198,7 +1205,8 @@ void TSelectorDraw::TakeEstimate()
          if (statbit) h2->SetBit(TH1::kNoStats);
          gPad->Update();
       }
-      TPolyMarker *pm = new TPolyMarker(fNfill);
+      TGraph *pm = new TGraph(fNfill);
+      pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
       pm->SetMarkerSize(fTree->GetMarkerSize());
@@ -1217,7 +1225,10 @@ void TSelectorDraw::TakeEstimate()
          if (v > vmax) v = vmax;
          pm->SetPoint(i,u,v);
       }
-      if (!fDraw && !strstr(fOption.Data(),"goff")) pm->Draw();
+      if (!fDraw && !strstr(fOption.Data(),"goff")) {
+		 if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
+         else                                             pm->Draw(fOption.Data());
+      }
       if (!h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
       }
