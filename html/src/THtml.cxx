@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.48 2003/12/30 13:16:50 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.49 2004/01/13 14:30:25 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2856,8 +2856,7 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
    while (*t == ' ')
       t++;
 
-   TClass *cl = 0;
-   if (!strstr(t,"::")) cl = gROOT->GetClass(t, load);
+   TClass *cl = gROOT->GetClass(t, load);
    delete [] name;
    return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ? cl : 0);
 }
