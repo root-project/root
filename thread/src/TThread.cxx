@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.26 2004/12/10 22:27:21 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.27 2004/12/14 15:06:18 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TMethodCall.h"
 #include "TTimeStamp.h"
 #include "TError.h"
+#include "snprintf.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
