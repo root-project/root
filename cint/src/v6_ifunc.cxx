@@ -1062,6 +1062,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #else
     strcpy(G__p_ifunc->funcname[func_now],funcheader);
 #endif
+
     if((char*)NULL!=(pt1=strstr(funcheader,">>")) && 
        (char*)NULL!=strchr(funcheader,'<')) {
       char *pt2;
@@ -1070,6 +1071,19 @@ char *funcheader;   /* funcheader = 'funcname(' */
       *pt2 = ' ';
       ++pt2;
       strcpy(pt2,pt1+1);
+    } else if ((char*)NULL!=strstr(funcheader,"operator<<") &&
+               (char*)NULL!=strchr(funcheader,'>') ) { 
+       /* we might have operator< <> or operator< <double> 
+          with the space missing */
+       pt1 = funcheader + strlen( "operator<" );
+       char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
+       if ( *(pt2+2)=='<' ) {
+          /* we have operator<< <...> */
+          ++pt2;
+       }
+       *pt2 = ' ';
+       ++pt2;
+       strcpy(pt2,pt1);        
     }
   }
   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now])-1]
