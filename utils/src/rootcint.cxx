@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.134 2003/04/02 06:21:34 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.135 2003/05/27 16:31:09 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -607,6 +607,27 @@ string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
    } else {
       return prefix+m.Name();
    }
+}
+
+//______________________________________________________________________________
+string GetLong64_Name(const string& original)
+{
+   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+
+   static const string longlong_s  = "long long"; 
+   static const string ulonglong_s = "unsigned long long";
+
+   string result = original;
+
+   int pos = 0;
+   while( (pos = result.find(ulonglong_s,pos) ) >=0 ) {
+      result.replace(pos, ulonglong_s.length(), "ULong64_t");
+   }
+   pos = 0;
+   while( (pos = result.find(longlong_s,pos) ) >=0 ) {
+      result.replace(pos, longlong_s.length(), "Long64_t");
+   }
+   return result;
 }
 
 //______________________________________________________________________________
@@ -1937,6 +1958,7 @@ const char *ShortTypeName(const char *typeDesc)
   static char t[1024];
   static const char* constwd = "const ";
   static const char* constwdend = "const";
+
   const char *s;
   char *p=t;
   int lev=0;
@@ -1946,7 +1968,7 @@ const char *ShortTypeName(const char *typeDesc)
      if (lev==0 && *s=='*') continue;
      if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0
                     ||strcmp(constwdend,s)==0 ) ) {
-        s+=strlen(constwd)-1;
+        s+=strlen(constwd)-1; // -1 because the loop adds 1  
         continue;
      }
      if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
@@ -3069,6 +3091,7 @@ void WriteShadowClass(G__ClassInfo &cl)
          if (strcmp("G__virtualinfo",d.Name())==0) continue;
 
          string type_name = GetNonConstTypeName(d,true); // .Type()->Name();
+         type_name = GetLong64_Name(type_name);
 
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
              (type_name.length()==0 || type_name=="enum") ||
