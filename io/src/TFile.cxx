@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.119 2004/05/11 10:49:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.120 2004/05/11 12:12:19 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TClassTable.h"
 #include "TProcessUUID.h"
 #include "TPluginManager.h"
+#include "TRegexp.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -1948,7 +1949,9 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TPluginHandler *h;
    TFile *f = 0;
 
-   if (!strncmp(name, "root", 4) && strchr(name,':')) {
+   TRegexp re("^root.*:");
+   TString sname = name;
+   if (sname.Index(re) != kNPOS) {
       // If the url points to the local user on the localhost
       // do not operate network machinery
       Bool_t sameUser = kFALSE;
