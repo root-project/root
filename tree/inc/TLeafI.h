@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.h,v 1.4 2000/12/13 15:13:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.h,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,6 +52,7 @@ public:
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
     virtual void    SetAddress(void *add=0);
     virtual void    SetMaximum(Int_t max) {fMaximum = max;}
+    virtual void    SetMinimum(Int_t min) {fMinimum = min;}
 
     ClassDef(TLeafI,1)  //A TLeaf for an Integer data type.
 };
