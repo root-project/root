@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.2 2000/09/06 14:15:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.4 2000/09/12 06:43:53 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -28,13 +28,12 @@
 #include "TError.h"
 
 #if defined(__linux) && defined(__i386__)
-// #define USE_BSWAPCPY
+//#define USE_BSWAPCPY
 #endif
 
 #ifdef USE_BSWAPCPY
 #include "Bswapcpy.h"
 #endif
-
 
 
 const UInt_t kNullTag           = 0;
@@ -859,15 +858,15 @@ void TBuffer::ReadFastArray(Int_t *ii, Int_t n)
    bswapcpy32(ii, fBufCur, n);
    fBufCur += sizeof(Int_t)*n;
 # else
-   char *sw = (char*)ii;
+   //char *sw = (char*)ii;
    for (int i = 0; i < n; i++) {
-//      frombuf(fBufCur, &ii[i]);
-      sw[0] = fBufCur[3];
-      sw[1] = fBufCur[2];
-      sw[2] = fBufCur[1];
-      sw[3] = fBufCur[0];
-      fBufCur += 4;
-      sw += 4;
+      frombuf(fBufCur, &ii[i]);
+      //sw[0] = fBufCur[3];
+      //sw[1] = fBufCur[2];
+      //sw[2] = fBufCur[1];
+      //sw[3] = fBufCur[0];
+      //fBufCur += 4;
+      //sw += 4;
    }
 # endif
 #else
@@ -911,15 +910,15 @@ void TBuffer::ReadFastArray(Float_t *f, Int_t n)
    bswapcpy32(f, fBufCur, n);
    fBufCur += sizeof(Float_t)*n;
 # else
-   char *sw = (char*)f;
+//   char *sw = (char*)f;
    for (int i = 0; i < n; i++) {
-//      frombuf(fBufCur, &f[i]);
-      sw[0] = fBufCur[3];
-      sw[1] = fBufCur[2];
-      sw[2] = fBufCur[1];
-      sw[3] = fBufCur[0];
-      fBufCur += 4;
-      sw += 4;
+      frombuf(fBufCur, &f[i]);
+      //sw[0] = fBufCur[3];
+      //sw[1] = fBufCur[2];
+      //sw[2] = fBufCur[1];
+      //sw[3] = fBufCur[0];
+      //fBufCur += 4;
+      //sw += 4;
    }
 # endif
 #else
@@ -1523,6 +1522,7 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
       }
       *bcnt = (v.cnt & ~kByteCountMask);
       *this >> version;
+//printf("Reading version=%d at pos=%d, bytecount=%d\n",version,*startpos,*bcnt);
 
    } else {
 
@@ -1534,6 +1534,7 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
          *this >> version;
          *this >> version;
       }
+//printf("Reading version=%d at pos=%d\n",version,startpos);
    }
 
    return version;
@@ -1552,6 +1553,7 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
    }
 
    Version_t version = cl->GetClassVersion();
+//printf("Writing version=%d at pos=%d for class:%s\n",version,cntpos,cl->GetName());
    if (version > kMaxVersion) {
       Error("WriteVersion", "version number cannot be larger than %hd)",
             kMaxVersion);
