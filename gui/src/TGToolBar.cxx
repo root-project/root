@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.9 2003/11/28 12:09:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.10 2003/12/12 18:21:07 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -64,6 +64,10 @@ TGToolBar::~TGToolBar()
    const TGPicture *p;
    while ((p = (const TGPicture *) next()))
       fClient->FreePicture(p);
+
+   // pictures might already have been deleted above, so avoid access
+   // to these objects
+   fPictures->Clear("nodelete");
 
    delete fPictures;
 }
