@@ -76,13 +76,13 @@ listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
 	$(CMDECHO) root.exe -q -b -l WriteList.C > WriteList.log
 	
 ReadClones.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) ReadClones.C clonesfile.root
-	$(CMDECHO) root.exe -q -b -l ReadClones.C > ReadClones.log
+	$(CMDECHO) root.exe -q -b -l ReadClones.C > ReadClones.log 2>&1
 	
 ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) root.exe -q -b -l ReadVector.C > ReadVector.log
+	$(CMDECHO) root.exe -q -b -l ReadVector.C > ReadVector.log 2>&1
 
 ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C clonesfile.root vectorfile.root listfile.root
-	$(CMDECHO) root.exe -q -b -l ReadList.C > ReadList.log
+	$(CMDECHO) root.exe -q -b -l ReadList.C > ReadList.log 2>&1
 
 ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C clonesfile.root
 	$(CMDECHO) root.exe -q -b -l ReadNolib.C > ReadNolib.log 2>&1
