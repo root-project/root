@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.15 2001/01/30 11:53:42 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.16 2001/02/02 11:18:33 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -644,16 +644,16 @@ void stress7()
    char elistname[20];
    char cutname[20];
    TEventList *el[10];
-   TEventList elistall("elistall","Sum of all cuts");
+   TEventList *elistall = new TEventList("elistall","Sum of all cuts");
    for (i=0;i<10;i++) {
       sprintf(elistname,">>elist%d",i);
       sprintf(cutname,"i 10 == %d",i); cutname[1] ='%';
       ntuple->Draw(elistname,cutname,"goff");
       el[i] = (TEventList*)gDirectory->Get(&elistname[2]);
       el[i]->Write();
-      elistall.Add(el[i]);
+      elistall->Add(el[i]);
    }
-   elistall.Write();
+   elistall->Write();
 
    // Read big list from file and check that the distribution with the list
    // correspond to all events (no cuts)
@@ -669,14 +669,16 @@ void stress7()
    hall->SetName("hall");
    nt->Draw("px>>hall","","goff");
    // Take the difference between the two histograms. Must be empty
-   TH1F hcomp = (*hall) - (*hpx);
-   Double_t compsum = hcomp.GetSum();
+   //TH1F hcomp = (*hall) - (*hpx);
+   //Double_t compsum = hcomp.GetSum();
+   hall->Add(hpx,-1);
+   Double_t compsum = hall->GetSum();
    ntotin  += f.GetBytesRead();
    ntotout += f.GetBytesWritten();
 
    // We can compare entries, means and rms
    Bool_t OK = kTRUE;
-   if (n1 != n2 || n1 != n3 || n3 != nlist || nall !=elistall.GetN()
+   if (n1 != n2 || n1 != n3 || n3 != nlist || nall !=elistall->GetN()
                 || npxpy != npxpyGood
                 || compsum != 0
                 || TMath::Abs(pxmean0-pxmean2) > 0.1
@@ -684,7 +686,7 @@ void stress7()
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
-      printf("%-8s n1=%d, n2=%d, n3=%d, elistallN=%d\n"," ",n1,n2,n3,elistall.GetN());
+      printf("%-8s n1=%d, n2=%d, n3=%d, elistallN=%d\n"," ",n1,n2,n3,elistall->GetN());
       printf("%-8s pxmean0=%g, pxmean2=%g, pxrms0=%g\n"," ",pxmean0,pxmean2,pxrms0);
       printf("%-8s pxrms2=%g, compsum=%g, npxpy=%d\n"," ",pxrms2,compsum,npxpy);
    }
