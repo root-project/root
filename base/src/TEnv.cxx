@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.14 2003/07/08 09:47:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.15 2004/04/27 13:13:23 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -425,23 +425,39 @@ const char *TEnv::Getvalue(const char *name)
    if (gProgName && strlen(gProgName) > 0)
       haveProgName = kTRUE;
 
+   char aname[2048];
    TEnvRec *er = 0;
-   if (haveProgName && gSystem && gProgName)
-      er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gProgName, name));
-   if (er == 0 && gSystem && gROOT)
-      er = Lookup(Form("%s.%s.%s", gSystem->GetName(), gROOT->GetName(), name));
-   if (er == 0 && gSystem)
-      er = Lookup(Form("%s.*.%s", gSystem->GetName(), name));
-   if (er == 0 && haveProgName && gProgName)
-      er = Lookup(Form("%s.%s", gProgName, name));
-   if (er == 0 && gROOT)
-      er = Lookup(Form("%s.%s", gROOT->GetName(), name));
-   if (er == 0)
-      er = Lookup(Form("*.*.%s", name));
-   if (er == 0)
-      er = Lookup(Form("*.%s", name));
-   if (er == 0)
+   if (haveProgName && gSystem && gProgName) {
+      sprintf(aname,"%s.%s.%s", gSystem->GetName(), gProgName, name);
+      er = Lookup(aname);
+   }
+   if (er == 0 && gSystem && gROOT) {
+      sprintf(aname,"%s.%s.%s", gSystem->GetName(), gROOT->GetName(), name);
+      er = Lookup(aname);
+   }
+   if (er == 0 && gSystem) {
+      sprintf(aname,"%s.*.%s", gSystem->GetName(), name);
+      er = Lookup(aname);
+   }
+   if (er == 0 && haveProgName && gProgName) {
+      sprintf(aname,"%s.%s", gProgName, name);
+      er = Lookup(aname);
+   }
+   if (er == 0 && gROOT) {
+      sprintf(aname,"%s.%s", gROOT->GetName(), name);
+      er = Lookup(aname);
+   }
+   if (er == 0) {
+      sprintf(aname,"*.*.%s", name);
+      er = Lookup(aname);
+   }
+   if (er == 0) {
+      sprintf(aname,"*.%s", name);
+      er = Lookup(aname);
+   }
+   if (er == 0) {
       er = Lookup(name);
+   }
    if (er == 0)
       return 0;
    return er->fValue;
