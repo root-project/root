@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.134 2002/09/05 19:55:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.135 2002/10/30 21:56:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1999,7 +1999,7 @@ Int_t TTree::Fill()
    //to the case where the Tree is in the top level directory.
    if (!fDirectory) return nbytes;
    TFile *file = fDirectory->GetFile();
-   if (file && file->GetBytesWritten() > (Double_t)fgMaxTreeSize) {
+   if (file && file->GetEND() > (Double_t)fgMaxTreeSize) {
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
    
