@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.4 2002/02/06 11:51:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.5 2002/10/03 17:59:23 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -268,8 +268,10 @@ void TMonitor::SetReady(TSocket *sock)
    // Called by TSocketHandler::Notify() to signal which socket is ready
    // to be read. User should not call this routine. The ready socket will
    // be returned via the Select() user function.
+   // Ready(TSocket * sock) signal is emitted
 
    fReady = sock;
+   Ready(fReady);
 }
 
 //______________________________________________________________________________
@@ -320,4 +322,12 @@ TList *TMonitor::GetListOfDeActives() const
       list->Add(h->GetSocket());
 
    return list;
+}
+
+//______________________________________________________________________________
+void TMonitor::Ready(TSocket *sock)
+{
+   // emit signal when some socket is ready
+
+   Emit("Ready(TSocket*)", (Long_t)sock);
 }

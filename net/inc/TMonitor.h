@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.4 2002/10/02 13:05:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.5 2002/10/03 17:59:23 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -29,12 +29,15 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
 
 class TList;
 class TSocket;
 
 
-class TMonitor : public TObject {
+class TMonitor : public TObject , public TQObject {
 
 friend class TSocketHandler;
 friend class TTimeOutTimer;
@@ -44,7 +47,8 @@ private:
    TList    *fDeActive;   //list of (temporary) disabled sockets
    TSocket  *fReady;      //socket which is ready to be read or written
 
-   void SetReady(TSocket *sock);
+   void  SetReady(TSocket *sock);
+   void *GetSender() { return this; }  // used to get gTQSender
 
 public:
    enum EInterest { kRead = 1, kWrite = 2 };
@@ -52,14 +56,15 @@ public:
    TMonitor();
    virtual ~TMonitor();
 
-   void Add(TSocket *sock, EInterest interest = kRead);
-   void Remove(TSocket *sock);
-   void RemoveAll();
+   virtual void Add(TSocket *sock, EInterest interest = kRead);
+   virtual void Remove(TSocket *sock);
+   virtual void RemoveAll();
 
-   void Activate(TSocket *sock);
-   void ActivateAll();
-   void DeActivate(TSocket *sock);
-   void DeActivateAll();
+   virtual void Activate(TSocket *sock);
+   virtual void ActivateAll();
+   virtual void DeActivate(TSocket *sock);
+   virtual void DeActivateAll();
+   virtual void Ready(TSocket *sock); // *SIGNAL*
 
    TSocket *Select();
    TSocket *Select(Long_t timeout);
