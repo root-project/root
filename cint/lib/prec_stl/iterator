@@ -601,23 +601,6 @@ private:
 	streambuf_type *_Strbuf;	// the wrapped stream buffer
 	};
 
-template<class _Category,
-	class _Ty,
-	class _Diff = ptrdiff_t,
-	class _Pointer = _Ty *,
-	class _Reference = _Ty&>
-		struct iterator
-	{	// base type for all iterator classes
-	typedef _Category iterator_category;
-	typedef _Ty value_type;
-	typedef _Diff difference_type;
-	typedef _Diff distance_type;	// retained
-	typedef _Pointer pointer;
-	typedef _Reference reference;
-	};
-
-#endif
-
 #endif
 
 
