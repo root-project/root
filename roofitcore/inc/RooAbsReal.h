@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.20 2001/08/02 21:39:07 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.21 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@ class RooDataSet ;
 class RooPlot;
 class RooRealVar;
 class RooRealFunc1D;
+class RooAbsFunc;
 class TH1F;
 
 class RooAbsReal : public RooAbsArg {
@@ -39,8 +40,8 @@ public:
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
 
-  // Bind ourselves with one particular real variable and normalization setup
-  RooRealFunc1D operator()(RooRealVar &var, Double_t scaleFactor= 1, const RooArgSet *normVars= 0) const;
+  // Lightweight interface adaptors (caller takes ownership)
+  RooAbsFunc *bindVars(const RooArgSet &vars) const;
 
   // Create a fundamental-type object that can hold our value.
   RooAbsArg *createFundamental() const;

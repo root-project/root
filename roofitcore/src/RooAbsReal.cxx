@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.29 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.30 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,9 +24,10 @@
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRealFunc1D.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooFormulaVar.hh"
+
+#include "RooFitCore/RooRealBinding.hh"
 
 #include <iostream.h>
 
@@ -349,12 +350,21 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   return frame;
 }
 
-RooRealFunc1D RooAbsReal::operator()(RooRealVar &var, Double_t scaleFactor,
-				     const RooArgSet *normVars) const {
-  // Create a 1-dimensional function object from the RooAbsReal
-  return RooRealFunc1D(*this,var,scaleFactor,normVars);
-}
+RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars) const {
+  // Create an interface adaptor f(vars) that binds us to the specified variables
+  // (in arbitrary order). For example, calling bindVars({x1,x3}) on an object
+  // F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
+  // current values of x2 and x4. The caller takes ownership of the returned adaptor.
 
+  RooAbsFunc *binding= new RooRealBinding(*this,vars);
+  if(binding && !binding->isValid()) {
+    cout << ClassName() << "::" << GetName() << ":bindVars: cannot bind to ";
+    vars.Print();
+    delete binding;
+    binding= 0;
+  }
+  return binding;
+}
 
 void RooAbsReal::copyCache(const RooAbsArg* source) 
 {

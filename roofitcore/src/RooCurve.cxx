@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.6 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.7 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -19,17 +19,19 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
-#include "RooFitCore/RooRealFunc1D.hh"
-#include "RooFitCore/RooAbsFunc1D.hh"
+#include "RooFitCore/RooRealIntegral.hh"
+#include "RooFitCore/RooRealBinding.hh"
+#include "RooFitCore/RooScaledFunc.hh"
 
 #include <iostream.h>
 #include <iomanip.h>
 #include <math.h>
+#include <assert.h>
 
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.6 2001/08/01 21:30:15 david Exp $";
+"$Id: RooCurve.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -64,14 +66,47 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
     title.Append(")");
   }
   setYAxisLabel(title.Data());
-  // bind the function to the specified real var
-  RooRealFunc1D func= f(x,scaleFactor,normVars);
+
+  RooAbsFunc *funcPtr(0),*rawPtr(0);
+  RooRealIntegral *projected(0);
+  if(0 != normVars) {
+    // calculate our normalization factor over x, if requested
+    RooArgSet vars(*normVars);
+    RooAbsArg *found= vars.find(x.GetName());
+    if(found) {
+      // calculate our normalization factor over all vars including x
+      RooRealIntegral normFunc("normFunc","normFunc",f,vars);
+      scaleFactor/= normFunc.getVal();
+      // remove x from the set of vars to be projected
+      vars.remove(*found);
+    }
+    // project out any remaining normalization variables
+    if(vars.GetSize() > 0) {
+      projected= new RooRealIntegral(TString(f.GetName()).Append("Projected"),
+				     TString(f.GetTitle()).Append(" (Projected)"),
+				     f,vars);
+      funcPtr= projected->bindVars(x);
+    }
+  }
+  if(0 == funcPtr) funcPtr= f.bindVars(x);
+  // apply a scale factor if necessary
+  if(scaleFactor != 1) {
+    rawPtr= funcPtr;
+    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
+  }
+  assert(0 != funcPtr);
+
   // calculate the points to add to our curve
-  addPoints(func,x.getPlotMin(),x.getPlotMax(),x.getPlotBins(),prec);
+  addPoints(*funcPtr,x.getPlotMin(),x.getPlotMax(),x.getPlotBins(),prec);
   initialize();
+
+  // cleanup
+  delete funcPtr;
+  if(rawPtr) delete rawPtr;
+  if(projected) delete projected;
 }
 
-RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc1D &func,
+RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec) {
   SetName(name);
   SetTitle(title);
@@ -88,19 +123,23 @@ void RooCurve::initialize() {
   SetLineColor(kBlue);
 }
 
-void RooCurve::addPoints(const RooAbsFunc1D &func, Double_t xlo, Double_t xhi,
+void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 			 Int_t minPoints, Double_t prec) {
   // Add points calculated with the specified function, over the range (xlo,xhi).
   // Add at least minPoints equally spaced points, and add sufficient points so that
   // the maximum deviation from the final straight-line segements is prec*(ymax-ymin).
 
   // check the inputs
+  if(!func.isValid()) {
+    cout << fName << "::addPoints: input function is not valid" << endl;
+    return;
+  }
   if(minPoints == 0 || xhi <= xlo) {
     cout << fName << "::addPoints: bad input (nothing added)" << endl;
     return;
   }
   // add the first point
-  Double_t x1,y1,x2= xlo,y2= func(x2);
+  Double_t x1,y1,x2= xlo,y2= func(&x2);
   addPoint(x2,y2);
 
   // loop over a grid with the minimum allowed number of points
@@ -109,7 +148,7 @@ void RooCurve::addPoints(const RooAbsFunc1D &func, Double_t xlo, Double_t xhi,
     x1= x2;
     y1= y2;
     x2= xlo + step*dx;
-    y2= func(x2);    
+    y2= func(&x2);    
     addRange(func,x1,x2,y1,y2,prec);
   }
 }
@@ -129,16 +168,16 @@ void RooCurve::addPoint(Double_t x, Double_t y) {
   updateYAxisLimits(y);
 }
 
-void RooCurve::addRange(const RooAbsFunc1D& func, Double_t x1, Double_t x2,
+void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
 			Double_t y1, Double_t y2, Double_t prec) {
-  // Fill the range (x1,x2) with points calculated using func(x). No point will
+  // Fill the range (x1,x2) with points calculated using func(&x). No point will
   // be added at x1, and a point will always be added at x2. The density of points
   // will be calculated so that the maximum deviation from a straight line
   // approximation is prec*(ymax-ymin).
 
   // calculate our value at the midpoint of this range
   Double_t xmid= 0.5*(x1+x2);
-  Double_t ymid= func(xmid);
+  Double_t ymid= func(&xmid);
   // test if the midpoint is sufficiently close to a straight line across this interval
   Double_t dy= ymid - 0.5*(y1+y2);
   if(fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
