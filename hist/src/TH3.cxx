@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.51 2004/09/23 13:03:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.52 2004/11/08 08:26:42 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1807,8 +1807,8 @@ TH1 *TH3::Project3D(Option_t *option) const
         }
      }
   }
-  if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h1->SetEntries(fEntries);
-  else h1->SetEntries(entries);
+  if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h->SetEntries(fEntries);
+  else h->SetEntries(entries);
   return h;
 }
 
