@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -91,10 +91,18 @@ void TGLKernel::ClearGLColor(Float_t *colors)
     glClearColor(red, green, blue, alpha);
 
 }
-
+  
 //______________________________________________________________________________
-void TGLKernel::ClearGL(UInt_t) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void TGLKernel::ClearGL(UInt_t stereo) {
+#ifdef STEREO_GL
+   if (stereo) {
+      if (Int_t(stereo) < 0)
+         glDrawBuffer(GL_BACK_LEFT);
+      else
+         glDrawBuffer(GL_BACK_RIGHT);
+   }
+#endif
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________
@@ -309,6 +317,9 @@ void TGLKernel::SetRootLight(Bool_t flag)
             glEnable(GL_LIGHT0);
             glEnable(GL_LIGHTING);
             glEnable(GL_COLOR_MATERIAL);
+#ifdef STEREO_GL
+            glEnable(GL_STEREO);
+#endif
 //            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
 //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);
 
