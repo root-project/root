@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.19 2000/08/17 09:47:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.20 2000/08/18 20:10:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1280,11 +1280,19 @@ Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor)
 // Return entry number corresponding to major and minor number
 // Note that this function returns only the entry number, not the data
 // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
-
+// the BuildIndex function has created a table of Double_t* of sorted values
+// corresponding to val = major + minor*1e-9;
+// The function performs binary search in this sorted table.
+// If it find an array value that maches val, it returns directly the
+// index in the table.
+// If an entry corresponding to major and minor is not found, the function
+// returns a value = -lowest -1 where lowest is the entry number in the table
+// immediatly lower than the requested value.
+   
    if (fIndex.fN == 0) return -1;
    Double_t value = major + minor*1e-9;
    Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
-   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1;
+   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1-i;
    return fIndex.fArray[i];
 }
 
