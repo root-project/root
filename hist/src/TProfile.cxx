@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.43 2003/11/13 09:45:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.44 2003/12/05 23:43:24 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -236,7 +236,7 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
 
 
 //______________________________________________________________________________
-void TProfile::Add(TF1 *, Double_t )
+void TProfile::Add(TF1 *, Double_t, Option_t * )
 {
    // Performs the operation: this = this + c1*f1
 

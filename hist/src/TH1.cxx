@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.161 2003/11/24 14:12:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.162 2003/12/09 18:15:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -633,11 +633,15 @@ void TH1::Build()
 }
 
 //______________________________________________________________________________
-void TH1::Add(TF1 *f1, Double_t c1)
+void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 {
 // Performs the operation: this = this + c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// By default, the function is computed at the centre of the bin.
+// if option "I" is specified (1-d histogram only), the integral of the 
+// function in each bin is used instead of the value of the function at 
+// the centre of the bin.
 // Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
@@ -648,6 +652,11 @@ void TH1::Add(TF1 *f1, Double_t c1)
       return;
    }
 
+   TString opt = option;
+   opt.ToLower();
+   Bool_t Integral = kFALSE;
+   if (opt.Contains("i") && fDimension ==1) Integral = kTRUE;
+   
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
@@ -664,7 +673,7 @@ void TH1::Add(TF1 *f1, Double_t c1)
    
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
-   Double_t cu;
+   Double_t cu=0;
    Double_t xx[3];
    Double_t *params = 0;
    f1->InitArgs(xx,params);
@@ -677,7 +686,13 @@ void TH1::Add(TF1 *f1, Double_t c1)
             if (!f1->IsInside(xx)) continue;
             TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            cu  = c1*f1->EvalPar(xx);
+            if (Integral) {
+               xx[0] = fXaxis.GetBinLowEdge(binx);
+               cu  = c1*f1->EvalPar(xx);
+               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx),fXaxis.GetBinUpEdge(binx))*fXaxis.GetBinWidth(binx);
+            } else {
+               cu  = c1*f1->EvalPar(xx);
+            }
             if (TF1::RejectedPoint()) continue;
             Double_t error1 = GetBinError(bin);
             AddBinContent(bin,cu);
