@@ -369,7 +369,7 @@ LDFLAGS       = -O -Xlinker -bind_at_load
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dylib -r -nostdlib
+SOFLAGS       = -dynamiclib -undefined suppress -nostdlib ../lib/macosx-fpsave.o
 endif
 
 ifeq ($(ARCH),hiux)
@@ -538,9 +538,9 @@ ifeq ($(ARCH),alphacxx)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO) -ldl
+		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $(EVENTO) \
-		   $(OutPutOpt) libEvent.so -ldl
+		   $(OutPutOpt) libEvent.so
 else
 ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
@@ -611,7 +611,11 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		@echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
+ifeq ($(ARCH),macosx)
+		$(LD) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
+else
 		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 Hello:          $(HELLOSO)
@@ -631,9 +635,9 @@ ifeq ($(ARCH),alphacxx)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) Hello.so -ldl
+		   $(OutPutOpt) Hello.so
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -662,9 +666,9 @@ ifeq ($(ARCH),alphacxx)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) Aclock.so -ldl
+		   $(OutPutOpt) Aclock.so
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -693,9 +697,9 @@ ifeq ($(ARCH),alphacxx)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) Tetris.so -ldl
+	 	   $(OutPutOpt) Tetris.so
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -723,9 +727,9 @@ ifeq ($(ARCH),alphacxx)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ -ldl
+		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) TBench.so -ldl
+		   $(OutPutOpt) TBench.so
 else
 ifeq ($(ARCH),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
