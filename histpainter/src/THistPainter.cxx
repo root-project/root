@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.125 2003/03/03 20:29:26 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.126 2003/03/07 10:13:12 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2687,9 +2687,6 @@ void THistPainter::PaintHist(Option_t *)
 //                   ====================================
 
    static char chopth[17];
-   static char choptg[5];
-   static char chtemp[9];
-
 
    Int_t htype, oldhtype;
    Int_t i, j, first, last, nbins, fixbin;
@@ -2698,8 +2695,6 @@ void THistPainter::PaintHist(Option_t *)
    yb = ynext = 0;
 
    strcpy(chopth, "                ");
-   strcpy(choptg, "    ");
-   strcpy(chtemp, "        ");
 
    Double_t ymin = Hparam.ymin;
    Double_t ymax = Hparam.ymax;
@@ -2801,11 +2796,7 @@ void THistPainter::PaintHist(Option_t *)
 
    if (fixbin) { keepx[0] = Hparam.xmin; keepx[1] = Hparam.xmax; }
    else {
-      if (Hoption.Line) {
-         for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinCenter(i+first);
-      } else {
-         for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
-      }
+      for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
    }
 
 //         Prepare Fill area (systematic with option "Bar").
@@ -2816,7 +2807,6 @@ void THistPainter::PaintHist(Option_t *)
       if (htype == 0 || htype == 1000) htype = 1001;
    }
 
-   //Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetWh()/800. + 0.5);
    Width_t lw = (Width_t)fH->GetLineWidth();
 
 //         Code option for GrapHist
@@ -2826,65 +2816,22 @@ void THistPainter::PaintHist(Option_t *)
    if (Hoption.Mark) chopth[2] = 'P';
    if (Hoption.Mark == 10) chopth[3] = '0';
    if (Hoption.Line || Hoption.Curve || Hoption.Hist || Hoption.Bar) {
-      if (Hoption.Curve)      chopth[3] = 'C';
-      if (Hoption.Hist > 0) { chopth[4] = 'H';  strcpy(choptg,"H"); }
-      else if (Hoption.Bar) { chopth[5] = 'B';  strcpy(choptg,"B"); }
+      if (Hoption.Curve)    chopth[3] = 'C';
+      if (Hoption.Hist > 0) chopth[4] = 'H';
+      else if (Hoption.Bar) chopth[5] = 'B';
       if (fH->GetFillColor() && htype) {
          if (Hoption.Logy) {
             chopth[6] = '1';
-            if (strlen(choptg)) {
-               strcpy(chtemp,"1");
-               strcat(chtemp, choptg);
-               strncpy(choptg, chtemp,4);
-            }
          }
          if (Hoption.Hist > 0 || Hoption.Curve || Hoption.Line) {
             chopth[7] = 'F';
-            if (strlen(choptg)) {
-               strcpy(chtemp,"F");
-               strcat(chtemp, choptg);
-               strncpy(choptg, chtemp,4);
-            }
          }
       }
    }
    if (!fixbin && strlen(chopth)) {
       chopth[8] = 'N';
-      if (strlen(choptg)) {
-         strcpy(chtemp,"N");
-         strcat(chtemp, choptg);
-         strncpy(choptg, chtemp,4);
-      }
    }
 
-   if (!strlen(chopth)) {
-      if (fH->GetFillColor() && htype) {
-         if (!Hoption.Logy) {
-            if (!Hoption.Bar) {
-               if (fixbin) { strcpy(chopth,"F");   strcpy(choptg,"F   "); }
-               else        { strcpy(chopth,"FN");  strcpy(choptg,"FN  "); }
-            }
-            else {
-               if (fixbin) { strcpy(chopth,"B");   strcpy(choptg,"B   "); }
-               else        { strcpy(chopth,"BN");  strcpy(choptg,"BN  "); }
-            }
-         }
-         else {
-            if (!Hoption.Bar) {
-               if (fixbin) { strcpy(chopth,"F1");  strcpy(choptg,"F1  "); }
-               else        { strcpy(chopth,"F1N"); strcpy(choptg,"F1N "); }
-            }
-            else {
-               if (fixbin) { strcpy(chopth,"B1");  strcpy(choptg,"B1  "); }
-               else        { strcpy(chopth,"B1N"); strcpy(choptg,"B1N "); }
-            }
-         }
-      }
-      else {
-         if (fixbin) { strcpy(chopth,"H");   strcpy(choptg,"H   "); }
-         else        { strcpy(chopth,"HN");  strcpy(choptg,"HN  "); }
-      }
-   }
    if (Hoption.Fill == 2)    strcat(chopth,"2");
    if (Hoption.HighRes != 0) strcat(chopth,"9");
 
@@ -2893,11 +2840,6 @@ void THistPainter::PaintHist(Option_t *)
    if (Hoption.Logx) {
       chopth[9]  = 'G';
       chopth[10] = 'X';
-      if (strlen(choptg)) {
-         strcpy(chtemp,"GX");
-         strcat(chtemp, choptg);
-         strncpy(choptg, chtemp,4);
-      }
       if (fixbin) {
          keepx[0] = TMath::Power(10,keepx[0]);
          keepx[1] = TMath::Power(10,keepx[1]);
@@ -2915,12 +2857,9 @@ void THistPainter::PaintHist(Option_t *)
    graph.SetMarkerStyle(fH->GetMarkerStyle());
    graph.SetMarkerSize(fH->GetMarkerSize());
    graph.SetMarkerColor(fH->GetMarkerColor());
-   if (fixbin) {
-      graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
-   }
-   else {
-      graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
-   }
+
+   graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
+
    delete [] keepx;
    delete [] keepy;
    gStyle->SetBarOffset(baroffsetsave);

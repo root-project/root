@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.93 2003/02/20 18:11:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.94 2003/03/05 20:40:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2752,20 +2752,20 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
       for (ip = first; ip < last; ip++) {
         Double_t xw;
-        if (!OptionBins) xw = wminstep + (ip-first)*delta;
-        else             xw = x[ip-1];
+        if (!OptionBins) xw = wminstep + (ip-first)*delta+0.5*delta;
+        else             xw = x[ip-1] + 0.5*(x[ip]-x[ip-1]);;
 
         if (!OptionRot) {
           Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
           if (ix < 0) ix = 0;
           if (ix >= nrPix) ix = nrPix-1;
-          Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
+          Int_t yPixel = gPad->YtoAbsPixel(y[ip-1]);
           if (yPixel >= ay1Pix) continue;
           if (minPix[ix] > yPixel) minPix[ix] = yPixel;
           if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
           (nrEntries[ix])++;
         } else {
-          Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip]))-ay1Pix;
+          Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip-1]))-ay1Pix;
           if (iy < 0) iy = 0;
           if (iy >= nrPix) iy = nrPix-1;;
           Int_t xPixel = gPad->XtoAbsPixel(gPad->XtoPad(xw));
@@ -2845,7 +2845,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         npt = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gxwork[npt-1] = wminstep + (i-first)*delta;
+           if (!OptionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
            else {
               xi1 = x[i];      xi = x[i-1];
               if (xi1 < xi) {
@@ -2853,7 +2853,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  else           Error(where, "X must have N+1 values with option N");
                  return;
               }
-              gxwork[npt-1] = x[i-1];      gxwork[npt] = x[i];
+              gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
            }
            if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
            if ((OptionMark != 10) && (OptionLine == 0)) {
@@ -2925,7 +2925,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
         npt = 0;
         for (i=first; i<=last;i++) {
            npt++;
-           if (!OptionBins) gywork[npt-1] = wminstep+(i-first)*delta;
+           if (!OptionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
            else {
               yi1 = y[i];      yi = y[i-1];
               if (yi1 < yi) {
