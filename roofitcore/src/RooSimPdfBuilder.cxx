@@ -1,14 +1,341 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.8 2001/12/02 23:47:43 verkerke Exp $
+ * Package: RooFitCore
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.9 2002/01/17 01:32:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
  *   17-Oct-2001 WV Created initial version
  *
- * Copyright (C) 2000 University of California
+ * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [PDF] --
+// 
+// RooSimPdfBuilder is a powerful tool to build RooSimultaneous
+// PDFs that are defined in terms component PDFs that are identical in
+// structure, but have different parameters. 
+//
+//  * Example
+//  ---------
+//
+// The following example demonstrates the essence of RooSimPdfBuilder:
+// Given a dataset D with a RooRealVar X and a RooCatetory C that has
+// state C1 and C2. We want to fit X with a Gaussian+ArgusBG PDF, 
+// and we want to fit the data subsets designated by C states C1 and C2 
+// separately and simultaneously. The PDFs to fit subsets C1 and C2 are
+// identical except for the kappa parameter of the ArgusBG PDF and the 
+// sigma parameter of the gaussian PDF
+//
+// Coding this example directly with RooFit classes gives
+// 
+// (we assume dataset D and variables C and X have been declared previously)
+// 
+//   RooRealVar m("m","mean of gaussian",-10,10) ;
+//   RooRealVar s_C1("s_C1","sigma of gaussian C1",0,20) ;
+//   RooRealVar s_C2("s_C2","sigma of gaussian C2",0,20) ;
+//   RooGaussian gauss_C1("gauss_C1","gaussian C1",X,m,s_C1) ;
+//   RooGaussian gauss_C2("gauss_C2","gaussian C2",X,m,s_C2) ;
+// 
+//   RooRealVar k_C1("k_C1","ArgusBG kappa parameter C1",-50,0) ;
+//   RooRealVar k_C2("k_C2","ArgusBG kappa parameter C2",-50,0) ;
+//   RooRealVar xm("xm","ArgusBG cutoff point",5.29) ;
+//   RooArgusBG argus_C1("argus_C1","argus background C1",X,k_C1,xm) ;
+//   RooArgusBG argus_C2("argus_C2","argus background C2",X,k_C2,xm) ;
+// 
+//   RooRealVar gfrac("gfrac","fraction of gaussian",0.,1.) ;
+//   RooAddPdf pdf_C1("pdf_C1","gauss+argus_C1",RooArgList(gauss_C1,argus_C1),gfrac) ;
+//   RooAddPdf pdf_C2("pdf_C2","gauss+argus_C2",RooArgList(gauss_C2,argus_C2),gfrac) ;
+// 
+//   RooSimultaneous simPdf("simPdf","simPdf",C) ;   
+//   simPdf.addPdf(pdf_C1,"C1") ;
+//   simPdf.addPdf(pdf_C2,"C2") ;
+// 
+// Coding this example with RooSimPdfBuilder gives
+// 
+//   RooRealVar m("m","mean of gaussian",-10,10) ;
+//   RooRealVar s("s","sigma of gaussian",0,20) ;
+//   RooGaussian gauss("gauss","gaussian",X,m,s) ;
+// 
+//   RooRealVar k("k","ArgusBG kappa parameter",-50,0) ;
+//   RooRealVar xm("xm","ArgusBG cutoff point",5.29) ;
+//   RooArgusBG argus("argus","argus background",X,k,xm) ;
+// 
+//   RooRealVar gfrac("gfrac","fraction of gaussian",0.,1.) ;
+//   RooAddPdf pdf("pdf","gauss+argus",RooArgList(gauss,argus),gfrac) ;
+// 
+//   RooSimPdfBuilder builder(pdf) ;
+//   RooArgSet* config = builder.createProtoBuildConfig() ;
+//   (*config)["physModels"] = "pdf" ;      // Name of the PDF we are going to work with
+//   (*config)["splitCats"]  = "C" ;        // Category used to differentiate sub-datasets
+//   (*config)["pdf"]        = "C : k,s" ;  // Prescription to taylor PDF parameters k and s 
+//                                          // for each data subset designated by C states
+//   RooSimultaneous* simPdf = builder.buildPdf(*config,&D) ;
+// 
+// The above snippet of code demonstrates the concept of RooSimPdfBuilder:
+// the user defines a single 'prototype' PDF that defines the structure of all
+// PDF components of the RooSimultaneous PDF to be built. 
+//
+// RooSimPdfBuilder then takes this prototype and replicates it as a component 
+// PDF for each state of the C index category. In the above example RooSimPdfBuilder
+// will first replicate k and s into k_C1,k_C2 and s_C1,s_C2, as prescribed in the
+// configuration. Then it will recursively replicate all PDF nodes that depend on
+// the 'split' parameter nodes: gauss into gauss_C1,C2, argus into argus_C1,C2 and
+// finally pdf into pdf_C1,pdf_C2. When PDFs for all states of C have been replicated
+// they are assembled into a RooSimultaneous PDF, which is returned by the buildPdf()
+// method.
+//
+// Although in this very simple example the use of RooSimPdfBuilder doesn't
+// reduce the amount of code much, it is already easier to read and maintain
+// because there is no duplicate code.
+//
+//
+// 
+//
+// * Builder configuration rules for a single prototype PDF
+// --------------------------------------------------------
+//
+// Each builder configuration needs at minumum two lines, physModels and splitCats, which identify
+// the ingredients of the build. In this section we only explain the building rules for
+// builds from a single prototype PDF, in which case the physModels line always reads
+//
+//    physModels = <pdfName>
+//
+// The second line, splitCats, indicates which categories are going to be used to 
+// differentiate the various subsets of the 'master' input data set. You can enter
+// a single category here, or multiple if necessary:
+//
+//  splitCats = <catName> [<catName> ...]
+//
+// All listed splitcats must be RooCategories that appear in the dataset provided to
+// RooSimPdfBuilder::buildPdf().
+// 
+// The parameter splitting prescriptions, the essence of each build configuration
+// can be supplied in a third line carrying the name of the pdf listed in physModels
+//
+//  pdfName = <splitCat> : <parameter> [,<parameter>,....]
+//
+// Each pdf can have only one line with splitting rules, but multiple rules can be
+// supplied in each line, e.g.
+//
+//  pdfName = <splitCat> : <parameter> [,<parameter>,....] \\
+//            <splitCat> : <parameter> [,<parameter>,....]
+//
+// Conversely, each parameter can only have one splitting prescription, but it may be split
+// by multiple categories, e.g.
+//
+//  pdfName = <splitCat1>,<splitCat2> : <parameter>
+//
+// instructs RooSimPdfBuilder to build a RooSuperCategory of <splitCat1> and <splitCat2>
+// and split <parameter> with that RooSuperCategory
+//
+// Here is an example of a builder configuration that uses several of the options discussed
+// above:
+//
+//     physModels = pdf
+//     splitCats  = tagCat runBlock
+//     pdf        = tagCat          : signalRes,bkgRes \\
+//                  runBlock        : fudgeFactor      \\
+//                  tagCat,runBlock : kludgeParam
+// 
+//
+//
+// * How to enter configuration data
+// ----------------------------------
+// 
+// The prototype builder configuration returned by 
+// RooSimPdfBuilder::createProtoBuildConfig() is a pointer to a RooArgSet filled with
+// initially blank RooStringVars named 'physModels','splitCats' and one for each PDF
+// PDF supplied to the RooSimPdfBuilders constructor (with the same name)
+//
+// In macro code, the easiest way to assign new values to these RooStringVars
+// is to use RooArgSets array operator and the RooStringVars assignment operator, e.g.
+//
+//  (*config)["physModels"] = "Blah" ;
+//            
+// To enter multiple splitting rules simply separate consecutive rules by whitespace
+// (not newlines), e.g.            V
+// 
+//  (*config)["physModels"] = "Blah " 
+//                            "Blah 2" ;
+//
+// In this example, C++ will concatenate the two string literals (without inserting
+// any whitespace), so the extra space after 'Blah' is important here.
+//
+// Alternatively, you can read the configuration from an ASCII file, as you can
+// for any RooArgSet using RooArgSet::readFromFile(). In that case the ASCII file
+// can follow the syntax of the examples above and the '\\' continuation line
+// sequence can be used to use multiple lines for a single read.
+//
+//
+//
+// * Working with multiple prototype PDFs
+// --------------------------------------
+//
+// It is also possible to build a RooSimultaneous PDF from multiple PDF prototypes.
+// You want to do this in cases where the input prototype PDF would otherwise be 
+// a RooSimultaneous PDF by itself. For such cases we don't feed a single
+// RooSimultaneous PDF into RooSimPdfBuilder, instead we feed its ingredients and
+// add a prescription to the builder configuration that corresponds to the 
+// PDF-category state mapping of the prototype RooSimultaneous.
+//
+// The constructor of the RooSimPdfBuilder will look as follows:
+//
+//    RooSimPdfBuilder builder(RooArgSet(pdfA,pdfB,...)) ;
+//
+// The physModels line is now expanded to carry the pdf->state mapping information
+// that the prototype RooSimultaneous would have. I.e.
+//
+//   physModels = mode : pdfA=modeA  pdfB=modeB
+//
+// is equivalent to a prototype RooSimultaneous constructed as
+//
+//   RooSimultanous simPdf("simPdf","simPdf",mode);
+//   simPdf.addPdf(pdfA,"modeA") ;
+//   simPdf.addPdf(pdfB,"modeB") ;
+//
+// The rest of the builder configuration works the same, except that
+// each prototype PDF now has its own set of splitting rules, e.g.
+//
+//   physModels = mode : pdfA=modeA  pdfB=modeB
+//   splitCats  = tagCat
+//   pdfA       = tagCat : bogusPar
+//   pdfB       = tagCat : fudgeFactor   
+//
+// Please note that 
+//
+//    - The master index category ('mode' above) doesn't have to be listed in 
+//      splitCats, this is implicit.
+//
+//    - The number of splitting prescriptions goes by the
+//      number of prototype PDFs and not by the number of states of the
+//      master index category (mode in the above and below example). 
+//
+// In the following case:
+//
+//      physModels = mode : pdfA=modeA  pdfB=modeB  pdfA=modeC  pdfB=modeD
+//
+// there are still only 2 sets of splitting rules: one for pdfA and one
+// for pdfB. However, you _can_ differentiate between modeA and modeC in 
+// the above example. The technique is to use 'mode' as splitting category, e.g.
+//
+//
+//      physModels = mode : pdfA=modeA  pdfB=modeB  pdfA=modeC  pdfB=modeD
+//      splitCats = tagCat
+//      pdfA      = tagCat : bogusPar \\
+//                  mode   : funnyPar
+//      pdfB      = mode   : kludgeFactor
+//
+//
+// will result in an individual set of funnyPar parameters for modeA and modeC
+// labeled (funnyPar_modeA and funnyPar_modeB) and an individual set of
+// kludgeFactor parameters for pdfB: kludgeFactor_modeB and kludgeFactor_modeD. 
+// Please note here that for splits in the master index category (mode) only the 
+// applicable states are built (A,C for pdfA, B,D for pdfB)
+//
+//
+//
+// * Advanced options
+// ----------------
+//
+// --> Partial splits
+//
+// You can request to limit the list of states of each splitCat that
+// will be considered in the build. This limitation is requested in the 
+// each build as follows:
+//
+//  splitCats = tagCat(Lep,Kao) RunBlock(Run1)
+//
+// In this example the splitting of tagCat is limited to states Lep,Kao
+// and the splitting of RunBlock is limited to Run1. The splits apply
+// globally to each build, i.e. every parameter split requested in this
+// build will be limited according to these specifications. 
+// 
+// NB: Partial builds have no pdf associated with the unbuilt states of the 
+// limited splits. Running such a pdf on a dataset that contains data with 
+// unbuilt states will result in this data being ignored completely.
+//
+//
+//
+// --> Non-trivial splits
+//
+// It is possible to make non-trivial parameter splits with RooSimPdfBuilder.
+// Trivial splits are considered simple splits in one (fundemental) category
+// in the dataset or a split in a RooSuperCategory 'product' of multiple
+// fundamental categories in the dataset. Non-trivial splits can be performed
+// using an intermediate 'category function' (RooMappedCategory,
+// RooGenericCategory,RooThresholdCategory etc), i.e. any RooAbsCategory
+// derived objects that calculates its output as function of one or more
+// input RooRealVars and/or RooCategories.
+//
+// Such 'function categories' objects must be constructed by the user prior
+// to building the PDF. In the RooSimPdfBuilder::buildPdf() function these
+// objects can be passed in an optional RooArgSet called 'auxiliary categories':
+//
+//     const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
+//                                     const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
+//                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//
+// Objects passed in this argset can subsequently be used in the build configuration, e.g.
+//
+//  RooMappedCategory tagMap("tagMap","Mapped tagging category",tagCat,"CutBased") ;
+//  tagMap.map("Lep","CutBased") ;
+//  tagMap.map("Kao","CutBased") ;
+//  tagMap.map("NT*","NeuralNet") ;                                                                                          
+//  ...
+//  builder.buildPdf(config,D,tagMap) ;
+//                            ^^^^^^
+//  <Contents of config>
+//     physModels = pdf
+//     splitCats  = tagCat runBlock
+//     pdf        = tagCat          : signalRes \\
+//                  tagMap          : fudgeFactor      
+//                  ^^^^^^
+//
+//  Category functions passed in the auxSplitCats RooArgSet can be used regularly
+//  in the spliiting configuration. They should not be listed in splitCats,
+//  but must be able to be expressed _completely_ in terms of the splitCats that 
+//  are listed.
+//
+//
+//
+// --> Multiple connected builds
+//
+// Sometimes you want to build multiple PDFs for completely separate (consecutive) fits 
+// that share some of their parameters. For example, we have two prototype PDFs 
+// A(x;p,q) and B(x;p,r) that have a common parameter p. We want to build a RooSimultaneousPdf
+// for both A and B, which involves a split of parameter p and we would like to build the
+// simultaneous pdfs simA and simB such that still share their parameter p_XXX. The way
+// to this is as follows:
+//
+//   RooSimPdfBuilder builder(RooArgSet(pdfA,pdfB)) ;
+//
+//   RooArgSet* configA = builder.createProtoBuildConfig() ;
+//   (*configA)["physModels"] = "pdfA" ;     
+//   (*configA)["splitCats"]  = "C" ;        
+//   (*configA)["pdf"]        = "C : p" ;  
+//   RooSimultaneous* simA = builder.buildPdf(*configA,&D) ;
+//
+//   RooArgSet* configB = builder.createProtoBuildConfig() ;
+//   (*configA)["physModels"] = "pdfB" ;     
+//   (*configA)["splitCats"]  = "C" ;        
+//   (*configA)["pdf"]        = "C : p" ;  
+//   RooSimultaneous* simB = builder.buildPdf(*configB,&D) ;
+//
+// They key ingredient in the construction is that the two builds are performed by the
+// same instance of RooSimPdfBuilder.
+//
+//
+//
+// * Ownership 
+// -----------
+//
+// The RooSimPdfBuilder instance owns all the objects it creates, including the top-level
+// RooSimultaneous it returns from buildPdf(), therefore the builder instance should live
+// as long as the pdfs need to exist.
+//
+
+
 
 #define _REENTRANT
 #include <string.h>
