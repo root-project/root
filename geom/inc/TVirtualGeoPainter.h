@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.17 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.18 2003/06/23 12:31:50 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
-   virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t */*start*/, Double_t */*end*/) {;}
+   virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetNsegments() const = 0; 
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
