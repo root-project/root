@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.9 2003/06/13 16:21:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.10 2003/07/26 05:51:55 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ class G__CallFunc;
 class TMethodCall : public TObject {
 
 public:
-   enum EReturnType { kLong, kDouble, kString, kOther };
+   enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 
 private:
    G__CallFunc   *fFunc;      //CINT method invocation environment

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.16 2003/07/26 05:51:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.17 2003/08/07 21:05:47 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -54,7 +54,7 @@ TMethodCall::TMethodCall()
    fParams   = "";
    fProto    = "";
    fDtorOnly = kFALSE;
-   fRetType  = (EReturnType) -1;
+   fRetType  = kNone;
 }
 
 //______________________________________________________________________________
@@ -160,7 +160,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
    fParams   = params;
    fProto    = "";
    fDtorOnly = kFALSE;
-   fRetType  = (EReturnType) -1;
+   fRetType  = kNone; 
 
    R__LOCKGUARD(gCINTMutex);
    if (cl)
@@ -205,7 +205,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    fParams   = "";
    fProto    = proto;
    fDtorOnly = kFALSE;
-   fRetType  = (EReturnType) -1;
+   fRetType  = kNone; 
 
    R__LOCKGUARD(gCINTMutex);
    if (cl)
@@ -400,7 +400,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
    // int, short and char, or float and double or anything else.
    // Since finding the return type is expensive the result is cached.
 
-   if ((int)fRetType == -1) {
+   if ( fRetType == kNone) {
       TFunction *func = GetMethod();
       if (func == 0) {
          fRetType = kOther;
