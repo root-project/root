@@ -1,9 +1,9 @@
-
-// Author: "Valery fine"   31/10/97
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.19 2004/09/14 15:56:15 brun Exp $
+// Author: Rene Brun , Olivier Couet 31/10/97
 
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
