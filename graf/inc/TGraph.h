@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.13 2001/09/20 20:48:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.14 2001/10/12 07:49:41 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
 
         TGraph();
         TGraph(Int_t n);
+        TGraph(Int_t n, const Int_t *x, const Int_t *y);
         TGraph(Int_t n, const Float_t *x, const Float_t *y);
         TGraph(Int_t n, const Double_t *x, const Double_t *y);
         virtual ~TGraph();
@@ -63,6 +64,7 @@ public:
         virtual void     ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *chopt="");
+        virtual void     DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
         virtual void     DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
         virtual void     DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     DrawPanel(); // *MENU*

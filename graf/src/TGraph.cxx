@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.48 2001/10/23 09:20:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.49 2001/10/27 10:39:51 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -119,11 +119,38 @@ TGraph::TGraph(Int_t n)
 }
 
 //______________________________________________________________________________
+TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+//*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with ints-*-*-*-*-*-*-*-*-*
+//*-*                  ==================================
+
+   if (n <= 0) {
+      Error("TGraph", "illegal number of points (%d)", n);
+      return;
+   }
+
+   fFunctions = new TList;
+   fHistogram = 0;
+   fNpoints   = n;
+   fX         = new Double_t[n];
+   fY         = new Double_t[n];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   if (!x || !y) return;
+   for (Int_t i=0;i<n;i++) {
+      fX[i] = (Double_t)x[i];
+      fY[i] = (Double_t)y[i];
+   }
+   SetBit(kClipFrame);
+}
+
+//______________________________________________________________________________
 TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
        : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with floats-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+//*-*                  ====================================
 
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
@@ -301,6 +328,20 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    return distance;
 }
 
+
+//______________________________________________________________________________
+void TGraph::DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option)
+{
+//*-*-*-*-*-*-*-*-*-*-*Draw this graph with new attributes*-*-*-*-*-*-*-*-*-*
+//*-*                  ===================================
+
+   TGraph *newgraph = new TGraph(n, x, y);
+   TAttLine::Copy(*newgraph);
+   TAttFill::Copy(*newgraph);
+   TAttMarker::Copy(*newgraph);
+   newgraph->SetBit(kCanDelete);
+   newgraph->AppendPad(option);
+}
 
 //______________________________________________________________________________
 void TGraph::DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option)
