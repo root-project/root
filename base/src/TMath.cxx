@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.30 2002/10/22 08:19:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.31 2002/11/27 15:24:04 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -970,7 +970,7 @@ Int_t TMath::LocMin(Int_t n, const Short_t *a)
   if  (n <= 0) return -1;
   Short_t xmin = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -988,7 +988,7 @@ Int_t TMath::LocMin(Int_t n, const Int_t *a)
   if  (n <= 0) return -1;
   Int_t xmin = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -1006,7 +1006,7 @@ Int_t TMath::LocMin(Int_t n, const Float_t *a)
   if  (n <= 0) return -1;
   Float_t xmin = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -1024,7 +1024,7 @@ Int_t TMath::LocMin(Int_t n, const Double_t *a)
   if  (n <= 0) return -1;
   Double_t xmin = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -1042,7 +1042,7 @@ Int_t TMath::LocMin(Int_t n, const Long_t *a)
   if  (n <= 0) return -1;
   Long_t xmin = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -1060,7 +1060,7 @@ Int_t TMath::LocMax(Int_t n, const Short_t *a)
   if  (n <= 0) return -1;
   Short_t xmax = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
@@ -1078,7 +1078,7 @@ Int_t TMath::LocMax(Int_t n, const Int_t *a)
   if  (n <= 0) return -1;
   Int_t xmax = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
@@ -1096,7 +1096,7 @@ Int_t TMath::LocMax(Int_t n, const Float_t *a)
   if  (n <= 0) return -1;
   Float_t xmax = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
@@ -1114,7 +1114,7 @@ Int_t TMath::LocMax(Int_t n, const Double_t *a)
   if  (n <= 0) return -1;
   Double_t xmax = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
@@ -1132,7 +1132,7 @@ Int_t TMath::LocMax(Int_t n, const Long_t *a)
   if  (n <= 0) return -1;
   Long_t xmax = a[0];
   Int_t loc = 0;
-  for  (Int_t i = 0; i < n; i++) {
+  for  (Int_t i = 1; i < n; i++) {
      if (xmax < a[i])  {
          xmax = a[i];
          loc = i;
