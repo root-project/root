@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -25,6 +25,7 @@ void Gl_setwidth(int width);
 void Gl_windowchanged();
 void Gl_histinit(char *file);
 void Gl_histadd(char *buf);
+int  Gl_eof();
 
 char *strip(char *line);
 

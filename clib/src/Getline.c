@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /*
@@ -257,6 +257,7 @@ int             (*gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
 
 static int      gl_init_done = -1;      /* terminal mode flag  */
 static int      gl_notty = 0;           /* 1 when not a tty */
+static int      gl_eof = 0;             /* 1 when not a tty and read() == -1 */
 static int      gl_termw = 80;          /* actual terminal width */
 static int      gl_scroll = 27;         /* width of EOL scrolling region */
 static int      gl_width = 0;           /* net size available for input */
@@ -967,9 +968,20 @@ Getlinem(int mode, char *prompt)
         }
         if (mode == 1) return NULL;
     }
+    if (c == -1 && gl_notty)
+       gl_eof = 1;
+    else
+       gl_eof = 0;
+
     gl_cleanup();
     gl_buf[0] = 0;
     return gl_buf;
+}
+
+int
+Gl_eof()
+{
+   return gl_eof;
 }
 
 char *
