@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.22 2001/12/03 13:32:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.23 2002/01/02 21:46:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -54,6 +54,9 @@ public:
     TBranchElement(const char *name, TClonesArray *clones, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
+    virtual Int_t    Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
+    virtual TBranch *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
+    virtual TBranch *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual void     Browse(TBrowser *b);
             void     BuildTitle(const char *name);
             Int_t    Fill();
