@@ -272,8 +272,7 @@ TMatrix::TMatrix(EMatrixCreatorsOp1 op, const TMatrix &prototype)
 {
    // Create a matrix applying a specific operation to the prototype.
    // Example: TMatrix a(10,12); ...; TMatrix b(TMatrix::kTransposed, a);
-   // Supported operations are: kZero, kUnit, kTransposed, kInverted and
-   // kInvertedPosDef.
+   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kInvertedPosDef.
 
    Invalidate();
 
@@ -940,21 +939,30 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    Double_t determinant = 1;
    const Double_t singularity_tolerance = 1e-35;
 
-   // store matrix diagonal
-   Real_t *diag = new Real_t[fNrows];
-   {
-     for (Int_t idiag = 0; idiag < fNrows; idiag++)
-       diag[idiag] = fElements[idiag*(1+fNrows)];
+   Int_t symmetric = 1;
+   Int_t irow;
+   for (irow = 0; irow < fNrows; irow++) {
+      for (Int_t icol = 0; icol < irow; icol++) {
+         if (fElements[irow*fNcols+icol] != fElements[icol*fNcols+irow]) {
+            symmetric = 0;
+            break;
+       }
+     }
    }
 
-   // condition the matrix
-   Int_t irow;
-   for (irow = 0; irow < fNrows; irow++)
-   {
-     for (Int_t icol = 0; icol < fNcols; icol++)
-     {
-       Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-       if (val != 0.0) fElements[irow*fNcols+icol] /= val;
+   // store matrix diagonal
+   Real_t *diag = 0;
+   if (symmetric) {
+      diag = new Real_t[fNrows];
+      for (Int_t idiag = 0; idiag < fNrows; idiag++)
+        diag[idiag] = fElements[idiag*(1+fNrows)];
+
+     // condition the matrix
+     for (irow = 0; irow < fNrows; irow++) {
+        for (Int_t icol = 0; icol < fNcols; icol++) {
+           Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
+           if (val != 0.0) fElements[irow*fNcols+icol] /= val;
+       }
      }
    }
 
@@ -1033,22 +1041,23 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
          }
       }
 
+   // revert our scaling
+   if (symmetric) {
+      for (irow = 0; irow < fNrows; irow++) {
+         for (Int_t icol = 0; icol < fNcols; icol++) {
+            Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
+            if (val != 0.0) fElements[irow*fNcols+icol] /= val;
+         }
+         determinant *= TMath::Abs(diag[irow]);
+      }
+      delete [] diag;
+   }
+
    if (determ_ptr)
       *determ_ptr = (no_swaps & 1 ? -determinant : determinant);
 
-   // revert our scaling
-   for (irow = 0; irow < fNrows; irow++)
-   {
-     for (Int_t icol = 0; icol < fNcols; icol++)
-     {
-       Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-       if (val != 0.0) fElements[irow*fNcols+icol] /= val;
-     }
-   }
-
    delete [] was_pivoted;
    delete [] pivots;
-   delete [] diag;
    return *this;
 }
 
@@ -1072,15 +1081,13 @@ void TMatrix::Invert(const TMatrix &m)
 //______________________________________________________________________________
 TMatrix &TMatrix::InvertPosDef()
 {
-   // Invert a positiv definite matrix.
-
    if (!IsValid()) {
-      Error("InvertPosDef", "matrix not initialized");
+      Error("InvertPosDef(Real_t*)", "matrix not initialized");
       return *this;
    }
 
    if (fNrows != fNcols) {
-      Error("InvertPosDef", "matrix to invert must be square");
+      Error("InvertPosDef(Real_t*)", "matrix to invert must be square");
       return *this;
    }
 
@@ -1089,49 +1096,57 @@ TMatrix &TMatrix::InvertPosDef()
    Real_t *pu = new Real_t[n*n];
 
    // step 1: Cholesky decomposition
-   if (Pdcholesky(pa,pu,n)) {
-      Error("InvertPosDef","matrix not positive definite");
-      delete [] pu;
-      return *this;
+   if (Pdcholesky(pa,pu,n))
+   {
+     Error("InverPosDef","matrix not positive definite");
+     delete [] pu;
+     return *this;
    }
 
    Int_t off_n = (n-1)*n;
    Int_t i,l;
-   for (i = 0; i < n; i++) {
-      Int_t off_i = i*n;
+   for (i = 0; i < n; i++)
+   {
+     Int_t off_i = i*n;
 
-      // step 2: Forward substitution
-      for (l = i; l < n; l++) {
-         if (l == i)
-            pa[off_n+l] = 1./pu[l*n+l];
-         else {
-            pa[off_n+l] = 0.;
-            for (Int_t k = i; k <= l-1; k++)
-               pa[off_n+l] = pa[off_n+l]-pu[k*n+l]*pa[off_n+k];
-            pa[off_n+l] = pa[off_n+l]/pu[l*n+l];
-         }
-      }
+   // step 2: Forward substitution
+     for (l = i; l < n; l++)
+     {
+       if (l == i)
+         pa[off_n+l] = 1./pu[l*n+l];
+       else
+       {
+         pa[off_n+l] = 0.;
+         for (Int_t k = i; k <= l-1; k++)
+           pa[off_n+l] = pa[off_n+l]-pu[k*n+l]*pa[off_n+k];
+         pa[off_n+l] = pa[off_n+l]/pu[l*n+l];
+       }
+     }
 
-      // step 3: Back substitution
-      for (l = n-1; l >= i; l--) {
-         Int_t off_l = l*n;
-         if (l == n-1)
-            pa[off_i+l] = pa[off_n+l]/pu[off_l+l];
-         else {
-            pa[off_i+l] = pa[off_n+l];
-            for (Int_t k = n-1; k >= l+1; k--)
-               pa[off_i+l] = pa[off_i+l]-pu[off_l+k]*pa[off_i+k];
-            pa[off_i+l] = pa[off_i+l]/pu[off_l+l];
-         }
-      }
+   // step 3: Back substitution
+     for (l = n-1; l >= i; l--)
+     {
+       Int_t off_l = l*n;
+       if (l == n-1)
+         pa[off_i+l] = pa[off_n+l]/pu[off_l+l];
+       else
+       {
+         pa[off_i+l] = pa[off_n+l];
+         for (Int_t k = n-1; k >= l+1; k--)
+           pa[off_i+l] = pa[off_i+l]-pu[off_l+k]*pa[off_i+k];
+         pa[off_i+l] = pa[off_i+l]/pu[off_l+l];
+       }
+     }
    }
 
    // Fill lower triangle symmetrically
-   if (n > 1) {
-      for (Int_t i = 0; i < n; i++) {
-         for (Int_t l = 0; l <= i-1; l++)
-            pa[i*n+l] = pa[l*n+i];
-      }
+   if (n > 1)
+   {
+     for (Int_t i = 0; i < n; i++)
+     {
+       for (Int_t l = 0; l <= i-1; l++)
+         pa[i*n+l] = pa[l*n+i];
+     }
    }
 
    delete [] pu;
@@ -1139,41 +1154,50 @@ TMatrix &TMatrix::InvertPosDef()
 }
 
 //______________________________________________________________________________
-Int_t TMatrix::Pdcholesky(const Real_t *a, Real_t *u, const Int_t n)
+Int_t TMatrix::Pdcholesky(
+const Real_t *a,
+      Real_t *u,
+const Int_t   n)
 {
-   //  Program Pdcholesky inverts a positiv definite (n x n) - matrix A,
-   //  using the Cholesky decomposition
-   //
-   //  Input:   a       - (n x n)- Matrix A
-   //           n       - dimensions n of matrices
-   //
-   //  Output:  u       - (n x n)- Matrix U so that U^T . U = A
-   //           return  - 0 decomposition succesful
-   //                   - 1 decomposition failed
+  //  Program Pdcholesky inverts a positiv definite (n x n) - matrix A,
+  //  using the Cholesky decomposition
+  //
+  //  Input:	a	- (n x n)- Matrix A
+  //  		n	- dimensions n of matrices
+  //
+  //  Output:	u	- (n x n)- Matrix U so that U^T . U = A
+  //		return	- 0 decomposition succesful
+  //			- 1 decomposition failed
 
-   memset(u,0,n*n*sizeof(Real_t));
+  memset(u,0,n*n*sizeof(Real_t));
 
-   for (Int_t k = 0; k < n; k++) {
-      Double_t s = 0.;
-      Int_t off_k = k*n;
-      for (Int_t j = k; j < n; j++) {
-         if (k > 0) {
-            s = 0.;
-            for (Int_t l = 0; l <= k-1; l++) {
-               Int_t off_l = l*n;
-               s += u[off_l+k]*u[off_l+j];
-            }
-         }
-         u[off_k+j] = a[off_k+j]-s;
-         if (k == j) {
-            if (u[off_k+j] <= 0)
-               return 1;
-            u[off_k+j] = TMath::Sqrt(u[off_k+j]);
-         } else
-            u[off_k+j] = u[off_k+j]/u[off_k+k];
+  for (Int_t k = 0; k < n; k++)
+  {
+    Double_t s = 0.;
+    Int_t off_k = k*n;
+    for (Int_t j = k; j < n; j++)
+    {
+      if (k > 0)
+      {
+        s = 0.;
+        for (Int_t l = 0; l <= k-1; l++)
+        {
+          Int_t off_l = l*n;
+          s += u[off_l+k]*u[off_l+j];
+        }
       }
-   }
-   return 0;
+      u[off_k+j] = a[off_k+j]-s;
+      if (k == j)
+      {
+        if (u[off_k+j] <= 0)
+          return 1;
+        u[off_k+j] = TMath::Sqrt(u[off_k+j]);
+      }
+      else
+        u[off_k+j] = u[off_k+j]/u[off_k+k];
+    }
+  }
+  return 0;
 }
 
 //______________________________________________________________________________
