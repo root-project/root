@@ -2295,6 +2295,11 @@ char *filenamein;
     /* Caution, G__ifile.fp is left openned.
      * This may cause trouble in future */
     fclose(G__srcfile[fentry].fp);
+    if (G__ifile.fp == G__srcfile[fentry].fp) {
+       /* Since the file is closed, the FILE* pointer is now invalid and thus
+          we have to remove it from G__ifile! */
+       G__ifile.fp=(FILE*)NULL;
+    }
     G__srcfile[fentry].fp=(FILE*)NULL;
 #ifndef G__OLDIMPLEMENTATION1908
     G__srcfile[fentry].slindex = G__shl_load(G__ifile.name);
