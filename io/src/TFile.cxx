@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.52 2002/02/09 20:07:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.53 2002/02/11 09:08:10 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -423,12 +423,24 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 //*-* -------------Read keys of the top directory
-      if (fEND <= size) {
+
+      if (fSeekKeys > fBEGIN && fEND <= size) {
          TDirectory::ReadKeys();
          gDirectory = this;
+         if (!GetNkeys()) Recover();
       } else {
-         Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
-         if (!Recover()) goto zombie;
+         if (fEND > size) {
+            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
+         } else {
+            Warning("TFile","file %s probably not closed, trying to recover",GetName());
+         }
+         Int_t nrecov = Recover();
+         if (nrecov) {
+            Warning("Recover", "successfully recovered %d keys", nrecov);
+         } else {
+            Warning("Recover", "no keys recovered: file is a Zombie");
+            goto zombie;
+         }
       }
    }
    gROOT->GetListOfFiles()->Add(this);
@@ -1027,8 +1039,6 @@ Int_t TFile::Recover()
       if (nrecov) Write();
    }
    delete [] header;
-   if (nrecov) Warning("Recover", "successfully recovered %d keys", nrecov);
-   else        Warning("Recover", "no keys recovered: file is a Zombie");
    return nrecov;
 }
 
