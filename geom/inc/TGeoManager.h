@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.41 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.42 2004/01/19 13:40:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -117,7 +117,7 @@ private :
    Double_t             *fDblBuffer;        //! transient dbl buffer
 
 //--- private methods
-   void                   BuildCache(Bool_t dummy=kFALSE);
+   void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
@@ -310,6 +310,7 @@ public:
    TVirtualGeoTrack      *GetParentTrackOfId(Int_t id) const;
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
+   Int_t                  GetSafeLevel() const;
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
@@ -430,12 +431,12 @@ public:
    void                   SelectTrackingMedia();
 
    //--- stack manipulation
-   Int_t                  PushPath() {return fCache->PushState(fCurrentOverlapping);}
+   Int_t                  PushPath(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel);}
    Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel();return fCurrentOverlapping;}
    Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(index);
                                      fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
-   Int_t                  PushPoint() {return fCache->PushState(fCurrentOverlapping, fPoint);}
+   Int_t                  PushPoint(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel,fPoint);}
    Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fPoint); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(index, fPoint); fCurrentNode=fCache->GetNode();

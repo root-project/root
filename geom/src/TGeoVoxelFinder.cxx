@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.20 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.21 2004/01/18 12:31:55 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -75,6 +75,7 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    fCheckList    = 0;
    fNcandidates  = 0;
    fCurrentVoxel = 0;
+   SetInvalid(kFALSE);
 }
 //-----------------------------------------------------------------------------
 TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
@@ -1129,19 +1130,27 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
 {
 // get the list of daughter indices for which point is inside their bbox
-   if (!fBoxes) return 0;
-   Bool_t one_daughter = kFALSE;
-   Int_t nslices = 0;
+//   if (!fBoxes) return 0;
    if (fVolume->GetNdaughters() == 1) {
+      if (fXb) {
+         if (point[0]<fXb[0] || point[0]>fXb[1]) return 0;
+      }
+      if (fYb) {
+         if (point[1]<fYb[0] || point[1]>fYb[1]) return 0;
+      }   
+
+      if (fZb) {
+         if (point[2]<fZb[0] || point[2]>fZb[1]) return 0;
+      }   
       fCheckList[0] = 0;
       nelem = 1;
-      one_daughter = kTRUE;
+      return fCheckList;
    }
+   Int_t nslices = 0;
    UChar_t *slice1 = 0;
    UChar_t *slice2 = 0; 
    UChar_t *slice3 = 0;
-   Int_t nd[3];
-   memset(&nd[0], 0, 3*sizeof(Int_t));
+   Int_t nd[3] = {0,0,0};
    Int_t im;
    if (fPriority[0]) {
       im = TMath::BinarySearch(fIbx, fXb, point[0]);
@@ -1190,7 +1199,6 @@ Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
          }      
       }   
    }
-   if (one_daughter) return fCheckList;
    nelem = 0;
 //   Int_t i = 0;
    Bool_t intersect = kFALSE;
@@ -1210,6 +1218,69 @@ Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
    if (intersect) return fCheckList;
    return 0;   
 }
+
+//-----------------------------------------------------------------------------
+Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck)
+{
+// get the list of candidates in voxel (i,j,k) - no check
+   UChar_t *slice1 = 0;
+   UChar_t *slice2 = 0; 
+   UChar_t *slice3 = 0;
+   Int_t nd[3] = {0,0,0};
+   Int_t nslices = 0;
+   if (fPriority[0]==2) {   
+      nd[0] = fIndX[fOBx[i]];
+      if (!nd[0]) return 0;
+      nslices++;
+      slice1 = (UChar_t*)(&fIndX[fOBx[i]+1]);
+   }   
+
+   if (fPriority[1]==2) {   
+      nd[1] = fIndY[fOBy[j]];
+      if (!nd[1]) return 0;
+      nslices++;
+      if (slice1) {
+         slice2 = (UChar_t*)(&fIndY[fOBy[j]+1]);
+      } else {
+         slice1 = (UChar_t*)(&fIndY[fOBy[j]+1]);
+         nd[0] = nd[1];
+      }   
+   }   
+
+   if (fPriority[2]==2) {
+      nd[2] = fIndZ[fOBz[k]];
+      if (!nd[2]) return 0;
+      nslices++;
+      if (slice1 && slice2) {
+         slice3 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+      } else {
+         if (slice1) {
+            slice2 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+            nd[1] = nd[2];
+         } else {
+            slice1 = (UChar_t*)(&fIndZ[fOBz[k]+1]);   
+            nd[0] = nd[2];
+         }   
+      }      
+   }   
+   Bool_t intersect = kFALSE;
+   switch (nslices) {
+      case 0:
+         Error("GetCheckList", "No slices for %s", fVolume->GetName());
+         return 0;
+      case 1:
+         intersect = Intersect(nd[0], slice1, ncheck, fCheckList);
+         break;
+      case 2:
+         intersect = Intersect(nd[0], slice1, nd[1], slice2, ncheck, fCheckList);
+         break;
+      default:         
+         intersect = Intersect(nd[0], slice1, nd[1], slice2, nd[2], slice3, ncheck, fCheckList);
+   }      
+   if (intersect) return fCheckList;
+   return 0; 
+}     
+
 //-----------------------------------------------------------------------------
 Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck)
 {
@@ -1486,7 +1557,6 @@ void TGeoVoxelFinder::SortAll(Option_t *)
 {
 // order bounding boxes along x, y, z
    Int_t nd = fVolume->GetNdaughters();
-   if (!nd) return;
    Int_t nperslice  = 1 /*N in slice*/ + 1+(nd-1)/(8*sizeof(Int_t)); /*Nbytes per slice*/
    Int_t nmaxslices = 2*nd-1; // max number of slices on each axis
    Double_t *boundaries = new Double_t[6*nd]; // list of different boundaries
@@ -1545,13 +1615,14 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }
    // now find priority
    if (ib < 2) {
-      Error("SortAll", "less than 2 boundaries on X for %s!", fVolume->GetName());
+      Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on X", fVolume->GetName());
       delete [] index;
       delete [] ind;
       delete [] temp;
       delete [] extra;
       delete [] extra_left;
       delete [] extra_right;
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -1663,13 +1734,14 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }
    // now find priority on Y
    if (ib < 2) {
-      Error("SortAll", "less than 2 boundaries on Y for %s!", fVolume->GetName());
+      Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on Y", fVolume->GetName());
       delete [] index;
       delete [] ind;
       delete [] temp;
       delete [] extra;
       delete [] extra_left;
       delete [] extra_right;
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -1783,13 +1855,14 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }      
    // now find priority on Z
    if (ib < 2) {
-      Error("SortAll", "less than 2 boundaries on Z for %s!", fVolume->GetName());
+      Error("SortAll", "Cannot voxelize %s :less than 2 boundaries on Z", fVolume->GetName());
       delete [] index;
       delete [] ind;
       delete [] temp;
       delete [] extra;
       delete [] extra_left;
       delete [] extra_right;
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -1819,7 +1892,6 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       fZb = new Double_t[ib];
       memcpy(fZb, &temp[0], ib*sizeof(Double_t));
       fIbz = ib;   
-   
    }   
 
 
@@ -2522,6 +2594,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
    if ((rmin>=rmax) || (pmin>=pmax) || (zmin>=zmax)) {
       Error("SortAll", "wrong bounding cylinder");
       printf("### volume was : %s\n", fVolume->GetName());
+      SetInvalid();
       return;
    }   
    Int_t id;
@@ -2572,6 +2645,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
    if (ib < 2) {
       Error("SortAll", "less than 2 boundaries on R !");
       printf("### volume was : %s\n", fVolume->GetName());
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -2654,6 +2728,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
    if (ib < 2) {
       Error("SortAll", "less than 2 boundaries on Phi !");
       printf("### volume was : %s\n", fVolume->GetName());
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -2726,6 +2801,7 @@ void TGeoCylVoxels::SortAll(Option_t *)
    if (ib < 2) {
       Error("SortAll", "less than 2 boundaries on Z !");
       printf("### volume was : %s\n", fVolume->GetName());
+      SetInvalid();
       return;
    }   
    if (ib == 2) {
@@ -2810,8 +2886,184 @@ void TGeoCylVoxels::Voxelize(Option_t *)
 {
 //--- Voxelize fVolume.
 //   printf("Voxelizing %s\n", fVolume->GetName());
-   Int_t nd = fVolume->GetNdaughters();
-   if (!nd) return;
    BuildVoxelLimits();
    SortAll();
 }
+
+ClassImp(TGeoFullVoxels)
+
+
+//-----------------------------------------------------------------------------
+TGeoFullVoxels::TGeoFullVoxels()
+{
+// Default constructor
+   fNvoxels = 0;
+   fNvx     = 0;
+   fNvy     = 0;
+   fNvz     = 0;
+   fVox     = 0;
+}
+//-----------------------------------------------------------------------------
+TGeoFullVoxels::TGeoFullVoxels(TGeoVolume *vol)
+               :TGeoVoxelFinder(vol)
+{
+// Constructor
+   fNvoxels = 0;
+   fNvx     = 0;
+   fNvy     = 0;
+   fNvz     = 0;
+   fVox     = 0;
+}
+
+//-----------------------------------------------------------------------------
+TGeoFullVoxels::~TGeoFullVoxels()
+{
+// Destructor
+   if (fVox) delete [] fVox;
+}
+
+//-----------------------------------------------------------------------------
+void TGeoFullVoxels::Voxelize(Option_t *)
+{
+//--- Voxelize fVolume.
+//   printf("Voxelizing %s\n", fVolume->GetName());
+   TGeoVoxelFinder::Voxelize();
+   if (IsInvalid()) return;
+   fNvx = fNvy = fNvz = 1;
+   if (fPriority[0]) fNvx = fIbx-1;
+   if (fPriority[1]) fNvy = fIby-1;
+   if (fPriority[2]) fNvz = fIbz-1;  
+   fNvoxels = fNvx*fNvy*fNvz;
+   if (fNvoxels <= 0) {
+      SetInvalid();
+      return;
+   }   
+   fVox = new UChar_t[fNvoxels]; 
+   // Intersect slices to get candidates
+   Int_t ptrx=0, ptry=0, ptrz=0; // index of voxel (i,j,k)
+   UChar_t *slice1 = 0;
+   UChar_t *slice2 = 0; 
+   UChar_t *slice3 = 0;
+   Int_t i,j,k;
+   if (fPriority[0]==2) {
+      for (i=0; i<fNvx; i++) {
+         ptrx = i*fNvy*fNvz;
+         slice1 = (UChar_t*)(&fIndX[fOBx[i]+1]);
+         if (fPriority[1]==2) {
+            for (j=0; j<fNvy; j++) {
+               ptry = ptrx + j*fNvz;
+               slice2 = (UChar_t*)(&fIndY[fOBy[j]+1]);
+               if (fPriority[2]==2) {
+                  for (k=0; k<fNvz; k++) {
+                     ptrz = ptry + k;
+                     slice3 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+                     fVox[ptrz] = slice1[0] & slice2[0] & slice3[0];
+                  }
+               } else {
+                  fVox[ptry] = slice1[0] & slice2[0];
+               }
+            }
+         } else {         
+            if (fPriority[2]==2) {
+               for (k=0; k<fNvz; k++) {
+                  ptrz = ptrx + k;
+                  slice3 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+                  fVox[ptrz] = slice1[0] & slice3[0];
+               }
+            } else {
+               fVox[ptrx] = slice1[0];
+            }
+         }
+      }
+   } else {
+      if (fPriority[1]==2) {
+         for (j=0; j<fNvy; j++) {
+            ptry = j*fNvz;
+            slice2 = (UChar_t*)(&fIndY[fOBy[j]+1]);
+            if (fPriority[2]==2) {
+               for (k=0; k<fNvz; k++) {
+                  ptrz = ptry + k;
+                  slice3 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+                  fVox[ptrz] = slice2[0] & slice3[0];
+               }
+            } else {
+               fVox[ptry] = slice2[0];
+            }
+         }
+      } else {         
+         if (fPriority[2]==2) {
+            for (k=0; k<fNvz; k++) {
+               ptrz = k;
+               slice3 = (UChar_t*)(&fIndZ[fOBz[k]+1]);
+               fVox[ptrz] = slice3[0];
+            }
+         } 
+      }
+   }                           
+}
+
+//-----------------------------------------------------------------------------
+Int_t *TGeoFullVoxels::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck)
+{
+// get the list of candidates in voxel (i,j,k) - no check
+   ncheck = 0;
+   Int_t nd = fVolume->GetNdaughters();
+   UChar_t *vox = GetVoxel(i,j,k);
+   UChar_t byte = vox[0];
+   if (!vox[0]) return 0;
+   for (Int_t bit=0; bit<nd; bit++) {
+      if (byte & (1<<bit)) fCheckList[ncheck++] = bit;
+   }
+   return fCheckList;
+}      
+
+//-----------------------------------------------------------------------------
+Int_t *TGeoFullVoxels::GetCheckList(Double_t *point, Int_t &nelem)
+{
+// get the list of daughter indices for which point is inside their bbox
+   nelem = fNcandidates = 0;
+   Int_t im;
+   UChar_t *slice; 
+   UChar_t byte = 0xFF;
+   if (fPriority[2]) {
+      im = TMath::BinarySearch(fIbz, fZb, point[2]);
+      if ((im==-1) || (im==fIbz-1)) return 0;
+      if (fPriority[2]==2) {
+         slice = (UChar_t*)(&fIndZ[fOBz[im]+1]);
+         byte &= slice[0];
+         if (!byte) return 0;
+      }   
+   }
+
+   if (fPriority[0]) {
+      im = TMath::BinarySearch(fIbx, fXb, point[0]);
+      if ((im==-1) || (im==fIbx-1)) return 0;
+      if (fPriority[0]==2) {
+         slice = (UChar_t*)(&fIndX[fOBx[im]+1]);
+         byte &= slice[0];
+         if (!byte) return 0;
+      }   
+   }
+
+   if (fPriority[1]) {
+      im = TMath::BinarySearch(fIby, fYb, point[1]);
+      if ((im==-1) || (im==fIby-1)) return 0;
+      if (fPriority[1]==2) {
+         slice = (UChar_t*)(&fIndY[fOBy[im]+1]);
+         byte &= slice[0];
+         if (!byte) return 0;
+      }   
+   }
+   Int_t nd = fVolume->GetNdaughters();
+   for (Int_t i=0; i<nd; i++) {
+      if (byte & (1<<i)) fCheckList[fNcandidates++] = i;
+   }
+   nelem = fNcandidates;
+   return fCheckList;   
+}
+
+//-----------------------------------------------------------------------------
+void TGeoFullVoxels::Print(Option_t *) const
+{
+}
+

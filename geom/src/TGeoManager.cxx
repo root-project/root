@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.69 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.70 2004/01/19 13:40:51 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -714,16 +714,16 @@ void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 }
 
 //_____________________________________________________________________________
-void TGeoManager::BuildCache(Bool_t dummy)
+void TGeoManager::BuildCache(Bool_t dummy, Bool_t nodeid)
 {
 // Builds the cache for physical nodes and global matrices.
    if (!fCache) {
       if (fNNodes>5000000 || dummy)  // temporary - works without
          // build dummy cache
-         fCache = new TGeoCacheDummy(fTopNode);
+         fCache = new TGeoCacheDummy(fTopNode, nodeid);
       else
          // build real cache
-         fCache = new TGeoNodeCache(0);
+         fCache = new TGeoNodeCache(0,nodeid);
    }
 }
 
@@ -1333,6 +1333,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    TString opt(option);
    opt.ToLower();
    Bool_t dummy = opt.Contains("d");
+   Bool_t nodeid = opt.Contains("i");
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
@@ -1344,11 +1345,11 @@ void TGeoManager::CloseGeometry(Option_t *option)
          SetTopVolume(fMasterVolume);
          if (fStreamVoxels) printf("### Voxelization retrieved from file\n");
          Voxelize("ALL");
-         if (!fCache) BuildCache(dummy);
+         if (!fCache) BuildCache(dummy,nodeid);
       } else {
          Warning("CloseGeometry", "top node was streamed!");
          Voxelize("ALL");
-         if (!fCache) BuildCache(dummy);
+         if (!fCache) BuildCache(dummy,nodeid);
       }
 //      BuildIdArray();
       printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
@@ -1364,7 +1365,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
 //   BuildIdArray();
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");
-   BuildCache(dummy);
+   BuildCache(dummy,nodeid);
    printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
    printf("----------------modeler ready----------------\n");
 }
@@ -1766,6 +1767,23 @@ Bool_t TGeoManager::GotoSafeLevel()
    while (fCurrentOverlapping && fLevel) CdUp();
    return kTRUE;
 }
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetSafeLevel() const
+{
+// Go upwards the tree until a non-overlaping node
+   Bool_t overlapping = fCurrentOverlapping;
+   if (!overlapping) return fLevel;
+   Int_t level = fLevel;
+   TGeoNode *node;
+   while (overlapping && level) {
+      level--;
+      node = GetMother(fLevel-level);
+      if (!node->IsOffset()) overlapping = node->IsOverlapping();
+   }   
+   return level;
+}
+
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
 {
@@ -2018,7 +2036,8 @@ void TGeoManager::SafetyOverlaps()
    TGeoVolume *vol;
    Int_t novlp, io;
    Int_t *ovlp;
-   PushPath();
+   Int_t safelevel = GetSafeLevel();
+   PushPath(safelevel+1);
    while (fCurrentOverlapping) {
       ovlp = fCurrentNode->GetOverlaps(novlp);
       CdUp();
@@ -2571,9 +2590,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       Double_t mothpt[3];
       Double_t vecpt[3];
       Double_t dpt[3], dvec[3];
-      PushPath();
       Int_t novlps;
-      while (fCurrentOverlapping) {
+      Int_t safelevel = GetSafeLevel();
+      PushPath(safelevel+1);
+       while (fCurrentOverlapping) {
          Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
          CdUp();
          mother = fCurrentNode->GetVolume();
@@ -2885,13 +2905,10 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 // Checks if point (x,y,z) is still in the current node.
    // check if this is an overlapping node
    if (fCurrentOverlapping) {
-      TGeoNode *current = fCurrentNode;
       Int_t cid = GetCurrentNodeId();
       if (!change) PushPoint();
       gGeoManager->FindNode(x,y,z);
-      Bool_t same = (cid>=0)?kTRUE:kFALSE;
-      if (same) same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
-      else      same = (current==fCurrentNode)?kTRUE:kFALSE;
+      Bool_t same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
       if (!change) PopPoint();
       return same;
    }         
@@ -3561,9 +3578,10 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fLevel = 0;
    if (fCache) {
       Bool_t dummy=fCache->IsDummy();
+      Bool_t nodeid = fCache->HasIdArray();
       delete fCache;
       fCache = 0;
-      BuildCache(dummy);
+      BuildCache(dummy,nodeid);
    }
    printf("Top volume is %s. Master volume is %s\n", fTopVolume->GetName(),
            fMasterVolume->GetName());
