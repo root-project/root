@@ -187,7 +187,7 @@ $(IOSENUM):     $(IOSENUMA)
 		cp $< $@
 
 $(IOSENUMA):    $(CINTTMP) $(MAKEINFO)
-		@(if [ ! -r $(IOSENUMA) ]; then \
+		@(if [ ! -r $@ ]; then \
 			echo "Making $@..."; \
 			$(CINTTMP) $(CINTTMPINC) $(IOSENUMC) > /dev/null; \
 			mv iosenum.h $@; \
