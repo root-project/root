@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.3 2004/10/18 12:52:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.4 2004/11/05 17:01:58 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -55,6 +55,10 @@ TMethodBrowsable::TMethodBrowsable(TBranchElement* be, TMethod* m,
       fReturnIsPointer=kTRUE;
       plainReturnType.Remove(plainReturnType.Length()-1);
       plainReturnType.Strip();
+      if(plainReturnType.BeginsWith("const")) {
+        plainReturnType.Remove(0,5);
+        plainReturnType.Strip();
+      }   
    }
    fReturnClass=gROOT->GetClass(plainReturnType);
 }
