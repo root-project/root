@@ -17,7 +17,7 @@
 //  For all possible draw options (there are a few which are not imple- //
 //  mentable in a graphical user interface) see THistPainter::Paint in  //
 //  root/histpainter/THistPainter.cxx                                   //
-
+//
 //Begin_Html
 /*
 <img src="gif/TH2Editor_1.gif">
