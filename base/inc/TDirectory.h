@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.3 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
    TDirectory(const char *name, const char *title, Option_t *option="");
    virtual ~TDirectory();
    virtual void        Append(TObject *obj);
+           void        Add(TObject *obj) { Append(obj); }
            Int_t       AppendKey(TKey *key);
    virtual void        Browse(TBrowser *b);
            void        Build();
@@ -88,8 +89,8 @@ public:
    virtual Seek_t      GetSeekKeys() { return fSeekKeys; }
    virtual const char *GetPath() const;
    Bool_t              IsFolder() const { return kTRUE; }
-   Bool_t              IsModified() { return fModified; }
-   Bool_t              IsWritable() { return fWritable; }
+   Bool_t              IsModified() const { return fModified; }
+   Bool_t              IsWritable() const { return fWritable; }
    virtual void        ls(Option_t *option="");
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual void        Paint(Option_t *option="");
