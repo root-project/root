@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.59 2003/08/06 14:17:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.60 2003/09/05 15:50:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -483,7 +483,7 @@ TStreamerBasicPointer::TStreamerBasicPointer(const char *name, const char *title
    fType += TStreamerInfo::kOffsetP;
    fCountName    = countName;
    fCountClass   = countClass;
-   fCountVersion = countVersion;
+   fCountVersion = countVersion;  //currently unused
    Init();
 //   printf("BasicPointer Init:%s, countName=%s, countClass=%s, countVersion=%d, fCounter=%x\n",
 //      name,countName,countClass,countVersion,fCounter);
@@ -519,7 +519,7 @@ void TStreamerBasicPointer::Init(TObject *)
 {
    
    TClass *cl = gROOT->GetClass(fCountClass.Data());
-   fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl,fCountVersion);
+   fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl);
    //at this point the counter is may be declared to skip
    if (fCounter) {
       if (fCounter->GetType() < TStreamerInfo::kCounter) fCounter->SetType(TStreamerInfo::kCounter); 
@@ -586,7 +586,7 @@ TStreamerLoop::TStreamerLoop(const char *name, const char *title, Int_t offset, 
 
    fCountName    = countName;
    fCountClass   = countClass;
-   fCountVersion = countVersion;
+   fCountVersion = countVersion;  //currently unused
    Init();
 }
 
@@ -622,7 +622,7 @@ Int_t TStreamerLoop::GetSize() const
 void TStreamerLoop::Init(TObject *)
 {   
    TClass *cl = gROOT->GetClass(fCountClass.Data());
-   fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl,fCountVersion);
+   fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl);
    //at this point the counter is may be declared to skip
    if (fCounter) {
       if (fCounter->GetType() < TStreamerInfo::kCounter) fCounter->SetType(TStreamerInfo::kCounter); 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.174 2003/08/14 19:09:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.175 2003/08/25 22:37:39 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -200,7 +200,7 @@ void TStreamerInfo::Build()
                Error("Build","%s, discarding: %s %s, illegal [%s] (must be Int_t)\n",GetName(),dm->GetFullTypeName(),dm->GetName(),dm->GetArrayIndex());
                continue;
             }
-            TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(dm->GetArrayIndex(),dmref->GetClass(),dmref->GetClass()->GetClassVersion());
+            TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(dm->GetArrayIndex(),dmref->GetClass());
             if (!bt) {
                if (dmref->GetClass()->Property() & kIsAbstract) continue;
                Error("Build","%s, discarding: %s %s, illegal [%s] must be placed before \n",GetName(),dm->GetFullTypeName(),dm->GetName(),dm->GetArrayIndex());
@@ -1040,13 +1040,14 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
 }
 
 //______________________________________________________________________________
-TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TClass *cl, Int_t version)
+TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TClass *cl)
 {
    // Get pointer to a TStreamerBasicType in TClass *cl
    //static function
 
    TObjArray *sinfos = cl->GetStreamerInfos();
-   TStreamerInfo *info = (TStreamerInfo *)sinfos->At(version);
+   TStreamerInfo *info = (TStreamerInfo *)sinfos->At(cl->GetClassVersion());
+   //TStreamerInfo *info = cl->GetStreamerInfo();
    if (!info) return 0;
    TStreamerElement *element = (TStreamerElement *)info->fElements->FindObject(countName);
    if (!element) return 0;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.39 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.40 2003/04/18 16:42:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -125,7 +125,7 @@ public:
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
 
    static TStreamerElement   *GetCurrentElement();
-   static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
+   static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);
    static Bool_t       CanOptimize();
    static void         Optimize(Bool_t opt=kTRUE);
    static Bool_t       CanDelete();
