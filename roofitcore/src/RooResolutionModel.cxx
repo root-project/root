@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.18 2001/10/31 07:19:30 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.19 2001/11/07 22:41:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -269,7 +269,10 @@ Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const
   // normalized integrals, must retrieve two different integrals for each convolution 
   // object. Using RooAbsPdf::getNorm for both would lead to 100% cache misses.
 
-  if (!nset) return getVal() ;
+  if (!nset) {
+    cout << "RooResolutionModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;
+    return 1 ;
+  }
 
   if (nset != _lastNormSetSpecial) {
 
@@ -297,7 +300,10 @@ Double_t RooResolutionModel::getNormSpecial(const RooArgSet* nset) const
 Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
-  if (!nset) return 1 ;
+  if (!nset) {
+    cout << "RooResolutionModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;
+    return 1 ;
+  }
 
   syncNormalization(nset) ;
   if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.12 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.13 2001/10/19 22:19:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -497,6 +497,27 @@ RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl
   return sel ;
 }
 
+
+
+Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
+{
+  // Check if this and other collection have identically named contents
+
+  // First check equal length 
+  if (getSize() != otherColl.getSize()) return kFALSE ;
+
+  // Then check that each element of our list also occurs in the other list
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!otherColl.find(arg->GetName())) {
+      delete iter ;
+      return kFALSE ;
+    }
+  }
+  delete iter ;
+  return kTRUE ;
+}
 
 
 

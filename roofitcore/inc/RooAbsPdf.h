@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.44 2001/11/05 18:50:47 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.45 2001/11/07 02:54:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -62,6 +62,8 @@ public:
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
   virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
+
+  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
   virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;

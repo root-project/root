@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.53 2001/11/05 18:50:47 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.54 2001/11/07 02:54:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -657,6 +657,24 @@ void RooAbsPdf::generateEvent(Int_t code) {
   // meaning of each code is defined by the getGenerator() implementation. The default
   // implementation does nothing.
 }
+
+
+
+Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const 
+{
+  // Check if PDF depends via more than route on given arg
+  TIterator* sIter = serverIterator() ;
+  const RooAbsArg *server(0);
+  while(server=(const RooAbsArg*)sIter->Next()) {
+    if(server == &arg) continue;
+    if(server->dependsOn(arg)) {
+      delete sIter ;
+      return kFALSE ;
+    }
+  }
+  return kTRUE ;
+}
+
 
 
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, 

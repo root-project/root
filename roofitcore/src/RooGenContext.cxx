@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.23 2001/11/02 18:27:51 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.24 2001/11/05 18:50:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -30,7 +30,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.23 2001/11/02 18:27:51 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.24 2001/11/05 18:50:49 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -80,13 +80,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       if(direct) {
 
 	if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
-	  // is this the only way that the model depends on this variable?
-	  servers->Reset();
-	  const RooAbsArg *server(0);
-	  while(direct && (server= (const RooAbsArg*)servers->Next())) {
-	    if(server == direct) continue;
-	    if(server->dependsOn(*arg)) direct= 0;
-	  }
+	  if (!_pdfClone->isDirectGenSafe(*arg)) direct=0 ;
 	}
 
 	if(direct) {

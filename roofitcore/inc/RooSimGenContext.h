@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.rdl,v 1.3 2001/10/14 07:11:42 verkerke Exp $
+ *    File: $Id: RooSimGenContext.rdl,v 1.4 2001/11/09 02:08:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -35,6 +35,7 @@ protected:
   RooSimGenContext(const RooSimGenContext& other) ;
 
   RooAbsCategoryLValue* _idxCat ; // Clone of index category
+  RooArgSet*            _idxCatSet ; // Owner of index category components
   const RooDataSet *_prototype;   // Prototype data set
   const RooSimultaneous *_pdf ;   // Original PDF
   TList _gcList ;                 // List of component generator contexts

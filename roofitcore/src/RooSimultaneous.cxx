@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.21 2001/10/27 22:28:22 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.22 2001/11/09 02:08:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,6 +35,7 @@
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooSimGenContext.hh"
+#include "RooFitCore/RooDataSet.hh"
 
 ClassImp(RooSimultaneous)
 ;
@@ -445,21 +446,20 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
 					const RooDataSet *prototype, Bool_t verbose) const 
 {
-  _indexCat.arg().Print("v") ;
-
-  cout << "RooSimultaneous::genContext" << _indexCat.arg().GetName() << endl ;
   if (vars.find(_indexCat.arg().GetName())) {
     // Generating index category: return special sim-context
     return new RooSimGenContext(*this,vars,prototype,verbose) ;
   } else if (_indexCat.arg().isDerived()) {
     // Generating dependents of a derived index category
-    
+
     // Determine if we none,any or all servers
     TIterator* sIter = _indexCat.arg().serverIterator() ;
     RooAbsArg* server ;
     Bool_t anyServer(kFALSE), allServers(kTRUE) ;
     while(server=(RooAbsArg*)sIter->Next()) {
-      if (vars.find(server->GetName())) {
+      cout << "processing server " << server->GetName() << endl ;
+      if (prototype->get()->find(server->GetName())) {
+	cout << "found server " << server->GetName() << endl ;
 	anyServer=kTRUE ;
       } else {
 	allServers=kFALSE ;
@@ -472,7 +472,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
       return new RooSimGenContext(*this,vars,prototype,verbose) ;
     } else if (!allServers && anyServer) {
       // Abort if we have only part of the servers
-      cout << "RooSimultaneous::genContext: ERROR: generator request must include either all "
+      cout << "RooSimultaneous::genContext: ERROR: prototype must include either all "
 	   << " components of the RooSimultaneous index category or none " << endl ;
       return 0 ; 
     } 

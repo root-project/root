@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.18 2001/10/27 22:28:19 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.19 2001/11/07 23:25:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -34,6 +34,7 @@
 #include "RooFitCore/RooAddModel.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooAddModel)
 ;
@@ -44,7 +45,10 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   RooResolutionModel(name,title,((RooResolutionModel*)modelList.at(0))->convVar()),
   _modelProxyIter(_modelProxyList.MakeIterator()),
   _coefProxyIter(_coefProxyList.MakeIterator()),
-  _isCopy(kFALSE)
+  _isCopy(kFALSE),
+  _codeReg(10),
+  _genReg(10),
+  _genThresh(0)
 {
   // Constructor from list of PDFs and list of coefficients.
   // Each model list element (i) is paired with coefficient list element (i).
@@ -116,7 +120,10 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   RooResolutionModel(other,name),
   _modelProxyIter(_modelProxyList.MakeIterator()),
   _coefProxyIter(_coefProxyList.MakeIterator()),
-  _isCopy(kTRUE) 
+  _codeReg(other._codeReg),
+  _genReg(other._genReg),
+  _isCopy(kTRUE), 
+  _genThresh(0)
 {
   // Copy constructor
 
@@ -170,6 +177,8 @@ RooAddModel::~RooAddModel()
   if (_basis && !_isCopy) {
     ownedList.Delete() ;
   }
+
+  if (_genThresh) delete[] _genThresh ;
 }
 
 
@@ -296,6 +305,10 @@ Double_t RooAddModel::evaluate() const
 
 Double_t RooAddModel::getNorm(const RooArgSet* nset) const
 {
+  if (!nset) {
+    cout << "RooAddModel::getNorm(" << GetName() << "): ERROR nset=0!!!" << endl ;    
+  }
+
   // Calculate current normalization of object
   //
   // Norm = sum(i=0,n-1) coef_i * norm(model_i) + (1 - sum(i=0,n-1)coef_i) * norm(model_n)
@@ -315,10 +328,13 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
   RooResolutionModel* model ;
   while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
     model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
-    if (_verboseEval>1) cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
-			     << model->getNorm(nset) << " x " << (*coef) << " = " 
-			     << model->getNorm(nset)*(*coef) << endl ;
-
+    if (_verboseEval>1) {
+      cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
+	   << model->getNorm(nset) << " x " << (*coef) << " = " 
+	   << model->getNorm(nset)*(*coef) ;
+      cout << "nset = " ; nset->Print("1") ;
+    }
+	
     Double_t coefVal = *coef ;
     if (coefVal) {
       norm += model->getNorm(nset)*(*coef) ;
@@ -443,6 +459,8 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
 void RooAddModel::syncNormalization(const RooArgSet* nset) const 
 {
   // Fan out syncNormalization call to component models
+  if (nset == _lastNormSet) return ;
+  _lastNormSet = (RooArgSet*)nset ;
 
   if (_verboseEval>0) cout << "RooAddModel:syncNormalization(" << GetName() 
 			 << ") forwarding sync request to components (" 
@@ -469,6 +487,7 @@ void RooAddModel::syncNormalization(const RooArgSet* nset) const
 
     TString nname(GetName()) ; nname.Append("Norm") ;
     TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
+    if (_norm) delete _norm ;
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;    
   }
   
@@ -605,6 +624,103 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet)
   return value ;
 }
 
+
+
+Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const 
+{
+  RooRealProxy* proxy ;
+  RooResolutionModel* model ;
+  _modelProxyIter->Reset() ;
+  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
+    if (!model->isDirectGenSafe(arg)) return kFALSE ;
+  }
+  return kTRUE ;
+}
+
+
+
+Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const
+{
+  // Ask all the components what they can generate
+
+  // First iteration, determine what each component can integrate analytically
+  Int_t* subcode = new Int_t[_modelProxyList.GetSize()] ;
+  RooRealProxy* proxy ;
+  Int_t n(0) ;
+  RooResolutionModel* model ;
+  _modelProxyIter->Reset() ;
+  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
+
+    RooArgSet subGenVars ;
+    subcode[n] = model->getGenerator(directVars,subGenVars) ;
+    //cout << "component #" << n << " returns generator code " << subcode[n] << endl ;
+
+    // For composite direct generation to work each component must be able to generate entire request
+    if (subcode[n]==0 || (subGenVars.getSize() != directVars.getSize())) {
+      //cout << "component #" << n << " doesn't support full generation request, no direct generator for sum" << endl ;
+      return 0 ;
+    }    
+    n++ ;
+  }
+
+  // Indicate that we directly generate all requested variables
+  generateVars.add(directVars) ;
+
+  // Combine individual generator codes into a single master code
+  Int_t masterCode = _genReg.store(subcode,_modelProxyList.GetSize())+1 ;  
+  //cout << "master generator code " << masterCode << " assigned" << endl ;
+  return masterCode ;
+}
+
+
+void RooAddModel::initGenerator(Int_t code) 
+{
+  // Setup fraction threshold table
+  if (_genThresh) delete[] _genThresh ;
+  _genThresh = new Double_t[_modelProxyList.GetSize()+1] ;
+
+  Int_t nComp = _modelProxyList.GetSize() ;
+  _genThresh = new Double_t[nComp+1] ;
+
+  Int_t i=1 ;
+  _genThresh[0] = 0 ;
+  _modelProxyIter->Reset() ;
+  RooRealProxy* proxy ;
+  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+    ((RooResolutionModel*)proxy->absArg())->initGenerator(code) ;
+    RooRealProxy *coefProxy = (RooRealProxy*) _coefProxyList.At(i-1) ;
+    RooAbsReal* coef = (RooAbsReal*) (coefProxy ? coefProxy->absArg() : 0) ;
+
+    if (coef) {
+      _genThresh[i] = coef->getVal() ;
+      if (i>0) _genThresh[i] += _genThresh[i-1] ;
+    } else {
+      _genThresh[i] = 1.0 ;
+    }
+    i++ ;
+  }    
+
+  _genSubCode = _genReg.retrieve(code-1) ;
+}
+
+
+
+void RooAddModel::generateEvent(Int_t code)
+{
+  // Throw a random number to determine which component to generate
+  Double_t rand = RooRandom::uniform() ;
+  Int_t i=0 ;
+  Int_t nComp = _modelProxyList.GetSize() ;
+  for (i=0 ; i<nComp ; i++) {
+    if (rand>_genThresh[i] && rand<_genThresh[i+1]) {
+      RooResolutionModel* model = (RooResolutionModel*) ((RooRealProxy*)_modelProxyList.At(i))->absArg() ;
+      model->generateEvent(_genSubCode[i]) ;
+      return ;
+    }
+  }  
+}
 
 
 

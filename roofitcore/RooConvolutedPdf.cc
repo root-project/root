@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.24 2001/10/27 22:28:20 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.25 2001/11/07 19:35:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -221,7 +221,6 @@ RooAbsGenContext* RooConvolutedPdf::genContext(const RooArgSet &vars,
   if (dynamic_cast<RooTruthModel*>(_model)) {
     // Truth resolution model: use generic context explicitly allowing generation of convolution variable
     RooArgSet forceDirect(*convVar()) ;
-    cout << GetName() << ": truth convolution, choosing RooGenContext with forceDirect" << endl ;
     return new RooGenContext(*this,vars,prototype,verbose,&forceDirect) ;
   } 
 
@@ -359,13 +358,16 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   
   // Optional messaging
   if (_verboseEval>0) {
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") ptr = " << this << endl ;
     cout << "RooConvolutedPdf::getAI(" << GetName() << ") coefficients integrate analytically " ; analVars.Print("1") ;
     cout << "RooConvolutedPdf::getAI(" << GetName() << ") intCoefCode  = " << intCoefCode << endl ;
     cout << "RooConvolutedPdf::getAI(" << GetName() << ") normCoefCode = " << normCoefCode << endl ;
-    cout << "RooConvolutedPdf::getAI(" << GetName() << ") intConvSet  = " ; 
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") intConvSet  = " << intConvSet << " " ; 
     if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;
-    cout << "RooConvolutedPdf::getAI(" << GetName() << ") normConvSet  = " ; 
+    cout << "RooConvolutedPdf::getAI(" << GetName() << ") normConvSet  = " << normConvSet << " "; 
     if (normConvSet) normConvSet->Print("1") ; else cout << "<none>" << endl ;
+    cout << "RooConvolutedOdf::getAI(" << GetName() << ") normSet = " << normSet << " " ;
+    if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
   }
 
   // Register convolution dependents integrated as analytical
@@ -420,15 +422,17 @@ Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
   const Int_t* tmp = _codeReg.retrieve(code-1,intConvSet,normConvSet) ;
   Int_t intCoefCode = tmp[0] ;
   Int_t normCoefCode = tmp[1] ;
-  
+
   RooResolutionModel* conv ;
   Int_t index(0) ;
   Double_t answer(0) ;
   _convSetIter->Reset() ;
 
-//   cout << "RooConvolutedPdf::aI(" << GetName() << "): intCoefCode = " << intCoefCode << ", normCoefCode = " << normCoefCode << endl ;
-//   cout << "          intConvSet = " ; if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;
-//   cout << "         normConvSet = " ; if (normConvSet) normConvSet->Print("1") ; else cout << "<none>" << endl ;
+//   cout << "RooConvolutedPdf::aI(" << GetName() << ") ptr = " << this << endl ;
+//   cout << "RooConvolutedPdf::aI(" << GetName() << "): masterCode = " << code << " intCoefCode = " << intCoefCode << ", normCoefCode = " << normCoefCode << endl ;
+//   cout << "          intConvSet = " << intConvSet << " "  ; if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;
+//   cout << "         normConvSet = " << normConvSet << " " ; if (normConvSet) normConvSet->Print("1") ; else cout << "<none>" << endl ;
+//   cout << "             normSet = " << normSet << " "     ; if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
 
   if (normSet==0) {
 

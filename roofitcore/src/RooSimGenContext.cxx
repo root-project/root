@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.4 2001/10/27 22:28:22 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.5 2001/11/09 02:08:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -33,7 +33,6 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,verbose), _pdf(&model)
 {
   // Constructor. Build an array of generator contexts for each component PDF
-  cout << "RooSimGenContext::ctor" << endl ;
 
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
@@ -113,7 +112,9 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   
 
   // Clone the index category
-  _idxCat = (RooAbsCategoryLValue*) model._indexCat.arg().Clone() ;
+  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(kTRUE) ;
+  _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
+  _idxCat->Print("v") ;
 }
 
 
@@ -122,7 +123,6 @@ RooSimGenContext::~RooSimGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
   delete[] _fracThresh ;
-  delete _idxCat ;
   _gcList.Delete() ;
 }
 
@@ -154,8 +154,14 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   if (_haveIdxProto) {
 
     // Lookup pdf from selected prototype index state
-    ((RooAbsGenContext*)_gcList.FindObject(_idxCat->getLabel()))->generateEvent(theEvent,remaining) ;
-    
+    const char* label = _idxCat->getLabel() ;
+    RooAbsGenContext* cx = (RooAbsGenContext*)_gcList.FindObject(label) ;
+    if (cx) {      
+      cx->generateEvent(theEvent,remaining) ;
+    } else {
+      cout << "RooSimGenContext::generateEvent: WARNING, no PDF to generate event of type " << label << endl ;
+    }    
+
   
   } else {
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.24 2001/10/27 22:28:19 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.25 2001/11/07 02:54:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -392,7 +392,9 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 {
   // Return analytical integral defined by given scenario code
 
-  if (code==0) return getVal(normSet) ;
+  if (code==0) {
+    return getVal(normSet) ;
+  }
 
   const Int_t* subCode = _codeReg.retrieve(code-1) ;
   if (!subCode) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.11 2001/11/05 18:50:50 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.12 2001/11/07 22:41:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -178,6 +178,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
   case expBasis:
     {
       Double_t result(0) ;
+      if (tau==0) return 1 ;
       if (basisSign != Minus) result += tau*(1-exp(-x.max()/tau)) ;
       if (basisSign != Plus) result += tau*(1-exp(x.min()/tau)) ;
       return result ;
@@ -185,6 +186,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
   case sinBasis:
     {
       Double_t result(0) ;
+      if (tau==0) return 0 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + 1/tau;
       if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + 1/tau ;
@@ -193,6 +195,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
   case cosBasis:
     {
       Double_t result(0) ;
+      if (tau==0) return 1 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*cos(dm*x.max()) + dm*sin(dm*x.max())) + 1/tau ;
       if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
