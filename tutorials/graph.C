@@ -21,18 +21,13 @@
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->SetTitle("a simple graph");
+   gr->GetXaxis()->SetTitle("X title");
+   gr->GetYaxis()->SetTitle("Y title");
    gr->Draw("ACP");
 
-   //Add axis titles.
-   //A graph is drawn using the services of the TH1F histogram class.
-   //The histogram is created by TGraph::Paint.
-   //TGraph::Paint is called by TCanvas::Update. This function is called by default
-   //when typing <CR> at the keyboard. In a macro, one must force TCanvas::Update.
-
+   // TCanvas::Update() draws the frame, after which one can change it
    c1->Update();
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(12);
-   gr->GetHistogram()->SetXTitle("X title");
-   gr->GetHistogram()->SetYTitle("Y title");
    c1->Modified();
 }
