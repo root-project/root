@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.27 2004/04/25 17:16:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.28 2004/04/27 12:31:19 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -184,7 +184,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
          Int_t mustdelete=0;
          SetBit(kCustomHistogram);
-         
+
          // parse things that follow the name of the histo between '(' and ')'.
          // At this point hname contains the name of the specified histogram.
          //   Now the syntax is exended to handle an hname of the following format
@@ -318,7 +318,14 @@ void TSelectorDraw::Begin(TTree *tree)
             j--;
          }
 
-         fOldHistogram = (TH1*)gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
+         TObject *oldObject = gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
+         fOldHistogram = dynamic_cast<TH1*>(oldObject);
+
+         if (fOldHistogram==0 && oldObject &&  !oldObject->InheritsFrom(TH1::Class())) {
+            Error("Begin","An object of type '%s' has the same name as the requested histo (%s)",oldObject->IsA()->GetName(),hname);
+            SetStatus(-1);
+            return;
+         }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
          if (mustdelete) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.145 2004/05/13 09:54:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.146 2004/05/13 09:57:23 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2717,6 +2717,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                      fVarIndexes[code][dim] = new TTreeFormula("index_var",
                                                                   varindex,
                                                                   fTree);
+                     current += strlen(varindex)+1; // move to the end of the index array
                   }
                }
             }
@@ -5411,8 +5412,17 @@ Bool_t TTreeFormula::LoadCurrentDim() {
                // if fVirtUsedSize[virt_dim] is positive then VarIndexes[i][k]->GetNdata()
                // is always the same and has already been factored in fUsedSize[virt_dim]
                index = fVarIndexes[i][k]->GetNdata();
-               if (fManager->fUsedSizes[virt_dim]==1 || (index!=1 && index<fManager->fUsedSizes[virt_dim]) )
+               if (index==1) {
+                  // We could either have a variable size array which is currently of size one                
+                  // or a single element that might or not might not be present (and is currently present!)
+                  if (fVarIndexes[i][k]->GetManager()->GetMultiplicity()==1) {
+                     if (index<fManager->fUsedSizes[virt_dim]) fManager->fUsedSizes[virt_dim] = index;
+                  }
+                  
+               } else if (fManager->fUsedSizes[virt_dim]==-fManager->fVirtUsedSizes[virt_dim] || 
+                          index<fManager->fUsedSizes[virt_dim]) {
                   fManager->fUsedSizes[virt_dim] = index;
+               }
 
             } else if (hasBranchCount2 && k==info->GetVarDim()) {
                // NOTE: We assume the indexing of variable sizes on the first index!
