@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -148,7 +148,8 @@ ostream& operator<<(ostream& os, const TString& s)
 {
    // Write string to stream.
 
-   if (os.opfx()) {
+   if (os.good()) {
+     if (os.tie()) os.tie()->flush(); // instead of opfx
       UInt_t len = s.Length();
       UInt_t wid = os.width();
       wid = (len < wid) ? wid - len : 0;
@@ -160,6 +161,8 @@ ostream& operator<<(ostream& os, const TString& s)
       if (wid && (flags & ios::left))
          os << "";  // let the ostream fill
    }
-   os.osfx();
+   // instead of os.osfx();
+   if (os.flags() & ios::unitbuf)
+      os.flush();
    return os;
 }
