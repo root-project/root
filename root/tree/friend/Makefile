@@ -1,16 +1,22 @@
 
 all: tests
-test: tests ChainFriend
+test: tests ChainFriend 
 
 override SUBDIRS =  
 
-CLEAN_TARGET += main *Dict* *~ createfile.out run.out 
-TEST_TARGETS = ChainFriend
+CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out
+TEST_TARGETS += ChainFriend unevenFriend
 
 include ../../Rules.mk
 
+
 files: Event.root Event2.root
 
+unevenFriend: unevenFriend.out
+	$(CMDECHO) diff unevenFriend.out unevenFriend.ref
+
+unevenFriend.out:  unevenFriend.C unevenFriend.ref
+	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
 
 ifeq ($(PLATFORM),win32)
 ROOTFILE = $(shell cygpath -u '$(ROOTSYS)/test/Event.root')

@@ -27,6 +27,16 @@ class MyClass : public TObject {
 
 };
 
+class Cont : public TObject {
+public:
+  MyClass data;
+  Cont() {};
+  Cont(int siz) : data(siz) {};
+  ~Cont() {};
+
+  ClassDef(Cont,1);
+};
+
 
 MyClass::MyClass() : n(0) {
 #if (VERSION==2)

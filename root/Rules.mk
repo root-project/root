@@ -107,8 +107,11 @@ MAKELIB       = $(ROOTSYS)/build/win/makelib.sh
 endif
 
 %.o: %.C
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %.o: %.cxx
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
+define WarnFailTest
+	@echo Warning $@ has some known skipped failures "(in `pwd`)"
+endef

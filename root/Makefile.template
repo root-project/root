@@ -10,7 +10,11 @@ TEST_TARGETS += mytest
 include ../../Rules.mk
 
 mytest:
-	@echo Running 'mytest' in `pwd`
 	$(CMDECHO) echo mytest > /dev/null
+
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
 
 

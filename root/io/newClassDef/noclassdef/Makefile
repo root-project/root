@@ -70,6 +70,8 @@ test2:
 all:	driver$(ExeSuf) libIotest.$(DllSuf)
 	./driver$(ExeSuf)
 
+shared: libIotest.$(DllSuf)
+
 test:   driver$(ExeSuf)
 	rm -f driver.output
 	./driver$(ExeSuf) 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > driver.output 
