@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.208 2004/10/22 14:53:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.209 2004/11/15 08:00:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4880,15 +4880,17 @@ Double_t TH1::GetMeanError(Int_t axis) const
 //______________________________________________________________________________
 Double_t TH1::GetRMS(Int_t axis) const
 {
-//   -*-*-*-*-*-*Return the Sigma value of this histogram*-*-*-*-*
-//               ===================================================
-//  Note that the mean value/sigma is computed using the bins in the currently
+//  Return the Sigma value of this histogram
+//
+//     Note that the mean value/sigma is computed using the bins in the currently
 //  defined range (see TAxis::SetRange). By default the range includes
 //  all bins from 1 to nbins included, excluding underflows and overflows.
 //  To force the underflows and overflows in the computation, one must
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
-//  Note that this function returns the Sigma of the distribution (not RMS).
+//  Note that this function returns the Standard Deviation (Sigma)
+//  of the distribution (not RMS).
+//  The Sigma estimate is computed as Sqrt((1/N)*(Sum(x_i-x_mean)^2))
 //  The name "RMS" was introduced many years ago (Hbook/PAW times).
 //  We kept the name for continuity.
 
@@ -4907,15 +4909,16 @@ Double_t TH1::GetRMS(Int_t axis) const
 //______________________________________________________________________________
 Double_t TH1::GetRMSError(Int_t axis) const
 {
-//   -*-*-*-*-*-*Return error of RMS estimation for Normal distribution*-*-*-*-*
-//               ====================================================
+//  Return error of RMS estimation for Normal distribution
+//      
 //  Note that the mean value/RMS is computed using the bins in the currently
 //  defined range (see TAxis::SetRange). By default the range includes
 //  all bins from 1 to nbins included, excluding underflows and overflows.
 //  To force the underflows and overflows in the computation, one must
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
-
+//  Value returned is standard deviation of sample standard deviation.
+   
    if (axis <1 || axis > 3) return 0;
    Double_t rms = GetRMS(axis);
    Stat_t stats[15];
