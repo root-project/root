@@ -557,8 +557,8 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(BENCH):       $(BENCHO) $(TBENCH)
-		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+$(BENCH):       $(BENCHO) $(TBENCHSO)
+		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 Hello:          $(HELLOSO)
@@ -621,7 +621,6 @@ endif
 endif
 endif
 
-TBench:         $(TBENCHSO)
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
