@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.88 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.89 2002/12/06 22:08:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1344,14 +1344,12 @@ TH1F *TGraph::GetHistogram() const
      if(gPad && gPad->GetLogy()) minimum = 0.9*rwymin;
      else                minimum = 0;
   }
-  if (minimum <= 0) {
-      if (gPad && gPad->GetLogy()) minimum = 0.001*maximum;
-      else                         minimum = 0;
-   }
-   if (uxmin <= 0 && gPad && gPad->GetLogx()) {
+  if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = 0.001*maximum;
+  if (uxmin <= 0 && gPad && gPad->GetLogx()) {
      if (uxmax > 1000) uxmin = 1;
      else              uxmin = 0.001*uxmax;
   }
+
   rwxmin = uxmin;
   rwxmax = uxmax;
   Int_t npt = 100;
