@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testStringFormula testBoolOpt
+TEST_TARGETS += testStringFormula testBoolOpt expotest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -20,6 +20,9 @@ testBoolOpt.log: testBoolOpt.C
 
 testBoolOpt : testBoolOpt.log
 	$(CMDECHO) diff -b testBoolOpt.ref testBoolOpt.log
+
+expotest: expotest.log
+	$(TestDiff)
 
 testWithFailure:
 ifeq ($(FAIL),)
