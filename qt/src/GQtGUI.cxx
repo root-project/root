@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.3 2004/08/13 06:05:17 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -1168,7 +1168,8 @@ Pixmap_t     TGQt::CreatePixmap(Drawable_t /*id*/, UInt_t w, UInt_t h)
 {
    // Creates a pixmap of the width and height you specified
    // and returns a pixmap ID that identifies it.
-   return Pixmap_t(OpenPixmap(w,h));
+   QPixmap *p = fQPixmapGuard.Create(w, h);
+   return Pixmap_t(p);
 }
 //______________________________________________________________________________
 Pixmap_t     TGQt::CreatePixmap(Drawable_t /*id*/, const char *bitmap, UInt_t width,
