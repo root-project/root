@@ -14,8 +14,8 @@
  *
 */
 
-#define ROOT_RELEASE "3.03/05"
-#define ROOT_VERSION_CODE 197381
+#define ROOT_RELEASE "3.03/06"
+#define ROOT_VERSION_CODE 197382
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
