@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.21 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.22 2003/04/05 01:11:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ public:
   RooDataHist() ; 
   RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0, Bool_t importErrors=kFALSE) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
@@ -46,7 +46,8 @@ public:
   }
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1.0) ;
+  virtual void add(const RooArgSet& row, Double_t weight=1.0) { add(row,weight,-1.) ; }
+  virtual void add(const RooArgSet& row, Double_t weight, Double_t sumw2) ;
   void set(const RooArgSet& row, Double_t weight, Double_t wgtErr=-1) ;
   void set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, Double_t wgtErrHi) ;
 
@@ -66,13 +67,16 @@ public:
   Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE) ;   
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
-  inline Double_t weightError() const {
+
+  enum ErrorType { Poisson, SumW2 } ;
+
+  inline Double_t weightError(ErrorType etype=Poisson) const {
     Double_t lo,hi ;
-    weightError(lo,hi) ;
+    weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
   }
 
-  void weightError(Double_t& lo, Double_t& hi) const ;
+  void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
@@ -110,13 +114,15 @@ protected:
   Double_t*       _wgt ; //[_arrSize] Weight array
   Double_t*    _errLo ; //[_arrSize] Low-side error on weight array
   Double_t*    _errHi ; //[_arrSize] High-side error on weight array
-  Double_t*      _binv ; //[_arrSize] Bin volume array
+  Double_t*    _sumw2 ; //[_arrSize] Sum of weights^2
+  Double_t*      _binv ; //[_arrSize] Bin volume array  
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
 
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
   mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
   mutable Double_t _curWgtErrHi ; // Error on weight associated with the current coordinate
+  mutable Double_t _curSumW2 ; // Current sum of weights^2
   mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
   mutable Int_t    _curIndex ; // Current index
 

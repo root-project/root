@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooChi2Var.rdl,v 1.3 2002/09/05 04:33:17 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,16 +18,24 @@
 #define ROO_CHI2_VAR
 
 #include "RooFitCore/RooAbsOptGoodnessOfFit.hh"
-class RooDataHist ;
+#include "RooFitCore/RooCmdArg.hh"
+#include "RooFitCore/RooDataHist.hh"
 
 class RooChi2Var : public RooAbsOptGoodnessOfFit {
 public:
 
   // Constructors, assignment etc
+  RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
+	     const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
+	     const RooCmdArg& arg4=RooCmdArg(), const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
+	     const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-	    Bool_t extended=kFALSE, Int_t nCPU=1) ;
+	    Bool_t extended, Int_t nCPU=1) ;
+
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 	    const RooArgSet& projDeps, Bool_t extended=kFALSE, Int_t nCPU=1) ;
+
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
@@ -42,10 +50,16 @@ public:
 
 protected:
 
+  RooDataHist::ErrorType _etype ;
   Bool_t _extended ;
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent) const ;
   
   ClassDef(RooChi2Var,1) // Abstract real-valued variable
 };
+
+RooCmdArg Extended() ;
+RooCmdArg DataError(RooDataHist::ErrorType) ;
+RooCmdArg numCPU(Int_t nCPU) ;
+
 
 #endif

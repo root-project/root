@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.30 2003/04/01 22:34:43 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.31 2003/04/05 01:11:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +41,7 @@ RooDataHist::RooDataHist()
   _wgt = 0 ;
   _errLo = 0 ;
   _errHi = 0 ;
+  _sumw2 = 0 ;
   _binv = 0 ;
   _idxMult = 0 ;  
   _curWeight = 0 ;
@@ -103,7 +104,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 // wve --- adjust for variable bin size histograms
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight, Bool_t importErrors) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
   RooTreeData(name,title,vars), _curWeight(0), _curVolume(1)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
@@ -182,17 +183,6 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   initialize() ;
   appendToDir(this,kTRUE) ;
 
-  // WVE --- How do we know if a TH1 has the sumW2 options set???
-
-  Double_t* sumw2 = 0 ;
-
-  // Allocate and initialize sumw2 array
-  if (importErrors) {
-    Int_t i ;
-    sumw2 = new Double_t[_arrSize] ;
-    for (i=0 ; i<_arrSize ; i++) sumw2[i] = 0 ;
-  }
-
   // Transfer contents
   RooArgSet set(*xvar) ;
   if (yvar) set.add(*yvar) ;
@@ -207,29 +197,17 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	if (zvar) {
 	  for (iz=0 ; iz < zvar->getFitBins() ; iz++) {
 	    zvar->setFitBin(iz) ;
-	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)*weight) ;
-	    if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1,iy+1,iz+1)*weight,2) ;
+	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)*weight,pow(histo->GetBinError(ix+1,iy+1,iz+1)*weight,2)) ;
 	  }
 	} else {
-	  add(set,histo->GetBinContent(ix+1,iy+1)*weight) ;	    
-	  if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1,iy+1)*weight,2) ;
+	  add(set,histo->GetBinContent(ix+1,iy+1)*weight,pow(histo->GetBinError(ix+1,iy+1)*weight,2)) ;
 	}
       }
     } else {
-      add(set,histo->GetBinContent(ix+1)*weight) ;	    
-      if (sumw2) sumw2[calcTreeIndex()] += pow(histo->GetBinError(ix+1)*weight,2) ;
+      add(set,histo->GetBinContent(ix+1)*weight,pow(histo->GetBinError(ix+1)*weight,2)) ;	    
     }
   }  
-
-  // Translate sumw2 into errors 
-  if (sumw2) {
-    Int_t i ;
-    for (i=0 ; i<_arrSize ; i++) {
-      _errLo[i] = sqrt(sumw2[i]) ;
-      _errHi[i] = _errLo[i] ;
-    }
-    delete[] sumw2 ;
-  }
+  
 }
 
 
@@ -263,11 +241,13 @@ void RooDataHist::initialize()
   _wgt = new Double_t[_arrSize] ;
   _errLo = new Double_t[_arrSize] ;
   _errHi = new Double_t[_arrSize] ;
+  _sumw2 = new Double_t[_arrSize] ;
   _binv = new Double_t[_arrSize] ;
   for (i=0 ; i<_arrSize ; i++) {
     _wgt[i] = 0 ;
     _errLo[i] = -1 ;
     _errHi[i] = -1 ;
+    _sumw2[i] = 0 ;
   }
 
 
@@ -320,10 +300,12 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   _errLo = new Double_t[_arrSize] ;
   _errHi = new Double_t[_arrSize] ;
   _binv = new Double_t[_arrSize] ;
+  _sumw2 = new Double_t[_arrSize] ;
   for (i=0 ; i<_arrSize ; i++) {
     _wgt[i] = other._wgt[i] ;
     _errLo[i] = other._errLo[i] ;
     _errHi[i] = other._errHi[i] ;
+    _sumw2[i] = other._sumw2[i] ;
     _binv[i] = other._binv[i] ;
   }  
 
@@ -390,10 +372,12 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   }
 
   Int_t i ;
+  Double_t lo,hi ;
   for (i=0 ; i<numEntries() ; i++) {
     const RooArgSet* row = get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-      rdh->add(*row,weight()) ;
+      weightError(lo,hi,SumW2) ;
+      rdh->add(*row,weight(),lo*lo) ;
     }
   }
 
@@ -413,6 +397,7 @@ RooDataHist::~RooDataHist()
   if (_wgt) delete[] _wgt ;
   if (_errLo) delete[] _errLo ;
   if (_errHi) delete[] _errHi ;
+  if (_sumw2) delete[] _sumw2 ;
   if (_binv) delete[] _binv ;
   if (_idxMult) delete[] _idxMult ;
   delete _realIter ;
@@ -577,28 +562,35 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 
 
 
-void RooDataHist::weightError(Double_t& lo, Double_t& hi) const 
+void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
 { 
   // Return error on current weight
-
-  if (_curWgtErrLo>=0) {
-    // Weight is preset or precalculated    
+  switch (etype) {
+  case Poisson:
+    if (_curWgtErrLo>=0) {
+      // Weight is preset or precalculated    
+      lo = _curWgtErrLo ;
+      hi = _curWgtErrHi ;
+      return ;
+    }
+    
+    // Calculate poisson errors
+    Double_t ym,yp ;  
+    RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
+    _curWgtErrLo = weight()-ym ;
+    _curWgtErrHi = yp-weight() ;
+    _errLo[_curIndex] = _curWgtErrLo ;
+    _errHi[_curIndex] = _curWgtErrHi ;
     lo = _curWgtErrLo ;
     hi = _curWgtErrHi ;
     return ;
+
+  case SumW2:
+    lo = sqrt(_curSumW2) ;
+    hi = sqrt(_curSumW2) ;
+    return ;
   }
-
-  // Calculate poisson errors
-  Double_t ym,yp ;  
-  RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
-  _curWgtErrLo = weight()-ym ;
-  _curWgtErrHi = yp-weight() ;
-  _errLo[_curIndex] = _curWgtErrLo ;
-  _errHi[_curIndex] = _curWgtErrHi ;
-  lo = _curWgtErrLo ;
-  hi = _curWgtErrHi ;
 }
-
 
 
 // wve adjust for variable bin sizes
@@ -645,7 +637,7 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
 
 
 
-void RooDataHist::add(const RooArgSet& row, Double_t weight) 
+void RooDataHist::add(const RooArgSet& row, Double_t weight, Double_t sumw2) 
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
@@ -654,6 +646,7 @@ void RooDataHist::add(const RooArgSet& row, Double_t weight)
   _vars = row ;
   Int_t idx = calcTreeIndex() ;
   _wgt[idx] += weight ;  
+  _sumw2[idx] += (sumw2>0?sumw2:weight*weight) ;
   _errLo[idx] = -1 ;
   _errHi[idx] = -1 ;
 }
@@ -863,6 +856,7 @@ const RooArgSet* RooDataHist::get(Int_t masterIdx) const
   _curWeight = _wgt[masterIdx] ;
   _curWgtErrLo = _errLo[masterIdx] ;
   _curWgtErrHi = _errHi[masterIdx] ;
+  _curSumW2 = _sumw2[masterIdx] ;
   _curVolume = _binv[masterIdx] ; 
   _curIndex  = masterIdx ;
   return RooTreeData::get(masterIdx) ;  

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.3 2002/09/05 04:33:18 verkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.4 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -512,4 +512,34 @@ void RooCmdConfig::stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge)
     name = strtok(0,",") ;
   }
 
+}
+
+
+Int_t RooCmdConfig::decodeIntOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, const RooCmdArg& arg1, 
+				      const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+				      const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7,
+				      const RooCmdArg& arg8, const RooCmdArg& arg9) 
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineInt("theInt",cmdArgName,intIdx,defVal) ;
+  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
+  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
+  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
+  return pc.getInt("theInt") ;
+}
+
+
+TObject* RooCmdConfig::decodeObjOnTheFly(const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, const RooCmdArg& arg1, 
+					 const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+					 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7,
+					 const RooCmdArg& arg8, const RooCmdArg& arg9) 
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineObject("theObj",cmdArgName,objIdx,defVal) ;
+  pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
+  pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
+  pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
+  return (TObject*) pc.getObject("theObj") ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.3 2002/09/05 04:33:18 verkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.4 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,6 +61,17 @@ public:
   void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) ;
 
   void print() ;
+
+
+  static Int_t decodeIntOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, const RooCmdArg& arg1, 
+				 const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+				 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
+				 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
+
+  static TObject* decodeObjOnTheFly(const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, const RooCmdArg& arg1, 
+				     const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+				     const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
+				     const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
 
 protected:
 

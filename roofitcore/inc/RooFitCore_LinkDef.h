@@ -25,6 +25,9 @@
 #pragma link C++ function MarkerStyle ;
 #pragma link C++ function MarkerColor ;
 #pragma link C++ function MarkerSize ;
+#pragma link C++ function Extended ;
+#pragma link C++ function NumCPU ;
+#pragma link C++ function DataError ;
 
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooRealVar- ;
