@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -46,7 +46,8 @@ TMap::TMap(Int_t capacity, Int_t rehashlevel)
 //______________________________________________________________________________
 TMap::~TMap()
 {
-   // TMap dtor.
+   // TMap dtor. Objects are not deleted unless the TMap is the
+   // owner (set via SetOwner()).
 
    Clear();
    delete fTable;
@@ -93,10 +94,15 @@ Int_t TMap::Capacity() const
 void TMap::Clear(Option_t *option)
 {
    // Remove all (key,value) pairs from the map but DO NOT delete the keys
-   // and/or values.
+   // and/or values. Objects are not deleted unless the TMap is the
+   // owner (set via SetOwner()).
 
-   fTable->Delete(option);    // delete the TAssoc's
-   fSize = 0;
+   if (IsOwner())
+      Delete();
+   else {
+      fTable->Delete(option);    // delete the TAssoc's
+      fSize = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -237,9 +243,10 @@ void TMap::Streamer(TBuffer &b)
       TObject *value;
 
       Version_t v = b.ReadVersion();
-      if (v > 1) {
+      if (v > 2)
+         TObject::Streamer(b);
+      if (v > 1)
          fName.Streamer(b);
-      }
       b >> nobjects;
       for (Int_t i = 0; i < nobjects; i++) {
          b >> obj;
@@ -248,6 +255,7 @@ void TMap::Streamer(TBuffer &b)
       }
    } else {
       b.WriteVersion(TMap::IsA());
+      TObject::Streamer(b);
       fName.Streamer(b);
       b << GetSize();
       TIter next(this);

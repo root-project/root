@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -192,7 +192,8 @@ TBtree::TBtree(int order)
 //______________________________________________________________________________
 TBtree::~TBtree()
 {
-   // Delete B-tree.
+   // Delete B-tree. Objects are not deleted unless the TBtree is the
+   // owner (set via SetOwner()).
 
    if (fRoot) {
       Clear();
@@ -249,10 +250,15 @@ TObject *TBtree::Before(TObject *) const
 //______________________________________________________________________________
 void TBtree::Clear(Option_t *)
 {
-   // Remove all objects from B-tree. Does NOT delete objects.
+   // Remove all objects from B-tree. Does NOT delete objects unless the TBtree
+   // is the owner (set via SetOwner()).
 
-   SafeDelete(fRoot);
-   fSize = 0;
+   if (IsOwner())
+      Delete();
+   else {
+      SafeDelete(fRoot);
+      fSize = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -265,7 +271,8 @@ void TBtree::Delete(Option_t *)
       if (obj && obj->IsOnHeap())
          TCollection::GarbageCollect(obj);
    }
-   Clear();
+   SafeDelete(fRoot);
+   fSize = 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
 
-   ClassDef(TMap,2)  //A map
+   ClassDef(TMap,3)  //A map
 };
 
 

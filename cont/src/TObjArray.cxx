@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
 //______________________________________________________________________________
 TObjArray::TObjArray(const TObjArray &a)
 {
-   // Create a copy of TObjArray a.
+   // Create a copy of TObjArray a. Note, does not copy the kIsOwner flag.
 
    fCont = 0;
    Init(a.fSize, a.fLowerBound);
@@ -61,12 +61,17 @@ TObjArray::TObjArray(const TObjArray &a)
       fCont[i] = a.fCont[i];
 
    fLast = a.fLast;
+   fName = a.fName;
 }
 
 //______________________________________________________________________________
 TObjArray::~TObjArray()
 {
-   // Delete an array.
+   // Delete an array. Objects are not deleted unless the TObjArray is the
+   // owner (set via SetOwner()).
+
+   if (IsOwner())
+      Delete();
 
    delete [] fCont;
    fCont = 0;
@@ -226,9 +231,13 @@ TObject *TObjArray::Before(TObject *obj) const
 //______________________________________________________________________________
 void TObjArray::Clear(Option_t *)
 {
-   // Remove all objects from the array. Does not delete the objects.
+   // Remove all objects from the array. Does not delete the objects
+   // unless the TObjArray is the owner (set via SetOwner()).
 
-   Init(fSize, fLowerBound);
+   if (IsOwner())
+      Delete();
+   else
+      Init(fSize, fLowerBound);
 }
 
 //______________________________________________________________________________
@@ -262,7 +271,7 @@ void TObjArray::Delete(Option_t *)
          fCont[i] = 0;
       }
 
-   Clear();
+   Init(fSize, fLowerBound);
 }
 
 //______________________________________________________________________________
@@ -297,9 +306,10 @@ void TObjArray::Streamer(TBuffer &b)
    Int_t nobjects;
    if (b.IsReading()) {
       Version_t v = b.ReadVersion();
-      if (v > 1) {
+      if (v > 2)
+         TObject::Streamer(b);
+      if (v > 1)
          fName.Streamer(b);
-      }
       b >> nobjects;
       b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
@@ -315,6 +325,7 @@ void TObjArray::Streamer(TBuffer &b)
       Changed();
    } else {
       b.WriteVersion(TObjArray::IsA());
+      TObject::Streamer(b);
       fName.Streamer(b);
       nobjects = GetSize();
       b << nobjects;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -40,8 +40,6 @@ protected:
 
 public:
    THashList(Int_t capacity=TCollection::kInitHashTableCapacity, Int_t rehash=0);
-   THashList(TObject *parent, Int_t capacity=TCollection::kInitHashTableCapacity,
-             Int_t rehash=0);
    virtual    ~THashList();
    Float_t    AverageCollisions() const;
    void       Clear(Option_t *option="");

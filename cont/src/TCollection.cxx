@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.4 2000/09/05 11:04:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.5 2000/09/06 14:11:00 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -261,9 +261,10 @@ void TCollection::Streamer(TBuffer &b)
 
    if (b.IsReading()) {
       Version_t v = b.ReadVersion();
-      if (v > 1) {
+      if (v > 2)
+         TObject::Streamer(b);
+      if (v > 1)
          fName.Streamer(b);
-      }
       b >> nobjects;
       for (Int_t i = 0; i < nobjects; i++) {
          b >> obj;
@@ -271,6 +272,7 @@ void TCollection::Streamer(TBuffer &b)
       }
    } else {
       b.WriteVersion(TCollection::IsA());
+      TObject::Streamer(b);
       fName.Streamer(b);
       nobjects = GetSize();
       b << nobjects;

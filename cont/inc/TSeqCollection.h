@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.2 2000/07/29 10:56:17 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -33,7 +33,6 @@ protected:
    Bool_t            fSorted;    // true if collection has been sorted
 
    TSeqCollection() { }
-   TSeqCollection(TObject *parent) : TCollection(parent) { }
    virtual void      Changed() { fSorted = kFALSE; }
 
 public:

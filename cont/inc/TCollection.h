@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.2 2000/05/24 10:31:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.3 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -54,12 +54,12 @@ private:
    void operator=(const TCollection &); // are too sensitive to be automatically copied
 
 protected:
+   enum { kIsOwner = BIT(14) };
+
    TString   fName;               //name of the collection
-   TObject  *fParent;             //parent object of collection
    Int_t     fSize;               //number of elements in collection
 
-   TCollection() : fParent(0), fSize(0) { }
-   TCollection(TObject *parent) : fParent(parent), fSize(0) { }
+   TCollection() : fSize(0) { }
 
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };
@@ -69,6 +69,7 @@ public:
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
+   Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    void               Browse(TBrowser *b);
    Int_t              Capacity() const { return fSize; }
    virtual void       Clear(Option_t *option="") = 0;
@@ -81,7 +82,6 @@ public:
    TObject           *operator()(const char *name) const;
    virtual TObject   *FindObject(TObject *obj) const;
    virtual const char *GetName() const { return fName.Data(); }
-   TObject           *GetParent() const { return fParent; }
    virtual Int_t      GetSize() const { return fSize; }
    virtual Int_t      GrowBy(Int_t delta) const;
    Bool_t             IsArgNull(const char *where, TObject *obj) const;
@@ -97,8 +97,8 @@ public:
    virtual void       RemoveAll(TCollection *col);
    void               RemoveAll() { Clear(); }
    void               SetCurrentCollection();
-   virtual void       SetName(const char *name) { fName = name; }
-   void               SetParent(TObject *parent) { fParent = parent; }
+   void               SetName(const char *name) { fName = name; }
+   void               SetOwner(Bool_t enable = kTRUE) { enable ? SetBit(kIsOwner) : ResetBit(kIsOwner); }
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
    static TCollection  *GetCurrentCollection();
@@ -106,7 +106,7 @@ public:
    static void          GarbageCollect(TObject *obj);
    static void          EmptyGarbageCollection();
 
-   ClassDef(TCollection,2)  //Collection abstract base class
+   ClassDef(TCollection,3)  //Collection abstract base class
 };
 
 

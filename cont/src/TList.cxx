@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.2 2000/06/27 15:09:54 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.3 2000/06/27 15:51:15 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -59,7 +59,8 @@ ClassImp(TList)
 //______________________________________________________________________________
 TList::~TList()
 {
-   // Delete the list. Objects are not deleted.
+   // Delete the list. Objects are not deleted unless the TList is the
+   // owner (set via SetOwner()).
 
    Clear();
 }
@@ -307,12 +308,19 @@ TObject *TList::Before(TObject *obj) const
 //______________________________________________________________________________
 void TList::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects.
+   // Remove all objects from the list. Does not delete the objects
+   // unless the TList is the owner (set via SetOwner()) and option
+   // "nodelete" is not set.
    // If option="nodelete" then don't delete any heap objects that were
    // marked with the kCanDelete bit, otherwise these objects will be
-   // deleted.
+   // deleted (this option is used by THashTable::Clear()).
 
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
+
+   if (!nodel && IsOwner()) {
+      Delete();
+      return;
+   }
 
    while (fFirst) {
       TObjLink *tlk = fFirst;
