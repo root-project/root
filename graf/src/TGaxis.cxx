@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.71 2004/06/16 08:23:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.72 2004/06/16 08:51:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -237,7 +237,7 @@ void TGaxis::CenterLabels(Bool_t center)
 //   if center = kTRUE axis labels are centered in the center of the bin
 //   default is to center on the primary tick marks
 //   This option does not make sense if there are more bins than tick marks.
-   
+
    if (center) SetBit(TAxis::kCenterLabels);
    else        ResetBit(TAxis::kCenterLabels);
 }
@@ -313,7 +313,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
    SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
    SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
-   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2   
+   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2
    SetTimeFormat(axis->GetTimeFormat());
 }
 
@@ -326,7 +326,7 @@ void TGaxis::Paint(Option_t *)
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
    Int_t    ndiv = fNdiv;
-   
+
    // following code required to support toggle of lin/log scales
    Double_t x1 = gPad->XtoPad(fX1);
    Double_t y1 = gPad->YtoPad(fY1);
@@ -477,9 +477,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //   The format is set with SetTimeFormat().
 //   wmin and wmax are considered as two time values in seconds.
 //   The time axis will be spread around the time offset value (set with
-//   SetTimeOffset() ). Actually it will go from TimeOffset+wmin to 
+//   SetTimeOffset() ). Actually it will go from TimeOffset+wmin to
 //   TimeOffset+wmax.
-//   see examples in tutorials timeonaxis.C and timeonaxis2.C 
+//   see examples in tutorials timeonaxis.C and timeonaxis2.C
 //
 //       chopt='t': Plot times with a defined format instead of values
 //
@@ -649,7 +649,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             tp.tm_hour  = hh;
             tp.tm_min   = mi;
             tp.tm_sec   = ss;
-            tp.tm_isdst = -1;
+            tp.tm_isdst = 0; // daylight saving time is not in effect (see mktime man pages)
             timeoffset  = mktime(&tp);
             // have to correct this time to go back to UTC
             timeoffsettest = (time_t)((Long_t)timeoffset);
@@ -691,7 +691,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          tp0->tm_hour  = 0;
          tp0->tm_min   = 0;
          tp0->tm_sec   = 0;
-         tp0->tm_isdst = -1;
+         tp0->tm_isdst = 0; // daylight saving time is not in effect (see mktime man pages)
          rangeBase = (timetp-mktime(tp0)); // years
          rangeOffset = (Double_t) (rangeBase);
       }
@@ -818,7 +818,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    Int_t maxDigits = 5;
    if (fAxis) maxDigits = fgMaxDigits;
-   
+
    TLine *lineaxis = new TLine();
    TLatex *textaxis = new TLatex();
    lineaxis->SetLineColor(GetLineColor());
@@ -1080,7 +1080,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
    } else if (Y0 == Y1) {
       if (OptionMinus && !OptionPlus) {
-         Ylabel = fLabelOffset+0.5*fLabelSize; 
+         Ylabel = fLabelOffset+0.5*fLabelSize;
          Ylabel += TMath::Abs(atick[0]);
       } else {
          Ylabel = -fLabelOffset;
@@ -1447,7 +1447,7 @@ L110:
                      timeformattmp.ReplaceAll("%S0.","%Ss");
 
                   }
-                  
+
                   strftime(LABEL,256,timeformattmp.Data(),utctis);
                   strcpy(CHTEMP,&LABEL[0]);
                   first = 0; last=strlen(LABEL)-1;
@@ -1861,16 +1861,16 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
       out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
    }
    if (fLineColor != 1) {
-      out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;   
+      out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (fLineStyle != 1) {
-      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;   
+      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;
    }
    if (fLineWidth != 1) {
-      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<endl;   
+      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<endl;
    }
    if (fLabelFont != 62) {
-      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;   
+      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;
    }
    if (TestBit(TAxis::kMoreLogLabels)) {
       out<<"   gaxis->SetMoreLogLabels();"<<endl;
@@ -1878,7 +1878,7 @@ void TGaxis::SavePrimitive(ofstream &out, Option_t *)
    if (TestBit(TAxis::kNoExponent)) {
       out<<"   gaxis->SetNoExponent();"<<endl;
    }
-   
+
    out<<"   gaxis->Draw();"<<endl;
 }
 
@@ -1887,7 +1887,7 @@ void TGaxis::SetDecimals(Bool_t dot)
 {
 // Set the Decimals flag
 // By default, blank characters are stripped, and then the
-// label is correctly aligned. The dot, if last character of the string, 
+// label is correctly aligned. The dot, if last character of the string,
 // is also stripped, unless this option is specified.
 // One can disable the option by calling axis.SetDecimals(kTRUE).
 // Note the bit is set in fBits (as opposed to fBits2 in TAxis!)
@@ -2008,13 +2008,13 @@ void TGaxis::SetTimeFormat(const char *tformat)
       fTimeFormat = timeformat;
       return;
    }
-   
+
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) {
       Int_t LnF = fTimeFormat.Length();
-      TString stringtimeoffset = fTimeFormat(IdF,LnF);  
+      TString stringtimeoffset = fTimeFormat(IdF,LnF);
       fTimeFormat = tformat;
-      fTimeFormat.Append(stringtimeoffset);        
+      fTimeFormat.Append(stringtimeoffset);
    } else {
       fTimeFormat = tformat;
       SetTimeOffset(gStyle->GetTimeOffset());
@@ -2033,7 +2033,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    Bool_t gmt = kFALSE;
    if (opt.Contains("gmt")) gmt = kTRUE;
 
-   char tmp[20]; 
+   char tmp[20];
    time_t timeoff;
    struct tm* utctis;
    Int_t IdF = fTimeFormat.Index("%F");
@@ -2041,9 +2041,9 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
-   utctis = gmtime(&timeoff); 
+   utctis = gmtime(&timeoff);
 
-   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
+   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 
    // append the decimal part of the time offset
