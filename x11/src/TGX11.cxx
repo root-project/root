@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.28 2003/01/22 11:23:04 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.29 2003/02/11 12:29:08 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -901,7 +901,11 @@ void TGX11::FindUsableVisual(XVisualInfo *vlist, Int_t nitems)
 
       w = XCreateWindow(fDisplay, root, -20, -20, 10, 10, 0, vlist[i].depth,
                         CopyFromParent, vlist[i].visual,
+#ifdef R__SOLARIS
+                        CWColormap|CWOverrideRedirect, &attr);
+#else
                         CWColormap|CWBorderPixel|CWOverrideRedirect, &attr);
+#endif
       if (w != None && XGetGeometry(fDisplay, w, &wjunk, &junk, &junk,
                                     &width, &height, &ujunk, &ujunk)) {
          fVisual     = vlist[i].visual;
