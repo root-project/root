@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.33 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.24 2001/10/03 10:16:50 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,8 +29,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -50,7 +51,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TDatime.h"
-#include "TProcessID.h"
+#include "TRef.h"
 #include "TMath.h"
 
 
@@ -62,11 +63,11 @@ class TDumpMembers : public TMemberInspector {
 
 public:
    TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
 {
    // Print value of member mname.
    //
@@ -184,7 +185,7 @@ TObject::TObject(const TObject &obj)
       fBits |= kIsOnHeap;
    else
       fBits &= ~kIsOnHeap;
-
+   
    fBits &= ~kIsReferenced;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
@@ -229,7 +230,7 @@ void TObject::Copy(TObject &obj)
 TObject::~TObject()
 {
    // TObject destructor. Removes object from all canvases and object browsers
-   // if observer bit is on and remove from the global object table.
+   // iff observer bit is on and remove from the global object table.
 
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
@@ -307,7 +308,6 @@ TObject *TObject::Clone(const char *) const
    buffer->SetBufferOffset(0);
    buffer->MapObject(newobj);  //register obj in map to handle self reference
    newobj->Streamer(*buffer);
-   newobj->ResetBit(kIsReferenced);
    gFile = filsav;
 
    delete buffer;
@@ -429,20 +429,20 @@ void TObject::Dump() const
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params, int* error)
+void TObject::Execute(const char *method, const char *params)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params, int* error)
+void TObject::Execute(TMethod *method, TObjArray *params)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:
@@ -451,7 +451,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
@@ -605,11 +605,7 @@ void TObject::Inspect() const
    //End_Html
 
 #ifdef WIN32
-#ifdef GDK_WIN32
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
-#else
    gGuiFactory->CreateInspectorImp(this, 400, 200);
-#endif
 #else
    gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
 #endif
@@ -874,7 +870,6 @@ void TObject::Streamer(TBuffer &R__b)
    // Stream an object of class TObject.
 
    if (IsA()->CanIgnoreTObjectStreamer()) return;
-   UShort_t pidf;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
@@ -883,17 +878,14 @@ void TObject::Streamer(TBuffer &R__b)
       //if the object is referenced, we must read its old address
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
-      R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
-      if (pid) pid->PutObjectWithID(this);
+      TRef::ReadRef(this,R__b,gFile);
    } else {
       R__b.WriteVersion(TObject::IsA());
       R__b << fUniqueID;
       R__b << fBits;
       //if the object is referenced, we must save its address/file_pid
       if (!TestBit(kIsReferenced)) return;
-      pidf = (UShort_t)TProcessID::WriteProcessID(0,gFile);
-      R__b << pidf;
+      TRef::SaveRef(this,R__b,gFile);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.10 2001/08/21 17:29:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.9 2001/05/29 10:22:02 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    virtual void      SetTextSize(Float_t textsize);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy);
-   virtual Int_t     WriteGIF(char *name);
+   virtual void      WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----
@@ -341,7 +341,7 @@ inline void      TVirtualX::SetTextMagnitude(Float_t) { }
 inline void      TVirtualX::SetTextSize(Float_t) { }
 inline void      TVirtualX::UpdateWindow(Int_t) { }
 inline void      TVirtualX::Warp(Int_t, Int_t) { }
-inline Int_t     TVirtualX::WriteGIF(char *) {return 0;}
+inline void      TVirtualX::WriteGIF(char *) { }
 inline void      TVirtualX::WritePixmap(Int_t, UInt_t, UInt_t, char *) { }
 
 //---- Methods used for GUI -----

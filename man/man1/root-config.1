@@ -1,5 +1,5 @@
 .\"
-.\" $Id: root-config.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\" $Id: root-config.1,v 1.2 2001/04/23 09:10:12 rdm Exp $
 .\"
 .TH ROOT-CONFIG 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -24,17 +24,12 @@ GLIBS  = $(shell root-config --glibs)
 in you Makefile.
 .PP
 You may also find the \fIautomake\fR(1), \fIautoconf\fR(1), and
-\fIlibtool\fR(1) macro file \fI/usr/share/aclocal/root.m4\fR
-useful. In the directories you use \fBROOT\fR libraries, have in your 
+\fIlibtool\fR(1) macro file \fI/usr/share/root/acinclude.m4\fR
+useful. Copy the contents to your source package \fIacinclude.m4\fR
+file, and in the directories you use \fBROOT\fR libraries, have in your
 \fIMakefile.am\fR file:
 .RS 
 .nf 
-ROOTCINT                = @ROOTCINT@
-ROOTLDFLAGS             = -L@ROOTLIBDIR@
-ROOTCPPFLAGS            = -I@ROOTINCDIR@
-ROOTLIBS                = @ROOTLIBS@
-ROOTCFLAGS              = @ROOTCFLAGS@
-
 lib_LTLIBRARIES         = libFoo.la
 libFoo_la_SOURCES       = Foo.cxx       Foo.h \\
                           FooCint.cxx   FooCint.h
@@ -42,12 +37,18 @@ libFoo_la_LDFLAGS       = -version-info 1:0
 
 BUILT_SOURCES           = FooCint.cxx FooCint.h 
 
-AM_CPPFLAGS             = $(ROOTCPPFLAGS)
-AM_LDFLAGS              = $(ROOTLDFLAGS)
+ROOTCONF                = @ROOTCONF@
+ROOTCINT                = $(shell $(ROOTCONF) --prefix)/bin/rootcint
+ROOTLIBS                = $(shell $(ROOTCONF) --libs)
+ROOTCFLAGS              = $(shell $(ROOTCONF) --cflags)
+
+INCLUDES                = -I$(top_srcdir)/include $(ROOTCFLAGS)
+CINTINCLUDES            = -I$(top_srcdir)/include 
+LIBS                    = $(ROOTLIBS)
 CLEANFILES              = *Cint.cxx *Cint.h *~ core 
 
-%Cint.cxx %Cint.h:%Inc.h %LinkDef.h
-        $(ROOTCINT) -f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
+%Cint.cxx:%Inc.h %LinkDef.h
+        $(ROOTCINT) -f $@ -c $(CINTINCLUDES) $^  
 
 .fi
 .RE
@@ -58,7 +59,8 @@ appropiate source files in the \fB_SOURCES\fR variable. In you
 .nf
 AC_PROG_CC
 AC_PROG_CXX
-ROOT_PATH
+AC_ROOT
+AM_DISABLE_STATIC
 AM_PROG_LIBTOOL
 .fi
 .RE
@@ -84,12 +86,6 @@ If no argument is given, report where the libraries are installed. If
 an argument is given, use that as the installation base directory for
 the libraries. This option does not affect the include path. 
 .TP
-.B --libdir
-Print the directory where the ROOT libraries are installed. 
-.TP
-.B --incdir
-Print the directory where the ROOT headers are installed. 
-.TP
 .B --libs
 Output a line suitable for linking a program agains the \fBROOT\fR
 libraries. No graphics libraries are output. 
@@ -102,28 +98,12 @@ Output a line suitable for compiling a source file againd the
 \fBROOT\fR header (class declararion) files. 
 .TP
 .B --new 
-Put the \fBlibNew.so\fR library in the library lists.  This option
-\fImust\fR be given before options \fB--libs\fR and \fB--glibs\fR. 
+Output a line suitable for linking against the \fBROOT\fR library
 .TP
 .B --nonew 
 Compatiblity option. Does nothing. 
-.TP
-.B --auxlibs
-Print auxiliary libraries and/or system linker flags.
-.TP
-.B --noauxlibs
-Do not print auxiliary libraries and/or system linker flags in the
-output of \fB--libs\fR and \fB--glibs\fR. 
-.B --auxcflags
-Print auxiliary compiler flags.
-.TP
-.B --noauxcflags
-Do not print auxiliary compiler flags in the output of
-\fB--cflags\fR.
-.TP
-.B --noldflags
-Do not print library path link option in output of \fB--libs\fR and
-\fB--glibs\fR. 
+\fBlibNew\fR. This option \fImust\fR be given before options
+\fB--libs\fR and \fB--glibs\fR. 
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIroot-cint\fR(1)
 .PP
@@ -170,10 +150,6 @@ This manual page was written by Christian Holm Christensen
 others). 
 .\"
 .\" $Log: root-config.1,v $
-.\" Revision 1.1  2001/08/15 13:30:48  rdm
-.\" move man files to new subdir man1. This makes it possible to add
-.\" $ROOTSYS/man to MANPATH and have "man root" work.
-.\"
 .\" Revision 1.2  2001/04/23 09:10:12  rdm
 .\" updates by Christian Holm for making debian and RedHat packages.
 .\"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.7 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.cxx,v 1.5 2000/09/06 14:20:10 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -78,7 +78,8 @@
 */
 //End_Html
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TTask.h"
 #include "TBrowser.h"
 #include "TROOT.h"

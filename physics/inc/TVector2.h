@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.4 2000/12/19 09:23:29 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.3 2000/11/23 08:32:00 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
   friend Double_t       operator ^ (const TVector2&, const TVector2&);
 
                                         // ****** setters
-  void Set(const TVector2& v);
+  void Set(TVector2& v);
   void Set(Double_t x0, Double_t y0);
   void Set(float  x0, float  y0);
 
@@ -90,7 +90,7 @@ public:
                                         // phi() is defined in [0,TWOPI]
 
   Double_t Phi           () const { return kPI+TMath::ATan2(-fY,-fX); };
-  Double_t DeltaPhi(const TVector2& v) const;
+  Double_t DeltaPhi(TVector2& v) const;
 
                                         // unit vector in the direction of *this
 
@@ -177,7 +177,7 @@ inline Double_t   operator ^ (const TVector2& v1, const TVector2& v2) {
   return  v1.fX*v2.fY-v1.fY*v2.fX;
 }
 
-inline  Double_t TVector2::DeltaPhi(const TVector2& v) const { return Phi_mpi_pi(Phi()-v.Phi()); }
+inline  Double_t TVector2::DeltaPhi(TVector2& v) const { return Phi_mpi_pi(Phi()-v.Phi()); }
 
 inline  TVector2 TVector2::Unit() const {return (Mod2()) ? *this/Mod() : TVector2(0); }
 
@@ -189,7 +189,7 @@ inline  TVector2 TVector2::Norm(const TVector2& v) const {return *this-Proj(v); 
 
                                      // ****** setters
 
-inline void TVector2::Set(const TVector2& v   )     { fX = v.fX; fY = v.fY; }
+inline void TVector2::Set(TVector2& v              )     { fX = v.fX; fY = v.fY; }
 inline void TVector2::Set(Double_t x0, Double_t y0) { fX = x0  ; fY = y0 ;  }
 inline void TVector2::Set(float  x0, float  y0)     { fX = x0  ; fY = y0 ;  }
 

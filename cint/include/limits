@@ -1,7 +1,3 @@
-#ifdef __MAKECINT__
-#include <prec_stl/limits>
-#else
 namespace std {
 #include <limits.h>
 }
-#endif

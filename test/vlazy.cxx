@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.5 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.3 2001/03/14 08:03:36 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -12,7 +12,7 @@
 
 #include "TStopwatch.h"
 #include "TMatrix.h"
-#include "Riostream.h"
+#include <iostream.h>
 
 
 class do_downsample : public TElementPosAction {

@@ -1,12 +1,10 @@
 #!/bin/sh -e 
 #
-# $Id: makedebchangelog.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id$
 #
 # Write a changelog file 
 #
-tgtdir=$1 ; shift
-debdir=$1 ; shift 
-versi=$1
+. build/package/lib/common.sh debian 
 
 cp ${debdir}/changelog ${tgtdir}
 
@@ -18,8 +16,5 @@ else
 fi
 
 #
-# $Log: makedebchangelog.sh,v $
-# Revision 1.1  2001/04/23 14:11:47  rdm
-# part of the debian and redhat build system.
-#
+# $Log$
 #

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.6 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
-
 #include "TLegendEntry.h"
 #include "TVirtualPad.h"
 #include "TROOT.h"
-#include "Riostream.h"
 
+#include <fstream.h>
+#include <stdio.h>
+#include <iostream.h>
 
 ClassImp(TLegendEntry)
 
@@ -33,7 +33,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 
 //____________________________________________________________________________
 TLegendEntry::TLegendEntry(TObject* obj, const char* label, Option_t* option )
-             :TAttText(12,0,1,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
+             :TAttText(12,0,1,62,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
   //___________________________________
   // TLegendEntry normal constructor for one entry in a TLegend

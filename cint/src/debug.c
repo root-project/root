@@ -226,18 +226,6 @@ char *func;
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1601
-static int G__tempfilenum = G__MAXFILE-1;
-
-/****************************************************************
-* G__gettempfilenum()
-****************************************************************/
-int G__gettempfilenum()
-{
-  return(G__tempfilenum);
-}
-#endif
-
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
@@ -277,9 +265,7 @@ char *file;
 
   int len;
 
-#ifdef G__OLDIMPLEMENTATION1601
   static int filenum = G__MAXFILE-1;
-#endif
   fpos_t pos;
   char store_var_type;
   struct G__input_file ftemp,store_ifile;
@@ -308,15 +294,6 @@ char *file;
   if(ftemp.fp) {
     ftemp.line_number = 1;
     sprintf(ftemp.name,file);
-#ifndef G__OLDIMPLEMENTATION1601
-    ftemp.filenum = G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = ftemp.fp;
-    G__srcfile[G__tempfilenum].filename=ftemp.name;
-    G__srcfile[G__tempfilenum].hash=0;
-    G__srcfile[G__tempfilenum].maxline=0;
-    G__srcfile[G__tempfilenum].breakpoint = (char*)NULL;
-    --G__tempfilenum;
-#else
     ftemp.filenum = filenum;
     G__srcfile[filenum].fp = ftemp.fp;
     G__srcfile[filenum].filename=ftemp.name;
@@ -324,7 +301,6 @@ char *file;
     G__srcfile[filenum].maxline=0;
     G__srcfile[filenum].breakpoint = (char*)NULL;
     --filenum;
-#endif
     if(G__ifile.fp && G__ifile.filenum>=0) {
       fgetpos(G__ifile.fp,&pos);
     }
@@ -422,15 +398,9 @@ char *file;
      * done for 'x' and 'E' command  but not for { } command */
     /* G__security = G__srcfile[G__ifile.filenum].security; */
     fclose(ftemp.fp);
-#ifndef G__OLDIMPLEMENTATION1601
-    ++G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
-    G__srcfile[G__tempfilenum].filename=(char*)NULL;
-#else
     ++filenum;
     G__srcfile[filenum].fp = (FILE*)NULL;
     G__srcfile[filenum].filename=(char*)NULL;
-#endif
 #ifndef G__OLDIMPLEMENTATION630
     if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
 #else

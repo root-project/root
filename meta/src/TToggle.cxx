@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 // which may be important while building universal objects...           //
 // When user provides a "set-method" of name SetXXX this object tries   //
 // automaticaly find a matching "get-method" by lookin for a method     //
-// with name GetXXX, IsXXX or HasXXX for given object.                  //
+// with name GetXXX or IsXXXfor given object.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

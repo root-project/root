@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.6 2001/10/08 15:05:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.5 2001/10/06 13:12:15 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -116,7 +116,7 @@
 #else
 #include <unistd.h>
 #include <sys/time.h>
-#if defined(R__LINUX)
+#ifdef R__LINUX
 #include <sys/sysinfo.h>
 #endif
 #endif
@@ -408,7 +408,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    GetComputerName(r.hostname, &r.l);
 #else
    struct randomness {
-#if defined(R__LINUX) 
+#ifdef R__LINUX
       struct sysinfo   s;
 #endif
       struct timeval   t;
@@ -416,7 +416,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    };
    randomness r;
 
-#if defined(R__LINUX) 
+#ifdef R__LINUX
    sysinfo(&r.s);
 #endif
    gettimeofday(&r.t, 0);

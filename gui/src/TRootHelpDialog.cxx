@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.4 2000/07/11 10:16:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -51,9 +51,9 @@ TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)((TGFrame *) main)->GetWidth() - (fWidth >> 1),
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
+                          ((TGFrame *) main)->GetWidth() - (fWidth >> 1),
+                          (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdum);
    Move(ax, ay);
    SetWMPosition(ax, ay);
 }

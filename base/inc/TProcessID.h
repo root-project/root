@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.3 2001/12/02 15:11:32 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.4 2001/09/28 07:54:00 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -25,8 +25,8 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TObjArray
-#include "TObjArray.h"
+#ifndef ROOT_TMap
+#include "TExMap.h"
 #endif
 
 class TFile;
@@ -34,35 +34,24 @@ class TFile;
 class TProcessID : public TNamed {
 
 protected:
-   Int_t              fCount;     //!Reference count to this object (from TFile)
-   TObjArray         *fObjects;   //!Array pointing to the referenced objects
+   Int_t     fCount;          //!Reference count to this object (from TFile)
+   TExMap     *fMap;          //!Pointer to the map descriptor
    
-   static TProcessID *fgPID;      //Pointer to current session ProcessID
-   static TObjArray  *fgPIDs;     //Table of ProcessIDs
-   static UInt_t      fgNumber;   //Referenced objects count
-  
-  public:
+public:
    TProcessID();
+   TProcessID(Int_t pid);
    TProcessID(const TProcessID &ref);
    virtual ~TProcessID();
    Int_t            DecrementCount();
    Int_t            IncrementCount();
    Int_t            GetCount() const {return fCount;}
-   TObjArray       *GetObjects() const {return fObjects;}
-   TObject         *GetObjectWithID(UInt_t uid);
-   void             PutObjectWithID(TObject *obj, UInt_t uid=0);
+   TExMap          *GetMap() const {return fMap;}
+   TObject         *GetObjectWithID(Long_t uid);
+   void             PutObjectWithID(Long_t uid, TObject *obj);
    virtual void     RecursiveRemove(TObject *obj);
    
-   static TProcessID  *AddProcessID();
-   static UInt_t       AssignID(TObject *obj);
-   static void         Cleanup();
-   static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
-   static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
-   static TProcessID  *GetProcessID(UShort_t pid);
-   static TProcessID  *GetSessionProcessID();
-   static  UInt_t      GetObjectCount();
-   static  void        SetObjectCount(UInt_t number);
-         
+   static TProcessID  *ReadProcessID(Int_t pidf , TFile *file);
+      
    ClassDef(TProcessID,1)  //Process Unique Identifier in time and space
 };
 

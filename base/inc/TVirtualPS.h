@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.3 2001/11/04 17:29:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -43,9 +43,6 @@ public:
    TVirtualPS();
    TVirtualPS(const char *filename, Int_t type=-111);
    virtual     ~TVirtualPS();
-   virtual void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) = 0;
-   virtual void  CellArrayFill(Int_t r, Int_t g, Int_t b) = 0;
-   virtual void  CellArrayEnd() = 0;
    virtual void  Close(Option_t *opt="") = 0;
    virtual void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) = 0;
    virtual void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
@@ -58,7 +55,6 @@ public:
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  PrintFast(Int_t nch, const char *string="") = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
-   virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
 
    ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };

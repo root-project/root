@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.12 2002/01/09 15:18:05 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.8 2000/12/11 18:55:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,35 +39,35 @@ class TMemberInspector;
 
 //---- types -------------------------------------------------------------------
 
-typedef char           Char_t;      //Signed Character 1 byte (char)
-typedef unsigned char  UChar_t;     //Unsigned Character 1 byte (unsigned char)
-typedef short          Short_t;     //Signed Short integer 2 bytes (short)
-typedef unsigned short UShort_t;    //Unsigned Short integer 2 bytes (unsigned short)
+typedef char           Char_t;      //Signed Character 1 byte
+typedef unsigned char  UChar_t;     //Unsigned Character 1 byte
+typedef short          Short_t;     //Signed Short integer 2 bytes
+typedef unsigned short UShort_t;    //Unsigned Short integer 2 bytes
 #ifdef R__INT16
 typedef long           Int_t;       //Signed integer 4 bytes
 typedef unsigned long  UInt_t;      //Unsigned integer 4 bytes
 #else
-typedef int            Int_t;       //Signed integer 4 bytes (int)
-typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes (unsigned int)
+typedef int            Int_t;       //Signed integer 4 bytes
+typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes
 #endif
 #ifdef R__B64    // Note: Long_t and ULong_t are currently not portable types
-typedef int            Seek_t;      //File pointer (int)
-typedef long           Long_t;      //Signed long integer 8 bytes (long)
-typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes (unsigned long)
+typedef int            Seek_t;      //File pointer
+typedef long           Long_t;      //Signed long integer 8 bytes
+typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes
 #else
-typedef int            Seek_t;      //File pointer (int)
-typedef long           Long_t;      //Signed long integer 4 bytes (long)
-typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
+typedef int            Seek_t;      //File pointer
+typedef long           Long_t;      //Signed long integer 4 bytes
+typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes
 #endif
-typedef float          Float_t;     //Float 4 bytes (float)
-typedef double         Double_t;    //Float 8 bytes (double)
-typedef char           Text_t;      //General string (char)
-typedef unsigned char  Bool_t;      //Boolean (0=false, 1=true) (unsigned char)
-typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)
-typedef short          Version_t;   //Class version identifier (short)
-typedef const char     Option_t;    //Option string (const char)
-typedef int            Ssiz_t;      //String size (int)
-typedef float          Real_t;      //TVector and TMatrix element type (float)
+typedef float          Float_t;     //Float 4 bytes
+typedef double         Double_t;    //Float 8 bytes
+typedef char           Text_t;      //General string
+typedef unsigned char  Bool_t;      //Boolean (0=false, 1=true)
+typedef unsigned char  Byte_t;      //Byte (8 bits)
+typedef short          Version_t;   //Class version identifier
+typedef const char     Option_t;    //Option string
+typedef int            Ssiz_t;      //String size
+typedef float          Real_t;      //TVector and TMatrix element type
 
 typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
@@ -152,7 +152,6 @@ public: \
    virtual void Streamer(TBuffer &b); \
    void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
-   friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
    _ClassInit_(name) \
    static const char *DeclFileName() { return __FILE__; } \
    static int DeclFileLine() { return __LINE__; } \
@@ -160,8 +159,6 @@ public: \
    static int ImplFileLine();
 
 #define _ClassImp_(name) \
-   TBuffer &operator>>(TBuffer &buf, const name *&obj) \
-      { return operator>>(buf, (name *&) obj); } \
    TClass *name::Class() \
       { if (!fgIsA) name::Dictionary(); return fgIsA; } \
    const char *name::ImplFileName() { return __FILE__; } \
@@ -223,11 +220,7 @@ public: \
    };
 
 #define ClassDefT2(name,Tmpl) \
-   template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl> *&obj); \
-   template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl> *&obj) \
-      { return operator>>(buf, (name<Tmpl> *&) obj); } \
+   template <class Tmpl> TBuffer &operator>>(TBuffer &, name<Tmpl> *&); \
    _ClassInitT_(name,Tmpl)
 
 #define _ClassImpT_(name,Tmpl) \
@@ -248,6 +241,7 @@ public: \
 
 
 //---- ClassDefT macros for templates with two template arguments --------------
+// ClassDefT   corresponds to ClassDef
 // ClassDef2T2 goes in the same header as ClassDefT but must be
 //             outside the class scope
 // ClassImp2T  corresponds to ClassImpT
@@ -268,10 +262,7 @@ public: \
 
 #define ClassDef2T2(name,Tmpl1,Tmpl2) \
    template <class Tmpl1, class Tmpl2> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2> *&obj); \
-   template <class Tmpl1, class Tmpl2> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2> *&obj) \
-      { return operator>>(buf, (name<Tmpl1, Tmpl2> *&) obj); } \
+   TBuffer &operator>>(TBuffer &, name<Tmpl1, Tmpl2> *&); \
    _ClassInit2T_(name,Tmpl1,Tmpl2)
 
 #define _ClassImp2T_(name,Tmpl1,Tmpl2) \
@@ -297,6 +288,7 @@ public: \
 
 
 //---- ClassDefT macros for templates with three template arguments ------------
+// ClassDefT   corresponds to ClassDef
 // ClassDef3T2 goes in the same header as ClassDefT but must be
 //             outside the class scope
 // ClassImp3T  corresponds to ClassImpT
@@ -317,10 +309,7 @@ public: \
 
 #define ClassDef3T2(name,Tmpl1,Tmpl2,Tmpl3) \
    template <class Tmpl1, class Tmpl2, class Tmpl3> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2, Tmpl3> *&obj); \
-   template <class Tmpl1, class Tmpl2, class Tmpl3> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2, Tmpl3> *&obj) \
-      { return operator>>(buf, (name<Tmpl1, Tmpl2, Tmpl3> *&) obj); } \
+   TBuffer &operator>>(TBuffer &, name<Tmpl1, Tmpl2, Tmpl3> *&); \
    _ClassInit3T_(name,Tmpl1,Tmpl2,Tmpl3)
 
 #define _ClassImp3T_(name,Tmpl1,Tmpl2,Tmpl3) \

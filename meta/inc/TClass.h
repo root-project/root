@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.18 2001/12/02 16:50:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.16 2001/05/25 06:24:15 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -63,7 +63,6 @@ private:
    G__ClassInfo     *fClassInfo;       //pointer to CINT class info class
 
    TMethod          *GetClassMethod(Long_t faddr);
-   TMethod          *GetClassMethod(const char*name, const char* signature);
 
    static Bool_t     fgCallingNew;     //True when TClass:New is executing
    static Int_t      fgClassCount;     //provides unique id for a each class
@@ -73,8 +72,7 @@ private:
 
 public:
    // TClass status bits
-   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13),
-          kUnloaded = BIT(15) };
+   enum { kClassSaved = BIT(12) , kIgnoreTObjectStreamer = BIT(13)};
 
    TClass();
    TClass(const char *name);
@@ -126,7 +124,6 @@ public:
    Bool_t         InheritsFrom(const char *cl) const;
    Bool_t         InheritsFrom(const TClass *cl) const;
    Bool_t         IsFolder() const {return kTRUE;}
-   Bool_t         IsLoaded() const;
    void          *New(Bool_t defConstructor = kTRUE);
    void          *New(void *arena, Bool_t defConstructor = kTRUE);
    void           Destructor(void *obj, Bool_t dtorOnly = kFALSE);
@@ -135,7 +132,6 @@ public:
    void           ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    Int_t          Size() const;
    TStreamerInfo *SetStreamerInfo(Int_t version, const char *info="");
-   void           SetUnloaded();
    Long_t         Property() const;
    void           SetStreamer(const char *name, Streamer_t p);
    Int_t          WriteBuffer(TBuffer &b, void *pointer, const char *info="");

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.9 2001/11/05 17:31:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.7 2001/02/03 15:41:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,6 @@
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
 #pragma link C++ global kNPOS;
-#pragma link C++ global kInfo;
 #pragma link C++ global kWarning;
 #pragma link C++ global kError;
 #pragma link C++ global kSysError;
@@ -36,7 +35,6 @@
 #pragma link C++ global gRandom;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
-#pragma link C++ global gErrorAbortLevel;
 #pragma link C++ global gStyle;
 #pragma link C++ global gVirtualGL;
 #pragma link C++ global gVirtualX;

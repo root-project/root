@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.7 2001/10/25 07:50:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.3 2000/10/31 11:18:25 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -30,11 +30,12 @@
 #include "Strlen.h"
 #include "Api.h"
 
+#include "G__ci.h"
+
 #ifndef WIN32
 extern long G__globalvarpointer;
 #endif
 
-extern "C" void G__settemplevel(int);
 
 ClassImp(TMethodCall)
 
@@ -209,7 +210,6 @@ void TMethodCall::Execute(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    if (fDtorOnly) {
 #ifdef WIN32
       long saveglobalvar = G__getgvp();
@@ -224,7 +224,6 @@ void TMethodCall::Execute(void *object)
 #endif
    } else
       fFunc->Exec(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -236,9 +235,7 @@ void TMethodCall::Execute(void *object, const char *params)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    fFunc->Exec(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -248,9 +245,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    retLong = fFunc->ExecInt(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -262,9 +257,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    retLong = fFunc->ExecInt(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -274,9 +267,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    retDouble = fFunc->ExecDouble(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -288,9 +279,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    retDouble = fFunc->ExecDouble(address);
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -300,9 +289,7 @@ void TMethodCall::Execute(void *object, char **retText)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    *retText =(char*) (fFunc->ExecInt(address));
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -314,9 +301,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   G__settemplevel(1);
    *retText =(char*)( fFunc->ExecInt(address));
-   G__settemplevel(-1);
 }
 
 //______________________________________________________________________________
@@ -333,15 +318,6 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          Error("ReturnType","Unknown method");
          return kOther;
       }
-
-      // count the number of stars in the name.
-      Int_t nstar = 0;
-      const char* returntype = func->GetReturnTypeName();
-      while (*returntype) {
-         if (*returntype == '*') nstar++;
-         returntype++;
-      }
-
       G__TypedefInfo type(func->GetReturnTypeName());
       const char *name = type.TrueName();
 
@@ -350,30 +326,21 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          name = type.TrueName();
       }
 
-      if ( (nstar==1) && 
-           (!strcmp("unsigned char", name)        || !strcmp("char", name)         ||
-            !strcmp("UChar_t", name)              || !strcmp("Char_t", name)       ||
-            !strcmp("const unsigned char", name)  || !strcmp("const char", name)   ||
-            !strcmp("const UChar_t", name)        || !strcmp("const Char_t", name) ||
-            !strcmp("unsigned char*", name)        || !strcmp("char*", name)         ||
-            !strcmp("UChar_t*", name)              || !strcmp("Char_t*", name)       ||
-            !strcmp("const unsigned char*", name)  || !strcmp("const char*", name)   ||
-            !strcmp("const UChar_t*", name)        || !strcmp("const Char_t*", name))) 
-         fRetType = kString;
-      else if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
-               !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
-               !strcmp("unsigned short", name) || !strcmp("short", name)   ||
-               !strcmp("unsigned char", name)  || !strcmp("char", name)    ||
-               !strcmp("UInt_t", name)         || !strcmp("Int_t", name)   ||
-               !strcmp("ULong_t", name)        || !strcmp("Long_t", name)  ||
-               !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
-               !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
-               strstr(name, "enum"))
+      if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
+          !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
+          !strcmp("unsigned short", name) || !strcmp("short", name)   ||
+          !strcmp("unsigned char", name)  || !strcmp("char", name)    ||
+          !strcmp("UInt_t", name)         || !strcmp("Int_t", name)   ||
+          !strcmp("ULong_t", name)        || !strcmp("Long_t", name)  ||
+          !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
+          !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
+          strstr(name, "enum"))
          fRetType = kLong;
       else if (!strcmp("float", name)   || !strcmp("double", name)    ||
                !strcmp("Float_t", name) || !strcmp("Double_t", name))
          fRetType = kDouble;
-      else fRetType = kOther;
+      else
+         fRetType = kOther;
    }
    return fRetType;
 }

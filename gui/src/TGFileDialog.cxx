@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.3 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -42,9 +42,6 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef GDK_WIN32
-#include <sys/stat.h>
-#endif
 
 enum {
    kIDF_CDUP,
@@ -253,9 +250,9 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       int      ax, ay;
       Window_t wdummy;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdummy);
+                                 (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                                 (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                                 ax, ay, wdummy);
       if (ax < 0) ax = 10;
       if (ay < 0) ay = 10;
       Move(ax, ay);
@@ -440,22 +437,6 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                   }
                }
-#else
-#ifdef GDK_WIN32
-               if (parm1 == kButton1) {
-                  if (fFc->NumSelected() == 1) {
-                     f = (TGFileItem *) fFc->GetNextSelected(&p);
-                     if ((f->GetType()) & _S_IFDIR) {
-                        fFc->ChangeDirectory(f->GetItemName()->GetString());
-                        fTreeLB->Update(fFc->GetDirectory());
-                     } else {
-                        fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                       fTbfname->GetString());
-                        delete this;
-                     }
-                  }
-               }
-#endif
 #endif
                break;
 

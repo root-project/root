@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.7 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.5 2001/05/07 18:41:49 rdm Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1736,7 +1736,9 @@ H.&nbsp;Wind.
 //End_Html
 //
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+#include <iomanip.h>
 #include "TMultiDimFit.h"
 #include "TMath.h"
 #include "TH1.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.24 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.18 2001/07/17 09:07:43 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "config.h"
 #endif
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TApplication.h"
 #include "TGuiFactory.h"
 #include "TVirtualX.h"
@@ -96,10 +97,9 @@ TApplication::TApplication(const char *appClassName,
    // method. The recognized options are removed from the argument array.
    // The original list of argument options can be retrieved via the Argc()
    // and Argv() methods. The appClassName "proofserv" is reserved for the
-   // PROOF system. The "options" and "numOptions" arguments are not used,
-   // except if you want to by-pass the argv processing by GetOptions()
-   // in which case you should specify numOptions<0. All options will
-   // still be available via the Argv() method for later use.
+   // PROOF system. The "options" and "numOptions" arguments are not used.
+   // Except numOptions<0 means: don't call GetOptions() (hack needed for
+   // PROOF).
 
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
@@ -297,10 +297,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
-         char *arg = strchr(argv[i], '(');
-         if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
-         if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory make it working directory
@@ -505,23 +502,15 @@ void TApplication::LoadGraphicsLibs()
    gROOT->ProcessLineFast("new TGX11(\"X11\", \"ROOT interface to X11\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
 #else
-#ifndef GDK_WIN32
    gROOT->LoadClass("TGWin32", "Win32");
 
    gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
    gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TWin32GuiFactory();");
-#else
-   gROOT->LoadClass("TGWin32", "Win32gdk");
-   gROOT->LoadClass("TRootGuiFactory", "Gui");
-
-   gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
-   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
-#endif
 #endif
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
+void TApplication::ProcessLine(const char *line, Bool_t sync)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -559,16 +548,16 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
 
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
-      char *s   = strtok(fn, "+(");
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
       if (!mac)
-         Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
+         Printf("No macro %s in path %s", fn, TROOT::GetMacroPath());
       else
          Printf("%s", mac);
       delete [] fn;
       delete [] mac;
       return;
    }
+
 
    if (!strncmp(line, ".L", 2)) {
       char *fn  = Strip(line+3);
@@ -592,11 +581,9 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
                TROOT::GetMacroPath());
       else {
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
-                                          (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix));
          else
-           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix));
       }
 
       delete [] fn;
@@ -605,7 +592,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3,error);
+      ProcessFile(line+3);
       return;
    }
 
@@ -623,13 +610,13 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLineSynch(line);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLine(line);
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessFile(const char *name, int *error)
+void TApplication::ProcessFile(const char *name)
 {
    // Process a file containing a C++ macro.
 
@@ -770,11 +757,9 @@ void TApplication::ProcessFile(const char *name, int *error)
       }
 
       if (tempfile) {
-         gInterpreter->ProcessLineSynch(Form(".x %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".x %s", exname));
       } else
-         gInterpreter->ProcessLineSynch(Form(".X %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".X %s", exname));
 
       delete [] exname;
    }

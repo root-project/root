@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-#
 # Makefile of ROOT for Itanium/Linux with Intel ecc compiler
 
 PLATFORM      = linux
@@ -26,7 +24,7 @@ CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
 
 # Linker:
 LD            = ecc
-LDFLAGS       = -i_dynamic $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Qoption,ld,-soname,
 SOEXT         = so
 

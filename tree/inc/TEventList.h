@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.5 2002/01/20 10:22:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.2 2000/11/21 20:47:45 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -27,8 +27,6 @@
 #endif
 
 class TDirectory;
-class TCollection;
-
 
 class TEventList : public TNamed {
 
@@ -36,7 +34,6 @@ protected:
         Int_t            fN;           //  Number of elements in the list
         Int_t            fSize;        //  Size of array
         Int_t            fDelta;       //  Increment size
-        Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
         Int_t            *fList;       //[fN]Array of elements
         TDirectory       *fDirectory;  //! Pointer to directory holding this tree
 
@@ -53,16 +50,13 @@ public:
         virtual Int_t    GetIndex(Int_t entry) const;
         virtual Int_t   *GetList() const { return fList; }
         virtual Int_t    GetN() const { return fN; }
-        virtual Bool_t   GetReapplyCut() { return fReapply; };
         virtual Int_t    GetSize() const { return fSize; }
-        virtual Int_t    Merge(TCollection *list);
         virtual void     Print(Option_t *option="") const;
         virtual void     Reset(Option_t *option="");
         virtual void     Resize(Int_t delta=0);
         virtual void     SetDelta(Int_t delta=100) {fDelta = delta;}
         virtual void     SetDirectory(TDirectory *dir);
         virtual void     SetName(const char *name); // *MENU*
-        virtual void     SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *MENU*
         virtual void     Sort();
         virtual void     Subtract(const TEventList *list);
 
@@ -70,7 +64,7 @@ public:
  friend TEventList  operator+(const TEventList &list1, const TEventList &list2);
  friend TEventList  operator-(const TEventList &list1, const TEventList &list2);
 
-        ClassDef(TEventList,3)  //A list of selected entries in a TTree.
+        ClassDef(TEventList,2)  //A list of selected entries in a TTree.
 };
 
 #endif

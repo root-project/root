@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.4 2001/11/28 14:49:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.1 2001/10/03 16:43:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -28,33 +28,22 @@
 
 class TProcessID;
 class TFile;
-class TExec;
-class TObjArray;
 
 class TRef : public TObject {
 
 protected:
-   TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
+   TProcessID     *fPID;   //!Pointer to ProcessID when TRef was written
 
-   static TObjArray  *fgExecs;  //List of execs
-   static TObject    *fgObject; //Pointer to object (set in Action on Demand)
-      
 public:
-   //status bits
-   enum { kNotComputed = BIT(12)};
-
    TRef() {fPID = 0;}
    TRef(TObject *obj);
    TRef(const TRef &ref);
    void operator=(TObject *obj);
-   TRef& operator=(const TRef &ref);
    virtual ~TRef() {;}
-   static Int_t       AddExec(const char *name);
-          TObject    *GetObject() const;
-   static TObjArray  *GetListOfExecs();
-   virtual void       SetAction(const char *name);
-   virtual void       SetAction(TObject *parent);
-   static  void       SetObject(TObject *obj);
+           TObject *GetObject() const; //or better by simply dereferencing operator ->
+
+   static  void   ReadRef(TObject *obj, TBuffer &R__b, TFile *file);
+   static  void   SaveRef(TObject *obj, TBuffer &R__b, TFile *file);
 
    ClassDef(TRef,1)  //Persistent Reference link to a TObject
 };

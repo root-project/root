@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.14 2002/01/15 00:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.10 2001/04/10 15:25:18 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -776,7 +776,6 @@ void TString::ReadBuffer(char *&buffer)
    for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
 }
 
-//______________________________________________________________________________
 TString* TString::ReadString(TBuffer &b, const TClass *clReq)
 {
    // Read TString object from buffer. Simplified version of
@@ -1308,15 +1307,12 @@ Bool_t TString::IsAscii() const
 }
 
 //______________________________________________________________________________
-Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
+Bool_t TString::EndsWith(const char* s, ECaseCompare cmp) const
 {
    Ssiz_t l = strlen(s);
-   if (l > Length()) return kFALSE;
-   const char *s2 = Data() + Length() - l;
-
-   if (cmp == kExact)
-      return strcmp(s, s2) == 0;
-   return strcasecmp(s, s2) == 0;
+   Ssiz_t i = Index(s, l, (Ssiz_t)0, cmp);
+   if (i == kNPOS) return kFALSE;
+   return i == Length() - l;
 }
 
 

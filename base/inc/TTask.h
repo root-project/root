@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.6 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.5 2000/09/06 14:20:10 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -23,9 +23,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 
 class TBrowser;
