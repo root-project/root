@@ -340,6 +340,10 @@ N: Filip Pizlo
 E: pizlo@purdue.edu
 D: TBits extension and test program testbits.cxx
 
+N: Timur Pocheptsov
+E: Timur.Pocheptsov@cern.ch
+D: Advanced OpenGL viewer.
+
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
 D: contributed to styles Bold, Video, Pub
