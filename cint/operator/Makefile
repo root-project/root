@@ -20,7 +20,8 @@ endif
 # Remember that sometest.log can be made automatically from
 # from runsometest.C
 
-EqualTest.log : equal_C.$(DllSuf)
+EqualTest.log : runEqualTest.C equal_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -l -b  runEqualTest.C | grep -v tagnum > $@ 2>&1
 
 EqualTest: EqualTest.log
 	$(TestDiff)
