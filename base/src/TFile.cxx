@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.74 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.75 2002/12/10 02:19:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1124,15 +1124,17 @@ Int_t TFile::ReOpen(Option_t *mode)
    // Reopen a file with a different access mode, like from READ to
    // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
    // mode argument can be either "READ" or "UPDATE". The method returns
-   // 0 in case of success, 1 in case mode did not change and -1 in
-   // case of failure.
+   // 0 in case the mode was successfully modified, 1 in case the mode
+   // did not change (was already as requested or wrong input arguments)
+   // and -1 in case of failure, in which case the file cannot be used
+   // anymore.
 
    TString opt = mode;
    opt.ToUpper();
 
    if (opt != "READ" && opt != "UPDATE") {
       Error("ReOpen", "mode must be either READ or UPDATE, not %s", opt.Data());
-      return -1;
+      return 1;
    }
 
    if (opt == fOption || (opt == "UPDATE" && fOption == "CREATE"))

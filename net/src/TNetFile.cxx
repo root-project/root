@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.27 2002/03/20 18:54:56 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.28 2002/12/10 02:19:46 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -408,13 +408,15 @@ Int_t TNetFile::ReOpen(Option_t *mode)
    // Reopen a file with a different access mode, like from READ to
    // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
    // mode argument can be either "READ" or "UPDATE". The method returns
-   // 0 in case of success, 1 in case mode did not change and -1 in
-   // case of failure. Not supported by rootd with protocol < 7.
+   // 0 in case the mode was successfully modified, 1 in case the mode
+   // did not change (was already as requested or wrong input arguments)
+   // and -1 in case of failure, in which case the file cannot be used
+   // anymore.
 
    if (fProtocol < 7) {
       Error("ReOpen", "operation not supported by remote rootd (protocol = %d)",
             fProtocol);
-      return -1;
+      return 1;
    }
 
    return TFile::ReOpen(mode);
