@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.5 2000/09/08 07:33:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.6 2000/09/08 16:07:33 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -153,7 +153,6 @@ public:
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
-   virtual const char *StreamerInfo() const;
    virtual void        UseCurrentStyle();
    virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
