@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.45 2001/03/05 10:44:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.46 2001/04/06 16:47:37 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -717,8 +717,8 @@ void TH1::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
    Stat_t s1[10], s2[10], s3[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
-   GetStats(s1);
-   h1->GetStats(s2);
+   h1->GetStats(s1);
+   h2->GetStats(s2);
    for (i=0;i<10;i++) s3[i] = ac1*s1[i] +ac2*s2[i];
    PutStats(s3);
 
