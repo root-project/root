@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.12 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.13 2003/04/10 09:00:20 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -107,6 +107,7 @@ ClassImp(TAxis3D)
 TAxis3D::TAxis3D() : TNamed(TAxis3D::rulerName,"ruler"){
   fSelected = 0;
   fZoomMode = kFALSE;
+  fStickyZoom = kFALSE;
   InitSet();
 }
 //______________________________________________________________________________
@@ -115,6 +116,7 @@ TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::rulerName,"ruler")
   fSelected = 0;
   InitSet();
   fZoomMode = kFALSE;
+  fStickyZoom = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -273,7 +275,7 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
         }
         view->SetRange(min,max);
 
-        SwitchZoom();
+        if(!fStickyZoom)SwitchZoom();
         gPad->Modified(kTRUE);
         gPad->Update();
         break;

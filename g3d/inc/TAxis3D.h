@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.5 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.5 2000/12/13 15:13:46 brun Exp $
+// $Id: TAxis3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -59,7 +59,8 @@ protected:
     TString         fOption;              // Options (is not use yet)
     static  const Char_t *rulerName;      // The default object name
     TAxis          *fSelected;            //!  The selected axis to play with
-            Bool_t  fZoomMode;            // Zoom mode for the entire parent TPad
+    Bool_t  fZoomMode;            // Zoom mode for the entire parent TPad
+    Bool_t  fStickyZoom;          // StickyZoom mode:  zoom will not be disabled    after zooming attempt if true  
 
     virtual void    Copy(TObject &hnew) const;
             void    InitSet();
@@ -75,6 +76,9 @@ public:
 
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+
+    Bool_t  & StickyZoom(){return fStickyZoom;}
+    Bool_t & Zoom(){return fZoomMode;}
 
     virtual Int_t    GetNdivisions(Option_t *axis="X") const;
     virtual Color_t  GetAxisColor(Option_t *axis="X") const;
@@ -121,7 +125,7 @@ public:
     static  TAxis3D *ToggleRulers(TVirtualPad *pad=0);
     static  TAxis3D *ToggleZoom(TVirtualPad *pad=0);
     void             UseCurrentStyle();
-
+    
     ClassDef(TAxis3D,1)  //3-D ruler painting class
 };
 
