@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.19 2003/02/26 10:11:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.20 2003/04/30 16:29:31 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -170,10 +170,10 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
-   if (fObjlen > fNbytes-fKeylen || 
-       (fObjlen==fNbytes-fKeylen 
+   Bool_t oldCase = fObjlen==fNbytes-fKeylen 
         && GetBranch()->GetCompressionLevel()!=0
-        && file->GetVersion()<=30401)) {
+        && file->GetVersion()<=30401;
+   if (fObjlen > fNbytes-fKeylen || oldCase) {
       if (TestBit(TBasket::kNotDecompressed) && (fNevBuf==1)) {
          // By-passing buffer unzipping has been requested and is
          // possible (only 1 entry in this basket).
@@ -202,6 +202,12 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
       Int_t noutot = 0;
       while (1) {
          nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
+         if (nin > fObjlen && oldCase) {
+            //buffer was very likely not compressed in an old version
+            delete [] fBuffer;
+            fBuffer = fBufferRef->Buffer();
+            goto AfterBuffer;
+         }
          nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
          R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
          if (!nout) break;
@@ -218,6 +224,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    } else {
       fBuffer = fBufferRef->Buffer();
    }
+AfterBuffer:
    cursav->cd();
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
