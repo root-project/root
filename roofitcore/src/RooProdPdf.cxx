@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.53 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.54 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1012,7 +1012,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
     Int_t code2(-1) ;
     RooLinkedList *nlist ;
-    getPartIntList(nset,iset,partIntList,nlist,code2) ;
+    getPartIntList(nset,iset,partIntList,nlist,code2,rangeName) ;
 
     delete vars ;
     delete nset ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.64 2005/02/23 15:09:26 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.65 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -570,7 +570,8 @@ Double_t RooAddPdf::evaluate() const
 {
   // Calculate the current value
 
-  const RooArgSet* nset = _pdfList.nset() ;
+  const RooArgSet* nset = _normSet ; 
+  
   syncSuppNormList(nset,0) ;
   syncCoefProjList(nset,0) ;
 
