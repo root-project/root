@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.3 2001/09/22 10:06:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.4 2002/06/25 05:47:51 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -37,7 +37,6 @@ protected:
     TTree        *fParentTree;  //!pointer to the parent TTree
     TTree        *fTree;        //!pointer to the TTree described by this element
     TFile        *fFile;        //!pointer to the file containing the friend TTree
-    Bool_t        fOwnTree;     //!true if tree is managed by this class
     TString       fTreeName;    // name of the friend TTree
     Bool_t        fOwnFile;     // true if file is managed by this class
 

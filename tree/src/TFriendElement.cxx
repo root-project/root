@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.9 2002/12/02 18:50:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.10 2003/08/23 14:53:41 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -43,7 +43,6 @@ TFriendElement::TFriendElement() : TNamed()
    fFile       = 0;
    fTree       = 0;
    fOwnFile    = kFALSE;
-   fOwnTree    = kTRUE;
    fParentTree = gTree;
 }
 
@@ -60,7 +59,6 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
    fFile       = 0;
    fTree       = 0;
    fOwnFile    = kTRUE;
-   fOwnTree    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
    if (strchr(treename,'=')) {
@@ -89,7 +87,6 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fFile       = file;
    fTree       = 0;
    fOwnFile    = kFALSE;
-   fOwnTree    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
    if (strchr(treename,'=')) {
@@ -129,7 +126,6 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
    }
    fOwnFile    = kFALSE;
-   fOwnTree    = kFALSE;
    fParentTree = tree;
    if (alias && strlen(alias)) {
       char *temp = Compress(alias);
@@ -161,7 +157,6 @@ TTree *TFriendElement::DisConnect()
 {
 // DisConnect file and TTree.
 
-   if (fOwnTree) delete fTree;
    if (fOwnFile) delete fFile;
    fFile = 0;
    fTree = 0;
@@ -203,11 +198,7 @@ TTree *TFriendElement::GetTree()
       if (fTree) {
          if (!fTree->InheritsFrom(TTree::Class()) ) {
             fTree = 0;
-         } else {
-            // Since we did NOT create it ourself, let's not
-            // take ownership of it.
-            fOwnTree = kFALSE;
-         }
+         } 
       }
       return fTree;
    }
