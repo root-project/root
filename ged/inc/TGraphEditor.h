@@ -49,7 +49,6 @@ protected:
    TGRadioButton                *fShape1;       // set simple poly-line between every graph point
    TGRadioButton                *fShape2;       // set graph draw mode to bar chart
    TGRadioButton                *fShape3;       // set graph draw mode to fill area
-   TGCheckButton                *fAxisOnOff;    // set Axis visible/unvisible
    TGCheckButton                *fMarkerOnOff;  // set Marker visible/unvisible   
    virtual void ConnectSignals2Slots();
 
@@ -66,7 +65,6 @@ public:
    virtual void DoShape1();
    virtual void DoShape2();
    virtual void DoShape3();
-   virtual void DoAxisOnOff();
    virtual void DoMarkerOnOff();
    virtual void DoTitle(const char *text);
  
