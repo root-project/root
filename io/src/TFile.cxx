@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.120 2004/05/11 12:12:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.121 2004/05/11 13:20:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1493,6 +1493,7 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
          return kTRUE;
       }
       if (siz != len) {
+         SetBit(kWriteError);
          Error("WriteBuffer", "error writing all requested bytes to file %s, wrote %d of %d",
                GetName(), siz, len);
          return kTRUE;
