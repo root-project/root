@@ -70,7 +70,6 @@ enable_rpath=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
-enable_python=no
 enable_ruby=no
 enable_qt=no
 enable_thread=           # must be set explicitely via --enable-thread
@@ -1574,8 +1573,6 @@ if test ! "x$enable_python" = "xno" ; then
     if test "x$pythonincdir" = "x" || test "x$pythonlib" = "x"; then
         enable_python="no"
     else
-        # Python support requires the explicitlink option
-        # enable_explicitlink="yes"
         pythonlibflags=
         case $platform in
             win32) pythonlibflags="-nodefaultlib:python23" ;;
@@ -1680,7 +1677,7 @@ message "Checking whether to build xrootd"
 xrdcomm=""
 
 # Xrootd and its client need thread support
-if test "x$enable_thread" = "xyes"; then 
+if test "x$enable_thread" = "xyes"; then
     # Ok, now check the architecture
     case $arch in
     # The server builds on Linux and Solaris only (for the time being)
@@ -2982,7 +2979,7 @@ fi
 # Show successful configure options
 #
 enabled_options=""
-for opt in $options; do 
+for opt in $options; do
    if eval "test x$`eval echo $opt` = xyes"; then
       thisopt=`echo $opt | sed 's,^enable_,,'`
       if test "x$enabled_options" = "x"; then
