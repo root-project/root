@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.32 2002/01/08 02:18:04 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.33 2002/01/24 20:00:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -666,6 +666,55 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
   cloneSetList.Delete() ;
   return holderSet ;
 }
+
+
+
+
+TList* RooTreeData::split(const RooAbsCategory& splitCat) 
+{
+  // Sanity check
+  if (!splitCat.dependsOn(*get())) {
+    cout << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
+	 << " doesn't depend on any variable in this dataset" << endl ;
+    return 0 ;
+  }
+
+  // Clone splitting category and attach to self
+  RooAbsCategory* cloneCat(0) ;
+  RooArgSet* cloneSet(0) ;
+  if (splitCat.isDerived()) {
+    cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
+    cloneCat = (RooAbsCategory*) cloneSet->find(splitCat.GetName()) ;
+    cloneCat->attachDataSet(*this) ;
+  } else {
+    cloneCat = dynamic_cast<RooAbsCategory*>(get()->find(splitCat.GetName())) ;
+    if (!cloneCat) {
+      cout << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
+	   << " is fundamental and does not appear in this dataset" << endl ;
+      return 0 ;      
+    }
+  }
+
+  // Split a dataset in a series of subsets, each corresponding
+  // to a state of splitCat
+  TList* dsetList = new TList ;
+  
+  // Loop over dataset and copy event to matching subset
+  Int_t i ;
+  for (i=0 ; i<numEntries() ; i++) {
+    const RooArgSet* row =  get(i) ;
+    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel()) ;
+    if (!subset) {
+      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel()) ;
+      dsetList->Add((RooAbsArg*)subset) ;
+    }
+    subset->add(*row) ;
+  }
+
+  delete cloneSet ;
+  return dsetList ;
+}
+
 
 
 
