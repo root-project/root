@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.57 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.58 2004/04/07 15:10:03 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1698,14 +1698,6 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
    Int_t h = TMath::Abs(y2 - y1);
-
-   if (fFillStyle> 3000 && fFillStyle < 3026) { // stippled
-      SetColor(gGCfill, 10);	// white background
-      gdk_gc_set_fill(gGCfill, GDK_SOLID);
-      gdk_win32_draw_rectangle(gCws->drawing, gGCfill, 1, x, y, w, h);
-      SetColor(gGCfill, fFillColor);
-      gdk_gc_set_fill(gGCfill, GDK_STIPPLED);
-   }
 
    switch (mode) {
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.125 2004/03/17 17:35:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.126 2004/03/20 17:45:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2668,8 +2668,15 @@ void TPad::PaintModified()
    fPadPaint = 1;
    cd();
    if (IsModified() || IsTransparent()) {
-
-       if (fPadView3D)
+      if ((fFillStyle < 3026) && (fFillStyle > 3000)) { 
+         Int_t px1 = XtoPixel(fX1);
+         Int_t px2 = XtoPixel(fX2);
+         Int_t py1 = YtoPixel(fY1);
+         Int_t py2 = YtoPixel(fY2);
+         gVirtualX->SetFillColor(10);
+         gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
+      }
+      if (fPadView3D)
 #if 1
          fPadView3D->PaintBeginModel();
 #else

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.37 2004/01/26 14:04:57 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.38 2004/03/10 14:43:10 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -568,14 +568,6 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
    Int_t h = TMath::Abs(y2 - y1);
-
-   if (fFillStyle> 3000 && fFillStyle < 3026) { //stippled
-      SetColor(*gGCfill, 0);
-      XSetFillStyle(fDisplay, *gGCfill, FillSolid);
-      XFillRectangle(fDisplay, gCws->drawing, *gGCfill, x, y, w, h);
-      SetFillColor(fFillColor);
-      XSetFillStyle(fDisplay, *gGCfill, FillStippled);
-   }
 
    switch (mode) {
 
