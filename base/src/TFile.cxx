@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.133 2004/08/31 14:59:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.134 2004/09/15 17:09:51 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -524,7 +524,7 @@ void TFile::Init(Bool_t create)
       cname.ReadBuffer(buffer); // fName.ReadBuffer(buffer); file may have been renamed
       fTitle.ReadBuffer(buffer);
       delete [] header;
-      if (fNbytesName < 10 || fNbytesName > 1000) {
+      if (fNbytesName < 10 || fNbytesName > 2000) {
          Error("Init","cannot read directory info of file %s", GetName());
          goto zombie;
       }
