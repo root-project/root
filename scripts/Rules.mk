@@ -15,7 +15,7 @@ test: tests ;
 
 # doing gmake FAIL=true run the test that are known to fail
 
-SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
+SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test) 
 TEST_TARGETS += $(TEST_TARGETS_DIR)
