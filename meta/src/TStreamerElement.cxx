@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.10 2001/01/13 17:05:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.11 2001/01/16 16:20:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -108,8 +108,9 @@ void TStreamerElement::ls(Option_t *) const
       sprintf(cdim,"[%d]",fMaxIndex[i]);
       strcat(name,cdim);
    }
-   if (IsaPointer() && !fTypeName.Contains("*")) fTypeName.Append("*");
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",GetTypeName(),name,fOffset,fType,GetTitle());
+   sprintf(includeName,GetTypeName());
+   if (IsaPointer() && !fTypeName.Contains("*")) strcat(includeName,"*");
+   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",includeName,name,fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
