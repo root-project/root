@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.3 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.1 2001/01/15 07:25:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 #endif
 
 class TStreamerInfo;
-class TStreamerElement;
 
 class TBranchElement : public TBranch {
 
@@ -34,19 +33,20 @@ protected:
     enum { kWarn = BIT(12) };
 
     TString             fClassName;    //Class name of referenced object
-    TObject            *fOldObject;    //!Pointer to old object
+    Int_t               fClassVersion; //Version number of class
     Int_t               fID;           //element serial number in fInfo
+    Int_t               fType;         //type of data in branch
     TStreamerInfo      *fInfo;         //!Pointer to StreamerInfo
-    TStreamerElement   *fElement;      //!Pointer to StreamerElement
     
 public:
     TBranchElement();
-    TBranchElement(TStreamerInfo *sinfo, TStreamerElement *element, Int_t id, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+    TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
+    TStreamerInfo  *GetInfo() const {return fInfo;}
     Bool_t          IsFolder() const;
     virtual void    Print(Option_t *option="") const;
     virtual void    Reset(Option_t *option="");

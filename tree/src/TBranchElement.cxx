@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.8 2000/12/14 11:22:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.1 2001/01/15 07:25:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #include "TDataType.h"
 #include "TDataMember.h"
 #include "TStreamerInfo.h"
-#include "TStreamerElement.h"
 #include "TBrowser.h"
 
 R__EXTERN  TTree *gTree;
@@ -44,25 +43,27 @@ TBranchElement::TBranchElement(): TBranch()
 //*-*        ====================================
 
    fNleaves   = 1;
-   fOldObject = 0;
+   fInfo = 0;
 }
 
 
 //______________________________________________________________________________
-TBranchElement::TBranchElement(TStreamerInfo *sinfo, TStreamerElement *element, Int_t id, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
     :TBranch()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a BranchElement*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =====================
 //
-   TClass *cl  = sinfo->GetClass();
-   fInfo       = sinfo;
-   fElement    = element;
-   fID         = id;
-         
-//printf("In TBranchElement constructor, addobj=%ld\n",(Long_t)addobj);
-   const char  *name = sinfo->GetName();
-   if (element) name = element->GetName();
+   TClass *cl    = sinfo->GetClass();
+   fInfo         = sinfo;
+   fID           = id;
+   fType         = -1;
+   fClassVersion = cl->GetClassVersion();
+   if (id >= 0) {
+     Int_t *types = sinfo->GetTypes();
+     fType = types[fID];
+  }
+           
    SetName(name);
    SetTitle(name);
    fCompress = compress;
@@ -77,12 +78,11 @@ TBranchElement::TBranchElement(TStreamerInfo *sinfo, TStreamerElement *element, 
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketSeek     = new Seek_t[fMaxBaskets];
-   fOldObject      = 0;
 
    fBasketEntry[0] = fEntryNumber;
    fBasketBytes[0] = 0;
 
-   TLeaf *leaf     = new TLeafElement(sinfo,element,id,name);
+   TLeaf *leaf     = new TLeafElement(name,fID, fType);
    leaf->SetBranch(this);
    leaf->SetAddress(addobj);
    fNleaves = 1;
@@ -251,9 +251,34 @@ void TBranchElement::SetAddress(void *add)
       return;
    }
    fReadEntry = -1;
-   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-   if (leaf) leaf->SetAddress(add);
+   
    fAddress = (char*)add;
+   char *pointer   = fAddress;
+   void **ppointer = (void**)add;
+   TObject *obj = (TObject*)(*ppointer);
+   TClass *cl = gROOT->GetClass(fClassName.Data());
+   if (!obj && cl) {
+      obj = (TObject*)cl->New();
+      *ppointer = (void*)obj;
+   }
+   Int_t *leafOffsets;
+   if (!fInfo) {
+      TStreamerInfo::Optimize(kFALSE);
+      pointer = (char*)obj;
+      cl->BuildRealData((void*)obj);
+      fInfo = cl->GetStreamerInfo(fClassVersion);
+      leafOffsets = fInfo->GetOffsets();
+      if (!leafOffsets || fInfo->IsOptimized()) fInfo->BuildOld();
+   }
+      
+   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+   if (leaf) {
+      if (fID >= 0) {
+         leafOffsets = fInfo->GetOffsets();
+         char *absaddr = (char*)obj + leafOffsets[fID];
+         leaf->SetAddress((void*)absaddr);
+      }
+   }
 
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -312,5 +337,5 @@ void TBranchElement::UpdateAddress()
 //*-*            ===================================================
 //
 
-   SetAddress(fAddress);
+
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.5 2001/01/12 14:30:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.1 2001/01/15 07:25:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -31,28 +31,20 @@ TLeafElement::TLeafElement(): TLeaf()
 {
 //*-*-*-*-*-*Default constructor for LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        =================================
-   fClass      = 0;
-   fObjAddress = 0;
-   fVirtual    = kTRUE;
-   fInfo       = 0;
-   fElement    = 0;
+   fAbsAddress = 0;
 }
 
 //______________________________________________________________________________
-TLeafElement::TLeafElement(TStreamerInfo *sinfo, TStreamerElement *element, Int_t id, const char *type)
-       :TLeaf(type,type)
+TLeafElement::TLeafElement(const char *name, Int_t id, Int_t type)
+       :TLeaf(name,name)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafObject*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==================
 //*-*
 
-  SetTitle(type);
-  fClass      = gROOT->GetClass(type);
-  fObjAddress = 0;
-  fVirtual    = kTRUE;
-  fInfo       = sinfo;
-  fElement    = element;
+  fAbsAddress = 0;
   fID         = id;
+  fType       = type;
 }
 
 //______________________________________________________________________________
@@ -72,8 +64,9 @@ void TLeafElement::FillBasket(TBuffer &b)
 
    char **apointer = (char**)fBranch->GetAddress();
    char *pointer = (char*)(*apointer);
-   if (fID >= 0) fInfo->WriteBuffer(b,pointer,fID);
-   printf("TLeafElement::FillBasket, id=%d, leaf= %s\n",fID,GetName());
+   if (fID >= 0) {
+      ((TBranchElement*)fBranch)->GetInfo()->WriteBuffer(b,pointer,fID);
+   }
 }
 
 //______________________________________________________________________________
@@ -85,29 +78,36 @@ TMethodCall *TLeafElement::GetMethodCall(const char *name)
 //*-*    name is a string with the general form  "method(list of params)"
 //*-*   If list of params is omitted, () is assumed;
 //*-*
-
-   char *namecpy = new char[strlen(name)+1];
-   strcpy(namecpy,name);
-   char *params = strchr(namecpy,'(');
-   if (params) { *params = 0; params++; }
-   else params = ")";
-
-   if (!fClass) fClass      = gROOT->GetClass(GetTitle());
-   TMethodCall *m = new TMethodCall(fClass, namecpy, params);
-   delete [] namecpy;
-   if (m->GetMethod()) return m;
-   Error("GetMethodCall","Unknown method:%s",name);
-   delete m;
    return 0;
 }
 
 //______________________________________________________________________________
-const char *TLeafElement::GetTypeName() const
+Double_t TLeafElement::GetValue(Int_t) const
 {
-//*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =========================
+// Returns leaf value
 
-   return fTitle.Data();
+   return Double_t(fType);
+}
+
+//______________________________________________________________________________
+void TLeafElement::PrintValue(Int_t) const
+{
+// Prints leaf value
+
+   // basic types
+   switch (fType) {
+      case TStreamerInfo::kChar:   {printf("should print Char"); break;}
+      case TStreamerInfo::kShort:  {Short_t *val = (Short_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kInt:    {Int_t *val = (Int_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kLong:   {printf("should print Long"); break;}
+      case TStreamerInfo::kFloat:  {Float_t *val = (Float_t*)fAbsAddress; printf("%f",*val); break;}
+      case TStreamerInfo::kDouble: {Double_t *val = (Double_t*)fAbsAddress; printf("%g",*val); break;}
+      case TStreamerInfo::kUChar:  {printf("should print UChar"); break;}
+      case TStreamerInfo::kUShort: {UShort_t *val = (UShort_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kUInt:   {UInt_t *val = (UInt_t*)fAbsAddress; printf("%d",*val); break;}
+      case TStreamerInfo::kULong:  {ULong_t *val = (ULong_t*)fAbsAddress; printf("%ld",*val); break;}
+                      {printf("should print leaf element:%s",GetName()); break;}
+   }
 }
 
 //______________________________________________________________________________
@@ -116,39 +116,10 @@ void TLeafElement::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-/*
-   char classname[128];
-   UChar_t n;
-   if (fVirtual) {
-      b >> n;
-      b.ReadFastArray(classname,n+1);
-      fClass      = gROOT->GetClass(GetTitle());
-   }
-   if (fClass) {
-      TObject *object;
-      if (!fObjAddress) {
-         Long_t *voidobj = new Long_t[1];
-         fObjAddress  = (void **)voidobj;
-         *fObjAddress = (TObject *)fClass->New();
-      }
-      object = (TObject*)(*fObjAddress);
-      if (fBranch->IsAutoDelete()) {
-         delete object;
-         object = (TObject *)fClass->New();
-      }
-      if (!object) return;
-      object->Streamer(b);
-      // in case we had written a null pointer a Zombie object was created
-      // we must delete it
-      if (object->TestBit(kInvalidObject)) {
-         if (object->GetUniqueID() == 123456789) {
-            delete object;
-            object = 0;
-         }
-      }
-      *fObjAddress = object;
-   } else GetBranch()->SetAddress(0);
-*/
+   char **apointer = (char**)fBranch->GetAddress();
+   char *pointer = (char*)(*apointer);
+//printf("ReadBasket, fID=%d, pointer=%ld\n",fID,(Long_t)pointer);
+   if (fID >= 0) ((TBranchElement*)fBranch)->GetInfo()->ReadBuffer(b,pointer,fID);
 }
 
 //______________________________________________________________________________
@@ -157,33 +128,5 @@ void TLeafElement::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   fObjAddress = add;
-}
-
-//______________________________________________________________________________
-void TLeafElement::Streamer(TBuffer &b)
-{
-   // Stream an object of class TLeafElement.
-
-   if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TLeafElement::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         fObjAddress = 0;
-         fClass  = gROOT->GetClass(fTitle.Data());
-         if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      TLeaf::Streamer(b);
-      fObjAddress = 0;
-      fClass  = gROOT->GetClass(fTitle.Data());
-      if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
-      if (R__v < 1) fVirtual = kFALSE;
-      //====end of old versions
-      
-   } else {
-      TLeafElement::Class()->WriteBuffer(b,this);
-   }
+   fAbsAddress = add;
 }
