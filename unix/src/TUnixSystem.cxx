@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.19 2001/02/17 11:44:16 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.20 2001/02/26 02:46:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2250,12 +2250,12 @@ int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
    struct statfs statfsbuf;
 #if defined(R__SGI) || (defined(R__SOLARIS) && !defined(R__LINUX))
    if (statfs(path, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-      *id = statfsbuf.f_type;
+      *id = statfsbuf.f_fstyp;
       *bsize = statfsbuf.f_bsize;
       *blocks = statfsbuf.f_blocks;
       *bfree = statfsbuf.f_bfree;
  #else
-   if (statfs(path, &statfsbuf) == 0) {
+   if (statfs((char*)path, &statfsbuf) == 0) {
       *id = statfsbuf.f_type;
       *bsize = statfsbuf.f_bsize;
       *blocks = statfsbuf.f_blocks;
