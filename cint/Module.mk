@@ -48,7 +48,11 @@ CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)
+ifeq ($(findstring $(CXXFLAGS),-library=iostream,no%Cstd),)
 CINTS2       += $(MODDIRS)/sunstrm.cxx
+else
+CINTS2       += $(MODDIRS)/libstrm.cxx
+endif
 else
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
