@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.12 2000/12/15 19:42:05 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.13 2000/12/19 14:36:09 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -698,6 +698,8 @@ void RootdSRPUser(const char *user)
 
    if (!*user)
       ErrorFatal(kErrBadUser, "RootdSRPUser: bad user name");
+
+   if (kSRootdPass) { }  // remove compiler warning
 
 #ifdef R__SRP
 

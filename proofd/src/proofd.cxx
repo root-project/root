@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.14 2000/12/19 14:35:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.15 2000/12/19 15:27:57 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -243,6 +243,8 @@ void ProofdSRPUser(const char *user)
 
    if (!*user)
       ErrorFatal("ProofdSRPUser: bad user name");
+
+   if (kSRootdPass) { }  // remove compiler warning
 
 #ifdef R__SRP
 
@@ -592,9 +594,7 @@ const char *RerouteUser()
          //    node <name>
          //
          if (nword >= 2 && strcmp(word[0], "node") == 0) {
-            struct hostent *hp;
-
-            if ((hp = gethostbyname(word[1])) != 0) {
+            if (gethostbyname(word[1]) != 0) {
                if (nnodes < kMaxSlaves) {
                   strcpy(node_name[nnodes], word[1]);
                   nnodes++;

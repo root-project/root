@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: error.cxx,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -111,7 +111,7 @@ void ErrorSys(const char *va_(fmt), ...)
 
    Perror(buf);
    syslog(LOG_ERR, buf);
-   NetSend(buf);
+   NetSend(buf, kMESS_STRING);
    exit(1);
 }
 
@@ -128,6 +128,6 @@ void ErrorFatal(const char *va_(fmt), ...)
    va_end(ap);
 
    syslog(LOG_ERR, buf);
-   NetSend(buf);
+   NetSend(buf, kMESS_STRING);
    exit(1);
 }
