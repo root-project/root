@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.20 2003/11/04 15:28:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.21 2003/12/04 00:00:38 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -92,16 +92,16 @@ static long gNullRef[(sizeof(TStringRef)+1)/sizeof(long) + 1];
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TStringRef* TStringRef::GetRep(Ssiz_t capacity, Ssiz_t nchar)
+TStringRef *TStringRef::GetRep(Ssiz_t capacity, Ssiz_t nchar)
 {
    // Static member function returning an empty string representation of
    // size capacity and containing nchar characters.
 
    if ((capacity | nchar) == 0) {
-     gNullStringRef->AddReference();
-     return gNullStringRef;
+      gNullStringRef->AddReference();
+      return gNullStringRef;
    }
-   TStringRef* ret = (TStringRef*)new char[capacity + sizeof(TStringRef) + 1];
+   TStringRef *ret = (TStringRef*)new char[capacity + sizeof(TStringRef) + 1];
    ret->fCapacity = capacity;
    ret->SetRefCount(1);
    ret->Data()[ret->fNchars = nchar] = 0; // Terminating null
@@ -114,16 +114,16 @@ Ssiz_t TStringRef::First(char c) const
 {
    // Find first occurrence of a character c.
 
-   const char* f = strchr(Data(), c);
+   const char *f = strchr(Data(), c);
    return f ? f - Data() : kNPOS;
 }
 
 //______________________________________________________________________________
-Ssiz_t TStringRef::First(const char* cs) const
+Ssiz_t TStringRef::First(const char *cs) const
 {
    // Find first occurrence of a character in cs.
 
-   const char* f = strpbrk(Data(), cs);
+   const char *f = strpbrk(Data(), cs);
    return f ? f - Data() : kNPOS;
 }
 
@@ -227,8 +227,7 @@ Ssiz_t TStringRef::Last(char c) const
 {
    // Find last occurrence of a character c.
 
-   // cxx under OSF on DEC Alpha needs cast to unsigned char!?
-   const char* f = strrchr(Data(), (unsigned char) c);
+   const char *f = strrchr(Data(), (unsigned char) c);
    return f ? f - Data() : kNPOS;
 }
 
@@ -245,6 +244,7 @@ ClassImp(TString)
 Ssiz_t  TString::GetInitialCapacity()    { return fgInitialCapac; }
 Ssiz_t  TString::GetResizeIncrement()    { return fgResizeInc; }
 Ssiz_t  TString::GetMaxWaste()           { return fgFreeboard; }
+
 //______________________________________________________________________________
 TString::TString()
 {
@@ -263,7 +263,7 @@ TString::TString(Ssiz_t ic)
 }
 
 //______________________________________________________________________________
-TString::TString(const char* cs)
+TString::TString(const char *cs)
 {
    // Create TString and initialize it with string cs.
 
@@ -276,7 +276,7 @@ TString::TString(const char* cs)
 }
 
 //______________________________________________________________________________
-TString::TString(const char* cs, Ssiz_t n)
+TString::TString(const char *cs, Ssiz_t n)
 {
    // Create TString and initialize it with the first n characters of cs.
 
@@ -335,7 +335,7 @@ TString& TString::operator=(char c)
 }
 
 //______________________________________________________________________________
-TString& TString::operator=(const char* cs)
+TString& TString::operator=(const char *cs)
 {
    // Assign string cs to TString.
 
@@ -349,7 +349,7 @@ TString& TString::operator=(const char* cs)
 }
 
 //______________________________________________________________________________
-TString& TString::operator=(const TString& str)
+TString& TString::operator=(const TString &str)
 {
    // Assignment operator.
 
@@ -360,7 +360,7 @@ TString& TString::operator=(const TString& str)
 }
 
 //______________________________________________________________________________
-TString& TString::operator=(const TSubString& substr)
+TString& TString::operator=(const TSubString &substr)
 {
    // Assign a TSubString substr to TString.
 
@@ -404,11 +404,11 @@ Ssiz_t TString::Capacity(Ssiz_t nc)
 }
 
 //______________________________________________________________________________
-int TString::CompareTo(const char* cs2, ECaseCompare cmp) const
+int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
 {
    // Compare a string to char *cs2.
 
-   const char* cs1 = Data();
+   const char *cs1 = Data();
    Ssiz_t len = Length();
    Ssiz_t i = 0;
    if (cmp == kExact) {
@@ -428,12 +428,12 @@ int TString::CompareTo(const char* cs2, ECaseCompare cmp) const
 }
 
 //______________________________________________________________________________
-int TString::CompareTo(const TString& str, ECaseCompare cmp) const
+int TString::CompareTo(const TString &str, ECaseCompare cmp) const
 {
    // Compare a string to another string.
 
-   const char* s1 = Data();
-   const char* s2 = str.Data();
+   const char *s1 = Data();
+   const char *s2 = str.Data();
    Ssiz_t len = str.Length();
    if (Length() < len) len = Length();
    if (cmp == kExact) {
@@ -484,7 +484,7 @@ unsigned TString::Hash(ECaseCompare cmp) const
 }
 
 //______________________________________________________________________________
-static int MemIsEqual(const char* p, const char* q, Ssiz_t n)
+static int MemIsEqual(const char *p, const char *q, Ssiz_t n)
 {
    // Returns false if strings are not equal.
 
@@ -498,7 +498,7 @@ static int MemIsEqual(const char* p, const char* q, Ssiz_t n)
 }
 
 //______________________________________________________________________________
-Ssiz_t TString::Index(const char* pattern, Ssiz_t plen, Ssiz_t startIndex,
+Ssiz_t TString::Index(const char *pattern, Ssiz_t plen, Ssiz_t startIndex,
                       ECaseCompare cmp) const
 {
    // Search for a string in the TString. Plen is the length of pattern,
@@ -509,7 +509,7 @@ Ssiz_t TString::Index(const char* pattern, Ssiz_t plen, Ssiz_t startIndex,
    if (slen < startIndex + plen) return kNPOS;
    if (plen == 0) return startIndex;
    slen -= startIndex + plen;
-   const char* sp = Data() + startIndex;
+   const char *sp = Data() + startIndex;
    if (cmp == kExact) {
       char first = *pattern;
       for (Ssiz_t i = 0; i <= slen; ++i)
@@ -558,7 +558,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
 
    // Check for shared representation or insufficient capacity
    if ( Pref()->References() > 1 || Capacity() < tot ) {
-      TStringRef* temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
+      TStringRef *temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
       memcpy(temp->Data()+rep, Data(), Length());
       Pref()->UnLink();
       fData = temp->Data();
@@ -567,7 +567,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
       fData[Pref()->fNchars = tot] = '\0';
    }
 
-   char* p = fData;
+   char *p = fData;
    while (rep--)
       *p++ = c;
 
@@ -575,7 +575,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
 }
 
 //______________________________________________________________________________
-TString& TString::Replace(Ssiz_t pos, Ssiz_t n1, const char* cs, Ssiz_t n2)
+TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
 {
    // Remove at most n1 characters from self beginning at pos,
    // and replace them with the first n2 characters of cs.
@@ -593,7 +593,7 @@ TString& TString::Replace(Ssiz_t pos, Ssiz_t n1, const char* cs, Ssiz_t n2)
        Capacity() - tot > GetMaxWaste() ||
        (cs && (cs >= Data() && cs < Data()+Length())))
    {
-      TStringRef* temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
+      TStringRef *temp = TStringRef::GetRep(AdjustCapacity(tot), tot);
       if (pos) memcpy(temp->Data(), Data(), pos);
       if (n2 ) memcpy(temp->Data()+pos, cs, n2);
       if (rem) memcpy(temp->Data()+pos+n2, Data()+pos+n1, rem);
@@ -609,11 +609,12 @@ TString& TString::Replace(Ssiz_t pos, Ssiz_t n1, const char* cs, Ssiz_t n2)
 }
 
 //______________________________________________________________________________
-TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2)
+TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
+                             Ssiz_t ls2)
 {
    // Find & Replace ls1 symbols of s1 with ls2 symbols of s2 if any.
 
-   if (s1 && ls1>0) {
+   if (s1 && ls1 > 0) {
       Ssiz_t index = 0;
       while ((index = Index(s1,ls1,index, kExact)) != kNPOS) {
          Replace(index,ls1,s2,ls2);
@@ -641,7 +642,7 @@ TSubString TString::Strip(EStripType st, char c)
 
    Ssiz_t start = 0;             // Index of first character
    Ssiz_t end = Length();        // One beyond last character
-   const char* direct = Data();  // Avoid a dereference w dumb compiler
+   const char *direct = Data();  // Avoid a dereference w dumb compiler
 
    if (st & kLeading)
       while (start < end && direct[start] == c)
@@ -668,7 +669,7 @@ void TString::ToLower()
 
    Cow();
    register Ssiz_t n = Length();
-   register char* p = fData;
+   register char *p = fData;
    while (n--) {
       *p = tolower((unsigned char)*p);
       p++;
@@ -682,7 +683,7 @@ void TString::ToUpper()
 
    Cow();
    register Ssiz_t n = Length();
-   register char* p = fData;
+   register char *p = fData;
    while (n--) {
       *p = toupper((unsigned char)*p);
       p++;
@@ -710,7 +711,7 @@ void TString::AssertElement(Ssiz_t i) const
 }
 
 //______________________________________________________________________________
-TString::TString(const char* a1, Ssiz_t n1, const char* a2, Ssiz_t n2)
+TString::TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2)
 {
    // Special constructor to initialize with the concatenation of a1 and a2.
 
@@ -750,7 +751,7 @@ void TString::Clone()
 {
    // Make string a distinct copy; preserve previous contents.
 
-   TStringRef* temp = TStringRef::GetRep(Length(), Length());
+   TStringRef *temp = TStringRef::GetRep(Length(), Length());
    memcpy(temp->Data(), Data(), Length());
    Pref()->UnLink();
    fData = temp->Data();
@@ -764,7 +765,7 @@ void TString::Clone(Ssiz_t nc)
 
    Ssiz_t len = Length();
    if (len > nc) len = nc;
-   TStringRef* temp = TStringRef::GetRep(nc, len);
+   TStringRef *temp = TStringRef::GetRep(nc, len);
    memcpy(temp->Data(), Data(), len);
    Pref()->UnLink();
    fData = temp->Data();
@@ -814,13 +815,13 @@ void TString::ReadBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TString* TString::ReadString(TBuffer &b, const TClass *clReq)
+TString *TString::ReadString(TBuffer &b, const TClass *clReq)
 {
    // Read TString object from buffer. Simplified version of
    // TBuffer::ReadObject (does not keep track of multiple
    // references to same string).  We need to have it here
    // because TBuffer::ReadObject can only handle descendant
-   // of TObject
+   // of TObject.
 
    Assert(b.IsReading());
 
@@ -853,7 +854,6 @@ TString* TString::ReadString(TBuffer &b, const TClass *clReq)
    }
 
    return a;
-
 }
 
 //______________________________________________________________________________
@@ -870,7 +870,7 @@ Int_t TString::Sizeof() const
 //_______________________________________________________________________
 void TString::Streamer(TBuffer &b)
 {
-   // Stream a string object
+   // Stream a string object.
 
    Int_t   nbig;
    UChar_t nwh;
@@ -973,11 +973,11 @@ TBuffer &operator<<(TBuffer &buf, const TString *s)
 // ------------------- Related global functions --------------------
 
 //______________________________________________________________________________
-Bool_t operator==(const TString& s1, const char* s2)
+Bool_t operator==(const TString& s1, const char *s2)
 {
    // Compare TString with a char *.
 
-   const char* data = s1.Data();
+   const char *data = s1.Data();
    Ssiz_t len = s1.Length();
    Ssiz_t i;
    for (i = 0; s2[i]; ++i)
@@ -987,7 +987,7 @@ Bool_t operator==(const TString& s1, const char* s2)
 
 #if defined(R__MWERKS) || defined(R__ALPHA)
 //______________________________________________________________________________
-Bool_t operator==(const TString& s1, const TString& s2)
+Bool_t operator==(const TString &s1, const TString &s2)
 {
    // Compare two TStrings.
 
@@ -996,21 +996,21 @@ Bool_t operator==(const TString& s1, const TString& s2)
 #endif
 
 //______________________________________________________________________________
-TString ToLower(const TString& str)
+TString ToLower(const TString &str)
 {
    // Return a lower-case version of str.
 
    register Ssiz_t n = str.Length();
    TString temp((char)0, n);
-   register const char* uc = str.Data();
-   register       char* lc = (char*)temp.Data();
+   register const char *uc = str.Data();
+   register       char *lc = (char*)temp.Data();
    // Guard against tolower() being a macro
    while (n--) { *lc++ = tolower((unsigned char)*uc); uc++; }
    return temp;
 }
 
 //______________________________________________________________________________
-TString ToUpper(const TString& str)
+TString ToUpper(const TString &str)
 {
    // Return an upper-case version of str.
 
@@ -1024,7 +1024,7 @@ TString ToUpper(const TString& str)
 }
 
 //______________________________________________________________________________
-TString operator+(const TString& s, const char* cs)
+TString operator+(const TString &s, const char *cs)
 {
    // Use the special concatenation constructor.
 
@@ -1032,7 +1032,7 @@ TString operator+(const TString& s, const char* cs)
 }
 
 //______________________________________________________________________________
-TString operator+(const char* cs, const TString& s)
+TString operator+(const char *cs, const TString &s)
 {
    // Use the special concatenation constructor.
 
@@ -1040,7 +1040,7 @@ TString operator+(const char* cs, const TString& s)
 }
 
 //______________________________________________________________________________
-TString operator+(const TString& s1, const TString& s2)
+TString operator+(const TString &s1, const TString &s2)
 {
    // Use the special concatenation constructor.
 
@@ -1048,7 +1048,7 @@ TString operator+(const TString& s1, const TString& s2)
 }
 
 //______________________________________________________________________________
-TString operator+(const TString& s, char c)
+TString operator+(const TString &s, char c)
 {
    // Add char to string.
 
@@ -1056,7 +1056,7 @@ TString operator+(const TString& s, char c)
 }
 
 //______________________________________________________________________________
-TString operator+(const TString& s, Long_t i)
+TString operator+(const TString &s, Long_t i)
 {
    // Add integer to string.
 
@@ -1065,7 +1065,7 @@ TString operator+(const TString& s, Long_t i)
 }
 
 //______________________________________________________________________________
-TString operator+(const TString& s, ULong_t i)
+TString operator+(const TString &s, ULong_t i)
 {
    // Add integer to string.
 
@@ -1074,7 +1074,7 @@ TString operator+(const TString& s, ULong_t i)
 }
 
 //______________________________________________________________________________
-TString operator+(char c, const TString& s)
+TString operator+(char c, const TString &s)
 {
    // Add string to integer.
 
@@ -1082,7 +1082,7 @@ TString operator+(char c, const TString& s)
 }
 
 //______________________________________________________________________________
-TString operator+(Long_t i, const TString& s)
+TString operator+(Long_t i, const TString &s)
 {
    // Add string to integer.
 
@@ -1091,7 +1091,7 @@ TString operator+(Long_t i, const TString& s)
 }
 
 //______________________________________________________________________________
-TString operator+(ULong_t i, const TString& s)
+TString operator+(ULong_t i, const TString &s)
 {
    // Add string to integer.
 
@@ -1155,7 +1155,7 @@ Ssiz_t TString::MaxWaste(Ssiz_t mw)
 //
 
 //______________________________________________________________________________
-TSubString::TSubString(const TString& str, Ssiz_t start, Ssiz_t nextent)
+TSubString::TSubString(const TString &str, Ssiz_t start, Ssiz_t nextent)
    : fStr((TString*)&str), fBegin(start), fExtent(nextent)
 {
    // Private constructor.
@@ -1177,7 +1177,7 @@ TSubString TString::operator()(Ssiz_t start, Ssiz_t len)
 }
 
 //______________________________________________________________________________
-TSubString TString::SubString(const char* pattern, Ssiz_t startIndex,
+TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
                               ECaseCompare cmp)
 {
    // Returns a substring matching "pattern", or the null substring
@@ -1225,7 +1225,7 @@ TSubString TString::operator()(Ssiz_t start, Ssiz_t len) const
 }
 
 //______________________________________________________________________________
-TSubString TString::SubString(const char* pattern, Ssiz_t startIndex,
+TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
                               ECaseCompare cmp) const
 {
    // Return sub-string matching pattern, starting at index. Cmp selects
@@ -1237,7 +1237,7 @@ TSubString TString::SubString(const char* pattern, Ssiz_t startIndex,
 }
 
 //______________________________________________________________________________
-TSubString& TSubString::operator=(const TString& str)
+TSubString& TSubString::operator=(const TString &str)
 {
    // Assign string to sub-string.
 
@@ -1248,7 +1248,7 @@ TSubString& TSubString::operator=(const TString& str)
 }
 
 //______________________________________________________________________________
-TSubString& TSubString::operator=(const char* cs)
+TSubString& TSubString::operator=(const char *cs)
 {
    // Assign char* to sub-string.
 
@@ -1259,7 +1259,7 @@ TSubString& TSubString::operator=(const char* cs)
 }
 
 //______________________________________________________________________________
-Bool_t operator==(const TSubString& ss, const char* cs)
+Bool_t operator==(const TSubString& ss, const char *cs)
 {
    // Compare sub-string to char *.
 
@@ -1273,7 +1273,7 @@ Bool_t operator==(const TSubString& ss, const char* cs)
 }
 
 //______________________________________________________________________________
-Bool_t operator==(const TSubString& ss, const TString& s)
+Bool_t operator==(const TSubString& ss, const TString &s)
 {
    // Compare sub-string to string.
 
@@ -1283,7 +1283,7 @@ Bool_t operator==(const TSubString& ss, const TString& s)
 }
 
 //______________________________________________________________________________
-Bool_t operator==(const TSubString& s1, const TSubString& s2)
+Bool_t operator==(const TSubString &s1, const TSubString &s2)
 {
    // Compare two sub-strings.
 
@@ -1300,7 +1300,7 @@ void TSubString::ToLower()
 
    if (!IsNull()) {                             // Ignore null substrings
       fStr->Cow();
-      register char* p = (char*)(fStr->Data() + fBegin); // Cast away constness
+      register char *p = (char*)(fStr->Data() + fBegin); // Cast away constness
       Ssiz_t n = fExtent;
       while (n--) { *p = tolower((unsigned char)*p); p++;}
    }
@@ -1312,7 +1312,7 @@ void TSubString::ToUpper()
    // Convert sub-string to upper-case.
    if (!IsNull()) {                             // Ignore null substrings
       fStr->Cow();
-      register char* p = (char*)(fStr->Data() + fBegin); // Cast away constness
+      register char *p = (char*)(fStr->Data() + fBegin); // Cast away constness
       Ssiz_t n = fExtent;
       while (n--) { *p = toupper((unsigned char)*p); p++;}
    }
@@ -1340,7 +1340,7 @@ Bool_t TString::IsAscii() const
 {
    // Return true if all characters in string are ascii.
 
-   const char* cp = Data();
+   const char *cp = Data();
    for (Ssiz_t i = 0; i < Length(); ++i)
       if (cp[i] & ~0x7F)
          return kFALSE;
@@ -1383,7 +1383,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    static char *slowBuffer  = 0;
    static int   slowBufferSize = 0;
 
-   if (hint==-1) hint = fld_size;
+   if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
       delete [] slowBuffer;
       slowBufferSize = 2 * hint;
@@ -1394,8 +1394,8 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= slowBufferSize) {
-      if (n == -1) n = 2*slowBufferSize;
-      return SlowFormat( format, ap, n);
+      if (n == -1) n = 2 * slowBufferSize;
+      return SlowFormat(format, ap, n);
    }
 
    return slowBuffer;
@@ -1416,7 +1416,7 @@ static char *Format(const char *format, va_list ap)
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= fld_size) {
-      return SlowFormat(format,ap,n);
+      return SlowFormat(format, ap, n);
    }
 
    bfree = buf+n+1;
@@ -1424,7 +1424,7 @@ static char *Format(const char *format, va_list ap)
 }
 
 //______________________________________________________________________________
-char *Form(const char* va_(fmt), ...)
+char *Form(const char *va_(fmt), ...)
 {
    // Formats a string in a circular formatting buffer. Removes the need to
    // create and delete short lived strings. Espcially useful to embed
@@ -1438,7 +1438,7 @@ char *Form(const char* va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Printf(const char* va_(fmt), ...)
+void Printf(const char *va_(fmt), ...)
 {
    // Formats a string in a circular formatting buffer and prints the string.
    // Appends a newline.
@@ -1522,7 +1522,8 @@ char *Compress(const char *str)
 }
 
 //______________________________________________________________________________
-int EscChar(const char *src, char *dst, int dstlen, char *specchars, char escchar)
+int EscChar(const char *src, char *dst, int dstlen, char *specchars,
+            char escchar)
 {
    // Escape specchars in src with escchar and copy to dst.
 
