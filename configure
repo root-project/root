@@ -1108,7 +1108,7 @@ fi
 echo $ac_n "Checking for shadow passwords ... $ac_c"
 
 if test "x$enable_shadowpw" = "x"; then
-   if test -e "/etc/shadow"; then
+   if test -f "/etc/shadow"; then
       enable_shadowpw="yes"
    else
       enable_shadowpw="no"
