@@ -53,6 +53,10 @@ N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
 
+N: Olivier Couet
+E: Olivier.Couet@cern.ch
+D: Implement support for CellArrays in TPostScript
+
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
