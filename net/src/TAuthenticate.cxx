@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.53 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.54 2004/05/18 15:54:18 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -263,8 +263,11 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       if (fHostAuth->HasMethod(Sec)) {
          fHostAuth->SetFirst(Sec);
       } else {
-         TString Det(GetDefaultDetails(Sec, 1, CheckUser));
+         char *dtmp = GetDefaultDetails(Sec, 1, CheckUser); 
+         TString Det(dtmp);
          fHostAuth->AddFirst(Sec, Det);
+         if (dtmp)
+            delete[] dtmp;
       }
    }
 
@@ -2095,7 +2098,12 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       // Get effective user (fro remote checks in $HOME/.rhosts)
       UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
-      TString EffUser = TString(pw->fUser);
+      TString EffUser;
+      if (pw) {
+         EffUser = TString(pw->fUser);
+         delete pw;
+      } else
+         EffUser = User;
 
       // Create Options string
       int Opt = (ReUse * kAUTH_REUSE_MSK) + (Crypt * kAUTH_CRYPT_MSK) +
