@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.1 2004/07/08 14:40:28 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -89,8 +89,10 @@ Bool_t TGDockButton::HandleCrossing(Event_t *event)
    TGButton::HandleCrossing(event);
    if (event->fType == kLeaveNotify) {
       fMouseOn = kFALSE;
+printf("mouseoff\n");
    } else if (event->fType == kEnterNotify) {
       fMouseOn = kTRUE;
+printf("mouseon\n");
    }
    if (IsEnabled()) fClient->NeedRedraw(this);
 
@@ -211,9 +213,8 @@ void TGUndockedFrame::CloseWindow()
 
 
 //______________________________________________________________________________
-TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t options) :
-   TGCompositeFrame(p, 10, 10, kHorizontalFrame),
-   TGWidget(id)
+TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
+   : TGCompositeFrame(p, 10, 10, kHorizontalFrame), TGWidget(id)
 {
    // Create a dockable frame widget.
 
@@ -278,7 +279,7 @@ void TGDockableFrame::UndockContainer()
 {
    // Undock container.
 
-   int i, ax, ay;
+   int ax, ay;
    Window_t wdummy;
 
    if (fFrame || !fEnableUndock) return;
@@ -307,6 +308,7 @@ void TGDockableFrame::UndockContainer()
    Layout();
 
    SendMessage(fMsgWindow, MK_MSG(kC_DOCK, kDOCK_UNDOCK), fWidgetId, 0);
+   Undocked();
 }
 
 //______________________________________________________________________________
@@ -338,6 +340,7 @@ void TGDockableFrame::DockContainer(Int_t del)
    fFrame = 0;
 
    SendMessage(fMsgWindow, MK_MSG(kC_DOCK, kDOCK_DOCK), fWidgetId, 0);
+   Docked();
 }
 
 //______________________________________________________________________________
