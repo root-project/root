@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.85 2002/09/23 17:06:37 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.86 2002/09/25 16:15:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3992,7 +3992,7 @@ void TPad::ResizePad(Option_t *option)
 //*-*- Linear X axis
    Double_t xrange  = fX2 - fX1;
    fXtoAbsPixelk = 0.5 + pxlow - pxrange*fX1/xrange;      //origin at left
-   fXtoPixelk = -pxrange*fX1/xrange;
+   fXtoPixelk = 0.5 +  -pxrange*fX1/xrange;
    fXtoPixel  = pxrange/xrange;
    fAbsPixeltoXk = fX1 - pxlow*xrange/pxrange;
    fPixeltoXk = fX1;
@@ -4000,7 +4000,7 @@ void TPad::ResizePad(Option_t *option)
 //*-*- Linear Y axis
    Double_t yrange  = fY2 - fY1;
    fYtoAbsPixelk = 0.5 + pylow - pyrange*fY1/yrange;      //origin at top
-   fYtoPixelk = -pyrange - pyrange*fY1/yrange;
+   fYtoPixelk = 0.5 +  -pyrange - pyrange*fY1/yrange;
    fYtoPixel  = pyrange/yrange;
    fAbsPixeltoYk = fY1 - pylow*yrange/pyrange;
    fPixeltoYk = fY1;
