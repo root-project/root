@@ -1,5 +1,8 @@
 /*
 
+  NOTE: This macro is kept for back compatibility only.
+  Use instead the executable $ROOTSYS/bin/hadd
+  
   This macro will add histograms from a list of root files and write them
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
