@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.5 2001/05/31 16:23:10 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.6 2004/07/08 11:52:32 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -39,6 +39,8 @@
 #ifndef ROOT_TTimer
 #include "TTimer.h"
 #endif
+
+class TThreadImp;
 
 
 class TThread : public TNamed {
