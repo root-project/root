@@ -14,6 +14,7 @@
 #include "TH2.h"
 
 #include <fstream.h>
+#include <iostream.h>
 
 ClassImp(THStack)
 
@@ -95,7 +96,7 @@ void THStack::Add(TH1 *h1)
    // Only 1-d histograms currently supported.
    // Note that all histograms in the list must have the same number
    // of channels and the same X axis.
-   
+
    if (!h1) return;
    if (h1->GetDimension() > 2) {
       Error("Add","THStack supports only 1-d and 2-d histograms");
@@ -159,7 +160,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
       if (fStack && !strstr(doption,"nostack")) h = (TH1*)fStack->At(i);
       Int_t dist = h->DistancetoPrimitive(px,py);
       if (dist < kMaxDiff) {
-         gPad->SetSelected(fHists->At(i)); 
+         gPad->SetSelected(fHists->At(i));
          gPad->SetCursor(kPointer);
          return dist;
       }
@@ -176,7 +177,7 @@ void THStack::Draw(Option_t *option)
 //   Options to draw histograms  are described in THistPainter::Paint
 // By default (if option "nostack" is not specified), histograms will be paint
 // stacked on top of each other.
-   
+
    TString opt = option;
    opt.ToLower();
    if (gPad) {
@@ -209,7 +210,7 @@ TH1 *THStack::GetHistogram() const
 }
 
 //______________________________________________________________________________
-Double_t THStack::GetMaximum(Option_t *option) 
+Double_t THStack::GetMaximum(Option_t *option)
 {
 //  returns the maximum of all added histograms
 //  returns the maximum of all histograms if option "nostack".
@@ -228,13 +229,13 @@ Double_t THStack::GetMaximum(Option_t *option)
          h = (TH1*)fHists->At(i);
          them = h->GetMaximum();
          if (them > themax) themax = them;
-      } 
+      }
    }
    return themax;
 }
 
 //______________________________________________________________________________
-Double_t THStack::GetMinimum(Option_t *option) 
+Double_t THStack::GetMinimum(Option_t *option)
 {
 //  returns the minimum of all added histograms
 //  returns the minimum of all histograms if option "nostack".
@@ -253,11 +254,11 @@ Double_t THStack::GetMinimum(Option_t *option)
          h = (TH1*)fHists->At(i);
          them = h->GetMinimum();
          if (them < themin) themin = them;
-      } 
+      }
    }
    return themin;
 }
-      
+
 //______________________________________________________________________________
 TAxis *THStack::GetXaxis() const
 {
@@ -293,7 +294,7 @@ void THStack::ls(Option_t *option) const
 void THStack::Modified()
 {
 // invalidate sum of histograms
-   
+
    if (!fStack) return;
    fStack->Delete();
    delete fStack;
@@ -307,7 +308,7 @@ void THStack::Paint(Option_t *option)
 // By default, histograms are shown stacked.
 //    -the first histogram is paint
 //    -then the sum of the first and second, etc
-// If option "nostack" is specified, histograms are all paint in the same pad 
+// If option "nostack" is specified, histograms are all paint in the same pad
 // as if the option "same" had been specified.
 //
 // See THistPainter::Paint for a list of valid options.
@@ -320,7 +321,7 @@ void THStack::Paint(Option_t *option)
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
-   
+
    Double_t themax = GetMaximum(option);
    Double_t themin = GetMinimum(option);
    if (!fHistogram) {
@@ -343,20 +344,20 @@ void THStack::Paint(Option_t *option)
 
    if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
    else fHistogram->GetPainter()->SetStack(fHists);
-   
+
    fHistogram->SetMaximum(1.05*themax);
    fHistogram->SetMinimum(themin);
    fHistogram->Paint(loption);
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
-      
+
    Int_t nhists = fHists->GetEntriesFast();
    strcat(loption,"same");
    for (Int_t i=0;i<nhists;i++) {
       if (nostack) fHists->At(i)->Paint(loption);
       else         fStack->At(nhists-i-1)->Paint(loption);
-   }   
+   }
 }
 
 //______________________________________________________________________________
