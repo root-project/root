@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: daemon.cxx,v 1.2 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: daemon.cxx,v 1.3 2002/01/22 10:53:28 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -49,7 +49,7 @@
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+    defined(__MACH__) || ( defined(__CYGWIN__) && defined(__GNUC__) )
 #define USE_SETSID
 #endif
 
@@ -85,8 +85,10 @@ void DaemonStart(int ignsigcld)
 
    int fd;
 
+#if !(defined(__CYGWIN__) && defined(__GNUC__))
    if (getppid() == 1)
       goto out;
+#endif
 
    // Ignore the terminal stop signals (BSD).
 
@@ -125,7 +127,8 @@ void DaemonStart(int ignsigcld)
       ErrorSys("DaemonStart: can't change process group");
 
    if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-#if !defined(__hpux) && !defined(__sun)
+#if !defined(__hpux) && !defined(__sun) \
+&& !(defined(__CYGWIN__) && defined(__GNUC__))
       ioctl(fd, TIOCNOTTY, 0);       // loose controlling tty
 #endif
       close(fd);

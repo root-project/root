@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.49 2003/01/22 11:23:04 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.50 2003/02/05 15:11:11 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -174,6 +174,10 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <errno.h>
+
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#   define cygwingcc
+#endif
 #if defined(__alpha) && !defined(linux)
 #   ifdef _XOPEN_SOURCE
 #      if _XOPEN_SOURCE+0 > 0
@@ -187,7 +191,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(__APPLE__)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-#elif defined(linux) || defined(__hpux)
+#elif defined(linux) || defined(__hpux) || defined(cygwingcc)
 #include <sys/vfs.h>
 #elif defined(__FreeBSD__)
 #include <sys/param.h>
@@ -198,7 +202,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 
 #if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
     defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
-    defined(__APPLE__)
+    defined(__APPLE__) || defined(cygwingcc)
 #define HAVE_MMAP
 #endif
 
@@ -217,7 +221,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
-#if defined(__MACH__) && !defined(__APPLE__)
+#if defined(cygwingcc) || (defined(__MACH__) && !defined(__APPLE__))
 #   define R__GLIBC
 #endif
 
@@ -232,9 +236,24 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
+#if defined(cygwingcc)
+#define F_LOCK F_WRLCK
+#define F_ULOCK F_UNLCK
+int fcntl_lockf(int fd, int op, off_t off) {
+   flock fl;
+   fl.l_whence=SEEK_SET;
+   fl.l_start=off;
+   fl.l_len=0; // whole file
+   fl.l_pid=getpid();
+   fl.l_type=op;
+   return fcntl(fd,F_SETLK, &fl);
+} 
+#define lockf fcntl_lockf
+#endif
+
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+    defined(__MACH__) || defined(cygwingcc) 
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>

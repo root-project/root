@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.4 2002/01/22 10:53:29 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -48,7 +48,7 @@
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+    defined(__MACH__) || (defined(__CYGWIN__) && defined(__GNUC__))
 #define USE_SETSID
 #endif
 
@@ -83,11 +83,12 @@ void DaemonStart(int ignsigcld, int fdkeep)
    // (i.e. if the parent process terminates before we are started).
 
    int fd;
-
+#if !(defined(__CYGWIN__) && defined(__GNUC__))
    if (getppid() == 1) {
       printf ("ROOTD_PID=%ld\n", (long) getpid());
       goto out;
    }
+#endif
 
    // Ignore the terminal stop signals (BSD).
 
@@ -133,7 +134,8 @@ void DaemonStart(int ignsigcld, int fdkeep)
    }
 
    if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-#if !defined(__hpux) && !defined(__sun)
+#if !defined(__hpux) && !defined(__sun) \
+&& !(defined(__CYGWIN__) && defined(__GNUC__))
       ioctl(fd, TIOCNOTTY, 0);       // loose controlling tty
 #endif
       close(fd);
