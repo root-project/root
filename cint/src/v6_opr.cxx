@@ -2432,7 +2432,7 @@ int flag;
   int store_memberfunc_struct_offset;
 
 #ifndef G__OLDIMPLEMENTATION745
-  if(strncmp(funcname,"operatr",8)==0 || strcmp(funcname,"G__ateval")==0) 
+  if(strncmp(funcname,"operator",8)==0 || strcmp(funcname,"G__ateval")==0) 
     return(0);
 #endif
 

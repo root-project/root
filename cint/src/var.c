@@ -2654,7 +2654,11 @@ struct G__var_array *varglobal,*varlocal;
        *
        *  0 <= p_inc < A*B*C*D = var->varlabel[iden][1]
        *************************************************/
-      if((p_inc<0||p_inc>var->varlabel[ig15][1]||
+      if(
+#ifndef G__OLDIMPLEMENTATION1502
+	 0==G__no_exec_compile &&
+#endif
+	 (p_inc<0||p_inc>var->varlabel[ig15][1]||
 	 (ig25<paran&&tolower(var->type[ig15])!='u')) 
 	 && var->reftype[ig15]==G__PARANORMAL) {
 	G__arrayindexerror(ig15,var,item,p_inc);
