@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.68 2003/08/21 14:31:01 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.69 2003/09/03 05:15:56 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1573,7 +1573,7 @@ void TUnixSystem::StackTrace()
    if (filter) {
       FILE *p = OpenPipe(Form("%s --help 2>&1", filter), "r");
       TString help;
-      while (help.Fgets(p)) {
+      while (help.Gets(p)) {
          if (help.Index("gnu-v3") != kNPOS) {
             cppfiltarg = "--format=gnu-v3";
             break;

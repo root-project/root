@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.6 2003/06/30 09:54:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.7 2003/08/06 23:44:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -174,25 +174,30 @@ ostream& operator<<(ostream& os, const TString& s)
 // ------------------- C I/O ------------------------------------
 
 //______________________________________________________________________________
-Bool_t TString::Fgets(FILE *fp)
+Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {
    // Read one line from the stream, including the \n, or until EOF.
-   // Returns kTRUE if string lenght > 0.
+   // Returns kTRUE if data was read.
+   // Remove the trailing \n if chop is true
 
    char buf[256];
+   Bool_t r = kFALSE;
 
    Clobber(GetInitialCapacity());
 
    do {
       if (fgets(buf, sizeof(buf), fp) == 0) break;
-         *this += buf;
+      *this += buf;
+      r = kTRUE;
    } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == 0);
 
-   return Length() > 0;
+   if (chop && EndsWith("\n")) Chop();
+
+   return r;
 }
 
 //______________________________________________________________________________
-void TString::Fputs(FILE *fp)
+void TString::Puts(FILE *fp)
 {
    // Write string to the stream.
 

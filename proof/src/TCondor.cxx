@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.2 2003/07/05 18:18:46 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.3 2003/08/06 21:31:24 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -40,9 +40,9 @@ TCondor::TCondor(const char *pool) : fPool(pool), fState(kFree)
 
    // hack our path :-/
    TString path = gSystem->Getenv("PATH");
-   path = "/opt/vdt/bin:" + path;
+   path = "/opt/condor/bin:" + path;
    gSystem->Setenv("PATH",path);
-   gSystem->Setenv("CONDOR_CONFIG","/opt/vdt/etc/condor_config");
+   gSystem->Setenv("CONDOR_CONFIG","/opt/condor/etc/condor_config");
 }
 
 //______________________________________________________________________________
@@ -79,16 +79,9 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
       return 0;
    }
 
-   char buf[1024];
    TString claimId;
-   while (!feof(pipe) && !ferror(pipe)) {
-      TString line;
-      do {
-         if (fgets(buf, sizeof(buf), pipe) == 0) break;
-         line += buf;
-      } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-      if (line.EndsWith("\n")) line.Chop();
+   TString line;
+   while (line.Gets(pipe)) {
 // Info("ClaimVM","Claim: line = %s", line.Data());
 
       if (line.BeginsWith("ClaimId = \"")) {
@@ -106,9 +99,8 @@ Info("ClaimVM","claim = '%s'", claimId.Data());
    Int_t r = gSystem->ClosePipe(pipe);
 Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
 
-   TString host = claimId(TRegexp("<.*>"));
-   TString activateCmd = Form("condor_cod activate -addr '%s' -id '%s' -keyword COD_PROOF_%d",
-                              host.Data(), claimId.Data(), port );
+   TString activateCmd = Form("condor_cod activate -id '%s' -keyword COD_PROOF_%d",
+                              claimId.Data(), port );
 
    pipe = gSystem->OpenPipe(activateCmd, "r");
 
@@ -117,14 +109,7 @@ Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
       return 0;
    }
 
-   while (!feof(pipe) && !ferror(pipe)) {
-      TString line;
-      do {
-         if (fgets(buf, sizeof(buf), pipe) == 0) break;
-         line += buf;
-      } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-      if (line.EndsWith("\n")) line.Chop();
+   while (line.Gets(pipe)) {
 Info("ClaimVM","Activate: line = %s", line.Data());
    }
 
@@ -161,16 +146,9 @@ TList *TCondor::GetVirtualMachines() const
       return 0;
    }
 
-   char buf[1024];
+   TString line;
    TList *l = new TList;
-   while (!feof(pipe) && !ferror(pipe)) {
-      TString line;
-      do {
-         if (fgets(buf, sizeof(buf), pipe) == 0) break;
-         line += buf;
-      } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-      if (line.EndsWith("\n")) line.Chop();
+   while (line.Gets(pipe)) {
       if (line != "") l->Add(new TObjString(line));
    }
 
@@ -213,10 +191,9 @@ Bool_t TCondor::SetState(EState state)
    TIter next(fClaims);
    TCondorSlave *claim;
    while((claim = (TCondorSlave*) next()) != 0) {
-      TString host = claim->fClaimID(TRegexp("<.*>"));
-      TString cmd = Form("condor_cod %s -addr '%s' -id '%s'",
+      TString cmd = Form("condor_cod %s -id '%s'",
                          state == kSuspended ? "suspend" : "resume",
-                         host.Data(), claim->fClaimID.Data());
+                         claim->fClaimID.Data());
 
       FILE  *pipe = gSystem->OpenPipe(cmd, "r");
 
@@ -225,15 +202,8 @@ Bool_t TCondor::SetState(EState state)
          return kFALSE;
       }
 
-      char buf[1024];
-      while (!feof(pipe) && !ferror(pipe)) {
-         TString line;
-         do {
-            if (fgets(buf, sizeof(buf), pipe) == 0) break;
-            line += buf;
-         } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-         if (line.EndsWith("\n")) line.Chop();
+      TString line;
+      while (line.Gets(pipe)) {
 Info("SetState","line = %s", line.Data());
       }
 
@@ -277,8 +247,7 @@ Bool_t TCondor::Release()
 
    TCondorSlave *claim;
    while((claim = (TCondorSlave*) fClaims->First()) != 0) {
-      TString host = claim->fClaimID(TRegexp("<.*>"));
-      TString cmd = Form("condor_cod release -addr '%s' -id '%s'", host.Data(), claim->fClaimID.Data());
+      TString cmd = Form("condor_cod release -id '%s'", claim->fClaimID.Data());
 
       FILE  *pipe = gSystem->OpenPipe(cmd, "r");
 
@@ -287,15 +256,8 @@ Bool_t TCondor::Release()
          return kFALSE;
       }
 
-      char buf[1024];
-      while (!feof(pipe) && !ferror(pipe)) {
-         TString line;
-         do {
-            if (fgets(buf, sizeof(buf), pipe) == 0) break;
-            line += buf;
-         } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-         if (line.EndsWith("\n")) line.Chop();
+      TString line;
+      while (line.Gets(pipe)) {
 Info("Release","line = %s", line.Data());
       }
 
@@ -325,15 +287,8 @@ Info("GetVmInfo","command: %s", cmd.Data());
       return 0;
    }
 
-   char buf[1024];
-   while (!feof(pipe) && !ferror(pipe)) {
-      TString line;
-      do {
-         if (fgets(buf, sizeof(buf), pipe) == 0) break;
-         line += buf;
-      } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-      if (line.EndsWith("\n")) line.Chop();
+   TString line;
+   while (line.Gets(pipe)) {
       if (line != "") {
 Info("GetVmInfo","line = %s", line.Data());
          TString amips = line(TRegexp("^[0-9]*"));
@@ -364,16 +319,9 @@ Info("GetImage","command: %s", cmd.Data());
       return 0;
    }
 
-   char buf[1024];
    TString image;
-   while (!feof(pipe) && !ferror(pipe)) {
-      TString line;
-      do {
-         if (fgets(buf, sizeof(buf), pipe) == 0) break;
-         line += buf;
-      } while (!ferror(pipe) && !feof(pipe) && strchr(buf,'\n') == 0);
-
-      if (line.EndsWith("\n")) line.Chop();
+   TString line;
+   while (line.Gets(pipe)) {
       if (line != "") {
 Info("GetVmInfo","line = %s", line.Data());
          image = line(TRegexp("[^:]+$"));

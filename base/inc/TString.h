@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.21 2002/12/05 15:31:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.22 2003/08/06 23:44:41 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -229,8 +229,8 @@ public:
    friend TBuffer &operator<<(TBuffer &b, const TString *obj);
 
    // C I/O interface
-   Bool_t   Fgets(FILE *fp);
-   void     Fputs(FILE *fp);
+   Bool_t   Gets(FILE *fp, Bool_t chop=kTRUE);
+   void     Puts(FILE *fp);
 
    // Type conversion
    operator const char*() const { return fData; }
