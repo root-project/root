@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.13 2001/04/30 15:08:50 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.14 2001/05/07 12:37:38 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -42,7 +42,8 @@ protected:
     Int_t               fStreamerType;  //branch streamer type
     Int_t               fMaximum;       //Maximum entries for a TClonesArray or variable array
     Int_t               fNdata;         //!Number of data in this branch
-    TBranchElement     *fBranchCount;   //pointer to branchcount branch
+    TBranchElement     *fBranchCount;   //pointer to primary branchcount branch
+    TBranchElement     *fBranchCount2;  //pointer to secondary branchcount branch
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     
@@ -56,6 +57,7 @@ public:
             Int_t    Fill();
             void     FillLeaves(TBuffer &b);
     TBranchElement  *GetBranchCount() const {return fBranchCount;}
+    TBranchElement  *GetBranchCount2() const {return fBranchCount2;}
     virtual const char  *GetClassName() const {return fClassName.Data();}
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
             Int_t    GetID() const {return fID;}
@@ -80,13 +82,14 @@ public:
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void     SetBasketSize(Int_t buffsize);
     virtual void     SetBranchCount(TBranchElement *bre);
+    virtual void     SetBranchCount2(TBranchElement *bre) {fBranchCount2 = bre;}
     virtual void     SetBranchFolder() {SetBit(kBranchFolder);}
     virtual void     SetClassName(const char *name) {fClassName=name;}
     virtual void     SetParentName(const char *name) {fParentName=name;}
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,5)  //Branch in case of an object
+    ClassDef(TBranchElement,6)  //Branch in case of an object
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.30 2001/04/28 11:43:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.31 2001/04/30 15:08:51 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -48,6 +48,7 @@ TBranchElement::TBranchElement(): TBranch()
    fNleaves   = 1;
    fInfo = 0;
    fBranchCount = 0;
+   fBranchCount2 = 0;
    fObject = 0;
    fMaximum = 0;
 }
@@ -74,6 +75,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fStreamerType = -1;
    fType         = 0;
    fBranchCount  = 0;
+   fBranchCount2 = 0;
    fObject       = 0;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
@@ -203,7 +205,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             if (fin == 0) continue;
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
             sprintf(branchname,"%s[%s_]",fin+1,name);
-            bre->SetBranchCount(this);
+            bre->SetBranchCount(this); //primary branchcount
             char *dim = strstr(branchname,"][");
             if (dim) {
                char *bracket = strstr(branchname,"[");
@@ -211,6 +213,28 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             }
             bre->SetTitle(branchname);
             lf->SetTitle(branchname);
+            // is there a secondary branchcount ?
+            //fBranchCount2 points to the secondary branchcount
+            //in case a TClonesArray element has itself a branchcount.
+            //Example in Event class with TClonesArray fTracks of Track objects.
+            //if the Track object has two members
+            //  Int_t    fNpoint;
+            //  Float_t *fPoints;  //[fNpoint]
+            //In this case the TBranchElement fTracks.fPoints has
+            // -its primary branchcount pointing to the branch fTracks
+            // -its secondary branchcount pointing to fTracks.fNpoint
+            Int_t stype = bre->GetStreamerType();
+            if (stype > 40 && stype < 55) {
+               char name2[kMaxLen];
+               strcpy(name2,bre->GetName());
+               char *bn = strrchr(name2,'.');
+               if (!bn) continue;
+               TStreamerBasicPointer *el = (TStreamerBasicPointer*)bre->GetInfo()->GetElements()->FindObject(bn+1);
+               strcpy(bn+1,el->GetCountName());
+               TBranchElement *bc2 = (TBranchElement*)fBranches.FindObject(name2);
+               bre->SetBranchCount2(bc2);
+               //printf("Branch:%s has a secondary branchcount, bc2=%s\n",bre->GetName(),bc2->GetName());
+            }
          }
          return;
          
@@ -595,6 +619,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len) const
    if (j == 0 && fBranchCount) {
       Int_t entry = fTree->GetReadEntry();
       fBranchCount->TBranch::GetEntry(entry);
+      if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
    }
    if (fTree->GetMakeClass()) {
      if (!fAddress) return 0;
