@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.45 2003/05/05 16:38:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.46 2003/05/22 21:02:08 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -46,6 +46,9 @@
 #endif
 #ifndef ROOT_TArrayS
 #include "TArrayS.h"
+#endif
+#ifndef ROOT_TArrayI
+#include "TArrayI.h"
 #endif
 #ifndef ROOT_TArrayF
 #include "TArrayF.h"
@@ -382,6 +385,49 @@ TH1S operator+(const TH1S &h1, const TH1S &h2);
 TH1S operator-(const TH1S &h1, const TH1S &h2);
 TH1S operator*(const TH1S &h1, const TH1S &h2);
 TH1S operator/(const TH1S &h1, const TH1S &h2);
+
+//________________________________________________________________________
+
+class TH1I: public TH1, public TArrayI {
+
+public:
+    TH1I();
+    TH1I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
+    TH1I(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+    TH1I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1I(const TH1I &h1i);
+    virtual ~TH1I();
+
+    virtual void    AddBinContent(Int_t bin);
+    virtual void    AddBinContent(Int_t bin, Stat_t w);
+    virtual void    Copy(TObject &hnew) const;
+    virtual TH1    *DrawCopy(Option_t *option="") const;
+    virtual Stat_t  GetBinContent(Int_t bin) const;
+    virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+    virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
+    virtual void    Reset(Option_t *option="");
+    virtual void    SetBinContent(Int_t bin, Stat_t content);
+    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+    virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
+    virtual void    SetBinsLength(Int_t n=-1);
+            TH1I&   operator=(const TH1I &h1);
+    friend  TH1I    operator*(Double_t c1, const TH1I &h1);
+    friend  TH1I    operator*(const TH1I &h1, Double_t c1);
+    friend  TH1I    operator+(const TH1I &h1, const TH1I &h2);
+    friend  TH1I    operator-(const TH1I &h1, const TH1I &h2);
+    friend  TH1I    operator*(const TH1I &h1, const TH1I &h2);
+    friend  TH1I    operator/(const TH1I &h1, const TH1I &h2);
+
+    ClassDef(TH1I,1)  //1-Dim histograms (one 32 bits integer per channel)
+};
+
+TH1I operator*(Double_t c1, const TH1I &h1);
+inline
+TH1I operator*(const TH1I &h1, Double_t c1) {return operator*(c1,h1);}
+TH1I operator+(const TH1I &h1, const TH1I &h2);
+TH1I operator-(const TH1I &h1, const TH1I &h2);
+TH1I operator*(const TH1I &h1, const TH1I &h2);
+TH1I operator/(const TH1I &h1, const TH1I &h2);
 
 //________________________________________________________________________
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.34 2003/06/14 04:56:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.35 2003/06/19 07:05:37 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -32,6 +32,7 @@ ClassImp(TH3)
 //
 //  TH3C a 3-D histogram with one byte per cell (char)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
+//  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
 //  TH3F a 3-D histogram with four bytes per cell (float)
 //  TH3D a 3-D histogram with eight bytes per cell (double)
 //
@@ -1749,7 +1750,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 {
 //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
 //*-*              ==================================================
-   TArrayS::Set(fNcells);
+   TH3S::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -1760,7 +1761,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
 //*-*            =======================================================
-   TArrayS::Set(fNcells);
+   TH3S::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -1771,7 +1772,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
 //*-*            =======================================================
-   TArrayS::Set(fNcells);
+   TH3S::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -1808,7 +1809,7 @@ void TH3S::Copy(TObject &newth3) const
 //*-*          ===========================================
 
    TH3::Copy((TH3S&)newth3);
-   TArrayS::Copy((TH3S&)newth3);
+   TH3S::Copy((TH3S&)newth3);
 }
 
 //______________________________________________________________________________
@@ -1946,6 +1947,197 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 TH3S operator/(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+ClassImp(TH3I)
+
+//______________________________________________________________________________
+//                     TH3I methods
+//______________________________________________________________________________
+TH3I::TH3I(): TH3()
+{
+}
+
+//______________________________________________________________________________
+TH3I::~TH3I()
+{
+}
+
+//______________________________________________________________________________
+TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup
+                                     ,Int_t nbinsz,Axis_t zlow,Axis_t zup)
+     :TH3(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup)
+{
+//*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
+//*-*              ==================================================
+   TH3I::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                             ,Int_t nbinsy,const Float_t *ybins
+                                             ,Int_t nbinsz,const Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                             ,Int_t nbinsy,const Double_t *ybins
+                                             ,Int_t nbinsz,const Double_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3I::TH3I(const TH3I &h3i) : TH3(), TArrayI()
+{
+   ((TH3I&)h3i).Copy(*this);
+}
+
+//______________________________________________________________________________
+void TH3I::AddBinContent(Int_t bin)
+{
+//*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                ==========================
+
+   if (fArray[bin] < 2147483647) fArray[bin]++;
+}
+
+//______________________________________________________________________________
+void TH3I::AddBinContent(Int_t bin, Stat_t w)
+{
+//*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                ==========================
+
+   Int_t newval = fArray[bin] + Int_t(w);
+   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Short_t(newval); return;}
+   if (newval < -2147483647) fArray[bin] = -2147483647;
+   if (newval >  2147483647) fArray[bin] =  2147483647;
+}
+
+//______________________________________________________________________________
+void TH3I::Copy(TObject &newth3) const
+{
+//*-*-*-*-*-*-*Copy this 3-D histogram structure to newth3*-*-*-*-*-*-*-*-*-*
+//*-*          ===========================================
+
+   TH3::Copy((TH3I&)newth3);
+   TArrayI::Copy((TH3I&)newth3);
+}
+
+//______________________________________________________________________________
+TH1 *TH3I::DrawCopy(Option_t *option) const
+{
+   TString opt = option;
+   opt.ToLower();
+   if (gPad && !opt.Contains("same")) gPad->Clear();
+   TH3I *newth3 = (TH3I*)Clone();
+   newth3->SetDirectory(0);
+   newth3->SetBit(kCanDelete);
+   newth3->AppendPad(option);
+   return newth3;
+}
+
+//______________________________________________________________________________
+Stat_t TH3I::GetBinContent(Int_t bin) const
+{
+   if (fBuffer) ((TH3I*)this)->BufferEmpty();
+   if (bin < 0) bin = 0;
+   if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
+   return Stat_t (fArray[bin]);
+}
+
+//______________________________________________________________________________
+void TH3I::Reset(Option_t *option)
+{
+//*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
+//*-*            ===========================================
+
+   TH3::Reset(option);
+   TArrayI::Reset();
+   // should also reset statistics once statistics are implemented for TH3
+}
+
+//______________________________________________________________________________
+void TH3I::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Short_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
+void TH3I::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayI::Set(n);
+}
+
+//______________________________________________________________________________
+TH3I& TH3I::operator=(const TH3I &h1)
+{
+   if (this != &h1)  ((TH3I&)h1).Copy(*this);
+   return *this;
+}
+
+//______________________________________________________________________________
+TH3I operator*(Float_t c1, TH3I &h1)
+{
+   TH3I hnew = h1;
+   hnew.Scale(c1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH3I operator+(TH3I &h1, TH3I &h2)
+{
+   TH3I hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH3I operator-(TH3I &h1, TH3I &h2)
+{
+   TH3I hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH3I operator*(TH3I &h1, TH3I &h2)
+{
+   TH3I hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH3I operator/(TH3I &h1, TH3I &h2)
+{
+   TH3I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
    return hnew;

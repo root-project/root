@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.23 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.24 2003/04/19 16:59:27 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -166,6 +166,45 @@ public:
    friend  TH3S    operator/(TH3S &h1, TH3S &h2);
 
    ClassDef(TH3S,3)  //3-Dim histograms (one short per channel)
+};
+
+//________________________________________________________________________
+
+class TH3I : public TH3, public TArrayI {
+public:
+   TH3I();
+   TH3I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                  ,Int_t nbinsy,Axis_t ylow,Axis_t yup
+                                  ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
+   TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                          ,Int_t nbinsy,const Float_t *ybins
+                                          ,Int_t nbinsz,const Float_t *zbins);
+   TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins
+                                          ,Int_t nbinsz,const Double_t *zbins);
+   TH3I(const TH3I &h3i);
+   virtual ~TH3I();
+   virtual void    AddBinContent(Int_t bin);
+   virtual void    AddBinContent(Int_t bin, Stat_t w);
+   virtual void    Copy(TObject &hnew) const;
+   virtual TH1    *DrawCopy(Option_t *option="") const;
+   virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t binz) const {return GetBinContent(GetBin(binx,biny,binz));}
+   virtual void    Reset(Option_t *option="");
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
+   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
+   virtual void    SetBinsLength(Int_t n=-1);
+           TH3I&   operator=(const TH3I &h1);
+   friend  TH3I    operator*(Float_t c1, TH3I &h1);
+   friend  TH3I    operator*(TH3I &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH3I    operator+(TH3I &h1, TH3I &h2);
+   friend  TH3I    operator-(TH3I &h1, TH3I &h2);
+   friend  TH3I    operator*(TH3I &h1, TH3I &h2);
+   friend  TH3I    operator/(TH3I &h1, TH3I &h2);
+
+   ClassDef(TH3I,3)  //3-Dim histograms (one 32 bits integer per channel)
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.23 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.24 2003/04/19 16:59:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -170,6 +170,48 @@ public:
    friend  TH2S    operator/(TH2S &h1, TH2S &h2);
 
    ClassDef(TH2S,3)  //2-Dim histograms (one short per channel)
+};
+
+
+//______________________________________________________________________________
+
+class TH2I : public TH2, public TArrayI {
+
+public:
+   TH2I();
+   TH2I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,Axis_t ylow,Axis_t yup);
+   TH2I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                          ,Int_t nbinsy,const Double_t *ybins);
+   TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins);
+   TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
+                                          ,Int_t nbinsy,const Float_t  *ybins);
+   TH2I(const TH2I &h2i);
+   virtual ~TH2I();
+   virtual void    AddBinContent(Int_t bin);
+   virtual void    AddBinContent(Int_t bin, Stat_t w);
+   virtual void    Copy(TObject &hnew) const;
+   virtual TH1    *DrawCopy(Option_t *option="") const;
+   virtual Stat_t  GetBinContent(Int_t bin) const;
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
+   virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
+   virtual void    Reset(Option_t *option="");
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
+   virtual void    SetBinsLength(Int_t n=-1);
+           TH2I&   operator=(const TH2I &h1);
+   friend  TH2I    operator*(Float_t c1, TH2I &h1);
+   friend  TH2I    operator*(TH2I &h1, Float_t c1) {return operator*(c1,h1);}
+   friend  TH2I    operator+(TH2I &h1, TH2I &h2);
+   friend  TH2I    operator-(TH2I &h1, TH2I &h2);
+   friend  TH2I    operator*(TH2I &h1, TH2I &h2);
+   friend  TH2I    operator/(TH2I &h1, TH2I &h2);
+
+   ClassDef(TH2I,3)  //2-Dim histograms (one 32 bits integer per channel)
 };
 
 

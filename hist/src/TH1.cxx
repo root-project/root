@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.148 2003/06/30 08:44:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.149 2003/06/30 09:03:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -39,18 +39,21 @@
 //      1-D histograms:
 //         TH1C : histograms with one byte per channel.   Maximum bin content = 255
 //         TH1S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH1D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      2-D histograms:
 //         TH2C : histograms with one byte per channel.   Maximum bin content = 255
 //         TH2S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH2F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH2D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      3-D histograms:
 //         TH3C : histograms with one byte per channel.   Maximum bin content = 255
 //         TH3S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH3F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH3D : histograms with one double per channel. Maximum precision 14 digits
 //
@@ -70,27 +73,28 @@
 //                                 |
 //                                 |
 //                                 |
-//         -----------------------------------------------------
-//                |                |       |      |      |     |
-//                |                |      TH1C   TH1S   TH1F  TH1D
-//                |                |                           |
-//                |                |                           |
-//                |               TH2                      TProfile
+//         -----------------------------------------------------------
+//                |                |       |      |      |     |     |
+//                |                |      TH1C   TH1S   TH1I  TH1F  TH1D
+//                |                |                                 |
+//                |                |                                 |
+//                |               TH2                             TProfile
 //                |                |
 //                |                |
-//                |                -----------------------------
-//                |                        |      |      |     |
-//                |                       TH2C   TH2S   TH2F  TH2D
-//                |                                            |
-//               TH3                                           |
-//                |                                        TProfile2D
+//                |                ----------------------------------
+//                |                        |      |      |     |     |
+//                |                       TH2C   TH2S   TH2I  TH2F  TH2D
+//                |                                                  |
+//               TH3                                                 |
+//                |                                               TProfile2D
 //                |
-//                ------------------------------
-//                        |      |      |      |
-//                       TH3C   TH3S   TH3F   TH3D
+//                -------------------------------------
+//                        |      |      |      |      |
+//                       TH3C   TH3S   TH3I   TH3F   TH3D
 //
 //      The TH*C classes also inherit from the array class TArrayC.
 //      The TH*S classes also inherit from the array class TArrayS.
+//      The TH*I classes also inherit from the array class TArrayI.
 //      The TH*F classes also inherit from the array class TArrayF.
 //      The TH*D classes also inherit from the array class TArrayD.
 //
@@ -5794,6 +5798,211 @@ TH1S operator*(const TH1S &h1, const TH1S &h2)
 TH1S operator/(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+ClassImp(TH1I)
+
+//______________________________________________________________________________
+//                     TH1I methods
+//______________________________________________________________________________
+TH1I::TH1I(): TH1(), TArrayI()
+{
+   fDimension = 1;
+   SetBinsLength(1);
+}
+
+//______________________________________________________________________________
+TH1I::TH1I(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
+     : TH1(name,title,nbins,xlow,xup)
+{
+//
+//    Create a 1-Dim histogram with fix bins of type integer
+//    ====================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+   TArrayI::Set(fNcells);
+
+   if (xlow >= xup) SetBuffer(fgBufferSize);
+}
+
+//______________________________________________________________________________
+TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
+     : TH1(name,title,nbins,xbins)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type integer
+//    =========================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
+     : TH1(name,title,nbins,xbins)
+{
+//
+//    Create a 1-Dim histogram with variable bins of type integer
+//    =========================================================
+//           (see TH1::TH1 for explanation of parameters)
+//
+   fDimension = 1;
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH1I::~TH1I()
+{
+
+}
+
+//______________________________________________________________________________
+TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
+{
+   ((TH1I&)h1i).Copy(*this);
+}
+
+//______________________________________________________________________________
+void TH1I::AddBinContent(Int_t bin)
+{
+//   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//                   ==========================
+
+   if (fArray[bin] < 2147483647) fArray[bin]++;
+}
+
+//______________________________________________________________________________
+void TH1I::AddBinContent(Int_t bin, Stat_t w)
+{
+//                   Increment bin content by w
+//                   ==========================
+
+   Int_t newval = fArray[bin] + Int_t(w);
+   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -2147483647) fArray[bin] = -2147483647;
+   if (newval >  2147483647) fArray[bin] =  2147483647;
+}
+
+//______________________________________________________________________________
+void TH1I::Copy(TObject &newth1) const
+{
+   TH1::Copy(newth1);
+   TArrayI::Copy((TH1I&)newth1);
+}
+
+//______________________________________________________________________________
+TH1 *TH1I::DrawCopy(Option_t *option) const
+{
+   TString opt = option;
+   opt.ToLower();
+   if (gPad && !opt.Contains("same")) gPad->Clear();
+   TH1I *newth1 = (TH1I*)Clone();
+   newth1->SetDirectory(0);
+   newth1->SetBit(kCanDelete);
+   newth1->AppendPad(opt.Data());
+   return newth1;
+}
+
+//______________________________________________________________________________
+Stat_t TH1I::GetBinContent(Int_t bin) const
+{
+   if (fBuffer) ((TH1I*)this)->BufferEmpty();
+   if (bin < 0) bin = 0;
+   if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
+   return Stat_t (fArray[bin]);
+}
+
+//______________________________________________________________________________
+void TH1I::Reset(Option_t *option)
+{
+   TH1::Reset(option);
+   TArrayI::Reset();
+}
+
+//______________________________________________________________________________
+void TH1I::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+// In case the bin number is greater than the number of bins and
+// the timedisplay option is set or the kCanRebin bit is set,
+// the number of bins is automatically doubled to accomodate the new bin
+   if (bin < 0) return;
+   if (bin >= fNcells-1) {
+      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
+         if (bin == fNcells-1) fArray[bin] = Int_t (content);
+         return;
+      }
+      while (bin >= fNcells-1)  LabelsInflate();
+   }
+   fArray[bin] = Int_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
+void TH1I::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+
+   if (n < 0) n = fXaxis.GetNbins();
+   fNcells = n;
+   TArrayI::Set(n);
+}
+
+//______________________________________________________________________________
+TH1I& TH1I::operator=(const TH1I &h1)
+{
+   if (this != &h1)  ((TH1I&)h1).Copy(*this);
+   return *this;
+}
+
+
+//______________________________________________________________________________
+TH1I operator*(Double_t c1, const TH1I &h1)
+{
+   TH1I hnew = h1;
+   hnew.Scale(c1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH1I operator+(const TH1I &h1, const TH1I &h2)
+{
+   TH1I hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH1I operator-(const TH1I &h1, const TH1I &h2)
+{
+   TH1I hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH1I operator*(const TH1I &h1, const TH1I &h2)
+{
+   TH1I hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH1I operator/(const TH1I &h1, const TH1I &h2)
+{
+   TH1I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
    return hnew;

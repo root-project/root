@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.42 2003/04/19 16:59:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.43 2003/05/10 15:52:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -27,6 +27,7 @@ ClassImp(TH2)
 //
 //  TH2C a 2-D histogram with one byte per cell (char)
 //  TH2S a 2-D histogram with two bytes per cell (short integer)
+//  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
 //  TH2F a 2-D histogram with four bytes per cell (float)
 //  TH2D a 2-D histogram with eight bytes per cell (double)
 //
@@ -483,7 +484,7 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
 //*-*-*-*-*-*-*Fill histogram following distribution in histogram h*-*-*-*
 //*-*          ====================================================
 //*-*
-//*-*   The distribution contained in the histogram h (TH1) is integrated
+//*-*   The distribution contained in the histogram h (TH2) is integrated
 //*-*   over the channel contents.
 //*-*   It is normalized to 1.
 //*-*   Getting one random number implies:
@@ -1992,6 +1993,202 @@ TH2S operator*(TH2S &h1, TH2S &h2)
 TH2S operator/(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+ClassImp(TH2I)
+
+//______________________________________________________________________________
+//                     TH2I methods
+//______________________________________________________________________________
+TH2I::TH2I(): TH2()
+{
+}
+
+//______________________________________________________________________________
+TH2I::~TH2I()
+{
+
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
+     :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
+{
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                     ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
+{
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                     ,Int_t nbinsy,const Double_t *ybins)
+     :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
+{
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                             ,Int_t nbinsy,const Double_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                             ,Int_t nbinsy,const Float_t *ybins)
+     :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayI::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
+{
+   ((TH2I&)h2i).Copy(*this);
+}
+
+//______________________________________________________________________________
+void TH2I::AddBinContent(Int_t bin)
+{
+//*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                ==========================
+
+   if (fArray[bin] < 2147483647) fArray[bin]++;
+}
+
+//______________________________________________________________________________
+void TH2I::AddBinContent(Int_t bin, Stat_t w)
+{
+//*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                ==========================
+
+   Int_t newval = fArray[bin] + Int_t(w);
+   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Short_t(newval); return;}
+   if (newval < -2147483647) fArray[bin] = -2147483647;
+   if (newval >  2147483647) fArray[bin] =  2147483647;
+}
+
+//______________________________________________________________________________
+void TH2I::Copy(TObject &newth2) const
+{
+   TH2::Copy((TH2I&)newth2);
+   TArrayI::Copy((TH2I&)newth2);
+}
+
+//______________________________________________________________________________
+TH1 *TH2I::DrawCopy(Option_t *option) const
+{
+   TString opt = option;
+   opt.ToLower();
+   if (gPad && !opt.Contains("same")) gPad->Clear();
+   TH2I *newth2 = (TH2I*)Clone();
+   newth2->SetDirectory(0);
+   newth2->SetBit(kCanDelete);
+   newth2->AppendPad(option);
+   return newth2;
+}
+
+//______________________________________________________________________________
+Stat_t TH2I::GetBinContent(Int_t bin) const
+{
+   if (fBuffer) ((TH2C*)this)->BufferEmpty();
+   if (bin < 0) bin = 0;
+   if (bin >= fNcells) bin = fNcells-1;
+   if (!fArray) return 0;
+   return Stat_t (fArray[bin]);
+}
+
+//______________________________________________________________________________
+void TH2I::Reset(Option_t *option)
+{
+//*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
+//*-*            ===========================================
+
+   TH2::Reset(option);
+   TArrayI::Reset();
+}
+
+//______________________________________________________________________________
+void TH2I::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Short_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
+void TH2I::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayI::Set(n);
+}
+
+//______________________________________________________________________________
+TH2I& TH2I::operator=(const TH2I &h1)
+{
+   if (this != &h1)  ((TH2I&)h1).Copy(*this);
+   return *this;
+}
+
+
+//______________________________________________________________________________
+TH2I operator*(Float_t c1, TH2I &h1)
+{
+   TH2I hnew = h1;
+   hnew.Scale(c1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH2I operator+(TH2I &h1, TH2I &h2)
+{
+   TH2I hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH2I operator-(TH2I &h1, TH2I &h2)
+{
+   TH2I hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH2I operator*(TH2I &h1, TH2I &h2)
+{
+   TH2I hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(0);
+   return hnew;
+}
+
+//______________________________________________________________________________
+TH2I operator/(TH2I &h1, TH2I &h2)
+{
+   TH2I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
    return hnew;
