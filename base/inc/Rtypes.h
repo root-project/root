@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.20 2002/05/10 21:32:08 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.21 2002/05/11 14:24:08 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -183,11 +183,9 @@ namespace ROOT {
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/);
 
-
 } // End of namespace ROOT
 
-// The macro below use this TGenericClassInfo, so let's insure it is
-// included
+// The macros below use TGenericClassInfo, so let's ensure it is included
 #ifndef ROOT_TGenericClassInfo
 #include "TGenericClassInfo.h"
 #endif
@@ -247,9 +245,10 @@ public: \
 namespace ROOT { \
    TGenericClassInfo *GenerateInitInstance(const name*); \
    static int _R__UNIQUE_(R__dummyint) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);  \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
 }
 #endif
+
 //---- ClassDefT macros for templates with one template argument ---------------
 // ClassDefT  corresponds to ClassDef
 // ClassDefT2 goes in the same header as ClassDefT but must be
