@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.1 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.2 2005/04/06 06:23:10 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1824,8 +1824,17 @@ namespace RootCsg {
 	{
 		Int_t vertexNum = source.Verts().size();
 		Int_t polyNum = source.Polys().size();
+		
+		// typename keywords required to be correctly portable
+		// between gcc and VC7 (though VC7 doesn't demand them)
+		// Solaris CC doesn't cope with them however...
+#ifdef R__SOLARIS
+		output.Verts() = MeshB::VLIST(vertexNum);
+		output.Polys() = MeshB::PLIST(polyNum);
+#else
 		output.Verts() = typename MeshB::VLIST(vertexNum);
 		output.Polys() = typename MeshB::PLIST(polyNum);
+#endif
 		std::copy(source.Verts().begin(), source.Verts().end(), output.Verts().begin());
 		std::copy(source.Polys().begin(), source.Polys().end(), output.Polys().begin());
 	}

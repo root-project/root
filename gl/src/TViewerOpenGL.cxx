@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.53 2005/03/18 08:03:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.54 2005/04/01 13:53:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -988,13 +988,14 @@ Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t
 //______________________________________________________________________________
 void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // Accept any children producer is willing to pass at present
    if (fInsideComposite) {
       RootCsg::BaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
-      fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
+      // Solaris CC can't create stl pair with enumerate type
+      fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
       return;
    }
 
+   // Accept any children producer is willing to pass at present
    if (addChildren) {
       *addChildren = kTRUE;
    }
