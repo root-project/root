@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.1 2002/09/14 00:35:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.2 2003/05/28 11:55:31 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // Selecting a color in these two widgets will generate the event:      //
 // kC_COLORSEL, kCOL_CLICK, widget id, 0.                               //
 // and the signal:                                                      //
-// ColorSelected(Pixel_t pixel)                                         //
+// ColorSelected(Pixel_t color)                                         //
 //                                                                      //
 // The TGColorDialog presents a full featured color selection dialog.   //
 // It uses 2 TGColorPalette's and the TGColorPick widgets.              //
@@ -86,7 +86,8 @@ public:
    Pixel_t GetColorByIndex(Int_t ix) const { return fPixels[ix]; }
    Pixel_t GetCurrentColor() const;
 
-   virtual void ColorSelected()  { Emit("ColorSelected(Pixel_t)", GetCurrentColor()); }  //*SIGNAL*
+   virtual void ColorSelected(Pixel_t col = 0)  
+           { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPalette,0)  // Color palette widget
 };
@@ -138,7 +139,8 @@ public:
    void     SetColor(Pixel_t color);
    Pixel_t  GetCurrentColor() const { return fCurrentColor; }
 
-   virtual void ColorSelected()  { Emit("ColorSelected(Pixel_t)", GetCurrentColor()); }  //*SIGNAL*
+   virtual  void ColorSelected(Pixel_t col = 0)  
+            { Emit("ColorSelected(Pixel_t)", col ? col : GetCurrentColor()); }  //*SIGNAL*
 
    ClassDef(TGColorPick,0)  // Color picker widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.11 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.12 2004/04/20 14:48:01 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -44,7 +44,7 @@
 // Selecting a color in these two widgets will generate the event:      //
 // kC_COLORSEL, kCOL_CLICK, widget id, 0.                               //
 // and the signal:                                                      //
-// ColorSelected(ULong_t pixel)                                         //
+// ColorSelected(Pixel_t color)                                         //
 //                                                                      //
 // The TGColorDialog presents a full featured color selection dialog.   //
 // It uses 2 TGColorPalette's and the TGColorPick widgets.              //
@@ -1038,7 +1038,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fPalette->Associate(this);
 
    for (i = 0; i < 48; ++i)
-      fPalette->SetColor(i, TColor::Number2Pixel(i));  // root colors
+      fPalette->SetColor(i, TColor::Number2Pixel(i+10));  // root colors
       // the basic colors were set via bcolor 
       //fPalette->SetColor(i, TColor::GetPixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
 
