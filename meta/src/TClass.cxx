@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.142 2004/03/26 22:40:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.143 2004/04/16 20:53:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2694,10 +2694,12 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    }
 
    //deserialize the object
+   b.IncrementLevel(sinfo);
    sinfo->ReadBuffer(b, (char*)pointer,-1);
    if (sinfo->IsRecovered()) count=0;
 
    //check that the buffer position corresponds to the byte count
+   b.DecrementLevel(sinfo);
    b.CheckByteCount(start,count,this);
    return 0;
 }
@@ -2738,10 +2740,12 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    }
 
    //deserialize the object
+   b.IncrementLevel(sinfo);
    sinfo->ReadBuffer(b, (char*)pointer,-1);
    if (sinfo->IsRecovered()) R__c=0;
 
    //check that the buffer position corresponds to the byte count
+   b.DecrementLevel(sinfo);
    b.CheckByteCount(R__s, R__c,this);
 
    if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n",GetName(),R__c);
@@ -2777,11 +2781,13 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
 
    //write the class version number and reserve space for the byte count
    UInt_t R__c = b.WriteVersion(this, kTRUE);
+   b.IncrementLevel(sinfo);
 
    //serialize the object
    sinfo->WriteBufferAux(b, (char**)&pointer,-1,1,0,0); // NOTE: expanded
 
    //write the byte count at the start of the buffer
+   b.DecrementLevel(sinfo);
    b.SetByteCount(R__c, kTRUE);
 
    if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",GetName(),GetClassVersion(),R__c);
