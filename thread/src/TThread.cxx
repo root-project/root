@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.21 2004/07/08 11:52:32 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.22 2004/09/15 14:39:03 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -150,6 +150,7 @@ void TThread::Constructor()
    fState  = kNewState;
 
    fId = 0;
+   fHandle = 0;
    if (!fgThreadImp) { // *** Only once ***
       fgThreadImp = gThreadFactory->CreateThreadImp();
       fgMainMutex = new TMutex(kTRUE);
@@ -274,7 +275,11 @@ void TThread::SetJoinId(TThread *tj)
 {
    // Set thread to join.
 
+#ifdef WIN32
+   SetJoinId(tj->fHandle);
+#else
    SetJoinId(tj->fId);
+#endif
 }
 
 //______________________________________________________________________________
@@ -318,6 +323,7 @@ Long_t TThread::Join(void **ret)
 //______________________________________________________________________________
 Long_t TThread::Join(Long_t jid, void **ret)
 {
+#if 0
    Long_t jd = jid;
    if (!jd) {  // jd is not known
       TThread *myth = TThread::Self();
@@ -325,7 +331,13 @@ Long_t TThread::Join(Long_t jid, void **ret)
       jd = myth->fJoinId;
       if (!jd) return -1L;
    }
-   return fgThreadImp->Join(jd,ret);
+#else
+   Long_t jd;
+   TThread *myth = jid ? GetThread(jid) : GetThread(fId);
+   if (!myth) return -1L;
+   jd = myth->fJoinId;
+#endif
+   return fgThreadImp->Join(jd, ret);
 }
 
 //______________________________________________________________________________

@@ -118,7 +118,7 @@ endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
 endif
-ifneq ($(OSTHREADLIB),)
+ifeq ($(ENABLETHREAD),yes)
 MODULES      += thread
 endif
 ifneq ($(FPYTHIALIB),)

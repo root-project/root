@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.6 2004/07/08 11:52:32 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.7 2004/07/16 00:08:17 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@ friend class TThreadImp;
 friend class TPosixThread;
 friend class TThreadTimer;
 friend class TThreadCleaner;
+friend class TWin32Thread;
 
 public:
 
@@ -81,7 +82,8 @@ private:
    EState         fState;                 // thread state
    EState         fStateComing;           // coming thread state
    Long_t         fId;                    // thread id
-   Long_t         fJoinId;                // thread id to whom can join
+   Long_t         fHandle;                // thread handle (Win32)
+   Long_t         fJoinId;                // thread id used for joining
    Bool_t         fDetached;              // kTRUE if thread is Detached
    Bool_t         fNamed;                 // kTRUE if thread is Named
    VoidRtnFunc_t  fFcnRetn;               // void* start function of thread
@@ -130,9 +132,10 @@ public:
    Long_t           GetJoinId() const { return fJoinId; }
    void             SetJoinId(TThread *tj);
    void             SetJoinId(Long_t jid);
+   void             SetHandle(Long_t handle) { fHandle = handle; }
 
-   static Long_t    Join(Long_t id, void **ret=0);
-   static Long_t    Join(void **ret=0);
+   Long_t           Join(Long_t id, void **ret=0);
+   Long_t           Join(void **ret=0);
 
    static Int_t     Exit(void *ret = 0);
    static Int_t     Exists();

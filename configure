@@ -254,7 +254,7 @@ check_library() {
     # skip cygwin libraries when in pure Win32 mode
     if test "x$platform" = "xwin32"; then
         case $found_dir in
-           /lib|/usr/*) found_dir="no" ;;
+           /lib|/lib/*|/usr/*) found_dir="no" ;;
         esac
     fi
 
@@ -587,7 +587,7 @@ enable/disable options, prefix with either --enable- or --disable-
    srp             SRP support, requires SRP source tree
    ssl             SSL encryption support, requires openssl
    table           Build libTable contrib library
-   thread          Thread support (currently only POSIX threads)
+   thread          Thread support
    venus           Venus EG support, requires libVenus
    xml             XML I/O interface
    xrootd          Build xrootd file server and its client (if supported)
@@ -930,7 +930,7 @@ fi
 # Check for posix thread library
 #
 case $platform in
-macosx)
+macosx|win32)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
@@ -1556,7 +1556,7 @@ if test ! "x$enable_python" = "xno" ; then
         $PYTHONDIR/include /usr/include/python2.3 /usr/include/python2.2 \
         /usr/local/include/python2.3 /usr/local/include/python2.2 \
         /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3 \
-        C:/Python23/include C:/Python22/include
+        /cygdrive/c/Python23/include /cygdrive/c/Python22/include
     pythoninc=$found_hdr
     pythonincdir=$found_dir
 
@@ -1566,7 +1566,7 @@ if test ! "x$enable_python" = "xno" ; then
         /usr/lib/python2.3/config /usr/lib/python2.2/config \
         /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config \
         /System/Library/Frameworks/Python.framework/Versions/2.3 \
-        C:/Python23/libs C:/Python22/libs
+        /cygdrive/c/Python23/libs /cygdrive/c/Python22/libs
     pythonlib=$found_lib
     pythonlibdir=$found_dir
 
