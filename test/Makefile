@@ -6,7 +6,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-ARCH          = $(shell root-config --arch)
+ARCH         := $(shell root-config --arch)
 
 CXX           =
 ObjSuf        = o
@@ -18,13 +18,6 @@ OutPutOpt     = -o # keep whitespace after "-o"
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
-
-ifeq ($(ARCH),win32)
-PLATFORM      = win32
-endif
-ifeq ($(ARCH),win32gdk)
-PLATFORM      = win32
-endif
 
 ifeq ($(ARCH),hpux)
 # HP-UX with CC
@@ -62,7 +55,6 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -fPIC -shared
 endif
-
 
 ifeq ($(ARCH),hurddeb)
 # GNU/Hurd
@@ -293,7 +285,6 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
-
 ifeq ($(ARCH),linuxsuse6)
 # Linux with gcc 2.7.2.x
 CXX           = g++
@@ -442,7 +433,7 @@ SOFLAGS       = -Wl,-b,-E -nostdlib -nostartfiles
 DllSuf        = sl
 endif
 
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx
@@ -491,7 +482,7 @@ EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
 EVENT         = Event$(ExeSuf)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 EVENTLIB      = libEvent.lib
 else
 EVENTLIB      = $(EVENTSO)
@@ -605,7 +596,7 @@ ifeq ($(ARCH),macosx)
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
@@ -673,7 +664,7 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		@echo "$@ done"
 
 $(STRESSGEOM):  $(STRESSGEOMO)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
 else
 		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@

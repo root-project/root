@@ -6,7 +6,7 @@
 #
 # Author: Fons Rademakers, 12/2/2003
 
-ARCH          = $(shell root-config --arch)
+ARCH         := $(shell root-config --arch)
 
 CXX           =
 ObjSuf        = o
@@ -19,13 +19,6 @@ ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 ROOTLIBDIR   := $(shell root-config --libdir)
-
-ifeq ($(ARCH),win32)
-PLATFORM      = win32
-endif
-ifeq ($(ARCH),win32gdk)
-PLATFORM      = win32
-endif
 
 ifeq ($(ARCH),hpux)
 # HP-UX with CC
@@ -443,7 +436,7 @@ SOFLAGS       = -Wl,-b,-E -nostdlib -nostartfiles
 DllSuf        = sl
 endif
 
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx
@@ -506,7 +499,7 @@ PROGRAMS      = $(ROOTSHOWER)
 all:            $(PROGRAMS)
 
 $(ROOTSHOWER):  $(ROOTSHOWERO)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
 		   '$(ROOTSYS)\lib\libHtml.lib' '$(ROOTSYS)\lib\libGeom.lib' $(OutPutOpt)$@
 else
