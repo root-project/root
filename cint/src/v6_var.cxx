@@ -5536,7 +5536,11 @@ long G__struct_offset; /* used to be int */
 #endif
 	  G__asm_inst[G__asm_cp-5]=store_asm_inst;
 	}
-	if(G__no_exec_compile) return;
+        if(G__no_exec_compile 
+           || (G__globalcomp && G__int(*result)==0) ) /* with -c-1 or -c-2 option */
+        {
+          return;
+        }
 #endif /* of G__ASM */
 
 	if(result->tagnum==var->p_tagtable[ig15]) {
