@@ -4,10 +4,10 @@ PLATFORM      = linux
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
-NOOPT         =
+NOOPT         = -O0
 else
 OPT           = -O
-NOOPT         =
+NOOPT         = -O0
 endif
 
 # Compiler:
