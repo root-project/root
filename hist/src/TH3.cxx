@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.54 2005/01/16 16:08:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.55 2005/01/20 21:58:44 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1199,7 +1199,8 @@ Int_t TH3::Merge(TCollection *list)
    //
    //IMPORTANT remark. The 3 axis x,y and z may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width.
+   //a multiple of the smallest bin width and the upper limit must also 
+   //be a multiple of the bin width.
    
    if (!list) return 0;
    TIter next(list);
@@ -1222,15 +1223,14 @@ Int_t TH3::Merge(TCollection *list)
    Stat_t stats[kNstat], totstats[kNstat];
    TH3 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
-      nentries = 0;
       hclone = (TH3*)Clone("FirstClone");
       Reset();
       inlist.Add(hclone);
    }
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
    Bool_t same = kTRUE;
    while ((h=(TH3*)next())) {     
       if (!h->InheritsFrom(TH3::Class())) {
@@ -1272,9 +1272,12 @@ Int_t TH3::Merge(TCollection *list)
    
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
-      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
-      nbiz = (Int_t) ((zmax-zmin)/bwiz +0.1); while(nbiz > 100) nbiz /= 2;
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); // while(nbix > 100) nbix /= 2;
+      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); // while(nbiy > 100) nbiy /= 2;
+      nbiz = (Int_t) ((zmax-zmin)/bwiz +0.1); // while(nbiz > 100) nbiz /= 2;
+      xmax = xmin + nbix*bwix;
+      ymax = ymin + nbiy*bwiy;
+      zmax = zmin + nbiz*bwiz;
       SetBins(nbix,xmin,xmax,nbiy,ymin,ymax,nbiz,zmin,zmax);
    }
    

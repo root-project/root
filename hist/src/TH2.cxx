@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.62 2004/12/21 13:52:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.63 2005/01/20 21:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1282,7 +1282,8 @@ Int_t TH2::Merge(TCollection *list)
    //
    //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width.
+   //a multiple of the smallest bin width and the upper limit must also 
+   //be a multiple of the bin width.
 
    if (!list) return 0;
    TIter next(list);
@@ -1301,15 +1302,14 @@ Int_t TH2::Merge(TCollection *list)
    Stat_t stats[kNstat], totstats[kNstat];
    TH2 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
-      nentries = 0;
       hclone = (TH2*)Clone("FirstClone");
       Reset();
       inlist.Add(hclone);
    }
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
    Bool_t same = kTRUE;
    while ((h=(TH2*)next())) {
       if (!h->InheritsFrom(TH2::Class())) {
@@ -1343,8 +1343,10 @@ Int_t TH2::Merge(TCollection *list)
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
-      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.5); // while(nbix > 100) nbix /= 2;
+      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.5); // while(nbiy > 100) nbiy /= 2;
+      xmax = xmin + nbix*bwix;
+      ymax = ymin + nbiy*bwiy;
       SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
    }
 

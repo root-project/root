@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.51 2004/12/20 10:01:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.52 2005/01/20 21:58:44 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "THLimitsFinder.h"
 #include "Riostream.h"
 
+const Int_t kNstat = 11;
 Bool_t TProfile::fgApproximate = kFALSE;
 
 ClassImp(TProfile)
@@ -1169,7 +1170,8 @@ Int_t TProfile::Merge(TCollection *list)
    //
    //IMPORTANT remark. The axis x may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width.
+   //a multiple of the smallest bin width and the upper limit must also 
+   //be a multiple of the bin width.
 
    if (!list) return 0;
    TIter next(list);
@@ -1180,11 +1182,13 @@ Int_t TProfile::Merge(TCollection *list)
    Double_t bwix  = fXaxis.GetBinWidth(1);
    Int_t    nbix  = fXaxis.GetNbins();
 
+   Stat_t stats[kNstat], totstats[kNstat];
    TProfile *h, *hclone=0;
-   Int_t nentries=(Int_t)fEntries;
+   Int_t i, nentries=(Int_t)fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
-      nentries = 0;
       hclone = (TProfile*)Clone("FirstClone");
       Reset();
       inlist.Add(hclone);
@@ -1197,6 +1201,8 @@ Int_t TProfile::Merge(TCollection *list)
       }
       inlist.Add(h);
       //import statistics
+      h->GetStats(stats);
+      for (i=0;i<kNstat;i++) totstats[i] += stats[i];
       nentries += (Int_t)h->GetEntries();
 
       // find min/max of the axes
@@ -1213,7 +1219,9 @@ Int_t TProfile::Merge(TCollection *list)
 
    //  if different binning compute best binning
    if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > fXaxis.GetNbins()) nbix /= 2;
+      nbix = (Int_t) ((xmax-xmin)/bwix +0.5); 
+      //while(nbix > fXaxis.GetNbins()) nbix /= 2;
+      xmax = xmin + nbix*bwix;
       SetBins(nbix,xmin,xmax);
    }
 
@@ -1235,6 +1243,8 @@ Int_t TProfile::Merge(TCollection *list)
       fTsumwx2 += h->fTsumwx2;
       fTsumwy  += h->fTsumwy;
    }
+   PutStats(totstats);
+   SetEntries(nentries);
    if (hclone) delete hclone;
    return nentries;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.216 2005/01/13 20:07:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.217 2005/01/20 21:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3498,7 +3498,8 @@ Int_t TH1::Merge(TCollection *list)
 //
 // IMPORTANT remark. The axis x may have different number
 // of bins and different limits, BUT the largest bin width must be
-// a multiple of the smallest bin width.
+// a multiple of the smallest bin width and the upper limit must also 
+// be a multiple of the bin width.
 // Example:
 // void atest() {
 //    TH1F *h1 = new TH1F("h1","h1",110,-110,0);
@@ -3533,15 +3534,14 @@ Int_t TH1::Merge(TCollection *list)
    Stat_t stats[kNstat], totstats[kNstat];
    TH1 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
    TList inlist;
    if (nentries > 0) {
-      nentries = 0;
       hclone = (TH1*)Clone("FirstClone");
       Reset();
       inlist.Add(hclone);
    }
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
    Bool_t same = kTRUE;
 
    THashList allLabels;
@@ -3603,8 +3603,11 @@ Int_t TH1::Merge(TCollection *list)
    if (!same) {
       if (allHaveLabels)
          nbix=allLabels.GetSize();
-      else
-         nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
+      else {
+         nbix = (Int_t) ((xmax-xmin)/bwix +0.5); 
+         //while (nbix>fXaxis.GetNbins()) {nbix /= 2; bwix *= 2; }
+         xmax = xmin + nbix*bwix;
+      } 
       SetBins(nbix,xmin,xmax);
    }
 
@@ -3956,7 +3959,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       hnew->SetName(newname);
    }
 
-   // change axis specs and rebuild bin contents array
+   // change axis specs and rebuild bin contents array::RebinAx
    if(newbins*ngroup != nbins) {
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
@@ -4054,7 +4057,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
          if (ntimes > 64) break;
          range *= 2;
          if (x < cxmax-range) continue;
-         xmin = cxmin - range/4;
+         xmin = cxmin - range/2;
          xmax = xmin + range;
          if (x < xmin) {
             xmin = cxmax - range;
