@@ -640,9 +640,9 @@ fi
 #
 if test ! "$platform" = "win32"; then
     check_library "libX11" "yes" "$x11libdir" \
-	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
+	/usr/lib32 /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
 	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
-	/usr/X11/lib /usr/lib32 /usr/lib/X11R5
+	/usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
