@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.3 2002/07/31 21:59:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.4 2003/07/01 11:39:44 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -33,7 +33,7 @@ class TList;
 
 class TSystemDirectory : public TSystemFile {
 
-private:
+protected:
    TOrdCollection *fDirsInBrowser;
    TOrdCollection *fFilesInBrowser;
 
