@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.226 2005/03/03 10:40:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.227 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1991,7 +1991,7 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
    char *linear;
-   linear=strstr(fname, "++");
+   linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
    TF2 *f2=0;
    TF3 *f3=0;
