@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.140 2003/05/30 20:37:46 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.141 2003/06/05 17:11:29 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4049,7 +4049,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    Double_t  statw  = gStyle->GetStatW();
    if (fit) statw   = 1.8*gStyle->GetStatW();
-   Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
+   Double_t  stath  = (nlines+nlinesf)*gStyle->GetStatFontSize();
+   if (stath <= 0) stath = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
    if (stats) {
       stats->Clear();
       done = kTRUE;
@@ -4199,7 +4200,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    Double_t  statw  = gStyle->GetStatW();
    if (fit) statw   = 1.8*gStyle->GetStatW();
-   Double_t  stath  = 0.25*nlines*gStyle->GetStatH();
+   Double_t  stath  = nlines*gStyle->GetStatFontSize();
+   if (stath <= 0) stath = 0.25*nlines*gStyle->GetStatH();
    if (fit) stath += gStyle->GetStatH();
    if (stats) {
       stats->Clear();
@@ -4776,6 +4778,7 @@ void THistPainter::PaintTitle()
    }
    Double_t ht = gStyle->GetTitleH();
    Double_t wt = gStyle->GetTitleW();
+   if (ht <= 0) ht = 1.1*gStyle->GetTitleFontSize();
    if (ht <= 0) ht = 0.05;
    if (wt <= 0) {
       TLatex l;
