@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.31 2003/05/16 07:32:04 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.32 2003/09/12 09:31:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1289,7 +1289,7 @@ void TTreeViewer::ExecuteDraw()
            varexp, cut, gopt, nentries, firstentry);
    if (fCounting) return;
    fCounting = kTRUE;
-   fTree->SetTimerInterval(20);
+   fTree->SetTimerInterval(200);
    fTimer->TurnOn();
    ExecuteCommand(command);
    HandleTimer(fTimer);
