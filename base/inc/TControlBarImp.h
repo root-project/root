@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TControlBarImp.h,v 1.3 2003/07/21 12:42:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TControlBarImp.h,v 1.4 2003/08/05 21:15:06 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 
 
 class TControlBar;
-
+class TControlBarButton;
 
 class TControlBarImp {
 
@@ -35,13 +35,15 @@ protected:
    TControlBar *fControlBar; //TControlBar associated with this implementation
    Int_t        fXpos;       //Initial x position
    Int_t        fYpos;       //Initial y position
-
+   TControlBarButton *fClicked; //Last clicked button 
+   
 public:
    TControlBarImp(TControlBar *c, const char * = "") : fControlBar(c) { }
    TControlBarImp(TControlBar *c, const char *, Int_t, Int_t) : fControlBar(c) { }
    virtual ~TControlBarImp() { }
 
    virtual TControlBar *GetControlBar() { return fControlBar; }
+   virtual TControlBarButton *GetClicked() { return fClicked; } 
 
    virtual void Create() { }
    virtual void Hide() { }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.5 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.6 2003/07/21 12:42:36 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -48,7 +48,7 @@ protected:
    Int_t           fOrientation;    //orientation
    TList          *fButtons;        //list of buttons
    Int_t           fNoroc;          //number of rows or columns
-
+   
 public:
    enum { kVertical = 1, kHorizontal = 2 };
 
@@ -63,6 +63,7 @@ public:
    void            AddControlBar(TControlBar *controlBar);
    void            AddControlBar(TControlBar &controlBar);
    void            AddSeparator();
+   TControlBarButton *GetClicked() const;      
    TControlBarImp *GetControlBarImp() const   { return fControlBarImp; }
    TList          *GetListOfButtons() const   { return fButtons; }
    Int_t           GetNumberOfColumns() const { return fNoroc; }

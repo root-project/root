@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.3 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.4 2003/07/21 12:42:36 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -19,6 +19,11 @@
 // The macro belows shows an example of controlbar.
 // To execute an item, click with the left mouse button.
 // To see the HELP of a button, click on the right mouse button.
+// 
+// You have access to the last clicked button via the method
+// GetClicked(). For example, bar->GetClicked()->GetName() 
+// will return the name of the last clicked button. 
+// 
 //
 //{
 //   gROOT.Reset("a");
@@ -263,4 +268,15 @@ void TControlBar::Show()
 {
     if( fControlBarImp )
         fControlBarImp->Show();
+}
+
+//_______________________________________________________________________
+TControlBarButton *TControlBar::GetClicked() const
+{
+   // Returns a pointer to the last clicked controlbar button;    
+   // null if no button was clicked yet
+   
+   if (!fControlBarImp->GetClicked()) 
+      Printf("None of the controlbar buttons is clicked yet");
+   return fControlBarImp->GetClicked();
 }
