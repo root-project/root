@@ -609,7 +609,7 @@ if [ "x$enable_mysql" != "xno" ]; then
                     /usr/local/mysql/lib /usr/mysql /usr/local/mysql \
                     /opt/mysql /opt/mysql/lib"
     fi
-    # If the "--enable-shared" flag is ste, we first look for the
+    # If the "--enable-shared" flag is set, we first look for the
     # shared library then the static one.
     if [ "x$enable_shared" != "xno" ]; then
         libs="libmysqlclient.so libmysqlclient.sl libmysqlclient.a \
