@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.5 2003/10/31 07:27:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.6 2004/03/05 07:47:40 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #ifndef ROOT_TVirtualGeoTrack
 #define ROOT_TVirtualGeoTrack
 
-#ifndef ROOT_TObject
+#ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
 
@@ -55,6 +55,7 @@ public:
    virtual ~TVirtualGeoTrack();
    
    virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=0) = 0;
+   virtual Int_t       AddDaughter(TVirtualGeoTrack *other) = 0;
    virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t) = 0;
    Int_t               GetId() const         {return fId;}
    virtual Int_t       GetDaughterId(Int_t index) const {return GetDaughter(index)->GetId();}
@@ -81,6 +82,7 @@ public:
    virtual void        ResetTrack() = 0;
    void                SetName(const char *name);
    virtual void        SetParticle(TObject *particle) {fParticle=particle;}
+   void                SetParent(TVirtualGeoTrack *parent) {fParent = parent;}
    void                SetId(Int_t id)       {fId = id;}
    virtual void        SetPDG(Int_t pdgcode) {fPDG = pdgcode;}
    

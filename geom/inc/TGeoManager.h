@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.45 2004/02/09 14:03:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.46 2004/02/19 12:58:29 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -293,6 +293,7 @@ public:
                                    Int_t nz);
 
    TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
+   TVirtualGeoTrack      *MakeTrack(Int_t id, Int_t pdgcode, TObject *particle);
    TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.2 2003/06/17 09:13:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.3 2003/07/07 21:18:30 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -78,6 +78,17 @@ TVirtualGeoTrack *TGeoTrack::AddDaughter(Int_t id, Int_t pdgcode, TObject *parti
    TGeoTrack *daughter = new TGeoTrack(id,pdgcode,this,particle);
    fTracks->AddAtAndExpand(daughter,index);
    return daughter;
+}
+
+//______________________________________________________________________________
+Int_t TGeoTrack::AddDaughter(TVirtualGeoTrack *other)
+{
+// Add a daughter and return its index.
+   if (!fTracks) fTracks = new TObjArray(1);
+   Int_t index = fTracks->GetEntriesFast();
+   fTracks->AddAtAndExpand(other,index);
+   other->SetParent(this);
+   return index;
 }
 
 //______________________________________________________________________________

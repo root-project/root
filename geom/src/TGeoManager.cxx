@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.75 2004/02/09 14:03:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.76 2004/02/19 12:58:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -654,6 +654,15 @@ Int_t TGeoManager::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
    Int_t index = fNtracks;
    fTracks->AddAtAndExpand(GetGeomPainter()->AddTrack(id,pdgcode,particle),fNtracks++);   
    return index;
+}   
+
+//_____________________________________________________________________________
+TVirtualGeoTrack *TGeoManager::MakeTrack(Int_t id, Int_t pdgcode, TObject *particle)
+{
+// Makes a primary track but do not attach it to the list of tracks. The track
+// can be attached as daughter to another one with TVirtualGeoTrack::AddTrack
+   TVirtualGeoTrack *track = GetGeomPainter()->AddTrack(id,pdgcode,particle);
+   return track;
 }   
    
 //_____________________________________________________________________________
