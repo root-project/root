@@ -217,8 +217,8 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 %.log : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
-%.clog : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $<+ > $@ 2>&1
+%.clog : run%_C.$(DllSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
 
 define BuildWithLib
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
