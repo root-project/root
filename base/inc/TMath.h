@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.45 2004/07/08 08:19:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.46 2004/07/08 17:42:04 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -209,19 +209,25 @@ public:
    static Int_t  LocMax(Int_t n, const Long_t *a);
    static Int_t  LocMax(Int_t n, const Long64_t *a);
 
-   //Mean, Median, RMS
-   static Double_t  Mean(Int_t n, const Short_t *a);
-   static Double_t  Mean(Int_t n, const Int_t *a);
-   static Double_t  Mean(Int_t n, const Float_t *a);
-   static Double_t  Mean(Int_t n, const Double_t *a);
-   static Double_t  Mean(Int_t n, const Long_t *a);
-   static Double_t  Mean(Int_t n, const Long64_t *a);
-   static Short_t   Median(Int_t n, const Short_t *a);
-   static Int_t     Median(Int_t n, const Int_t *a);
-   static Float_t   Median(Int_t n, const Float_t *a);
-   static Double_t  Median(Int_t n, const Double_t *a);
-   static Long_t    Median(Int_t n, const Long_t *a);
-   static Long64_t  Median(Int_t n, const Long64_t *a);
+   //Mean, Geometric Mean, Median, RMS
+   static Double_t  Mean(Int_t n, const Short_t *a,const Double_t *w=0);
+   static Double_t  Mean(Int_t n, const Int_t *a,const Double_t *w=0);
+   static Double_t  Mean(Int_t n, const Float_t *a,const Double_t *w=0);
+   static Double_t  Mean(Int_t n, const Double_t *a,const Double_t *w=0);
+   static Double_t  Mean(Int_t n, const Long_t *a,const Double_t *w=0);
+   static Double_t  Mean(Int_t n, const Long64_t *a,const Double_t *w=0);
+   static Double_t  GeomMean(Int_t n, const Short_t *a);
+   static Double_t  GeomMean(Int_t n, const Int_t *a);
+   static Double_t  GeomMean(Int_t n, const Float_t *a);
+   static Double_t  GeomMean(Int_t n, const Double_t *a);
+   static Double_t  GeomMean(Int_t n, const Long_t *a);
+   static Double_t  GeomMean(Int_t n, const Long64_t *a);
+   static Short_t   Median(Int_t n, const Short_t *a, const Double_t *w=0, Int_t *work=0);
+   static Int_t     Median(Int_t n, const Int_t *a, const Double_t *w=0, Int_t *work=0);
+   static Float_t   Median(Int_t n, const Float_t *a, const Double_t *w=0, Int_t *work=0);
+   static Double_t  Median(Int_t n, const Double_t *a, const Double_t *w=0, Int_t *work=0);
+   static Long_t    Median(Int_t n, const Long_t *a, const Double_t *w=0, Int_t *work=0);
+   static Long64_t  Median(Int_t n, const Long64_t *a, const Double_t *w=0, Int_t *work=0);
    static Double_t  MedianSorted(Int_t n, Double_t *a);
    static Double_t  RMS(Int_t n, const Short_t *a);
    static Double_t  RMS(Int_t n, const Int_t *a);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.68 2004/07/08 12:45:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.70 2004/07/08 17:42:04 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1349,87 +1349,303 @@ Int_t TMath::LocMax(Int_t n, const Long64_t *a)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Short_t *a)
+Double_t TMath::Mean(Int_t n, const Short_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Int_t *a)
+Double_t TMath::Mean(Int_t n, const Int_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Float_t *a)
+Double_t TMath::Mean(Int_t n, const Float_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Double_t *a)
+Double_t TMath::Mean(Int_t n, const Double_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Long_t *a)
+Double_t TMath::Mean(Int_t n, const Long_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Mean(Int_t n, const Long64_t *a)
+Double_t TMath::Mean(Int_t n, const Long64_t *a, const Double_t *w)
 {
-   // Return the mean of a vector a with length n.
+   // Return the weighted mean of an array a with length n.
 
    if (n <= 0) return 0;
 
-   Double_t tot = 0;
-   for (Int_t i=0;i<n;i++) tot += a[i];
-   Double_t mean = tot/n;
-   return mean;
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Int_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Int_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Short_t *a)
+{
+   // Return the geometric mean of an array a with length n.             
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Int_t *a)
+{
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Float_t *a)
+{  
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Double_t *a)
+{  
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Long_t *a)
+{  
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Int_t n, const Long64_t *a)
+{  
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0) return 0;
+
+   Double_t logsum = 0.;
+   for (Int_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
 }
 
 //______________________________________________________________________________
 Double_t TMath::MedianSorted(Int_t n, Double_t *a)
 {
-   // Return the median of a vector a in monotonic order with length n
+   // Return the median of an array a in monotonic order with length n
    // where median is a number which divides sequence of n numbers
    // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
@@ -1454,126 +1670,464 @@ Double_t TMath::MedianSorted(Int_t n, Double_t *a)
    return a[imin];
 }
 
+Int_t kWorkMax = 100;
+
 //______________________________________________________________________________
-Short_t TMath::Median(Int_t n, const Short_t *a)
+Short_t TMath::Median(Int_t n, const Short_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Double_t median;
+   Double_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Double_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    Short_t res = (Short_t)median;
    return res;
 }
 
 //______________________________________________________________________________
-Int_t TMath::Median(Int_t n, const Int_t *a)
+Int_t TMath::Median(Int_t n, const Int_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Double_t median;
+   Double_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Double_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    Int_t res = (Int_t)median;
    return res;
 }
 
 //______________________________________________________________________________
-Float_t TMath::Median(Int_t n, const Float_t *a)
+Float_t TMath::Median(Int_t n, const Float_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Float_t median;
+   Float_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Float_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Float_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    return median;
 }
 
 //______________________________________________________________________________
-Double_t TMath::Median(Int_t n, const Double_t *a)
+Double_t TMath::Median(Int_t n, const Double_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Double_t median;
+   Double_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Double_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    return median;
 }
 
 //______________________________________________________________________________
-Long_t TMath::Median(Int_t n, const Long_t *a)
+Long_t TMath::Median(Int_t n, const Long_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Double_t median;
+   Double_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Double_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    Long_t res = (Long_t)median;
    return res;
 }
 
 //______________________________________________________________________________
-Long64_t TMath::Median(Int_t n, const Long64_t *a)
+Long64_t TMath::Median(Int_t n, const Long64_t *a, const Double_t *w, Int_t *work)
 {
-   // Return the median of a vector a with length n
-   // where median is a number which divides sequence of n numbers
-   // into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd, the median is kth element k = (n + 1) / 2.
    // when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax . 
 
    if (n <= 0) return 0;
 
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,a,ind,kFALSE);
-   Double_t median;
+   Double_t sumTot2 = n;
+   if (w) {
+     sumTot2 = 0.;
+     for (Int_t j = 0; j < n; j++) {
+       if (w[j] < 0) {
+         ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+         return 0;
+       }
+       sumTot2 += w[j];
+     }
+   }
+   sumTot2 /= 2.;
 
-   if (n%2==1) median = a[ind[n/2]];
-   else        median = 0.5*(a[ind[n/2-1]]+a[ind[n/2]]);
-   delete [] ind;
+   Int_t workLocal[kWorkMax];
+   Bool_t isAllocated = kFALSE;                                          
+
+   Int_t *ind;
+   if (work) {
+     ind = work;
+   } else {
+     ind = workLocal;
+     if (n > kWorkMax) {
+       isAllocated = kTRUE;
+       ind = new Int_t[n];
+     }
+   }
+
+   TMath::Sort(n,a,ind,kFALSE);
+
+   Double_t sum = 0.;
+   Int_t jl;
+   for (jl = 0; jl < n; jl++) {
+     if (w) sum += w[ind[jl]];
+     else   sum += 1.0;
+     if (sum >= sumTot2) break;
+   }
+
+   Int_t jh;
+   sum = 2.*sumTot2;
+   for (jh = n-1; jh >= 0; jh--) {
+     if (w) sum -= w[ind[jh]];
+     else   sum -= 1.0;
+     if (sum <= sumTot2) break;
+   }
+
+   Double_t median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+   if (isAllocated)
+      delete [] ind;
    Long64_t res = (Long64_t)median;
    return res;
 }
@@ -1581,7 +2135,7 @@ Long64_t TMath::Median(Int_t n, const Long64_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Short_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
@@ -1596,7 +2150,7 @@ Double_t TMath::RMS(Int_t n, const Short_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Int_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
@@ -1611,7 +2165,7 @@ Double_t TMath::RMS(Int_t n, const Int_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Float_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
@@ -1626,7 +2180,7 @@ Double_t TMath::RMS(Int_t n, const Float_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Double_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
@@ -1641,7 +2195,7 @@ Double_t TMath::RMS(Int_t n, const Double_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Long_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
@@ -1656,7 +2210,7 @@ Double_t TMath::RMS(Int_t n, const Long_t *a)
 //______________________________________________________________________________
 Double_t TMath::RMS(Int_t n, const Long64_t *a)
 {
-   // Return the RMS of a vector a with length n.
+   // Return the RMS of an array a with length n.
 
    if (n <= 0) return 0;
 
