@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.13 2004/11/23 15:49:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.14 2005/01/14 15:08:57 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -302,7 +302,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
                TDatime::GetDateTime(cdatime[0],cdate,ctime);
                sprintf(&line[kvalue],"%d/%d",cdate,ctime);
             } else if (isbits) {
-               sprintf(&line[kvalue],"%lx ", (Long_t)pointer);
+               sprintf(&line[kvalue],"0x%lx", *(ULong_t*)pointer);
             } else {
                strncpy(&line[kvalue], membertype->AsString(pointer),128);
             }
