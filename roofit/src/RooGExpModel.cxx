@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGExpModel.cc,v 1.5 2001/10/08 05:21:18 verkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.6 2001/11/19 07:26:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,6 +17,7 @@
 #include "RooFitModels/RooGExpModel.hh"
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooRealConstant.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooGExpModel) 
 ;
@@ -362,5 +363,28 @@ RooComplex RooGExpModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) co
   return v.exp()*(-zsq.exp()/(zc*rootpi) + 1)*2 ;
 }
 
+
+Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+{
+  if (matchArgs(directVars,generateVars,x)) return 1 ; 
+  return 0 ;
+}
+
+
+void RooGExpModel::generateEvent(Int_t code)
+{
+  assert(code==1) ;
+  Double_t xgen ;
+  while(1) {
+    Double_t xgau = RooRandom::randomGenerator()->Gaus(0,(sigma*ssf));
+    Double_t xexp = RooRandom::uniform();
+    if (!_flip) xgen= xgau + (rlife*rsf)*log(xexp);
+    else xgen= xgau - (rlife*rsf)*log(xexp);
+    if (xgen<x.max() && xgen>x.min()) {
+      x = xgen ;
+      return ;
+    }
+  }
+}
 
 
