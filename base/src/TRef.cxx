@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.16 2002/06/16 09:10:20 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.17 2002/07/09 21:15:39 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -206,7 +206,15 @@ TRef::TRef(TObject *obj)
    // TRef copy ctor.
 
    *this = obj;
-   fPID = TProcessID::GetSessionProcessID();
+   if (!obj) return;
+   if (obj->TestBit(kHasUUID)) {
+      fPID = gROOT->GetUUIDs();
+      obj->SetBit(kIsReferenced);
+      SetBit(kHasUUID);
+      SetUniqueID(obj->GetUniqueID());
+   } else {
+      fPID = TProcessID::GetSessionProcessID();
+   }
 }
 
 //______________________________________________________________________________
@@ -239,6 +247,7 @@ void TRef::operator=(TObject *obj)
             fPID = TProcessID::GetSessionProcessID();
             uid = TProcessID::AssignID(obj);
          }
+         ResetBit(kHasUUID);
       }
    }
    SetUniqueID(uid);
@@ -251,6 +260,7 @@ TRef &TRef::operator=(const TRef &ref)
 
    SetUniqueID(ref.GetUniqueID());
    fPID = ref.fPID;
+   SetBit(kHasUUID,ref.TestBit(kHasUUID));
    return *this;
 }
 
