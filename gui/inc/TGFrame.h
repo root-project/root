@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.38 2004/04/06 21:24:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.39 2004/06/04 15:57:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -38,7 +38,7 @@
 #include "TGFont.h"
 #endif
 #ifndef ROOT_TGLayout
-#include "TGLayout.h"s
+#include "TGLayout.h"
 #endif
 #ifndef ROOT_TGString
 #include "TGString.h"
