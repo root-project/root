@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.34 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.35 2004/05/06 09:40:30 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -200,7 +200,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
    // count number of columns in format
    Int_t ncol = 0;
    char *s = (char*)format;
-   while(s=(char*)strstr(s,"%")) {ncol++; s++;}
+   while((s=(char*)strstr(s,"%"))) {ncol++; s++;}
    char line[80];
    Int_t np = 0;
    
