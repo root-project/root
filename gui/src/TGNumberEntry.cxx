@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.1 2001/09/18 10:55:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.2 2001/09/18 15:31:33 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1871,7 +1871,7 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
       Error("TGNumberEntry", "arrow_down.xpm not found");
 
    // create gui elements
-   fNumericEntry = new TGNumberEntryField(this, 3, val, style, attr,
+   fNumericEntry = new TGNumberEntryField(this, id, val, style, attr,
                                           limits, min, max);
    fNumericEntry->Associate(parent);
    AddFrame(fNumericEntry, 0);
