@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.31 2004/10/30 07:43:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.32 2004/11/02 16:55:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -402,6 +402,18 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
       gVirtualGL->SetGLLineWidth(1.5f);
       DrawObjects();
       break;
+   case kKey_Up:
+      MoveCenter(kKey_Up);
+      break;
+   case kKey_Down:
+      MoveCenter(kKey_Down);
+      break;
+   case kKey_Left:
+      MoveCenter(kKey_Left);
+      break;
+   case kKey_Right:
+      MoveCenter(kKey_Right);
+      break;
    }
 
    return kTRUE;
@@ -497,6 +509,11 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Double_t zdiff = fRangeZ.second - fRangeZ.first;
    Double_t min = xdiff > ydiff ? ydiff > zdiff ? zdiff : ydiff : xdiff > zdiff ? zdiff : xdiff;
    Double_t newRad = min / 20.;
+
+
+   fXc = fRangeX.first + xdiff / 2;
+   fYc = fRangeY.first + ydiff / 2;
+   fZc = fRangeZ.first + zdiff / 2;
    
    light1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
    light1->SetBulbRad(newRad);
@@ -743,10 +760,6 @@ void TViewerOpenGL::CalculateViewvolumes()
       fViewVolume[1] = max / 1.9 * fry;
       fViewVolume[2] = max * 0.707;
       fViewVolume[3] = 3 * max;
-
-      fXc = fRangeX.first + xdiff / 2;
-      fYc = fRangeY.first + ydiff / 2;
-      fZc = fRangeZ.first + zdiff / 2;
       fRad = max * 1.7;
    }
 }
@@ -757,10 +770,10 @@ void TViewerOpenGL::CreateCameras()
    if (!fRender.GetSize())
       return;
 
-   TGLSimpleTransform trXOY(gRotMatrixXOY, fRad, fXc, fYc, fZc);
-   TGLSimpleTransform trXOZ(gIdentity, fRad, fXc, fYc, fZc);
-   TGLSimpleTransform trYOZ(gRotMatrixYOZ, fRad, fXc, fYc, fZc);
-   TGLSimpleTransform trPersp(fArcBall->GetRotMatrix(), fRad, fXc, fYc, fZc);
+   TGLSimpleTransform trXOY(gRotMatrixXOY, fRad, &fXc, &fYc, &fZc);
+   TGLSimpleTransform trXOZ(gIdentity, fRad, &fXc, &fYc, &fZc);
+   TGLSimpleTransform trYOZ(gRotMatrixYOZ, fRad, &fXc, &fYc, &fZc);
+   TGLSimpleTransform trPersp(fArcBall->GetRotMatrix(), fRad, &fXc, &fYc, &fZc);
 
    fCamera[kXOY]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trXOY);
    fCamera[kXOZ]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trXOZ);
@@ -812,5 +825,40 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       gVirtualGL->Invalidate(&fRender);
    }
    
+   DrawObjects();
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::MoveCenter(Int_t key)
+{
+   Double_t shift[3] = {0.};
+   Double_t steps[2] = {fViewVolume[0] * fZoom[0] / 40, fViewVolume[0] * fZoom[0] / 40};
+
+   switch (key) {
+   case kKey_Left:
+      shift[0] = steps[0];
+      break;
+   case kKey_Right:
+      shift[0] = -steps[0];
+      break;
+   case kKey_Up:
+      shift[1] = -steps[1];
+      break;
+   case kKey_Down:
+      shift[1] = steps[1];
+      break;
+   }
+
+   const Double_t *rotM = fArcBall->GetRotMatrix();
+   Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], shift[0]},
+                            {rotM[1], -rotM[9], rotM[5], shift[1]},
+                            {rotM[2], -rotM[10], rotM[6], 0.}};
+                                     
+   TToySolver tr(*matrix);
+   tr.GetSolution(shift);
+   fXc += shift[0];
+   fYc += shift[1];
+   fZc += shift[2];
+
    DrawObjects();
 }

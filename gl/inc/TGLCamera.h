@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.3 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -51,16 +51,21 @@ public:
    virtual void Apply()const = 0;
 };
 
+
 class TGLSimpleTransform : public TGLTransformation {
 private:
    const Double_t *fRotMatrix;
-   Double_t fShift;
-   Double_t fX;
-   Double_t fY;
-   Double_t fZ;
+   Double_t       fShift;
+   //modifications
+   const Double_t *fX;
+   const Double_t *fY;
+   const Double_t *fZ;
 public:
+/*
    TGLSimpleTransform(const Double_t *rm, Double_t s, Double_t x,
-                      Double_t y, Double_t z);
+                      Double_t y, Double_t z);*/
+   TGLSimpleTransform(const Double_t *rm, Double_t s, const Double_t *x,
+                      const Double_t *y, const Double_t *z);
    void Apply()const;
 };
 

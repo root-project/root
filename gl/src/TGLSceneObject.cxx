@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.13 2004/11/03 17:40:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -11,6 +11,8 @@
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
+
+#include <iostream>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -62,7 +64,8 @@ static GLUquadric *GetQuadric()
             Error("GetQuadric::Init", "could not create quadric object");
          } else {
             gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
-            gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
+//            gluQuadricDrawStyle(fQuad,   (GLenum)GLU_FILL);
+            gluQuadricNormals(fQuad, GLU_SMOOTH);
          }
       }
       ~Init()
@@ -524,6 +527,8 @@ void TGLPolyMarker::GLDraw()const
 //______________________________________________________________________________
 void TGLPolyMarker::DrawStars()const
 {
+   glDisable(GL_LIGHTING);
+   glColor3fv(fColor);
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {
       Double_t x = fVertices[i];
       Double_t y = fVertices[i + 1];
@@ -549,6 +554,7 @@ void TGLPolyMarker::DrawStars()const
       }
       glEnd();
    }
+   glEnable(GL_LIGHTING);
 }
 
 //______________________________________________________________________________
@@ -583,27 +589,39 @@ TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
 }
 
 //______________________________________________________________________________
+Bool_t TGLSphere::IsTransparent()const
+{
+   return fColor[3] < 1.f;;
+}
+
+//______________________________________________________________________________
 void TGLSphere::GLDraw()const
 {
    // Draw a Sphere using OpenGL Sphere primitive gluSphere
- 
-   GLUquadric *quadObj = GetQuadric();
-
-   glLoadName(GetGLName());
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
    glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
    glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
 
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   glPushMatrix();
-   glTranslated(fX, fY, fZ);
-   gluSphere(quadObj, fRadius, fNdiv, fNdiv);
-   glPopMatrix();
+   if (IsTransparent()) {
+      glEnable(GL_BLEND);
+      glDepthMask(GL_FALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+   
+   if (GLUquadric *quadObj = GetQuadric()) {
+      glLoadName(GetGLName());
+      glPushMatrix();
+      glTranslated(fX, fY, fZ);
+      gluSphere(quadObj, fRadius, fNdiv, fNdiv);
+      glPopMatrix();
+   }
 
-   glDisable(GL_BLEND);
+   if (IsTransparent()) {
+      glDepthMask(GL_TRUE);
+      glDisable(GL_BLEND);
+   }
 }
 
 //______________________________________________________________________________
@@ -643,9 +661,11 @@ void TGLSimpleLight::GLDraw()const
    //Draw light source as sphere
    glLoadName(GetGLName());
    glPushMatrix();
+
    glTranslatef(lightPos[0], lightPos[1], lightPos[2]);
    GLUquadric *quadObj = GetQuadric();
-   gluSphere(quadObj, fBulbRad, 10, 10);
+   if (quadObj) gluSphere(quadObj, fBulbRad, 10, 10);
+
    glPopMatrix();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -30,8 +30,13 @@ TGLTransformation::~TGLTransformation()
 {
 }
 
+/*
 TGLSimpleTransform::TGLSimpleTransform(const Double_t *rm, Double_t s, Double_t x,
                                        Double_t y, Double_t z)
+                        :fRotMatrix(rm), fShift(s),
+                         fX(x), fY(y), fZ(z)*/
+TGLSimpleTransform::TGLSimpleTransform(const Double_t *rm, Double_t s, const Double_t *x,
+                                       const Double_t *y, const Double_t *z)
                         :fRotMatrix(rm), fShift(s),
                          fX(x), fY(y), fZ(z)
 {
@@ -42,7 +47,7 @@ void TGLSimpleTransform::Apply()const
    glTranslated(0., 0., -fShift);
    glMultMatrixd(fRotMatrix);
    glRotated(-90., 1., 0., 0.);
-   glTranslated(-fX, -fY, -fZ);
+   glTranslated(-*fX, -*fY, -*fZ);
 }
 
 TGLPerspectiveCamera::TGLPerspectiveCamera(const Double_t *vv, const Int_t *vp,

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.17 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.18 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -120,6 +120,8 @@ private:
    void CalculateViewports();
    void CalculateViewvolumes();
    void CreateCameras();
+   //
+   void MoveCenter(Int_t key);
    // final overriders from TGMainFrame
    void CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
