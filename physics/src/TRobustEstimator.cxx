@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.5 2004/09/10 17:00:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.1 2004/10/08 09:07:10 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -1232,9 +1232,9 @@ void TRobustEstimator::RDraw(Int_t *subdat, Int_t ngroup, Int_t *indsubdat)
 //_____________________________________________________________________________
 Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *work){
   //because I need an Int_t work array
-  Bool_t isAllocated = kFALSE;
-  Int_t kWorkMax=100;
- Int_t i, ir, j, l, mid;
+   Bool_t isAllocated = kFALSE;
+   const Int_t kWorkMax=100;
+   Int_t i, ir, j, l, mid;
    Int_t arr;
    Int_t *ind;
    Int_t workLocal[kWorkMax];
