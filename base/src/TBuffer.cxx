@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.35 2002/09/30 09:18:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.36 2002/11/01 19:12:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1471,7 +1471,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
 {
    // Read object from I/O buffer. 
    // A typical use for this function is:
-   //    MyClass *ptr = b.ReadObjectAny(MyClass::Class());
+   //    MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
    // I.e. clCast should point to a TClass object describing the class pointed 
    // to by your pointer.
    // In case of multiple inheritance, the return value might not be the 
