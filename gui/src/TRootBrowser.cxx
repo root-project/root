@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.52 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.53 2004/06/22 15:36:42 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -52,7 +52,7 @@
 #include "TInterpreter.h"
 
 #include "HelpText.h"
-#include "TGFrame.h"
+
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -605,7 +605,7 @@ void TRootIconBox::Refresh()
    Sort(fSortType);
 
    // Make TRootBrowser display total objects in status bar
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),fTotal, fSelected);
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
 
    MapSubwindows();
 }
@@ -661,6 +661,7 @@ TRootBrowser::~TRootBrowser()
    delete fToolBarSep;
    delete fToolBar;
    delete fFSComboBox;
+   delete fDrawOption;
    delete fStatusBar;
    delete fV1;
    delete fV2;
@@ -811,10 +812,19 @@ void TRootBrowser::CreateBrowser(const char *name)
       fToolBar->AddButton(this, &gToolBarData[i], spacing);
       spacing = 0;
    }
-   fDrawOption = new TGTextEntry(fToolBar, new TGTextBuffer(4));
-   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsTop | kLHintsRight,2,2,0,0));
+   fDrawOption = new TGComboBox(fToolBar, "");
+   fDrawOption->GetTextEntry()->SetToolTipText("Object Draw Option", 300);
+   fDrawOption->Resize(80, 10);
+   Int_t dropt = 1;
+   fDrawOption->AddEntry("same", dropt++);
+   fDrawOption->AddEntry("box", dropt++);
+   fDrawOption->AddEntry("lego", dropt++);
+   fDrawOption->AddEntry("hcol", dropt++);
+   fDrawOption->AddEntry("alp", dropt++);
+
+   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsTop | kLHintsRight | kLHintsExpandY,2,2,2,2));
    fToolBar->AddFrame(new TGLabel(fToolBar,"Option"), 
-                      new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,0,0));
+                      new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,2,2));
 
    fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    AddFrame(fToolBarSep, fBarLayout);
@@ -981,7 +991,6 @@ void TRootBrowser::BrowseObj(TObject *obj)
    // TRootBrowser::Add() which will fill the IconBox and the tree.
    // Emits signal "BrowseObj(TObject*)".
 
-   fBrowser->SetDrawOption(GetDrawOption());
    Emit("BrowseObj(TObject*)", (Long_t)obj);
    fIconBox->RemoveAll();
 
@@ -1566,7 +1575,7 @@ void TRootBrowser::SetDrawOption(Option_t *option)
 {
    // sets drawing option
  
-   fDrawOption->SetText(option);
+   fDrawOption->GetTextEntry()->SetText(option);
 }
 
 //______________________________________________________________________________
@@ -1574,7 +1583,7 @@ Option_t *TRootBrowser::GetDrawOption() const
 {
    // returns drawing option
  
-   return fDrawOption->GetText();
+   return fDrawOption->GetTextEntry()->GetText();
 }
 //______________________________________________________________________________
 void TRootBrowser::DoubleClicked(TObject *obj)

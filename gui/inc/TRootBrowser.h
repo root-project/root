@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.10 2004/02/07 10:42:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.11 2004/06/22 15:36:42 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@ class TGListTreeItem;
 class TGFileItem;
 class TList;
 class TGFileContainer;
-class TGTextEntry;
+class TGComboBox;
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
@@ -69,7 +69,7 @@ private:
    TGLayoutHints       *fMenuBarHelpLayout;
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
-   TGTextEntry         *fDrawOption;        //drawing option entry
+   TGComboBox          *fDrawOption;        //drawing option entry
 
    TList               *fWidgets;
    Cursor_t             fWaitCursor;        // busy cursor
