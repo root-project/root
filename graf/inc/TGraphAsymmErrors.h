@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.15 2004/05/19 13:47:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.16 2004/06/19 15:47:19 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
         TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t *option="");
         virtual ~TGraphAsymmErrors();
         virtual void    Apply(TF1 *f);
-        virtual void    BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option);
+        virtual void    BayesDivide(const TH1 *pass, const TH1 *total, Option_t *option="");
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;
