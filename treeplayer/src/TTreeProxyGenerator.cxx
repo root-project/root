@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.12 2005/01/22 09:29:37 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.13 2005/01/27 06:16:43 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -670,14 +670,43 @@ namespace ROOT {
                brprefix += dataMemberName(0,pos+1);
                dataMemberName.Remove(0,strlen(mom->GetName())+1);
             } else {
-               TBranch *momSmom = (TBranchElement*)mom->GetMother()->GetSubBranch(mom);
-               if (momSmom != mom && momSmom != branch->GetMother() &&
-                  strncmp( momSmom->GetName(), 
-                  dataMemberName.Data(), 
-                  strlen(momSmom->GetName()) ) ==0 ) 
-               {
-                  brprefix += dataMemberName(0,pos+1);
-                  dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
+               TBranchElement *current = mom;
+               TStreamerInfo *momInfo = current->GetInfo();
+               Int_t bid = current->GetID();
+               TStreamerElement *momElement = bid>=0 ? (TStreamerElement *)momInfo->GetElements()->At(bid) : 0;
+               while( momElement && momElement->IsBase() ) {
+                  TString momPrefix = current->GetName();
+                  Int_t classlen = strlen(momElement->GetClass()->GetName());
+                  if (   momPrefix.Length() >= (classlen+1)
+                      && momPrefix[momPrefix.Length()-classlen-1]=='.'
+                      && 0==strcmp((momPrefix.Data()+(momPrefix.Length()-classlen)),momElement->GetClass()->GetName()) 
+                      ) 
+                  {
+                     momPrefix.Remove((momPrefix.Length()-classlen-1));
+                     if (strncmp( momPrefix.Data(), 
+                           dataMemberName.Data(), 
+                           momPrefix.Length() ) ==0 ) 
+                     {
+                        brprefix += dataMemberName(0,pos+1);
+                        dataMemberName.Remove(0,momPrefix.Length()+1);
+                        break;
+                     } 
+                  }
+                  TBranchElement *momSmom = (TBranchElement*)current->GetMother()->GetSubBranch(current);
+                  
+                  if (momSmom != mom && momSmom != branch->GetMother() &&
+                     strncmp( momSmom->GetName(), 
+                     dataMemberName.Data(), 
+                     strlen(momSmom->GetName()) ) ==0 ) 
+                  {
+                     brprefix += dataMemberName(0,pos+1);
+                     dataMemberName.Remove(0,strlen(momSmom->GetName())+1);
+                     break;
+                  }
+                  current = momSmom;
+                  momInfo = momSmom->GetInfo();
+                  bid = momSmom->GetID();
+                  momElement = bid>=0 ? (TStreamerElement *)momInfo->GetElements()->At(bid) : 0;
                }
             }
          }
