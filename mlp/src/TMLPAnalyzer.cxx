@@ -123,12 +123,13 @@ void TMLPAnalyzer::GatherInformations()
    TTree* data = network->fData;
    TEventList* test = network->fTest;
    Int_t nEvents = test->GetN();
-   Double_t* params = new Double_t[GetNeurons(1)];
-   Double_t* rms    = new Double_t[GetNeurons(1)];
-   TTreeFormula* formulas[GetNeurons(1)];
+   Int_t NN = GetNeurons(1);
+   Double_t* params = new Double_t[NN];
+   Double_t* rms    = new Double_t[NN];
+   TTreeFormula** formulas = new TTreeFormula*[NN];
    TString formula;
    Int_t i(0), j(0), k(0), l(0);
-   for(Int_t i=0; i<GetNeurons(1); i++){
+   for(i=0; i<NN; i++){
       formula = GetNeuronFormula(i);
       formulas[i] = new TTreeFormula(Form("NF%d",this),formula,data);
       TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
@@ -169,7 +170,7 @@ void TMLPAnalyzer::GatherInformations()
    }
    delete[] params;
    delete[] rms;
-   for(i=0; i<GetNeurons(1); i++) delete formulas[i];
+   for(i=0; i<GetNeurons(1); i++) delete formulas[i]; delete [] formulas;
 }
 
 //______________________________________________________________________________
