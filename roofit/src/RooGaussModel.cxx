@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.15 2001/10/27 22:32:28 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.16 2001/10/30 07:38:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -311,7 +311,7 @@ void RooGaussModel::generateEvent(Int_t code)
   assert(code==1) ;
   Double_t xgen ;
   while(1) {    
-    xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
+    xgen = RooRandom::randomGenerator()->Gaus((mean*msf),(sigma*ssf));
     if (xgen<x.max() && xgen>x.min()) {
       x = xgen ;
       return ;
