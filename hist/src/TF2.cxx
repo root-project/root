@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.16 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.17 2003/01/15 21:45:39 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -501,15 +501,12 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetMarkerColor(GetMarkerColor());
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
+   fHistogram->SetStats(0);
 
 //*-*-  Draw the histogram
-   Int_t optStat = gStyle->GetOptStat();
-   gStyle->SetOptStat(0);
    if (opt.Length() == 0)  fHistogram->Paint("cont3");
    else if (opt == "same") fHistogram->Paint("cont2same");
    else                    fHistogram->Paint(option);
-   gStyle->SetOptStat(optStat);
-
 }
 
 //______________________________________________________________________________
