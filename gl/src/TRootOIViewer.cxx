@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.cxx,v 1.4 2001/05/14 15:25:38 fine Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.cxx,v 1.2 2001/05/14 16:27:39 brun Exp $
 // Author: Valery Fine & Fons Rademakers   5/10/2000 and 28/4/2001
 
 /*************************************************************************
@@ -80,7 +80,7 @@ void InventorCallback(void *d, SoAction *action)
          currentViewer->GetGLView()->GetPad()->GetView()->GetRange(minBound,maxBound);
          if (minBound[0] == maxBound[0])
               SoCacheElement::invalidate(action->getState());
-  
+
          ((SoGetBoundingBoxAction *)action)->
             extendBy(SbBox3f(minBound[0],minBound[1],minBound[2]
                             ,maxBound[0],maxBound[2],maxBound[2])
@@ -104,7 +104,7 @@ private:
    TRootOIViewer  *fViewer;   // pointer back to viewer imp
 public:
    TSoXtEventHandler(TRootOIViewer *c) { fViewer = c; }
-   Bool_t HandleEvent(Event_t *ev)
+   Bool_t HandleEvent(Event_t *)
       { return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
 };
 
@@ -153,16 +153,16 @@ private:
 public:
    TOIContainer(TRootOIViewer *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev)
+   Bool_t  HandleButton(Event_t *)
           { return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
           { TGFrame::HandleConfigureNotify(ev);
             return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleKey(Event_t *ev)
+   Bool_t  HandleKey(Event_t *)
           { return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleMotion(Event_t *ev)
+   Bool_t  HandleMotion(Event_t *)
           { return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleExpose(Event_t *ev)
+   Bool_t  HandleExpose(Event_t *)
           { return SoXt::dispatchEvent((XEvent *)gVirtualX->GetNativeEvent()); }
 };
 
