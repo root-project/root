@@ -42,9 +42,9 @@ SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
 SOEXT         = dylib
 
 # System libraries:
-SYSLIBS       = -lm -ldl
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        = -lm -ldl
+CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 
 # Fortran:
 F77           = g77
