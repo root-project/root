@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.17 2002/08/20 08:23:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.21 2002/09/18 13:12:59 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -242,14 +242,15 @@ private:
    Bool_t           fWasGrouped;
    TObject         *fActiveObject;    //
 
-   void  *FindItem(const TString& name,
-                   Bool_t direction = kTRUE,
-                   Bool_t caseSensitive = kTRUE,
-                   Bool_t beginWith = kFALSE);
+   TGFrameElement *FindFrame(const TString& name,
+                             Bool_t direction = kTRUE,
+                             Bool_t caseSensitive = kTRUE,
+                             Bool_t beginWith = kFALSE);
    void RemoveGarbage();
 
 public:
-   TRootIconBox(TGListView *lv, UInt_t options = kSunkenFrame,
+   TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
+                UInt_t options = kSunkenFrame,
                 ULong_t back = fgDefaultFrameBackground);
 
    virtual ~TRootIconBox();
@@ -262,13 +263,15 @@ public:
    void   RemoveAll();
    void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
    Int_t  GetGroupSize() const { return fGroupSize; }
-   TGFrameElement *FindFrame(Int_t x, Int_t y, Bool_t exclude=kTRUE) { return TGContainer::FindFrame(x,y,exclude); }
+   TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE) { return TGContainer::FindFrame(x,y,exclude); }
    Bool_t WasGrouped() const { return fWasGrouped; }
+
 };
 
 //______________________________________________________________________________
-TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
-   TGFileContainer(lv, options, back)
+TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
+                           UInt_t h, UInt_t options, ULong_t back) :
+   TGFileContainer(p, w, h, options, back)
 {
    // Create iconbox containing ROOT objects in browser.
 
@@ -356,6 +359,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    // via the mime file (see GetObjPictures()).
 
    if (!cl) return;
+   TRootBrowser *browser = (TRootBrowser *)fListView->GetParent()->GetParent()->GetParent();
 
    TGFileItem *fi;
    fWasGrouped = kFALSE;
@@ -417,6 +421,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    }
 
    if ((fCurrentList->GetSize()==fGroupSize) && !fGrouped) {
+      browser->SetViewMode(kLVLargeIcons,kTRUE);
       fGrouped = kTRUE;
 
       // clear fList
@@ -515,13 +520,13 @@ void TRootIconList::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
-                             Bool_t caseSensitive,Bool_t beginWith)
+TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
+                                       Bool_t caseSensitive,Bool_t beginWith)
 {
    // Find a frame which assosiated object has a name containing a "name" string.
 
    if (!fGrouped) {
-      return TGContainer::FindItem(name,direction,caseSensitive,beginWith);
+      return TGContainer::FindFrame(name,direction,caseSensitive,beginWith);
    }
 
    if (name.IsNull()) return 0;
@@ -553,7 +558,7 @@ void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
    TList* li = 0;
 
    while (el) {
-      //if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
+      if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
 
       lv = (TGLVEntry*)el->fFrame;
       li = (TList*)lv->GetUserData();
@@ -562,6 +567,7 @@ void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
 
       while ((obj=next())) {
          str = obj->GetName();
+
          idx = str.Index(name,0,cmp);
 
          if (idx!=kNPOS) {
@@ -857,18 +863,23 @@ void TRootBrowser::CreateBrowser(const char *name)
    fHf->AddFrame(fV2, lo);
 
    // Create tree
-   fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder); // canvas
-   fLt = new TGListTree(fTreeView, kHorizontalFrame,fgWhitePixel); // container
+   fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder);
+   fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
+                        fgWhitePixel);
    fLt->Associate(this);
    fLt->SetAutoTips();
+   fTreeView->SetContainer(fLt);
+   fLt->SetCanvas(fTreeView);
 
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
    fV1->AddFrame(fTreeView, lo);
 
    // Create list view (icon box)
-   fListView = new TGListView(fV2, 520, 250); // canvas
-   fIconBox = new TRootIconBox(fListView,kHorizontalFrame, fgWhitePixel); // container
+
+   fListView = new TGListView(fV2, 520, 250);
+   fIconBox = new TRootIconBox(fListView->GetViewPort(), fListView, 520, 250,
+                               kHorizontalFrame, fgWhitePixel);
    fIconBox->Associate(this);
 
    TString gv = gEnv->GetValue("Browser.GroupView","1000");
@@ -878,6 +889,9 @@ void TRootBrowser::CreateBrowser(const char *name)
       fViewMenu->CheckEntry(kViewGroupLV);
       fIconBox->SetGroupSize(igv);
    }
+
+   fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
+   fListView->SetContainer(fIconBox);
 
    // reuse lo from "create tree"
    fV2->AddFrame(fListView, lo);
@@ -997,8 +1011,6 @@ void TRootBrowser::CloseWindow()
    // In case window is closed via WM we get here.
 
    DeleteWindow();
-   gInterpreter->DeleteGlobal(fBrowser);
-   delete fBrowser;  // this in turn will delete this object
 }
 
 //______________________________________________________________________________
@@ -1181,11 +1193,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (fListLevel && fIconBox->WasGrouped()) {
                         gVirtualX->SetCursor(fIconBox->GetId(),fWaitCursor);
                         gVirtualX->Update();
-                        fLt->ClearHighlighted();
-                        fListLevel = fListLevel->GetParent();
                         TObject *obj = (TObject *) fListLevel->GetUserData();
-                        fLt->HighlightItem(fListLevel);
-                        BrowseObj(obj);
+                        if (fListLevel->IsActive()) BrowseObj(obj);
                         gVirtualX->SetCursor(fIconBox->GetId(),kNone);
                         break;
                      }
@@ -1193,6 +1202,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fListLevel = fListLevel->GetParent();
                      fLt->ClearHighlighted();
                      fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                      break;
@@ -1246,6 +1256,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      fListLevel = fLt->FindItemByPathname(e->GetPath()->GetString());
                      fLt->ClearHighlighted();
                      fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                   }
@@ -1265,6 +1276,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   if ((item = fLt->GetSelected()) != 0 &&
                       item != fListLevel) {
                      ListTreeHighlight(item);
+                     fClient->NeedRedraw(fLt);
                   }
                   if (item && parm1 == kButton3) {
                      Int_t x = (Int_t)(parm2 & 0xffff);
@@ -1274,7 +1286,13 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   }
                }
                break;
-
+            case kCT_ITEMDBLCLICK:
+               if (parm1 == kButton1) {
+                  if (fLt->GetSelected() != 0) {
+                     fClient->NeedRedraw(fLt);
+                  }
+               }
+               break;
             default:
                break;
          }
@@ -1310,7 +1328,6 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                   }
                }
-
                break;
             case kCT_ITEMDBLCLICK:
                if (parm1 == kButton1) {
@@ -1333,7 +1350,6 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       default:
          break;
    }
-   fClient->NeedRedraw(fLt);
    fClient->NeedRedraw(fIconBox);
    return kTRUE;
 }

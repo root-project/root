@@ -277,26 +277,6 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
-   TGContainer(p,options, back)
-{
-   // Create a list view container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas derived TGListView).
-
-   fListView = 0;
-   fLastActive = 0;
-   fCpos = fJmode = 0;
-
-   fViewMode = kLVLargeIcons;
-   fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
-
-   SetLayoutManager(new TGTileLayout(this, 8));
-
-   if (p->InheritsFrom(TGListView::Class())) fListView = (TGListView*)p;
-}
-
-//______________________________________________________________________________
 TGLVContainer::~TGLVContainer()
 {
    // Delete list view container.

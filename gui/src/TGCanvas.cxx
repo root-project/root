@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.8 2002/09/10 12:15:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.9 2002/09/13 14:12:14 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include "TGCanvas.h"
 #include "TGListView.h"
 #include "TGScrollBar.h"
+#include "TGWidget.h"
 #include "TTimer.h"
 #include "TMath.h"
 #include "KeySymbols.h"
@@ -255,38 +256,6 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                         kButtonPressMask | kButtonReleaseMask |
                         kPointerMotionMask, kNone, kNone);
-
-   AddInput(kKeyPressMask | kPointerMotionMask);
-}
-
-//______________________________________________________________________________
-TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
-   TGCompositeFrame(p->GetViewPort(),p->GetWidth(),p->GetHeight(),options,back)
-{
-   // Create a canvas container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas).
-
-   fMsgWindow  = p->GetViewPort();
-   fCanvas = p;
-   fCanvas->GetViewPort()->SetContainer(this);
-   p->GetViewPort()->SetBackgroundColor(back);
-
-   fDragging   = kFALSE;
-   fTotal = fSelected = 0;
-   fMapSubwindows = kFALSE;
-   fOnMouseOver = kFALSE;
-   fLastActiveEl = 0;
-   fLastDir = kTRUE;
-   fLastCase = kTRUE;
-   fKeyTimer = new TGContainerKeyboardTimer(this);
-   fScrollTimer = new TGContainerScrollTimer(this);
-   fKeyTimerActive = kFALSE;
-   fScrolling = kFALSE;
-
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
 }
@@ -548,9 +517,7 @@ void TGContainer::ActivateItem(TGFrameElement* el)
       fSelected++;
    }
 
-   if (!fSelected) fSelected = 1;
-
-   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),fTotal, fSelected);
 }
 
 //______________________________________________________________________________
@@ -559,7 +526,6 @@ TGPosition TGContainer::GetPagePosition() const
    // Returns page position.
 
    TGPosition ret;
-   if (!fViewPort) return ret;
 
    ret.fX = -fViewPort->GetHPos();
    ret.fY = -fViewPort->GetVPos();
@@ -573,7 +539,6 @@ TGDimension TGContainer::GetPageDimension() const
    // Returns page dimension.
 
    TGDimension ret;
-   if (!fViewPort) return ret;
 
    ret.fWidth = fViewPort->GetWidth();
    ret.fHeight = fViewPort->GetHeight();
@@ -708,19 +673,21 @@ Bool_t TGContainer::HandleButton(Event_t *event)
 
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
-   Int_t newpos;
-   page = dim.fHeight;
+
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      page = dim.fHeight;
+   }
 
    if (event->fCode == kButton4) {
       //scroll up
-      newpos = pos.fY - page;
+      Int_t newpos = pos.fY - page;
       if (newpos<0) newpos = 0;
       fCanvas->SetVsbPosition(newpos);
       return kTRUE;
    }
    if (event->fCode == kButton5) {
       // scroll down
-      newpos = fCanvas->GetVsbPosition() + page;
+      Int_t newpos = fCanvas->GetVsbPosition() + page;
       fCanvas->SetVsbPosition(newpos);
       return kTRUE;
    }
@@ -850,11 +817,10 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
 
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
-   Int_t x = pos.fX + event->fX;
-   Int_t y = pos.fY + event->fY;
+   int x = pos.fX + event->fX;
+   int y = pos.fY + event->fY;
    TGFrameElement* el = 0;
    TGFrame* f = 0;
-   fOnMouseOver = kFALSE;
 
    if (fDragging) {
       if (fMapSubwindows) gVirtualX->DrawRectangle(fId, fgLineGC(), fX0, fY0, fXf-fX0, fYf-fY0);
@@ -895,7 +861,9 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
              ((yf0 > fY0 && yf0 < fYf) ||
               (yff > fY0 && yff < fYf))) {
             f->Activate(kTRUE);
+#ifndef WIN32
             gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
+#endif
             OnMouseOver(f);
             ++selected;
          } else {
@@ -913,32 +881,24 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
       }
       fClient->NeedRedraw(this);
    } else {
-      TGFrame *over_frame = 0;
-
       TIter next(fList);
 
+      fOnMouseOver = kFALSE;
+
       while ((el = (TGFrameElement *) next())) {
-         if (!fMapSubwindows) {
-            if ( ( Int_t(el->fFrame->GetY()) + (Int_t)el->fFrame->GetHeight() > y ) &&
-               ( Int_t(el->fFrame->GetX()) + (Int_t)el->fFrame->GetWidth() > x ) &&
-               ( Int_t(el->fFrame->GetY()) < y ) &&
-               ( Int_t(el->fFrame->GetX()) < x ) )  {
-               over_frame = el->fFrame;
-               break;
-            }
-         } else {
-            if (el->fFrame->GetId() == (Window_t)event->fUser[0]) {
-               over_frame = el->fFrame;
-               break;
+         if ( ( Int_t(el->fFrame->GetY()) + (Int_t)el->fFrame->GetHeight() > y ) &&
+            ( Int_t(el->fFrame->GetX()) + (Int_t)el->fFrame->GetWidth() > x ) &&
+            ( Int_t(el->fFrame->GetY()) < y ) &&
+            ( Int_t(el->fFrame->GetX()) < x ) )  {
+#ifndef WIN32
+               gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
+#endif
+               OnMouseOver(f);
             }
          }
-      }
-      if (over_frame) {
-         OnMouseOver(over_frame);
-         gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
-      } else {
+#ifndef WIN32
          gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kPointer));
-      }
+#endif
    }
 
    if (fScrolling) {
@@ -970,7 +930,7 @@ Bool_t TGContainer::HandleKey(Event_t *event)
             // treat 'Enter' and 'Return' as a double click
             SendMessage(GetMessageWindow(), MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK),
                               kButton1, (event->fYRoot << 16) | event->fXRoot);
-            if (fLastActiveEl) ReturnPressed(fLastActiveEl->fFrame);
+            ReturnPressed(fLastActiveEl->fFrame);
             break;
          case kKey_Shift:
          case kKey_Control:
@@ -1088,7 +1048,7 @@ Bool_t TGContainer::HandleKey(Event_t *event)
 //______________________________________________________________________________
 void TGContainer::Search()
 {
-   // Invokes search dialog. Looks for item with the entered name.
+   // invokes search dialog. Looks for item with the entered name
 
    Int_t ret = 0;
    char msg[256];
@@ -1098,19 +1058,18 @@ void TGContainer::Search()
    new TGSearchDialog(fClient->GetRoot(), fCanvas, 400, 150, fSearch, &ret);
 
    if (ret) {
-         fe = (TGFrameElement*)FindItem(fSearch->fBuffer, fSearch->fDirection,
-                                        fSearch->fCaseSensitive);
+         fe = FindFrame(fSearch->fBuffer, fSearch->fDirection,fSearch->fCaseSensitive);
 
       if (!fe) {  // find again
          if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
          fLastActiveEl = 0;
-         fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+         fe = FindFrame(fLastName.Data(),fLastDir,fLastCase);
 
          if (!fe) {
             sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
             gVirtualX->Bell(50);
             new TGMsgBox(fClient->GetRoot(), fCanvas, "Container", msg,
-                         kMBIconExclamation, kMBOk, 0);
+                                       kMBIconExclamation, kMBOk, 0);
          } else {
             if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
             ActivateItem(fe);
@@ -1221,11 +1180,16 @@ void TGContainer::SearchPattern()
 
    TGFrameElement* fe = 0;
    TIter next(fList);
+   TGLVEntry* lv;
+   TObject* obj;
    TString str;
 
    while ((fe=( TGFrameElement*)next())) {
-      str = fe->fFrame->GetName();
+      if (!fe->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
 
+      lv = (TGLVEntry*)fe->fFrame;
+      obj = (TObject*)lv->GetUserData();
+      str = obj->GetName();
       if (str.BeginsWith(fKeyInput,TString::kIgnoreCase)) {
          if (fLastActiveEl && (fLastActiveEl!=fe) )
             fLastActiveEl->fFrame->Activate(kFALSE);
@@ -1247,12 +1211,12 @@ void TGContainer::RepeatSearch()
    char msg[256];
    TGFrameElement* fe = 0;
 
-   fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+   fe = FindFrame(fLastName.Data(),fLastDir,fLastCase);
 
    if (!fe) {
       if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
       fLastActiveEl = 0;
-      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+      fe = FindFrame(fLastName.Data(),fLastDir,fLastCase);
 
       if (!fe) {
          sprintf(msg, "Couldn't find \"%s\"", fLastName.Data());
@@ -1306,8 +1270,8 @@ TGFrameElement* TGContainer::FindFrame(Int_t x,Int_t y,Bool_t exclude)
 }
 
 //______________________________________________________________________________
-void* TGContainer::FindItem(const TString& name, Bool_t direction,
-                            Bool_t caseSensitive, Bool_t beginWith)
+TGFrameElement* TGContainer::FindFrame(const TString& name, Bool_t direction,
+                                       Bool_t caseSensitive,Bool_t beginWith)
 {
 
    // Find a frame which assosiated object has a name containing a "name" string.
@@ -1336,8 +1300,16 @@ void* TGContainer::FindItem(const TString& name, Bool_t direction,
       else el  = (TGFrameElement *)fList->Last();
    }
 
+   TGLVEntry* lv = 0;
+   TObject* obj = 0;
+
    while (el) {
-      str = el->fFrame->GetName();
+      if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
+
+      lv = (TGLVEntry*)el->fFrame;
+      obj = (TObject*)lv->GetUserData();
+      str = obj->GetName();
+
       idx = str.Index(name,0,cmp);
 
       if (idx!=kNPOS) {
@@ -1805,7 +1777,7 @@ void TGCanvas::Layout()
 
    if (need_hsb) {
       fHScrollbar->MoveResize(fBorderWidth, ch+fBorderWidth, cw, fHScrollbar->GetDefaultHeight());
-      fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
+      fHScrollbar->SetRange(container->GetWidth(), fVport->GetWidth());
       fHScrollbar->MapWindow();
    } else {
       fHScrollbar->UnmapWindow();
@@ -1820,7 +1792,6 @@ void TGCanvas::Layout()
       fVScrollbar->UnmapWindow();
       fVScrollbar->SetPosition(0);
    }
-   fClient->NeedRedraw(container);
 }
 
 //______________________________________________________________________________

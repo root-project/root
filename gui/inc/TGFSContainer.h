@@ -133,9 +133,6 @@ public:
    TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kSunkenFrame,
                    ULong_t back = GetDefaultFrameBackground());
-   TGFileContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
-                   ULong_t back = GetDefaultFrameBackground());
-
    virtual ~TGFileContainer();
 
    virtual Bool_t HandleTimer(TTimer *t);

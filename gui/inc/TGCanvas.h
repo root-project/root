@@ -88,17 +88,14 @@ protected:
    virtual void SearchPattern();
    virtual void OnAutoScroll();
 
-   virtual void *FindItem(const TString& name,
-                          Bool_t direction = kTRUE,
-                          Bool_t caseSensitive = kTRUE,
-                          Bool_t beginWith = kFALSE);
+   virtual TGFrameElement *FindFrame(const TString& name,
+                                     Bool_t direction = kTRUE,
+                                     Bool_t caseSensitive = kTRUE,
+                                     Bool_t beginWith = kFALSE);
 public:
    TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
-               UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
-   TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
-               ULong_t back = GetDefaultFrameBackground());
-
+                 UInt_t options = kSunkenFrame,
+                 ULong_t back = GetDefaultFrameBackground());
    virtual ~TGContainer();
 
    virtual void MapSubwindows();
