@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.19 2004/05/28 18:13:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.20 2004/07/16 23:06:23 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
    virtual char    *GetPrompt() = 0;
    virtual const char *GetSharedLibs() = 0;
    virtual const char *GetClassSharedLibs(const char *cls) = 0;
+   virtual const char *GetSharedLibDeps(const char *lib) = 0;
    virtual const char *GetIncludePath() = 0;
    virtual Int_t    InitializeDictionaries() = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;

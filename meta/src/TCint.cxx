@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.91 2004/07/26 23:32:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.92 2004/08/04 20:23:23 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -410,7 +410,7 @@ void TCint::PrintIntro()
 }
 
 //______________________________________________________________________________
-void TCint::RecursiveRemove(TObject *obj) 
+void TCint::RecursiveRemove(TObject *obj)
 {
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT object are always on the heap.
@@ -993,9 +993,6 @@ Int_t TCint::LoadLibraryMap()
          TString libs = rec->GetValue();
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
-         // convert back from "@@" to "::", we used "@@" because TEnv
-         // considers "::" a terminator
-         ((TObjString*)tokens->At(0))->String().ReplaceAll("@@", "::");
          char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
          G__set_class_autoloading_table((char*)(cls+8), lib);
          if (gDebug > 0)
@@ -1206,9 +1203,35 @@ const char *TCint::GetClassSharedLibs(const char *cls)
    // lookup class to find list of libraries
    if (fMapfile) {
       TString c = TString("Library.") + cls;
+      // convert "::" to "@@", we used "@@" because TEnv
+      // considers "::" a terminator
       c.ReplaceAll("::", "@@");
       const char *libs = fMapfile->GetValue(c, "");
       return (*libs) ? libs : 0;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+const char *TCint::GetSharedLibDeps(const char *lib)
+{
+   // Get the list a libraries on which the specified lib depends. The
+   // returned string contains as first element the lib itself.
+   // Returns 0 in case the lib does not exist or does not have
+   // any dependencies.
+
+   if (!fMapfile || !lib || !lib[0])
+      return 0;
+
+   TEnvRec *rec;
+   TIter next(fMapfile->GetTable());
+
+   while ((rec = (TEnvRec*) next())) {
+      size_t l = strlen(lib);
+      const char *libs = rec->GetValue();
+      if (!strncmp(libs, lib, l) && strlen(libs) > l) {
+         return libs;
+      }
    }
    return 0;
 }

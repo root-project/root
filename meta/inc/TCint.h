@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.21 2004/07/16 23:06:23 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.22 2004/08/04 20:23:23 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    char   *GetPrompt() { return fPrompt; }
    const char *GetSharedLibs();
    const char *GetClassSharedLibs(const char *cls);
+   const char *GetSharedLibDeps(const char *lib);
    const char *GetIncludePath();
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
