@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.6 2002/12/10 12:11:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.7 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -130,7 +130,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-   sprintf(msg, "GET %s://%s:%d%s?%d:%d\r\n", fUrl.GetProtocol(),
+   sprintf(msg, "GET %s://%s:%d%s?%lld:%d\r\n", fUrl.GetProtocol(),
            fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
    s.SendRaw(msg, strlen(msg));
    s.RecvRaw(buf, len);
