@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.93 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.94 2004/07/04 17:48:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2569,9 +2569,9 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
 
    char *arg = strchr(fname, '(');
    // special case for $(HOME)/aap.C(10)
-   while (arg && *(arg-1) == '$' && *(arg+1))
+   while (arg && *arg && (arg > fname && *(arg-1) == '$') && *(arg+1))
       arg = strchr(arg+1, '(');
-   if (arg) {
+   if (arg && arg > fname) {
       *arg = 0;
       char *t = arg-1;
       while (*t == ' ') {
