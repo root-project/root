@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.38 2002/06/17 07:59:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.39 2002/06/17 16:51:33 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -489,7 +489,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t OptionTime;
    Int_t first,last,labelnumber;
    Int_t Xalign, Yalign;
-   Int_t N, NN1, NN2, NN3, N1A, N2A, N3A, NB2, NB3;
+   Int_t NN1, NN2, NN3, N1A, N2A, N3A, NB2, NB3;
    Int_t nbins, N1Aold, NN1old;
    N1Aold = NN1old = 0;
    Int_t ndyn;
@@ -589,11 +589,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
 //*-*-              Determine number of divisions 1, 2 and 3
-   N     = ndiv;
-   N3A   = N/10000;
-   N     = N-N3A*10000;
-   N2A   = N/100;
-   N1A   = N-N2A*100;
+   N1A   = ndiv%100;
+   N2A   = (ndiv%10000 - N1A)/100;
+   N3A   = ndiv/10000;
    NN3   = TMath::Max(N3A,1);
    NN2   = TMath::Max(N2A,1)*NN3;
    NN1   = TMath::Max(N1A,1)*NN2+1;
@@ -778,7 +776,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (OptionEqual) Lside=1;
    }
    XLside = Lside;
-//printf("name=%s, OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",GetName(),OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
 
 //*-*-              Tick marks size
    if(XMside >= 0) tick_side = 1;
@@ -964,8 +961,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          if (Lside < 0)  Ylabel += atick[0];
       }
    } else if (Y0 == Y1) {
-      Ylabel = -fLabelOffset;
-      if (Mside <= 0) Ylabel -= TMath::Abs(atick[0]);
+      if (OptionMinus && !OptionPlus) {
+         Ylabel = fLabelOffset+0.5*fLabelSize; 
+         Ylabel += TMath::Abs(atick[0]);
+      } else {
+         Ylabel = -fLabelOffset;
+         if (Mside <= 0) Ylabel -= TMath::Abs(atick[0]);
+      }
       if (OptionLog)  Ylabel -= 0.5*charheight;
    } else {
       if (Mside+Lside >= 0) Ylabel =  fLabelOffset;
