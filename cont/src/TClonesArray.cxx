@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.20 2001/10/22 08:46:49 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.21 2001/11/07 16:44:49 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -485,6 +485,17 @@ void TClonesArray::Streamer(TBuffer &b)
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
+      //Make sure TStreamerInfo is not optimized, otherwise it will not be
+      //possible to support schema evolution in read mode.
+      //In case the StreamerInfo has already been computed and optimized,
+      //one must disable the option BypassStreamer
+      Bool_t optim = TStreamerInfo::CanOptimize();
+      if (optim) TStreamerInfo::Optimize(kFALSE);
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      sinfo->ForceWriteInfo();
+      if (optim) TStreamerInfo::Optimize(kTRUE);
+      if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
+      
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
@@ -494,8 +505,6 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      sinfo->ForceWriteInfo();
       if (CanBypassStreamer()) {
          sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {
