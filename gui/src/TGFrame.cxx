@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.18 2002/09/18 12:13:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.19 2002/11/05 10:28:40 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -799,7 +799,8 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    // with the window manager.
 
    // WMDeleteNotify causes the system to send a kClientMessage to the
-   // window with fFormat=32 and fUser[0]=gWM_DELETE_WINDOW.
+   // window with fFormat=32 and fUser[0]=gWM_DELETE_WINDOW when window
+   // closed via WM
    gVirtualX->WMDeleteNotify(fId);
 
    fBindList = new TList;
