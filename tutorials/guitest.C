@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.23 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.24 2003/06/13 15:12:51 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -15,6 +15,7 @@
 #include <TVirtualX.h>
 #include <TGResourcePool.h>
 #include <TGListBox.h>
+#include <TGListTree.h>
 #include <TGClient.h>
 #include <TGFrame.h>
 #include <TGIcon.h>
@@ -41,6 +42,7 @@
 #include <TH2.h>
 #include <TRandom.h>
 #include <TSystem.h>
+#include <TSystemDirectory.h>
 #include <TEnv.h>
 
 
@@ -56,6 +58,7 @@ enum ETestCommandIdentifiers {
    M_TEST_MSGBOX,
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
+   M_TEST_DIRLIST,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
@@ -362,6 +365,25 @@ public:
 };
 
 
+class TestDirList {
+
+RQ_OBJECT("TestDirList")
+
+private:
+   TGTransientFrame *fMain;
+   TGListTree       *fContents;
+   TList            *fTrash;
+   TString DirName(TGListTreeItem* item);
+
+public:
+   TestDirList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~TestDirList();
+
+   // slots
+   void OnDoubleClick(TGListTreeItem* item, Int_t btn);
+};
+
+
 class TestProgress {
 
 private:
@@ -470,7 +492,8 @@ public:
 
 TileFrame::TileFrame(const TGWindow *p)
 {
-   // Create tile view container. Used to show colormap.
+   // Create tile view container. Used to shconst TGWindow *p, const TGWindow *main,
+   //                      UInt_t w, UInt_t how colormap.
 
    fFrame = new TGCompositeFrame(p, 10, 10, kHorizontalFrame,
                                  TGFrame::GetWhitePixel());
@@ -569,6 +592,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Message Box...", M_TEST_MSGBOX);
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
+   fMenuTest->AddEntry("&List Directory...", M_TEST_DIRLIST);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
@@ -774,6 +798,10 @@ void TestMainFrame::HandleMenu(Int_t id)
 
       case M_TEST_SHUTTER:
          new TestShutter(gClient->GetRoot(), fMain, 400, 200);
+         break;
+
+      case M_TEST_DIRLIST:
+         new TestDirList(gClient->GetRoot(), fMain, 400, 200);
          break;
 
       case M_TEST_PROGRESS:
@@ -1122,7 +1150,8 @@ void TestDialog::DoOK()
 
    // The same effect can be obtained by using a singleshot timer:
    //TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
-}
+}Contents->AddItem(0,"/");  // browse the upper directory
+
 
 void TestDialog::DoCancel()
 {
@@ -1723,6 +1752,104 @@ void TestShutter::HandleButtons()
 {
    TGButton *btn = (TGButton *) gTQSender;
    printf("Shutter button %d\n", btn->WidgetId());
+}
+
+
+TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
+                         UInt_t w, UInt_t h)
+{
+   // Create transient frame containing a dirlist widget.
+
+   fMain = new TGTransientFrame(p, main, w, h);
+
+   fTrash = new TList();
+   TGLayoutHints *lo;
+
+   TGCanvas* canvas = new TGCanvas(fMain, 500, 300);
+   fTrash->Add(canvas);
+   fContents = new TGListTree(canvas, kHorizontalFrame);
+   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsBottom);
+   fTrash->Add(lo);
+   fMain->AddFrame(canvas,lo);
+   fContents->Connect("DoubleClicked(TGListTreeItem*,Int_t)","TestDirList",this,
+                      "OnDoubleClick(TGListTreeItem*,Int_t)");
+
+#ifdef G__WIN32
+   fContents->AddItem(0,"c:\\");  // browse the upper directory
+#else
+   fContents->AddItem(0,"/");  // browse the upper directory
+#endif
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
+             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
+   fMain->Move(ax, ay);
+
+   fMain->SetWindowName("List Dir Test");
+
+   fMain->Resize(fMain->GetDefaultSize());
+   fMain->MapSubwindows();
+   fMain->MapWindow();
+}
+
+TestDirList::~TestDirList()
+{
+   // dtor.
+
+   delete fContents;
+
+   fTrash->Delete();
+   delete fTrash;
+   delete fMain;
+}
+
+TString TestDirList::DirName(TGListTreeItem* item)
+{
+   // returns an absolute path
+
+   TGListTreeItem* parent;
+   TString dirname = item->GetText();
+
+   while ((parent=item->GetParent())) {
+      dirname = gSystem->ConcatFileName(parent->GetText(),dirname.Data());
+      item = parent;
+   }
+
+   return dirname;
+}
+
+void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
+{
+   // show contents of directory
+
+   if ((btn!=kButton1) || !item || (Bool_t)item->GetUserData()) return;
+
+   // use  UserData to indicate that item was already browsed
+   item->SetUserData((void*)1);
+
+   TSystemDirectory dir(item->GetText(),DirName(item).Data());
+
+   TList *files = dir.GetListOfFiles();
+
+   if (files) {
+      TIter next(files);
+      TSystemFile *file;
+      TString fname;
+
+      while ((file=(TSystemFile*)next())) {
+         if (file->IsDirectory()) {
+            fname = file->GetName();
+            if ((fname!="..") && (fname!=".")) { // skip it
+               fContents->AddItem(item,fname.Data());
+            }
+         }
+      }
+      delete files;
+   }
 }
 
 

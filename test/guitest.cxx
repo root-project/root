@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.28 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.29 2003/06/13 15:12:51 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -14,6 +14,7 @@
 #include <TVirtualX.h>
 #include <TGResourcePool.h>
 #include <TGListBox.h>
+#include <TGListTree.h>
 #include <TGClient.h>
 #include <TGFrame.h>
 #include <TGIcon.h>
@@ -39,6 +40,7 @@
 #include <TH2.h>
 #include <TRandom.h>
 #include <TSystem.h>
+#include <TSystemDirectory.h>
 #include <TEnv.h>
 
 
@@ -54,6 +56,7 @@ enum ETestCommandIdentifiers {
    M_TEST_MSGBOX,
    M_TEST_SLIDER,
    M_TEST_SHUTTER,
+   M_TEST_DIRLIST,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
    M_TEST_NEWMENU,
@@ -319,6 +322,20 @@ public:
 };
 
 
+class TestDirList  : public TGTransientFrame {
+
+private:
+   TGListTree       *fContents;
+   TList            *fTrash;
+   TString DirName(TGListTreeItem* item);
+
+public:
+   TestDirList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~TestDirList();
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+};
+
+
 class TestProgress : public TGTransientFrame {
 
 private:
@@ -507,6 +524,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Message Box...", M_TEST_MSGBOX);
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
    fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
+   fMenuTest->AddEntry("&List Directory...", M_TEST_DIRLIST);
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
@@ -705,6 +723,10 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_SHUTTER:
                      new TestShutter(fClient->GetRoot(), this, 400, 200);
+                     break;
+
+                  case M_TEST_DIRLIST:
+                     new TestDirList(gClient->GetRoot(), this, 400, 200);
                      break;
 
                   case M_TEST_PROGRESS:
@@ -1634,6 +1656,107 @@ Bool_t TestShutter::ProcessMessage(Long_t, Long_t parm1, Long_t)
    // Process messages sent to this dialog.
 
    printf("Shutter button %d\n", (Int_t)parm1);
+   return kTRUE;
+}
+
+TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
+                         UInt_t w, UInt_t h) : TGTransientFrame(p, main, w, h)
+{
+   // Create transient frame containing a dirlist widget.
+
+   fTrash = new TList();
+   TGLayoutHints *lo;
+
+   TGCanvas* canvas = new TGCanvas(this, 500, 300);
+   fTrash->Add(canvas);
+   fContents = new TGListTree(canvas, kHorizontalFrame);
+   fContents->Associate(this);
+   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsBottom);
+   fTrash->Add(lo);
+   AddFrame(canvas,lo);
+
+#ifdef WIN32
+   fContents->AddItem(0,"c:\\");  // browse the upper directory
+#else
+   fContents->AddItem(0,"/");  // browse the upper directory
+#endif
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+             (Int_t)(((TGFrame *) main)->GetWidth() - GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - GetHeight()) >> 1,
+             ax, ay, wdum);
+   Move(ax, ay);
+
+   SetWindowName("List Dir Test");
+   Resize(GetDefaultSize());
+   MapSubwindows();
+   MapWindow();
+}
+
+TestDirList::~TestDirList()
+{
+   // dtor.
+
+   delete fContents;
+
+   fTrash->Delete();
+   delete fTrash;
+   delete fMain;
+}
+
+TString TestDirList::DirName(TGListTreeItem* item)
+{
+   // returns an absolute path
+
+   TGListTreeItem* parent;
+   TString dirname = item->GetText();
+
+   while ((parent=item->GetParent())) {
+      dirname = gSystem->ConcatFileName(parent->GetText(),dirname.Data());
+      item = parent;
+   }
+
+   return dirname;
+}
+
+Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+{
+   // process message sent to this widget.
+
+   TGListTreeItem *item = fContents->GetSelected();
+
+   if ( (GET_MSG(msg)!=kC_LISTTREE) || (parm1!=kButton1) ||
+        !item || (Bool_t)item->GetUserData()) return kTRUE;
+
+   if ( (GET_SUBMSG(msg)!=kCT_ITEMDBLCLICK) &&
+        (GET_SUBMSG(msg)!=kCT_ITEMCLICK) ) return kTRUE;
+
+   // use  UserData to indicate that item was already browsed
+   item->SetUserData((void*)1);
+
+   TSystemDirectory dir(item->GetText(),DirName(item).Data());
+
+   TList *files = dir.GetListOfFiles();
+
+   if (files) {
+      TIter next(files);
+      TSystemFile *file;
+      TString fname;
+
+      while ((file=(TSystemFile*)next())) {
+         if (file->IsDirectory()) {
+            fname = file->GetName();
+            if ((fname!="..") && (fname!=".")) { // skip it
+               fContents->AddItem(item,fname.Data());
+            }
+         }
+      }
+      delete files;
+   }
+
    return kTRUE;
 }
 
