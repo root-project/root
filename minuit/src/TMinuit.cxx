@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.32 2003/07/29 13:52:36 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.33 2003/09/03 05:39:28 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -2088,7 +2088,7 @@ void TMinuit::mnderi()
 //*-*        Calculates the first derivatives of FCN (GRD),
 //*-*        either by finite differences or by transforming the user-
 //*-*        supplied derivatives to internal coordinates,
-//*-*        according to whether ISW(3) is zero or one.
+//*-*        according to whether fISW[2] is zero or one.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
@@ -3978,7 +3978,7 @@ void TMinuit::mnhess()
     }
 //*-*-                                       . . . . . . diagonal elements .
 
-//*-*-        ISW(2) = 1 if approx, 2 if not posdef, 3 if ok
+//*-*-        fISW[1] = 1 if approx, 2 if not posdef, 3 if ok
 //*-*-        AIMSAG is the sagitta we are aiming for in second deriv calc.
 
     aimsag = TMath::Sqrt(fEpsma2)*(TMath::Abs(fAmin) + fUp);
@@ -4504,7 +4504,7 @@ void TMinuit::mninit(Int_t i1, Int_t i2, Int_t i3)
     fISW[2] = 0;
     fISW[3] = 0;
     fISW[4] = 1;
-//*-*-        ISW(6)=0 for batch jobs,  =1 for interactive jobs
+//*-*-        fISW[5]=0 for batch jobs,  =1 for interactive jobs
 //*-*-                     =-1 for originally interactive temporarily batch
 
     fISW[5] = 0;
@@ -6247,7 +6247,7 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
 //*-*                  2    values, errors, step sizes, internal values
 //*-*                  3    values, errors, step sizes, first derivs.
 //*-*                  4    values, parabolic errors, MINOS errors
-//*-*    when INKODE=5, MNPRIN chooses IKODE=1,2, or 3, according to ISW(2)
+//*-*    when INKODE=5, MNPRIN chooses IKODE=1,2, or 3, according to fISW[1]
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Initialized data */
@@ -6266,7 +6266,7 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
 	Printf(" THERE ARE CURRENTLY NO PARAMETERS DEFINED");
 	return;
     }
-//*-*-                 get value of IKODE based in INKODE, ISW(2)
+//*-*-                 get value of IKODE based in INKODE, fISW[1]
     ikode = inkode;
     if (inkode == 5) {
 	ikode = fISW[1] + 1;
