@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.15 2003/09/19 14:10:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.16 2004/07/28 20:15:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -532,7 +532,7 @@ void TBox::Paint(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Paint this box with its current attributes*-*-*-*-*-*-*
 //*-*                  ==========================================
-   PaintBox(fX1,fY1,fX2,fY2);
+   PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
 
 //______________________________________________________________________________
