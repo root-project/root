@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.34 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.35 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -69,7 +69,7 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 
 //_____________________________________________________________________________
 TGeoPgon::TGeoPgon(Double_t *param)
-         :TGeoPcon(0,0,0) 
+         :TGeoPcon() 
 {
 // Default constructor in GEANT3 style
 // param[0] = phi1
