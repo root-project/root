@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectRef.cxx,v 1.1 2001/10/01 10:29:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectRef.cxx,v 1.2 2001/10/02 08:16:23 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -78,6 +78,10 @@ ClassImp(TObjectRef)
 // the next access to the pointer will be fast (no need to search in
 // the TExMap of the TProcessID anymore).
 //
+// WARNING: If MyClass is the class of the referenced object, The TObject
+//          part of MyClass must be Streamed. One should not
+//          call MyClass::Class()->IgnoreTObjectStreamer()
+//
 // Implicit use of TObjectRef in ROOT collections
 // ----------------------------------------------
 // The TSeqCollection (TList, TObjArray, etc) have been modified with
@@ -114,6 +118,10 @@ void TObjectRef::operator=(TObject *obj)
 
    UInt_t uid;
    if (obj) {
+      if (obj->IsA()->CanIgnoreTObjectStreamer()) {
+         Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
+         return;
+      }
       obj->SetBit(kIsReferenced);
       uid = (char*)obj - (char*)gSystem;
    } else {
@@ -165,6 +173,7 @@ void TObjectRef::SaveRef(TObject *obj, TBuffer &R__b, TFile *file)
    Int_t pidf = 0;
    if (file) {
       pidf = file->GetProcessCount();
+      file->SetBit(TFile::kHasReferences);
    }
    R__b << uid;
    R__b << pidf;
@@ -184,9 +193,12 @@ void TObjectRef::Streamer(TBuffer &R__b)
       SetUniqueID((UInt_t)uid);
       fPID = TProcessID::ReadProcessID(pidf,gFile);
    } else {
+      pidf = 0;
       uid = (Long_t)GetUniqueID();
-      if (gFile) pidf = gFile->GetProcessCount();
-      else       pidf = 0;
+      if (gFile) {
+         pidf = gFile->GetProcessCount();
+         gFile->SetBit(TFile::kHasReferences);
+      }
       R__b << pidf;
       R__b << uid;
    }
