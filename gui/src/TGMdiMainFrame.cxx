@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.1 2004/09/03 00:25:47 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -876,9 +876,7 @@ void TGMdiMainFrame::FreeMove(TGMdiFrame *mdiframe)
    Int_t xroot, yroot;
    Window_t win;
 
-   gVirtualX->TranslateCoordinates(frame->GetTitleBar()->GetId(),
-              fClient->GetRoot()->GetId(), x, y, xroot, yroot, win);
-   gVirtualX->Warp(xroot, yroot);
+   gVirtualX->Warp(x, y, frame->GetTitleBar()->GetId()); 
 
    frame->GetTitleBar()->SetLeftButPressed();
    frame->GetTitleBar()->SetX0(x);
@@ -906,7 +904,7 @@ void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
    gVirtualX->TranslateCoordinates(frame->GetLowerRightCR()->GetId(),
               fClient->GetRoot()->GetId(), x, y, xroot, yroot, win);
 
-   gVirtualX->Warp(xroot, yroot);
+   gVirtualX->Warp(x, y, frame->GetLowerRightCR()->GetId()); 
 
    Event_t event;
 
