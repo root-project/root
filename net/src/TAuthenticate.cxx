@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.52 2004/05/10 16:00:01 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.53 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1624,9 +1624,9 @@ Int_t TAuthenticate::SshAuth(TString &User)
             again = SshError(fileErr);
             if (gDebug > 3)
                Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                         getpid(), ssh_rc, again, ntry);
+                         gSystem->GetPid(), ssh_rc, again, ntry);
             if (again)
-               sleep(1);
+               gSystem->Sleep(1);
          }
       }
    } else {
@@ -1674,7 +1674,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                   again = SshError(fileErr);
                   if (gDebug > 3)
                      Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                               getpid(), ssh_rc, again, ntry);
+                               gSystem->GetPid(), ssh_rc, again, ntry);
                   if (again)
                      // Wait 1 sec before retry
                      gSystem->Sleep(1000);
@@ -1695,7 +1695,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
       gSystem->Unlink(fileErr);
    }
    if (gDebug > 3)
-      Info("SshAuth", "%d: system return code: %d (%d)", getpid(), ssh_rc, ntry+1);
+      Info("SshAuth", "%d: system return code: %d (%d)", gSystem->GetPid(), ssh_rc, ntry+1);
 
    if (ssh_rc && sshproto == 0) {
 
