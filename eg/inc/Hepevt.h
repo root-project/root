@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.2 2002/08/07 08:13:57 brun Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.3 2004/03/12 08:35:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -7,8 +7,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-
 
 #ifndef ROOT_HepEvt
 #define ROOT_HepEvt
@@ -34,7 +32,9 @@ typedef struct {
 
 COMMON_BLOCK_DEF(HEPEVT_DEF,HEPEVT);
 
-//HEPEVT_DEF HEPEVT;
+#ifndef __APPLE__
+HEPEVT_DEF HEPEVT;
+#endif
 
 }
 
