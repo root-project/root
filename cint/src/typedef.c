@@ -571,7 +571,18 @@ void G__define_type()
   }
 
 #ifndef G__OLDIMPLEMENTATION1141
+#ifndef G__PHILIPPE34
+  if( strncmp(typename,"long",4)==0
+      && ( strlen(typename)==4
+           || (strlen(typename)>=5 && (typename[4]=='&' || typename[4]=='*')) )
+     ) {
+     if (strlen(typename)>=5) {
+        // Rewind.
+        fseek(G__ifile.fp,-1-(strlen(typename) - strlen("long")) ,SEEK_CUR);
+     }
+#else 
   if(strcmp(typename,"long")==0) {
+#endif /* G__PHILIPPE34 */
 #ifndef G__OLDIMPLEMENTATION1836
     int tmptypenum;
     if('l'==type) {
@@ -592,12 +603,12 @@ void G__define_type()
     if('l'==type || 'k'==type) {
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
-	int store_def_struct_member = G__def_struct_member;
-	G__def_struct_member = 0;
+       int store_def_struct_member = G__def_struct_member;
+       G__def_struct_member = 0;
 #endif
-	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+       G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
 #ifndef G__OLDIMPLEMENTATION1153
-	G__def_struct_member = store_def_struct_member;
+       G__def_struct_member = store_def_struct_member;
 #endif
       }
 #ifndef G__OLDIMPLEMENTATION1686
@@ -613,7 +624,7 @@ void G__define_type()
       strcpy(tagname,"G__longlong");
       itemp=G__defined_tagname(tagname,2);
       if(-1==itemp) {
-	G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
+       G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
       }
       G__search_typename("long long",'u',itemp,G__PARANORMAL);
       type='u';
@@ -623,21 +634,35 @@ void G__define_type()
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1533
+#ifndef G__PHILIPPE34
+  if(strncmp(typename,"double",strlen("double"))==0
+     && ( strlen(typename)==strlen("double")
+          || (strlen(typename)>strlen("double") && (typename[strlen("double")]=='&' || typename[strlen("double")]=='*')) )
+     ) {
+     if (strlen(typename)>strlen("double")) {
+        // Rewind.
+        fseek(G__ifile.fp,-1-(strlen(typename) - strlen("double")) ,SEEK_CUR);
+     }
+#else
   if(strcmp(typename,"double")==0) {
+#endif /* G__PHILIPPE34 */
     if('l'==type) {
 #ifndef G__OLDIMPLEMENTATION1836
       int tmptypenum;
       G__loadlonglong(&itemp,&tmptypenum,G__LONGDOUBLE);
       type = 'u';
+#ifndef G__PHILIPPE34
+      strcpy(tagname,"G__longdouble");
+#endif /* G__PHILIPPE34 */
 #else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
-	int store_def_struct_member = G__def_struct_member;
-	G__def_struct_member = 0;
+       int store_def_struct_member = G__def_struct_member;
+       G__def_struct_member = 0;
 #endif
-	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+       G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
 #ifndef G__OLDIMPLEMENTATION1153
-	G__def_struct_member = store_def_struct_member;
+       G__def_struct_member = store_def_struct_member;
 #endif
       }
 
@@ -653,12 +678,12 @@ void G__define_type()
       strcpy(tagname,"G__longdouble");
       itemp=G__defined_tagname(tagname,2);
       if(-1==itemp) {
-	G__genericerror("Error: 'long double' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
+       G__genericerror("Error: 'long double' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
       }
       G__search_typename("long double",'u',itemp,G__PARANORMAL);
       type='u';
 #endif /* 1836 */
-    }
+     }
     c=G__fgetname(typename,";,[");
   }
 #endif
@@ -668,10 +693,25 @@ void G__define_type()
    *                           ^
    *  read typename
    */
+#ifndef G__PHILIPPE34
+  if(strncmp(typename,"int",3)==0 
+     && ( strlen(typename)==3
+          || (strlen(typename)>=4 && (typename[3]=='&' || typename[3]=='*')) )
+     ) {
+     if (strlen(typename)>=4) {
+        // Rewind.
+        fseek(G__ifile.fp,-1-(strlen(typename) - strlen("int")) ,SEEK_CUR);
+     }
+#else
   if(strcmp(typename,"int")==0) {
-    c=G__fgetstream(typename,";,[");
+#endif /* G__PHILIPPE34 */
+     c=G__fgetstream(typename,";,[");
   }
-  else if(strcmp(typename,"*")==0) {
+#ifndef G__PHILIPPE34
+  if(strcmp(typename,"*")==0) {
+#else
+   else if(strcmp(typename,"*")==0) {
+#endif /* G__PHILIPPE34 */   
 #ifndef G__OLDIMPLEMENTATION1396
     fpos_t tmppos;
     int tmpline = G__ifile.line_number;
