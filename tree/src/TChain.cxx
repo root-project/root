@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.52 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.53 2002/07/06 06:54:35 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -106,8 +106,7 @@ TChain::TChain(const char *name, const char *title)
 //______________________________________________________________________________
 TChain::~TChain()
 {
-//*-*-*-*-*-*Default destructor for a Chain*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==============================
+// destructor for a Chain
 
    fDirectory = 0;
    delete fFile; fFile = 0;
@@ -462,8 +461,7 @@ void TChain::Browse(TBrowser *)
 //_______________________________________________________________________
 void TChain::CreatePackets()
 {
-//*-*-*-*-*-*-*-*-*Initialize the packet descriptor string*-*-*-*-*-*-*-*-*-*
-//*-*              =======================================
+// Initialize the packet descriptor string
 
    TIter next(fFiles);
    TChainElement *element;
@@ -499,8 +497,7 @@ Int_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,I
 //______________________________________________________________________________
 TBranch *TChain::GetBranch(const char *name)
 {
-//*-*-*-*-*-*-*-*-*Return pointer to the branch name*-*-*-*-*
-//*-*              ==========================================
+// Return pointer to the branch name in the current tree
 
    if (fTree) return fTree->GetBranch(name);
    LoadTree(0);
@@ -533,11 +530,13 @@ Double_t TChain::GetEntries() const
 //______________________________________________________________________________
 Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 {
-//*-*-*-*-*-*-*-*-*Return entry in memory*-*-*-*-*-*-*-*-*-*
-//*-*              ======================
+// Get entry from the file to memory
+//
 //     getall = 0 : get only active branches
 //     getall = 1 : get all branches
-
+//
+// return the total number of bytes read
+   
    if (LoadTree(entry) < 0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
@@ -546,8 +545,7 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 //______________________________________________________________________________
 TLeaf *TChain::GetLeaf(const char *name)
 {
-//*-*-*-*-*-*-*-*-*Return pointer to the leaf name*-*-*-*-*
-//*-*              ==========================================
+//  Return pointer to the leaf name in the current tree
 
    if (fTree) return fTree->GetLeaf(name);
    LoadTree(0);
@@ -559,8 +557,7 @@ TLeaf *TChain::GetLeaf(const char *name)
 //______________________________________________________________________________
 TObjArray *TChain::GetListOfBranches()
 {
-//*-*-*-*-*-*-*-*-*Return pointer to list of branches of current tree*-*-*-*-*
-//*-*              ================================================
+// Return pointer to list of branches of current tree
 
    if (fTree) return fTree->GetListOfBranches();
    LoadTree(0);
@@ -572,8 +569,7 @@ TObjArray *TChain::GetListOfBranches()
 //______________________________________________________________________________
 TObjArray *TChain::GetListOfLeaves()
 {
-//*-*-*-*-*-*-*-*-*Return pointer to list of leaves of current tree*-*-*-*-*
-//*-*              ================================================
+// Return pointer to list of leaves of current tree
 
    if (fTree) return fTree->GetListOfLeaves();
    LoadTree(0);
@@ -593,8 +589,7 @@ Int_t TChain::GetMaxMergeSize()
 //______________________________________________________________________________
 Double_t TChain::GetMaximum(const char *columname)
 {
-//*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
-//*-*              ============================================
+// Return maximum of column with name columname
 
    Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
@@ -610,8 +605,7 @@ Double_t TChain::GetMaximum(const char *columname)
 //______________________________________________________________________________
 Double_t TChain::GetMinimum(const char *columname)
 {
-//*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
-//*-*              ============================================
+// Return minimum of column with name columname
 
    Double_t theMin = FLT_MAX; //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
@@ -627,8 +621,7 @@ Double_t TChain::GetMinimum(const char *columname)
 //______________________________________________________________________________
 Int_t TChain::GetNbranches()
 {
-//*-*-*-*-*-*-*-*-*Return number of branches of current tree*-*-*-*-*
-//*-*              =========================================
+// Return number of branches of current tree
 
    if (fTree) return fTree->GetNbranches();
    LoadTree(0);
@@ -769,7 +762,13 @@ Int_t TChain::LoadTree(Int_t entry)
    next.Reset();
    while ((element = (TChainElement*)next())) {
       void *add = element->GetBaddress();
-      if (add)        fTree->SetBranchAddress(element->GetName(),add);
+      if (add) {
+         TBranch *br = fTree->GetBranch(element->GetName());
+         if (br) {
+            br->SetAddress(add);
+            if (TestBit(kAutoDelete)) br->SetAutoDelete(kTRUE);
+         }
+      }
    }
 
    if (cursav) cursav->cd();
@@ -800,9 +799,7 @@ Int_t TChain::LoadTree(Int_t entry)
 //______________________________________________________________________________
 void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Loop on nentries of this chain starting at firstentry
-//*-*              ===================================================
-
+// Loop on nentries of this chain starting at firstentry
 
    Error("Loop","Function not yet implemented");
 
@@ -1050,8 +1047,7 @@ Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, In
 //______________________________________________________________________________
 Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Process this chain executing the code in selector*-*-*-*-*
-//*-*              ================================================
+// Process this chain executing the code in selector
 
    return TTree::Process(selector,option,nentries,firstentry);
 }
@@ -1077,10 +1073,21 @@ void TChain::Reset(Option_t *)
 }
 
 //_______________________________________________________________________
+void TChain::SetAutoDelete(Bool_t autodelete)
+{
+//  Set the global branch kAutoDelete bit
+//  When LoadTree loads a new Tree, the branches for which
+//  the address is set will have the option AutoDelete set
+//  For more details on AutoDelete, see TBranch::SetAutoDelete.
+            
+   if (autodelete) SetBit(kAutoDelete,1);
+   else            SetBit(kAutoDelete,0);
+}
+
+//_______________________________________________________________________
 void TChain::SetBranchAddress(const char *bname, void *add)
 {
-//*-*-*-*-*-*-*-*-*Set branch address*-*-*-*-*-*-*-*
-//*-*              ==================
+// Set branch address
 //
 //      bname is the name of a branch.
 //      add is the address of the branch.
@@ -1102,8 +1109,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 //_______________________________________________________________________
 void TChain::SetBranchStatus(const char *bname, Bool_t status)
 {
-//*-*-*-*-*-*-*-*-*Set branch status Process or DoNotProcess*-*-*-*-*-*-*-*
-//*-*              =========================================
+// Set branch status Process or DoNotProcess
 //
 //      bname is the name of a branch. if bname="*", apply to all branches.
 //      status = 1  branch will be processed
@@ -1158,8 +1164,7 @@ void TChain::SetMaxMergeSize(Int_t maxsize)
 //_______________________________________________________________________
 void TChain::SetPacketSize(Int_t size)
 {
-//*-*-*-*-*-*-*-*-*Set number of entries per packet for parallel root*-*-*-*-*
-//*-*              =================================================
+// Set number of entries per packet for parallel root
 
    fPacketSize = size;
    TIter next(fFiles);
@@ -1198,8 +1203,7 @@ void TChain::SetWeight(Double_t w, Option_t *option)
 //_______________________________________________________________________
 void TChain::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+// Stream a class object
 
    if (b.IsReading()) {
       UInt_t R__s, R__c;

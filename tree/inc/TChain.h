@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.24 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.25 2002/07/06 06:54:35 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
     // TChain constants
     enum {
        kGlobalWeight   = BIT(15),
+       kAutoDelete     = BIT(16),
        kBigNumber      = 1234567890
     };
     TChain();
@@ -95,6 +96,7 @@ public:
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=kBigNumber, Int_t firstentry=0);
     virtual void      Reset(Option_t *option="");
+    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetDirectory(TDirectory *dir);
