@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.2 2004/06/28 05:29:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.3 2004/07/27 12:21:31 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -29,7 +29,8 @@ namespace ROOT {
    {
       fDataName = GetName();
       fDataName.ReplaceAll("<","_");
-      fDataName.ReplaceAll(">","_");     
+      fDataName.ReplaceAll(">","_");
+      if (fDataName[fDataName.Length()-1]=='.') fDataName.Remove(fDataName.Length()-1);
    }
    
    const char *TBranchProxyDescriptor::GetDataName() 
@@ -53,6 +54,7 @@ namespace ROOT {
       // Return true if this description is the 'same' as the other decription.
 
       if ( !other ) return false;
+      if ( other == this ) return true;
 
       if ( inClass ) {
          // If this description belong to a class, the branchname will be 

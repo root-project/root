@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.8 2004/08/23 19:27:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.9 2004/12/04 19:47:00 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -369,9 +369,17 @@ namespace ROOT {
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
    {
       if (desc) {
-         fCurrentListOfTopProxies->Add(desc);
-         UInt_t len = strlen(desc->GetTypeName());
-         if ((len+2)>fMaxDatamemberType) fMaxDatamemberType = len+2;
+         TBranchProxyDescriptor *existing = 
+            (TBranchProxyDescriptor*)((*fCurrentListOfTopProxies)(desc->GetName()));
+         if (existing) {
+            Warning("TTreeProxyGenerator","The branch name \"%s\" is duplicated. Only the first instance \n"
+               "\twill be available directly. The other instance(s) might be available via their complete name\n"
+               "\t(including the name of their mother branche's name).",desc->GetName());
+         } else {
+            fCurrentListOfTopProxies->Add(desc);
+            UInt_t len = strlen(desc->GetTypeName());
+            if ((len+2)>fMaxDatamemberType) fMaxDatamemberType = len+2;
+         }
       }
    }
 
@@ -1144,7 +1152,7 @@ namespace ROOT {
                }
 
             }
-            if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' ) {
+            if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
                TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
                TStreamerInfo *info = be ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
@@ -1176,9 +1184,7 @@ namespace ROOT {
             } else {
 
                // We have a top level raw type.
-
                AnalyzeOldBranch(branch, 0, 0);
-
             }
 
          } else {
@@ -1884,8 +1890,10 @@ namespace ROOT {
 
       if (updating) {
          // over-write existing file only if needed.
-         if (AreDifferent(fHeaderFilename,tmpfilename)) gSystem->Rename(tmpfilename,fHeaderFilename);
-         else gSystem->Unlink(tmpfilename);
+         if (AreDifferent(fHeaderFilename,tmpfilename)) {
+            gSystem->Unlink(fHeaderFilename);
+            gSystem->Rename(tmpfilename,fHeaderFilename);
+         } else gSystem->Unlink(tmpfilename);
       }
    }
 
