@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.8 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -104,9 +104,9 @@ public:
 
    virtual void SetTopEntry(TGLBEntry *e, TGLayoutHints *lh);
 
-   virtual void Selected(Int_t widgetId, Int_t id); //*SIGNAL*
-   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*
-   virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } //*SIGNAL*
+   virtual void Selected(Int_t widgetId, Int_t id); // *SIGNAL*
+   virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } // *SIGNAL*
+   virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGComboBox,0)  // Combo box widget
@@ -162,11 +162,12 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+const Int_t kMaxFonts = 20;
+
 class TGFontTypeComboBox : public TGComboBox { 
 
 protected:
-   static const int maxFonts = 20;
-   FontStruct_t fFonts[maxFonts];      
+   FontStruct_t fFonts[kMaxFonts];      
 
 public:
    TGFontTypeComboBox(const TGWindow*p, Int_t id, 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.12 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.13 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -431,7 +431,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
 
    int noFonts = 0;
 
-   for (int i = 1; fonts[i][0] != 0 && noFonts < maxFonts; i++) {
+   for (int i = 1; fonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
 
       fFonts[noFonts] = gVirtualX->LoadQueryFont(fonts[i][0]);
 
@@ -449,7 +449,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
       noFonts++;
    }
    
-   if (noFonts < maxFonts - 1)
+   if (noFonts < kMaxFonts - 1)
       ;
    fFonts[noFonts] = 0;
    Select(1);  // to have first entry selected
@@ -460,6 +460,6 @@ TGFontTypeComboBox::~TGFontTypeComboBox()
 {
    // Text font combo box dtor.
 
-   for (int i = 0; i < maxFonts && fFonts[i] != 0; i++)
+   for (int i = 0; i < kMaxFonts && fFonts[i] != 0; i++)
       gVirtualX->DeleteFont(fFonts[i]);
 }
