@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.2 2000/06/13 12:32:56 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -131,6 +131,7 @@ public:
    virtual Int_t    GetPadPaint() = 0;
    virtual Int_t    GetPixmapID() = 0;
    virtual TPadView3D *GetView3D() = 0;
+   virtual Bool_t   HasCrosshair() = 0;
    virtual void     HighLight(Color_t col=kRed, Bool_t set=kTRUE) = 0;
    virtual Bool_t   IsBatch() = 0;
    Bool_t           IsBeingResized() const { return fResizing; }
@@ -178,6 +179,7 @@ public:
    virtual void     SetBorderMode(Short_t bordermode) = 0;
    virtual void     SetBorderSize(Short_t bordersize) = 0;
    virtual void     SetCanvasSize(UInt_t ww, UInt_t wh) = 0;
+   virtual void     SetCrosshair(Int_t crhair=1) = 0;
    virtual void     SetCursor(ECursor cursor) = 0;
    virtual void     SetDoubleBuffer(Int_t mode=1) = 0;
    virtual void     SetEditable(Bool_t mode=kTRUE) = 0;
