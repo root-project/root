@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.82 2003/01/17 17:48:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.83 2003/01/19 21:17:34 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1109,7 +1109,7 @@ Int_t TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (seekpdir == fSeekDir && strcmp(classname,"TBasket")) {
+      if (seekpdir == fSeekDir && strcmp(classname,"TFile") && strcmp(classname,"TBasket")) {
          key = new TKey();
          key->ReadBuffer(bufread);
          if (!strcmp(key->GetName(),"StreamerInfo")) {
