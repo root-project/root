@@ -845,6 +845,9 @@ int *piout;
   int hash,temp;
   int i;
   int null_entry;
+#ifndef G__OLDIMPLEMENTATION1451
+  int lensysdir;
+#endif
 
   if(c!='\n' && c!='\r') {
     c=G__fgetname(statement+1,endofline);
@@ -864,8 +867,17 @@ int *piout;
 	  sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
 	  len=strlen(sysinclude);
 	  lenstl=strlen(sysstl);
+#ifndef G__OLDIMPLEMENTATION1451
+	  if(G__SystemIncludeDir) lensysdir=strlen(G__SystemIncludeDir);
+	  else lensysdir=0;
+#endif
 	  if(strncmp(sysinclude,statement+1,(size_t)len)==0||
-	     strncmp(sysstl,statement+1,(size_t)lenstl)==0)
+	     strncmp(sysstl,statement+1,(size_t)lenstl)==0
+#ifndef G__OLDIMPLEMENTATION1451
+	     || (G__SystemIncludeDir && 
+		 strncmp(G__SystemIncludeDir,statement+1,lensysdir)==0)
+#endif
+	     )
 	    G__globalcomp=G__NOLINK;
 	  else 
 	    G__globalcomp=G__store_globalcomp;

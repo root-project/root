@@ -3505,7 +3505,7 @@ struct G__var_array *varglobal,*varlocal;
     if(var) G__struct_offset = 0;
     if(!var && G__getarraydim && !G__IsInMacro()) {
       G__const_noerror=0;
-      G__genericerror("Error: Illegal array dimention (Ignore subsequent errors)");
+      G__genericerror("Error: Illegal array dimension (Ignore subsequent errors)");
       *known2=1;
       return(G__null);
     }
@@ -3535,7 +3535,7 @@ struct G__var_array *varglobal,*varlocal;
 	 (0==(G__CONSTVAR&var->constvar[ig15])||
 	  (G__DYNCONST&var->constvar[ig15]))) {
         G__const_noerror=0;
-	G__genericerror("Error: Non-static-const variable in array dimention");
+	G__genericerror("Error: Non-static-const variable in array dimension");
 	fprintf(G__serr," (cint allows this only in interactive command and special form macro which\n");
 	fprintf(G__serr,"  is special extension. It is not allowed in source code. Please ignore\n");
 	fprintf(G__serr,"  subsequent errors.)\n");

@@ -443,6 +443,10 @@ int G__ignore_stdnamespace = 1;
 int G__decl_obj=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1451
+char* G__SystemIncludeDir=0;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

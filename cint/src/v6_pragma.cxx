@@ -274,6 +274,12 @@ int G__pragma()
   else if(strcmp(command,"ANSI")==0) {
     G__nonansi_func=0;
   }
+#ifndef G__PHILIPPE30
+  else if(strcmp(command,"extra_include")==0) {
+    G__specify_extra_include();
+    c='\n';
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1183
   else if(0==strcmp(command,"define")) {

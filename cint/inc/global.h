@@ -660,6 +660,10 @@ extern int G__ignore_stdnamespace;
 extern int G__decl_obj;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1451
+extern char* G__SystemIncludeDir;
+#endif
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

@@ -720,7 +720,7 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-    ,"a:b:c:d:ef:gikl:n:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTVW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gikl:n:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
 
@@ -838,6 +838,14 @@ char *argv[] ;
       }
       dllid = optarg;
       break;
+
+#ifndef G__OLDIMPLEMENTATION1451
+    case 'U':
+      if(G__SystemIncludeDir) free(G__SystemIncludeDir);
+      G__SystemIncludeDir = (char*)malloc(strlen(optarg)+1);
+      strcpy(G__SystemIncludeDir,optarg);
+      break;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION411
     case 'u':
@@ -1049,7 +1057,7 @@ char *argv[] ;
       G__more(G__sout,"  -c -1: make C++ precompiled interface method files\n");
       G__more(G__sout,"  -c -2: make C precompiled interface method files\n");
 #ifndef G__OLDIMPLEMENTATION970
-      G__more(G__sout,"  -C : copy src to $TMPDIR so that src can be change during cint run\n");
+      G__more(G__sout,"  -C : copy src to $TMPDIR so that src can be changed during cint run\n");
 #endif
 #ifdef G__DUMPFILE
       G__more(G__sout,"  -d [dumpfile] : dump function call history\n");
@@ -1223,6 +1231,10 @@ char *argv[] ;
   if(G__security_error) {
     fprintf(G__serr,"Warning: Error occured during reading source files\n");
   }
+#endif
+
+#ifndef G__PHILIPPE30
+  G__gen_extra_include();
 #endif
 
   if(G__CPPLINK == G__globalcomp) { /* C++ header */

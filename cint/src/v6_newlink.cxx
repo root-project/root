@@ -132,6 +132,10 @@ static int G__store_asm_noverflow;
 static int G__store_no_exec_compile;
 static int G__store_asm_exec;
 #endif
+#ifndef G__PHILIPPE30
+static int G__extra_inc_n = 0;
+static char** G__extra_include = 0; /*  [G__MAXFILENAME] = NULL;  */
+#endif
 
 
 /**************************************************************************
@@ -2288,7 +2292,7 @@ struct G__ifunc_table *ifunc;
 	    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	    break;
 	  default:
-	    G__genericerror("Cint internal error ary parameter dimention");
+	    G__genericerror("Cint internal error ary parameter dimension");
 	    break;
 	  }
 	}
@@ -2302,7 +2306,7 @@ struct G__ifunc_table *ifunc;
 	    ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	    break;
 	  default:
-	    G__genericerror("Cint internal error ary parameter dimention");
+	    G__genericerror("Cint internal error ary parameter dimension");
 	    break;
 	  }
 	}
@@ -3747,7 +3751,7 @@ int k;
 	  ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	  break;
 	default:
-	  G__genericerror("Cint internal error ary parameter dimention");
+	  G__genericerror("Cint internal error ary parameter dimension");
 	  break;
 	}
       }
@@ -3761,7 +3765,7 @@ int k;
 	  ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
 	  break;
 	default:
-	  G__genericerror("Cint internal error ary parameter dimention");
+	  G__genericerror("Cint internal error ary parameter dimension");
 	  break;
 	}
       }
@@ -7854,6 +7858,92 @@ G__value *buf;
   return(&buf->obj.d);
 }
 /* #endif   ON1167 */
+
+
+#ifndef G__PHILIPPE30
+/**************************************************************************
+* G__specify_extra_include()
+* has to be called from the pragma decoding!
+**************************************************************************/
+void G__specify_extra_include() {
+  int i;
+  int c;
+  char buf[G__ONELINE];
+  char *tobecopied;
+  if (!G__extra_include) {
+    G__extra_include = (char**)malloc(G__MAXFILE*sizeof(char*));
+    for(i=0;i<G__MAXFILE;i++) 
+      G__extra_include[i]=(char*)malloc(G__MAXFILENAME*sizeof(char));
+  };
+  c = G__fgetstream_template(buf,";\n\r<>");
+  if ( 1 ) { /* should we check if the file exist ? */
+    tobecopied = buf;
+    if (buf[0]=='\"' || buf[0]=='\'') tobecopied++;
+    i = strlen(buf);
+    if (buf[i-1]=='\"' || buf[i-1]=='\'') buf[i-1]='\0';
+    strcpy(G__extra_include[G__extra_inc_n++],tobecopied);
+  }
+}
+
+/**************************************************************************
+ * G__gen_extra_include()
+ * prepend the extra header files to the C or CXX file
+ **************************************************************************/
+void G__gen_extra_include() {
+  char * tempfile;
+  FILE *fp,*ofp;
+  char line[BUFSIZ];
+  int i;
+  
+  if (G__extra_inc_n) {
+#ifndef G__ADD_EXTRA_INCLUDE_AT_END
+    /* because of a bug in (at least) the KAI compiler we have to
+       add the files at the beginning of the dictionary header file
+       (Specifically, the extra include files have to be include 
+       before any forward declarations!) */
+    
+    tempfile = (char*) malloc(strlen(G__CPPLINK_H)+5);
+    sprintf(tempfile,"%s.temp", G__CPPLINK_H);
+    rename(G__CPPLINK_H,tempfile);
+    
+    fp = fopen(G__CPPLINK_H,"w");
+    if(!fp) G__fileerror(G__CPPLINK_H);
+    ofp = fopen(tempfile,"r");
+    if(!ofp) G__fileerror(tempfile);
+    
+    /* Add the extra include ad the beginning of the files */
+    fprintf(fp,"\n/* Includes added by #pragma extra_include */\n");
+    for(i=0; i< G__extra_inc_n; i++) {
+      fprintf(fp,"#include \"%s\"\n",G__extra_include[i]);
+    }
+    
+    /* Copy the rest of the header file */
+    while (fgets(line, BUFSIZ, ofp)) {
+      fprintf(fp, "%s", line);
+    }
+    fprintf(fp,"\n");
+    
+    fclose(fp);
+    fclose(ofp);
+    unlink(tempfile);
+    free(tempfile);
+    
+#else
+    fp = fopen(G__CPPLINK_H,"a");
+    if(!fp) G__fileerror(G__CPPLINK_H);
+    
+    fprintf(fp,"\n/* Includes added by #pragma extra_include */\n");
+    for(i=0; i< G__extra_inc_n; i++) {
+      fprintf(fp,"#include \"%s\"\n",G__extra_include[i]);
+    }
+    fprintf(fp,"\n");
+    fclose(fp);    
+#endif
+    
+  }
+}
+
+#endif
 
 /*
  * Local Variables:

@@ -36,9 +36,9 @@ class G__CallFunc {
   G__CallFunc() ;
   void Init() ;
 
-  void SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset);
+  void SetFunc(G__ClassInfo* cls,const char* fname,const char* args,long* poffset);
 #ifndef G__OLDIMPLEMENTATION540
-  void SetFuncProto(G__ClassInfo* cls,char* fname,char* argtype,long* poffset);
+  void SetFuncProto(G__ClassInfo* cls,const char* fname,const char* argtype,long* poffset);
 #endif
   // begin old interface
   void SetFunc(G__InterfaceMethod f);
@@ -60,7 +60,7 @@ class G__CallFunc {
 
 #ifndef G__FONS50
   G__InterfaceMethod InterfaceMethod() { return pfunc; }
-  void SetArgs(char* args);
+  void SetArgs(const char* args);
 #endif
 
  private:

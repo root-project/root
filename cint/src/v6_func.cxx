@@ -641,11 +641,11 @@ int *known3;
       if(G__asm_noverflow) {
 #ifndef G__OLDIMPLEMENTATION1449
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+	if(G__asm_dbg) fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
 #endif
-        G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-        G__inc_cp_asm(1,0);
-#endif  /* 1449 */
+	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	G__inc_cp_asm(1,0);
+#endif
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif

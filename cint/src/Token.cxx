@@ -47,7 +47,8 @@ void G__TokenInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 // MakeLocalTable has to be used when entering to a new function
 G__MethodInfo G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
-                                           ,char* fname,char* paramtype) 
+                                           ,const char* fname
+					   ,const char* paramtype) 
 {
   long dmy;
 
@@ -80,7 +81,8 @@ G__MethodInfo G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
 // Query has to be used to get information for each token
 int G__TokenInfo::Query(G__ClassInfo& tag_scope
 			,G__MethodInfo& func_scope
-			,char* /* preopr*/ ,char* name, char* postopr)
+			,const char* /* preopr */ ,const char* name
+			,const char* postopr)
 {
   nextscope.Init(); // initialize nesting scope information
   // search token matches in following order
@@ -101,7 +103,7 @@ int G__TokenInfo::Query(G__ClassInfo& tag_scope
 ///////////////////////////////////////////////////////////////////////////
 // Private member functions
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchTypeName(char* name,char* postopr)
+int G__TokenInfo::SearchTypeName(const char* name,const char* postopr)
 {
   tinfo.Init(name);
   if(tinfo.IsValid()) {
@@ -121,8 +123,8 @@ int G__TokenInfo::SearchTypeName(char* name,char* postopr)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchLocalVariable(char* name,G__MethodInfo& func_scope
-				     ,char* postopr)
+int G__TokenInfo::SearchLocalVariable(const char* name,G__MethodInfo& func_scope
+				     ,const char* postopr)
 {
   if(localvar && func_scope.IsValid()) {
     if(&func_scope != &methodscope) {
@@ -152,8 +154,8 @@ int G__TokenInfo::SearchLocalVariable(char* name,G__MethodInfo& func_scope
   return(0);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchDataMember(char* name,G__ClassInfo& tag_scope
-				  ,char* postopr)
+int G__TokenInfo::SearchDataMember(const char* name,G__ClassInfo& tag_scope
+				  ,const char* postopr)
 {
   if(tag_scope.IsValid() && tag_scope.HasDataMember(name)) {
     tokenproperty = p_data;
@@ -170,7 +172,7 @@ int G__TokenInfo::SearchDataMember(char* name,G__ClassInfo& tag_scope
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchGlobalVariable(char* name,char* postopr)
+int G__TokenInfo::SearchGlobalVariable(const char* name,const char* postopr)
 {
   if(glob.HasDataMember(name)) {
     tokenproperty = p_data;
@@ -186,7 +188,7 @@ int G__TokenInfo::SearchGlobalVariable(char* name,char* postopr)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchMemberFunction(char* name,G__ClassInfo& tag_scope)
+int G__TokenInfo::SearchMemberFunction(const char* name,G__ClassInfo& tag_scope)
 {
   if(tag_scope.IsValid() && tag_scope.HasMethod(name)) {
     tokenproperty = p_func;
@@ -198,7 +200,7 @@ int G__TokenInfo::SearchMemberFunction(char* name,G__ClassInfo& tag_scope)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchGlobalFunction(char* name)
+int G__TokenInfo::SearchGlobalFunction(const char* name)
 {
   if(glob.HasMethod(name)) {
     tokenproperty = p_func;
@@ -211,7 +213,7 @@ int G__TokenInfo::SearchGlobalFunction(char* name)
 }
 ///////////////////////////////////////////////////////////////////////////
 // set nextscope for scope stacking
-void G__TokenInfo::GetNextscope(char* name,G__ClassInfo& tag_scope)
+void G__TokenInfo::GetNextscope(const char* name,G__ClassInfo& tag_scope)
 {
   G__DataMemberInfo dt(tag_scope);
   // iterate on variable table

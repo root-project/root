@@ -157,7 +157,7 @@ void G__CallFunc::SetArg(double d)
 }
 #ifndef G__FONS51
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgs(char* args)
+void G__CallFunc::SetArgs(const char* args)
 {
   int isrc=0;
   char *endmark=(char*)",";
@@ -166,7 +166,7 @@ void G__CallFunc::SetArgs(char* args)
   para.paran=0;
   int c;
   do {
-    c=G__getstream(args,&isrc,para.parameter[para.paran],endmark);
+    c=G__getstream((char*)args,&isrc,para.parameter[para.paran],endmark);
     if (para.parameter[para.paran][0]) {
       // evaluate arg
 #ifndef G__OLDIMPLEMENTATION899
@@ -182,7 +182,7 @@ void G__CallFunc::SetArgs(char* args)
 #ifndef G__OLDIMPLEMENTATION540
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFuncProto(G__ClassInfo* cls
-			  ,char* fname  ,char* argtype
+			  ,const char* fname  ,const char* argtype
 			  ,long* poffset)
 {
 #ifndef G__OLDIMPLEMENTATION1035
@@ -205,7 +205,7 @@ void G__CallFunc::SetFuncProto(G__ClassInfo* cls
 #endif
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetFunc(G__ClassInfo* cls
-			  ,char* fname  ,char* args
+			  ,const char* fname  ,const char* args
 			  ,long* poffset)
 {
   // G__getstream(), G__type2string()
@@ -225,7 +225,7 @@ void G__CallFunc::SetFunc(G__ClassInfo* cls
   argtype[0]='\0';
   int c;
   do {
-    c=G__getstream(args,&isrc,para.parameter[para.paran],endmark);
+    c=G__getstream((char*)args,&isrc,para.parameter[para.paran],endmark);
     if (para.parameter[para.paran][0]) {
       // evaluate arg
 #ifndef G__OLDIMPLEMENTATION899

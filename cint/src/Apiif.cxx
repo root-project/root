@@ -46,6 +46,8 @@ static void G__operator_delete(void *p) {
 #endif
 }
 
+void G__DELDMY_ApiifdOcxx() { G__operator_delete(0); }
+
 #include "dllrev.h"
 extern "C" int G__cpp_dllrevG__API() { return(G__CREATEDLLREV); }
 
@@ -1116,15 +1118,15 @@ static int G__G__CallFunc_Init_2_0(G__value *result7,G__CONST char *funcname,str
 
 static int G__G__CallFunc_SetFunc_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
-      ((G__CallFunc*)(G__getstructoffset()))->SetFunc((G__ClassInfo*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
-,(char*)G__int(libp->para[2]),(long*)G__int(libp->para[3]));
+      ((G__CallFunc*)(G__getstructoffset()))->SetFunc((G__ClassInfo*)G__int(libp->para[0]),(const char*)G__int(libp->para[1])
+,(const char*)G__int(libp->para[2]),(long*)G__int(libp->para[3]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__G__CallFunc_SetFuncProto_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
-      ((G__CallFunc*)(G__getstructoffset()))->SetFuncProto((G__ClassInfo*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
-,(char*)G__int(libp->para[2]),(long*)G__int(libp->para[3]));
+      ((G__CallFunc*)(G__getstructoffset()))->SetFuncProto((G__ClassInfo*)G__int(libp->para[0]),(const char*)G__int(libp->para[1])
+,(const char*)G__int(libp->para[2]),(long*)G__int(libp->para[3]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1192,7 +1194,7 @@ static int G__G__CallFunc_InterfaceMethod_5_1(G__value *result7,G__CONST char *f
 
 static int G__G__CallFunc_SetArgs_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
-      ((G__CallFunc*)(G__getstructoffset()))->SetArgs((char*)G__int(libp->para[0]));
+      ((G__CallFunc*)(G__getstructoffset()))->SetArgs((const char*)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1372,8 +1374,8 @@ static int G__G__TokenInfo_Init_2_0(G__value *result7,G__CONST char *funcname,st
 
 static int G__G__TokenInfo_MakeLocalTable_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
-        G__MethodInfo *pobj,xobj=((G__TokenInfo*)(G__getstructoffset()))->MakeLocalTable(*(G__ClassInfo*)libp->para[0].ref,(char*)G__int(libp->para[1])
-,(char*)G__int(libp->para[2]));
+        G__MethodInfo *pobj,xobj=((G__TokenInfo*)(G__getstructoffset()))->MakeLocalTable(*(G__ClassInfo*)libp->para[0].ref,(const char*)G__int(libp->para[1])
+,(const char*)G__int(libp->para[2]));
         pobj=new G__MethodInfo(xobj);
         result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;
         G__store_tempobject(*result7);
@@ -1383,8 +1385,8 @@ static int G__G__TokenInfo_MakeLocalTable_3_0(G__value *result7,G__CONST char *f
 
 static int G__G__TokenInfo_Query_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)((G__TokenInfo*)(G__getstructoffset()))->Query(*(G__ClassInfo*)libp->para[0].ref,*(G__MethodInfo*)libp->para[1].ref
-,(char*)G__int(libp->para[2]),(char*)G__int(libp->para[3])
-,(char*)G__int(libp->para[4])));
+,(const char*)G__int(libp->para[2]),(const char*)G__int(libp->para[3])
+,(const char*)G__int(libp->para[4])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -2124,11 +2126,11 @@ static void G__setup_memfuncG__CallFunc(void) {
    G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_1_0,105,G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Init",404,G__G__CallFunc_Init_2_0,121,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("SetFunc",696,G__G__CallFunc_SetFunc_3_0,121,-1,-1,0,4,1,1,0,
-"U 'G__ClassInfo' - 0 - cls C - - 0 - fname "
-"C - - 0 - args L - - 0 - poffset",(char*)NULL,(void*)NULL,0);
+"U 'G__ClassInfo' - 0 - cls C - - 10 - fname "
+"C - - 10 - args L - - 0 - poffset",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("SetFuncProto",1228,G__G__CallFunc_SetFuncProto_4_0,121,-1,-1,0,4,1,1,0,
-"U 'G__ClassInfo' - 0 - cls C - - 0 - fname "
-"C - - 0 - argtype L - - 0 - poffset",(char*)NULL,(void*)NULL,0);
+"U 'G__ClassInfo' - 0 - cls C - - 10 - fname "
+"C - - 10 - argtype L - - 0 - poffset",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("SetFunc",696,G__G__CallFunc_SetFunc_5_0,121,-1,-1,0,1,1,1,0,"Y - 'G__InterfaceMethod' 0 - f",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("SetBytecode",1115,G__G__CallFunc_SetBytecode_6_0,121,-1,-1,0,1,1,1,0,"U 'G__bytecodefunc' - 0 - bc",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("IsValid",684,G__G__CallFunc_IsValid_7_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
@@ -2140,7 +2142,7 @@ static void G__setup_memfuncG__CallFunc(void) {
    G__memfunc_setup("ExecInt",688,G__G__CallFunc_ExecInt_3_1,108,-1,-1,0,1,1,1,0,"Y - - 0 - pobject",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("ExecDouble",992,G__G__CallFunc_ExecDouble_4_1,100,-1,-1,0,1,1,1,0,"Y - - 0 - pobject",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("InterfaceMethod",1522,G__G__CallFunc_InterfaceMethod_5_1,89,-1,G__defined_typename("G__InterfaceMethod"),0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("SetArgs",697,G__G__CallFunc_SetArgs_6_1,121,-1,-1,0,1,1,1,0,"C - - 0 - args",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("SetArgs",697,G__G__CallFunc_SetArgs_6_1,121,-1,-1,0,1,1,1,0,"C - - 10 - args",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
    G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_7_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,1,1,1,0,"u 'G__CallFunc' - 1 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
@@ -2178,12 +2180,12 @@ static void G__setup_memfuncG__TokenInfo(void) {
    G__memfunc_setup("G__TokenInfo",1170,G__G__TokenInfo_G__TokenInfo_1_0,105,G__get_linked_tagnum(&G__G__APILN_G__TokenInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Init",404,G__G__TokenInfo_Init_2_0,121,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("MakeLocalTable",1361,G__G__TokenInfo_MakeLocalTable_3_0,117,G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,0,3,1,1,0,
-"u 'G__ClassInfo' - 1 - tag_scope C - - 0 - fname "
-"C - - 0 - paramtype",(char*)NULL,(void*)NULL,0);
+"u 'G__ClassInfo' - 1 - tag_scope C - - 10 - fname "
+"C - - 10 - paramtype",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Query",534,G__G__TokenInfo_Query_4_0,105,-1,-1,0,5,1,1,0,
 "u 'G__ClassInfo' - 1 - tag_scope u 'G__MethodInfo' - 1 - func_scope "
-"C - - 0 - preopr C - - 0 - name "
-"C - - 0 - postopr",(char*)NULL,(void*)NULL,0);
+"C - - 10 - preopr C - - 10 - name "
+"C - - 10 - postopr",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("GetNextScope",1209,G__G__TokenInfo_GetNextScope_5_0,117,G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
    G__memfunc_setup("G__TokenInfo",1170,G__G__TokenInfo_G__TokenInfo_3_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TokenInfo),-1,0,1,1,1,0,"u 'G__TokenInfo' - 1 - -",(char*)NULL,(void*)NULL,0);

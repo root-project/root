@@ -2682,7 +2682,7 @@ char *new_name;
 #endif
   
   /*******************************************************
-   * multidimentional array number of dimention
+   * multidimensional array number of dimension
    *******************************************************/
   pindex=var->paran[ig15];
   
@@ -3056,7 +3056,7 @@ char *new_name;
   }
   
   /*******************************************************
-   * multidimentional array number of dimention
+   * multidimensional array number of dimension
    *******************************************************/
   pindex=var->paran[ig15];
   

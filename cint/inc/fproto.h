@@ -728,6 +728,11 @@ extern void G__smart_unload G__P((int ifn));
 extern struct G__dictposition* G__get_dictpos G__P((char* fname));
 #endif
 
+#ifndef G__PHILIPPE30
+void G__specify_extra_include G__P((void)) ;
+void G__gen_extra_include G__P((void)) ;
+#endif
+
 #ifdef __cplusplus
 }
 #endif

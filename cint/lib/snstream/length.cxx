@@ -1,8 +1,8 @@
-#! /home/gotom/src/cint/cint 
+//#! cint 
 // length.cxx
 //
 //  Limit C++ source length to certain number
-//  Usage:   length.cxx [length] file1  file2  ...
+//  Usage:  cint length.cxx [length] file1  file2  ...
 //
 
 const int MAXLINE = 10000;

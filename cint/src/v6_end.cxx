@@ -236,6 +236,11 @@ void G__scratch_all()
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1451
+  if(G__SystemIncludeDir) free(G__SystemIncludeDir);
+  G__SystemIncludeDir = (char*)NULL;
+#endif
+
   /*************************************************************
    * Initialize cint body global variables
    *************************************************************/

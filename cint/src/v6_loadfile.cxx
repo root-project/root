@@ -1199,6 +1199,13 @@ char *filenamein;
 	G__ifile.fp = fopen(G__ifile.name,"rb");
 #endif
 	ipath = ipath->next;
+#ifndef G__OLDIMPLEMENTATION1451
+	if(G__SystemIncludeDir) {
+	  int lensysdir=strlen(G__SystemIncludeDir);
+	  if(strncmp(G__SystemIncludeDir,G__ifile.name,lensysdir)==0)
+	    G__globalcomp=G__NOLINK;
+	}
+#endif
       }
       if(G__ifile.fp) break;
 

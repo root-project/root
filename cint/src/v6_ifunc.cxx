@@ -4600,7 +4600,9 @@ struct G__funclist *match;
 struct G__funclist *func;
 {
   int ipara;
-  
+#ifndef G__OLDIMPLEMENTATION1450
+  if(!match || !match->ifunc || !func || !func->ifunc) return(0);
+#endif
   for(ipara=0;ipara<match->ifunc->para_nu[match->ifn];ipara++) {
     if(
        (match->ifunc->para_type[match->ifn][ipara] !=
