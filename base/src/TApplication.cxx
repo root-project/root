@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.14 2001/06/17 23:08:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.15 2001/06/25 16:28:39 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -76,6 +76,7 @@ TApplication::TApplication()
    fAppImp        = 0;
    fReturnFromRun = kFALSE;
    fNoLog         = kFALSE;
+   fNoLogo        = kFALSE;
    fQuit          = kFALSE;
    fFiles         = 0;
    fIdleCommand   = 0;
@@ -124,6 +125,10 @@ TApplication::TApplication(const char *appClassName,
 
    for (int i = 0; i < fArgc; i++)
       fArgv[i] = StrDup(argv[i]);
+
+   fNoLog         = kFALSE;
+   fNoLogo        = kFALSE;
+   fQuit          = kFALSE;
 
    GetOptions(argc, argv);
    if (fArgv) gSystem->SetProgname(fArgv[0]);
