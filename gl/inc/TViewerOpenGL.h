@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.22 2004/11/23 21:42:55 brun Exp $
+// @(#)root/gl:$Name: v4-02-00 $:$Id: TViewerOpenGL.h,v 1.23 2004/12/01 16:57:19 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -114,6 +114,7 @@ public:
 private:
    void CreateViewer();
    void DrawObjects()const;
+   void PrintObjects()const;
    void MakeCurrent()const;
    void SwapBuffers()const;
    void Show();

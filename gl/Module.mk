@@ -23,6 +23,7 @@ GLH1         := $(MODDIRI)/TViewerOpenGL.h $(MODDIRI)/TGLRenderArea.h \
                 $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLSceneObject.h
 GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx TGLRenderArea.cxx \
                 TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx TGLFrustum.cxx
+GLS1         := $(wildcard $(MODDIRS)/*.c)
 ifneq ($(ARCH),win32)
 GLS          += TX11GL.cxx
 GLH1         += $(MODDIRI)/TX11GL.h
@@ -38,8 +39,9 @@ endif
 
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
 GLO          := $(GLS:.cxx=.o)
+GLO1         := $(GLS1:.c=.o)
 
-GLDEP        := $(GLO:.o=.d)
+GLDEP        := $(GLO:.o=.d) $(GLDO:.o=.d) $(GLO1:.o=.d)
 
 GLLIB        := $(LPATH)/libRGL.$(SOEXT)
 
@@ -54,9 +56,9 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       $(GLO) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
+$(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLDO)" \
+		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(GLLIBS) $(IVLIBS)"
 
 $(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
@@ -100,3 +102,5 @@ $(GLO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) $(IVFLAGS) -o $@ -c $<
 endif
 
+$(GLDIRS)/gl2ps.o: $(GLDIRS)/gl2ps.c
+	$(CC) $(OPT) -I$(GLDIRI) -o $@ -c $<

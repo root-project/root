@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.46 2005/01/04 14:38:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.47 2005/01/19 13:19:34 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -11,11 +11,8 @@
 #include "TPluginManager.h"
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
-#include "TVirtualPad.h"
-#include "TVirtualGL.h"
 #include "KeySymbols.h"
 #include "TGShutter.h"
-#include "TVirtualX.h"
 #include "TBuffer3D.h"
 #include "TGLKernel.h"
 #include "TGButton.h"
@@ -25,11 +22,9 @@
 #include "Buttons.h"
 #include "TAtt3D.h"
 #include "TGMenu.h"
-#include "TPoint.h"
 #include "TColor.h"
-#include "TTimer.h"
-#include "TROOT.h"
 #include "TMath.h"
+#include "TSystem.h"
 
 #include "TGLSceneObject.h"
 #include "TViewerOpenGL.h"
@@ -38,6 +33,8 @@
 #include "TGLRender.h"
 #include "TGLCamera.h"
 #include "TArcBall.h"
+
+#include "gl2ps.h"
 
 const char gHelpViewerOpenGL[] = "\
      PRESS \n\
@@ -119,6 +116,8 @@ enum EGLViewerCommands {
    kGLXOZ,
    kGLYOZ,
    kGLPersp,
+   kGLPrintEPS,
+   kGLPrintPDF,
    kGLExit
 };
 
@@ -128,6 +127,8 @@ const Int_t TViewerOpenGL::fgInitX = 0;
 const Int_t TViewerOpenGL::fgInitY = 0;
 const Int_t TViewerOpenGL::fgInitW = 780;
 const Int_t TViewerOpenGL::fgInitH = 670;
+
+int format = GL2PS_EPS;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
@@ -184,6 +185,8 @@ void TViewerOpenGL::CreateViewer()
 {
    // Menus creation
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
+   fFileMenu->AddEntry("&Print EPS", kGLPrintEPS);
+   fFileMenu->AddEntry("&Print PDF", kGLPrintPDF);
    fFileMenu->AddEntry("&Exit", kGLExit);
    fFileMenu->Associate(this);
 
@@ -471,8 +474,8 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
             case kYOZ:
                fSelectedObj->Shift(0., -yshift, xshift);
                break;
-	         default:
-	            break;
+            default:
+               break;
             }
          } else {
             const Double_t *rotM = fArcBall->GetRotMatrix();
@@ -629,6 +632,51 @@ void TViewerOpenGL::DrawObjects()const
 }
 
 //______________________________________________________________________________
+void TViewerOpenGL::PrintObjects()const
+{
+   // Generates a PostScript or PDF output of the OpenGL scene. They are vector
+   // graphics files and can be huge and long to generate.
+
+   char *pFileName = "viewer.eps";
+   if (format == GL2PS_PDF) pFileName = "viewer.pdf";
+   Info("Print", "Start creating %s. Please wait ...", pFileName);
+
+   if (FILE *output = fopen (pFileName, "w+"))
+   {
+      int buffsize = 0, state = GL2PS_OVERFLOW;
+      while (state == GL2PS_OVERFLOW) {
+         MakeCurrent();
+         buffsize += 1024*1024;
+         gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+         format, GL2PS_BSP_SORT,
+         GL2PS_USE_CURRENT_VIEWPORT
+         | GL2PS_SIMPLE_LINE_OFFSET | GL2PS_SILENT
+         | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL
+         | 0,
+         GL_RGBA, 0, NULL,0, 0, 0,
+         buffsize, output, NULL);
+         gVirtualGL->NewMVGL();
+         Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
+         Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
+      
+         gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
+         gVirtualGL->PushGLMatrix();
+         gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);
+         gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
+         gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
+         gVirtualGL->PopGLMatrix();
+         gVirtualGL->TraverseGraph((TGLRender *)fRender);
+         SwapBuffers();
+         state = gl2psEndPage();
+      }
+      fclose (output);
+      if (!gSystem->AccessPathName(pFileName))
+      Info("Print", "ROOT file %s has been created", pFileName);
+   }
+}
+
+
+//______________________________________________________________________________
 void TViewerOpenGL::UpdateRange(const TGLSelection *box)
 {
    const Double_t *X = box->GetRangeX();
@@ -679,6 +727,14 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             hd->Popup();
             break;
          }
+         case kGLPrintEPS:
+            format = GL2PS_EPS;
+            PrintObjects();
+            break;
+         case kGLPrintPDF:
+            format = GL2PS_PDF;
+            PrintObjects();
+            break;
          case kGLXOY:
             if (fConf != kXOY) {
             //set active camera
