@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.35 2002/02/05 16:45:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.36 2002/02/15 11:47:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -779,7 +779,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (OptionEqual) Lside=1;
    }
    XLside = Lside;
-   //printf("OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
+//printf("name=%s, OptionPlus=%d, OptionMinus=%d, OptionEqual=%d, Mside=%d, Lside=%d\n",GetName(),OptionPlus, OptionMinus,OptionEqual,Mside,Lside);
 
 //*-*-              Tick marks size
    if(XMside >= 0) tick_side = 1;
@@ -957,11 +957,17 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
 //*-*-              Position of labels in Y
    if (X0 == X1) {
-      Ylabel = fLabelOffset;
-      if (Lside < 0) Ylabel += atick[0];
+      if (OptionPlus) {
+         if (OptionEqual) Ylabel =  fLabelOffset/2 + atick[0];
+         else             Ylabel = -fLabelOffset;
+      } else {
+         Ylabel = fLabelOffset;
+         if (Lside < 0)  Ylabel += atick[0];
+      }
    } else if (Y0 == Y1) {
       Ylabel = -fLabelOffset;
       if (Mside <= 0) Ylabel -= TMath::Abs(atick[0]);
+      if (OptionLog)  Ylabel -= 0.5*charheight;
    } else {
       if (Mside+Lside >= 0) Ylabel =  fLabelOffset;
       else                  Ylabel = -fLabelOffset;
