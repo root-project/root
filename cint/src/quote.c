@@ -98,7 +98,7 @@ char *string;
   int itemp,itemp2=0,hash;
   char temp[G__LONGLINE];
   G__value result;
-#ifndef G__OLDIMPLEMENTATION1636
+#ifdef G__OLDIMPLEMENTATION1636
   struct G__ConstStringList *pconststring;
 #endif
 #ifndef G__OLDIMPLEMENTATION1631

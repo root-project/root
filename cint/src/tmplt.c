@@ -1451,7 +1451,11 @@ void G__declare_template()
      *                               ^              */
     do {
 #ifndef G__OLDIMPLEMENTATION1488
+#ifndef G__OLDIMPLEMENTATION1638
+      c=G__fgetname_template(temp,"(<&*");
+#else
       c=G__fgetname_template(temp,"(<");
+#endif
       if(isspace(c) && strcmp(temp,"operator")==0) {
 	c=G__fgetstream(temp+8,"(");
 	if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");

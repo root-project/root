@@ -42,7 +42,7 @@ static ifstream  *G__redirected_cin;
  ********************************************************************/
 extern "C" void G__unredirectcout() {
   if(G__store_cout) {
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
     cout << G__store_cout;
 #else
     cout.rdbuf(G__store_cout);
@@ -60,7 +60,7 @@ extern "C" void G__unredirectcout() {
 extern "C" void G__redirectcout(const char* filename) {
   G__unredirectcout();
   G__redirected_cout = new ofstream(filename,ios::app);
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
   G__store_cout = cout.rdbuf() ;
   cout << G__redirected_cout->rdbuf() ;
 #else
@@ -72,7 +72,7 @@ extern "C" void G__redirectcout(const char* filename) {
  ********************************************************************/
 extern "C" void G__unredirectcerr() {
   if(G__store_cerr) {
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
     cerr << G__store_cerr;
 #else
     cerr.rdbuf(G__store_cerr);
@@ -90,7 +90,7 @@ extern "C" void G__unredirectcerr() {
 extern "C" void G__redirectcerr(const char* filename) {
   G__unredirectcerr();
   G__redirected_cerr = new ofstream(filename,ios::app);
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
   G__store_cerr = cerr.rdbuf() ;
   cerr << G__redirected_cerr->rdbuf() ;
 #else
@@ -102,7 +102,7 @@ extern "C" void G__redirectcerr(const char* filename) {
  ********************************************************************/
 extern "C" void G__unredirectcin() {
   if(G__store_cin) {
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
     cin >> G__store_cin;
 #else
     cin.rdbuf(G__store_cin);
@@ -120,7 +120,7 @@ extern "C" void G__unredirectcin() {
 extern "C" void G__redirectcin(const char* filename) {
   G__unredirectcin();
   G__redirected_cin = new ifstream(filename,ios::in);
-#if (defined(__sgi) || defined(__alpha)) && !defined(__GNUC__)
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
   G__store_cin = cin.rdbuf() ;
   cin >> G__redirected_cin->rdbuf() ;
 #else

@@ -5257,6 +5257,12 @@ long G__struct_offset; /* used to be int */
 	      G__asm_cp = store_cp + 8;
 	    }
 	  }
+#ifndef G__OLDIMPLEMENTATION1641
+	  else if(!ig2) {
+	    G__fprinterr(G__serr,"Error: Constructor %s not found",result7);
+	    G__genericerror((char*)NULL);
+	  }
+#endif
 	}
 #else
 	G__getfunction(result7,&ig2 ,G__TRYCONSTRUCTOR);

@@ -318,7 +318,7 @@ int G__IncludePathInfo::Next() {
 #include <exception>
 #include <typeinfo>
 #if !defined(__hpux) || __HP_aCC >= 53000
-    using namespace std;
+using namespace std;
 #endif
 #endif
 /*********************************************************************
@@ -399,7 +399,7 @@ extern "C" void G__operator_delete_ary(void *p) {
 #include <set>
 #include <string>
 #if (!defined(__hpux) && !defined(_MSC_VER)) || __HP_aCC >= 53000
-    using namespace std;
+using namespace std;
 #endif
 /******************************************************************
 * char* G__savestring()

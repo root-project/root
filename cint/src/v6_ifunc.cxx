@@ -4709,6 +4709,10 @@ int ifn;
   int i;
   int store_iscpp = G__iscpp;
   G__iscpp = 1;
+
+#ifndef G__OLDIMPLEMENTATION1639
+  if(!ifunc || !ifunc->pentry[ifn]) return;
+#endif
   
 #ifndef G__OLDIMPLEMENTATION1485
   if(G__serr==fp) {
@@ -5157,7 +5161,8 @@ int recursive;
 #endif
 
 #ifdef G__ASM_DBG2
-  G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
+  if(G__dispsource) 
+    G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
 #endif
 
   if(!match) {
