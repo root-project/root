@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.33 2002/01/22 10:53:29 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.34 2002/01/27 15:55:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1931,9 +1931,6 @@ static struct signal_map {
    { SIGUSR2,  0, 0, "user-defined signal 2" }
 };
 
-extern "C" {
-   static void sighandler(int sig);
-}
 
 //______________________________________________________________________________
 static void sighandler(int sig)

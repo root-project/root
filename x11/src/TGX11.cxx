@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.16 2002/01/02 21:48:30 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.17 2002/01/08 08:34:22 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -2927,8 +2927,6 @@ extern "C" {
                   void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
    int GIFdecode(Byte_t *GIFarr, Byte_t *PIXarr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
    int GIFinfo(Byte_t *GIFarr, int *Width, int *Height, int *Ncols);
-   static void GetPixel(int y, int width, Byte_t *scline);
-   static void PutByte(Byte_t b);
 }
 
 //______________________________________________________________________________
