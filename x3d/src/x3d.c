@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.4 2001/05/08 18:11:04 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.5 2001/05/11 17:20:14 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -123,6 +123,8 @@ static int quitApplication = 0;
 static Display *gDisplay = NULL;
 static Ginfo *gGInfo = NULL;
 static Oinfo *gOInfo = NULL;
+
+static int gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift;
 
 
 
@@ -862,52 +864,21 @@ XColor c;
 }
 
 
-static void SixTeenBitSetColors(g)
+static void TrueColorSetColors(g)
 Ginfo *g;
 /******************************************************************************
-   Set up color information/stipples for a fifteen and sixteen bit displays.
+   Set up color information/stipples for TrueColor displays.
 ******************************************************************************/
 {
 int index, colorValue;
 Color *colors;
 int numColors;
 
-   /* 15 and 16 bit true colors have 6 bits precision per color however
-      only the 5 most significant bits are used in the color index.
-      Except for 16 bits when green uses all 6 bits. I.e.:
-      15 bits = rrrrrgggggbbbbb
-      16 bits = rrrrrggggggbbbbb
-
-      we calculate r, g and b with a max of 63 and then right shift by 1.
-      However in this case all colors are set with a max of 255 (8 bits)
-      so we just right shift them by 3, 2 and 3 bits respectively (and
-      3, 3, 3 for 15 bits).
-   */
-
-   /* if this does not work for some reason, replace by more generic code as
-      in TGX11::OpenDisplay().
-   */
-   /* settings for 16 bit true color displays */
-   int greenshift = 5;
-   int redshift   = 6 + greenshift;
-   int reddiv     = 3;
-   int greendiv   = 2;
-   int bluediv    = 3;
-
-   /* correction for 15 bit true color displays */
-   if (g->depth == 15) {
-      redshift = 5 + greenshift;
-      greendiv = 3;
-   }
-
-   /*
-   {
-   XVisualInfo vInfo;
-   XMatchVisualInfo(g->dpy, DefaultScreen(g->dpy), g->depth, TrueColor, &vInfo);
-   printf("red_mask = %lu, green_mask = %lu, blue_mask = %lu,"
-      " bit_per_rgb = %d\n",
-      vInfo.red_mask, vInfo.green_mask, vInfo.blue_mask, vInfo.bits_per_rgb);
-   }
+   /* On TrueColor displays the color pixel value composed directly of
+      r, g and b components. The order of the r, g and b and the number
+      of bits used for each color is specified by the X server and decoded
+      in the gRedShift, gRedDiv etc. values. Since X3D uses 255 as max
+      color the div is the number of bits to left shift (divide) from 255.
    */
 
    colors = g->colors;
@@ -915,12 +886,12 @@ int numColors;
 
    for(index = 0; index < numColors; index++){
 
-/* In 15/16 bit every color is what it is */
+/* In TrueColor every color is what it is */
 
       colors[index].value =
-      (colors[index].red >> reddiv) << redshift |
-      (colors[index].green >> greendiv) << greenshift |
-      (colors[index].blue >> bluediv);
+      (colors[index].red >>   gRedDiv)   << gRedShift |
+      (colors[index].green >> gGreenDiv) << gGreenShift |
+      (colors[index].blue >>  gBlueDiv)  << gBlueShift;
 
 /* Set stipple */
 
@@ -933,78 +904,25 @@ int numColors;
 
 /* Set stereo color */
 
-      colorValue= (int)((double)31 *
+      colorValue= (int)((double)(255 >> gRedDiv) *
       ((double)sqrt((double)((double)colors[index].red *
       (double)colors[index].red + (double)colors[index].green *
       (double)colors[index].green + (double)colors[index].blue *
       (double)colors[index].blue)) / MAXCOLORDIST));
 
-      colors[index].stereoColor = colorValue << redshift | colorValue;
+      colors[index].stereoColor = (colorValue << gRedShift) |
+                                  (colorValue << gBlueShift);
       }
 
 /* Set various important color values */
 
    g->stereoBlack  = 0;
-   g->redMask  = 31 << redshift;
-   g->blueMask = 31;
+   g->redMask  = (255 >> gRedDiv) << gRedShift;
+   g->blueMask = (255 >> gBlueDiv) << gBlueShift;
    g->Black  = 0;
-   g->Red    = 31 << redshift;
-   g->Blue   = 31;
-   g->Purple = (31 << redshift) | 31;
-}
-
-
-static void TwentyFourBitSetColors(g)
-Ginfo *g;
-/******************************************************************************
-   Set up color information/stipples for a twenty-four  bit display.
-******************************************************************************/
-{
-int index, colorValue;
-Color *colors;
-int numColors;
-
-   colors = g->colors;
-   numColors = g->numColors;
-
-   for(index = 0; index < numColors; index++){
-
-/* In 24 bit every color is what it is */
-
-      colors[index].value =
-      colors[index].red << 16 |
-      colors[index].green << 8 |
-      colors[index].blue;
-
-/* Set stipple */
-
-      colors[index].stipple =(int)((double)NUMSTIPPLES *
-      ((double)sqrt((double)(
-      (double)colors[index].red   * (double)colors[index].red +
-      (double)colors[index].green * (double)colors[index].green +
-      (double)colors[index].blue  * (double)colors[index].blue))
-      / MAXCOLORDIST));
-
-/* Set stereo color */
-
-      colorValue= (int)((double)255 *
-      ((double)sqrt((double)((double)colors[index].red *
-      (double)colors[index].red + (double)colors[index].green *
-      (double)colors[index].green + (double)colors[index].blue *
-      (double)colors[index].blue)) / MAXCOLORDIST));
-
-      colors[index].stereoColor = colorValue << 16 | colorValue;
-      }
-
-/* Set various important color values */
-
-   g->stereoBlack  = 0;
-   g->redMask  = 255 << 16;
-   g->blueMask = 255;
-   g->Black  = 0;
-   g->Red    = 255 << 16;
-   g->Blue   = 255;
-   g->Purple = (255 << 16) | 255;
+   g->Red    = (255 >> gRedDiv) << gRedShift;
+   g->Blue   = (255 >> gBlueDiv) << gBlueShift;
+   g->Purple = g->Red | g->Blue;
 }
 
 
@@ -1052,7 +970,7 @@ XWindowAttributes attributes;
 XSetWindowAttributes attribs;
 XWMHints wmhint;
 int index, index2, screen;
-XVisualInfo vInfo;
+Visual *vis;
 XSizeHints sizehint;
 int x, y, NUMCOLORS;
 unsigned int width, height, numSegments;
@@ -1133,24 +1051,42 @@ int useroot = 0;
 
 /* Which visual do we get? */
 
-   g->depth = ONE;
+   gRedDiv = gGreenDiv = gBlueDiv = gRedShift = gGreenShift = gBlueShift = -1;
+   g->depth = DefaultDepth(g->dpy, screen);
 
-   if(XMatchVisualInfo(g->dpy, screen, 8, GrayScale, &vInfo)){
-/* An 8 bit GrayScale ? */
+   vis = DefaultVisual(g->dpy, screen);
+   if (g->depth > EIGHT && vis->class == TrueColor) {
+      int i;
+      for (i = 0; i < (int)sizeof(vis->blue_mask)*8; i++) {
+         if (gBlueShift == -1 && ((vis->blue_mask >> i) & 1))
+            gBlueShift = i;
+         if ((vis->blue_mask >> i) == 1) {
+            gBlueDiv = 8 - i - 1 + gBlueShift;  /* max value is 255, i.e. 8 bits */
+            break;
+         }
+      }
+      for (i = 0; i < (int)sizeof(vis->green_mask)*8; i++) {
+         if (gGreenShift == -1 && ((vis->green_mask >> i) & 1))
+            gGreenShift = i;
+         if ((vis->green_mask >> i) == 1) {
+            gGreenDiv = 8 - i - 1 + gGreenShift;
+            break;
+         }
+      }
+      for (i = 0; i < (int)sizeof(vis->red_mask)*8; i++) {
+         if (gRedShift == -1 && ((vis->red_mask >> i) & 1))
+            gRedShift = i;
+         if ((vis->red_mask >> i) == 1) {
+            gRedDiv = 8 - i - 1 + gRedShift;
+            break;
+         }
+      }
+      /*
+      printf("gRedDiv = %d, gGreenDiv = %d, gBlueDiv = %d, gRedShift = %d, gGreenShift = %d, gBlueShift = %d\n",
+             gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift);
+      */
+   } else if (g->depth > EIGHT)
       g->depth = EIGHT;
-   }else if(XMatchVisualInfo(g->dpy, screen, 8, PseudoColor, &vInfo)){
-/* An 8 bit PseudoColor ? */
-      g->depth = EIGHT;
-   }else if(XMatchVisualInfo(g->dpy, screen, 15, TrueColor, &vInfo)){
-/* An 15 bit TrueColor ? */
-      g->depth = FIFTEEN;
-   }else if(XMatchVisualInfo(g->dpy, screen, 16, TrueColor, &vInfo)){
-/* An 16 bit TrueColor ? */
-      g->depth = SIXTEEN;
-   }else if(XMatchVisualInfo(g->dpy, screen, 24, TrueColor, &vInfo)){
-/* A 24 bit TrueColor ? */
-      g->depth = TWENTYFOUR;
-   }
 
    g->pix = XCreatePixmap(g->dpy, RootWindow(g->dpy,screen), g->winX,
    g->winY, g->depth);
@@ -1273,12 +1209,8 @@ int useroot = 0;
       OneBitSetColors(g);
       }
 
-   if(g->depth == FIFTEEN || g->depth == SIXTEEN){
-      SixTeenBitSetColors(g);
-      }
-
-   if(g->depth == TWENTYFOUR){
-      TwentyFourBitSetColors(g);
+   if(g->depth > EIGHT){
+      TrueColorSetColors(g);
       }
 
    if(g->depth == EIGHT){

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.8 2001/04/11 15:19:11 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.9 2001/05/11 17:20:14 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -133,6 +133,7 @@ protected:
    Int_t      fBlueDiv;            //Blue value divider
    Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
    Int_t      fGreenShift;         //Bits to left shift green
+   Int_t      fBlueShift;          //Bits to left shift blue
 
    // needed by TGX11TTF
    Bool_t     AllocColor(Colormap cmap, XColor *color);

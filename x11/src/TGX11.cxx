@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.5 2001/05/07 00:13:50 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.6 2001/05/11 17:20:14 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -312,6 +312,7 @@ TGX11::TGX11(const TGX11 &org)
    fBlueDiv         = org.fBlueDiv;
    fRedShift        = org.fRedShift;
    fGreenShift      = org.fGreenShift;
+   fBlueShift       = org.fBlueShift;
    fDrawMode        = org.fDrawMode;
    fXEvent          = new XEvent;
 
@@ -382,7 +383,7 @@ Bool_t TGX11::AllocColor(Colormap cmap, XColor *color)
    } else {
       color->pixel = (color->red   >> fRedDiv)   << fRedShift |
                      (color->green >> fGreenDiv) << fGreenShift |
-                     (color->blue  >> fBlueDiv);
+                     (color->blue  >> fBlueDiv)  << fBlueShift;
       return kTRUE;
    }
    return kFALSE;
@@ -405,8 +406,8 @@ void TGX11::QueryColors(Colormap cmap, XColor *color, Int_t ncolors)
          g = (color[i].pixel & vis->green_mask) >> fGreenShift;
          color[i].green = UShort_t(g*kBIGGEST_RGB_VALUE/(vis->green_mask >> fGreenShift));
 
-         b = (color[i].pixel & vis->blue_mask);
-         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/vis->blue_mask);
+         b = (color[i].pixel & vis->blue_mask) >> fBlueShift;
+         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/(vis->blue_mask >> fBlueShift));
 
          color[i].flags = DoRed | DoGreen | DoBlue;
       }
@@ -1024,32 +1025,38 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fCursors[kWatch]       = XCreateFontCursor(fDisplay, XC_watch);
 
    // Setup color information
-   fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = -1;
+   fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
    fDepth = DefaultDepth(fDisplay, fScreenNumber);
 
    Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
    if (vis->c_class == TrueColor) {
       int i;
-      for (i = 0; i < int(sizeof(vis->blue_mask)*8); i++)
+      for (i = 0; i < int(sizeof(vis->blue_mask)*kBitsPerByte); i++) {
+         if (fBlueShift == -1 && ((vis->blue_mask >> i) & 1))
+            fBlueShift = i;
          if ((vis->blue_mask >> i) == 1) {
-            fGreenShift = i + 1;
-            fBlueDiv = sizeof(UShort_t)*8 - fGreenShift;
+            fBlueDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fBlueShift;
             break;
          }
-      for (i = 0; i < int(sizeof(vis->green_mask)*8); i++)
-         if ((vis->green_mask >> (i+fGreenShift)) == 1) {
-            fRedShift = i + 1;
-            fGreenDiv = sizeof(UShort_t)*8 - fRedShift;
-            fRedShift += fGreenShift;
+      }
+      for (i = 0; i < int(sizeof(vis->green_mask)*kBitsPerByte); i++) {
+         if (fGreenShift == -1 && ((vis->green_mask >> i) & 1))
+            fGreenShift = i;
+         if ((vis->green_mask >> i) == 1) {
+            fGreenDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fGreenShift;
             break;
          }
-      for (i = 0; i < int(sizeof(vis->red_mask)*8); i++)
-         if ((vis->red_mask >> (i+fRedShift)) == 1) {
-            fRedDiv = sizeof(UShort_t)*8 - (i+1);
+      }
+      for (i = 0; i < int(sizeof(vis->red_mask)*kBitsPerByte); i++) {
+         if (fRedShift == -1 && ((vis->red_mask >> i) & 1))
+            fRedShift = i;
+         if ((vis->red_mask >> i) == 1) {
+            fRedDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fRedShift;
             break;
          }
-      //printf("fRedDiv = %d, fGreenDiv = %d, fBlueDiv = %d, fRedShift = %d, fGreenShift = %d\n",
-      //       fRedDiv, fGreenDiv, fBlueDiv, fRedShift, fGreenShift);
+      }
+      //printf("fRedDiv = %d, fGreenDiv = %d, fBlueDiv = %d, fRedShift = %d, fGreenShift = %d, fBlueShift = %d\n",
+      //       fRedDiv, fGreenDiv, fBlueDiv, fRedShift, fGreenShift, fBlueShift);
    }
 
    return 0;
