@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.34 2001/03/05 15:24:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.35 2001/03/12 07:16:04 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TError.h"
 #include "TMapFile.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "Api.h"
 
 #ifndef WIN32
@@ -659,7 +660,10 @@ TList *TClass::GetListOfDataMembers()
 {
    // Return list containing the TDataMembers of a class.
 
-   if (!fClassInfo) return 0;
+   if (!fClassInfo) {
+      if (!fData) fData = new TList;
+      return fData;
+   }
 
    if (!fData) {
       if (!gInterpreter)
@@ -675,7 +679,10 @@ TList *TClass::GetListOfMethods()
 {
    // Return list containing the TMethods of a class.
 
-   if (!fClassInfo) return 0;
+   if (!fClassInfo) {
+      if (!fMethod) fMethod = new TList;
+      return fMethod;
+   }
 
    if (!fMethod) {
       if (!gInterpreter)
@@ -946,6 +953,7 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
       sinfo->Build();
    } else {
       if (!sinfo->GetOffsets()) sinfo->BuildOld();
+      if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) sinfo->Compile();
    }
    return sinfo;
 }
@@ -997,8 +1005,18 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
 
    if (cl == this) return kTRUE;
 
-   if (!fClassInfo) return kFALSE;
-
+   if (!fClassInfo) {
+      TStreamerInfo *sinfo = ((TClass *)this)->GetStreamerInfo();
+      TIter next(sinfo->GetElements());
+      TStreamerElement *element;
+      while ((element = (TStreamerElement*)next())) {
+         if (element->IsA() == TStreamerBase::Class()) {
+            TClass *clbase = element->GetClassPointer();
+            if (clbase->InheritsFrom(cl)) return kTRUE;
+         }
+      }
+      return kFALSE;
+   }
    // cast const away (only for member fBase which can be set in GetListOfBases())
    if (((TClass *)this)->GetBaseClass(cl)) return kTRUE;
    return kFALSE;
@@ -1032,7 +1050,15 @@ void *TClass::New(Bool_t defConstructor)
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor.
 
-   if (!fClassInfo) return 0;
+   if (!fClassInfo) {
+      // We only have a fake class. Use TStreamerInfo service.
+      TStreamerInfo *sinfo = GetStreamerInfo();
+      Int_t l = sinfo->GetSize();
+      char *pp = new char[l];
+      for (Int_t i=0;i<l;i++) pp[i] = 0;
+      sinfo->New(pp);
+      return pp;
+   }
 
    fgCallingNew = defConstructor;
    void *p = GetClassInfo()->New();
@@ -1048,7 +1074,11 @@ void *TClass::New(void *arena, Bool_t defConstructor)
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor.
 
-   if (!fClassInfo) return 0;
+   if (!fClassInfo) {
+      // We only have a fake class. Use TStreamerInfo service.
+      GetStreamerInfo()->New((char*)arena);
+      return arena;
+   }
 
    fgCallingNew = defConstructor;
    void *p = GetClassInfo()->New(arena);
@@ -1093,8 +1123,8 @@ Int_t TClass::Size() const
 {
    // Return size of object of this class.
 
-   if (!fClassInfo) return 0;
-   return GetClassInfo()->Size();
+   if (fClassInfo) return GetClassInfo()->Size(); 
+   return ((TClass*)this)->GetStreamerInfo()->GetSize();
 }
 
 //______________________________________________________________________________
