@@ -90,7 +90,7 @@ typedef __int64 G__int64;
 typedef unsigned __int64 G__uint64;
 #else
 typedef long long G__int64;
-typedef unsgined long long G__uint64;
+typedef unsigned long long G__uint64;
 #endif
 
 /**************************************************************************
@@ -508,19 +508,10 @@ int G__ateval(unsigned long x) {return(0);}
 
 
 #ifdef __MAKECINT__
-/*
-#undef G__REGEXP
-#undef G__SHAREDLIB
-#undef G__OSFDLL
-#pragma eval G__deleteglobal("G__REGEXP");
-#pragma eval G__deleteglobal("G__SHAREDLIB");
-#pragma eval G__deleteglobal("G__OSFDLL");
-#pragma link off global G__REGEXP;
-#pragma link off global G__SHAREDLIB;
-#pragma link off global G__OSFDLL;
-*/
+#ifndef G__LONGLONGTMP
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
+#endif
 #pragma link C++ function G__ateval;
 #endif
 
@@ -594,6 +585,13 @@ typedef long double G__double92;
 #elif defined(__hpux) || defined(G__HPUX)
 
 typedef double G__double92;
+
+/**************************************************************************
+* D.Cussol : Alpha TRU64
+**************************************************************************/
+#elif defined(__alpha) || defined(G__ALPHA) || defined(R__ALPHA)
+				
+typedef double G__double92;	
 
 /**************************************************************************
 * OTHER
@@ -724,17 +722,11 @@ inline int G__ateval(const G__longdouble& a) {
 }
 
 #ifdef __MAKECINT__
-/*
-#undef G__REGEXP
-#undef G__SHAREDLIB
-#undef G__OSFDLL
-#pragma eval G__deleteglobal("G__REGEXP");
-#pragma eval G__deleteglobal("G__SHAREDLIB");
-#pragma eval G__deleteglobal("G__OSFDLL");
-#pragma link off global G__REGEXP;
-#pragma link off global G__SHAREDLIB;
-#pragma link off global G__OSFDLL;
-*/
+#ifndef G__LONGLONGTMP
+#define G__LONGLONGTMP
+#pragma link off global G__LONGLONGTMP;
+#endif
+#pragma link C++ function G__ateval;
 #endif
 
 //#endif

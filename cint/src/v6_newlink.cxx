@@ -5637,7 +5637,9 @@ FILE *hfp;
 		,G__newtype.name[i]
 		,G__newtype.type[i]
 		,G__mark_linked_tagnum(G__newtype.tagnum[i])
-#ifndef G__OLDIMPLEMENTATION1394
+#if !defined(G__OLDIMPLEMENTATION1861)
+		,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+#elif !defined(G__OLDIMPLEMENTATION1394)
 		,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
 #else
 		,G__newtype.reftype[i]
@@ -5651,7 +5653,9 @@ FILE *hfp;
 #endif
 		,G__newtype.name[i]
 		,G__newtype.type[i]
-#ifndef G__OLDIMPLEMENTATION1394
+#if !defined(G__OLDIMPLEMENTATION1861)
+		,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+#elif !defined(G__OLDIMPLEMENTATION1394)
 		,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
 #else
 		,G__newtype.reftype[i]
@@ -7668,6 +7672,9 @@ char *paras;
       }
       c = G__separate_parameter(paras,&os,c_reftype_const);
       reftype_const = atoi(c_reftype_const);
+#ifndef G__OLDIMPLEMENTATION1861
+      if(-1!=typenum) reftype_const += G__newtype.isconst[typenum]*10;
+#endif
       c = G__separate_parameter(paras,&os,c_default);
       if('-'==c_default[0] && '\0'==c_default[1]) {
 	para_default=(G__value*)NULL;

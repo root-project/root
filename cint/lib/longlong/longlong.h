@@ -58,14 +58,14 @@ typedef unsigned long G__uint64;
 #elif defined(_WIN32)||defined(_WINDOWS)||defined(_Windows)||defined(_WINDOWS_)
 
 #if defined(_MSC_VER)
-typedef _int64 G__int64;
-typedef unsigned _int64 G__uint64;
+typedef __int64 G__int64;
+typedef unsigned __int64 G__uint64;
 #elif defined(__BCPLUSPLUS__)
 typedef __int64 G__int64;
-typedef unsigned _int64 G__uint64;
+typedef unsigned __int64 G__uint64;
 #else
 typedef long long G__int64;
-typedef unsgined long long G__uint64;
+typedef unsigned long long G__uint64;
 #endif
 
 /**************************************************************************
@@ -483,19 +483,10 @@ int G__ateval(unsigned long x) {return(0);}
 
 
 #ifdef __MAKECINT__
-/*
-#undef G__REGEXP
-#undef G__SHAREDLIB
-#undef G__OSFDLL
-#pragma eval G__deleteglobal("G__REGEXP");
-#pragma eval G__deleteglobal("G__SHAREDLIB");
-#pragma eval G__deleteglobal("G__OSFDLL");
-#pragma link off global G__REGEXP;
-#pragma link off global G__SHAREDLIB;
-#pragma link off global G__OSFDLL;
-*/
+#ifndef G__LONGLONGTMP
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
+#endif
 #pragma link C++ function G__ateval;
 #endif
 

@@ -40,9 +40,9 @@ int* ptag;
 int* ptype;
 int which;
 {
-  int lltag,lltype;
-  int ulltag,ulltype;
-  int ldtag,ldtype;
+  int lltag= -1,lltype= -1;
+  int ulltag= -1,ulltype= -1;
+  int ldtag= -1,ldtype= -1;
   int store_decl = G__decl;
   int store_def_struct_member = G__def_struct_member;
   int flag=0;

@@ -546,6 +546,20 @@ using namespace std;
 /******************************************************************
 * char* G__savestring()
 ******************************************************************/
+#ifndef G__OLDIMPLEMENTATION1860
+static const char* G__saveconststring__dummy(const char* s)
+{
+  static set<string> conststring;
+  string str(s);
+  conststring.insert(string(str));
+  set<string>::iterator p = conststring.lower_bound(str);
+  return((*p).c_str());
+}
+extern "C" const char* G__saveconststring(const char* s)
+{
+  return G__saveconststring__dummy (s);
+}
+#else /* 1860 */
 extern "C" const char* G__saveconststring(const char* s)
 {
   static set<string> conststring;
@@ -554,6 +568,7 @@ extern "C" const char* G__saveconststring(const char* s)
   set<string>::iterator p = conststring.lower_bound(str);
   return((*p).c_str());
 }
+#endif /* 1860 */
 #endif
 #endif
 
