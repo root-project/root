@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.26 2000/12/15 12:05:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.27 2001/01/19 18:12:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1190,7 +1190,7 @@ void TGraph::Paint(Option_t *option)
    if (fFunctions) {
      TIter   next(fFunctions);
      while ((f = (TObject*) next())) {
-      if (f->IsA() == TF1::Class()) {
+      if (f->InheritsFrom(TF1::Class())) {
          if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
       } else  {
          f->Paint();
