@@ -4,6 +4,8 @@ void fitcont()
    // To get the n-sigma contour the ERRDEF parameter in Minuit has to set
    // to n^2. The fcn function has to be set before the routine is called.
    //
+   // WARNING!!! This test works only with TMinuit
+   //
    // The TGraph object is created via the interpreter. The user must cast it
    // to a TGraph*
    // Author;  Rene Brun
