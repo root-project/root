@@ -90,9 +90,9 @@ public:
   inline void SetNbackground(Double_t Nbg)        { fNbackground = Nbg;   }
   inline void SetCL(Double_t newCL)               { fCL          = newCL; }
 
-  inline void SetMuMin(Double_t  newMin    = 0.0)    { fMuMin = newMin;  }
-  inline void SetMuMax(Double_t  newMax    = 50.0);
-  inline void SetMuStep(Double_t newMuStep = 0.005);
+  inline void SetMuMin(Double_t  newMin    = 0.0)   { fMuMin = newMin;  }
+         void SetMuMax(Double_t  newMax    = 50.0);
+         void SetMuStep(Double_t newMuStep = 0.005);
 
   ClassDef(TFeldmanCousins,1)
 };

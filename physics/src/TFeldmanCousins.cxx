@@ -212,7 +212,7 @@ Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 }
 
 //______________________________________________________________________________
-inline void TFeldmanCousins::SetMuMax(Double_t newMax)
+void TFeldmanCousins::SetMuMax(Double_t newMax)
 {
  fMuMax   = newMax; 
  fNMax    = (Int_t)newMax; 
@@ -220,7 +220,7 @@ inline void TFeldmanCousins::SetMuMax(Double_t newMax)
 }
 
 //______________________________________________________________________________
-inline void TFeldmanCousins::SetMuStep(Double_t newMuStep)
+void TFeldmanCousins::SetMuStep(Double_t newMuStep)
 {
   if(newMuStep == 0.0)
   {
