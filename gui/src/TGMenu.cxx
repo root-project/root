@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.26 2003/12/16 22:31:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.27 2004/01/19 14:00:47 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -161,7 +161,7 @@ TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright
    // Add popup menu to menu bar.
    //
    // Comment:
-   //    This method is valid  only for horizontal menu bars. 
+   //    This method is valid  only for horizontal menu bars.
    //    The most common case is menu bar containing equidistant titles padding left side.
    //       TGMenuBar *bar;
    //       bar->AddPopup("title1", 10);
@@ -383,7 +383,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
    TGMenuTitle *target = 0;
 
-   if (event->fType == kGKeyPress) {
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
 
       TGFrameElement *el;
       TIter next(fList);
