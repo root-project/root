@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.18 2001/11/16 02:44:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.19 2001/11/30 11:29:37 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -154,7 +154,7 @@ TBuffer &TBuffer::operator>>(Long_t &l)
 }
 
 //______________________________________________________________________________
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt = kTRUE)
+void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
 {
    // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
    // new buffer is expected to have the same size as the previous buffer.
