@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.2 2000/11/27 10:46:20 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.3 2001/01/15 01:24:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,6 +22,8 @@
 #pragma link C++ class TAuthenticate;
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
+#pragma link C++ class TPServerSocket;
+#pragma link C++ class TPSocket;
 #pragma link C++ class TMessage;
 #pragma link C++ class TMonitor;
 #pragma link C++ class TUrl;
