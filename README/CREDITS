@@ -49,6 +49,10 @@ E: bevan@slac.stanford.edu
 D: class TFeldmanCousins
 D: TMath::BubbleHigh, TMath::BubbleLow
 
+N: Marek Biskup
+E: Marek.Biskup@cern.ch
+D: PROOF contributions
+
 N: Dan Bradley
 E: dan@hep.wisc.edu
 D: Chirp plugin which allows remote file access via the Condor Chirp protocol
@@ -275,6 +279,10 @@ D: pioneer on many fronts, installation, support
 N: Pere Mato
 E: Pere.Mato@cern.ch
 D: PyRoot package
+
+N: Richard Maunder
+E: Richard.Maunder@cern.ch
+D: OpenGL developments
 
 N: Grzegorz Mazur
 E: mazur@mail.desy.de
