@@ -38,8 +38,10 @@ clean() {
    rm -f $CINTDIRS/list.dll
    rm -f $CINTDIRS/deque.dll
    rm -f $CINTDIRS/map.dll
+   rm -f $CINTDIRS/map2.dll
    rm -f $CINTDIRS/set.dll
    rm -f $CINTDIRS/multimap.dll
+   rm -f $CINTDIRS/multimap2.dll
    rm -f $CINTDIRS/multiset.dll
    rm -f $CINTDIRS/stack.dll
    rm -f $CINTDIRS/queue.dll
@@ -178,6 +180,14 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map.$SOEXT \
    $CINTDIRS/map.$SOEXT $STLDIR/G__cpp_map.o
 rename $CINTDIRS/map
 
+$CINT -w1 -zmap2 -n$STLDIR/G__cpp_map2.cxx -D__MAKECINT__ \
+   -DG__MAKECINT -DG__MAP2 -c-1 -A -M0x10 -Z0 $STLDIR/mp.h
+$CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_map2.o \
+   -c $STLDIR/G__cpp_map2.cxx
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map2.$SOEXT \
+   $CINTDIRS/map2.$SOEXT $STLDIR/G__cpp_map2.o
+rename $CINTDIRS/map2
+
 $CINT -w1 -zset -n$STLDIR/G__cpp_set.cxx -D__MAKECINT__ \
    -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/st.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_set.o \
@@ -193,6 +203,14 @@ $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_multimap.o \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap.$SOEXT \
    $CINTDIRS/multimap.$SOEXT $STLDIR/G__cpp_multimap.o
 rename $CINTDIRS/multimap
+
+$CINT -w1 -zmultimap2 -n$STLDIR/G__cpp_multimap2.cxx -D__MAKECINT__ \
+   -DG__MAKECINT -DG__MAP2 -c-1 -A -M0x10 -Z0 $STLDIR/multmp.h
+$CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_multimap2.o \
+   -c $STLDIR/G__cpp_multimap2.cxx
+$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap2.$SOEXT \
+   $CINTDIRS/multimap2.$SOEXT $STLDIR/G__cpp_multimap2.o
+rename $CINTDIRS/multimap2
 
 $CINT -w1 -zmultiset -n$STLDIR/G__cpp_multiset.cxx -D__MAKECINT__ \
    -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/multst.h
