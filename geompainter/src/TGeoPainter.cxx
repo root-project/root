@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.24 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.25 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2537,7 +2537,7 @@ Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoi
       if (dpoint2 < dist) dist=(Int_t)dpoint2;
    }
    delete [] points;
-   return Int_t(TMath::Sqrt(Float_t(dist)));
+   return Int_t(TMath::Sqrt(Double_t(dist)));
 }
 //______________________________________________________________________________
 void TGeoPainter::Test(Int_t npoints, Option_t *option)
