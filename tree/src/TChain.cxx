@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.26 2001/09/26 09:43:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.27 2001/11/17 16:00:21 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -26,6 +26,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <math.h>
+//the following include must be declared before TMath.h (finite on win32)
+#include <float.h>
+
 #include "TROOT.h"
 #include "TChain.h"
 #include "TTree.h"
@@ -39,8 +43,6 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 
-#include <math.h>
-#include <float.h>
 
 ClassImp(TChain)
 
@@ -523,7 +525,7 @@ Double_t TChain::GetMaximum(const char *columname)
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Double_t theMax = -FLT_MAX;  //in float.h
+   Double_t theMax = -FLT_MAX;  //in float.h 
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
