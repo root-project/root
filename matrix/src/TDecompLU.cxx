@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.16 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.17 2004/12/02 11:53:30 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -781,11 +781,9 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
     const TVectorD diagv = TMatrixDDiag_const(lu);
     DiagProd(diagv,tol,d1,d2);
     d1 *= sign;
-    if (TMath::Abs(d2) > 52.0) {
+    if (TMath::Abs(d2) > 52.0)
       ::Warning("TDecompLU::InvertLU","Determinant under/over-flows double: det= %.4f 2^%.0f",d1,d2);
-      *det =  0.0;
-    } else
-      *det = d1*TMath::Power(2.0,d2);
+    *det = d1*TMath::Power(2.0,d2);
   }
 
   //  Form inv(U).
