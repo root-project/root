@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.8 2001/04/09 08:15:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.9 2001/04/21 12:04:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -107,6 +107,7 @@ public:
     virtual TLeaf   *GetLeaf(const char *name) const;
             TBasket *GetBasket(Int_t basket);
             Int_t   *GetBasketBytes() const {return fBasketBytes;}
+            Int_t   *GetBasketEntry() const {return fBasketEntry;}
     virtual Seek_t   GetBasketSeek(Int_t basket) const;
     TDirectory      *GetDirectory() const {return fDirectory;}
     virtual TFile   *GetFile(Int_t mode=0);
