@@ -1083,7 +1083,7 @@ if test ! "x$enable_rfio" = "xno" ; then
     shiftinc=$found_hdr
     shiftincdir=$found_dir
 
-    if ! test "x$shiftincdir" = "x"; then
+    if test ! "x$shiftincdir" = "x"; then
         message "Checking whether stage_out_hsm declared in $shiftinc"
         if `grep stage_out_hsm $shiftincdir/$shiftinc > /dev/null 2>&1` ; then
             echo "yes"
