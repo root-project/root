@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.192 2004/10/01 06:28:13 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.193 2004/10/05 10:28:24 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1135,7 +1135,7 @@ void THistPainter::Paint(Option_t *option)
 <img src="gif/PaintBarH.gif">
 */
 //End_Html
-
+//
 //  The SCATter plot option (default for 2-D histograms)
 // =======================
 //  For each cell (i,j) a number of points proportional to the cell content is drawn.
