@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.3 2000/09/05 09:18:42 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.3 2000/09/05 09:18:42 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
@@ -52,7 +52,7 @@ const char *Id = {
 //  to built the containers.                                            //
 //                                                                      //
 //  One may derive the custom container classes from TDataSet.          //
-//  See for example TObjectSet, TTable, TNode, TFileSet                 //
+//  See for example TObjectSet, TTable, TVolume, TFileSet               //
 //  These classes  derived from TDataSet:                               //
 //                                                                      //
 //   Class Name                                                         //
@@ -214,7 +214,6 @@ TDataSet::TDataSet(TNode &)
 {
   assert(0);
 }
-
 //______________________________________________________________________________
 TDataSet::~TDataSet()
 {
@@ -358,14 +357,7 @@ TDataSet *TDataSet::Find(const Char_t *path) const
 }
 
 //______________________________________________________________________________
-TDataSet  *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
-{
-  // Aliase for TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) method
-  return FindDataSet(name,path,opt);
-}
-
-//______________________________________________________________________________
-TDataSet *TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt) const
+TDataSet *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
 {
   //
   // Full description see: TDataSetIter::FindDataSet
@@ -377,7 +369,7 @@ TDataSet *TDataSet::FindDataSet(const Char_t *name,const Char_t *path,Option_t *
   //
 
   TDataSetIter next((TDataSet*)this);
-  return next.FindDataSet(name,path,opt);
+  return next.FindByName(name,path,opt);
 }
 
 //______________________________________________________________________________
@@ -439,8 +431,8 @@ void TDataSet::ls(Int_t depth) const
  //            No par - ls() prints only level out                  //
  //                                                                 //
  /////////////////////////////////////////////////////////////////////
+  PrintContents();
 
-  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
   if (!fList || depth == 1 ) return;
   if (!depth) depth = 99999;
 
@@ -451,11 +443,6 @@ void TDataSet::ls(Int_t depth) const
     d->ls(depth-1);
     TROOT::DecreaseDirLevel();
   }
-}
-//______________________________________________________________________________
-Bool_t TDataSet::IsLocked() const
-{
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -511,6 +498,14 @@ Bool_t TDataSet::IsEmpty() const
 {
    // return kTRUE if the "internal" collection has no member
    return First() ? kFALSE : kTRUE ;
+}
+
+//______________________________________________________________________________
+void TDataSet::PrintContents(Option_t *opt) const {
+  // Callback method to complete ls() method recursive loop
+  // This is to allow to separate navigation and the custom information
+  // in the derived classes (see; TTable::PrintContents for example
+  printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
 }
 
 //______________________________________________________________________________
@@ -659,11 +654,6 @@ Int_t TDataSet::Purge(Option_t *)
      delete son;
  }
  return 0;
-}
-
-//______________________________________________________________________________
-void  TDataSet::SetLock(int )
-{
 }
 
 //______________________________________________________________________________
