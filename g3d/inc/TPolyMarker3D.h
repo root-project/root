@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.2 2000/06/13 12:22:49 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
         virtual void      Draw(Option_t *option="");
         virtual void      DrawPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+        virtual Int_t     GetLastPoint() const { return fLastPoint;}
         virtual Int_t     GetN() const { return fN;}
         virtual Float_t  *GetP() const { return fP;}
         Option_t         *GetOption() const {return fOption.Data();}
