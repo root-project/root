@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTable.rdl,v 1.1 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooTable.rdl,v 1.2 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,13 +30,13 @@ public:
 
   virtual void fill(RooAbsCategory& cat) = 0 ;
 
-  // Printing interface (human readable)
+  // Printing interface (human readable) WVE change to RooPrintable interface
   enum PrintOption { Standard=0 } ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
   void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
 
 protected:
-  virtual RooTable& operator=(const RooTable& other) {} ; 
+  virtual RooTable& operator=(const RooTable& other) { return *this ; } ; 
 
   ClassDef(RooTable,1) // a real-valued variable and its value
 };

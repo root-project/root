@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.11 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooFormula.rdl,v 1.12 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -26,15 +26,14 @@ public:
   // Constructors etc.
   RooFormula() ;
   RooFormula(const char* name, const char* formula, const RooArgSet& varList);
-  RooFormula(const char* name, const RooFormula& other) ;
-  RooFormula(const RooFormula& other) ;
+  RooFormula(const RooFormula& other, const char* name=0) ;
   RooFormula& operator=(const RooFormula& other) ;
-  virtual TObject* Clone() ;
+  virtual TObject* Clone(const char*) const { return new RooFormula(*this) ; }
   virtual ~RooFormula();
 	
   // Dependent management
-  RooArgSet& actualDependents() const;
-  Bool_t changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
+  RooArgSet& actualDependents() const ;
+  Bool_t changeDependents(const RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
 
   // Function value accessor
   inline Bool_t ok() { return _isOK ; }
@@ -58,7 +57,7 @@ protected:
   Int_t DefinedVariable(TString &name) ;
   Double_t DefinedValue(Int_t code) ;
 
-  Bool_t _isOK ;
+  Bool_t    _isOK ;
   TList     _origList ;   //! Original list of dependents
   TObjArray _useList ;    //! List of actual dependents 
   TObjArray _labelList ;  //  List of label names for category objects  

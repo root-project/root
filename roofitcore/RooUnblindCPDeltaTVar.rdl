@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.5 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.6 2001/04/20 01:51:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,8 +25,8 @@ public:
 			const char *blindString,
 			RooAbsReal& deltat, RooAbsCategory& tag, 
 			RooAbsCategory& blindState);
-  RooUnblindCPDeltaTVar(const char* name, const RooUnblindCPDeltaTVar& other);
-  virtual TObject* Clone() { return new RooUnblindCPDeltaTVar(*this); }  
+  RooUnblindCPDeltaTVar(const RooUnblindCPDeltaTVar& other, const char* name=0) ;
+  virtual TObject* clone() const { return new RooUnblindCPDeltaTVar(*this); }  
   virtual ~RooUnblindCPDeltaTVar();
 
   // I/O streaming interface (machine readable)
@@ -34,12 +34,12 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
 
 protected:
 
-  RooUnblindCPDeltaTVar& operator=(const RooUnblindCPDeltaTVar& other) {} ;
+  RooUnblindCPDeltaTVar& operator=(const RooUnblindCPDeltaTVar& other) { return *this ; } ;
   
   // Only PDFs can access the unblinded values
   friend class RooAbsPdf ;

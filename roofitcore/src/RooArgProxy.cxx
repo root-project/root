@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooArgProxy.cc,v 1.1 2001/04/20 01:51:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,25 +19,30 @@ ClassImp(RooArgProxy)
 ;
 
 
-RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, RooAbsArg& arg) : 
-  TNamed(name,name), _arg(&arg)
+RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg) : 
+  TNamed(name,desc), _arg(&arg), _dset(0)
 {
   owner->registerProxy(*this) ;
 }
 
 
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
-  TNamed(other), _arg(other._arg) 
+  TNamed(other), _arg(other._arg), _dset(other._dset)
 {
   SetName(name) ;
   owner->registerProxy(*this) ;
 }
 
 
-Bool_t RooArgProxy::changePointer(RooArgSet& newServerList) 
+Bool_t RooArgProxy::changePointer(const RooArgSet& newServerList) 
 {
   RooAbsArg* newArg = newServerList.find(_arg->GetName()) ;
   if (newArg) _arg = newArg ;
 
   return newArg?kTRUE:kFALSE ;
+}
+
+void RooArgProxy::changeDataSet(const RooDataSet* newDataSet) 
+{
+  _dset = (RooDataSet*) newDataSet ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.12 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.13 2001/05/02 18:08:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,19 +29,8 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
   setShapeDirty(kTRUE) ;  
 }
 
-RooAbsCategory::RooAbsCategory(const char* name, const RooAbsCategory& other) :
-  RooAbsArg(name, other), _value(other._value) 
-{
-  initCopy(other) ;
-}
-
-RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) : 
-  RooAbsArg(other), _value(other._value)
-{
-  initCopy(other) ;
-}
-
-void RooAbsCategory::initCopy(const RooAbsCategory& other)
+RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
+  RooAbsArg(other,name), _value(other._value) 
 {
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
@@ -53,6 +42,7 @@ void RooAbsCategory::initCopy(const RooAbsCategory& other)
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
+
 
 RooAbsCategory::~RooAbsCategory()
 {
@@ -218,6 +208,7 @@ Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   //Read object contents from stream (dummy for now)
+  return kFALSE ;
 } 
 
 void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const

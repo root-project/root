@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.11 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.12 2001/04/21 02:42:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,10 @@ class TPaveText;
 class Roo1DTable ;
 class RooAbsCategory ;
 class RooPlot;
+class RooRealFunction ;
+class RooDerivedReal ;
+class RooFitContext ;
+class RooAbsPdf ;
 
 class RooDataSet : public TTree, public RooPrintable {
 public:
@@ -43,6 +47,7 @@ public:
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);
+  RooDataSet(RooDataSet const & other);
   inline virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
@@ -54,6 +59,8 @@ public:
   // Add one ore more rows of data
   void add(const RooArgSet& data);
   void append(RooDataSet& data) ;
+  void addColumn(RooDerivedReal& var) ;
+//   void addColumn(RooRealFunction& var) {} ;
 
   // Load a given row of data
   const RooArgSet* get() const { return &_vars ; } // last loaded row
@@ -80,17 +87,18 @@ public:
 protected:
 
   // Load data from another TTree
-  void loadValues(TTree *ntuple, const char *cuts);
+  void loadValues(const TTree *ntuple, const char *cuts);
   void loadValues(const char *filename, const char *treename,
 		  const char *cuts);
+
+  // RooFitContext optimizer interface
+  friend class RooFitContext ;
 
   // Column structure definition
   RooArgSet _vars, _truth;
   TString _blindString ;
 
 private:
-
-  RooDataSet(const RooDataSet &other); // cannot be copied
 
   void initialize(const RooArgSet& vars);
   TIterator *_iterator; //! don't make this data member persistent

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.cc,v 1.3 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooPrintable.cc,v 1.4 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,7 +15,6 @@
 // Classes inheriting from this class can be plotted and printed.
 
 #include "BaBar/BaBar.hh"
-
 #include "RooFitCore/RooPrintable.hh"
 
 #include <iostream.h>
@@ -25,7 +24,7 @@
 ClassImp(RooPrintable)
 
 static const char rcsid[] =
-"$Id: RooPrintable.cc,v 1.3 2001/04/21 01:13:11 david Exp $";
+"$Id: RooPrintable.cc,v 1.4 2001/05/02 18:09:00 david Exp $";
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible

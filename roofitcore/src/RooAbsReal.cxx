@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.9 2001/04/21 01:13:10 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.10 2001/05/02 18:08:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,7 +27,7 @@ ClassImp(RooAbsReal)
 ;
 
 
-RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit= "") : 
+RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(0), _plotMax(0)
 {
   setValueDirty(kTRUE) ;
@@ -35,7 +35,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit= ""
 }
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
-		       Double_t maxVal, const char *unit= "") :
+		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(minVal), _plotMax(maxVal)
 {
   setValueDirty(kTRUE) ;
@@ -43,19 +43,11 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 }
 
 
-RooAbsReal::RooAbsReal(const char* name, const RooAbsReal& other) : 
-  RooAbsArg(name,other), _unit(other._unit), _plotBins(other._plotBins), 
+RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
+  RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
   _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
 {
 }
-
-
-RooAbsReal::RooAbsReal(const RooAbsReal& other) :
-  RooAbsArg(other), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
-{
-}
-
 
 
 RooAbsReal::~RooAbsReal()
@@ -103,6 +95,7 @@ void RooAbsReal::setPlotLabel(const char *label) {
 Bool_t RooAbsReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   //Read object contents from stream (dummy for now)
+  return kFALSE ;
 } 
 
 void RooAbsReal::writeToStream(ostream& os, Bool_t compact) const

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.rdl,v 1.3 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooHist.rdl,v 1.4 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -30,6 +30,7 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+
 protected:
   void initialize();
   Int_t roundBin(Stat_t y);

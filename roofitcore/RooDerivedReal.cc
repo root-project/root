@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDerivedReal.cc,v 1.3 2001/04/19 01:42:27 verkerke Exp $
+ *    File: $Id: RooDerivedReal.cc,v 1.4 2001/04/21 02:42:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,31 +16,26 @@
 #include "TH1.h"
 #include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgProxy.hh"
 
 ClassImp(RooDerivedReal) 
 ;
 
 
-RooDerivedReal::RooDerivedReal(const char *name, const char *title, const char *unit= "") : 
+RooDerivedReal::RooDerivedReal(const char *name, const char *title, const char *unit) : 
   RooAbsReal(name,title,unit)
 {
 }
 
 RooDerivedReal::RooDerivedReal(const char *name, const char *title, Double_t minVal,
-		       Double_t maxVal, const char *unit= "") :
+		       Double_t maxVal, const char *unit) :
   RooAbsReal(name,title,minVal,maxVal,unit)
 {
 }
 
 
-RooDerivedReal::RooDerivedReal(const char* name, const RooDerivedReal& other) : 
-  RooAbsReal(name,other)
-{
-}
-
-
-RooDerivedReal::RooDerivedReal(const RooDerivedReal& other) :
-  RooAbsReal(other)
+RooDerivedReal::RooDerivedReal(const RooDerivedReal& other, const char* name) : 
+  RooAbsReal(other,name)
 {
 }
 
@@ -64,7 +59,7 @@ RooAbsArg& RooDerivedReal::operator=(const RooAbsArg& aother)
 }
 
 
-Double_t RooDerivedReal::getVal() const
+Double_t RooDerivedReal::getVal(const RooDataSet* dset) const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || isShapeDirty()) {
@@ -107,6 +102,28 @@ Int_t RooDerivedReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& numDe
 
   return 0 ;
 }
+
+
+
+Bool_t RooDerivedReal::tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const
+{
+  Bool_t match = kFALSE ;
+  TString name(a.absArg()->GetName()) ;
+
+  TIterator* iter = allDeps.MakeIterator()  ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()){    
+    if (!name.CompareTo(arg->GetName())) {
+      match = kTRUE ;
+    } else {
+      numDeps.add(*arg) ;
+    }
+  }
+  delete iter ;
+
+  return match ;  
+}
+
 
 
 Double_t RooDerivedReal::analyticalIntegral(Int_t code) const

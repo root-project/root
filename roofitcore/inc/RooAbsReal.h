@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.7 2001/04/11 23:25:26 davidk Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.8 2001/05/02 18:08:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,8 +14,8 @@
 #define ROO_ABS_REAL
 
 #include "RooFitCore/RooAbsArg.hh"
-
-class RooArgSet;
+class RooArgSet ;
+class RooDataSet ;
 class RooPlot;
 class RooRealVar;
 class RooRealFunc1D;
@@ -29,13 +29,12 @@ public:
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
 	     const char *unit= "") ;
-  RooAbsReal(const RooAbsReal& other);
-  RooAbsReal(const char* name, const RooAbsReal& other);
+  RooAbsReal(const RooAbsReal& other, const char* name=0);
   RooAbsReal& operator=(const RooAbsReal& other) ;
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal() const { return _value ; }
+  virtual Double_t getVal(const RooDataSet* dset=0) const { return _value ; }
   Bool_t operator==(Double_t value) const ;
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }

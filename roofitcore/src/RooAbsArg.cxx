@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.18 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.19 2001/05/02 18:08:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
+#include "RooFitCore/RooDataSet.hh"
 
 #include <string.h>
 
@@ -51,39 +52,16 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
   // dirty flags set.
 }
 
-RooAbsArg::RooAbsArg(const char* name, const RooAbsArg& other)
-  : TNamed(name,other.GetTitle())
+RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
+  : TNamed(other.GetName(),other.GetTitle())
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created 
   // object has an empty client list and has its dirty
   // flags set.
 
-  // use our own name unless we are provided with something better
-  if(0 == strlen(name)) SetName(other.GetName());
-  initCopy(other) ;
-}
-
-
-
-RooAbsArg::RooAbsArg(const RooAbsArg& other)
-  : TNamed(other)
-{
-  // Copy constructor transfers all properties of the original
-  // object, except for its list of clients. The newly created 
-  // object has an empty client list and has its dirty
-  // flags set. The virtual Clone() method is implemented using
-  // this constructor.
-
-  initCopy(other) ;
-}
-
-
-
-void RooAbsArg::initCopy(const RooAbsArg& other)
-{
-  // Take on the properties of the specified object except for its
-  // list of clients.
+  // Use name in argument, if supplied
+  if (name) SetName(name) ;
 
   // take attributes from target
   TObject* obj ;
@@ -98,8 +76,8 @@ void RooAbsArg::initCopy(const RooAbsArg& other)
   RooAbsArg* server ;
   Bool_t valueProp, shapeProp ;
   while (server = (RooAbsArg*) sIter->Next()) {
-    valueProp = (Bool_t)server->_clientListValue.FindObject((TObject*)&other) ;
-    shapeProp = (Bool_t)server->_clientListShape.FindObject((TObject*)&other) ;
+    valueProp = server->_clientListValue.FindObject((TObject*)&other)?kTRUE:kFALSE ;
+    shapeProp = server->_clientListShape.FindObject((TObject*)&other)?kTRUE:kFALSE ;
     addServer(*server,valueProp,shapeProp) ;
   }
   delete sIter ;
@@ -107,6 +85,7 @@ void RooAbsArg::initCopy(const RooAbsArg& other)
   setValueDirty() ;
   setShapeDirty() ;
 }
+
 
 
 RooAbsArg::~RooAbsArg() 
@@ -133,7 +112,8 @@ RooAbsArg::~RooAbsArg()
 	 << client->GetName() << " should have been deleted before" << endl ;
     fatalError=kTRUE ;
   }
-  assert(!fatalError) ;
+
+  //assert(!fatalError) ;
 }
 
 
@@ -289,6 +269,124 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 
 
 
+void RooAbsArg::leafNodeServerList(RooArgSet* list, const RooAbsArg* arg) const
+{
+  treeNodeServerList(list,arg,kFALSE,kTRUE) ;
+}
+
+
+
+void RooAbsArg::branchNodeServerList(RooArgSet* list, const RooAbsArg* arg) const 
+{
+  treeNodeServerList(list,arg,kTRUE,kFALSE) ;
+}
+
+
+void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
+  // Do recursive deep copy of all 'ultimate' servers 
+{
+  if (!arg) arg=this ;
+
+  if ((doBranch&&doLeaf) ||
+      (doBranch&&arg->isDerived()) ||
+      (doLeaf&&!arg->isDerived())) {
+    list->add(*arg) ;  
+  }
+
+  RooAbsArg* server ;
+  TIterator* sIter = arg->serverIterator() ;
+  while (server=(RooAbsArg*)sIter->Next()) {
+    treeNodeServerList(list,server,doBranch,doLeaf) ;
+    }
+  
+  delete sIter ;
+}
+
+
+
+
+RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const 
+{
+  RooArgSet* parList = new RooArgSet("parameters") ;
+  const RooArgSet* dataList = set->get() ;
+
+  // Create and fill deep server list
+  RooArgSet leafList("leafNodeServerList") ;
+  leafNodeServerList(&leafList) ;
+
+  // Copy non-dependent servers to parameter list
+  TIterator* sIter = leafList.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)sIter->Next()) {
+    if (!dataList->FindObject(arg->GetName())) {
+      parList->add(*arg) ;
+    }
+  }
+  delete sIter ;
+
+  return parList ;
+}
+
+
+
+RooArgSet* RooAbsArg::getDependents(const RooDataSet* set) const 
+{
+  RooArgSet* depList = new RooArgSet("dependents") ;
+  const RooArgSet* dataList = set->get() ;
+
+  // Create and fill deep server list
+  RooArgSet leafList("leafNodeServerList") ;
+  leafNodeServerList(&leafList) ;
+
+  // Copy dependent servers to dependent list
+  TIterator* sIter = leafList.MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)sIter->Next()) {
+    if (dataList->FindObject(arg->GetName())) {
+      depList->add(*arg) ;
+    }
+  }
+  delete sIter ;
+
+  return depList ;
+}
+
+
+Bool_t RooAbsArg::checkDependents(const RooDataSet* set) const 
+{
+  // Always OK if we have no servers
+  if (!_serverList.First()) {
+    return kFALSE ;
+  }
+  
+  Bool_t ret=kFALSE ;
+
+  RooAbsArg *server, *server2 ;
+  TIterator *sIter  = serverIterator() ;
+  TIterator *sIter2 = serverIterator() ;
+  while(server=(RooAbsArg*)sIter->Next()) {
+
+    // First check if argument is OK
+    if (server->checkDependents(set)) {
+      ret = kTRUE ;
+    } else {    
+      sIter2->Reset() ;
+      while((server2=(RooAbsArg*)sIter2->Next()) && server2!=server) {
+	if (server->dependentOverlaps(set,*server2)) {
+	  cout << "RooAbsArg::checkDependents(" << GetName() << "): ERROR: components " << server->GetName() 
+	       << " and " << server2->GetName() << " have one or more dependents in common" << endl ;
+	  ret = kTRUE ;
+	}
+      }
+    }
+  }
+
+  delete sIter ;
+  delete sIter2 ;
+
+  return ret ;
+}
+
 
 Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
 {
@@ -299,22 +397,58 @@ Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
   TIterator* sIter = serverList.MakeIterator();
   RooAbsArg* server ;
   while (!result && (server=(RooAbsArg*)sIter->Next())) {
-    if (dependsOn(*server)) result= kTRUE;
+    if (dependsOn(*server)) {
+      result= kTRUE;
+    }
   }
   delete sIter;
   return result;
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooAbsArg& server) const
+Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg) const
 {
   // Test whether we depend on (ie, are served by) the specified object.
   // Note that RooAbsArg objects are considered equivalent if they have
   // the same name.
 
-  TObject *found= _serverList.FindObject(server.GetName());
-  return found ? kTRUE : kFALSE ;
+  // First test direct dependence
+  if (_serverList.FindObject(testArg.GetName())) return kTRUE ;
+
+  // If not, recurse
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* server(0) ;
+  while (server=(RooAbsArg*)sIter->Next()) {
+    if (server->dependsOn(testArg)) {
+      delete sIter ;
+      return kTRUE ;
+    }
+  }
+
+  delete sIter ;
+  return kFALSE ;
 }
+
+
+
+Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg) const 
+{
+  RooArgSet list("list") ;
+  treeNodeServerList(&list) ;
+
+  return testArg.dependsOn(list) ;
+}
+
+
+
+Bool_t RooAbsArg::dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const
+{
+  RooArgSet* depList = getDependents(dset) ;
+  Bool_t ret = testArg.dependsOn(*depList) ;
+  delete depList ;
+  return ret ;
+}
+
 
 
 void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
@@ -375,10 +509,12 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
 
 
 
-Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll) 
+Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll) 
 {
-  // Replace current servers with new servers with the same name from the given list
+  // Trivial case, no servers
+  if (!_serverList.First()) return kFALSE ;
 
+  // Replace current servers with new servers with the same name from the given list
   Bool_t ret(kFALSE) ;
 
   //Copy original server list to not confuse the iterator while deleting
@@ -442,6 +578,26 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
 }
 
 
+
+Bool_t RooAbsArg::recursiveRedirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll) 
+{
+  Bool_t ret(kFALSE) ;
+  
+  // Do redirect on self
+  ret |= redirectServers(newSet,mustReplaceAll) ;
+
+  // Do redirect on servers
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* server ;
+  while(server=(RooAbsArg*)sIter->Next()) {
+    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll) ;
+  }
+
+  return ret ;
+}
+
+
+
 void RooAbsArg::registerProxy(RooArgProxy& proxy) 
 {
   // Every proxy can be registered only once
@@ -475,7 +631,7 @@ Int_t RooAbsArg::numProxies() const
 
 
 
-void RooAbsArg::attachToTree(TTree& t, Int_t bufSize=32000)
+void RooAbsArg::attachToTree(TTree& t, Int_t bufSize)
 {
   cout << "RooAbsArg::attachToTree(" << GetName() 
        << "): Cannot be attached to a TTree" << endl ;

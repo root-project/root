@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.12 2001/04/13 00:43:57 david Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.13 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,10 +15,14 @@
 
 #include <iostream.h>
 #include <math.h>
-
+#include <float.h>
 #include "TString.h"
-
 #include "RooFitCore/RooAbsReal.hh"
+
+#ifndef INFINITY
+ #define INFINITY FLT_MAX
+#endif
+
 class RooArgSet ;
 
 class RooRealVar : public RooAbsReal {
@@ -31,9 +35,8 @@ public:
 	   Double_t maxValue, const char *unit= "");
   RooRealVar(const char *name, const char *title, Double_t value, 
 	   Double_t minValue, Double_t maxValue, const char *unit= "") ;
-  RooRealVar(const RooRealVar& other);
-  RooRealVar(const char* name, const RooRealVar& other);
-  virtual TObject* Clone(const char *name= "") const { return new RooRealVar(name,*this); }
+  RooRealVar(const RooRealVar& other, const char* name=0);
+  virtual TObject* clone() const { return new RooRealVar(*this); }
   virtual ~RooRealVar();
   RooRealVar& operator=(const RooRealVar& other) ;
   
@@ -61,7 +64,6 @@ public:
   Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
 
   // Constant and Projected flags 
-  inline Bool_t isConstant() const { return getAttribute("Constant") ; }
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
   inline Bool_t isProjected() const { return getAttribute("Projected") ; }
   inline void setProjected(Bool_t value= kTRUE) { setAttribute("Projected",value);}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $$
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,7 +9,6 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
 
 #include <iostream.h>
 #include "TROOT.h"
@@ -62,23 +61,11 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 }
 
 
-RooFormula::RooFormula(const char* name, const RooFormula& other) : 
+RooFormula::RooFormula(const RooFormula& other, const char* name) : 
   TFormula(other), _isOK(other._isOK) 
 {
-  SetName(name) ;
-  initCopy(other) ;
-}
+  if (name) SetName(name) ;
 
-
-RooFormula::RooFormula(const RooFormula& other) : 
-  TFormula(other), _isOK(other._isOK) 
-{
-  initCopy(other) ;
-}
-
-
-void RooFormula::initCopy(const RooFormula& other)
-{
   TIterator* iter = other._origList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
@@ -88,25 +75,8 @@ void RooFormula::initCopy(const RooFormula& other)
   int i ;
   for (i=0 ; i<other._useList.GetEntries() ; i++) {
     _useList.Add(other._useList.At(i)) ;
+    _labelList.Add(other._labelList.At(i)) ;
   }
-}
-
-
-TObject* RooFormula::Clone() {
-  
-  // Streamer-based clone()
-  RooFormula* clone = (RooFormula*) TObject::Clone() ;
-
-  TIterator* oIter = _origList.MakeIterator() ;
-  TObject *obj ;
-  while (obj = oIter->Next()) clone->_origList.Add(obj) ;
-  delete oIter ;
-
-  TIterator* uIter = _useList.MakeIterator() ;
-  while (obj = uIter->Next()) clone->_useList.Add(obj) ;
-  delete uIter ;
-
-  return clone ;
 }
 
 
@@ -115,7 +85,6 @@ RooFormula& RooFormula::operator=(const RooFormula& other)
   // to be implemented
   return *this ;
 }
-
 
 
 RooFormula::~RooFormula() 
@@ -132,7 +101,7 @@ RooArgSet& RooFormula::actualDependents() const
   set.Clear() ;
   int i ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    set.Add(_useList.At(i)) ;
+    set.add((RooAbsArg&)*_useList.At(i),kTRUE) ;
   }
   return set ;
 }
@@ -148,7 +117,7 @@ void RooFormula::dump() {
 }
 
 
-Bool_t RooFormula::changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll) 
+Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplaceAll) 
 {
   //Change current servers to new servers with the same name given in list
   Bool_t errorStat(kFALSE) ;
@@ -211,10 +180,11 @@ RooFormula::DefinedVariable(TString &name)
   }
 
   // Defined internal reference code for given named variable 
-  RooAbsReal* rrv= (RooAbsReal*) _origList.FindObject(argName) ;
-  if (!rrv) return -1 ;
-  _useList.Add(rrv) ;
+  RooAbsArg* arg= (RooAbsArg*) _origList.FindObject(argName) ;
+  if (!arg) return -1 ;
 
+  // Add variable to use list
+  _useList.Add(arg) ;
   if (labelName) {
     _labelList.Add(new TObjString(labelName)) ;
   } else {
@@ -223,6 +193,7 @@ RooFormula::DefinedVariable(TString &name)
 
   return (_useList.GetEntries()-1) ;
 }
+
 
 void RooFormula::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this argument set to the specified stream.

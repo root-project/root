@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCatType.rdl,v 1.4 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooCatType.rdl,v 1.5 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,7 +22,7 @@ public:
   inline RooCatType() : TNamed() { _value = 0 ; } 
   inline RooCatType(const char* name, Int_t value) : TNamed(name,""), _value(value) {} ;
   inline RooCatType(const RooCatType& other) : TNamed(other), _value(other._value) {} ;
-  virtual TObject* Clone() { return new RooCatType(*this); }
+  virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
   
 
   inline RooCatType& operator=(const RooCatType& other) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.7 2001/04/09 04:29:34 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.8 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -21,9 +21,8 @@ public:
   // Constructors etc.
   inline RooMappedCategory() { }
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat);
-  RooMappedCategory(const RooMappedCategory& other) ;
-  RooMappedCategory(const char *name, const RooMappedCategory& other) ;
-  virtual TObject* Clone() { return new RooMappedCategory(*this); }
+  RooMappedCategory(const RooMappedCategory& other, const char *name=0) ;
+  virtual TObject* clone() const { return new RooMappedCategory(*this); }
   virtual ~RooMappedCategory();
 
   // Mapping definition functions
@@ -49,7 +48,6 @@ public:
 protected:
 
   RooMappedCategory& operator=(const RooMappedCategory& other) ;
-  void initCopy(const RooMappedCategory& other) ;
   
   TObjArray _inlo ;
   TObjArray _inhi ;

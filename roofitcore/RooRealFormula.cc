@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.6 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.7 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,14 +28,8 @@ RooRealFormula::RooRealFormula(const char *name, const char *title, RooArgSet& d
 }
 
 
-RooRealFormula::RooRealFormula(const char* name, const RooRealFormula& other) : 
-  RooDerivedReal(name, other), _formula(other._formula)
-{
-}
-
-
-RooRealFormula::RooRealFormula(const RooRealFormula& other) : 
-  RooDerivedReal(other), _formula(other._formula)
+RooRealFormula::RooRealFormula(const RooRealFormula& other, const char* name) : 
+  RooDerivedReal(other, name), _formula(other._formula)
 {
 }
 
@@ -49,6 +43,7 @@ RooRealFormula& RooRealFormula::operator=(const RooRealFormula& other)
 {
   RooAbsReal::operator=(other) ;
   _formula = other._formula ;
+  return *this ;
 }
 
 
@@ -81,17 +76,27 @@ Bool_t RooRealFormula::setFormula(const char* formula)
 }
 
 
-
 Bool_t RooRealFormula::isValid(Double_t value) const {
   return kTRUE ;
 }
 
 
-Bool_t RooRealFormula::redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll)
+
+Bool_t RooRealFormula::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
   // Propagate server change to formula engine
   return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
+
+
+
+Bool_t RooRealFormula::checkDependents(const RooDataSet* set) const 
+{
+  // We can handle any dependent configuration since RooRealFormula 
+  // does an explicit normalization of the top-level PDF over the leafNode servers
+  return kFALSE ;
+}
+
 
 void RooRealFormula::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
@@ -101,7 +106,9 @@ void RooRealFormula::printToStream(ostream& os, PrintOption opt, TString indent)
     os << indent;
     _formula.printToStream(os,opt,indent);
   }
-} 
+}
+
+
 
 Bool_t RooRealFormula::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {

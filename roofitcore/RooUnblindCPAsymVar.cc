@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.4 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.5 2001/04/20 01:51:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,19 +26,13 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					     const char *blindString, RooAbsReal& cpasym)
-  : RooDerivedReal(name,title), _blindEngine(blindString), _asym("asym",this,cpasym) 
+  : RooDerivedReal(name,title), _blindEngine(blindString), _asym("asym","CP Asymmetry",this,cpasym) 
 {  
 }
 
 
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char* name, const RooUnblindCPAsymVar& other) : 
-  RooDerivedReal(name, other), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
-{
-}
-
-
-RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other) : 
-  RooDerivedReal(other), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
+  RooDerivedReal(other, name), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
 {
 }
 
@@ -66,10 +60,10 @@ Bool_t RooUnblindCPAsymVar::isValid(Double_t value, Bool_t verbose) const
 }
 
 
-void RooUnblindCPAsymVar::printToStream(ostream& os, PrintOption opt) const
+void RooUnblindCPAsymVar::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   // Print current value and definition of formula
-  os << "RooUnblindCPAsymVar: " << GetName() << " : (value hidden) asym=" 
+  os << indent << "RooUnblindCPAsymVar: " << GetName() << " : (value hidden) asym=" 
      << _asym.arg().GetName() ;
   if(!_unit.IsNull()) os << ' ' << _unit;
   printAttribList(os) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.rdl,v 1.1 2001/03/27 01:20:20 verkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.2 2001/04/20 01:51:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,15 +21,18 @@ public:
 
   // Constructors, assignment etc.
   RooRealProxy() {} ;
-  RooRealProxy(const char* name, RooAbsArg* owner, RooAbsReal& ref) ;
+  RooRealProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsReal& ref) ;
   RooRealProxy(const char* name, RooAbsArg* owner, const RooRealProxy& other) ;
-  virtual TObject* Clone() { return new RooRealProxy(*this); }
+  virtual TObject* Clone(const char*) const { return new RooRealProxy(*this); }
   virtual ~RooRealProxy();
-  
 
   // Accessors
-  inline operator Double_t() const { return arg().getVal() ; }
+  inline operator Double_t() const { return arg().getVal(_dset) ; }
   inline const RooAbsReal& arg() const { return (RooAbsReal&)*_arg ; }
+
+  // Limits for integration
+  Double_t min() const ;
+  Double_t max() const ;
 
 protected:
 

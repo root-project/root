@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.3 2001/04/19 01:42:27 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.4 2001/04/21 02:42:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,7 @@ ClassImp(RooRealIntegral)
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooDerivedReal& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
-  RooDerivedReal(name,title), _function(&function), _mode(0),
+  RooDerivedReal(name,title), _function((RooDerivedReal*)&function), _mode(0),
   _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
 
@@ -104,25 +104,14 @@ void RooRealIntegral::initNumIntegrator()
   }  
 }
 
-RooRealIntegral::RooRealIntegral(const char* name, const RooRealIntegral& other) : 
-  RooDerivedReal(name,other), _function(other._function), _mode(other._mode),
+RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
+  RooDerivedReal(other,name), _function(other._function), _mode(other._mode),
   _intList("intList"), _sumList("sumList") 
 {
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
   initNumIntegrator() ;
 }
-
-
-RooRealIntegral::RooRealIntegral(const RooRealIntegral& other) :
-  RooDerivedReal(other), _function(other._function), _mode(other._mode),
-  _intList("intList"), _sumList("sumList")
-{
-  copyList(_intList,other._intList) ;
-  copyList(_sumList,other._sumList) ;
-  initNumIntegrator() ;
-}
-
 
 
 RooRealIntegral::~RooRealIntegral()
@@ -206,22 +195,22 @@ Bool_t RooRealIntegral::isValid(Double_t value) const
 }
 
 
-Bool_t RooRealIntegral::redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll)
+Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
   return kFALSE ;
 }
 
 
-void RooRealIntegral::printToStream(ostream& os, PrintOption opt=Standard) const
+void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
 
   if (opt==Verbose) {
-    RooAbsArg::printToStream(os,Verbose) ;
+    RooAbsArg::printToStream(os,Verbose,indent) ;
     return ;
   }
 
   //Print object contents
-  os << "RooRealIntegral: " << GetName() << " =" ;
+  os << indent << "RooRealIntegral: " << GetName() << " =" ;
 
   RooAbsArg* arg ;
   Bool_t first(kTRUE) ;

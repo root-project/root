@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDerivedReal.rdl,v 1.2 2001/04/19 01:42:27 verkerke Exp $
+ *    File: $Id: RooDerivedReal.rdl,v 1.3 2001/04/21 02:42:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,7 +15,9 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 class RooArgSet ;
+class RooDataSet ;
 class TH1F ;
+class RooArgProxy ;
 
 class RooDerivedReal : public RooAbsReal {
 public:
@@ -25,13 +27,12 @@ public:
   RooDerivedReal(const char *name, const char *title, const char *unit= "") ;
   RooDerivedReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
 	     const char *unit= "") ;
-  RooDerivedReal(const RooDerivedReal& other);
-  RooDerivedReal(const char* name, const RooDerivedReal& other);
+  RooDerivedReal(const RooDerivedReal& other, const char* name=0);
   RooDerivedReal& operator=(const RooDerivedReal& other) ;
   virtual ~RooDerivedReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal() const ;
+  virtual Double_t getVal(const RooDataSet* dset=0) const ;
 
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
@@ -42,8 +43,10 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval() const ;
-  virtual Bool_t traceEvalHook(Double_t value) const {}
+  virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
   virtual Double_t evaluate() const = 0 ;
+
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const ;
 
   ClassDef(RooDerivedReal,1) // a real-valued variable and its value
 };

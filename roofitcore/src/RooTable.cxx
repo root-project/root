@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooTable.cc,v 1.1 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,7 @@ RooTable::~RooTable()
 }
 
 
-void RooTable::printToStream(ostream& os, PrintOption opt=Standard) 
+void RooTable::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  os << "RooTable" << endl ;
+  os << indent << "RooTable" << endl ;
 }

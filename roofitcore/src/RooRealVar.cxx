@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.12 2001/04/13 00:43:56 david Exp $
+ *    File: $Id: RooRealVar.cc,v 1.13 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,21 +49,14 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   removeFitRange();
 }  
 
-RooRealVar::RooRealVar(const char* name, const RooRealVar& other) :
-  RooAbsReal(name,other), 
+RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
+  RooAbsReal(other,name), 
   _error(other._error),
   _fitMin(other._fitMin),
   _fitMax(other._fitMax)
 {
 }
 
-RooRealVar::RooRealVar(const RooRealVar& other) :
-  RooAbsReal(other), 
-  _error(other._error),
-  _fitMin(other._fitMin),
-  _fitMax(other._fitMax)
-{
-}
 
 RooRealVar::~RooRealVar() 
 {
@@ -289,9 +282,11 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
     }      
     // Append plot limits
     os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
+
     // Append fit limits if not +Inf:-Inf
+    os << "F(" ;
     if(hasFitMin()) {
-      os << "F(" << getFitMin();
+      os << getFitMin();
     }
     else {
       os << "-INF";
@@ -300,7 +295,7 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << " - " << getFitMax() << ") ";
     }
     else {
-      os << " - +INF ) ";
+      os << " - +INF) ";
     }
     // Add comment with unit, if unit exists
     if (!_unit.IsNull())

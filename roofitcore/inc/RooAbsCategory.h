@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.10 2001/04/13 00:43:56 david Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.11 2001/04/14 00:43:18 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,8 +29,7 @@ public:
   // Constructors, assignment etc.
   RooAbsCategory() {} ;
   RooAbsCategory(const char *name, const char *title);
-  RooAbsCategory(const RooAbsCategory& other) ;
-  RooAbsCategory(const char* name, const RooAbsCategory& other) ;
+  RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
   
   // Value accessors
@@ -59,7 +58,6 @@ protected:
 
   RooAbsCategory& operator=(const RooAbsCategory& other) ; 
   virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
-  void initCopy(const RooAbsCategory& other) ;
 
   // Ordinal index representation is strictly for internal use
   Int_t getOrdinalIndex() const ;

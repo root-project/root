@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.rdl,v 1.6 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooRealFormula.rdl,v 1.7 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,10 +23,9 @@ public:
   // Constructors, assignment etc
   inline RooRealFormula() { }
   RooRealFormula(const char *name, const char *title, RooArgSet& dependents);
-  RooRealFormula(const RooRealFormula& other);
-  RooRealFormula(const char* name, const RooRealFormula& other);
+  RooRealFormula(const RooRealFormula& other, const char* name=0);
   RooRealFormula& operator=(const RooRealFormula& other);
-  virtual TObject* Clone(const char *name= "") const { return new RooRealFormula(name,*this); }
+  virtual TObject* clone() const { return new RooRealFormula(*this); }
   virtual ~RooRealFormula();
 
   // Formula editing interface
@@ -39,6 +38,9 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
+  // Custom dependent checking
+  virtual Bool_t checkDependents(const RooDataSet* set) const ;
+
   // Debugging
   void dumpFormula() { _formula.dump() ; }
 
@@ -50,7 +52,7 @@ protected:
   virtual Double_t evaluate() const ;
 
   // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
 
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value) const ;

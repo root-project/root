@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.rdl,v 1.1 2001/04/11 00:57:09 davidk Exp $
+ *    File: $Id: RooPrintable.rdl,v 1.2 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,9 +13,10 @@
 #ifndef ROO_PRINTABLE
 #define ROO_PRINTABLE
 
-class ostream;
-class TNamed;
 
+class TNamed ;
+
+#include <iostream.h>
 #include "Rtypes.h"
 #include "TString.h"
 

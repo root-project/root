@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMultiCatIter.cc,v 1.1 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,8 +47,8 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   
   // Allocate storage for component iterators
   _nIter = catList.GetSize() ;
-  _iterList   = new (TIterator*)[_nIter] ;
-  _catPtrList = new (RooCategory*)[_nIter] ;
+  _iterList   = new pTIterator[_nIter] ;
+  _catPtrList = new pRooCategory[_nIter] ;
 
   // Construct component iterators
   _curIter = 0 ;

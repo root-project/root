@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPDeltaTVar.cc,v 1.4 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.cc,v 1.5 2001/04/20 01:51:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,14 +28,14 @@ RooUnblindCPDeltaTVar::RooUnblindCPDeltaTVar(const char *name, const char *title
 					     const char *blindString,
 					     RooAbsReal& deltat, RooAbsCategory& tag, 
 					     RooAbsCategory& blindState)
-  : RooDerivedReal(name,title), _blindEngine(blindString), _deltat("deltat",this,deltat), 
-    _tag("tag",this,tag), _state("state",this,blindState)
+  : RooDerivedReal(name,title), _blindEngine(blindString), _deltat("deltat","Delta t",this,deltat), 
+    _tag("tag","CP Tag",this,tag), _state("state","Blinding state",this,blindState)
 {  
 }
 
 
-RooUnblindCPDeltaTVar::RooUnblindCPDeltaTVar(const char* name, const RooUnblindCPDeltaTVar& other) : 
-  RooDerivedReal(name, other), _blindEngine(other._blindEngine), _deltat("deltat",this,other._deltat),
+RooUnblindCPDeltaTVar::RooUnblindCPDeltaTVar(const RooUnblindCPDeltaTVar& other, const char* name) : 
+  RooDerivedReal(other, name), _blindEngine(other._blindEngine), _deltat("deltat",this,other._deltat),
   _tag("tag",this,other._tag), _state("state",this,other._state)
 {
 }
@@ -48,12 +48,12 @@ RooUnblindCPDeltaTVar::~RooUnblindCPDeltaTVar()
 
 Double_t RooUnblindCPDeltaTVar::evaluate() const
 {
-  if (_state==0) {
-    // Blinding not active for this event
-    return _deltat ;
-  } else {
+  if (_state=="Blind") {
     // Blinding active for this event
     return _blindEngine.UnHideDeltaZ(_deltat,_tag);
+  } else {
+    // Blinding not active for this event
+    return _deltat ;
   }
 }
 
@@ -70,10 +70,10 @@ Bool_t RooUnblindCPDeltaTVar::isValid(Double_t value, Bool_t verbose) const
 }
 
 
-void RooUnblindCPDeltaTVar::printToStream(ostream& os, PrintOption opt) const
+void RooUnblindCPDeltaTVar::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   // Print current value and definition of formula
-  os << "RooUnblindCPDeltaTVar: " << GetName() << " : (value hidden) deltat=" 
+  os << indent << "RooUnblindCPDeltaTVar: " << GetName() << " : (value hidden) deltat=" 
      << _deltat.arg().GetName() << ", tag=" << _tag.arg().GetName() ;
   if(!_unit.IsNull()) os << ' ' << _unit;
   printAttribList(os) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.14 2001/04/14 00:43:18 davidk Exp $
+ *    File: $Id: RooArgSet.cc,v 1.15 2001/04/20 01:51:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,63 +32,63 @@ RooArgSet::RooArgSet(const char *name) :
 {
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3,
-		       RooAbsArg& var4) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3,
+		       const RooAbsArg& var4) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3,
-		       RooAbsArg& var4, RooAbsArg& var5) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3,
+		       const RooAbsArg& var4, const RooAbsArg& var5) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3,
-		       RooAbsArg& var4, RooAbsArg& var5, RooAbsArg& var6) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3,
+		       const RooAbsArg& var4, const RooAbsArg& var5, const RooAbsArg& var6) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3,
-		       RooAbsArg& var4, RooAbsArg& var5, 
-                       RooAbsArg& var6, RooAbsArg& var7) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3,
+		       const RooAbsArg& var4, const RooAbsArg& var5, 
+                       const RooAbsArg& var6, const RooAbsArg& var7) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
 }
 
-RooArgSet::RooArgSet(const char *name, RooAbsArg& var1,
-		       RooAbsArg& var2, RooAbsArg& var3,
-		       RooAbsArg& var4, RooAbsArg& var5, 
-                       RooAbsArg& var6, RooAbsArg& var7, RooAbsArg& var8) :
+RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
+		       const RooAbsArg& var2, const RooAbsArg& var3,
+		       const RooAbsArg& var4, const RooAbsArg& var5, 
+                       const RooAbsArg& var6, const RooAbsArg& var7, const RooAbsArg& var8) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
@@ -109,7 +109,7 @@ RooArgSet::RooArgSet(const char *name, const RooArgSet& other) :
   while (orig = (RooAbsArg*)iterator->Next()) {
     orig->redirectServers(*this) ;
   }
-
+  delete iterator ;
 }
 
 RooArgSet::~RooArgSet() 
@@ -144,7 +144,7 @@ RooArgSet* RooArgSet::snapshot() {
 }
 
 
-void RooArgSet::addServerClonesToList(RooAbsArg& var)
+void RooArgSet::addServerClonesToList(const RooAbsArg& var)
 {
   // Add clones of servers of given argument to list
 
@@ -175,7 +175,7 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
 }
 
 
-Bool_t RooArgSet::add(RooAbsArg& var) {
+Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
   // Add argument to list
 
   const char *name= var.GetName();
@@ -189,23 +189,24 @@ Bool_t RooArgSet::add(RooAbsArg& var) {
   RooAbsArg *other(0);
   if(other= find(name)) {
     if(other != &var) {
-      // print a warning if this variable is not the same one we
-      // already have
-      cout << "RooArgSet(" << _name << "): cannot add second variable \"" << name
-	   << "\"" << endl;
+      if (!silent)
+	// print a warning if this variable is not the same one we
+	// already have
+	cout << "RooArgSet(" << _name << "): cannot add second variable \"" << name
+	     << "\"" << endl;
     }
     // don't add duplicates
     return kFALSE;
   }
   // add a pointer to this variable to our list (we don't own it!)
-  Add(&var);
+  Add((TObject*)&var);
   return kTRUE;
 }
 
 
 
 
-Bool_t RooArgSet::add(RooArgSet& list)
+Bool_t RooArgSet::add(const RooArgSet& list)
 {
   Bool_t result(false) ;
 
@@ -219,7 +220,7 @@ Bool_t RooArgSet::add(RooArgSet& list)
 
 
 
-Bool_t RooArgSet::replace(RooAbsArg& var1, RooAbsArg& var2) 
+Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
 {
   // check that this isn't a copy of a list
   if(_isCopy) {
@@ -242,14 +243,14 @@ Bool_t RooArgSet::replace(RooAbsArg& var1, RooAbsArg& var2)
     return kFALSE;
   }
   // replace var1 with var2
-  Remove(&var1);
-  Add(&var2);
+  Remove((TObject*)&var1);
+  Add((TObject*)&var2);
   return kTRUE;
 }
 
 
 
-Bool_t RooArgSet::remove(RooAbsArg& var) {
+Bool_t RooArgSet::remove(const RooAbsArg& var) {
   // Remove argument from list
 
   // check that this isn't a copy of a list
@@ -265,7 +266,7 @@ Bool_t RooArgSet::remove(RooAbsArg& var) {
 	 << " and cannot be removed" << endl;
     return kFALSE;
   }
-  Remove(&var);
+  Remove((TObject*)&var);
   return kTRUE;
 }
 

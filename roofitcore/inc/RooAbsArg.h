@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.17 2001/04/18 20:38:01 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.18 2001/04/20 01:51:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,16 +32,28 @@ public:
   RooAbsArg() ;
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
-  RooAbsArg(const RooAbsArg& other) ;
-  RooAbsArg(const char* name, const RooAbsArg& other) ;
+  RooAbsArg(const RooAbsArg& other, const char* name=0) ;
+  virtual TObject* clone() const = 0 ;
+  virtual TObject* Clone(const char* newname=0) const { return clone() ; }
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
   Bool_t dependsOn(const RooArgSet& serverList) const ;
   Bool_t dependsOn(const RooAbsArg& server) const ;
+  Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
+  void leafNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
+  void branchNodeServerList(RooArgSet* list, const RooAbsArg* arg=0) const ;
+  void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 
+			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE) const ;
   
+  // Parameter & dependents interpretation of servers
+  RooArgSet* getParameters(const RooDataSet* set) const ;
+  RooArgSet* getDependents(const RooDataSet* set) const ;
+  Bool_t dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const ;
+  virtual Bool_t checkDependents(const RooDataSet* set) const ;
+
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
   virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
@@ -56,6 +68,7 @@ public:
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
   Bool_t getAttribute(const Text_t* name) const ;
   inline TIterator* attribIterator() { return _attribList.MakeIterator() ; }
+  inline Bool_t isConstant() const { return getAttribute("Constant") ; }
 
   //Debug hooks
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
@@ -64,7 +77,6 @@ public:
 protected:
 
   virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
-  void initCopy(const RooAbsArg& other) ;
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
@@ -74,8 +86,9 @@ protected:
   THashList _serverList      ; //! do not persist (or clone)
   TObjArray _proxyArray      ; //! do not persist (or clone)
 
-  Bool_t redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
-  virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll) {} ;
+  Bool_t redirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  Bool_t recursiveRedirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
 
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooArgSet& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;

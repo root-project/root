@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.7 2001/04/09 04:29:34 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.8 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -9,7 +9,6 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -28,23 +27,8 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 }
 
 
-RooMappedCategory::RooMappedCategory(const char *name, const RooMappedCategory& other) :
-  RooDerivedCategory(name,other), _defout(other._defout) 
-{
-  initCopy(other) ;
-}
-
-
-
-RooMappedCategory::RooMappedCategory(const RooMappedCategory& other) :
-  RooDerivedCategory(other), _defout(other._defout) 
-{
-  initCopy(other) ;
-}
-
-
-
-void RooMappedCategory::initCopy(const RooMappedCategory& other) 
+RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
+  RooDerivedCategory(other,name), _defout(other._defout) 
 {
   int i ;
   for (i=0 ; i<other._inlo.GetEntries() ; i++) {
@@ -53,7 +37,6 @@ void RooMappedCategory::initCopy(const RooMappedCategory& other)
     _out.Add(other._out.At(i)) ;
   }
 }
-
 
 
 RooMappedCategory::~RooMappedCategory() 

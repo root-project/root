@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDerivedCategory.rdl,v 1.1 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,8 +29,7 @@ public:
   // Constructors, assignment etc.
   RooDerivedCategory() {} ;
   RooDerivedCategory(const char *name, const char *title);
-  RooDerivedCategory(const RooDerivedCategory& other) ;
-  RooDerivedCategory(const char* name, const RooDerivedCategory& other) ;
+  RooDerivedCategory(const RooDerivedCategory& other, const char* name=0) ;
   virtual ~RooDerivedCategory();
 
   virtual Int_t getIndex() const ;
@@ -43,7 +42,7 @@ protected:
 
   // Function evaluation and error tracing
   RooCatType traceEval() const ;
-  virtual Bool_t traceEvalHook(RooCatType value) const {}
+  virtual Bool_t traceEvalHook(RooCatType value) const { return kFALSE ;}
   virtual RooCatType evaluate() const = 0 ;
 
   ClassDef(RooDerivedCategory,1) // a real-valued variable and its value

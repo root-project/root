@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMultiCatIter.rdl,v 1.1 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,9 @@
 #include "TIterator.h"
 #include "RooFitCore/RooArgSet.hh"
 class RooCategory ;
+
+typedef TIterator* pTIterator ;
+typedef RooCategory* pRooCategory ;
 
 class RooMultiCatIter : public TIterator {
 public:
@@ -34,8 +37,8 @@ protected:
   void initialize(const RooArgSet& catList) ;
 
   RooArgSet        _catList  ;   // Set of categories iterated over
-  TIterator**      _iterList ;   // Array of category type iterators 
-  RooCategory**  _catPtrList ;   // Array of pointers to original categories
+  pTIterator*      _iterList ;   // Array of category type iterators 
+  pRooCategory*  _catPtrList ;   // Array of pointers to original categories
   Int_t _nIter ;                 // Number of categories/iterators in use
   Int_t _curIter ;               // Current location of master iterator
 

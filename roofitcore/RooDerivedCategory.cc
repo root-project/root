@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDerivedCategory.cc,v 1.1 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,17 +30,11 @@ RooDerivedCategory::RooDerivedCategory(const char *name, const char *title) :
 
 
 
-RooDerivedCategory::RooDerivedCategory(const char* name, const RooDerivedCategory& other) :
-  RooAbsCategory(name, other)
+RooDerivedCategory::RooDerivedCategory(const RooDerivedCategory& other, const char* name) :
+  RooAbsCategory(other,name)
 {
 }
 
-
-
-RooDerivedCategory::RooDerivedCategory(const RooDerivedCategory& other) : 
-  RooAbsCategory(other)
-{
-}
 
 
 RooDerivedCategory::~RooDerivedCategory()

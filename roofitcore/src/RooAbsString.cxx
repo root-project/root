@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.2 2001/03/29 01:59:09 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.3 2001/03/29 22:37:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,26 +30,12 @@ RooAbsString::RooAbsString(const char *name, const char *title) :
 
 
 
-RooAbsString::RooAbsString(const char* name, const RooAbsString& other) : 
-  RooAbsArg(name, other)
-{
-  initCopy(other) ;
-}
-
-
-
-RooAbsString::RooAbsString(const RooAbsString& other) : 
-  RooAbsArg(other)
-{
-  initCopy(other) ;
-}
-
-
-
-void RooAbsString::initCopy(const RooAbsString& other)
+RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
+  RooAbsArg(other, name)
 {
   strcpy(_value,other._value) ;
 }
+
 
 
 RooAbsString::~RooAbsString()
@@ -97,6 +83,7 @@ Bool_t RooAbsString::operator==(TString value) const
 Bool_t RooAbsString::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   //Read object contents from stream (dummy for now)
+  return kFALSE ;
 } 
 
 void RooAbsString::writeToStream(ostream& os, Bool_t compact) const
@@ -105,10 +92,10 @@ void RooAbsString::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-void RooAbsString::printToStream(ostream& os, PrintOption opt) const
+void RooAbsString::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   //Print object contents
-  os << "RooAbsString: " << GetName() << " = " << getVal();
+  os << indent << "RooAbsString: " << GetName() << " = " << getVal();
   os << " : \"" << fTitle << "\"" ;
 
   printAttribList(os) ;

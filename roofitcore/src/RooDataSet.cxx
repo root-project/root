@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.17 2001/04/21 02:42:43 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.18 2001/05/02 18:08:59 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,6 @@
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
 
 #include <iostream.h>
 #include <iomanip.h>
@@ -48,6 +47,7 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooDataSet)
@@ -84,6 +84,14 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
   loadValues(filename,treename,cuts);
 }
 
+
+RooDataSet::RooDataSet(RooDataSet const & other) : 
+  TTree(other.GetName(),other.GetTitle()), _vars("Dataset Variables"), _truth(), _branch(0)
+{
+  initialize(other._vars) ;
+  loadValues(&other,"") ;
+}
+
 RooDataSet::~RooDataSet()
 {
   // we cloned the initial AbsArgs ourselves and own them
@@ -109,7 +117,7 @@ void RooDataSet::loadValues(const char *filename, const char *treename,
   }
 }
 
-void RooDataSet::loadValues(TTree *t, const char *cuts) 
+void RooDataSet::loadValues(const TTree *t, const char *cuts) 
 {
   // Load values of given ttree
 
@@ -219,6 +227,36 @@ void RooDataSet::initialize(const RooArgSet& vars) {
 }
 
 
+void RooDataSet::addColumn(RooDerivedReal& newVar) 
+{
+  // Clone current tree
+  RooDataSet* cloneData = new RooDataSet(*this) ;
+
+  // Clone variable and attach to cloned tree 
+  RooDerivedReal* newVarClone = (RooDerivedReal*) newVar.Clone() ;
+  newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
+
+  // Attach value place holder to this tree
+  RooRealVar* valHolder = new RooRealVar(newVar.GetName(),newVar.GetTitle(),0) ;
+  ((RooAbsArg*)valHolder)->attachToTree(*this) ;
+  _vars.add(*valHolder) ;
+
+  // Fill values of of placeholder
+  Reset() ;
+  for (int i=0 ; i<cloneData->GetEntries() ; i++) {
+    cloneData->get(i) ;
+
+    _vars = cloneData->_vars ;
+    valHolder->setVal(newVarClone->getVal(this)) ;
+
+    Fill() ;
+  }
+  
+  delete newVarClone;
+  delete cloneData ;
+}
+
+
 void RooDataSet::add(const RooArgSet& data) {
   // Add a row of data elements  virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   _vars= data;
@@ -309,6 +347,7 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
 
   if (ownPlotVar) delete plotVar ;
   if (select) delete select ;
+
   return histo ;
 }
 
