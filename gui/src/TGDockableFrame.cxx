@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.4 2004/07/30 15:42:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.5 2004/08/03 19:45:14 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -279,13 +279,14 @@ void TGDockableFrame::UndockContainer()
 
    if (fFrame || !fEnableUndock) return;
 
-   fFrame = new TGUndockedFrame(fClient->GetRoot(), this);
+   fFrame = new TGUndockedFrame(fClient->GetDefaultRoot(), this);
+   fFrame->SetEditDisabled();
 
    RemoveFrame(fContainer);
    fContainer->ReparentWindow(fFrame);
    fFrame->AddFrame(fContainer, fCl);  // fHints
 
-   gVirtualX->TranslateCoordinates(GetId(), fClient->GetRoot()->GetId(), fX,
+   gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(), fX,
                                    fY + fFrame->GetHeight(), ax, ay, wdummy);
 
    if (fDockName) fFrame->SetWindowName(fDockName);
