@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.3 2002/10/25 00:19:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.4 2004/02/16 22:49:18 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -67,6 +67,16 @@ public:
    const char *GetOptions() const { return fOptions; }
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
+
+   void        SetProtocol(const char *proto) { fProtocol = proto; fUrl = ""; }
+   void        SetUser(const char *user) { fUser = user; fUrl = ""; }
+   void        SetPasswd(const char *pw) { fPasswd = pw; fUrl = ""; }
+   void        SetHost(const char *host) { fHost = host; fUrl = ""; }
+   void        SetFile(const char *file) { fFile = file; fUrl = ""; }
+   void        SetAnchor(const char *anchor) { fAnchor = anchor; fUrl = ""; }
+   void        SetOptions(const char *opt) { fOptions = opt; fUrl = ""; }
+   void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
+
    void        Print(Option_t *option="") const;
 
    ClassDef(TUrl,1)  //Represents an URL
