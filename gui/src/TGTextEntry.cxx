@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.25 2004/09/10 16:25:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.26 2004/09/11 16:27:09 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1591,28 +1591,24 @@ void TGTextEntry::RemoveText(Int_t start, Int_t end)
 void TGTextEntry::SetFont(FontStruct_t font, Bool_t local)
 {
    // Changes text font.
-   // If global is true font is changed locally.
+   // If local is kTRUE font is changed locally.
+
+   if (font == fFontStruct) return;
 
    FontH_t v = gVirtualX->GetFontHandle(font);
+
    if (!v) return;
 
    if (local) {
       TGGC *gc = new TGGC(fNormGC); // copy
       fHasOwnFont = kTRUE;
       fNormGC = *gc;
+      gc = new TGGC(fSelGC); // copy
+      fSelGC = *gc;
    }
    fNormGC.SetFont(v);
+   fSelGC.SetFont(v);
    fFontStruct = font;
-
-   int max_ascent, max_descent;
-
-   UInt_t tWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(),
-                                         fText->GetTextLength());
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   UInt_t tHeight = max_ascent + max_descent;
-
-   // Resize is done when parent's is Layout() is called
-   Resize(tWidth, tHeight + 1);
    fClient->NeedRedraw(this);
 }
 
