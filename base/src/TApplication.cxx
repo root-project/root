@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.2 2000/06/12 15:44:09 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -135,6 +135,8 @@ TApplication::TApplication(const char *appClassName,
 
       if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1))
          gROOT->LoadClass("TGX11TTF", "GX11TTF");
+
+      delete [] ttfont;
    }
 #endif
 
