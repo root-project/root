@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBCPEffDecay.cc,v 1.4 2001/10/30 07:38:52 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.5 2001/11/05 18:53:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -94,20 +94,26 @@ RooBCPEffDecay::~RooBCPEffDecay()
 
 Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const 
 {
+  // B0    : _tag = +1 
+  // B0bar : _tag = -1 
+
   if (basisIndex==_basisExp) {
-    //exp term: (1 -/+ dw)(1+a^2)/2
+    //exp term: (1 -/+ dw)(1+a^2)/2 
     return (1 - _tag*_delMistag)*(1+_absLambda*_absLambda)/2 ;
+    // =    1 + _tag*deltaDil/2
   }
 
   if (basisIndex==_basisSin) {
-    //sin term: +/- (1-2w)*etaCP*a*b 
-    return _tag*(1-2*_avgMistag)*_CPeigenval*_absLambda*_argLambda ;
+    //sin term: +/- (1-2w)*ImLambda(= -etaCP * |l| * sin2b)
+    return -1*_tag*(1-2*_avgMistag)*_CPeigenval*_absLambda*_argLambda ;
+    // =   _tag*avgDil * ...
   }
   
   if (basisIndex==_basisCos) {
     //cos term: +/- (1-2w)*(1-a^2)/2
-    return _tag*(1-2*_avgMistag)*(1-_absLambda*_absLambda)/2 ;
-  }
+    return -1*_tag*(1-2*_avgMistag)*(1-_absLambda*_absLambda)/2 ;
+    // =   -_tag*avgDil * ...
+  } 
   
   return 0 ;
 }
@@ -160,7 +166,7 @@ void RooBCPEffDecay::initGenerator(Int_t code)
   if (code==2) {
     // Calculate the fraction of mixed events to generate
     Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
-    _tag = -1 ;
+    _tag = 1 ;
     Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
   }  
@@ -173,7 +179,7 @@ void RooBCPEffDecay::generateEvent(Int_t code)
   // Generate mix-state dependent
   if (code==2) {
     Double_t rand = RooRandom::uniform() ;
-    _tag = (rand<=_genB0Frac) ? -1 : 1 ;
+    _tag = (rand<=_genB0Frac) ? 1 : -1 ;
   }
 
   // Generate delta-t dependent
@@ -198,8 +204,8 @@ void RooBCPEffDecay::generateEvent(Int_t code)
     Double_t al2 = _absLambda*_absLambda ;
     Double_t maxAcceptProb = (1+al2) + fabs(maxDil*_CPeigenval*_absLambda*_argLambda) + fabs(maxDil*(1-al2)/2);        
     Double_t acceptProb    = (1+al2)/2*(1-_tag*_delMistag) 
-                           + (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval) 
-                           + (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
+                           - (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval) 
+                           - (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
 
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
     

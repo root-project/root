@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.rdl,v 1.4 2001/10/30 07:38:53 verkerke Exp $
+ *    File: $Id: RooBMixDecay.rdl,v 1.5 2001/11/05 18:53:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -24,9 +24,9 @@ public:
   // Constructors, assignment etc
   inline RooBMixDecay() { }
   RooBMixDecay(const char *name, const char *title, 
-	       RooRealVar& t, RooAbsCategory& tag,
+	       RooRealVar& t, RooAbsCategory& mixState, RooAbsCategory& tagFlav,
 	       RooAbsReal& tau, RooAbsReal& dm,
-	       RooAbsReal& mistag, const RooResolutionModel& model, 
+	       RooAbsReal& mistag, RooAbsReal& delMistag, const RooResolutionModel& model, 
 	       DecayType type=DoubleSided) ;
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=0);
@@ -46,13 +46,19 @@ protected:
 
   DecayType        _type ;
   RooRealProxy     _mistag ;
-  RooCategoryProxy _tag ;
+  RooRealProxy     _delMistag ;
+  RooCategoryProxy _mixState ;
+  RooCategoryProxy _tagFlav ;
   RooRealProxy     _tau ;
   RooRealProxy     _dm ;
   RooRealProxy     _t ;
   Int_t _basisExp ;
   Int_t _basisCos ;
-  Double_t _genMixFrac ;
+
+  Double_t _genMixFrac ;   //! do not persist
+  Double_t _genFlavFrac ;  //!
+  Double_t _genFlavFracMix ;   //!
+  Double_t _genFlavFracUnmix ; //!
 
   ClassDef(RooBMixDecay,1) // B Mixing decay PDF
 };
