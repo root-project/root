@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.15 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.16 2004/10/15 17:08:10 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -317,6 +317,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    TGTextLBEntry *te;
    TGFileItem *f;
    void *p = 0;
+   const char *txt;
 
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -326,11 +327,20 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kIDF_OK:
                      // same code as under kTE_ENTER
                      if (fTbfname->GetTextLength() == 0) {
-                        const char *txt = "Please provide file name or use \"Cancel\"";
+                        txt = "Please provide file name or use \"Cancel\"";
                         new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                                      "Missing File Name", txt, kMBIconExclamation,
                                      kMBOk);
                         return kTRUE;
+                     } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
+                        Int_t ret;
+                        txt = Form("File name %s already exists, OK to overwrite it?",
+                                   fTbfname->GetString());
+                        new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                                     "File Name Exist", txt, kMBIconExclamation,
+                                     kMBYes | kMBNo, &ret);
+                        if (ret == kMBNo)
+                           return kTRUE;
                      }
                      fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                     fTbfname->GetString());
@@ -444,6 +454,15 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                "Missing File Name", txt, kMBIconExclamation,
                                kMBOk);
                   return kTRUE;
+               } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
+                  Int_t ret;
+                  txt = Form("File name %s already exists, OK to overwrite it?",
+                             fTbfname->GetString());
+                  new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                               "File Name Exist", txt, kMBIconExclamation,
+                               kMBYes | kMBNo, &ret);
+                  if (ret == kMBNo)
+                     return kTRUE;
                }
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
