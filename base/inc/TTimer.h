@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.2 2000/10/17 12:26:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.3 2000/11/10 02:28:52 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -45,9 +45,6 @@
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
-#ifndef ROOT_TQObject
-#include "TQObject.h"
-#endif
 #ifndef ROOT_TTime
 #include "TTime.h"
 #endif
@@ -57,7 +54,7 @@
 
 
 
-class TTimer : public TSysEvtHandler, public TQObject {
+class TTimer : public TSysEvtHandler {
 
 protected:
    TTime     fTime;      // time out time in ms
@@ -84,6 +81,7 @@ public:
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
    virtual Bool_t Notify();
+   void           Add() { TurnOn(); }
    void           Remove() { TurnOff(); }
    void           Reset();
    void           SetCommand(const char *command);

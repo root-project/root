@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@ Bool_t TFileHandler::Notify()
 {
    // Notify when event occured on descriptor associated with this handler.
 
+   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -50,6 +51,7 @@ Bool_t TFileHandler::ReadNotify()
    // Notify when something can be read from the descriptor associated with
    // this handler.
 
+   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -59,6 +61,7 @@ Bool_t TFileHandler::WriteNotify()
    // Notify when something can be written to the descriptor associated with
    // this handler.
 
+   Notified();       // emit Notified() signal
    return kFALSE;
 }
 
@@ -79,12 +82,25 @@ Bool_t TFileHandler::HasWriteInterest()
 }
 
 //______________________________________________________________________________
+void TFileHandler::Add()
+{
+   // Add file event handler to system file handler list.
+
+   if (gSystem && fFileNum != -1) {
+      gSystem->AddFileHandler(this);
+      Added();      // emit Added() signal
+   }
+}
+
+//______________________________________________________________________________
 void TFileHandler::Remove()
 {
    // Remove file event handler from system file handler list.
 
-   if (gSystem && fFileNum != -1)
+   if (gSystem && fFileNum != -1) {
       gSystem->RemoveFileHandler(this);
+      Removed();     // emit Removed() signal
+   }
 }
 
 
@@ -105,7 +121,19 @@ Bool_t TSignalHandler::Notify()
 {
    // Notify when signal occurs.
 
+   Notified();       // emit Notified() signal
    return kFALSE;
+}
+
+//______________________________________________________________________________
+void TSignalHandler::Add()
+{
+   // Add signal handler to system signal handler list.
+
+   if (gSystem && fSignal != (ESignals)-1) {
+      gSystem->AddSignalHandler(this);
+      Added();      // emit Added() signal
+   }
 }
 
 //______________________________________________________________________________
@@ -113,6 +141,8 @@ void TSignalHandler::Remove()
 {
    // Remove signal handler from system signal handler list.
 
-   if (gSystem && fSignal != (ESignals)-1)
+   if (gSystem && fSignal != (ESignals)-1) {
       gSystem->RemoveSignalHandler(this);
+      Removed();     // emit Removed() signal
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -24,16 +24,27 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
 
 
-class TSysEvtHandler : public TObject {
+class TSysEvtHandler : public TObject, public TQObject {
+
+private:
+   void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
    TSysEvtHandler() { }
    virtual ~TSysEvtHandler() { }
 
-   virtual Bool_t   Notify() = 0;
+   virtual void     Add()    = 0;
    virtual void     Remove() = 0;
+   virtual Bool_t   Notify() = 0;
+
+   virtual void     Notified() { Emit("Notified()"); }  //*SIGNAL*
+   virtual void     Added()    { Emit("Added()"); }     //*SIGNAL*
+   virtual void     Removed()  { Emit("Removed()"); }   //*SIGNAL*
 
    ClassDef(TSysEvtHandler,0)  //ABC for handling system events
 };
@@ -65,6 +76,7 @@ public:
    virtual Bool_t  WriteNotify();
    virtual Bool_t  HasReadInterest();
    virtual Bool_t  HasWriteInterest();
+   virtual void    Add();
    virtual void    Remove();
 
    ClassDef(TFileHandler,0)  //Handles events on file descriptors
@@ -117,6 +129,7 @@ public:
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
    virtual Bool_t Notify();
+   virtual void   Add();
    virtual void   Remove();
 
    ClassDef(TSignalHandler,0)  //Signal event handler
