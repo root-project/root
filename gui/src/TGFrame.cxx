@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.89 2004/10/06 12:50:18 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.90 2004/10/06 14:18:01 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -149,7 +149,6 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fMinHeight   = 0;
    fMaxWidth    = ~0;
    fMaxHeight   = ~0;
-   fMustCleanup = kFALSE;
    fFE          = 0;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
@@ -210,7 +209,6 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fMinHeight   = 0;
    fMaxWidth    = ~0;
    fMaxHeight   = ~0;
-   fMustCleanup = kFALSE;
    fFE          = 0;
 
    SetWindowName();
@@ -220,23 +218,6 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
 TGFrame::~TGFrame()
 {
    // Destructor.
-}
-
-//______________________________________________________________________________
-void TGFrame::SetCleanup(Bool_t on)
-{
-   // Turn on automatic cleanup of child frames.
-
-   if (on == fMustCleanup) return;
-   fMustCleanup = on;
-}
-
-//______________________________________________________________________________
-Bool_t TGFrame::IsCleanupOn() const
-{
-   // Return kTRUE if parent's Cleanup is in on (or at ctor).
-
-   return kFALSE; //(fParent->MustCleanup() && !fFE);
 }
 
 //______________________________________________________________________________
@@ -779,6 +760,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
+   fMustCleanup   = 0;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -799,6 +781,7 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
+   fMustCleanup   = 0;
 
    SetLayoutManager(new TGVerticalLayout(this));
 
@@ -810,7 +793,7 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
-   if (MustCleanup()) Cleanup();
+   if (fMustCleanup) Cleanup();
    if (fList) fList->Delete();
    delete fList;
    delete fLayoutManager;
@@ -941,6 +924,19 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
 }
 
 //______________________________________________________________________________
+void TGCompositeFrame::SetCleanup(Int_t on)
+{
+   // Turn on automatic cleanup of child frames at dtor.
+   //
+   // if on is ZERO - no automatic cleanup
+   // if on > 0 - non-propagative cleanup
+   // if on < 0 - propagate Cleanup to all child_composite frames (hierarchical)
+
+   if (on == fMustCleanup) return;
+   fMustCleanup = on;
+}
+
+//______________________________________________________________________________
 void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
    // Add frame to the composite frame using the specified layout hints.
@@ -953,6 +949,9 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
+
+   // if fMustCleanup < 0 - propagate Cleanup to all child_composite frames (hierarchical)
+   if (fMustCleanup < 0) f->SetCleanup(-1);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.15 2004/09/22 12:34:10 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.16 2004/09/22 18:05:04 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2316,10 +2316,11 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
    frame->Move(x > x0 ? x0 : x, y > y0 ? y0 : y);
    frame->Resize(w, h);
    frame->MapRaised();
-   frame->SetCleanup(kTRUE);
+   frame->SetCleanup(-1);
 
    if (fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) {
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();
+      edit->SetCleanup(-1);
       ReparentFrames(frame, edit);
       frame->MapRaised();
       edit->SetLayoutBroken();

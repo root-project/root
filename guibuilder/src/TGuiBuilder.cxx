@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.17 2004/09/22 18:05:04 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.18 2004/09/23 06:37:40 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -222,7 +222,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
 {
    // ctor
 
-   SetCleanup(kTRUE);
+   SetCleanup(-1);
    fEditDisabled = kTRUE;
 
    if (gDragManager) {
@@ -1145,9 +1145,8 @@ TGFrame *TGuiBuilder::VSplitter()
    //
 
    TGHorizontalFrame *ret = new TGHorizontalFrame();
-   ret->MustCleanup();
+   ret->SetCleanup(-1);
    TGVerticalFrame *v1 = new TGVerticalFrame(ret, 40, 10, kSunkenFrame |  kFixedWidth);
-   v1->MustCleanup();
    ret->AddFrame(v1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
    TGVSplitter *splitter = new TGVSplitter(ret);
@@ -1156,7 +1155,6 @@ TGFrame *TGuiBuilder::VSplitter()
 
    TGVerticalFrame *v2 = new TGVerticalFrame(ret, 10, 10, kSunkenFrame);
    v2->ChangeOptions(kSunkenFrame);
-   v2->MustCleanup();
    ret->AddFrame(v2, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
 
    ret->MapSubwindows();
@@ -1170,9 +1168,8 @@ TGFrame *TGuiBuilder::HSplitter()
    //
 
    TGVerticalFrame *ret = new TGVerticalFrame();
-   ret->MustCleanup();
+   ret->SetCleanup(-1);
    TGHorizontalFrame *v1 = new TGHorizontalFrame(ret, 10, 40, kSunkenFrame | kFixedHeight);
-   v1->MustCleanup();
    ret->AddFrame(v1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
    TGHSplitter *splitter = new TGHSplitter(ret);
@@ -1181,7 +1178,6 @@ TGFrame *TGuiBuilder::HSplitter()
 
    TGHorizontalFrame *v2 = new TGHorizontalFrame(ret, 10, 10);
    v2->ChangeOptions(kSunkenFrame);
-   v2->MustCleanup();
    ret->AddFrame(v2, new TGLayoutHints(kLHintsBottom | kLHintsExpandX | kLHintsExpandY));
 
    ret->MapSubwindows();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.54 2004/09/22 12:27:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.55 2004/10/06 12:50:18 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -136,7 +136,6 @@ protected:
    UInt_t   fOptions;       // frame options
    Pixel_t  fBackground;    // frame background color
    UInt_t   fEventMask;     // currenty active event mask
-   Bool_t   fMustCleanup;   // if kTRUE Cleanup() is called in destructor
    TGFrameElement *fFE;     // pointer to frame element
 
    static Bool_t      fgInit;
@@ -246,11 +245,10 @@ public:
    virtual Bool_t  IsComposite() const { return kFALSE; }
    virtual Bool_t  IsEditable() const { return kFALSE; }
    virtual void    SetEditable(Bool_t) {}
-   virtual void    SetCleanup(Bool_t on = kTRUE);
-   virtual Bool_t  MustCleanup() const { return fMustCleanup; }
-   virtual Bool_t  IsCleanupOn() const;
    virtual void    SetLayoutBroken(Bool_t = kTRUE) {}
    virtual Bool_t  IsLayoutBroken() const { return kFALSE; }
+   virtual void    SetCleanup(Int_t = 1) {}
+   virtual Bool_t  MustCleanup() const { return kFALSE; }
 
    virtual void    SetDragType(Int_t type);
    virtual void    SetDropType(Int_t type);
@@ -314,6 +312,7 @@ protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
    Bool_t           fLayoutBroken;    // no layout manager is used
+   Int_t            fMustCleanup;     // if non-zero Cleanup() is called in destructor
 
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
@@ -372,6 +371,8 @@ public:
    virtual Bool_t IsLayoutBroken() const
                   { return fLayoutBroken || !fLayoutManager || IsEditable(); }
    virtual void   SetEditDisabled(Bool_t on = kTRUE);
+   virtual void   SetCleanup(Int_t on = 1);
+   virtual Bool_t MustCleanup() const { return (fMustCleanup != 0); }
 
    TList *GetList() { return fList; }
    virtual void Print(Option_t *option="") const;
