@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.56 2003/12/30 13:39:27 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.57 2003/12/31 16:36:32 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -248,9 +248,10 @@ TWinNTSystem::~TWinNTSystem()
 
 #ifdef GDK_WIN32
    if (hThread1) ::CloseHandle(hThread1);
-#endif
+#else
 
    ::CloseHandle(fhTermInputEvent);
+#endif
 }
 
 #ifdef GDK_WIN32
@@ -338,16 +339,16 @@ Bool_t TWinNTSystem::Init()
    CreateIcons();
 #endif
 
-   // Create Event HANDLE for stand-alone ROOT-based applications
-   fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 
 #ifdef GDK_WIN32
-    if (!gROOT->IsBatch()) {
+//    if (!gROOT->IsBatch()) {
         hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
         hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
             &thread1ID );
-    }
-
+//    }
+#else
+   // Create Event HANDLE for stand-alone ROOT-based applications
+   fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 #endif
 
     return kFALSE;
@@ -740,103 +741,78 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
 {
-   // Events are processed by separate thread. Here we just return the
-   // interrupt value the might have been set in command thread.
+   // process pending events, i.e. DispatchOneEvent(kTRUE)
 
-   Bool_t intr = gROOT->IsInterrupted();
-   gROOT->SetInterrupt(kFALSE);
-
-   if (!gROOT->IsBatch())
-      DispatchOneEvent(kTRUE);
-
-   return intr;
+   return TSystem::ProcessEvents();
 }
 
 //______________________________________________________________________________
 void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
- // Dispatch a single event via Command thread
+   // Dispatch a single event in TApplication::Run() loop
 
-   if (gROOT->IsBatch()) {
-      if (!gApplication->HandleTermInput()) {
-          // wait ExitLoop()
-          ::WaitForSingleObject(fhTermInputEvent,INFINITE);
-          ::ResetEvent(fhTermInputEvent);
-      }
-      return;
+   if (gROOT->IsLineProcessing()) {
+      return;   // might block, but rarely
    }
-   while (1) {
-      fReadready  = fReadmask;
-      fWriteready = fWritemask;
-      if(gROOT->IsLineProcessing()) {
-         if (!pendingOnly) {
-            ::SleepEx(1, TRUE);
+
+   // used once at startup for syncronization with HandleConsoleThread
+   if (hEvent1) ::SetEvent(hEvent1);
+      
+   // first handle any GUI events
+   if (gXDisplay) {
+      if (gXDisplay->Notify()) {
+         if (!pendingOnly) return;
+      }
+   }
+
+   // check synchronous signals
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
+      if (CheckSignals(kTRUE)) {
+         if (!pendingOnly) return;
+      }
+   }
+   fSigcnt = 0;
+   fSignals.Zero();
+
+   // handle past due timers
+   if (fTimers && fTimers->GetSize() > 0) {
+      if (DispatchTimers(kTRUE)) {
+         // prevent timers from blocking the rest types of events
+         Long_t to = NextTimeOut(kTRUE);
+         if (to > kItimerResolution || to == -1) {
             return;
          }
       }
-      if (hEvent1) ::SetEvent(hEvent1);
-      if (gXDisplay) {
-         if(gXDisplay->Notify()) {
-            if (fReadready.IsSet(gXDisplay->GetFd())) {
-               fReadready.Clr(gXDisplay->GetFd());
-               fNfd--;
-            }
-            if (!pendingOnly) {
-               return;
-            }
-         }
-         else {
-            if (!pendingOnly) {
-               SleepEx(1, TRUE);
-            }
-         }
-      }
-      // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-          TFileHandler *fh;
-          TIter next(fFileHandler);
-
-          while (fh = (TFileHandler*) next()) {
-              int fd = fh->GetFd();
-              if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-                  fReadready.Clr(fd);
-                  if (fh->ReadNotify()) {
-                      return;
-                  }
-              }
-              if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-                  fWriteready.Clr(fd);
-                  if (fh->WriteNotify()) {
-                      return;
-                  }
-              }
-          }
-      }
-      fNfd = 0;
-      fReadready.Zero();
-      fWriteready.Zero();
-
-      // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
-         if (CheckSignals(kTRUE)) {
-             if (!pendingOnly) return;
-         }
-      }
-      fSigcnt = 0;
-      fSignals.Zero();
-
-      // check synchronous timers
-      if (fTimers && fTimers->GetSize() > 0) {
-         if (DispatchTimers(kTRUE)) {
-            // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
-               return;
-         }
-      }
-      if (pendingOnly) return;
    }
+
+   // handle all(not masked) file descriptors ready for reading/writing
+   if (fNfd > 0 && fFileHandler->GetSize() > 0) {
+      TFileHandler *fh;
+      TIter next(fFileHandler);
+
+      while (fh = (TFileHandler*) next()) {
+         int fd = fh->GetFd();
+        
+         if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
+            fReadready.Clr(fd);
+            fh->ReadNotify();
+         }
+         if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
+            fWriteready.Clr(fd);
+            fh->WriteNotify();
+         }
+      }
+   }
+   fNfd = 0;
+   fReadready.Zero();
+   fWriteready.Zero();
+
+   // We do not use blocking (like MsgWaitForMultipleObjects). 
+   // ::SleepEx(1, 1) does the same dirty work ;-)
+   // i.e. prevents from 100% CPU time occupation.
+   ::SleepEx(1, 1);
 }
+
 #endif
 
 //______________________________________________________________________________
