@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.2 2002/09/14 11:21:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.3 2002/09/14 20:25:48 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -244,13 +244,11 @@ Bool_t TGColorPalette::HandleMotion(Event_t *event)
 Bool_t TGColorPalette::HandleKey(Event_t *event)
 {
    Char_t input[10];
-   Int_t  n;
    UInt_t keysym;
 
    if (event->fType == kGKeyPress) {
 
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
-      n = strlen(input);
 
       Int_t cx = fCx;
       Int_t cy = fCy;
