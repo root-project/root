@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.25 2003/05/01 07:42:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.1 2004/04/22 06:56:09 brun Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -169,9 +169,9 @@ public:
     {return Max(lb,Min(c,ub));}
 
   // I/O
-  friend std::ostream& operator<<(std::ostream& out, const TComplex& c) {
+  friend ostream& operator<<(ostream& out, const TComplex& c) {
     out << "(" << c.fRe << "," << c.fIm << "i)"; return out; }
-  friend std::istream& operator>>(std::istream& in, TComplex& c) {
+  friend istream& operator>>(istream& in, TComplex& c) {
     in >> c.fRe >> c.fIm; return in;}
 
 protected:
