@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.11 2004/06/01 11:15:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.12 2004/08/23 16:01:09 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -3323,7 +3323,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
-	  << "    double term = " << prefix << "gCoefficient[i]; <<"
+	  << "    double term = " << prefix << "gCoefficient[i];"
 	  << endl
 	  << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
 	  << endl
