@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.50 2002/06/12 20:29:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.51 2002/06/14 13:47:15 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -432,6 +432,28 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 }
 
 //______________________________________________________________________________
+TFriendElement *TChain::AddFriend(TTree *chain, const char* alias)
+{
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,chain,alias);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+            //         chain,filename,t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","Unknown TChain %s",chain->GetName());
+      }
+   } else {
+      Warning("AddFriend","Cannot add FriendElement %s",chain->GetName());
+   }
+   return fe;
+}
+
+//______________________________________________________________________________
 void TChain::Browse(TBrowser *)
 {
 
@@ -672,6 +694,13 @@ Int_t TChain::LoadTree(Int_t entry)
       return -3;
    }
    fTree = (TTree*)fFile->Get(element->GetName());
+   if (fTree==0) {
+      // Now that we do not check during the addition, we need to check here!
+      Error("LoadTree","cannot find tree with name %s in file %s", 
+            element->GetName(),element->GetTitle());
+      delete fFile; fFile = 0;
+      return -4;
+   }
    fTreeNumber = t;
    fDirectory = fFile;
 
@@ -711,6 +740,20 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Notify user if requested
    if (fNotify) fNotify->Notify();
+
+   if (fFriends) {
+      //NOTE: maybe we should move this code to each of the function calling LoadTree
+      //so that we enable the ability to make firend with chains of same total length but different 
+      //intermediary length
+      TIter next(fFriends);
+      TFriendElement *fe;
+      while ((fe = (TFriendElement*)next())) {
+         TTree *t = fe->GetTree();
+         t->LoadTree(entry);
+         TTree *friend_t = t->GetTree();
+         if (friend_t) fTree->AddFriend(friend_t,fe->GetName());
+      }
+   }
 
    return fReadEntry;
 }

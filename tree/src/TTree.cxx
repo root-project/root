@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.123 2002/05/18 08:22:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.124 2002/05/29 21:06:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -532,6 +532,35 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
               file?file->GetName():"");
    }
    return fe;
+}
+
+//______________________________________________________________________________
+TFriendElement *TTree::AddFriend(TTree *tree, const char* alias)
+{
+// Add a TFriendElement to the list of friends. The TTree is managed by
+// the user (e.g. the user must delete the file).
+// For complete description see AddFriend(const char *, const char *).
+
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,tree, alias);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+               tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","unknown tree %s in file %s",
+                 tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)");
+      }
+   } else {
+      Warning("AddFriend","cannot add FriendElement %s in file %s",tree->GetName(),
+              fe->GetFile()?fe->GetFile()->GetName():"(memory resident)");
+   }
+   return fe;
+
 }
 
 //______________________________________________________________________________

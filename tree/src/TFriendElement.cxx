@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.4 2001/06/07 08:40:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.5 2001/09/22 10:06:55 rdm Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TTree.h"
 #include "TFriendElement.h"
 #include "TFile.h"
+#include "TROOT.h"
 
 R__EXTERN TTree *gTree;
 
@@ -42,6 +43,7 @@ TFriendElement::TFriendElement() : TNamed()
    fFile       = 0;
    fTree       = 0;
    fOwnFile    = kFALSE;
+   fOwnTree    = kTRUE;
    fParentTree = gTree;
 }
 
@@ -58,6 +60,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
    fFile       = 0;
    fTree       = 0;
    fOwnFile    = kTRUE;
+   fOwnTree    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
    if (strchr(treename,'=')) {
@@ -86,6 +89,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fFile       = file;
    fTree       = 0;
    fOwnFile    = kFALSE;
+   fOwnTree    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
    if (strchr(treename,'=')) {
@@ -98,6 +102,34 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    }
 
    Connect();
+}
+
+//______________________________________________________________________________
+TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias)
+:TNamed(friendtree?friendtree->GetName():"",
+        friendtree?(friendtree->GetDirectory()?friendtree->GetDirectory()->GetFile()->GetName():""):"")
+{
+//*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                      ======================
+//
+
+   fTree       = friendtree;
+   fTreeName   = "";
+   fFile       = 0;
+   if (fTree) {
+      fTreeName   = fTree->GetName();
+      if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
+   }
+   fOwnFile    = kFALSE;
+   fOwnTree    = kFALSE;
+   fParentTree = tree;
+   if (alias && strlen(alias)) {
+      char *temp = Compress(alias);
+      SetName(temp);
+      delete [] temp;
+   }
+
+   // No need to Connect.
 }
 
 //______________________________________________________________________________
@@ -121,7 +153,7 @@ TTree *TFriendElement::DisConnect()
 {
 // DisConnect file and TTree.
 
-   delete fTree;
+   if (fOwnTree) delete fTree;
    if (fOwnFile) delete fFile;
    fFile = 0;
    fTree = 0;
@@ -156,7 +188,14 @@ TTree *TFriendElement::GetTree()
 // Return pointer to friend TTree.
 
    if (fTree) return fTree;
-   if (!GetFile()) return 0;
+   if (!GetFile()) {
+      // This could be a memory tree or chain
+      fTree = (TTree*)gROOT->FindObject(GetTreeName());
+      if (! fTree->InheritsFrom(TTree::Class()) ) {
+         fTree = 0;
+      }
+      return fTree;
+   }
    fTree = (TTree*)fFile->Get(GetTreeName());
    TDirectory *dir = fParentTree->GetDirectory();
    if (dir && dir != gDirectory) dir->cd();
