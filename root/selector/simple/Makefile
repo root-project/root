@@ -25,9 +25,13 @@ endif
 testLoadingSelector.log: testSel_C.$(DllSuf)  testSelector_C.$(DllSuf)
 
 
+removepwd: 
+	$(CMDECHO)sed 's|$(PWD)||g' testLoadingSelector.log >& testLoadingSelector.temp
+	$(CMDECHO)mv testLoadingSelector.temp testLoadingSelector.log
+
 # ..... | sed -s/$(PWD)//g > testLoadingSelector.log
 
 
-testLoadingSelector: testLoadingSelector.log
+testLoadingSelector: testLoadingSelector.log removepwd
 		  $(TestDiff)
 
