@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.106 2002/11/04 21:18:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.107 2002/11/15 16:05:52 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2948,7 +2948,8 @@ Int_t THistPainter::PaintInit()
       Hparam.xlast = fXaxis->FindFixBin(Hparam.xmax);
       Hparam.xmin  = TMath::Log10(Hparam.xmin);
       Hparam.xmax  = TMath::Log10(Hparam.xmax);
-      if (Hparam.xlast > last) Hparam.xlast = last;
+      if (Hparam.xlast  > last)  Hparam.xlast  = last;
+      if (Hparam.xfirst < first) Hparam.xfirst = first;
    }
 
 //     Compute Y axis parameters
