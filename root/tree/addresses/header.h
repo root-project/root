@@ -2,6 +2,8 @@
 
 class Track : public TObject {
   public:
+  Track() : a(0) {};
+  explicit Track(int val) : a(val) {};
   int a;
   ClassDef(Track,1);
 };

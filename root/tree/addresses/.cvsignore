@@ -1,0 +1,9 @@
+*.def
+*.dll
+*.lib
+*.dll
+*.d
+*.root
+*.log
+*.exp
+

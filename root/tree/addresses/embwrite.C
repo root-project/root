@@ -1,5 +1,5 @@
 {
-gSystem->Load("test.dll");
+gROOT->ProcessLine(".L Embedded_load.C+");
 TFile *f    = new TFile("Embedded.root", "RECREATE", "Root Embedded test");
 TTree *tree = new TTree("T","An example of a ROOT tree");
 Normal_objects* obj = new Normal_objects();

@@ -1,73 +1,115 @@
-#include "TFile.h"
-#include "clonesA_Event.h"
+// Example to write & read a Tree built with a complex class inheritance tree.
+// It demonstrates usage of inheritance and TClonesArrays
+// This is simplied / stripped extract of an event structure used within the
+// Marabou project (http://www.bl.physik.uni-muenchen.de/marabou/html/)
+//
+//to run this example, do:
+// root > .x clonesA_rw.C
 
-ClassImp(TUsrHit)
-    ClassImp(TUsrHitBuffer)
-    ClassImp(TUsrSevtData1)
-    ClassImp(TUsrSevtData2)
-    ClassImp(TMrbSubevent_Caen)
-
-//______________________________________________________
-TUsrHit::TUsrHit(Int_t ev) {
-   cerr << "ctor TUsrHit " << this << endl;
-   fEventNumber = ev;
-   fModuleNumber = ev%4;
-   fChannel  = ev+1000;
-//   for (Int_t i=0;i<3;i++) fEventTime[i] = 100+ev;  
-   fChannelTime = ev * ev;
-}
-
-//______________________________________________________
-
-TUsrHitBuffer::TUsrHitBuffer(Int_t maxent) {
-   cerr << "ctor TUsrHitBuffer " << this << endl;
-   fNofEntries = maxent;
-   fNofHits = 0;
-   fHits = new TClonesArray("TUsrHit", fNofEntries);
-   cerr << "Made clones at ptr " << &fHits << " at addr " << fHits << endl;
-}
-
-//______________________________________________________
-
-TUsrHit *TUsrHitBuffer::AddHit(Int_t ev) {
-   TClonesArray & hits = *fHits;
-   TUsrHit *hit = new(hits[fNofHits++]) TUsrHit(ev);
-   return hit;
-}
-
-//______________________________________________________
-
-void TUsrHitBuffer::Clear(Option_t *) {
-   fHits->Clear();
-   fNofHits = 0;
-}
-
-//______________________________________________________
-
-void TUsrSevtData1::SetEvent(Int_t ev) {
-   Clear();
-   cout << "TUsrSevtData1: " << ev << endl;
-   fTimeStamp = 100+ev; //in TMrbSubevent_Caen
-   fSevtName  = "SubEvent_1_";
-   fSevtName += ev;
-   fMer       = 1100 + ev;
-   fPileup    = 2100 + ev;
-   for(Int_t i = 1; i <= ev+1; i++) {
-      fHitBuffer.AddHit(i);
+void clonesA_Event_w()
+{
+// protect against old ROOT versions
+   if ( gROOT->GetVersionInt() < 30503 ) {
+      cout << "Works only with ROOT version >= 3.05/03" << endl;
+      return;
    }
-   fNiceTrig = -ev;
-}
-//______________________________________________________
-
-void TUsrSevtData2::SetEvent(Int_t ev) {
-   Clear();
-   cout << "TUsrSevtData2: " << ev << endl;
-   fTimeStamp = 100+ev; //in TMrbSubevent_Caen
-   fSevtName  = "SubEvent_2_";
-   fSevtName += ev;
-   fMer       = 21000 + ev;
-   fPileup    = 22000 + ev;
-   for(Int_t i = 1; i <= ev+1; i++) {
-      fHitBuffer.AddHit(i);
+   if ( gROOT->GetVersionDate() < 20030406 ) {
+      cout << "Works only with ROOT CVS version after 5. 4. 2003" << endl;
+      return;
    }
+
+   //write a Tree
+   TFile *hfile = new TFile("clonesA_Event.root","RECREATE","Test TClonesArray");
+   TTree *tree  = new TTree("clonesA_Event","An example of a ROOT tree");
+   TUsrSevtData1 *event1 = new TUsrSevtData1();
+   TUsrSevtData2 *event2 = new TUsrSevtData2();
+   tree->Branch("top1","TUsrSevtData1",&event1,8000,99);
+   tree->Branch("top2.","TUsrSevtData2",&event2,8000,99);
+   for (Int_t ev = 0; ev < 10; ev++) {
+      cout << "event " << ev << endl;
+      event1->SetEvent(ev);
+      event2->SetEvent(ev);
+      cout << "# hits event1: " <<  event1->GetHitBuffer()->GetNofHits() << endl;
+      cout << "tca : " << event1->GetHitBuffer()->GetCA()->GetLast() << endl;
+      tree->Fill();
+      if (ev <3) tree->Show(ev);
+   }
+   tree->Write();
+   tree->Print();
+   delete hfile;
 }
+ 
+void clonesA_Event_r(bool verify=true)
+{
+   //read the Tree
+   TFile * hfile = new TFile("clonesA_Event.root");
+   TTree *tree = (TTree*)hfile->Get("clonesA_Event");
+
+   TUsrSevtData1 * event1 = 0;
+   TUsrSevtData2 * event2 = 0;
+   tree->SetBranchAddress("top1",&event1);
+   tree->SetBranchAddress("top2.",&event2);
+   for (Int_t ev = 0; ev < 8; ev++) {
+      tree->GetEntry(ev);
+      // tree->Show(ev);
+      cout << "Pileup event1: " <<  event1->GetPileup() << endl;
+      cout << "# hits event1: " <<  event1->GetHitBuffer()->GetNofHits() << endl;
+      //cout << "Pileup event2: " <<  event2->GetPileup() << endl;
+      cout << "tca : " << event1->GetHitBuffer()->GetCA()->GetLast() << endl;
+      
+      if (verify) {
+         bool failed = false;
+         if ( event1->GetTimeStamp() != 100+ev ) {
+            cerr << "event1->GetTimeStamp() is " << event1->GetTimeStamp()
+                 << " instead of " << 100+ev << endl;
+            failed = true;
+         }
+         if ( event1->GetHitBuffer()->GetCA()->GetLast() != ev ) {
+            cerr << "event1->GetHitBuffer()->GetCA()->GetLast() is " << event1->GetHitBuffer()->GetCA()->GetLast() 
+                 << " instead of " << ev << endl;
+            failed = true;
+         }
+         if ( event1->GetPileup() != 2100+ev ) {
+            cerr << "event1->GetPileup() is " << event1->GetPileup() 
+                 << " instead of " << 2100+ev << endl;
+            failed = true;
+         }
+         if ( event1->GetNiceTrig() != -ev ) {
+            cerr << "event->GetNiceTrig() is " << event1->GetNiceTrig()
+                 << " instead of " << -ev << endl;
+            failed = true;
+         }
+
+
+         if ( event2->GetTimeStamp() != 100+ev ) {
+            cerr << "event2->GetTimeStamp() is " << event2->GetTimeStamp()
+                 << " instead of " << 100+ev << endl;
+            failed = true;
+         }
+         if ( event2->GetHitBuffer()->GetCA()->GetLast() != ev ) {
+            cerr << "event2->GetHitBuffer()->GetCA()->GetLast() is " << event2->GetHitBuffer()->GetCA()->GetLast() 
+                 << " instead of " << ev << endl;
+            failed = true;
+         }
+         if ( event2->GetPileup() != 22000+ev ) {
+            cerr << "event2->GetPileup() is " << event2->GetPileup() 
+                 << " instead of " << 22000+ev << endl;
+            failed = true;
+         }
+         if (failed) gApplication->Terminate(1);
+
+      }
+      event1->Clear();
+      event2->Clear();
+ //     gObjectTable->Print();          // detect possible memory leaks
+   }
+   
+   delete hfile;
+}
+ 
+void clonesA_rw() {
+   if (!gSystem->CompileMacro("clonesA_Event.cxx","k")) gApplication->Terminate(1);  // compile shared lib
+   clonesA_Event_w();                            // write the tree
+   clonesA_Event_r();                            // read back the tree
+}
+

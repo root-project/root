@@ -1,5 +1,5 @@
 {
-gSystem->Load("test.dll");
+gROOT->ProcessLine(".L Embedded_load.C+");
 TFile *f    = new TFile("Embedded.root");
 TTree *tree = (TTree*)f->Get("T");
 Normal_objects* obj = new Normal_objects();
