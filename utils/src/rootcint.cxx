@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.196 2004/12/13 18:57:56 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.197 2005/01/07 00:15:28 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1105,9 +1105,8 @@ bool NeedShadowClass(G__ClassInfo& cl)
    if (TClassEdit::IsSTLCont(cl.Name()) != 0 ) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
 
-   return (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-           && strncmp(cl.FileName(),"prec_stl",8)!=0 )
-      || (cl.HasMethod("ShowMembers") && cl.IsTmplt());
+   if (cl.HasMethod("ShowMembers")) return cl.IsTmplt();
+   else return ((cl.RootFlag() & G__USEBYTECOUNT) && strncmp(cl.FileName(),"prec_stl",8)!=0);
 }
 
 //______________________________________________________________________________
@@ -4426,6 +4425,10 @@ int main(int argc, char **argv)
 
    cl.Init();
    while (cl.Next()) {
+      if (cl.Linkage() == G__CPPLINK && !cl.IsLoaded()) {
+         Error(0,"A dictionary has been requested for %s but there is no declaration!\n",cl.Name());
+         continue;
+      }
       if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
 
          // Write Code for initialization object (except for STL containers)
@@ -4464,6 +4467,9 @@ int main(int argc, char **argv)
    bool has_input_error = false;
    while (cl.Next()) {
       if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+         if (!cl.IsLoaded()) {
+            continue;
+         }
          if (cl.HasMethod("Streamer")) {
             if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
                // We do not write out the input operator anymore, it is a template
@@ -4501,6 +4507,9 @@ int main(int argc, char **argv)
    //
    cl.Init();
    while (cl.Next()) {
+      if (!cl.IsLoaded()) {
+         continue;
+      }
       if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          // Write Code for Class_Name() and static variable
          if (cl.HasMethod("Class_Name")) {
