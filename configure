@@ -231,6 +231,11 @@ check_library() {
             i64=`echo $i | sed 's|lib*|lib64|'`
             i="$i64 $i"
         fi
+        # look first in the hpux64 directories
+        if test "x$checkhpux64" = "xyes" ; then
+            i64=`echo $i | sed 's|\(lib*\)|\1/hpux64|'`
+            i="$i64 $i"
+        fi
         for l in $i ; do
             for j in ${libs} ; do
 	        # if we found the file (it's readable by user), we set the
@@ -685,6 +690,8 @@ sgicc)
    checklib32="yes" ;;
 linuxx8664*|sgicc64)
    checklib64="yes" ;;
+hpuxia64acc)
+   checkhpux64="yes" ;;
 esac
 
 if test "x$platform" = "xmacosx" ; then
@@ -893,7 +900,7 @@ if test ! "$platform" = "win32"; then
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
-	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+	$XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
 	/usr/X11/lib
     xpmlib=$found_lib
@@ -980,7 +987,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 	/usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
 	/usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/lib /opt/graphics/OpenGL/lib/hpux64 /opt/graphics/OpenGL/lib"
+	/opt/Mesa/lib /opt/graphics/OpenGL/lib"
 
     keep=$opengllibdir
     check_library "libGL libMesaGL" "$enable_shared" \
@@ -1438,9 +1445,6 @@ fi
 #
 # Check for graphics libraries used by libAfterImage, like libjpeg, etc.
 #
-if test "x$platform" = "xwin32"; then
-    enable_asimage="no"
-fi
 if test ! "x$enable_asimage" = "xno" ; then
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
        /usr/local/include /usr/include /opt/include $finkdir/include
@@ -1492,7 +1496,6 @@ if test ! "x$enable_asimage" = "xno" ; then
         aspngincdir=""
         astiffincdir=""
         asgifincdir=""
-        enable_asimage="no"
     else
         asextralib="$asextralib $found_libz"
         asextralibdir="$asextralibdir $found_dirz"
