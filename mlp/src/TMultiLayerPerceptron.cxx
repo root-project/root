@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.7 2003/09/05 10:40:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.8 2003/09/10 16:40:57 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ difficult to maintain code.</P>
 </UL>
 <P>The multilayer perceptron is a simple feed-forward network with
 the following structure:</P>
-<P ALIGN=CENTER><IMG SRC="mlp.png" NAME="MLP" 
+<P ALIGN=CENTER><IMG SRC="gif/mlp.png" NAME="MLP" 
 ALIGN=MIDDLE WIDTH=333 HEIGHT=358 BORDER=0>
 </P>
 <P>It is made of neurons characterized by a bias and weighted links
