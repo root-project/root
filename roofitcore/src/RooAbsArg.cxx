@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.69 2002/04/10 20:59:04 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.70 2002/05/03 21:49:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -137,6 +137,7 @@ RooAbsArg::~RooAbsArg()
   TIterator* clientIter = _clientList.MakeIterator() ;
   RooAbsArg* client = 0;
   while (client=(RooAbsArg*)clientIter->Next()) {
+    client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
     client->setAttribute(attr.Data());
@@ -472,7 +473,7 @@ Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const
 {
   // Overloadable function in which derived classes can implement
   // consistency checks of the variables. If this function returns
-  // true, indicating an error, the fitter or generator will abort.
+  // true, indicating an error, the fitter or generator will abort.  
   return kFALSE ;
 }
 
@@ -486,6 +487,11 @@ Bool_t RooAbsArg::recursiveCheckDependents(const RooArgSet* nset) const
   RooAbsArg* arg ;
   Bool_t ret(kFALSE) ;
   while(arg=(RooAbsArg*)iter->Next()) {
+    if (arg->getAttribute("ServerDied")) {
+      cout << "RooAbsArg::recursiveCheckDependents: ERROR: one or more servers of node " 
+	   << arg->GetName() << " no longer exists!" << endl ;
+      ret = kTRUE ;
+    }
     ret |= arg->checkDependents(nset) ;
   }
   delete iter ;
