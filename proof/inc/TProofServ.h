@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.11 2002/04/19 18:23:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.12 2002/10/07 10:43:51 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 
 class TProof;
 class TSocket;
+class TList;
 class TDSetElement;
 
 
@@ -59,6 +60,7 @@ private:
    TSocket    *fSocket;           //socket connection to client
    TProof     *fProof;            //PROOF talking to slave servers
    FILE       *fLogFile;          //log file
+   TList      *fEnabledPackages;  //list of enabled packages
    Int_t       fPackageLockId;    //file id of package dir lock
    Int_t       fCacheLockId;      //file id of cache dir lock
    Int_t       fProtocol;         //protocol version number
@@ -71,7 +73,6 @@ private:
    Bool_t      fInterrupt;        //if true macro execution will be stopped
    Float_t     fRealTime;         //real time spent executing commands
    Float_t     fCpuTime;          //CPU time spent executing commands
-   Stat_t      fEntriesProcessed; //total number of entries processed (obtained via GetNextPacket)
    TStopwatch  fLatency;          //measures latency of packet requests
    TStopwatch  fCompute;          //measures time spend processing a packet
 
@@ -115,8 +116,6 @@ public:
    void          Print(Option_t *option="") const;
 
    TObject      *Get(const char *namecycle);
-   Stat_t        GetEntriesProcessed() const { return fEntriesProcessed; }
-   void          GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
    TDSetElement *GetNextPacket();
    void          Reset(const char *dir);
    Int_t         ReceiveFile(const char *file, Bool_t bin, Long_t size);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.35 2002/11/28 18:38:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.36 2002/12/02 18:50:05 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #include "TUrl.h"
 #include "TFTP.h"
 #include "TROOT.h"
-#include "TFile.h"
 #include "TH1.h"
 #include "TProofPlayer.h"
 #include "TDSet.h"
@@ -208,9 +207,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
       char fconf[256];
       sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
-      if (gSystem->AccessPathName(fconf, kFileExists)) {
+      if (gSystem->AccessPathName(fconf, kReadPermission)) {
           sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
-         if (gSystem->AccessPathName(fconf, kFileExists)) {
+         if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("Init", "no PROOF config file found");
             return 0;
          }
@@ -234,7 +233,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             int nword = sscanf(line, "%s %s %s %s %s %s %s", word[0], word[1],
                 word[2], word[3], word[4], word[5], word[6]);
 
-            // find node on which master runs
+            // see if master may run on this node
             if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
                TInetAddress a = gSystem->GetHostByName(word[1]);
                if (!host.CompareTo(a.GetHostName()) ||
@@ -321,57 +320,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
-Int_t TProof::ConnectFile(const TFile *file)
-{
-   // Send message to all slaves to connect "file". This method is
-   // called by the TFile ctor (no user method). Message is only send
-   // if file was opened in READ mode.
-
-   if (!IsValid() || !file) return 0;
-
-   TString clsnam  = file->IsA()->GetName();
-   TString filenam = file->GetName();
-   TString option  = file->GetOption();
-
-   // only propagate files opened in READ mode to PROOF servers
-   if (option.CompareTo("READ", TString::kIgnoreCase))
-      return 0;
-
-   // A TFile can only be opened on all machines if the master and slaves
-   // share the same file system image.
-   if (clsnam == "TFile") {
-      if (GetNumberOfUniqueSlaves() > 0)
-         return 0;
-      else {
-         if (!gSystem->IsAbsoluteFileName(filenam)) {
-            filenam = gSystem->WorkingDirectory();
-            filenam += "/";
-            filenam += file->GetName();
-         }
-      }
-   }
-
-   TMessage mess(kPROOF_OPENFILE);
-   mess << clsnam << filenam << option;
-   Broadcast(mess, kAll);
-   return Collect(kAll);
-}
-
-//______________________________________________________________________________
-void TProof::ConnectFiles()
-{
-   // Tell all servers to open all files currently opened by the client.
-
-   if (!IsValid()) return;
-
-   TIter  next(gROOT->GetListOfFiles());
-   TFile *f;
-
-   while ((f = (TFile *) next()))
-      ConnectFile(f);
-}
-
-//______________________________________________________________________________
 void TProof::Close(Option_t *)
 {
    // Close all open slave servers.
@@ -389,19 +337,6 @@ void TProof::Close(Option_t *)
       fUniqueSlaves->Clear();
       fBadSlaves->Clear();
    }
-}
-
-//______________________________________________________________________________
-Int_t TProof::DisConnectFile(const TFile *file)
-{
-   // Send message to all slaves to disconnect "file". This method is
-   // called by the TFile::Close() (no user method).
-
-   if (!IsValid()) return 0;
-
-   char str[512];
-   sprintf(str, "{TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\"); if (f) f->Close();}", file->GetName());
-   return SendCommand(str, kAll);
 }
 
 //______________________________________________________________________________
@@ -889,10 +824,6 @@ Int_t TProof::Collect(TMonitor *mon)
             }
             break;
 
-         case kPROOF_LIMITS:
-            if (fPlayer) Limits(s, *mess);
-            break;
-
          case kPROOF_FATAL:
             MarkBad(s);
             if (!mon->GetActive()) loop = 0;
@@ -1081,66 +1012,6 @@ void TProof::HandleAsyncInput(TSocket *sl)
    }
 
    delete mess;
-}
-
-//______________________________________________________________________________
-void TProof::Limits(TSocket *, TMessage &)
-{
-   // Calculate histogram limits after TTree::fEstimate entries have
-   // been processed.
-   // This function is called via Collect() in response to a kPROOF_LIMITS
-   // message send from a PROOF slave in TTree::TakeEstimate().
-
-/*
-   static TObjArray arr;
-   static Int_t     mxnbin[4], totevt;
-   static Float_t   mxvmin[4], mxvmax[4];
-   Int_t            dim, nentries, nbin[4];
-   Float_t          vmin[4], vmax[4];
-
-   mess >> dim >> nentries >> nbin[0] >> vmin[0] >> vmax[0];
-   if (dim == 2)
-      mess >> nbin[1] >> vmin[1] >> vmax[1];
-   if (dim == 3)
-      mess >> nbin[2] >> vmin[2] >> vmax[2];
-
-   if (!fLimits) {
-      arr.Clear();
-      for (int i = 0; i < dim; i++) {
-         mxnbin[i] = nbin[i];
-         mxvmin[i] = vmin[i];
-         mxvmax[i] = vmax[i];
-      }
-      totevt = nentries;
-      arr.Add(s);
-      fLimits++;
-   } else if (totevt < fTree->GetEstimate()) {
-      for (int i = 0; i < dim; i++) {
-         mxnbin[i] = TMath::Max(mxnbin[i], nbin[i]);
-         mxvmin[i] = TMath::Min(mxvmin[i], vmin[i]);
-         mxvmax[i] = TMath::Max(mxvmax[i], vmax[i]);
-      }
-      totevt += nentries;
-      arr.Add(s);
-      fLimits++;
-   }
-
-   if (totevt >= fTree->GetEstimate() || fLimits == GetNumberOfActiveSlaves()) {
-      TMessage msg(kPROOF_LIMITS);
-      msg << mxnbin[0] << mxvmin[0] << mxvmax[0];
-      if (dim == 2)
-         msg << mxnbin[1] << mxvmin[1] << mxvmax[1];
-      if (dim == 3)
-         msg << mxnbin[2] << mxvmin[2] << mxvmax[2];
-
-      if (arr.GetLast() != -1) {
-         for (int i = 0; i < fLimits; i++)
-            ((TSocket*)arr[i])->Send(msg);
-         arr.Clear();
-      } else
-         s->Send(msg);
-   }
-*/
 }
 
 //______________________________________________________________________________
@@ -1439,10 +1310,8 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
 //______________________________________________________________________________
 Int_t TProof::SendCurrentState(ESlaves list)
 {
-   // Transfer the current state of the master to the active slave servers
-   // just before starting the TTree loop. The current state includes: the
-   // current working directory, TChain defintion, MaxVirtualSize, Selector,
-   // etc.
+   // Transfer the current state of the master to the active slave servers.
+   // The current state includes: the current working directory, etc.
 
    if (!IsValid()) return 0;
 
@@ -1457,14 +1326,11 @@ Int_t TProof::SendCurrentState(ESlaves list)
 Int_t TProof::SendInitialState()
 {
    // Transfer the initial (i.e. current) state of the master to all
-   // slave servers. The initial state includes: log level, currently open
-   // files.
+   // slave servers. Currently the initial state includes: log level.
 
    if (!IsValid()) return 0;
 
    SetLogLevel(fLogLevel, gProofDebugMask);
-   if (IsMaster())
-      ConnectFiles();
 
    return GetNumberOfActiveSlaves();
 }
@@ -1797,15 +1663,15 @@ void TProof::ShowPackages(Bool_t all)
 void TProof::ShowEnabledPackages(Bool_t all)
 {
    // List which packages are enabled. If all is true show enabled packages
-   // for all slaves. If everything is ok all slaves should have the same
-   // packages enabled.
+   // for all active slaves. If everything is ok all active slaves should
+   // have the same packages enabled.
 
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(7) << all;
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
+   Broadcast(mess);
+   Collect();
 }
 
 //______________________________________________________________________________
@@ -1833,8 +1699,13 @@ void TProof::ClearPackage(const char *package)
       return;
    }
 
+   // if name, erroneously ends in .par, strip off .par
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(5) << TString(package);
+   mess << Int_t(5) << pac;
    Broadcast(mess, kUnique);
    Collect(kUnique);
 }
@@ -1842,12 +1713,28 @@ void TProof::ClearPackage(const char *package)
 //______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package)
 {
-   // Enable specified package. Executes the PROOF-INF/BUILD.C (or BUILD.sh)
-   // if exists followed by the PROOF-INF/setup.C script.
+   // Enable specified package. Executes the PROOF-INF/BUILD.sh
+   // if exists followed by the PROOF-INF/SETUP.C script.
    // Returns 0 in case of success and -1 in case of error.
 
-   if (package) { }  // place holder
-   return 0;
+   if (!IsValid()) return -1;
+
+   if (!package || !strlen(package)) {
+      Error("EnablePackage", "need to specify a package name");
+      return -1;
+   }
+
+   // if name, erroneously ends in .par, strip off .par
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(6) << pac;
+   Broadcast(mess);
+   Collect();
+
+   return fStatus;
 }
 
 //______________________________________________________________________________
@@ -1871,6 +1758,11 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
    TString spar = par;
    if (!spar.EndsWith(".par")) {
       Error("UploadPackage", "package %s must have extension .par", par);
+      return -1;
+   }
+
+   if (gSystem->AccessPathName(par, kReadPermission)) {
+      Error("UploadPackage", "package %s does not exist", par);
       return -1;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.33 2002/11/18 23:03:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.34 2002/12/02 18:50:05 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -19,6 +19,10 @@
 // master server.                                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#ifdef HAVE_CONFIG
+#include "config.h"
+#endif
 
 #ifdef WIN32
    #include <io.h>
@@ -53,11 +57,12 @@
 #include "TUrl.h"
 #include "TEnv.h"
 #include "TError.h"
-#include "TTree.h"
 #include "TProofPlayer.h"
 #include "TDSetProxy.h"
 #include "TTimeStamp.h"
 #include "TProofDebug.h"
+
+#include "compiledata.h"
 
 #ifndef R__WIN32
 const char* const kCP = "/bin/cp -f";
@@ -228,17 +233,19 @@ TProofServ::TProofServ(int *argc, char **argv)
    gErrorAbortLevel = kSysError;
    SetErrorHandler(ProofServErrorHandler);
 
-   fNcmd        = 0;
-   fInterrupt   = kFALSE;
-   fProtocol    = 0;
-   fOrdinal     = -1;
-   fGroupId     = -1;
-   fGroupSize   = 0;
-   fLogLevel    = 0;
-   fRealTime    = 0.0;
-   fCpuTime     = 0.0;
-   fProof       = 0;
-   fSocket      = new TSocket(0);
+   fNcmd            = 0;
+   fInterrupt       = kFALSE;
+   fProtocol        = 0;
+   fOrdinal         = -1;
+   fGroupId         = -1;
+   fGroupSize       = 0;
+   fLogLevel        = 0;
+   fRealTime        = 0.0;
+   fCpuTime         = 0.0;
+   fProof           = 0;
+   fSocket          = new TSocket(0);
+   fEnabledPackages = new TList;
+   fEnabledPackages->SetOwner();
 
    GetOptions(argc, argv);
 
@@ -272,19 +279,29 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // Everybody expects iostream to be available, so load it...
 #ifndef WIN32
-   ProcessLine("#include <iostream>");
+   ProcessLine("#include <iostream>", kTRUE);
 #endif
+   // Allow the usage of ClassDef and ClassImp in interpreted macros
+   ProcessLine("#include <RtypesCint.h>", kTRUE);
 
    // Load user functions
    const char *logon;
    logon = gEnv->GetValue("Proof.Load", (char*)0);
-   if (logon && !gSystem->AccessPathName(logon, kReadPermission))
-      ProcessLine(Form(".L %s",logon));
+   if (logon) {
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      if (mac)
+         ProcessLine(Form(".L %s", logon), kTRUE);
+      delete [] mac;
+   }
 
    // Execute logon macro
    logon = gEnv->GetValue("Proof.Logon", (char*)0);
-   if (logon && !NoLogOpt() && !gSystem->AccessPathName(logon, kReadPermission))
-      ProcessFile(logon);
+   if (logon && !NoLogOpt()) {
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      if (mac)
+         ProcessFile(logon);
+      delete [] mac;
+   }
 
    // Save current interpreter context
    gInterpreter->SaveContext();
@@ -318,6 +335,7 @@ TProofServ::~TProofServ()
    // Cleanup. Not really necessary since after this dtor there is no
    // live anyway.
 
+   delete fEnabledPackages;
    delete fSocket;
 }
 
@@ -396,38 +414,6 @@ TObject *TProofServ::Get(const char *namecycle)
    delete mess;
 
    return idcur;
-}
-
-//______________________________________________________________________________
-void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax)
-{
-   // Get limits of histogram from master. This method is called by
-   // TTree::TakeEstimate().
-
-   TMessage mess(kPROOF_LIMITS);
-
-   mess << dim << nentries << nbins[0] << vmin[0] << vmax[0];
-
-   if (dim == 2)
-      mess << nbins[1] << vmin[1] << vmax[1];
-
-   if (dim == 3)
-      mess << nbins[2] << vmin[2] << vmax[2];
-
-   fSocket->Send(mess);
-
-   TMessage *answ;
-   if (fSocket->Recv(answ) != -1) {
-      (*answ) >> nbins[0] >> vmin[0] >> vmax[0];
-
-      if (dim == 2)
-         (*answ) >> nbins[1] >> vmin[1] >> vmax[1];
-
-      if (dim == 3)
-         (*answ) >> nbins[2] >> vmin[2] >> vmax[2];
-
-      delete answ;
-   }
 }
 
 //______________________________________________________________________________
@@ -574,20 +560,6 @@ void TProofServ::HandleSocketInput()
 
       case kPROOF_STOP:
          Terminate(0);
-         break;
-
-      case kPROOF_TREEDRAW:
-         mess->ReadString(str, sizeof(str));
-         {
-            Int_t maxv, est;
-            char name[64];
-            sscanf(str, "%s %d %d", name, &maxv, &est);
-            TTree *t = (TTree*)gDirectory->Get(name);
-            if (t) {
-               t->SetMaxVirtualSize(maxv);
-               t->SetEstimate(est);
-            }
-         }
          break;
 
       case kPROOF_PROCESS:
@@ -791,40 +763,6 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
-      case kPROOF_OPENFILE:
-         {
-            // NOT CURRENTLY USED, LEFT AS EXAMPLE (TFile::Open() will
-            // do the forwarding from master to slaves)
-            // open file on master, if successfull this will also send the
-            // connect message to the slaves
-            TString clsnam, filenam, option;
-            (*mess) >> clsnam >> filenam >> option;
-            TString cmd;
-            cmd = "TFile::Open(\"" + filenam + "\", \"" + option + "\");";
-            if (IsMaster()) {
-               if (clsnam == "TNetFile") {
-                  TUrl url(filenam);
-                  Int_t sec = gEnv->GetValue("Rootd.Authentication",
-                                             TAuthenticate::kClear);
-                  if (!strcmp(url.GetProtocol(), "roots"))
-                     sec = TAuthenticate::kSRP;
-                  if (!strcmp(url.GetProtocol(), "rootk"))
-                     sec = TAuthenticate::kKrb5;
-                  TAuthenticate auth(0, url.GetHost(), "rootd", sec);
-                  TString user, passwd;
-                  if (auth.CheckNetrc(user, passwd))
-                     ProcessLine(cmd);
-                  else
-                     Error("HandleSocketInput", "cannot execute \"%s\" since authentication is not possible",
-                           cmd.Data());
-               } else
-                  ProcessLine(cmd);
-            } else
-               ProcessLine(cmd);
-         }
-         SendLogFile();
-         break;
-
       case kPROOF_PARALLEL:
          if (IsMaster()) {
             Int_t nodes;
@@ -840,9 +778,10 @@ void TProofServ::HandleSocketInput()
             // type: 1 = ShowCache, 2 = ClearCache, 3 = ShowPackages,
             // 4 = ClearPackages, 5 = ClearPackage, 6 = EnablePackage,
             // 7 = ShowEnabledPackages
+            Int_t  status = 0;
             Int_t  type;
             Bool_t all;  //build;
-            TString package;
+            TString package, pdir, ocwd;
             (*mess) >> type;
             switch (type) {
                case 1:
@@ -873,6 +812,7 @@ void TProofServ::HandleSocketInput()
                case 4:
                   LockPackage();
                   gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
+                  fEnabledPackages->Delete();
                   UnlockPackage();
                   if (IsMaster())
                      fProof->ClearPackages();
@@ -880,17 +820,82 @@ void TProofServ::HandleSocketInput()
                case 5:
                   (*mess) >> package;
                   LockPackage();
+                  // remove package directory and par file
                   gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                                 package.Data()));
+                  gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(),
+                                package.Data()));
+                  delete fEnabledPackages->Remove(fEnabledPackages->FindObject(package));
                   UnlockPackage();
                   if (IsMaster())
                      fProof->ClearPackage(package);
+                  break;
+               case 6:
+                  (*mess) >> package;
+                  LockPackage();
+                  // check that package and PROOF-INF directory exists
+                  pdir = fPackageDir + "/" + package;
+                  if (gSystem->AccessPathName(pdir)) {
+                     Error("HandleSocketInput:kPROOF_CACHE", "package %s does not exist",
+                           package.Data());
+                     status = -1;
+                  } else if (gSystem->AccessPathName(pdir + "/PROOF-INF")) {
+                     Error("HandleSocketInput:kPROOF_CACHE", "package %s does not have a PROOF-INF directory",
+                           package.Data());
+                     status = -1;
+                  }
+
+                  if (!status) {
+
+                     PDB(kPackage, 1)
+                        Info("HandleSocketInput:kPROOF_CACHE",
+                             "package %s exists and has PROOF-INF directory", package.Data());
+
+                     ocwd = gSystem->WorkingDirectory();
+                     gSystem->ChangeDirectory(pdir);
+
+                     // check for BUILD.sh and execute
+                     if (!gSystem->AccessPathName(pdir + "/PROOF-INF/BUILD.sh")) {
+                         if (gSystem->Exec("PROOF-INF/BUILD.sh"))
+                            status = -1;
+                     }
+
+                     // check for SETUP.C and execute
+                     if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
+                        gROOT->Macro("PROOF-INF/SETUP.C");
+                     }
+
+                     gSystem->ChangeDirectory(ocwd);
+
+                  }
+                  UnlockPackage();
+                  // if successful add to list and propagate to slaves
+                  if (!status) {
+                     fEnabledPackages->Add(new TObjString(package));
+                     if (IsMaster())
+                        fProof->EnablePackage(package);
+                  }
+                  break;
+               case 7:
+                  (*mess) >> all;
+                  if (IsMaster())
+                     printf("*** Enabled packages ***\n");
+                  else
+                     printf("*** Enabled packages on slave %d on %s\n", fOrdinal,
+                            gSystem->HostName());
+                  {
+                     TIter next(fEnabledPackages);
+                     while (TObjString *str = (TObjString*) next())
+                        printf("%s\n", str->GetName());
+                  }
+                  if (IsMaster() && all)
+                     fProof->ShowEnabledPackages(all);
                   break;
                default:
                   Error("HandleSocketInput:kPROOF_CACHE", "unknown type %d", type);
                   break;
             }
-            SendLogFile();
+            SendLogFile(status);
          }
          break;
 
@@ -1201,13 +1206,7 @@ void TProofServ::Reset(const char *dir)
    // Make sure current directory is empty (don't delete anything when
    // we happen to be in the ROOT memory only directory!?)
    if (gDirectory != gROOT) {
-      TObject *obj;
-      TIter next(gDirectory->GetList());
-      while ((obj = next()))
-         if (!obj->InheritsFrom(TTree::Class())) {
-            gDirectory->GetList()->Remove(obj);
-            delete obj;
-         }
+      gDirectory->Delete();
    }
 }
 
@@ -1405,6 +1404,13 @@ void TProofServ::Setup()
    bindir = gSystem->Getenv("ROOTSYS");
    if (!bindir.IsNull()) bindir += "/bin";
 # endif
+# ifdef COMPILER
+   TString compiler = COMPILER;
+   compiler.Remove(0, compiler.Index("is ") + 3);
+   compiler = gSystem->DirName(compiler);
+   if (!bindir.IsNull()) bindir += ":";
+   bindir += compiler;
+#endif
    if (!bindir.IsNull()) bindir += ":";
    bindir += "/bin:/usr/bin:/usr/local/bin";
    gSystem->Setenv("PATH", bindir);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.h,v 1.1 2002/04/19 18:23:59 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -29,13 +29,13 @@ class TH1;
 class TProofLimitsFinder : public THLimitsFinder {
 
 public:
-    TProofLimitsFinder();
-    virtual ~TProofLimitsFinder();
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
-    virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
+   TProofLimitsFinder();
+   virtual ~TProofLimitsFinder();
+   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
+   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
+   virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
 
-    ClassDef(TProofLimitsFinder,0)  //Find and communicate best axis limits
+   ClassDef(TProofLimitsFinder,0)  //Find and communicate best axis limits
 };
 
 #endif

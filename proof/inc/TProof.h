@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.27 2002/11/28 18:38:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.28 2002/12/05 15:56:12 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -50,7 +50,6 @@ namespace std { using ::map; }
 class TMessage;
 class TSocket;
 class TMonitor;
-class TFile;
 class TSignalHandler;
 class TSlave;
 class TProofServ;
@@ -109,7 +108,6 @@ private:
    Double_t  fBytesRead;     //bytes read by all slaves during the session
    Float_t   fRealTime;      //realtime spent by all slaves during the session
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
-   Int_t     fLimits;        //used by Limits()
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
    TProofPlayer   *fPlayer;     //current player
    struct MD5Mod_t {
@@ -140,12 +138,8 @@ private:
    Int_t    SendPrint();
    Int_t    Ping(ESlaves list);
    void     Interrupt(EUrgent type, ESlaves list = kActive);
-   void     ConnectFiles();
-   Int_t    ConnectFile(const TFile *file);
-   Int_t    DisConnectFile(const TFile *file);
    void     AskStatus();
    Int_t    GoParallel(Int_t nodes);
-   void     Limits(TSocket *s, TMessage &mess);
    void     RecvLogFile(TSocket *s, Int_t size);
 
    Int_t    Broadcast(const TMessage &mess, TList *slaves);
