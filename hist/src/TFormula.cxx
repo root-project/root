@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.70 2004/01/16 16:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.71 2004/02/11 22:06:44 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1928,6 +1928,12 @@ Int_t TFormula::Compile(const char *expression)
   err = 0;
   Analyze((const char*)chaine,err);
 
+// if no parameters delete arrays fParams and fNames
+  if (!fNpar) {
+	  delete [] fParams; fParams = 0;
+	  delete [] fNames;  fNames = 0;
+  }
+	
 //*-*- if no errors, copy local parameters to formula objects
   if (!err) {
      if (fNdim <= 0) fNdim = 1;
