@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.69 2005/02/02 17:45:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.70 2005/02/18 09:26:54 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1280,7 +1280,11 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
-
+   
+   TVirtualPad *savedPad = 0;
+   savedPad = (TVirtualPad *) gPad;
+   gPad = Canvas();
+   
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
    UInt_t h = GetHeight();
@@ -1288,6 +1292,9 @@ void TRootCanvas::ShowEditor(Bool_t show)
 
    if (show) {
       if (!fEditor) CreateEditor();
+      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
+            TVirtualPadEditor::HideEditor();
+      }
       ShowFrame(fHorizontal1);
       fMainFrame->ShowFrame(fEditorFrame);
       fViewMenu->CheckEntry(kViewEditor);
@@ -1301,6 +1308,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
       h = h - s;
    }
    Resize(w, h);
+
+   if (savedPad) gPad = savedPad;
 }
 
 //______________________________________________________________________________
@@ -1308,12 +1317,16 @@ void TRootCanvas::CreateEditor()
 {
    // Create embedded editor.
 
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0) {
+         TVirtualPadEditor::HideEditor();
+   }
    fEditorFrame->SetEditable();
    gPad = Canvas();
    // next two lines are related to the old editor
    TString show = gEnv->GetValue("Canvas.ShowEditor","false");
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
+   fEditor->SetGlobal(kFALSE);
    fEditorFrame->SetEditable(0);
    // next line is related to the old editor
    if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");

@@ -45,9 +45,11 @@ public:
    virtual void     TextAttributes(Int_t ,Float_t ,Int_t ,Int_t ,Float_t ) { }
 
    virtual void     Build() { }
-   virtual void     Show() { }
    virtual void     Hide() { }
+   virtual Bool_t   IsGlobal() const = 0;
    virtual void     DeleteEditors() { }
+   virtual void     SetGlobal(Bool_t) { }
+   virtual void     Show() { }
 
    // methods related to the new editor interface
 

@@ -90,7 +90,7 @@ void TVirtualPadEditor::ShowEditor()
    // Show the pad editor. Static method.
 
    if (!fgPadEditor) GetPadEditor();
-
+   fgPadEditor->SetGlobal(kTRUE);
    fgPadEditor->Show();
 }
 

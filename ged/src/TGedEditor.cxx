@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.15 2004/12/10 12:54:17 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.16 2005/02/02 17:45:47 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -30,12 +30,12 @@
 #include "TBaseClass.h"
 #include "TSystem.h"
 
-ClassImp(TGedFrame)
+
 ClassImp(TGedEditor)
 
 //______________________________________________________________________________
 TGedEditor::TGedEditor(TCanvas* canvas) :
-   TGMainFrame(gClient->GetRoot(), 155, 20)
+   TGMainFrame(gClient->GetRoot(), 175, 20)
 {
 
    fCan = new TGCanvas(this, 170, 10, kFixedWidth); 
@@ -49,7 +49,8 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
                     new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
    fTabContainer->AddFrame(fStyle, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
                                                      5, 0, 2, 2));
-   fWid = 1;
+   fWid = GetCounter();
+   fGlobal = kTRUE;
 
    if (canvas) {
       if (!canvas->GetSelected())
@@ -68,12 +69,14 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       fPad    = 0;
       fCanvas = 0;
       fClass  = 0;
+      if (gPad) SetCanvas(gPad->GetCanvas());
+      SetWindowName("Global Editor");
    }
-
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
    if (canvas) Resize(GetWidth(), canvas->GetWh()+4);  // 4 canvas borders
+
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -83,7 +86,9 @@ void TGedEditor::CloseWindow()
    // When closed via WM close button, just unmap (i.e. hide) editor
    // for later use.
 
-   Hide();
+   UnmapWindow();
+   Disconnect(fCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
+   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -191,21 +196,50 @@ void TGedEditor::GetClassEditor(TClass *cl)
 //______________________________________________________________________________
 void TGedEditor::ConnectToCanvas(TCanvas *c)
 {
+   // Connect this editor to the selected object in the canvas 'c'.
 
-   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",
-                     this, "SetModel(TVirtualPad*,TObject*,Int_t)");
+   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",\
+               this, "SetModel(TVirtualPad*,TObject*,Int_t)");
+   if (!c->GetSelected())
+      c->SetSelected(c);
+   if (!c->GetSelectedPad())
+      c->SetSelectedPad(c);
    c->Selected(c->GetSelectedPad(), c->GetSelected(), kButton1Down);
+}
+
+//______________________________________________________________________________
+void TGedEditor::SetCanvas(TCanvas *newcan)
+{
+   // Change connection to another canvas.
+
+   if (!newcan || !fCanvas || (fCanvas == newcan)) return;
+   
+   if (fCanvas && (fCanvas != newcan))
+      DisconnectEditors(fCanvas);
+   fCanvas = newcan;
+
+   SetWindowName(Form("%s_Editor", fCanvas->GetName()));
+   if (!fCanvas->GetSelected())
+      fCanvas->SetSelected(newcan);
+   if (!fCanvas->GetSelectedPad())
+      fCanvas->SetSelectedPad(newcan);
+   fModel  = fCanvas->GetSelected();
+   fPad    = fCanvas->GetSelectedPad();
+   fClass  = fModel->IsA();
+   GetEditors();
+   ConnectToCanvas(fCanvas);
+   SetModel(fPad, fModel, kButton1Down);
 }
 
 //______________________________________________________________________________
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
 
-   if (event != kButton1Down) return;
+   if (!fGlobal && (event != kButton1Down)) return;
 
    TCanvas *c = (TCanvas *) gTQSender;
 
-   if (c != fCanvas) return; 
+   if (!fGlobal && (c != fCanvas)) return; 
 
    fModel = obj;
    fPad   = pad;
@@ -239,17 +273,39 @@ void TGedEditor::Show()
 {
    // Show editor.
 
+   if (gPad && (gPad->GetCanvas() != fCanvas))
+      SetCanvas(gPad->GetCanvas());
+   else
+      ConnectToCanvas(fCanvas);
+
+   if (fCanvas->GetShowEditor())
+      fCanvas->ToggleEditor();
+
    MapWindow();
    if (!gROOT->GetListOfCleanups()->FindObject(this))
       gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
-void TGedEditor::DeleteEditors()
+void TGedEditor::Hide()
 {
-   // Delete GUI editors connected to the canvas fCanvas.
+   // Hide editor.
 
-   Disconnect(fCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
+   if (gPad->GetCanvas() == fCanvas) {
+      UnmapWindow();
+      Disconnect(fCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
+      gROOT->GetListOfCleanups()->Remove(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGedEditor::DisconnectEditors(TCanvas *canvas)
+{
+   // Disconnect GUI editors connected to canvas. 
+   
+   if (!canvas) return;
+
+   Disconnect(canvas, "Selected(TVirtualPad*,TObject*,Int_t)", this, "SetModel(TVirtualPad*,TObject*,Int_t)");
 
    TClass * cl;
    TIter next(gROOT->GetListOfClasses());
@@ -259,21 +315,52 @@ void TGedEditor::DeleteEditors()
          TIter next1(editors);
          TGedElement *ge;
          while ((ge = (TGedElement *)next1())) {
-            if (ge->fCanvas == fCanvas) {
-               editors->Remove(ge);
+            if (ge->fCanvas == canvas) {
+               ge->fCanvas = 0;
             }
          }
       }
    }
 }
-//______________________________________________________________________________
-void TGedEditor::Hide()
-{
-   // Hide editor.
 
-   gROOT->GetListOfCleanups()->Remove(this);
-   UnmapWindow();
-}
+//______________________________________________________________________________
+void TGedEditor::DeleteEditors()
+{
+   // Delete GUI editors connected to the canvas fCanvas.
+
+   DisconnectEditors(fCanvas);
+   Bool_t del = kTRUE;
+
+   TClass * cl;
+   TIter next(gROOT->GetListOfClasses());
+
+   while((cl = (TClass *)next())) {
+      if (cl->GetEditorList()->First() != 0) {
+         TList *editors = cl->GetEditorList();
+         TIter next1(editors);
+         TGedElement *ge;
+         while ((ge = (TGedElement *)next1())) {
+            if (ge->fCanvas != 0) {
+                 del = kFALSE;
+            }
+         }
+      }
+   }
+
+   if (del) {
+      TIter next(gROOT->GetListOfClasses());
+      while((cl = (TClass *)next())) {
+         if (cl->GetEditorList()->First() != 0) {
+            TList *editors = cl->GetEditorList();
+            TIter next1(editors);
+            TGedElement *ge;
+            while ((ge = (TGedElement *)next1())) {
+                  editors->Remove(ge);
+            }
+         }
+      }
+   }
+}  
 
 //______________________________________________________________________________
 TGedEditor::~TGedEditor()
