@@ -506,6 +506,9 @@ distclean:: clean
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                *.def .def
+ifeq ($(PLATFORM),macosx)
+	@rm -f lib/*.so
+endif
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
