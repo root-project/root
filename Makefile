@@ -131,6 +131,7 @@ MAKECINTDLLS  = build/unix/makecintdlls.sh
 ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
+MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
@@ -231,10 +232,11 @@ config config/Makefile.:
 $(COMPILEDATA): config/Makefile.$(ARCH)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
-	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)"
+	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
+	   "$(MAKEEXE)"
 
 $(MAKEINFO): config/Makefile.$(ARCH)
-	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC)
+	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
 
 build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \

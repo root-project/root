@@ -20,6 +20,7 @@ CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -library=iostream,no%Cstd
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO
+CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 
 # Linker:
 LD            = $(CXX)
