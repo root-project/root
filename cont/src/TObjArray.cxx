@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.6 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.7 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -408,7 +408,8 @@ Int_t TObjArray::GetLast() const
 //______________________________________________________________________________
 TObject **TObjArray::GetObjectRef(TObject *obj) const
 {
-   // return address of pointer obj
+   // Return address of pointer obj.
+
    Int_t index = IndexOf(obj);
    return &fCont[index];
 }
@@ -421,7 +422,6 @@ Int_t TObjArray::IndexOf(const TObject *obj) const
    //
    // obj == 0 Return the index of the first empty slot.
    //          Returns lowerBound-1 in case array doesn't contain any empty slot.
-
 
    Int_t i;
    if (obj) {
