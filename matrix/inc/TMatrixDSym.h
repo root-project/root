@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.8 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.9 2004/05/12 11:35:26 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -114,8 +114,8 @@ public:
   TMatrixDSym &operator+=(const TMatrixDSym &source);
   TMatrixDSym &operator-=(const TMatrixDSym &source);
 
-  TMatrixDSym &Apply(const TElementActionD    &action);
-  TMatrixDSym &Apply(const TElementPosActionD &action);
+  TMatrixDBase &Apply(const TElementActionD    &action);
+  TMatrixDBase &Apply(const TElementPosActionD &action);
 
   virtual void Randomize  (Double_t alpha,Double_t beta,Double_t &seed);
   virtual void RandomizePD(Double_t alpha,Double_t beta,Double_t &seed);
