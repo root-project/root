@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.8 2002/08/09 22:35:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.9 2002/12/02 18:50:08 rdm Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -107,7 +107,15 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
 //______________________________________________________________________________
 TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias)
 :TNamed(friendtree?friendtree->GetName():"",
-        friendtree?(friendtree->GetDirectory()?friendtree->GetDirectory()->GetFile()->GetName():""):"")
+          friendtree
+        ? (   friendtree->GetDirectory()
+            ? (    friendtree->GetDirectory()->GetFile()
+                 ? friendtree->GetDirectory()->GetFile()->GetName()
+                 :  ""
+              )
+            : ""
+          )
+        :  "")
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ======================
