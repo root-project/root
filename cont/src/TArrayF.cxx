@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.5 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TArrayF::TArrayF(Int_t n, const Float_t *array)
 }
 
 //______________________________________________________________________________
-TArrayF::TArrayF(const TArrayF &array)
+TArrayF::TArrayF(const TArrayF &array) : TArray(array)
 {
    // Copy constructor.
 
@@ -95,8 +95,7 @@ void TArrayF::AddAt(Float_t c, Int_t i)
 {
    // Add float c at position i. Check for out of bounds.
 
-   if (!BoundsOk("TArrayF::AddAt", i))
-      i = 0;
+   if (!BoundsOk("TArrayF::AddAt", i)) return;
    fArray[i] = c;
 }
 
@@ -130,13 +129,13 @@ void TArrayF::Set(Int_t n, const Float_t *array)
 {
    // Set size of this array to n floats and set the contents.
 
-   if (n < 0 || array == 0) return;
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
    }
    fN = n;
    if (fN == 0) return;
+   if (array == 0) return;
    if (!fArray) fArray = new Float_t[fN];
    memcpy(fArray,array, n*sizeof(Float_t));
 }
@@ -156,11 +155,3 @@ void TArrayF::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayF *&obj)
-{
-   // Read TArrayF object from buffer. Declared in ClassDef.
-
-   obj = (TArrayF *) TArray::ReadArray(buf, TArrayF::Class());
-   return buf;
-}

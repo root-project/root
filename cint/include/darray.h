@@ -633,4 +633,20 @@ array pow(array& a,array& b)
 #include <array.h>
 #endif
 
+#ifdef __CINT__
+int G__ateval(const array& x) {
+  int n = x.getsize();
+#ifdef G__DISPALL
+  for(int i=0;i<n-1;i++) cout << x[i] << ",";
+#else
+  for(int i=0;i<5;i++) cout << x[i] << ",";
+  cout << ",,,";
+  for(int i=n-5;i<n-1;i++) cout << x[i] << ",";
 #endif
+  cout << x[n-1] << endl;
+  return(1); 
+}
+#endif
+
+#endif
+

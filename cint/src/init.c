@@ -726,9 +726,13 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
+
+    case 'J':
+      G__dispmsg = atoi(optarg);
+      break;
 
 #ifndef G__OLDIMPLEMENTATION1525
     case 'j':
@@ -1095,12 +1099,13 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION1525
       G__more(G__sout,"* -j [0|1]: Create multi-thread safe DLL(experimental)\n");
 #endif
+      G__more(G__sout,"  -J[0-4] : Display nothing(0)/error(1)/warning(2)/note(3)/all(4) messages\n");
       /* G__more(G__sout,"  -k : function key on\n"); */
       G__more(G__sout,"  -K : C mode\n");
 #ifdef G__SHAREDLIB
       G__more(G__sout,"  -l [dynamiclinklib] : link dynamic link library\n");
 #endif
-      G__more(G__sout,"  -m : Support 8bit char comment (Disable multi-byte char)\n");
+      G__more(G__sout,"  -m : Support ISO-8859-x Eurpoean char set (disabling multi-byte char)\n");
       G__more(G__sout,"* -M [newdelmask] : operator new/delete mask for precompiled interface method\n");
       G__more(G__sout,"* -n [linkname] : Specify precompiled interface method filename\n");
       G__more(G__sout,"* -N [DLL_name] : Specify DLL interface method name\n");
@@ -2068,6 +2073,9 @@ void G__platformMacro()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
+#ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
+  sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+#endif
   /***********************************************************************
    * micro processor
    ***********************************************************************/
@@ -2082,6 +2090,9 @@ void G__platformMacro()
 #endif
 #ifdef __i960__ /* Intel 960 */
   sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
+#endif
+#ifdef __ia64__ /* Intel Itanium */
+  sprintf(temp,"G__ia64=%ld",(long)__ia64__); G__add_macro(temp);
 #endif
 #ifdef __m88k__ /* Motorola 88000 */
   sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);

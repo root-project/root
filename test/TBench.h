@@ -36,6 +36,16 @@ public:
   ClassDef(THit,1) // the hit class
 };
 
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf,THit *&obj)
+{
+   obj = new THit();
+   obj->Streamer(buf);
+   return buf;
+}
+
 //-------------------------------------------------------------
 class TObjHit : public TObject, public THit {
 

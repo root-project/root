@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.19 2002/03/17 00:26:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.21 2002/05/10 11:07:22 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -110,10 +110,10 @@ private:
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
    };
-#if !defined(__HP_aCC) || __HP_aCC >= 53000
-   typedef std::map<TString, MD5Mod_t> FileMap_t;
-#else
+#ifdef R__GLOBALSTL
    typedef map<TString, MD5Mod_t> FileMap_t;
+#else
+   typedef std::map<TString, MD5Mod_t> FileMap_t;
 #endif
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 
@@ -208,7 +208,7 @@ public:
    void        ShowEnabledPackages(Bool_t all = kFALSE);
    void        ClearPackages();
    void        ClearPackage(const char *package);
-   Int_t       EnablePackage(const char *package, Bool_t build = kFALSE);
+   Int_t       EnablePackage(const char *package);
    Int_t       UploadPackage(const char *par, Int_t parallel = 1);
 
    const char *GetMaster() const { return fMaster; }

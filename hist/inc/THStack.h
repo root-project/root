@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.2 2001/12/10 15:03:18 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.4 2002/06/21 06:57:27 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
 
         THStack();
         THStack(const char *name, const char *title);
+        THStack(const THStack &hstack);
         virtual ~THStack();
         virtual void     Add(TH1 *h);
         virtual void     Browse(TBrowser *b);
@@ -53,7 +54,7 @@ public:
         virtual void     Draw(Option_t *chopt="");
         TH1             *GetHistogram() const;
         TObjArray       *GetHists()  const { return fHists; }
-        TObjArray       *GetStack()  const { return fStack; }
+        TObjArray       *GetStack();
         virtual Double_t GetMaximum(Option_t *option="");
         virtual Double_t GetMinimum(Option_t *option="");
         TAxis           *GetXaxis() const;

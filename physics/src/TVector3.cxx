@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.4 2001/01/12 11:24:36 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.5 2002/04/22 06:26:27 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -168,8 +168,8 @@ theta plane) to the (x,y,z) frame.
 ClassImp(TVector3)
 
 //______________________________________________________________________________
-TVector3::TVector3(const TVector3 & p)
-: fX(p.fX), fY(p.fY), fZ(p.fZ) {}
+TVector3::TVector3(const TVector3 & p) : TObject(p),
+  fX(p.fX), fY(p.fY), fZ(p.fZ) {}
 
 TVector3::TVector3(Double_t x, Double_t y, Double_t z)
 : fX(x), fY(y), fZ(z) {}

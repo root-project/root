@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.8 2002/06/12 16:46:12 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -85,6 +85,7 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    // both alias and true name are initialized to name
    fTrueName.InitialCapacity(1000);
    fContainer = (TTVLVContainer *) p;
+
    fTip = 0;
    fIsCut = kFALSE;
    fTrueName = name->GetString();
@@ -277,6 +278,7 @@ TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t opt
    fExpressionList = new TList;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
+   fMapSubwindows = kTRUE;
 }
 //______________________________________________________________________________
 TTVLVContainer::~TTVLVContainer()
@@ -456,7 +458,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
                           f->SetTrueName(name.Data());
                        } else {
                           Warning("HandleButton",
-                                  "Name too long. Can not add any more items to scan box");
+                                  "Name too long. Can not add any more items to scan box.");
                        }
                     }
                  }
@@ -794,7 +796,7 @@ Bool_t TGSelectBox::ValidateAlias()
 {
 //--- return true if edited alias is not a leading string of other expression aliases
    if (!strcmp(fTeAlias->GetText(), "-empty-") || !strlen(fTeAlias->GetText())) {
-      fViewer->Warning("You should define the alias first");
+      fViewer->Warning("ValidateAlias", "You should define the alias first.");
       return kFALSE;
    }
    TList *list = fViewer->ExpressionList();
@@ -804,7 +806,7 @@ Bool_t TGSelectBox::ValidateAlias()
       if (item != fEntry) {
          TString itemalias(item->GetAlias());
          if (itemalias.Contains(fTeAlias->GetText())) {
-            fViewer->Warning("Alias can not be the leading string of other alias");
+            fViewer->Warning("ValidAlias", "Alias can not be the leading string of other alias.");
             return kFALSE;
          }
       }

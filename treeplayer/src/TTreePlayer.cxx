@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.96 2002/04/14 14:35:26 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.99 2002/06/11 15:47:36 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,7 @@
 #include "TVirtualFitter.h"
 #include "TEnv.h"
 #include "THLimitsFinder.h"
+#include "TPluginManager.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -1811,7 +1812,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             fprintf(fp,"   %-15s %s;\n","Int_t", branchname);
             continue;
          }
-         if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1; continue;}
+         if (bre->IsBranchFolder()) {
+            fprintf(fp,"   %-15s *%s;\n",bre->GetClassName(), branchname);
+            mustInit.Add(bre);
+            continue;
+         } else {
+            if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
+         }
          if (bre->GetStreamerType() <= 0) {
             if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
@@ -1932,8 +1939,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    Begin(TTree *tree);\n");
       fprintf(fp,"   void    Init(TTree *tree);\n");
       fprintf(fp,"   Bool_t  Notify();\n");
+      fprintf(fp,"   Bool_t  Process(Int_t entry);\n");
       fprintf(fp,"   Bool_t  ProcessCut(Int_t entry);\n");
       fprintf(fp,"   void    ProcessFill(Int_t entry);\n");
+      fprintf(fp,"   void    SetOption(const char *option) { fOption = option; }\n");
+      fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
+      fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
+      fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
       fprintf(fp,"   void    Terminate();\n");
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
@@ -2057,10 +2069,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"//   Set object pointer\n");
       while( (obj = next()) ) {
          if (obj->InheritsFrom(TBranch::Class())) {
-            fprintf(fp,"   %s = 0;\n",((TBranch*)obj)->GetName() );
+            strcpy(branchname,((TBranch*)obj)->GetName() );
          } else if (obj->InheritsFrom(TLeaf::Class())) {
-            fprintf(fp,"   %s = 0;\n",((TLeaf*)obj)->GetName() );
+            strcpy(branchname,((TLeaf*)obj)->GetName() );
          }
+         bname = branchname;
+         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         fprintf(fp,"   %s = 0;\n",branchname );
       }
    }
    fprintf(fp,"//   Set branch addresses\n");
@@ -2252,6 +2267,18 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function Process
+      fprintf(fpc,"\n");
+      fprintf(fpc,"Bool_t %s::Process(Int_t entry)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // Processing function.\n");
+      fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
+      fprintf(fpc,"   // Read only the necessary branches to select entries.\n");
+      fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
+      fprintf(fpc,"   // Return kFALSE as stop processing.\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
       // generate code for class member function ProcessCut
       fprintf(fpc,"\n");
@@ -3101,17 +3128,18 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
       return;
    }
 
+#if !defined(R__WIN32) || defined(GDK_WIN32)
+   if (ww || wh) { }   // use unused variables
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(1,fTree->GetName());
+   }
+#else
+   //hoping to replace these two lines soon by the general case
    gROOT->LoadClass("TTreeViewer","TreeViewer");
-#ifdef R__WIN32
-#ifndef GDK_WIN32
    gROOT->ProcessLine(Form("new TTreeViewer(\"%s\",\"TreeViewer\",%d,%d);",fTree->GetName(),ww,wh));
-#else
-   if (ww || wh) { }   // use unused variables
-   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
-#endif
-#else
-   if (ww || wh) { }   // use unused variables
-   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
 #endif
 }
 

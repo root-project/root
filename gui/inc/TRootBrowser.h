@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.2 2001/07/05 16:50:12 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -48,6 +48,8 @@ class TList;
 
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
+
+friend class TRootIconBox;
 
 private:
    TGHorizontal3DLine  *fToolBarSep;

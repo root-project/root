@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.40 2002/04/06 14:55:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.46 2002/07/09 10:23:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TClonesArray.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
+#include "TStreamerInfo.h"
 
 TBranch *gBranch;
 
@@ -425,7 +426,7 @@ Int_t TBranch::Fill()
       fBasketBytes[fWriteBasket]  = basket->GetNbytes();
       fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
       Int_t addbytes = basket->GetObjlen() + basket->GetKeylen() ;
-      if (fDirectory != gROOT && fDirectory->IsWritable()) {
+      if (fDirectory != 0 && fDirectory != gROOT && fDirectory->IsWritable()) {
          delete basket;
          fBaskets[fWriteBasket] = 0;
       }
@@ -752,6 +753,8 @@ TFile *TBranch::GetFile(Int_t mode)
       return file;
    }
 
+   if (fFileName.Length() == 0) return 0;
+   
    TString bFileName = fFileName;
 
    // check if branch file name is absolute or a URL (e.g. /castor/...,
@@ -813,11 +816,9 @@ Stat_t TBranch::GetTotalSize() const
 // Return total number of bytes in the branch (including current buffer)
 // =====================================================================
 
-   TBasket *basket = (TBasket*)fBaskets.Last();
-   if (!basket) return fTotBytes;
-   TBuffer *buf    = basket->GetBufferRef();
-   if (!buf)    return fTotBytes;
-   return fTotBytes + buf->Length();
+   TBuffer b(TBuffer::kWrite,10000);
+   TBranch::Class()->WriteBuffer(b,(TBranch*)this);
+   return fTotBytes + b.Length();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.31 2002/03/21 16:51:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.33 2002/05/08 17:36:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TAxis::~TAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(const TAxis &axis)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
    ((TAxis&)axis).Copy(*this);
 }
@@ -661,6 +661,26 @@ void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
       while ((obj=(TObjString*)next())) {
          out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<endl;
       }
+   }
+
+   if (TestBit(kLabelsHori)) {
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsHori);"<<endl;
+   }
+
+   if (TestBit(kLabelsVert)) {
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsVert);"<<endl;
+   }
+
+   if (TestBit(kLabelsDown)) {
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsDown);"<<endl;
+   }
+
+   if (TestBit(kLabelsUp)) {
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsUp);"<<endl;
+   }
+
+   if (TestBit(kCenterTitle)) {
+      out<<"   "<<name<<subname<<"->CenterTitle(true);"<<endl;
    }
 
    TAttAxis::SaveAttributes(out,name,subname);

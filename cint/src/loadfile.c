@@ -1086,7 +1086,9 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	if(G__dispmsg>=G__DISPNOTE) {
+	  G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	}
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.

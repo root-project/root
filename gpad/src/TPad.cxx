@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.75 2002/04/08 10:46:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.78 2002/07/16 17:22:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
+#include "TPluginManager.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -591,12 +592,12 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
    return code;
 }
 
-
 //______________________________________________________________________________
 void TPad::Close(Option_t *)
 {
    // Delete all primitives in pad and pad itself.
    // Pad cannot be used anymore after this call.
+   // Emits signal "Closed()".
 
    if (!TestBit(kNotDeleted)) return;
    if (!fMother) return;
@@ -611,6 +612,9 @@ void TPad::Close(Option_t *)
       if (fFrame->TestBit(kNotDeleted)) delete fFrame;
       fFrame = 0;
    }
+
+   // emit signal
+   Closed();
 
    if (fPixmapID != -1) {
       if (gPad) {
@@ -634,7 +638,7 @@ void TPad::Close(Option_t *)
    }
 
    fMother = 0;
-   if (gROOT->GetSelectedPad()== this) gROOT->SetSelectedPad(0);
+   if (gROOT->GetSelectedPad() == this) gROOT->SetSelectedPad(0);
 }
 
 //______________________________________________________________________________
@@ -2370,7 +2374,15 @@ TFrame *TPad::GetFrame()
 //______________________________________________________________________________
 TObject *TPad::GetPrimitive(const char *name) const
 {
-   if (fPrimitives) return fPrimitives->FindObject(name);
+   if (!fPrimitives) return 0;
+   TIter next(fPrimitives);
+   TObject *found, *obj;
+   while ((obj=next())) {
+      if (!strcmp(name, obj->GetName())) return obj;
+      if (obj->InheritsFrom(TPad::Class())) continue;
+      found = obj->FindObject(name);
+      if (found) return found;
+   }
    return 0;
 }
 
@@ -3578,7 +3590,7 @@ void TPad::Print(const char *filename, Option_t *option)
 //    TCanvas c1("c1");
 //    h1.Draw();
 //    c1.Print("c1.ps");
-//    
+//
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
@@ -3586,7 +3598,7 @@ void TPad::Print(const char *filename, Option_t *option)
 
 //*-*   Set the default option as "Postscript" (Should be a data member of TPad)
 
-   
+
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
 
@@ -3633,9 +3645,6 @@ void TPad::Print(const char *filename, Option_t *option)
 
 //==============Save pad/canvas as a Postscript file==================================
 
-   // check if Postscript class is in memory. If not, dynamic link
-   if (gROOT->LoadClass("TPostScript","Postscript")) return;
-   
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
@@ -3646,7 +3655,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
    if (copen)  mustClose = kFALSE;
    if (cclose) mustClose = kTRUE;
-   
+
    Bool_t noScreen = kFALSE;
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
       noScreen = kTRUE;
@@ -3665,8 +3674,15 @@ void TPad::Print(const char *filename, Option_t *option)
    TVirtualPS *psave = gVirtualPS;
 
    if (!gVirtualPS || mustOpen) {
+      // Plugin Postscript driver
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(0);
+      }
+
       // Create a new Postscript file
-      gROOT->ProcessLineFast("new TPostScript()");
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
@@ -3680,7 +3696,7 @@ void TPad::Print(const char *filename, Option_t *option)
       } else {
          gVirtualPS->PrintStr("@showpage gr"); //only at the end of the first picture
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
-         gVirtualPS = 0;         
+         gVirtualPS = 0;
       }
    } else {
       // Append to existing Postscript file
@@ -3692,7 +3708,7 @@ void TPad::Print(const char *filename, Option_t *option)
          delete gVirtualPS;
          gVirtualPS = 0;
       } else {
-         gVirtualPS = 0;         
+         gVirtualPS = 0;
       }
    }
 
@@ -4870,9 +4886,11 @@ void TPad::x3d(Option_t *option)
    }
 
 #ifndef WIN32
-   if (gROOT->LoadClass("TViewerX3D","X3d")) return;
-
-   gROOT->ProcessLine(Form("TViewerX3D *R__x3d = new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
-                      (Long_t)this, option));
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TViewerX3D"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(5,this,option,"X3D Viewer",800,600);
+      }
 #endif
 }

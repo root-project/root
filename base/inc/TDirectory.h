@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.9 2002/01/05 17:15:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.10 2002/01/23 15:48:05 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -30,11 +30,13 @@
 #ifndef ROOT_TDatime
 #include "TDatime.h"
 #endif
+#ifndef ROOT_TUUID
+#include "TUUID.h"
+#endif
 
 class TBrowser;
 class TKey;
 class TFile;
-
 
 class TDirectory : public TNamed {
 
@@ -48,11 +50,12 @@ protected:
    Seek_t      fSeekDir;         //Location of directory on file
    Seek_t      fSeekParent;      //Location of parent directory on file
    Seek_t      fSeekKeys;        //Location of Keys record on file
-   TFile       *fFile;           //pointer to current file in memory
-   TObject     *fMother;         //pointer to mother of the directory
-   TList       *fList;           //Pointer to objects list in memory
-   TList       *fKeys;           //Pointer to keys list in memory
-
+   TFile      *fFile;            //pointer to current file in memory
+   TObject    *fMother;          //pointer to mother of the directory
+   TList      *fList;            //Pointer to objects list in memory
+   TList      *fKeys;            //Pointer to keys list in memory
+   TUUID       fUUID;            //Unique identifier
+   
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
 
@@ -98,6 +101,7 @@ public:
    virtual Seek_t      GetSeekParent() const { return fSeekParent; }
    virtual Seek_t      GetSeekKeys() const { return fSeekKeys; }
    virtual const char *GetPath() const;
+   TUUID               GetUUID() const {return fUUID;}
    Bool_t              IsFolder() const { return kTRUE; }
    Bool_t              IsModified() const { return fModified; }
    Bool_t              IsWritable() const { return fWritable; }
@@ -123,7 +127,7 @@ public:
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle);
    static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
 
-   ClassDef(TDirectory,1)  //Describe directory structure in memory
+   ClassDef(TDirectory,2)  //Describe directory structure in memory
 };
 
 R__EXTERN TDirectory   *gDirectory;

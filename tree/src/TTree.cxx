@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.121 2002/04/12 19:19:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.129 2002/07/09 10:24:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -530,6 +530,28 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
    } else {
       Warning("AddFriend","cannot add FriendElement %s in file %s",treename,
               file?file->GetName():"");
+   }
+   return fe;
+}
+
+//______________________________________________________________________________
+TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
+{
+// Add a TFriendElement to the list of friends. The TTree is managed by
+// the user (e.g. the user must delete the file).
+// For complete description see AddFriend(const char *, const char *).
+
+   if (!tree) return 0;
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,tree, alias);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (warn && t->GetEntries() < fEntries) {
+         Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+                 tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",
+                 t->GetEntries(),fEntries);
+      } 
    }
    return fe;
 }
@@ -1117,11 +1139,16 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          Error("Bronch","TClonesArray with no class defined in branch: %s",name);
          return 0;
       }
+      G__ClassInfo* classinfo = clones->GetClass()->GetClassInfo();
+      if (!classinfo) {
+         Error("Bronch","TClonesArray with no dictionary defined in branch: %s",name);
+         return 0;
+      }
       if (splitlevel > 0) {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1)
+         if (classinfo->RootFlag() & 1)
             Warning("Bronch","Using split mode on a class: %s with a custom Streamer",clones->GetClass()->GetName());
       } else {
-         if (clones->GetClass()->GetClassInfo()->RootFlag() & 1) clones->BypassStreamer(kFALSE);
+         if (classinfo->RootFlag() & 1) clones->BypassStreamer(kFALSE);
          TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
          fBranches.Add(branch);
          return branch;
@@ -1129,6 +1156,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    }
 
    Bool_t hasCustomStreamer = kFALSE;
+   if (!cl->GetClassInfo()) {
+      Error("Bronch","Cannot find dictionary for class: %s",classname);
+      return 0;
+   }
    if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
    if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
@@ -2102,9 +2133,21 @@ TBranch *TTree::GetBranch(const char *name)
 
 
 //______________________________________________________________________________
+Bool_t TTree::GetBranchStatus(const char *branchname) const
+{
+   // return status of branch with name branchname
+   // 0 if branch is not activated
+   // 1 if branch is activated
+   
+   TBranch *br = ((TTree*)this)->GetBranch(branchname);
+   if (br) return (br->TestBit(kDoNotProcess) == 0);
+   return 0;
+}    
+
+//______________________________________________________________________________
 Int_t TTree::GetBranchStyle()
 {
-  // static function returning the current branch style
+ // static function returning the current branch style
   // style = 0 old Branch
   // style = 1 new Bronch
 
@@ -2334,6 +2377,21 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 }
 
 //______________________________________________________________________________
+const char *TTree::GetFriendAlias(TTree *tree) const
+{
+// If the the 'tree' is a friend, this method returns its alias name
+
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      if (t==tree) return fe->GetName();
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 {
 // Creates a new iterator that will go through all the leaves on the tree
@@ -2375,12 +2433,13 @@ TLeaf *TTree::GetLeaf(const char *aname)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      leaf = t->GetLeaf(name);
+      leaf = t->GetLeaf(aname);
       if (leaf) return leaf;
    }
 
    //second pass in the list of friends when the leaf name
    //is prefixed by the tree name
+   char strippedArg[2*kMaxLen];
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
@@ -2390,7 +2449,14 @@ TLeaf *TTree::GetLeaf(const char *aname)
       subname += l;
       if (*subname != '.') continue;
       subname++;
-      leaf = t->GetLeaf(subname);
+      if (slash) {
+         strncpy(strippedArg,aname,nbch+1);
+         strippedArg[nbch+1] = 0;
+      } else {
+         strippedArg[0] = 0;
+      }
+      strcat(strippedArg,subname);
+      leaf = t->GetLeaf(strippedArg);
       if (leaf) return leaf;
    }
    return 0;
@@ -2480,6 +2546,16 @@ Int_t TTree::LoadTree(Int_t entry)
       if (fReadEntry < 0) fNotify->Notify();
    }
    fReadEntry = entry;
+
+   if (fFriends) {
+      TIter nextf(fFriends);
+      TFriendElement *fe;
+      while ((fe = (TFriendElement*)nextf())) {
+         TTree *t = fe->GetTree();
+         t->LoadTree(entry);
+      }
+   }
+
    return fReadEntry;
 
 }
@@ -2715,20 +2791,16 @@ void TTree::Print(Option_t *option) const
   }
 
   Int_t s = 0;
+  Int_t skey = 0;
   if (fDirectory) {
      TKey *key = fDirectory->GetKey(GetName());
-     if (key) s = key->GetNbytes();
+     if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
   }
-  Double_t total = fTotBytes;
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
-  Int_t l;
-  TBranch *br;
-  TLeaf *leaf;
-  for (l=0;l<nl;l++) {
-     leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
-     br   = leaf->GetBranch();
-     total += br->GetTotalSize();
-  }
+  Double_t total = fTotBytes + skey;
+  TBuffer b(TBuffer::kWrite,10000);
+  TTree::Class()->WriteBuffer(b,(TTree*)this);
+  total += b.Length();
+
   Int_t file     = Int_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
@@ -2738,6 +2810,10 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
+  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+  Int_t l;
+  TBranch *br;
+  TLeaf *leaf;
   if (strstr(option,"toponly")) {
      Int_t *count = new Int_t[nl];
      Int_t keep =0;
@@ -2885,6 +2961,25 @@ TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *op
    return 0;
 }
 
+//______________________________________________________________________________
+void TTree::RemoveFriend(TTree *oldFriend)
+{
+//*-*-*-*-*-*-*-*Remove a friend from the list of friend *-*-*
+//*-*            =============================================
+
+   if (!fFriends) return;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *friend_t = fe->GetTree();
+      
+      if (friend_t == oldFriend) {
+         fFriends->Remove(fe);
+         delete fe;
+      }
+   }
+}
+   
 //______________________________________________________________________________
 void TTree::Reset(Option_t *option)
 {
@@ -3346,7 +3441,7 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter)
+TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter) : TIterator(iter)
 {
   // Copy constructor
 

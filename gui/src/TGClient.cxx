@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.16 2002/04/03 16:40:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.17 2002/04/22 18:24:06 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -192,7 +192,7 @@ FontStruct_t TGTextLBEntry::fgDefaultFontStruct;
 Cursor_t TGComboBoxPopup::fgDefaultCursor;
 
 TGGC TGSelectedPicture::fgSelectedGC;
-TGGC TGLVContainer::fgLineGC;
+TGGC TGContainer::fgLineGC;
 TGGC TGListView::fgDefaultGC;
 FontStruct_t TGListView::fgDefaultFontStruct;
 
@@ -524,9 +524,9 @@ TGClient::TGClient(const char *dpyName)
    gval.fFillStyle  = kFillSolid;
    gval.fSubwindowMode = kIncludeInferiors;
    gval.fGraphicsExposures = kFALSE;
-   TGLVContainer::fgLineGC.SetAttributes(&gval);
-   TGLVContainer::fgLineGC.SetDashOffset(0);
-   TGLVContainer::fgLineGC.SetDashList("\x1\x1", 2);
+   TGContainer::fgLineGC.SetAttributes(&gval);
+   TGContainer::fgLineGC.SetDashOffset(0);
+   TGContainer::fgLineGC.SetDashList("\x1\x1", 2);
 
    gval.fMask = kGCFont;
    gval.fFont = gVirtualX->GetFontHandle(TGTextView::fgDefaultFontStruct);

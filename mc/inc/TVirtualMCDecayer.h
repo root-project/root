@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMCDecayer.h,v 1.19 2002/04/08 15:06:08 brun Exp $
+// @(#)root/mc:$Name: v3-03-05 $:$Id: TVirtualMCDecayer.h,v 1.2 2002/04/26 08:46:10 brun Exp $
 // Author: Andreas Morsch  13/04/2002
    
 #ifndef ROOT_TVirtualMCDecayer
@@ -17,7 +17,7 @@ typedef enum
 { kSemiElectronic, kDiElectron, kSemiMuonic, kDiMuon,
   kBJpsiDiMuon, kBJpsiDiElectron, 
   kBPsiPrimeDiMuon, kBPsiPrimeDiElectron, kPiToMu, kKaToMu, kNoDecay, 
-  kHadronicD, kOmega, kAll}
+  kHadronicD, kOmega, kPhiKK, kAll, kNoDecayHeavy}
 Decay_t;
 
 class TVirtualMCDecayer : public TObject {

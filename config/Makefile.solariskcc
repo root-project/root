@@ -29,10 +29,12 @@ CXX           = KCC
 CC            = /opt/SUNWspro/bin/cc
 CXXFLAGS      = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
                 --diag_suppress 191 --diag_suppress 830 \
+                --one_instantiation_per_object \
                 $(CXXOPT) -KPIC -I/usr/openwin/include
 CFLAGS        = -KPIC -I/usr/openwin/include -O0 $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --display_error_number $(EXTRA_CXXFLAGS) \
-                --diag_suppress 191 --diag_suppress 830 $(CXXOPT) \
+                --diag_suppress 191 --diag_suppress 830 \
+                --one_instantiation_per_object $(CXXOPT) \
                 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \

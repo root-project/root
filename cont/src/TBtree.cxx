@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.5 2001/01/07 15:13:40 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -601,7 +601,7 @@ TBtreeIter::TBtreeIter(const TBtree *t, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TBtreeIter::TBtreeIter(const TBtreeIter &iter)
+TBtreeIter::TBtreeIter(const TBtreeIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

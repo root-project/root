@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.3 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.4 2002/04/19 18:24:00 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TError.h"
 #include "TTree.h"
 #include "TSelector.h"
+#include "TProofDebug.h"
 
 
 //------------------------------------------------------------------------
@@ -95,7 +96,7 @@ Int_t TEventIter::LoadDir()
          // cleanup ?
          return -1;
       }
-      Info("Process","Opening file: %s", fFilename.Data() );
+      PDB(kLoop,2) Info("Process","Opening file: %s", fFilename.Data() );
       ret = 1;
    }
 
@@ -109,7 +110,7 @@ Int_t TEventIter::LoadDir()
             fPath.Data() );
          return -1;
       }
-      Info("Process","Cd to: %s", fPath.Data() );
+      PDB(kLoop,2) Info("Process","Cd to: %s", fPath.Data() );
       fDir = gDirectory;
       dirsave->cd();
       ret = 1;
@@ -294,7 +295,7 @@ Long64_t TEventIterTree::GetNextEvent()
          }
 
          // delete fTree;
-Info("GetNextEvent","Reading: %s", fTreeName.Data() );
+         PDB(kLoop,2) Info("GetNextEvent","Reading: %s", fTreeName.Data() );
          fTree = (TTree *) key->ReadObj();
 
          if ( fTree == 0 ) {
@@ -337,6 +338,7 @@ Info("GetNextEvent","Reading: %s", fTreeName.Data() );
    }
 
    if ( attach ) {
+      PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
       fSel->Init( fTree );
    }
    --fElemNum;

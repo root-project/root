@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.11 2002/03/22 15:58:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.12 2002/04/30 21:33:50 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TPaveStats.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -54,6 +55,8 @@ ClassImp(TPaveStats)
 TPaveStats::TPaveStats(): TPaveText()
 {
    // TPaveStats default constructor
+   
+   fParent = 0;
 }
 
 //______________________________________________________________________________
@@ -62,6 +65,7 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
 {
    // TPaveStats normal constructor
 
+   fParent = 0;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
    SetFitFormat(gStyle->GetFitFormat());
@@ -72,6 +76,7 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
 TPaveStats::~TPaveStats()
 {
    // TPaveStats default destructor
+   if (!fParent->TestBit(kInvalidObject)) fParent->RecursiveRemove(this);
 }
 
 //______________________________________________________________________________
@@ -247,6 +252,38 @@ void TPaveStats::Paint(Option_t *option)
       }
    }
    SetTextSize(textsave);
+}
+
+//______________________________________________________________________________
+void TPaveStats::SavePrimitive(ofstream &out, Option_t *)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TPaveStats::Class())) {
+       out<<"   ";
+   } else {
+       out<<"   "<<ClassName()<<" *";
+   }
+   if (fOption.Contains("NDC")) {
+      out<<"ptstats = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
+      <<","<<quote<<fOption<<quote<<");"<<endl;
+   } else {
+      out<<"ptstats = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
+      <<","<<quote<<fOption<<quote<<");"<<endl;
+   }
+   if (strcmp(GetName(),"TPave")) {
+      out<<"   ptstats->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   }
+   if (fBorderSize != 4) {
+      out<<"   ptstats->SetBorderSize("<<fBorderSize<<");"<<endl;
+   }
+   SaveFillAttributes(out,"ptstats",0,1001);
+   SaveLineAttributes(out,"ptstats",1,1,1);
+   SaveTextAttributes(out,"ptstats",22,0,1,62,0);
+   SaveLines(out,"ptstats");
+   out<<"   ptstats->Draw();"<<endl;
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.30 2002/03/27 17:51:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.31 2002/03/28 01:47:04 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "TColor.h"
 #include "TClassTable.h"
 #include "TSystemDirectory.h"
+#include "TPluginManager.h"
 
 
 TApplication *gApplication = 0;
@@ -154,7 +155,7 @@ TApplication::TApplication(const char *appClassName,
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-#if !defined(WIN32)
+#ifndef R__WIN32
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
@@ -496,28 +497,47 @@ void TApplication::LoadGraphicsLibs()
    if (gROOT->IsBatch()) return;
 
    gROOT->LoadClass("TCanvas", "Gpad");
-#ifndef WIN32
-   //gSystem->Load("/usr/X11R6/lib/libX11.so");
-   //gSystem->Load("libXpm");
-   gROOT->LoadClass("TGX11", "GX11");  // implicitely loads X11 and Xpm
-   gROOT->LoadClass("TRootGuiFactory", "Gui");
 
-   gROOT->ProcessLineFast("new TGX11(\"X11\", \"ROOT interface to X11\");");
-   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
+   TString name;
+   TString title = "ROOT interface to ";
+   TString nativex;
+   TString nativeg = "root";
+#ifndef R__WIN32
+   nativex = "x11";
+   name    = "X11";
+   title  += "X11";
 #else
 #ifndef GDK_WIN32
-   gROOT->LoadClass("TGWin32", "Win32");
-
-   gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
-   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TWin32GuiFactory();");
+   nativex = "win32";
+   nativeg = "win32";
+   name    = "Win32";
+   title  += "Win32";
 #else
-   gROOT->LoadClass("TGWin32", "Win32gdk");
-   gROOT->LoadClass("TRootGuiFactory", "Gui");
+   nativex = "win32gdk";
+   name    = "Win32gdk";
+   title  += "Win32gdk";
+#endif
+#endif
 
-   gVirtualX   = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
-   gGuiFactory = (TGuiFactory *) gROOT->ProcessLineFast("new TRootGuiFactory();");
-#endif
-#endif
+   TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
+   guiBackend.ToLower();
+   if (guiBackend == "native") {
+      guiBackend = nativex;
+   } else {
+      name   = guiBackend;
+      title += guiBackend;
+   }
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
+   }
+   if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", nativeg))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
+   }
 }
 
 //______________________________________________________________________________

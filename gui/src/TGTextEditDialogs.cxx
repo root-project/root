@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.2 2000/12/20 17:34:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.3 2001/12/20 10:19:26 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -79,13 +79,14 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
 
    fF1->AddFrame(fSearchButton, fL1);
    fF1->AddFrame(fCancelButton, fL1);
+
    AddFrame(fF1, fL21);
 
    fLSearch = new TGLabel(fF3, new TGHotString("Search &for:"));
 
    fBSearch = new TGTextBuffer(100);
    if (fType->fBuffer)
-      fBSearch->AddText(0, fType->fBuffer);
+      fBSearch->AddText(0,fType->fBuffer);
    else
       fSearchButton->SetState(kButtonDisabled);
 

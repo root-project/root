@@ -726,7 +726,7 @@ int lenbuf;
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
@@ -749,7 +749,7 @@ int lenbuf;
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             if(G__asm_dbg) G__fprinterr(G__serr,"    G__no_exec_compile set\n"); \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
@@ -820,7 +820,7 @@ int lenbuf;
 #define G__SUSPEND_ANDOPR                                             \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_and[pp_and] = G__no_exec_compile;     \
-	  if(!G__no_exec_compile && !G__int(vstack[sp-1])) {          \
+	  if(!G__no_exec_compile && 0==G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vtmp_and = vstack[sp-1];                                  \
 	  }                                                           \
@@ -838,7 +838,7 @@ int lenbuf;
 #define G__SUSPEND_OROPR                                              \
         if('u'!=vstack[sp-1].type) {                                  \
 	  store_no_exec_compile_or[pp_or] = G__no_exec_compile;       \
-	  if(!G__no_exec_compile && G__int(vstack[sp-1])) {           \
+	  if(!G__no_exec_compile && 0!=G__double(vstack[sp-1])) {     \
             G__no_exec_compile = 1;                                   \
             vstack[sp-1] = G__one;                                    \
             vtmp_or = vstack[sp-1];                                   \
@@ -1676,7 +1676,7 @@ G__value *presult;
 {
   int hash=0;
   long scope_struct_offset=0;
-  int scope_tagnum;
+  int scope_tagnum = -1;
   int ifn;
   struct G__ifunc_table *memfunc;
   char *p = strstr(item,"::");
@@ -1693,12 +1693,24 @@ G__value *presult;
     for(ifn=0;ifn<memfunc->allifunc;ifn++) {
       if(strcmp(item,memfunc->funcname[ifn])==0) {
 #ifndef G__OLDIMPLEMENTATION1289
+#ifndef G__OLDIMPLEMENTATION1653
+	/* For the time being, pointer to member function can only be handled
+	 * as function name */
+	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+	/* 
+	if(memfunc->pentry[ifn]->filenum>=0) 
+	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+	else 
+	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
+	*/
+#else
 	if(memfunc->pentry[ifn]->tp2f) {
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	}
 	else {
 	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	}
+#endif
 #else
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 #endif
@@ -2279,7 +2291,22 @@ char *expression2;
   G__value result;
   result=G__getexpr(expression2);
   if('u'==result.type) return(G__iosrdstate(&result));
+#ifndef G__OLDIMPLEMENTATION1670
+  if('f'==result.type||'d'==result.type) {
+    /*
+    printf("\n!!! %s type=%c  d=%g i=%ld",expression2
+       ,result.type,result.obj.d,result.obj.i); 
+     G__printlinenum();
+    */
+    return(0.0!=result.obj.d);
+  }
+  else {
+    return(result.obj.i);
+  }
+   
+#else
   return(G__int(result));
+#endif
 }
 
 #else /* 1340 */

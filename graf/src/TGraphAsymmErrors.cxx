@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.17 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.20 2002/05/31 17:16:11 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -334,7 +334,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-   if (strchr(option,'X')) {TGraph::Paint(option); return;}
+   if (strchr(option,'X') || strchr(option,'x')) {TGraph::Paint(option); return;}
    Bool_t brackets = kFALSE;
    if (strstr(option,"[]")) brackets = kTRUE;
    Bool_t endLines = kTRUE;
@@ -475,6 +475,38 @@ Int_t TGraphAsymmErrors::RemovePoint()
 }
 
 //______________________________________________________________________________
+Int_t TGraphAsymmErrors::RemovePoint(Int_t ipnt)
+{
+// Delete point number ipnt
+
+   Int_t ipoint = TGraph::RemovePoint(ipnt);
+   if (ipoint < 0) return ipoint;
+
+   Double_t *newEXlow  = new Double_t[fNpoints];
+   Double_t *newEYlow  = new Double_t[fNpoints];
+   Double_t *newEXhigh = new Double_t[fNpoints];
+   Double_t *newEYhigh = new Double_t[fNpoints];
+   Int_t i, j = -1;
+   for (i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newEXlow[j]  = fEXlow[i];
+      newEYlow[j]  = fEYlow[i];
+      newEXhigh[j] = fEXhigh[i];
+      newEYhigh[j] = fEYhigh[i];
+   }
+   delete [] fEXlow;
+   delete [] fEYlow;
+   delete [] fEXhigh;
+   delete [] fEYhigh;
+   fEXlow  = newEXlow;
+   fEYlow  = newEYlow;
+   fEXhigh = newEXhigh;
+   fEYhigh = newEYhigh;
+   return ipoint;
+}
+
+//______________________________________________________________________________
 void TGraphAsymmErrors::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -554,6 +586,10 @@ void TGraphAsymmErrors::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    fX[i] = x;
    fY[i] = y;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
 }
 
 //______________________________________________________________________________

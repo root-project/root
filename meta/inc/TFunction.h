@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -48,6 +48,8 @@ public:
    virtual     ~TFunction();
    Int_t        Compare(const TObject *obj) const;
    const char  *GetName() const;
+   virtual const char     *GetMangledName() const; 
+   virtual const char     *GetPrototype() const; 
    const char  *GetSignature();
    const char  *GetTitle() const;
    const char  *GetReturnTypeName() const;

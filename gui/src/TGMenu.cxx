@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.6 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.8 2002/06/12 16:46:12 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -406,6 +406,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fStick       = kTRUE;
    fCurrent     = 0;
    fHasGrab     = kFALSE;
+   fPoppedUp    = kFALSE;
 
    SetWindowAttributes_t wattr;
    wattr.fMask             = kWAOverrideRedirect | kWASaveUnder;
@@ -686,6 +687,9 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
       fHasGrab = kFALSE;
    }
 
+   fPoppedUp = kTRUE;
+   PoppedUp();
+
    gClient->RegisterPopup(this);
 }
 
@@ -729,6 +733,11 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
    UnmapWindow();
 
    gClient->UnregisterPopup(this);
+
+   if (fPoppedUp) {
+      fPoppedUp = kFALSE;
+      PoppedDown();
+   }
 
    return id;
 }
@@ -781,7 +790,7 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
       }
       Activate(ptr);
    } else {
-      Activate(0);
+      Activate((TGMenuEntry*)0);
    }
 
    return kTRUE;

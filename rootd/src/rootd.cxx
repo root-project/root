@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.41 2002/03/20 18:47:30 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.43 2002/06/25 23:53:26 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -219,6 +219,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
     defined(__MACH__)
 #include <grp.h>
 #include <sys/types.h>
+#include <signal.h>
 #endif
 
 #if defined(__sun) || defined(R__GLIBC)
@@ -558,26 +559,50 @@ again:
    int result = 1;
 
    if (siz > 0) {
+      int changed = 0;
       char *fbuf = new char[siz+1];
+      char *flast = fbuf + siz;
 
       while (read(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
          ResetErrno();
       fbuf[siz] = 0;
 
       char *n, *s = fbuf;
-      while ((n = strchr(s, '\n'))) {
+      while ((n = strchr(s, '\n')) && siz > 0) {
+         n++;
          char user[64], gmode[32];
          int  pid;
          unsigned long ino;
          sscanf(s, "%s %lu %s %s %d", msg, &ino, gmode, user, &pid);
-         if (ino == inode) {
+         if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
+            ErrorInfo("Remove Stale Lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+            if (n >= flast) {
+               siz = int(s - fbuf);
+               changed = 1;
+               break;
+            } else {
+               int l = int(flast - n) + 1;
+               memmove(s, n, l);
+               siz -= int(n - s);
+               n = s;
+            }
+            flast = fbuf + siz;
+            changed = 1;
+         } else if (ino == inode) {
             if (mode == 1)
                result = 0;
             else if (!strcmp(gmode, "write"))
                result = 0;
-            break;
          }
-         s = n + 1;
+         s = n;
+      }
+      if (changed) {
+         ftruncate(fid, 0);
+         lseek(fid, 0, SEEK_SET);
+         if (siz > 0) {
+            while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
+               ResetErrno();
+         }
       }
       delete [] fbuf;
    }
@@ -607,6 +632,7 @@ void RootdCloseTab(int force=0)
    // current rootd. If force = 1, then remove all references for gFile
    // from the kRootdTab file. This might be necessary in case something
    // funny happened and the original reference was not correctly removed.
+   // Stale locks are detected by checking each pid and then removed.
 
    const char *sfile = kRootdTab;
    int fid;
@@ -657,10 +683,14 @@ again:
       while ((n = strchr(s, '\n')) && siz > 0) {
          n++;
          char msg[kMAXPATHLEN], user[64], gmode[32];
-         int  pid;
+         int  pid, stale = 0;
          unsigned int ino;
          sscanf(s, "%s %u %s %s %d", msg, &ino, gmode, user, &pid);
-         if ((!force && mypid == pid) ||
+         if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
+            stale = 1;
+            ErrorInfo("Remove Stale Lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+         }
+         if (stale || (!force && mypid == pid) ||
              (force && inode == ino && !strcmp(gUser, user))) {
             if (n >= flast) {
                siz = int(s - fbuf);
@@ -674,14 +704,13 @@ again:
             }
             flast = fbuf + siz;
             changed = 1;
-            if (!force) break;
          }
          s = n;
       }
       if (changed) {
          ftruncate(fid, 0);
+         lseek(fid, 0, SEEK_SET);
          if (siz > 0) {
-            lseek(fid, 0, SEEK_SET);
             while (write(fid, fbuf, siz) < 0 && GetErrno() == EINTR)
                ResetErrno();
          }

@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.6 2002/04/04 17:32:13 rdm Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.7 2002/05/03 14:30:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,7 @@
 #pragma link C++ class TStreamerObject-;
 #pragma link C++ class TStreamerObjectAny-;
 #pragma link C++ class TStreamerObjectPointer-;
+#pragma link C++ class TStreamerObjectAnyPointer-;
 #pragma link C++ class TStreamerString-;
 #pragma link C++ class TStreamerSTL-;
 #pragma link C++ class TStreamerSTLstring-;

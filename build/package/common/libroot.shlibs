@@ -9,6 +9,7 @@
 @prefix@/lib/root/libHistPainter.so*
 @prefix@/lib/root/libHtml.so*
 @prefix@/lib/root/libMatrix.so*
+@prefix@/lib/root/libMC.so*
 @prefix@/lib/root/libMinuit.so*
 @prefix@/lib/root/libNew.so*
 @prefix@/lib/root/libPhysics.so*

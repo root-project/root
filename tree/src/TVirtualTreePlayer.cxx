@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TVirtualTreePlayer.h"
+#include "TPluginManager.h"
 
 TClass  *TVirtualTreePlayer::fgPlayer = 0;
 
@@ -23,13 +24,18 @@ TVirtualTreePlayer *TVirtualTreePlayer::TreePlayer(TTree *obj)
    // The player will process the specified obj. If the Tree player
    // does not exist a default player is created.
 
-   // if no player set yet, set TTreePlayer by default
+   // if no player set yet,  create a default painter via the PluginManager
    if (!fgPlayer) {
       if (gROOT->LoadClass("TProof","Proof")) return 0;
-      if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return 0;
-      TVirtualTreePlayer::SetPlayer("TTreePlayer");
-      if (!fgPlayer) return 0;
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreePlayer"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         TVirtualTreePlayer::SetPlayer(h->GetClass());
+         if (!fgPlayer) return 0;
+      }
    }
+   
    //create an instance of the Tree player
    TVirtualTreePlayer *p = (TVirtualTreePlayer*)fgPlayer->New();
    if (p) p->SetTree(obj);

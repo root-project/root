@@ -21,5 +21,23 @@ using namespace std;
 #pragma link C++ class valarray<float>;
 #pragma link C++ class valarray<double>;
 #undef G__NOINTOPR
+
+#pragma link off function valarray<bool>::abs;
+#pragma link off function valarray<bool>::acos;
+#pragma link off function valarray<bool>::asin;
+#pragma link off function valarray<bool>::atan;
+#pragma link off function valarray<bool>::atan2;
+#pragma link off function valarray<bool>::cos;
+#pragma link off function valarray<bool>::cosh;
+#pragma link off function valarray<bool>::exp;
+#pragma link off function valarray<bool>::log;
+#pragma link off function valarray<bool>::log10;
+#pragma link off function valarray<bool>::pow;
+#pragma link off function valarray<bool>::sin;
+#pragma link off function valarray<bool>::sinh;
+#pragma link off function valarray<bool>::sqrt;
+#pragma link off function valarray<bool>::tan;
+#pragma link off function valarray<bool>::tanh;
+
 #endif
 

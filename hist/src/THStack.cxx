@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.11 2002/04/22 20:12:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.14 2002/07/15 10:39:53 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -89,6 +89,26 @@ THStack::~THStack()
 }
 
 //______________________________________________________________________________
+THStack::THStack(const THStack &hstack)
+{
+// THStack copy constructor
+   
+   fHistogram = 0;
+   fMaximum = hstack.fMaximum;
+   fMinimum = hstack.fMinimum;
+   fStack = 0;
+   fHists = 0;
+   fName  = hstack.fName;
+   fTitle = hstack.fTitle;
+   if (hstack.GetHists() == 0) return;
+   TIter next(hstack.GetHists());
+   TH1 *h;
+   while ((h=(TH1*)next())) {
+      Add(h);
+   }
+}
+
+//______________________________________________________________________________
 void THStack::Add(TH1 *h1)
 {
    // add a new histogram to the list
@@ -101,6 +121,7 @@ void THStack::Add(TH1 *h1)
    }
    if (!fHists) fHists = new TObjArray();
    fHists->Add(h1);
+   Modified(); //invalidate stack
 }
 
 //______________________________________________________________________________
@@ -117,6 +138,7 @@ void THStack::BuildStack()
 //  Build a separate list fStack containing the running sum of all histograms
 
    if (fStack) return;
+   if (!fHists) return;
    Int_t nhists = fHists->GetEntriesFast();
    fStack = new TObjArray(nhists);
    Bool_t add = TH1::AddDirectoryStatus();
@@ -156,6 +178,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
       h = (TH1*)fHists->At(i);
       if (fStack && !strstr(doption,"nostack")) h = (TH1*)fStack->At(i);
       Int_t dist = h->DistancetoPrimitive(px,py);
+      if (dist <= 0) return 0;
       if (dist < kMaxDiff) {
          gPad->SetSelected(fHists->At(i));
          gPad->SetCursor(kPointer);
@@ -259,9 +282,17 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
+TObjArray *THStack::GetStack() 
+{
+   // Return pointer to Stack. Build it if not yet done
+   
+   BuildStack();
+   return fStack;
+}
+
+//______________________________________________________________________________
 TAxis *THStack::GetXaxis() const
 {
-   // Get x axis of the graph.
 
    if (!gPad) return 0;
    return GetHistogram()->GetXaxis();
@@ -317,6 +348,8 @@ void THStack::Paint(Option_t *option)
 //
 // See THistPainter::Paint for a list of valid options.
 
+   if (!fHists) return;
+   
    TString opt = option;
    opt.ToLower();
    

@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name$:$Id$ */
+/* @(#)root/histpainter:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TLego;
+#pragma link C++ class TPainter3dAlgorithms;
 #pragma link C++ class THistPainter;
 
 

@@ -539,6 +539,39 @@ int G__MethodInfo::IsBusy()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+static char G__buf[G__LONGLINE];
+char* G__MethodInfo::GetPrototype()
+{
+  strcpy(G__buf,Type()->Name());
+  strcat(G__buf," ");
+  if(belongingclass && belongingclass->IsValid()) {
+    strcat(G__buf,belongingclass->Name());
+    strcat(G__buf,"::");
+  }
+  strcat(G__buf,Name());
+  strcat(G__buf,"(");
+  G__MethodArgInfo arg(*this);
+  int flag=0;
+  while(arg.Next()) {
+    if(flag) strcat(G__buf,",");
+    flag=1;
+    strcat(G__buf,arg.Type()->Name());
+    strcat(G__buf," ");
+    strcat(G__buf,arg.Name());
+    if(arg.DefaultValue()) {
+      strcat(G__buf,"=");
+      strcat(G__buf,arg.DefaultValue());
+    }
+  }
+  strcat(G__buf,")");
+  return(G__buf);
+}
+///////////////////////////////////////////////////////////////////////////
+char* G__MethodInfo::GetMangledName()
+{
+  return(G__map_cpp_name(GetPrototype()));
+}
+///////////////////////////////////////////////////////////////////////////
 
 #ifndef G__OLDIMPLEMENTATION1294
 ///////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.65 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.75 2002/07/16 21:59:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -22,6 +22,8 @@
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
+#include "TRandom.h"
+#include "TPaveStats.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
@@ -325,6 +327,112 @@ TGraph::TGraph(const TH1 *h)
    SetTitle(h->GetTitle());   
 }
          
+
+//______________________________________________________________________________
+TGraph::TGraph(const TF1 *f, Option_t *option)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor importing its parameters from the TF1 object passed as argument
+// if option =="" (default), a TGraph is created with points computed
+//                at the fNpx points of f.
+// if option =="d", a TGraph is created with points computed with the derivatives
+//                at the fNpx points of f.
+// if option =="i", a TGraph is created with points computed with the integral
+//                at the fNpx points of f.
+// if option =="I", a TGraph is created with points computed with the integral
+//                at the fNpx+1 points of f and the integral is normalized to 1.
+    
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
+   if (!f) {
+      Error("TGraph", "Pointer to function is null");
+      return;
+   }
+   char coption = ' ';
+   if (option) coption = *option;   
+   fFunctions = new TList;
+   fNpoints   = f->GetNpx();
+   Double_t xmin = f->GetXmin();
+   Double_t xmax = f->GetXmax();
+   Double_t dx   = (xmax-xmin)/fNpoints;
+   if (coption == 'i' || coption == 'I') fNpoints++;
+   fX         = new Double_t[fNpoints];
+   fY         = new Double_t[fNpoints];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   Double_t integ = 0;
+   Int_t i;
+   for (i=0;i<fNpoints;i++) {
+      if (coption == 'i' || coption == 'I') {
+         fX[i] = xmin +i*dx;
+         if (i == 0) fY[i] = 0;
+         else        fY[i] = integ + ((TF1*)f)->Integral(fX[i]-dx,fX[i]);
+         integ = fY[i];
+      } else if (coption == 'd' || coption == 'D') {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Derivative(fX[i]);
+      } else {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Eval(fX[i]);
+      }  
+   }
+   if (integ != 0 && coption == 'I') {
+      for (i=1;i<fNpoints;i++) fY[i] /= integ;
+   }
+   
+   SetLineColor(f->GetLineColor());;
+   SetLineWidth(f->GetLineWidth());
+   SetLineStyle(f->GetLineStyle());
+   SetFillColor(f->GetFillColor());
+   SetFillStyle(f->GetFillStyle());
+   
+   SetName(f->GetName());
+   SetTitle(f->GetTitle());   
+}
+
+//______________________________________________________________________________
+TGraph::TGraph(const char *filename, const char *format, Option_t *option)
+       : TNamed("Graph",filename), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor reading input from filename
+// filename is assumed to contain at least two columns of numbers
+         
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   fFunctions = new TList;
+   SetBit(kClipFrame);
+   
+
+   Double_t x,y;
+   FILE *fp = fopen(filename,"r");
+   if (!fp) {
+      MakeZombie();
+      Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
+      return;
+   }
+   Set(100);  //initial number of points
+   char line[80];
+   Int_t np = 0;
+   while (fgets(line,80,fp)) {
+      sscanf(&line[0],format,&x, &y);
+      if (np >= fNpoints) Set(2*fNpoints);
+      SetPoint(np,x,y);
+      np++;
+   }
+   Set(np);
+
+   fclose(fp);
+}   
+   
 //______________________________________________________________________________
 TGraph::~TGraph()
 {
@@ -333,9 +441,11 @@ TGraph::~TGraph()
 
    delete [] fX;
    delete [] fY;
-   if (!fFunctions) return;
-   fFunctions->Delete();
-   delete fFunctions;
+   if (fFunctions) { 
+      fFunctions->SetBit(kInvalidObject);
+      fFunctions->Delete(); 
+      delete fFunctions; 
+   }
    fFunctions = 0;
    delete fHistogram;
    fHistogram = 0;
@@ -409,7 +519,7 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t distance;
    if (fHistogram) {
       distance = fHistogram->DistancetoPrimitive(px,py);
-      if (distance <= 0) return distance;
+      if (distance <= 5) return distance;
    }
 
 //*-*- Somewhere on the graph points?
@@ -448,7 +558,10 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
       Int_t dist = f->DistancetoPrimitive(px,py);
-      if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
+      if (dist < kMaxDiff) {
+         gPad->SetSelected(f);
+         return 0; //must be o and not dist in case of TMultiGraph
+      }
    }
    return distance;
 }
@@ -712,6 +825,24 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
+TObject *TGraph::FindObject(const char *name) const
+{
+// search object named name in the list of functions
+
+   if (fFunctions) return fFunctions->FindObject(name);
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TGraph::FindObject(const TObject *obj) const
+{
+// search object obj in the list of functions
+
+   if (fFunctions) return fFunctions->FindObject(obj);
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
@@ -808,6 +939,25 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //    Double_t chi2 = myfunc->GetChisquare();
 //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+//
+//   Fit Statistics
+//   ==============
+//  You can change the statistics box to display the fit parameters with
+//  the TStyle::SetOptFit(mode) method. This mode has four digits.
+//  mode = pcev  (default = 0111)
+//    v = 1;  print name/values of parameters
+//    e = 1;  print errors (if e=1, v must be 1)
+//    c = 1;  print Chisquare/Number of degress of freedom
+//    p = 1;  print Probability
+//
+//  For example: gStyle->SetOptFit(1011);
+//  prints the fit probability, parameter names/values, and errors.
+//  You can change the position of the statistics box with these lines
+//  (where g is a pointer to the TGraph):
+//
+//  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+//  Root > st->SetX1NDC(newx1); //new x start position
+//  Root > st->SetX2NDC(newx2); //new x end position
 
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
@@ -976,7 +1126,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);
-      else                grFitter->PrintResults(3,amin);
+      else                  grFitter->PrintResults(3,amin);
    }
    delete [] arglist;
 
@@ -1187,6 +1337,10 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 // In case of a TGraph object, the error in x is not set (ex=0).
 // same for ey, the error along y.
 //
+// If both ex and ey are null, a special algorithm is used to estimate the errors.
+// The function is evaluated at x+epsilon and x-epsilon (epsilon=range/1000)
+// and the error is set to the difference of these two values.
+//
 // The chisquare is computed as the sum of the quantity below at each point:
 //
 //                     (y - f(x))**2
@@ -1196,33 +1350,19 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
 // where x and y are the point coordinates
 //
    Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
-   Double_t dersum[25], grad[25];
-   static Double_t eysum[50];
    Double_t x[1], xx[1];
-   Double_t xm,xp,errormax;
-   Int_t bin, k, npfits, nparts, part;
+   Double_t xm,xp;
+   Int_t bin, npfits=0;
 
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
-   npar           = grF1->GetNpar();
-   Double_t cumin = gy[0];
-   Double_t cumax = gy[0];
-   if (flag == 2) for (k=0;k<npar;k++) dersum[k] = gin[k] = 0;
-   nparts = n/3;
-   if (nparts == 0)  nparts = 1;
-   if (nparts > 40)  nparts = 40;
-
    Double_t fxmin = grF1->GetXmin();
    Double_t fxmax = grF1->GetXmax();
-   Double_t dfx   = (fxmax - fxmin)/nparts;
-   if (gr->TestBit(TGraph::kFitInit)) {
-      for (part=0;part<nparts;part++) { eysum[part] = 0;}
-   }
+   npar           = grF1->GetNpar();
 
    grF1->InitArgs(x,u);
-   npfits = 0;
    f      = 0;
    for (bin=0;bin<n;bin++) {
       x[0] = gx[bin];
@@ -1231,51 +1371,26 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
       TF1::RejectPoint(kFALSE);
       fu   = grF1->EvalPar(x,u);
       if (TF1::RejectedPoint()) continue;
+      fsum = (cu-fu);
+      npfits++;
+      if (fitOption.W1) {
+         f += fsum*fsum;
+         continue;
+      }
       ex   = gr->GetErrorX(bin);
       ey   = gr->GetErrorY(bin);
-      if (fitOption.W1) {ex = 0; ey = 1;}
-      if (ey < 0) {
-         part = Int_t((x[0] - fxmin)/dfx);
-         if (part < 0) part = 0;
-         if (part >= nparts) part = nparts-1;
-         eu = 1;
-         if (gr->TestBit(TGraph::kFitInit)) {
-            eysum[part] += (cu-fu)*(cu-fu);
-            if (cu < cumin) cumin = cu;
-            if (cu > cumax) cumax = cu;
-         } else {
-            eu = eysum[part];
-            eu *= eu;
-         }
-      } else {
-         xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-         xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-         xx[0] = xm; fm = grF1->EvalPar(xx,u);
-         xx[0] = xp; fp = grF1->EvalPar(xx,u);
-         eux = (fp-fm)/2;
-         eu = ey*ey +eux*eux;
-      }
+      if (ex < 0) ex = 0;
+      if (ey < 0) ey = 0;
+      if (ex == 0) ex = (fxmax-fxmin)*1e-3;
+      xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+      xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+      xx[0] = xm; fm = grF1->EvalPar(xx,u);
+      xx[0] = xp; fp = grF1->EvalPar(xx,u);
+      eux = 0.5*(fp-fm);
+      eu = eux*eux;
+      if (ey) eu += ey*ey;
       if (eu <= 0) eu = 1;
-      if (flag == 2) {
-          for (k=0;k<npar;k++) dersum[k] += 1; //should be the derivative
-      }
-      npfits++;
-      if (flag == 2) {
-         for (k=0;k<npar;k++) grad[k] += dersum[k]*(fu-cu)/eu; dersum[k] = 0;
-      }
-      fsum = (cu-fu);
       f   += fsum*fsum/eu;
-   }
-
-//  make a better error estimate to be used in the next iterations
-   if (gr->TestBit(TGraph::kFitInit)) {
-      gr->ResetBit(TGraph::kFitInit);
-      errormax   = 0.2*(cumax-cumin);
-      for (part=0;part<nparts;part++) {
-         eysum[part] = TMath::Sqrt(eysum[part]);
-         if (eysum[part] > errormax) eysum[part] = errormax;
-         if (errormax < 0.2) eysum[part] = 1;
-      }
    }
    grF1->SetNumberFitPoints(npfits);
 }
@@ -1553,6 +1668,96 @@ void TGraph::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TGraph::PaintFit(TF1 *fit)
+{
+//  Paint "stats" box with the fit info
+   
+   Int_t dofit;
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
+
+   if (stats) dofit  = stats->GetOptFit();
+   else       dofit  = gStyle->GetOptFit();
+   
+   if (!dofit) fit = 0;
+   if (dofit  == 1) dofit  =  111;
+   Int_t nlines = 0;
+   Int_t print_fval    = dofit%10;
+   Int_t print_ferrors = (dofit/10)%10;
+   Int_t print_fchi2   = (dofit/100)%10;
+   Int_t print_fprob   = (dofit/1000)%10;
+   Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
+   if (fit) nlinesf += fit->GetNpar();
+   Bool_t done = kFALSE;
+   Double_t  statw  = 1.8*gStyle->GetStatW();
+   Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
+   if (stats) {
+      stats->Clear();
+      done = kTRUE;
+   } else {
+      stats  = new TPaveStats(
+               gStyle->GetStatX()-statw,
+               gStyle->GetStatY()-stath,
+               gStyle->GetStatX(),
+               gStyle->GetStatY(),"brNDC");
+
+      stats->SetParent(fFunctions);
+      stats->SetOptFit(dofit);
+      stats->SetOptStat(0);
+      stats->SetFillColor(gStyle->GetStatColor());
+      stats->SetFillStyle(gStyle->GetStatStyle());
+      stats->SetBorderSize(gStyle->GetStatBorderSize());
+      stats->SetTextFont(gStyle->GetStatFont());
+      if (gStyle->GetStatFont()%10 > 2)
+         stats->SetTextSize(gStyle->GetStatFontSize());
+      stats->SetFitFormat(gStyle->GetFitFormat());
+      stats->SetStatFormat(gStyle->GetStatFormat());
+      stats->SetName("stats");
+
+      stats->SetTextColor(gStyle->GetStatTextColor());
+      stats->SetTextAlign(12);
+      stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
+   }
+
+   char t[64];
+   char textstats[50];
+   Int_t ndf = fit->GetNDF();
+   sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
+   sprintf(t,textstats,(Float_t)fit->GetChisquare());
+   if (print_fchi2) stats->AddText(t);
+   if (print_fprob) {
+      sprintf(textstats,"Prob  = %s%s","%",stats->GetFitFormat());
+      sprintf(t,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+      stats->AddText(t);
+   }
+   if (print_fval || print_ferrors) {
+      for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
+         if (print_ferrors) {
+            sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
+            sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
+                            ,(Float_t)fit->GetParError(ipar));
+         } else {
+            sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
+            sprintf(t,textstats,(Float_t)fit->GetParameter(ipar));
+         }
+         t[63] = 0;
+         stats->AddText(t);
+      }
+   }
+
+   if (!done) fFunctions->Add(stats);
+   stats->Paint();
+}
+
+//______________________________________________________________________________
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw a graph*-*-*-*-*-*-*-*-*-*-*
@@ -1728,15 +1933,18 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
   TF1 *fit = 0;
   if (fFunctions) fit = (TF1*)fFunctions->First();
-  if (fit) {
-     if (fHistogram) {
-        TVirtualHistPainter::HistPainter(fHistogram)->PaintStat(0,fit);
-     } else {
-        TH1F *hfit = new TH1F("___0","",2,0,1);
-        TVirtualHistPainter::HistPainter(hfit)->PaintStat(0,fit);
-        delete hfit;
+  TObject *f;
+  if (fFunctions) {
+     TIter   next(fFunctions);
+     while ((f = (TObject*) next())) {
+        if (f->InheritsFrom(TF1::Class())) {
+           fit = (TF1*)f;
+           break;
+        }
      }
   }
+  if (fit) PaintFit(fit);
+  
   rwxmin   = gPad->GetUxmin();
   rwxmax   = gPad->GetUxmax();
   rwymin   = gPad->GetUymin();
@@ -2040,7 +2248,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
    const char *where = "PaintGraphHist";
 
-   const Int_t NPMXFA= 99;
    Int_t OptionLine , OptionAxis , OptionCurve, OptionStar , OptionMark;
    Int_t OptionBar  , OptionRot  , OptionOne;
    Int_t OptionFill , OptionZ;
@@ -2223,20 +2430,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               continue;
            }
-           if (npt >= NPMXFA) {
-              gxwork[npt-1] = gxwork[npt-2];
-              gywork[npt-1] = gywork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gxwork[0] = gxwork[npt-1];
-              npt      = 2;
-           }
         }  //endfor (j=first; j<=last;j++) {
      }
      else {
@@ -2270,20 +2463,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
               }
               continue;
-           }
-           if (npt >= NPMXFA) {
-              gywork[npt-1] = gywork[npt-2];
-              gxwork[npt-1] = gxwork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gywork[0] = gywork[npt-1];
-              npt      = 2;
            }
         }  //endfor (j=first; j<=last;j++)
      }
@@ -2322,7 +2501,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gxwork[npt-1] = gxwork[npt-2];
               gywork[npt-1] = ywmin;
               ComputeLogs(npt, OptionZ);
-              gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+              //gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+              //do not draw the two vertical lines on the edges
+              gPad->PaintPolyLine(npt-2,&gxworkl[1],&gyworkl[1]);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
@@ -2498,12 +2679,16 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
         if (!OptionRot) {
           Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
+          if (ix < 0) ix = 0;
+          if (ix >= nrPix) ix = nrPix-1;
           Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
           if (minPix[ix] > yPixel) minPix[ix] = yPixel;
           if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
           (nrEntries[ix])++;
         } else {
           Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip]))-ay1Pix;
+          if (iy < 0) iy = 0;
+          if (iy >= nrPix) iy = nrPix-1;;
           Int_t xPixel = gPad->XtoAbsPixel(gPad->XtoPad(xw));
           if (minPix[iy] > xPixel) minPix[iy] = xPixel;
           if (maxPix[iy] < xPixel) maxPix[iy] = xPixel;
@@ -2886,6 +3071,32 @@ Int_t TGraph::RemovePoint()
 }
 
 //______________________________________________________________________________
+Int_t TGraph::RemovePoint(Int_t ipoint)
+{
+// Delete point number ipoint
+
+   if (ipoint < 0) return -1;
+   if (ipoint >= fNpoints) return -1;
+   
+   fNpoints--;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   Int_t j = -1;
+   for (Int_t i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newX[j] = fX[i];
+      newY[j] = fY[i];
+   }
+   delete [] fX;
+   delete [] fY;
+   fX = newX;
+   fY = newY;
+   gPad->Modified();
+   return ipoint;
+}
+
+//______________________________________________________________________________
 void TGraph::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -2929,6 +3140,9 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
       out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   ptstats->SetParent(graph->GetListOfFunctions());"<<endl;
+      }
    }
 
    if (!strstr(option,"multigraph")) {

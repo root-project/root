@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.7 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.10 2002/05/10 08:30:10 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -474,7 +474,7 @@ void test_matrix_slices(int vsize)
    Assert( !( m == pattern ) && !( m != pattern ) );
    {
       TMatrixDiag md(m);
-      for (int j = 1; j <= md.GetNdiags(); j++)
+      for (int j = 0; j < md.GetNdiags(); j++)
          md(j) /= 1.5;
    }
    vc = TMatrixDiag(m);
@@ -553,10 +553,10 @@ void test_vector_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
-int main()
+int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
-   TApplication app("vvector", 0, 0);
+   TApplication app("vvector", &argc, argv);
 
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<

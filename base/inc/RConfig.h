@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.36 2002/05/03 14:30:41 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.42 2002/05/24 15:10:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -27,7 +27,7 @@
 /*---- new C++ features ------------------------------------------------------*/
 
 #define R__RTTI
-
+#define R__USE_SHADOW_CLASS
 
 /*---- machines --------------------------------------------------------------*/
 
@@ -78,6 +78,13 @@
 #      if __DECCXX_VER >= 60060002
 #         define R__VECNEWDELETE /* supports overloading of new[] and delete[] */
 #         define R__PLACEMENTDELETE /* supports overloading placement delete */
+#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#         define R__THROWNEWDELETE  /* new/delete throw exceptions */
+#      endif
+#      if defined __GNUC__
+#         define R__NAMESPACE_TEMPLATE_IMP_BUG
+#      else
+#         define R__TEMPLATE_OVERLOAD_BUG
 #      endif
 #   else
 #      define R__VMS
@@ -230,7 +237,7 @@
 #   define ANSICPP
 #endif
 
-#ifdef __GNUG__
+#ifdef __GNUC__
 #   define R__GNU
 #   define ANSICPP
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
@@ -273,6 +280,9 @@
 #      define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #      define R__TMPLTSTREAM     /* iostream implemented with templates */
+#   else
+#      define R__TEMPLATE_OVERLOAD_BUG
+#      define R__GLOBALSTL       /* STL in global name space */
 #   endif
 #endif
 
@@ -282,6 +292,7 @@
 #      define WIN32
 #   endif
 #   define R__BYTESWAP
+#   define R__ACCESS_IN_SYMBOL
 #endif
 
 
@@ -357,13 +368,13 @@
 
 #endif
 
-/* produce an indentifier that is almost unique inside a file */
+/* produce an identifier that is almost unique inside a file */
 #ifndef __CINT__
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
 #else
-    // Currently CINT does not really mind to have duplicates and
-    // does not work correctly as far as merging token is concerned.
+    /* Currently CINT does not really mind to have duplicates and     */
+    /* does not work correctly as far as merging tokens is concerned. */
 #   define _R__UNIQUE_(X) X
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.37 2002/04/11 18:16:17 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.38 2002/05/03 14:30:43 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1961,6 +1961,12 @@ static void sighandler(int sig)
    }
 }
 
+#if defined(R__KCC)
+extern "C" {
+  typedef void (*sighandlerFunc_t)(int);
+}
+#endif
+
 //______________________________________________________________________________
 void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 {
@@ -1976,6 +1982,8 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
       sigact.sa_handler = (void (*)())sighandler;
 #elif defined(R__SOLARIS)
       sigact.sa_handler = sighandler;
+#elif defined(R__KCC)
+      sigact.sa_handler = (sighandlerFunc_t)sighandler;
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
 #  if defined(R__SGI64)
       sigact.sa_handler = sighandler;

@@ -18,7 +18,60 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////
-#if defined(G__GNUC) && !defined (G__KCC)
+#if (G__GNUC>=3)
+
+template <class _Tp>
+class allocator {
+  //typedef alloc _Alloc;          // The underlying allocator.
+public:
+  typedef size_t     size_type;
+  typedef ptrdiff_t  difference_type;
+  typedef _Tp*       pointer;
+  typedef const _Tp* const_pointer;
+  typedef _Tp&       reference;
+  typedef const _Tp& const_reference;
+  typedef _Tp        value_type;
+
+  template <class _Tp1> struct rebind {
+    typedef allocator<_Tp1> other;
+  };
+
+  allocator() ;
+  allocator(const allocator&) ;
+  //template <class _Tp1> allocator(const allocator<_Tp1>&) ;
+  ~allocator() ;
+
+  pointer address(reference __x) const ;
+  const_pointer address(const_reference __x) const ;
+
+  // __n is permitted to be 0.  The C++ standard says nothing about what
+  // the return value is when __n == 0.
+  _Tp* allocate(size_type __n, const void* = 0) ;
+
+  // __p is not permitted to be a null pointer.
+  void deallocate(pointer __p, size_type __n);
+
+  size_type max_size() const ;
+
+  void construct(pointer __p, const _Tp& __val) ;
+  void destroy(pointer __p) ;
+};
+
+template<>
+class allocator<void> {
+public:
+  typedef size_t      size_type;
+  typedef ptrdiff_t   difference_type;
+  typedef void*       pointer;
+  typedef const void* const_pointer;
+  typedef void        value_type;
+
+  template <class _Tp1> struct rebind {
+    typedef allocator<_Tp1> other;
+  };
+};
+//////////////////////////////////////////////////////////////////////
+#elif defined(G__GNUC) && !defined (G__KCC) 
 
 template <int inst>
 class __malloc_alloc_template {

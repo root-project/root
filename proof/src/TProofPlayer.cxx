@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.4 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.8 2002/06/14 15:14:31 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TProofDebug.h"
 
 #include "Api.h"
 
@@ -67,7 +68,7 @@ TProofPlayer::TProofPlayer()
 {
    // Default ctor.
 
-   fInput    = new THashList;
+   fInput    = new TList;
    fOutput   = 0;
    fSelector = 0;
 }
@@ -94,7 +95,11 @@ void TProofPlayer::ClearInput()
 //______________________________________________________________________________
 TObject *TProofPlayer::GetOutput(const char *name) const
 {
-   return fOutput->FindObject(name);
+   if (fOutput != 0) {
+      return fOutput->FindObject(name);
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -115,9 +120,9 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                  Long64_t nentries, Long64_t first,
                                  TEventList *evl)
 {
-   Info("Process","Enter");
+   PDB(kGlobal,1) Info("Process","Enter");
 
-   delete fSelector;
+   fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {
@@ -131,20 +136,17 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    TEventIter *evIter = TEventIter::Create(dset, fSelector, first, nentries);
 
-   if ( gDebug > 2 )
-      Info("Process","Call Begin");
+   PDB(kLoop,1) Info("Process","Call Begin(0)");
 
    fSelector->Begin( 0 );  // Init is called explicitly from GetNextEvent()
 
-   if ( gDebug > 2 )
-      Info("Process","Loop over Process()");
+   PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
    Long64_t entry;
    while ((entry = evIter->GetNextEvent()) >= 0) {
 
-      if ( gDebug > 3 )
-         Info("Process","Call Process(%ld)", entry);
+      PDB(kLoop,3)Info("Process","Call Process(%ld)", entry);
 
       Bool_t stop = fSelector->Process(entry);
       if (stop) {}  // remove unused warning
@@ -153,8 +155,8 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    }
 
    // Finalize
-   if ( gDebug > 2 )
-      Info("Process","Call Terminate");
+   PDB(kLoop,1) Info("Process","Call Terminate");
+   
    fSelector->Terminate();
 
    fOutput = fSelector->GetOutputList();
@@ -221,80 +223,55 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Long64_t nentries, Long64_t first,
                                   TEventList *evl)
 {
+   // Process specified TDSet on PROOF.
+   // Returns -1 in case error, 0 otherwise.
 
-Info("Process","---- Start ----");
+   PDB(kGlobal,1) Info("Process","Enter");
+
+   delete fOutput;
+   fOutput = new TList;
 
    TString filename = selector_file;
    filename = filename.Strip(TString::kTrailing,'+');
-Info("Process", "Sendfile: %s", filename.Data() );
+   
+   PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
    fProof->SendFile(filename);
 
    if ( filename.EndsWith(".C") ) {
-         filename.ReplaceAll(".C",".h");
-Info("Process", "Sendfile: %s", filename.Data() );
-         fProof->SendFile(filename);
+      filename.ReplaceAll(".C",".h");
+      PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
+      fProof->SendFile(filename);
    }
-
-#if 0
-   ... compiling will get private commands ...
-   TString libname = filename;
-   Ssiz_t dot_pos = libname.Last('.');
-   if ( dot_pos >= 0 )
-      libname.Replace(dot_pos,1,"_");
-   Ssiz_t slash_pos = libname.Last('/');  // Unix specfic !!
-   // G__loadfile seems to need this
-   if ( slash_pos < 0 )
-      libname.Prepend("./");              // Unix specfic !!
-   libname.Append(".");
-   libname.Append(gSystem->GetSoExt());
-
-
-   TString compileCmd("gSystem->CompileMacro(\"");
-   compileCmd += filename;
-   compileCmd += "\",\"f\",\"";
-   compileCmd += libname;
-   compileCmd += "\")";
-   if ( fProof->Exec(compileCmd, TProof::kUnique) == -1 ) {
-      Warning("Process","Compile failed");
-      return -1;
-   }
-
-   TString unloadCmd("G__unloadfile(\"");
-   unloadCmd += libname;
-   unloadCmd +=  "\")";
-   fProof->Exec(unloadCmd, TProof::kActive);
-
-   TString loadCmd("G__loadfile(\"");
-   loadCmd += libname;
-   loadCmd +=  "\")";
-   fProof->Exec(loadCmd, TProof::kActive);
-#endif
 
    TMessage mesg(kPROOF_PROCESS);
    TString fn(selector_file);
 
    TDSet *set = dset;
    if ( fProof->IsMaster() ) {
-Info("Process","Create Proxy DSet");
+
+      PDB(kPacketizer,1) Info("Process","Create Proxy DSet");
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
                         dset->GetDirectory() );
 
       delete fPacketizer;
       fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
                                  first, nentries);
+      
+      if ( !fPacketizer->IsValid() ) {
+         return -1;
+      }
    }
 
    mesg << set << fn << fInput << nentries << first; // no evl yet
-Info("Process","Broadcast");
 
+   PDB(kGlobal,1) Info("Process","Calling Broadcast");
    fProof->Broadcast(mesg);
-Info("Process","Collect");
 
+   PDB(kGlobal,1) Info("Process","Calling Collect");
    fProof->SetPlayer(this);  // Fix SetPlayer to release current player
-
    fProof->Collect();
 
-Info("Process","Calling Merge Output");
+   PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
 
    return 0;
@@ -304,12 +281,10 @@ Info("Process","Calling Merge Output");
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
 {
-Info("MergeOutput","Enter");
-   delete fOutput;
-   fOutput = new THashList;
+   PDB(kOutput,1) Info("MergeOutput","Enter");
 
    if ( fOutputLists == 0 ) {
-      Info("MergeOutput","Leave (empty)");
+      PDB(kOutput,1) Info("MergeOutput","Leave (no output)");
       return;
    }
 
@@ -345,35 +320,35 @@ Info("MergeOutput","Enter");
    }
 
    delete fOutputLists; fOutputLists = 0;
-Info("MergeOutput","Leave");
+   PDB(kOutput,1) Info("MergeOutput","Leave (%d object(s))", fOutput->GetSize());
 }
 
 
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
-Info("StoreOutput","Enter");
+   PDB(kOutput,1) Info("StoreOutput","Enter");
 
    if ( out == 0 ) {
-Info("StoreOutput","Leave (empty)");
+      PDB(kOutput,1) Info("StoreOutput","Leave (empty)");
       return;
    }
 
    TIter next(out);
 
    if (fOutputLists == 0) {
-Info("StoreOutput","Create fOutputLists");
+      PDB(kOutput,2) Info("StoreOutput","Create fOutputLists");
       fOutputLists = new TList;
       fOutputLists->SetOwner();
    }
 
    TObject *obj;
    while( (obj = next()) ) {
-Info("StoreOutput","Find '%s'", obj->GetName() );
-fOutputLists->Print();
+      PDB(kOutput,2) Info("StoreOutput","Find '%s'", obj->GetName() );
+
       TList *list = (TList *) fOutputLists->FindObject( obj->GetName() );
       if ( list == 0 ) {
-Info("StoreOutput","List not Found", obj->GetName() );
+         PDB(kOutput,2) Info("StoreOutput","List not Found (creating)", obj->GetName() );
          list = new TList;
          list->SetName( obj->GetName() );
          list->SetOwner();
@@ -384,7 +359,7 @@ Info("StoreOutput","List not Found", obj->GetName() );
 
    out->SetOwner(kFALSE);  // Needed??
    delete out;
-Info("StoreOutput","Leave");
+   PDB(kOutput,1) Info("StoreOutput","Leave");
 }
 
 
@@ -395,10 +370,10 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave)
    TDSetElement *e = fPacketizer->GetNextPacket( slave );
 
    if ( e != 0 ) {
-      Info("GetNextPacket","'%s' '%s' '%s' %d %d", e->GetFileName(),
+      PDB(kPacketizer,2) Info("GetNextPacket","'%s' '%s' '%s' %d %d", e->GetFileName(),
             e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
    } else {
-      Info("GetNextPacket","Done");
+      PDB(kPacketizer,2) Info("GetNextPacket","Done");
    }
 
    return e;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.10 2002/02/22 10:44:01 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.11 2002/04/05 11:39:21 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -484,11 +484,29 @@ Int_t TDataMember::GetOffset() const
    //Note that the offset cannot be computed in case of an abstract class
    //for which the list of real data has not yet been computed via
    //a real daughter class.
+   char dmbracket[256];
+   sprintf(dmbracket,"%s[",this->GetName());
    fClass->BuildRealData();
    TIter next(fClass->GetListOfRealData());
    TRealData *rdm;
    while ((rdm = (TRealData*)next())) {
-      if (rdm->GetDataMember() == this) return rdm->GetThisOffset();
+      char *rdmc = (char*)rdm->GetName();
+      //next statement required in case a class and one of its parent class
+      //have data members with the same name
+      if (this->IsaPointer() && rdmc[0] == '*') rdmc++;
+      
+      if (rdm->GetDataMember() != this) continue;
+      if (strcmp(rdmc,this->GetName()) == 0) {
+         return rdm->GetThisOffset();
+      }
+      if (strcmp(rdm->GetName(),this->GetName()) == 0) {
+         if (rdm->IsObject()) {
+            return rdm->GetThisOffset();
+         }
+      }
+      if (strstr(rdm->GetName(),dmbracket)) {
+         return rdm->GetThisOffset();
+      }
    }
    return 0;
 }

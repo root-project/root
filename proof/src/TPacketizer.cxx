@@ -30,9 +30,7 @@
 #include "TDSet.h"
 #include "TUrl.h"
 #include "TError.h"
-#include "TFile.h"
-#include "TTree.h"
-#include "TKey.h"
+#include "TProofDebug.h"
 
 ClassImp(TPacketizer)
 
@@ -91,7 +89,7 @@ friend class TPacketizer;
 
 private:
    TSlave        *fSlave;        // corresponding TSlave record
-   TFileNode     *fFileNode;     // correcponding node or 0
+   TFileNode     *fFileNode;     // corresponding node or 0
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
    Int_t          fProcessed;    // number of entries processed
@@ -106,55 +104,6 @@ public:
 
    void        SetFileNode(TFileNode *node) { fFileNode = node; }
 };
-
-
-Long64_t TPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
-{
-   Long64_t entries;
-      TFile *file = TFile::Open(e->GetFileName());
-
-      if ( file->IsZombie() ) {
-         Error("GetEntries","Cannot open file: %s (%s)",
-            e->GetFileName(), strerror(file->GetErrno()) );
-         return -1;
-      }
-
-      TDirectory *dirsave = gDirectory;
-      if ( ! file->cd(e->GetDirectory()) ) {
-         Error("GetEntries","Cannot cd to: %s",
-            e->GetDirectory() );
-         delete file;
-         return -1;
-      }
-      TDirectory *dir = gDirectory;
-      dirsave->cd();
-
-      if ( tree ) {
-         TKey *key = dir->GetKey(e->GetObjName());
-         if ( key == 0 ) {
-            Error("GetEntries","Cannot find tree \"%s\" in %s",
-                  e->GetObjName(), e->GetFileName() );
-            delete file;
-            return -1;
-         }
-         TTree *tree = (TTree *) key->ReadObj();
-         if ( tree == 0 ) {
-            // Error always reported?
-            delete file;
-            return -1;
-         }
-         entries = (Long64_t) tree->GetEntries();
-         delete tree;
-
-      } else {
-         TList *keys = dir->GetListOfKeys();
-         entries = keys->GetSize();
-      }
-
-      delete file;
-
-      return entries;
-}
 
 
 //______________________________________________________________________________
@@ -183,13 +132,14 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
          Error("TPacketizer","First (%d) higher then number of entries (%d) in %d",
                e->GetFirst(), n, e->GetFileName() );
          fValid = kFALSE;
-         break;
+         return;
       }
 
       if ( e->GetNum() == -1 ) {
          e->SetNum( n - e->GetFirst() );
       } else if ( e->GetFirst() + e->GetNum() > n ) {
-         Error("TPacketizer","Num (%d) + First (%d) larger then number of keys (%d) in %s",
+         Error("TPacketizer",
+            "Num (%d) + First (%d) larger then number of keys (%d) in %s",
             e->GetNum(), e->GetFirst(), n, e->GetFileName() );
          e->SetNum( n - e->GetFirst() );
       }
@@ -209,8 +159,13 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
       }
 
       // TODO: Names must be in rootd URL format, check where?
-      Assert( url.IsValid() && strncmp(url.GetProtocol(),"root", 4) == 0 );
-
+      if ( !url.IsValid() || !strncmp(url.GetProtocol(),"root", 4) == 0 ) {
+         Error("TPacketizer","Filename not in rootd URL format (%s)",
+                e->GetFileName() );
+         fValid = kFALSE;
+         return;
+      }
+      
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
 
       if ( node == 0 ) {
@@ -223,7 +178,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
       node->Add( e );
    }
 
-   Info("TPacketizer","Processing %ld entries in %d files on %d hosts",
+   PDB(kGlobal,1) Info("TPacketizer","Processing %ld entries in %d files on %d hosts",
          fTotalEntries, files, fFileNodes->GetSize() );
 
    // Is there an easier way to do shallow copy ?
@@ -288,6 +243,10 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *sl) const
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
 {
+   if ( !fValid ) {
+      return 0;
+   }
+   
    // find slave
 
    TSlaveStat *slave = (TSlaveStat*) fSlaves->FindObject( sl->GetName() );
@@ -358,7 +317,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
    TDSetElement *base = file->fElement;
    Int_t last = base->GetFirst() + base->GetNum();
    Int_t first;
-   Int_t num = 10;  // target packet size TODO: variable packet size
+   Int_t num = 1000;  // target packet size TODO: variable packet size
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;

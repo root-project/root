@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.5 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -288,7 +288,7 @@ THashTableIter::THashTableIter(const THashTable *ht, Bool_t dir)
 }
 
 //______________________________________________________________________________
-THashTableIter::THashTableIter(const THashTableIter &iter)
+THashTableIter::THashTableIter(const THashTableIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

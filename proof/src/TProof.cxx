@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.21 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.25 2002/07/17 12:29:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TProofPlayer.h"
 #include "TDSet.h"
 #include "TEnv.h"
+#include "TProofDebug.h"
 
 
 TProof *gProof = 0;
@@ -209,8 +210,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
       }
-      if (fLogLevel > 1)
-         Info("Init", "using PROOF config file: %s", fconf);
+      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -956,10 +956,9 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_OUTPUTLIST:
             {
-Info("Collect","Got kPROOF_OUTPUTLIST");
-               TList *out = (TList *) mess->ReadObject(THashList::Class());
+               PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
+               TList *out = (TList *) mess->ReadObject(TList::Class());
                fPlayer->StoreOutput(out); // Adopts the list
-Info("Collect","Done kPROOF_OUTPUTLIST");
             }
             break;
 
@@ -1211,11 +1210,10 @@ Int_t TProof::Process(TDSet *set, const char *selector, Long64_t nentries,
                       Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
+   // Returns -1 in case of error, 0 otherwise.
 
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
-
-   fPlayer->GetOutputList()->Delete();
 
    return fPlayer->Process(set, selector, nentries, first, evl);
 }
@@ -1753,7 +1751,7 @@ void TProof::ShowPackages(Bool_t all)
 {
    // List contents of package directory. If all is true show all package
    // directries also on slaves. If everything is ok all package directories
-   // are to be the same.
+   // should be the same.
 
    if (!IsValid()) return;
 
@@ -1767,8 +1765,8 @@ void TProof::ShowPackages(Bool_t all)
 void TProof::ShowEnabledPackages(Bool_t all)
 {
    // List which packages are enabled. If all is true show enabled packages
-   // for all slaves. If everything is ok all package directories
-   // are to be the same.
+   // for all slaves. If everything is ok all slaves should have the same
+   // packages enabled.
 
    if (!IsValid()) return;
 
@@ -1798,6 +1796,11 @@ void TProof::ClearPackage(const char *package)
 
    if (!IsValid()) return;
 
+   if (!package || !strlen(package)) {
+      ClearPackages();
+      return;
+   }
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(5) << TString(package);
    Broadcast(mess, kUnique);
@@ -1805,8 +1808,11 @@ void TProof::ClearPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package, Bool_t build)
+Int_t TProof::EnablePackage(const char *package)
 {
+   // Enable specified package. Executes the PROOF-INF/BUILD.C (or BUILD.sh)
+   // if exists followed by the PROOF-INF/setup.C script.
+   // Returns 0 in case of success and -1 in case of error.
 
    return 0;
 }
@@ -1831,8 +1837,7 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
 
    TString spar = par;
    if (!spar.EndsWith(".par")) {
-      Error("UploadPackage", "package %s has not correct extension,"
-            " must be .par", par);
+      Error("UploadPackage", "package %s must have extension .par", par);
       return -1;
    }
 
@@ -1852,13 +1857,17 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
    TIter next(fUniqueSlaves);
    TSlave *sl;
    while ((sl = (TSlave *) next())) {
+      if (!sl->IsValid())
+         continue;
+
       sl->GetSocket()->Send(mess);
 
       TMessage *reply;
       sl->GetSocket()->Recv(reply);
       if (reply->What() != kPROOF_CHECKFILE) {
          // remote directory is locked, upload file via TFTP
-         if (IsMaster()) parallel = 1;
+         if (IsMaster())
+            parallel = 1;  // assume LAN
          {
             TFTP ftp(TString("root://")+sl->GetName(), parallel);
             if (!ftp.IsZombie()) {
@@ -1866,8 +1875,15 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
                ftp.put(par, gSystem->BaseName(par));
             }
          }
-         // unlock dir
+         // install package and unlock dir
          sl->GetSocket()->Send(mess2);
+         delete reply;
+         sl->GetSocket()->Recv(reply);
+         if (reply->What() != kPROOF_CHECKFILE) {
+            Error("UploadPackage", "unpacking of package %s failed", par);
+            delete reply;
+            return -1;
+         }
       }
       delete reply;
    }

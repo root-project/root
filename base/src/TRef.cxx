@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.13 2002/03/25 20:21:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.16 2002/06/16 09:10:20 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -153,6 +153,21 @@
 // then, the compiled or interpreted function GetWebHistogram() would have
 // been called instead of the CINT script GetWebHistogram.C
 //
+// Special case of a TRef pointing to an object with a TUUID
+// ----------------------------------------------------------
+// If the referenced object has a TUUID, its bit kHasUUID has been set.
+// This case is detected by the TRef assignement operator.
+// (For example, TFile and TDirectory have a TUUID)
+// The TRef fPID points directly to the single object TProcessUUID (deriving
+// from TProcessID) and managing the list of TUUIDs for a process.
+// The TRef kAsUUID bit is set and its fUniqueID is set to the fUniqueID
+// of the referenced object.
+// When the TRef is streamed to a buffer, the corresponding TUUID is also
+// streamed with the TRef. When a TRef is read from a buffer, the corresponding
+// TUUID is also read and entered into the global list of TUUIDs (if not
+// already there). The TRef fUniqueID is set to the UIIDNumber.
+// see TProcessUUID for more details.
+//
 // Array of TRef
 // -------------
 // The special class TRefArray should be used to store multiple references.
@@ -171,11 +186,12 @@
 
 #include "TRef.h"
 #include "TROOT.h"
-#include "TProcessID.h"
+#include "TProcessUUID.h"
 #include "TFile.h"
 #include "TObjArray.h"
 #include "TExec.h"
 #include "TSystem.h"
+#include "TObjString.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 
@@ -194,7 +210,7 @@ TRef::TRef(TObject *obj)
 }
 
 //______________________________________________________________________________
-TRef::TRef(const TRef &ref)
+TRef::TRef(const TRef &ref) : TObject(ref)
 {
    *this = ref;
 }
@@ -210,12 +226,19 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      if (obj->TestBit(kIsReferenced)) {
+      if (obj->TestBit(kHasUUID)) {
+         fPID = gROOT->GetUUIDs();
+         obj->SetBit(kIsReferenced);
+         SetBit(kHasUUID);
          uid = obj->GetUniqueID();
-         fPID = TProcessID::GetProcessWithUID(uid);
       } else {
-         fPID = TProcessID::GetSessionProcessID();
-         uid = TProcessID::AssignID(obj);
+         if (obj->TestBit(kIsReferenced)) {
+            uid = obj->GetUniqueID();
+            fPID = TProcessID::GetProcessWithUID(uid);
+         } else {
+            fPID = TProcessID::GetSessionProcessID();
+            uid = TProcessID::AssignID(obj);
+         }
       }
    }
    SetUniqueID(uid);
@@ -291,8 +314,9 @@ TObject *TRef::GetObject() const
    //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid in the first 8 bits
-      Int_t execid = TestBits(0xff);
+      Int_t execid = TestBits(0xff00);
       if (execid > 0) {
+         execid = execid>>16;
          TExec *exec = (TExec*)fgExecs->At(execid-1);
          if (exec) {
             //we expect the object to be returned via TRef::SetObject
@@ -304,14 +328,14 @@ TObject *TRef::GetObject() const
                ((TRef*)this)->SetUniqueID(uid);
                fPID->PutObjectWithID(obj,uid);
             } else {
-               //well may be the Exec has loaded the object
+               //well may be the Exec has loaded the object 
                obj = fPID->GetObjectWithID(uid);
             }  
          }  
       }
    }
    
-   return obj;
+   return obj; 
 }
 
 //______________________________________________________________________________
@@ -374,18 +398,44 @@ void TRef::Streamer(TBuffer &R__b)
    TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       TObject::Streamer(R__b);
-      R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,file);
-      //The execid has been saved in the unique id of the TStreamerElement
-      //being read by TStreamerElement::Streamer
-      //The current element (fgElement) is set as a static global
-      //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
-      Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
-      if (execid) SetBit(execid);
+      if (TestBit(kHasUUID)) {
+         TString s;
+         s.Streamer(R__b);
+         TProcessUUID *pid = gROOT->GetUUIDs();
+         UInt_t number = pid->AddUUID(s.Data());
+         fPID = pid;
+         SetUniqueID(number);
+         if (gDebug > 1) {
+            printf("Reading TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
+         }      
+      } else {
+         R__b >> pidf;
+         fPID = TProcessID::ReadProcessID(pidf,file);
+         //The execid has been saved in the unique id of the TStreamerElement
+         //being read by TStreamerElement::Streamer
+         //The current element (fgElement) is set as a static global
+         //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
+         Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
+         if (execid) SetBit(execid<<16);
+         if (gDebug > 1) {
+            printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+         }      
+      }      
    } else {
       TObject::Streamer(R__b);
 
-      pidf = TProcessID::WriteProcessID(fPID,file);
-      R__b << pidf;
+      if (TestBit(kHasUUID)) {
+         TObjString *objs = gROOT->GetUUIDs()->FindUUID(GetUniqueID());
+         objs->String().Streamer(R__b);
+         if (gDebug > 1) {
+            printf("Writing TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
+         }      
+      } else {
+         pidf = TProcessID::WriteProcessID(fPID,file);
+         R__b << pidf;
+         if (gDebug > 1) {
+            printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
+         }      
+      }
    }
 }

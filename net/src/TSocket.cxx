@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.8 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.9 2001/02/12 14:30:02 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -174,7 +174,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const TSocket &s)
+TSocket::TSocket(const TSocket &s) : TNamed(s)
 {
    // TSocket copy ctor.
 

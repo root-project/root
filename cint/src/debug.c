@@ -467,7 +467,7 @@ char *unnamedmacro;
   int nest=0,single_quote=0,double_quote=0;
   G__value buf;
   FILE *fp;
-  int i;
+  int i,len;
   int addmparen=0;
   int addsemicolumn =0;
 
@@ -481,7 +481,8 @@ char *unnamedmacro;
   else if(unnamedmacro[i]==';')  addsemicolumn = 0;
   else                   addsemicolumn = 1;
 
-  for(i=0;i<strlen(unnamedmacro);i++) {
+  len = (int)strlen(unnamedmacro);
+  for(i=0;i<len;i++) {
     switch(unnamedmacro[i]) {
     case '(': case '[': case '{':
       if(!single_quote && !double_quote) ++nest; break;
@@ -700,9 +701,11 @@ int c;
 void G__lockedvariable(item)
 char *item;
 {
-  G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
-	  ,item
-	  ,G__ifile.name,G__ifile.line_number);
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
+		 ,item
+		 ,G__ifile.name,G__ifile.line_number);
+  }
 }
 
 
@@ -716,8 +719,10 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+    G__printlinenum();
+  }
 #endif
   
   G__hash(varname,hash,ig15)
@@ -746,8 +751,10 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+    G__printlinenum();
+  }
 #endif
   
   G__hash(varname,hash,ig15)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.4 2002/03/07 02:04:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.5 2002/03/15 15:51:52 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 //                                                                      //
 // To compute the message digest of a chunk of bytes, create an         //
 // TMD5 object, call Update() as needed on buffers full of bytes, and   //
-// then call Final(), which will, optinally, fill a supplied 16-byte    //
+// then call Final(), which will, optionally, fill a supplied 16-byte   //
 // array with the digest.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -69,16 +69,19 @@ public:
    void        Print() const;
    const char *AsString() const;
 
+   static TMD5  *ReadChecksum(const char *file);
+   static Int_t  WriteChecksum(const char *file, const TMD5 *md5);
+
    static TMD5  *FileChecksum(const char *file);
    static Int_t  FileChecksum(const char *file, UChar_t digest[16]);
 
    ClassDef(TMD5,1)  // MD5 cryptographic hash functions with a 128 bit output
 };
 
-inline TBuffer &operator>>(TBuffer& buf, TMD5& md5)
+inline TBuffer &operator>>(TBuffer &buf, TMD5 &md5)
 { md5.Streamer(buf); return buf; }
 
-inline TBuffer &operator<<(TBuffer& buf, const TMD5& md5)
+inline TBuffer &operator<<(TBuffer &buf, const TMD5 &md5)
 { ((TMD5&)md5).Streamer(buf); return buf; }
 
 inline Bool_t operator!=(const TMD5 &m1, const TMD5 &m2)

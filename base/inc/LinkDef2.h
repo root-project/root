@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.16 2002/03/15 17:23:40 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.19 2002/07/09 21:03:17 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,12 +39,15 @@
 
 #pragma link C++ function operator==(const TUUID&,const TUUID&);
 #pragma link C++ function operator!=(const TUUID&,const TUUID&);
+#pragma link C++ function operator>>(TBuffer&,TUUID&);
+#pragma link C++ function operator<<(TBuffer&,const TUUID&);
 
 #pragma link C++ function operator==(const TRef&,const TRef&);
 #pragma link C++ function operator!=(const TRef&,const TRef&);
 
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
+#pragma link C++ class TMath;
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
 #pragma link C++ class TFree;
@@ -52,7 +55,6 @@
 #pragma link C++ class TKeyMapFile;
 #pragma link C++ class TMapFile;
 #pragma link C++ class TMapRec;
-#pragma link C++ class TMath;
 #pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
@@ -61,6 +63,7 @@
 #pragma link C++ class TObject-;
 #pragma link C++ class TPoint;
 #pragma link C++ class TProcessID+;
+#pragma link C++ class TProcessUUID+;
 #pragma link C++ class TProcessEventTimer;
 #pragma link C++ class TRandom+;
 #pragma link C++ class TRandom2+;

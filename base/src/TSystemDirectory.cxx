@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -137,7 +137,7 @@ void TSystemDirectory::Browse(TBrowser *b)
 //______________________________________________________________________________
 TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
 {
-   // Static function that returns system directory object if it
+   // Method that returns system directory object if it
    // exists in list, 0 otherwise.
 
    int size = fDirsInBrowser->GetSize();
@@ -152,7 +152,7 @@ TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
 //______________________________________________________________________________
 TSystemFile *TSystemDirectory::FindFileObj(const char *name, const char *dir)
 {
-   // Static function that returns system file object if it exists in
+   // Method that returns system file object if it exists in
    // list, 0 otherwise.
 
    int size = fFilesInBrowser->GetSize();

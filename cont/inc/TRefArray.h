@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.5 2001/11/28 14:51:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.7 2002/05/25 21:00:36 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -63,6 +63,8 @@ public:
    Int_t            GetEntriesFast() const {return GetAbsLast()+1;}  //only OK when no gaps
    Int_t            GetLast() const;
    TObject        **GetObjectRef(TObject *obj) const;
+   TProcessID      *GetPID() const {return fPID;}
+   UInt_t           GetUID(Int_t at) const;
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
 
@@ -82,7 +84,7 @@ public:
    TObject         *After(TObject *obj) const;
    TObject         *First() const;
    TObject         *Last() const;
-   virtual TObject *&operator[](Int_t i);
+   virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
    Int_t            IndexOf(const TObject *obj) const;
    void             SetLast(Int_t last);
@@ -135,21 +137,26 @@ inline Bool_t TRefArray::BoundsOk(const char *where, Int_t at) const
                   : kTRUE;
 }
 
-inline TObject *&TRefArray::operator[](Int_t at)
+inline TObject *TRefArray::operator[](Int_t at) const
 {
-   MayNotUse("operator[]");
-   return (TObject*&)fUIDs[0];
-}
-
-inline TObject *TRefArray::At(Int_t i) const
-{
-   // Return the object at position i. Returns 0 if i is out of bounds.
-   int j = i-fLowerBound;
+   int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
       if (!fPID) return 0;
       return fPID->GetObjectWithID(fUIDs[j]);
    }
-   BoundsOk("At", i);
+   BoundsOk("At", at);
+   return 0;
+}
+
+inline TObject *TRefArray::At(Int_t at) const
+{
+   // Return the object at position i. Returns 0 if i is out of bounds.
+   int j = at-fLowerBound;
+   if (j >= 0 && j < fSize) {
+      if (!fPID) return 0;
+      return fPID->GetObjectWithID(fUIDs[j]);
+   }
+   BoundsOk("At", at);
    return 0;
 }
 

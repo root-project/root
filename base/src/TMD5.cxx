@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.7 2002/03/15 15:51:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.8 2002/03/16 18:30:11 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 //                                                                      //
 // To compute the message digest of a chunk of bytes, create an         //
 // TMD5 object, call Update() as needed on buffers full of bytes, and   //
-// then call Final(), which will, optinally, fill a supplied 16-byte    //
+// then call Final(), which will, optionally, fill a supplied 16-byte   //
 // array with the  digest.                                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -389,13 +389,68 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
 }
 
 //______________________________________________________________________________
+TMD5 *TMD5::ReadChecksum(const char *file)
+{
+   // Returns checksum stored in ASCII in specified file. Use to read files
+   // created via WriteChecksum(). The returned TMD5 object must be deleted
+   // by the user. Returns 0 in case the file cannot be opened or in case of
+   // error. Static utlity function.
+
+   FILE *fid = fopen(file, "r");
+   if (!fid) {
+      // file cannot be opened
+      return 0;
+   }
+
+   char buf[33];
+
+   fgets(buf, 33, fid);
+
+   UChar_t digest[16];
+   for (int i = 0; i < 16; i++) {
+      UShort_t d;
+      char s = buf[2+2*i];
+      buf[2+2*i] = 0;
+      sscanf(buf+2*i, "%hx", &d);
+      buf[2+2*i] = s;
+      digest[i] = (UChar_t) d;
+   }
+
+   fclose(fid);
+
+   TMD5 *md5 = new TMD5(digest);
+   return md5;
+}
+
+//______________________________________________________________________________
+Int_t TMD5::WriteChecksum(const char *file, const TMD5 *md5)
+{
+   // Writes checksum in ASCII format to specified file. This file can
+   // directly be read by ReadChecksum(). The md5 must have been finalized.
+   // Returns -1 in case file cannot be opened or in case of error,
+   // 0 otherwise. Static utility function.
+
+   FILE *fid = fopen(file, "w");
+   if (!fid) {
+      // file cannot be opened
+      return -1;
+   }
+
+   fputs(md5->AsString(), fid);
+
+   fclose(fid);
+
+   return 0;
+}
+
+//______________________________________________________________________________
 TMD5 *TMD5::FileChecksum(const char *file)
 {
    // Returns checksum of specified file. The returned TMD5 object must
-   // be deleted by the user. Returns 0 in case the file does not exit
+   // be deleted by the user. Returns 0 in case the file does not exists
    // or in case of error. This function preserves the modtime of the file
    // so it can be safely used in conjunction with methods that keep track
-   // of the file's modtime.
+   // of the file's modtime. Static utility function.
 
    Long_t id, size, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
@@ -458,7 +513,7 @@ Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
    // Returns checksum of specified file in digest argument. Returns -1 in
    // case of error, 0 otherwise. This method preserves the modtime of the
    // file so it can be safely used in conjunction with methods that keep
-   // track of the file's modtime.
+   // track of the file's modtime. Static utility function.
 
    TMD5 *md5 = FileChecksum(file);
    if (md5) {

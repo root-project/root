@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.2 2001/05/16 08:53:16 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.4 2002/06/20 21:02:52 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>
@@ -26,7 +26,7 @@ const Char_t *TIMERCLASS = "Timer";
   {                                                \
       TWin32SendWaitClass code(this,(UInt_t)k##_function,(UInt_t)(_p1),(UInt_t)(_p2),(UInt_t)(_p3)); \
       ExecTimerThread(&code);                      \
-      code.Wait();                                 \
+      if (code.GetCOP()!=-1) code.Wait();          \
   }
 #define  ReturnMethodThread(_type,_function,_p1,_p2) \
   else                                               \
@@ -34,30 +34,30 @@ const Char_t *TIMERCLASS = "Timer";
       _type _local;                                  \
       TWin32SendWaitClass code(this,(UInt_t)k##_function,(UInt_t)(_p1),(UInt_t)(_p2),(UInt_t)(&_local)); \
       ExecTimerThread(&code);                        \
-      code.Wait();                                   \
+      if (code.GetCOP()!=-1) code.Wait();            \
       return _local;                                 \
   }
 
 //*-*
 #define CallWindowMethod1(_function,_p1)             \
   if ( IsTimeThread())                               \
-  {TWin32Timer::_function(_p1);}                       \
+  {TWin32Timer::_function##CB(_p1);}                       \
     CallMethodThread(_function,_p1,0,0)
 //*-*
 #define CallWindowMethod(_function)                  \
   if ( IsTimeThread())                               \
-  {TWin32Timer::_function();}                          \
+  {TWin32Timer::_function##CB();}                          \
     CallMethodThread(_function,0,0,0)
 
 //*-*
 #define ReturnWindowMethod1(_type,_function,_p1)     \
   if ( IsTimeThread())                               \
-  {return TWin32Timer::_function(_p1);}                \
+  {return TWin32Timer::_function##CB(_p1);}                \
     ReturnMethodThread(_type,_function,_p1,0)
 //*-*
 #define ReturnWindowMethod(_type,_function)          \
   if ( IsTimeThread())                               \
-  {return TWin32Timer::_function();}                   \
+  {return TWin32Timer::_function##CB();}                   \
     ReturnMethodThread(_type,_function,0,0)
 
 //______________________________________________________________________________
@@ -230,6 +230,7 @@ void TWin32Timer::ExecTimerThread(TGWin32Command *command)
  if (!code) code = new TWin32SendClass(this);
  fSendFlag = 1;
  int i = ExecCommand(code,kFALSE);
+ if (!i) code->SetCOP(-1);
 }
 //______________________________________________________________________________
 Bool_t  TWin32Timer::ExecCommand(TGWin32Command *command,Bool_t synch)
@@ -246,7 +247,13 @@ Bool_t  TWin32Timer::ExecCommand(TGWin32Command *command,Bool_t synch)
                              cmd,
                              (WPARAM)command->GetCOP(),
                              (LPARAM)command))
-       ){ ; }
+       ){ ; 
+    // 1444 Invalid thread identifier.  ERROR_INVALID_THREAD_ID 
+    if ( GetLastError() == ERROR_INVALID_THREAD_ID ) {
+       // The thread is gone ... not needed to insist.
+       return false;
+    }
+ }
  return postresult;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.3 2001/08/24 16:34:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.4 2002/01/27 13:57:01 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -50,8 +50,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
       if (h->LoadPlugin() == -1)
          return 0;
-      serv = (TSQLServer *) gROOT->ProcessLineFast(Form(
-             "new %s(\"%s\", \"%s\", \"%s\")", h->GetClass(), db, uid, pw));
+      serv = (TSQLServer *) h->ExecPlugin(3, db, uid, pw);
    }
    return serv;
 }

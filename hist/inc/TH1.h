@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.31 2002/02/25 16:05:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.32 2002/04/26 10:18:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -143,6 +143,8 @@ public:
     virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
     virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
     virtual Int_t    FindBin(Axis_t x, Axis_t y=0, Axis_t z=0);
+    virtual TObject *FindObject(const char *name) const;
+    virtual TObject *FindObject(const TObject *obj) const;
     virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
     virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
     virtual void     FitPanel(); // *MENU*

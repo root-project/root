@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: rmain.cxx,v 1.4 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: rmain.cxx,v 1.5 2001/04/21 02:57:43 rdm Exp $
 // Author: Fons Rademakers   02/03/95
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 int main(int argc, char **argv)
 {
    // Create an interactive ROOT application
-   TRint *theApp = new TRint("Rint", &argc, argv, 0, 0);
+   TRint *theApp = new TRint("Rint", &argc, argv);
 
    // and enter the event loop...
    theApp->Run();

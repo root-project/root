@@ -304,9 +304,11 @@ char *oldtype,*newtype;
   if(type) {
 #ifndef G__OLDIMPLEMENTATION734
     if(strcmp(newtype,"bool")!=0) {
-      G__fprinterr(G__serr,"Limitation: macro handled as typedef %s %s;"
-	      ,oldtype,newtype);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: macro handled as typedef %s %s;"
+		     ,oldtype,newtype);
+	G__printlinenum();
+      }
     }
     G__search_typename(newtype,type,tagnum,0);
 #else
@@ -318,7 +320,7 @@ char *oldtype,*newtype;
   }
   else {
     G__fprinterr(G__serr,"Limitation: can not handle macro %s %s" ,newtype,oldtype);
-    if(0==G__cpp) G__fprinterr(G__serr," Use +P or -p option\n");
+    if(0==G__cpp) G__fprinterr(G__serr," Use +P or -p option");
     G__genericerror((char*)NULL);
   }
 
@@ -860,8 +862,10 @@ int G__execfuncmacro_noexec (char* macroname)
 #ifndef G__OLDIMPLEMENTATION1152
   if(p) *p='\0';
   else {
-    G__fprinterr(G__serr,"Warning: %s  Syntax error???",macroname);
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: %s  Syntax error???",macroname);
+      G__printlinenum();
+    }
   }
 #else
   *p='\0';

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.79 2002/04/08 06:38:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.89 2002/07/15 10:56:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -31,11 +31,12 @@
 #include "TGraph.h"
 #include "TGaxis.h"
 #include "TColor.h"
-#include "TLego.h"
+#include "TPainter3dAlgorithms.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom.h"
 #include "TObjArray.h"
+#include "TVectorD.h"
 #include "Hoption.h"
 #include "Hparam.h"
 
@@ -79,11 +80,6 @@ THistPainter::THistPainter()
    fYbuf  = new Double_t[kNMAX];
    fNcuts = 0;
    fStack = 0;
-   fStats = 0;
-
-   //add this THistPainter to the list of cleanups such that in case
-   //the stats object is deleted, its pointer be reset
-   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -92,7 +88,6 @@ THistPainter::~THistPainter()
 //    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
-   gROOT->GetListOfCleanups()->Remove(this);
    delete [] fXbuf;
    delete [] fYbuf;
 }
@@ -123,7 +118,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-
+   Int_t curdist = big;
+   Int_t yxaxis, dyaxis,xyaxis, dxaxis;
+   Bool_t dsame;
+   TString doption = gPad->GetPadPointer()->GetDrawOption();
+   
 //     return if point is not in the histogram area
 
 //     If a 3-D view exists, check distance to axis
@@ -137,16 +136,15 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (d1 <= kMaxDiff) {gPad->SetSelected(fXaxis); return 0;}
       d2 = view->GetDistancetoAxis(2, px, py, ratio);
       if (d2 <= kMaxDiff) {gPad->SetSelected(fYaxis); return 0;}
-      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) return 1;
-      return big;
+      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) curdist = 1;
+      goto FUNCTIONS;
    }
 //     check if point is close to an axis
-   TString doption = gPad->GetPadPointer()->GetDrawOption();
    doption.ToLower();
-   Bool_t dsame = kFALSE;
+   dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
-   Int_t xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
-   Int_t dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
+   xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
+   dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
    if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
       if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
@@ -154,9 +152,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          return 0;
       }
    }
-   Int_t yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
+   yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
    if (yxaxis < puymin) yxaxis = puymin;
-   Int_t dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
+   dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
    if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
       if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
@@ -188,7 +186,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if ( px > puxmin + delta2
         && px < puxmax - delta2
         && py > puymax + delta2
-        && py < puymin - delta2) return 1;
+        && py < puymin - delta2) {curdist =1; goto FUNCTIONS;}
    }
 
 //     point is inside histogram area. Find channel number
@@ -236,13 +234,14 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (TMath::Abs(px - pxbin) <= kMaxDiff) return TMath::Abs(px - pxbin);
    }
    //     Loop on the list of associated functions and user objects
+FUNCTIONS:
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
       Int_t dist = f->DistancetoPrimitive(px,py);
       if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
    }
-   return big;
+   return curdist;
 }
 
 //______________________________________________________________________________
@@ -938,21 +937,19 @@ void THistPainter::Paint(Option_t *option)
 // For example: gStyle->SetOptStat(11);
 // displays only the name of histogram and the number of entries.
 //
-//When the option "same", the statistic box is not redrawn, and hence
-// the statistics from the previously drawn hostgram will still show.
-// With the option "sames", you can rename a previous "stats" box
-// and/or change its position with these lines:
+// With the option "same", the statistic box is not redrawn.
+// With the option "sames", the statistic box is drawn. If it hiddes
+// the previous statistics box, you can change its position
+// with these lines (if h is the pointer to the histogram):
 //
-//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
-//  Root > st->SetName(newname)
+//  Root > TPaveStats *st = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
-//  Root > newhist->Draw("sames")
 //
 // Fit Statistics
 // ==============
-// You can change the statistics box to display the fit paramters with
-// the TH1::SetOptFit(mode) method. This mode has four digits.
+// You can change the statistics box to display the fit parameters with
+// the TStyle::SetOptFit(mode) method. This mode has four digits.
 // mode = pcev  (default = 0111)
 //    v = 1;  print name/values of parameters
 //    e = 1;  print errors (if e=1, v must be 1)
@@ -1749,9 +1746,13 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 
    Double_t z, xk,xstep, yk, ystep, xcent, ycent, xlow, xup, ylow, yup;
-   Double_t dz = Hparam.zmax - Hparam.zmin;
-   Double_t dxmin = 0.51*(gPad->PixeltoX(1)-gPad->PixeltoX(0));
-   Double_t dymin = 0.51*(gPad->PixeltoY(0)-gPad->PixeltoY(1));
+   Double_t dz  = Hparam.zmax - Hparam.zmin;
+   Double_t ux1 = gPad->PixeltoX(1);
+   Double_t ux0 = gPad->PixeltoX(0);
+   Double_t uy1 = gPad->PixeltoY(1);
+   Double_t uy0 = gPad->PixeltoY(0);
+   Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
+   Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -1827,6 +1828,7 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
+   fH->SetFillStyle(1001);
    fH->TAttFill::Modify();
 
 //                  Initialize the levels on the Z axis
@@ -2171,7 +2173,7 @@ void THistPainter::PaintContour(Option_t *option)
             }
             if (nadd == 0) break;
          }
-         theColor = Int_t((ipoly+1.99)*Float_t(ncolors)/Float_t(ndivz));
+         theColor = Int_t((ipoly+0.99)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
          if (ndivz > 1) fH->SetFillColor(icol);
          fH->TAttFill::Modify();
@@ -2299,7 +2301,7 @@ void THistPainter::PaintErrors(Option_t *)
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
    Double_t logymin = 0;
-   Int_t k, npoints, first, last, fixbin;
+   Int_t i, k, npoints, first, last, fixbin;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
@@ -2387,7 +2389,7 @@ void THistPainter::PaintErrors(Option_t *)
       //     ex2   = Up X error
       //     ey1   = Low Y error
       //     ey2   = Up Y error
-      //     (xi,yi) = Error bars corrdinates
+      //     (xi,yi) = Error bars coordinates
 
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
@@ -2519,6 +2521,17 @@ L30:
       Int_t logy = gPad->GetLogy();
       gPad->SetLogx(0);
       gPad->SetLogy(0);
+
+      // In some cases the number of points in the fill area is smaller than
+      // 2*npoints. In such cases the array xline and yline must be arranged 
+      // before being plotted. The next loop does that.
+      if (if2 > npoints) {
+         for(i=1; i<if1 ;i++) {
+            xline[if1-2+i] = xline[if2-1+i];
+            yline[if1-2+i] = yline[if2-1+i];
+         }
+	 npoints = if1-1;
+      }	
       if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
       else         graph.PaintGraph(2*npoints,xline,yline,"F");
       gPad->SetLogx(logx);
@@ -2558,20 +2571,25 @@ void THistPainter::PaintFunction(Option_t *)
 //   by a user without calling THistPainter::Fit.
 //   To add a new function to the list of associated functions, do
 //     h->GetListOfFunctions()->Add(f1);
+//        or
+//     h->GetListOfFunctions()->Add(f1,someoption);
 //   To retrieve a function by name from this list, do:
 //     TF1 *f1 = (TF1*)h->GetListOfFunctions()->FindObject(name);
 //   or
 //     TF1 *f1 = h->GetFunction(name);
 //
-   TObject *f;
-   TIter   next(fFunctions);
-   while ((f = (TObject*) next())) {
+   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
+   TObject *obj;
+
+   while (lnk) {
+      obj = lnk->GetObject();
       TVirtualPad *padsave = gPad;
-      if (f->InheritsFrom(TF1::Class())) {
-         if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+      if (obj->InheritsFrom(TF1::Class())) {
+         if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
-         f->Paint();
+         obj->Paint(lnk->GetOption());
       }
+      lnk = (TObjOptLink*)lnk->Next();
       padsave->cd();
    }
 }
@@ -2833,6 +2851,12 @@ void THistPainter::PaintH3(Option_t *option)
    char *cmd;
    if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
       cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+   } else if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"iso")) {
+      PaintH3Iso();
+      return;
+   } else if (strstr(option,"tf3")) {
+      PaintTF3();
+      return;
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
@@ -3195,6 +3219,139 @@ Int_t THistPainter::PaintInitH()
 
 
 //______________________________________________________________________________
+void THistPainter::PaintH3Iso()
+{
+   // Control function to draw a 3d histogram with Iso Surfaces.
+   //
+   // Thanks to the function IsoSurface of the TPainter3dAlgorithms class, this
+   // function paints a Gouraud shaded 3d iso surface though a 3d histogram.
+   // 
+   // This first implementation paint one surface at the value computed as follow:
+   // SumOfWeights/(NbinsX*NbinsY*NbinsZ)
+   //
+   // Example:
+   //
+   //  #include "TH3.h"
+   //  #include "TRandom.h"
+   //
+   //  void hist3d() {
+   //     TH3F *h3 = new TH3F("h3","h3",20,-2,2,20,-2,2,20,0,4);
+   //     Double_t x, y, z;
+   //     for (Int_t i=0;i<10000;i++) {
+   //        gRandom->Rannor(x, y);
+   //        z = x*x + y*y;
+   //        h3->Fill(x,y,z);
+   //     }
+   //     h3->Draw("iso");
+   //  }
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintIso.gif">
+   */
+   //End_Html
+
+   const Double_t ydiff = 1;
+   const Double_t yligh1 = 10;
+   const Double_t qa = 0.15;
+   const Double_t qd = 0.15;
+   const Double_t qs = 0.8;
+   Double_t fmin, fmax;
+   Int_t i, irep;
+   Int_t nbcol = 28;
+   Int_t icol1 = 201;
+   Int_t ic1 = icol1;
+   Int_t ic2 = ic1+nbcol;
+   Int_t ic3 = ic2+nbcol;
+
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+   
+   Int_t nx = fH->GetNbinsX();
+   Int_t ny = fH->GetNbinsY();
+   Int_t nz = fH->GetNbinsZ();
+
+   Double_t *x = new Double_t[nx];
+   Double_t *y = new Double_t[ny];
+   Double_t *z = new Double_t[nz];
+
+   for ( i=0 ; i<nx ; i++) x[i] = xaxis->GetBinCenter(i+1);
+   for ( i=0 ; i<ny ; i++) y[i] = yaxis->GetBinCenter(i+1);
+   for ( i=0 ; i<nz ; i++) z[i] = zaxis->GetBinCenter(i+1);
+
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   Double_t s[3];
+   s[0] = fH->GetSumOfWeights()/(fH->GetNbinsX()*fH->GetNbinsY()*fH->GetNbinsZ());
+   s[1] = 0.5*s[0];
+   s[2] = 1.5*s[0];
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);                          
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintH3Iso", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   Double_t dcol = 0.5/Double_t(nbcol);
+   TColor *colref = gROOT->GetColor(fH->GetFillColor());
+   Float_t r, g, b, hue, light, satur;
+   colref->GetRGB(r,g,b);
+   TColor::RGBtoHLS(r,g,b,hue,light,satur);
+   TColor *acol;
+   for (Int_t col=0;col<nbcol;col++) {
+      acol = gROOT->GetColor(col+icol1);
+      TColor::HLStoRGB(hue, .4+col*dcol, satur, r, g, b);
+      acol->SetRGB(r, g, b);
+   }
+
+   fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   fLego->LightSource(0, ydiff, 0, 0, 0, irep);
+   fLego->LightSource(1, yligh1, 1, 1, 1, irep);
+   fLego->SurfaceProperty(qa, qd, qs, 1, irep);
+   fmin = ydiff*qa;
+   fmax = ydiff*qa + (yligh1+0.1)*(qd+qs);
+   fLego->SetIsoSurfaceParameters(fmin, fmax, nbcol, ic1, ic2, ic3);
+
+   fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");  
+
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
+   delete [] x;
+   delete [] y;
+   delete [] z;
+}
+
+
+//______________________________________________________________________________
 void THistPainter::PaintLego(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
@@ -3208,7 +3365,7 @@ void THistPainter::PaintLego(Option_t *)
 //       Possible systems are CYL,POL,SPH,PSR.
 //
 //      See THistPainter::Draw for the list of Lego options.
-//      See TLego for more examples of lego options.
+//      See TPainter3dAlgorithms for more examples of lego options.
 //
 //      See TStyle::SetPalette to change the color palette.
 //      It is suggested to use palette 1 via the call
@@ -3281,7 +3438,7 @@ void THistPainter::PaintLego(Option_t *)
    //   }
    //}
 
-   fLego = new TLego(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
 
 //          Create axis object
 
@@ -3355,17 +3512,17 @@ void THistPainter::PaintLego(Option_t *)
    if (Hoption.Lego == 11 || Hoption.Lego == 12) {
 //      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
 
    if (Hoption.Lego == 12) DefineColorLevels(ndivz);
 
-   fLego->SetLegoFunction(&TLego::LegoFunction);
-   if (Hoption.Lego ==  1) fLego->SetDrawFace(&TLego::DrawFaceRaster2);
-   if (Hoption.Lego == 11) fLego->SetDrawFace(&TLego::DrawFaceMode3);
-   if (Hoption.Lego == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
+   fLego->SetLegoFunction(&TPainter3dAlgorithms::LegoFunction);
+   if (Hoption.Lego ==  1) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster2);
+   if (Hoption.Lego == 11) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode3);
+   if (Hoption.Lego == 12) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
    if (Hoption.System == kPOLAR) {
       if (Hoption.Lego ==  1) fLego->LegoPolar(1,nx,ny,"FB");
       if (Hoption.Lego == 11) fLego->LegoPolar(1,nx,ny,"BF");
@@ -3384,7 +3541,7 @@ void THistPainter::PaintLego(Option_t *)
       if (Hoption.Lego == 12) fLego->LegoSpherical(1,1,nx,ny,"BF");
    } else {
       if (Hoption.Lego ==  1) {
-                              fLego->SetDrawFace(&TLego::DrawFaceMove2);
+                              fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
                               fLego->LegoCartesian(90,nx,ny,"FB");}
       if (Hoption.Lego == 11) fLego->LegoCartesian(90,nx,ny,"BF");
       if (Hoption.Lego == 12) fLego->LegoCartesian(90,nx,ny,"BF");
@@ -3393,13 +3550,13 @@ void THistPainter::PaintLego(Option_t *)
    if (Hoption.Lego == 1 || Hoption.Lego == 11) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
    if (Hoption.System == kCARTESIAN) {
       fLego->InitMoveScreen(-1.1,1.1);
-      fLego->SetDrawFace(&TLego::DrawFaceMove2);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
@@ -3625,16 +3782,15 @@ void THistPainter::PaintPalette()
    Double_t y1,y2;
    static char chopt[5] = "";
    if (Hoption.Logz) {
-      wlmin = Hparam.zmin;
-      if (wmax > 0) wlmax = TMath::Log10(wmax);
-      else          wlmax = Hparam.zmax;
+      wlmin = TMath::Log10(wmin);
+      wlmax = TMath::Log10(wmax);
    }
    Double_t ws    = wlmax-wlmin;
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz = TMath::Abs(fH->GetContour());
    Int_t theColor,color;
-   Double_t scale = ndivz/(Hparam.zmax - Hparam.zmin);
+   Double_t scale = ndivz/(wlmax - wlmin);
    for (Int_t i=0;i<ndivz;i++) {
       Double_t w1 = fH->GetContourLevel(i);
       if (w1 < wlmin) w1 = wlmin;
@@ -3643,7 +3799,7 @@ void THistPainter::PaintPalette()
       if (w2 <= wlmin) continue;
       y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
       y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
-      color = Int_t(0.01+(w1-Hparam.zmin)*scale);
+      color = Int_t(0.01+(w1-wlmin)*scale);
       theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
       box.SetFillColor(gStyle->GetColorPalette(theColor));
       box.TAttFill::Modify();
@@ -3815,19 +3971,27 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //  When option "same" is specified, the statistic box is not drawn.
 //  Specify option "sames" to force painting statistics with option "same"
 //  When option "sames" is given, one can use the following technique
-//  to rename a previous "stats" box and/or change its position
-//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
-//  Root > st->SetName(newname)
+//  to move a previous "stats" box to a new position
+//  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
 //  Root > newhist->Draw("sames")
 
    static char t[64];
    Int_t dofit;
-   //   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
-   if (fStats) {
-      dofit  = fStats->GetOptFit();
-      dostat = fStats->GetOptStat();
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
+
+   if (stats) {
+      dofit  = stats->GetOptFit();
+      dostat = stats->GetOptStat();
    } else {
       dofit  = gStyle->GetOptFit();
    }
@@ -3852,100 +4016,102 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //     Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
-      if (fStats) { delete fStats; fStats = 0; }
+      if (stats) { delete stats; fFunctions->Remove(stats); }
       return;
    }
    Double_t  statw  = gStyle->GetStatW();
    if (fit) statw   = 1.8*gStyle->GetStatW();
    Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
-   if (fStats) {
-      fStats->Clear();
+   if (stats) {
+      stats->Clear();
       done = kTRUE;
    } else {
-      fStats  = new TPaveStats(
+      stats  = new TPaveStats(
                gStyle->GetStatX()-statw,
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
 
-      fStats->SetOptFit(dofit);
-      fStats->SetOptStat(dostat);
-      fStats->SetFillColor(gStyle->GetStatColor());
-      fStats->SetFillStyle(gStyle->GetStatStyle());
-      fStats->SetBorderSize(gStyle->GetStatBorderSize());
-      fStats->SetTextFont(gStyle->GetStatFont());
+      stats->SetParent(fFunctions);
+      stats->SetOptFit(dofit);
+      stats->SetOptStat(dostat);
+      stats->SetFillColor(gStyle->GetStatColor());
+      stats->SetFillStyle(gStyle->GetStatStyle());
+      stats->SetBorderSize(gStyle->GetStatBorderSize());
+      stats->SetTextFont(gStyle->GetStatFont());
       if (gStyle->GetStatFont()%10 > 2)
-         fStats->SetTextSize(gStyle->GetStatFontSize());
-      fStats->SetFitFormat(gStyle->GetFitFormat());
-      fStats->SetStatFormat(gStyle->GetStatFormat());
-      fStats->SetName("stats");
+         stats->SetTextSize(gStyle->GetStatFontSize());
+      stats->SetFitFormat(gStyle->GetFitFormat());
+      stats->SetStatFormat(gStyle->GetStatFormat());
+      stats->SetName("stats");
 
-      fStats->SetTextColor(gStyle->GetStatTextColor());
-      fStats->SetTextAlign(12);
-      fStats->SetBit(kCanDelete);
+      stats->SetTextColor(gStyle->GetStatTextColor());
+      stats->SetTextAlign(12);
+      stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
    }
-   if (print_name)  fStats->AddText(fH->GetName());
+   if (print_name)  stats->AddText(fH->GetName());
    if (print_entries) {
       if (fH->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(fH->GetEntries()));
       else                        sprintf(t,"Entries = %14.7g",Float_t(fH->GetEntries()));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    char textstats[50];
    if (print_mean) {
-      sprintf(textstats,"Mean  = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetMean(1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_rms) {
-      sprintf(textstats,"RMS   = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetRMS(1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_under) {
-      sprintf(textstats,"Underflow = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Underflow = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(0));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_over) {
-      sprintf(textstats,"Overflow  = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Overflow  = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(fXaxis->GetNbins()+1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_integral) {
-      sprintf(textstats,"Integral = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Integral = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->Integral());
-      fStats->AddText(t);
+      stats->AddText(t);
    }
 
 //     Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",fStats->GetFitFormat(),ndf);
+      sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
       sprintf(t,textstats,(Float_t)fit->GetChisquare());
-      if (print_fchi2) fStats->AddText(t);
+      if (print_fchi2) stats->AddText(t);
       if (print_fprob) {
-         sprintf(textstats,"Prob  = %s%s","%",fStats->GetFitFormat());
+         sprintf(textstats,"Prob  = %s%s","%",stats->GetFitFormat());
          sprintf(t,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
-         fStats->AddText(t);
+         stats->AddText(t);
       }
       if (print_fval || print_ferrors) {
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             if (print_ferrors) {
-               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat(),"%",fStats->GetFitFormat());
+               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
                sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
-               sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat());
+               sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
                sprintf(t,textstats,(Float_t)fit->GetParameter(ipar));
             }
             t[63] = 0;
-            fStats->AddText(t);
+            stats->AddText(t);
          }
       }
    }
 
-   if (!done) fStats->Draw();
-   fStats->Paint();
+   if (!done) fFunctions->Add(stats);
+   stats->Paint();
 }
 
 //______________________________________________________________________________
@@ -3970,7 +4136,15 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 
    static char t[64];
    Int_t dofit;
-   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
    if (stats) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
@@ -4008,6 +4182,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
+      
+      stats->SetParent(fFunctions);
       stats->SetOptFit(dofit);
       stats->SetOptStat(dostat);
       stats->SetFillColor(gStyle->GetStatColor());
@@ -4021,6 +4197,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       stats->SetFitFormat(gStyle->GetFitFormat());
       stats->SetStatFormat(gStyle->GetStatFormat());
       stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
@@ -4083,7 +4260,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       }
    }
 
-   if (!done) stats->Draw();
+   if (!done) fFunctions->Add(stats);
    stats->Paint();
 }
 
@@ -4187,7 +4364,7 @@ void THistPainter::PaintSurface(Option_t *)
    //   }
    //}
 
-   fLego = new TLego(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
 
@@ -4243,8 +4420,8 @@ void THistPainter::PaintSurface(Option_t *)
    if (Hoption.Surf == 13) {
       DefineColorLevels(ndivz);
       Hoption.Surf = 23;
-      fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
-      fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"BF");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
@@ -4261,7 +4438,7 @@ void THistPainter::PaintSurface(Option_t *)
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
@@ -4288,8 +4465,8 @@ void THistPainter::PaintSurface(Option_t *)
          acol->SetRGB(r,g,b);
       }
       fLego->Spectrum(nbcol, fmin, fmax, icol1, 1, irep);
-      fLego->SetSurfaceFunction(&TLego::GouraudFunction);
-      fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::GouraudFunction);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"BF");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
@@ -4303,9 +4480,9 @@ void THistPainter::PaintSurface(Option_t *)
       } else {
          fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       }
-      fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
-      if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceRaster1);
-      if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
+      if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
+      if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfacePolar(1,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfacePolar(1,nx,ny,"BF");
@@ -4319,7 +4496,7 @@ void THistPainter::PaintSurface(Option_t *)
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceSpherical(1,1,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       } else {
-         if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceCartesian(90,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceCartesian(90,nx,ny,"BF");
       }
@@ -4328,13 +4505,13 @@ void THistPainter::PaintSurface(Option_t *)
    if (Hoption.Surf == 1 || Hoption.Surf == 13) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
    if (Hoption.System == kCARTESIAN) {
       fLego->InitMoveScreen(-1.1,1.1);
-      fLego->SetDrawFace(&TLego::DrawFaceMove2);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
@@ -4362,7 +4539,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
       funlevel[i]   = fH->GetContourLevel(i);
-      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
    colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
@@ -4455,6 +4632,79 @@ void THistPainter::PaintText(Option_t *)
    }
 }
 
+
+//______________________________________________________________________________
+void THistPainter::PaintTF3()
+{
+   // Control function to draw a 3d implicit functions.
+   //
+   // Thanks to the function ImplicitFunction of the TPainter3dAlgorithms class,
+   // this function paints 3d representation of an implicit function.
+   // 
+   // Example:
+   //
+   //   TF3 *fun3 = new TF3("fun3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);      
+   //   fun3->Draw();
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintTF3.gif">
+   */
+   //End_Html
+   Int_t irep;
+
+   TGaxis *axis = new TGaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+   
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTF3", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.BackBox) {
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
+
+   fLego->ImplicitFunction(fXbuf, fYbuf, fH->GetNbinsX(),
+                                         fH->GetNbinsY(),
+                                         fH->GetNbinsZ(), "BF");
+
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
+
+   PaintTitle();
+
+   delete axis;
+   delete fLego; fLego = 0;
+}
+
+
 //______________________________________________________________________________
 void THistPainter::PaintTitle()
 {
@@ -4510,6 +4760,24 @@ void THistPainter::PaintTitle()
 }
 
 //______________________________________________________________________________
+void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
+{
+//  Process message mess
+   
+   if (!strcmp(mess,"SetF3")) {
+      TPainter3dAlgorithms::SetF3((TF3*)obj);
+   } else if (!strcmp(mess,"SetF3ClippingBoxOff")) {
+      TPainter3dAlgorithms::SetF3ClippingBoxOff();
+   } else if (!strcmp(mess,"SetF3ClippingBoxOn")) {
+      TVectorD &v =  (TVectorD&)(*obj);
+      Double_t xclip = v(0);
+      Double_t yclip = v(1);
+      Double_t zclip = v(2);
+      TPainter3dAlgorithms::SetF3ClippingBoxOn(xclip,yclip,zclip);
+   }
+}
+
+//______________________________________________________________________________
 void THistPainter::RecalculateRange()
 {
 //    *-*-*-*Recompute the histogram range following graphics operations*-*-*
@@ -4533,15 +4801,6 @@ void THistPainter::RecalculateRange()
                       xmax + dxr*gPad->GetRightMargin(),
                       ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
-}
-
-//______________________________________________________________________________
-void THistPainter::RecursiveRemove(TObject *obj)
-{
-   // Recursively remove this object from a list. Typically implemented
-   // by classes that can contain multiple references to a same object.
-  if (obj == fStats) fStats = 0;
-
 }
 
 //______________________________________________________________________________

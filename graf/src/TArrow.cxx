@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.4 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -74,7 +74,7 @@ TArrow::~TArrow()
 }
 
 //______________________________________________________________________________
-TArrow::TArrow(const TArrow &arrow)
+TArrow::TArrow(const TArrow &arrow) : TLine(arrow), TAttFill(arrow)
 {
    ((TArrow&)arrow).Copy(*this);
 }

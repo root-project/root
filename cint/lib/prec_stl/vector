@@ -16,18 +16,18 @@
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
 
-#include <iterator>
-#include <memory>
-#include <utility>
+#include <_iterator>
+#include <_memory>
+#include <_utility>
 
-#if defined(G__ANSIISOLIB)
-template<class T,class Allocator=allocator<T> >
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+template<class T,class Allocator=std::allocator<T> >
 #elif defined(G__GNUC) && !defined(G__KCC)
 template<class T,class Allocator=alloc>
 #elif defined(G__HPUX)
 template<class T,class Allocator=allocator>
 #else
-template<class T,class Allocator=allocator<T> >
+template<class T,class Allocator=std::allocator<T> >
 #endif
 class vector {
  public:
@@ -39,13 +39,13 @@ class vector {
   typedef reverse_iterator<iterator>	        reverse_iterator;
   typedef reverse_iterator<const_iterator>      const_reverse_iterator;
 #else
-#if !(G__GNUC>=3)
+#if !(G__GNUC>=3 && G__GNUC_MINOR<1)
   typedef T* iterator;
   typedef const T* const_iterator;
 #else
   typedef vector<T, Allocator> vector_type;
-  typedef __normal_iterator<T*, vector_type> iterator;
-  typedef __normal_iterator<T*, vector_type> const_iterator;
+  typedef std::__normal_iterator<T*, vector_type> iterator;
+  typedef std::__normal_iterator<T*, vector_type> const_iterator;
 #endif
 #endif
 #if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
@@ -71,7 +71,7 @@ class vector {
 #if defined(G__VISUAL)
 	: public _Ranit<T,difference_type>
 #elif !defined(G__SUNPRO_C)
-    	: public random_access_iterator<T,difference_type>
+    	: public std::random_access_iterator<T,difference_type>
 #endif
 	{
    public:

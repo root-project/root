@@ -256,6 +256,7 @@ class ios_base {
 #ifndef G__SUNCC5
     ~ios_base();    
 #endif
+    ios_base& operator=(const ios_base& x);
 };
 
 template<class charT, class traits>
@@ -333,6 +334,8 @@ class basic_streambuf {
     inline streamsize sputn(const char_type *s, streamsize n);
   protected:
     basic_streambuf();
+  private:
+    basic_streambuf& operator=(const basic_streambuf& x);
 };
 
 template<class charT, class traits>
@@ -533,7 +536,7 @@ ostream& operator<< ( ostream&, long );
 ostream& operator<< ( ostream&, unsigned long);
 ostream& operator<< ( ostream&, float );
 ostream& operator<< ( ostream&, double );
-ostream& operator<< ( ostream&, long double );
+//ostream& operator<< ( ostream&, long double );
 ostream& operator<< ( ostream&, bool );
 
 istream& operator>> ( istream&, char& );
@@ -546,7 +549,7 @@ istream& operator>> ( istream&, long& );
 istream& operator>> ( istream&, unsigned long& );
 istream& operator>> ( istream&, float& );
 istream& operator>> ( istream&, double& );
-istream& operator>> ( istream&, long double& );
+//istream& operator>> ( istream&, long double& );
 istream& operator>> ( istream&, bool& );
 istream& operator>> ( istream&, char* );
 istream& operator>> ( istream&, void*& );

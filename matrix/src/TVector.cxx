@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.8 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.11 2002/05/18 08:48:42 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TVector::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
 
-   gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1F *R__TVector = new TH1F((TVector&)((TVector*)(0x%lx)));R__TVector->SetBit(kCanDelete);R__TVector->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -911,6 +911,28 @@ Bool_t TVector::IsValid() const
    return kTRUE;
 }
 
+void TVector::SetElements(const Float_t *elements)
+{
+  if (!IsValid()) {
+    Error("SetElements", "vector is not initialized");
+    return;
+  }
+  memcpy(fElements,elements,fNrows*sizeof(Float_t));
+}
+
+TVector::TVector(Int_t n, const Float_t *elements)
+{
+   Allocate(n);
+   SetElements(elements);
+}
+
+TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
+{
+   Allocate(upb-lwb+1, lwb);
+   SetElements(elements);
+}
+
+
 Bool_t AreCompatible(const TVector &v1, const TVector &v2)
 {
    if (!v1.IsValid()) {
@@ -937,7 +959,7 @@ TVector &TVector::operator=(const TVector &source)
    return *this;
 }
 
-TVector::TVector(const TVector &another)
+TVector::TVector(const TVector &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

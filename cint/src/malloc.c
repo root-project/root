@@ -7,7 +7,7 @@
  * Description:
  *  Allocate automatic variable arena 
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -285,7 +285,7 @@ char *item;
 	/***********************************
 	 * Get padding size
 	 ***********************************/
-	if(bsize>G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
+	if(bsize>(int)G__DOUBLEALLOC) allocmem=G__DOUBLEALLOC;
 	else	    allocmem=bsize;
 	/***********************************
 	 * Get padding size

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.8 2001/02/26 10:28:53 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.9 2001/04/06 07:27:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -131,7 +131,7 @@ private:
    TGLabel              *fLbl2;         // label for list view
    TGHorizontalFrame    *fBFrame;       // button frame
    TGHorizontalFrame    *fHpb;          // progress bar frame
-   TGHProgressBar       *fProgressBar;  // progress bar 
+   TGHProgressBar       *fProgressBar;  // progress bar
    TGLabel              *fBLbl4;        // label for input list entry
    TGLabel              *fBLbl5;        // label for output list entry
    TGTextEntry          *fBarListIn;    // tree input event list name entry
@@ -170,6 +170,7 @@ private:
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
+   void          DoError(int level, const char *location, const char *fmt, va_list va) const;
 
 public:
    TTreeViewer(const char* treeName = 0);
@@ -215,7 +216,6 @@ public:
    Bool_t        SwitchTree(Int_t index);
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
-   void          Warning(const char* msg);
 
    ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
 };

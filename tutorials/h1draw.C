@@ -38,7 +38,7 @@
    // a "transparent cube" to guide you rotating the lego in real time.
    pad2->cd();
    hpx->DrawCopy("lego1");
-   label2 = new TPaveLabel(0.4,0.8,0.9,0.95,"option Lego1");
+   label2 = new TPaveLabel(-0.72,0.74,-0.22,0.88,"option Lego1");
    label2->SetFillColor(42);
    label2->Draw();
    label2a = new TPaveLabel(-0.93,-1.08,0.25,-0.92,"Click on lego to rotate");

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.23 2002/02/18 23:09:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.25 2002/05/11 16:34:46 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const TProfile &profile)
+TProfile::TProfile(const TProfile &profile) : TH1D(profile)
 {
    ((TProfile&)profile).Copy(*this);
 }
@@ -762,6 +762,13 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    }
    if (fErrorMode == kERRORMEAN) return eprim/TMath::Sqrt(sum);
    else if (fErrorMode == kERRORSPREAD) return eprim;
+   else if (fErrorMode == kERRORSPREADI) {
+      if (eprim != 0) return eprim/TMath::Sqrt(sum);
+      return 1/TMath::Sqrt(12*sum);
+   }
+   else if (fErrorMode == kERRORSPREADG) {
+      return eprim/TMath::Sqrt(sum);
+   }
    else return eprim;
 }
 

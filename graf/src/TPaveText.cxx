@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.13 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.15 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -78,7 +78,7 @@ TPaveText::~TPaveText()
 }
 
 //______________________________________________________________________________
-TPaveText::TPaveText(const TPaveText &pavetext)
+TPaveText::TPaveText(const TPaveText &pavetext) : TPave(pavetext), TAttText(pavetext)
 {
    ((TPaveText&)pavetext).Copy(*this);
 }
@@ -422,7 +422,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
             if (w > longest) longest = w;
          }
       }
-      if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
+      if (longest > 0.96*dx) textsize *= 0.96*dx/longest;
       if (mode == kDiamond) textsize *= 0.66;
       SetTextSize(textsize);
    }

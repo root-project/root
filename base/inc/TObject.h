@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.18 2002/03/13 01:55:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.21 2002/07/08 14:38:34 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -61,6 +61,7 @@ enum EObjBits {
    kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
    kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
    kIsReferenced     = BIT(4),   // if object is referenced by a TRef or TRefArray
+   kHasUUID          = BIT(5),   // if object has a TUUID (its fUniqueID=UUIDNumber)
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
    kNoContextMenu    = BIT(8),   // if object does not want context menu
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
@@ -78,7 +79,7 @@ private:
 
 protected:
    void MakeZombie() { fBits |= kZombie; }
-   void DoError(int level, const char *location, const char *fmt, va_list va) const;
+   virtual void DoError(int level, const char *location, const char *fmt, va_list va) const;
 
 public:
    //----- Private bits, clients can only test but not change them
@@ -100,7 +101,7 @@ public:
    TObject &operator=(const TObject &rhs);
    virtual ~TObject();
 
-   void                AppendPad(Option_t *option="");
+   virtual void        AppendPad(Option_t *option="");
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
@@ -165,11 +166,11 @@ public:
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling
-   void     Info(const char *method, const char *msgfmt, ...) const;
-   void     Warning(const char *method, const char *msgfmt, ...) const;
-   void     Error(const char *method, const char *msgfmt, ...) const;
-   void     SysError(const char *method, const char *msgfmt, ...) const;
-   void     Fatal(const char *method, const char *msgfmt, ...) const;
+   virtual void     Info(const char *method, const char *msgfmt, ...) const;
+   virtual void     Warning(const char *method, const char *msgfmt, ...) const;
+   virtual void     Error(const char *method, const char *msgfmt, ...) const;
+   virtual void     SysError(const char *method, const char *msgfmt, ...) const;
+   virtual void     Fatal(const char *method, const char *msgfmt, ...) const;
 
    void     AbstractMethod(const char *method) const;
    void     MayNotUse(const char *method) const;

@@ -29,7 +29,8 @@ endif
 
 MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
                 hist tree graf g3d gpad gui minuit histpainter proof \
-                treeplayer treeviewer physics postscript rint html eg mc
+                treeplayer treeviewer physics postscript rint html eg mc \
+                geom geompainter
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -76,8 +77,15 @@ endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
+ifneq ($(DCAPINCDIR),)
 ifneq ($(DCAPLIB),)
 MODULES      += dcache
+endif
+endif
+ifneq ($(ALIENINCDIR),)
+ifneq ($(ALIENCLILIB),)
+MODULES      += alien
+endif
 endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
@@ -91,8 +99,8 @@ endif
 ifneq ($(FVENUSLIB),)
 MODULES      += venus
 endif
-ifneq ($(STAR),)
-MODULES      += star
+ifneq ($(TABLE),)
+MODULES      += table
 endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
@@ -106,8 +114,8 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
-                pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook
+                pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
+                rootd proofd dcache hbook alien
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -136,6 +144,15 @@ PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
 endif
 
+##### gcc version #####
+
+ifneq ($(findstring g++,$(CXX)),)
+GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f1)
+GCC_MINOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f2)
+endif
+
 ##### f77 options #####
 
 ifeq ($(F77LD),)
@@ -146,6 +163,12 @@ F77OPT       := $(OPT)
 endif
 ifeq ($(F77LDFLAGS),)
 F77LDFLAGS   := $(LDFLAGS)
+endif
+
+ifeq ($(GCC_MAJOR),3)
+ifeq ($(GCC_MINOR),1)
+F77LDFLAGS   += -lfrtbegin
+endif
 endif
 
 ##### utilities #####
@@ -170,10 +193,11 @@ MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
-##### compiler directives #####
+##### compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
 MAKEINFO      = cint/MAKEINFO
+ROOTRC        = etc/system.rootrc
 
 ##### libCore #####
 
@@ -269,6 +293,10 @@ config config/Makefile.:
 	   exit 1; \
 	fi)
 
+$(ROOTRC): config/rootrc.in
+	@(echo ""; echo "Please, run ./configure again to bring $@ up to date"; \
+	  echo ""; exit 1)
+
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
@@ -278,7 +306,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
 
-build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
+build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
@@ -359,13 +387,12 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
-	@rm -rf htmldoc
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
-	@rm -rf bin lib include system.rootrc config/Makefile.config \
+	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   test/Makefile etc/system.rootrc etc/root.mimes
 
 version: $(CINTTMP)
@@ -583,7 +610,7 @@ showbuild:
 	@echo "FPYTHIALIBDIR      = $(FPYTHIALIBDIR)"
 	@echo "FPYTHIA6LIBDIR     = $(FPYTHIA6LIBDIR)"
 	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
-	@echo "STAR               = $(STAR)"
+	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"

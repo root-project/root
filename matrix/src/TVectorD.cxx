@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.7 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.10 2002/05/18 08:48:42 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TVectorD::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVectorD" by default and no title
 
-   gROOT->ProcessLine(Form("TH1D *R__TV = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1D *R__TVectorD = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TVectorD->SetBit(kCanDelete);R__TVectorD->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -908,6 +908,27 @@ Bool_t TVectorD::IsValid() const
    return kTRUE;
 }
 
+void TVectorD::SetElements(const Double_t *elements)
+{
+  if (!IsValid()) {
+    Error("SetElements", "vector is not initialized");
+    return;
+  }
+  memcpy(fElements,elements,fNrows*sizeof(Double_t));
+}
+
+TVectorD::TVectorD(Int_t n, const Double_t *elements)
+{
+   Allocate(n);
+   SetElements(elements);
+}
+
+TVectorD::TVectorD(Int_t lwb, Int_t upb, const Double_t *elements)
+{
+   Allocate(upb-lwb+1, lwb);
+   SetElements(elements);
+}
+
 Bool_t AreCompatible(const TVectorD &v1, const TVectorD &v2)
 {
    if (!v1.IsValid()) {
@@ -934,7 +955,7 @@ TVectorD &TVectorD::operator=(const TVectorD &source)
    return *this;
 }
 
-TVectorD::TVectorD(const TVectorD &another)
+TVectorD::TVectorD(const TVectorD &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.11 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.12 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -438,6 +438,17 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
             xoffset = -fVisible.fX;
          if (pos.fY >= ToObjYCoord(fVisible.fY)) {
             buffer = fText->GetLine(pos, len);
+            Int_t i = 0;
+            while (buffer[i] != '\0') {
+               if (buffer[i] == '\t') {
+                  buffer[i] = ' ';
+                  Int_t j = i+1;
+                  while (buffer[j] == 16 && buffer[j] != '\0')
+                     buffer[j++] = ' ';
+               }
+               i++;
+            }
+
             if (!fIsMarked ||
                 pos.fY < fMarkedStart.fY || pos.fY > fMarkedEnd.fY ||
                (pos.fY == fMarkedStart.fY &&

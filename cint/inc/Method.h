@@ -85,9 +85,11 @@ G__MethodInfo {
   int Size();
   int IsBusy();
 #ifndef G__OLDIMPLEMENTATION644
-   FILE* FilePointer();
-   long FilePosition();
+  FILE* FilePointer();
+  long FilePosition();
 #endif
+  char* GetPrototype();
+  char* GetMangledName();
 
  protected:
   long handle;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.36 2002/04/10 17:20:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.41 2002/07/16 08:06:07 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -472,7 +472,7 @@ TF1::~TF1()
 }
 
 //______________________________________________________________________________
-TF1::TF1(const TF1 &f1)
+TF1::TF1(const TF1 &f1) : TFormula(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
    ((TF1&)f1).Copy(*this);
 }
@@ -642,6 +642,48 @@ void TF1::Draw(Option_t *option)
    newf1->AppendPad(option);
    newf1->SetBit(kCanDelete);
    return newf1;
+}
+
+//______________________________________________________________________________
+void TF1::DrawDerivative(Option_t *option)
+{
+// Draw derivative of this function
+//
+// An intermediate TGraph object is built and drawn with option.
+//
+// The resulting graph will be drawn into the current pad.
+// If this function is used via the context menu, it recommended
+// to create a new canvas/pad before invoking this function.
+   
+   TVirtualPad *pad = gROOT->GetSelectedPad();
+   TVirtualPad *padsav = gPad;
+   if (pad) pad->cd();
+
+   char cmd[512];
+   sprintf(cmd,"{TGraph *R__%s_Derivative = new TGraph((TF1*)0x%lx,\"d\");R__%s_Derivative->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
+   gROOT->ProcessLine(cmd);
+   if (padsav) padsav->cd();
+}
+
+//______________________________________________________________________________
+void TF1::DrawIntegral(Option_t *option)
+{
+// Draw integral of this function
+//
+// An intermediate TGraph object is built and drawn with option.
+//
+// The resulting graph will be drawn into the current pad.
+// If this function is used via the context menu, it recommended
+// to create a new canvas/pad before invoking this function.
+
+   TVirtualPad *pad = gROOT->GetSelectedPad();
+   TVirtualPad *padsav = gPad;
+   if (pad) pad->cd();
+
+   char cmd[512];
+   sprintf(cmd,"{TGraph *R__%s_Integral = new TGraph((TF1*)0x%lx,\"i\");R__%s_Integral->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
+   gROOT->ProcessLine(cmd);
+   if (padsav) padsav->cd();
 }
 
 //______________________________________________________________________________
@@ -873,11 +915,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 //     f2->GetQuantiles(nprob,gr->GetY());
 //     gr->Draw("alp");
 
-  if (nprobSum < 2) {
-     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
-     return 0;
-  }
-  const Int_t npx     = TMath::Min(50,2*nprobSum);
+  const Int_t npx     = TMath::Min(250,TMath::Max(50,2*nprobSum));
   const Double_t xMin = GetXmin();
   const Double_t xMax = GetXmax();
   const Double_t dx   = (xMax-xMin)/npx;
@@ -1622,9 +1660,25 @@ void TF1::Paint(Option_t *option)
    }
 
 //*-*- Copy Function attributes to histogram attributes
+   Double_t minimum   = fHistogram->GetMinimumStored();
+   Double_t maximum   = fHistogram->GetMaximumStored();
+   if (minimum == -1111) { //this can happen after unzooming
+      if (fHistogram->TestBit(TH1::kIsZoomed)) {
+         minimum = fHistogram->GetYaxis()->GetXmin();
+      } else {
+         minimum = fMinimum;
+      }
+      fHistogram->SetMinimum(minimum);
+   }
+   if (maximum == -1111) {
+      if (fHistogram->TestBit(TH1::kIsZoomed)) {
+         maximum = fHistogram->GetYaxis()->GetXmax();
+      } else {
+         maximum = fMaximum;
+      }
+      fHistogram->SetMaximum(maximum);
+   }
    fHistogram->SetBit(TH1::kNoStats);
-   fHistogram->SetMinimum(fMinimum);
-   fHistogram->SetMaximum(fMaximum);
    fHistogram->SetLineColor(GetLineColor());
    fHistogram->SetLineStyle(GetLineStyle());
    fHistogram->SetLineWidth(GetLineWidth());

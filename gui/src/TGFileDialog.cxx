@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.7 2002/06/12 17:56:25 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -416,8 +416,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kCT_ITEMCLICK:
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() == 1) {
+                     TGLVEntry *e = (TGLVEntry *) fFc->GetNextSelected(&p);
                      fTbfname->Clear();
-                     fTbfname->AddText(0, fFc->GetNextSelected(&p)->GetItemName()->GetString());
+                     fTbfname->AddText(0, e->GetItemName()->GetString());
                      fClient->NeedRedraw(fName);
                   }
                }

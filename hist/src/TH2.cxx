@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.27 2002/02/25 16:05:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.30 2002/05/18 16:29:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1158,7 +1158,8 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
-  if (lastybin > ny) lastybin = ny;
+  if (lastybin  < 0) lastybin  = ny;
+  if (lastybin  > ny+1) lastybin  = ny;
 
 // Create the profile histogram
   char *pname = (char*)name;
@@ -1209,7 +1210,8 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
-  if (lastxbin > nx) lastxbin = nx;
+  if (lastxbin  < 0) lastxbin  = nx;
+  if (lastxbin  > nx+1) lastxbin  = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1267,8 +1269,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
-  if (lastybin > 9000) lastybin = ny;
-  if (lastybin > ny+1) lastybin = ny;
+  if (lastybin  < 0) lastybin  = ny;
+  if (lastybin  > ny+1) lastybin  = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1341,8 +1343,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
-  if (lastxbin > 9000) lastxbin = nx;
-  if (lastxbin > nx+1) lastxbin = nx;
+  if (lastxbin  < 0) lastxbin  = nx;
+  if (lastxbin  > nx+1) lastxbin  = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1492,7 +1494,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2C::TH2C(const TH2C &h2c)
+TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
    ((TH2C&)h2c).Copy(*this);
 }
@@ -1711,7 +1713,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2S::TH2S(const TH2S &h2s)
+TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
    ((TH2S&)h2s).Copy(*this);
 }
@@ -1947,7 +1949,7 @@ TH2F::TH2F(const TMatrix &m)
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const TH2F &h2f)
+TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
    ((TH2F&)h2f).Copy(*this);
 }
@@ -2170,7 +2172,7 @@ TH2D::TH2D(const TMatrixD &m)
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const TH2D &h2d)
+TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
    ((TH2D&)h2d).Copy(*this);
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.1 2002/03/21 16:11:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.3 2002/06/14 15:14:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -26,24 +26,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TVirtualPacketizer
+#include "TVirtualPacketizer.h"
 #endif
 
-#include "Rtypes.h"
 
-
-class TDSet;
-class TDSetElement;
-class TSlave;
-
-typedef long Long64_t;
-
-class TPacketizer : public TObject {
+class TPacketizer : public TVirtualPacketizer {
 
 private:
    Int_t    fProcessed;       // number of entries processed
-   Bool_t   fValid;           // Constructed properly ?
    Long64_t fTotalEntries;    // Total number of entries to be distributed
 
    TList   *fFileNodes;       // nodes with files
@@ -56,7 +47,6 @@ private:
    TPacketizer();
    TPacketizer(const TPacketizer &);     // no implementation, will generate
    void operator=(const TPacketizer &);  // error on accidental usage
-   Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);

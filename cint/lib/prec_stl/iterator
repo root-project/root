@@ -115,7 +115,6 @@ struct iterator_traits<const T*> {
   typedef const T&                   reference;
 };
 
-
 ////////////////////////////////////////////////////////////////////////
 // iterator
 ////////////////////////////////////////////////////////////////////////
@@ -247,16 +246,16 @@ _Iter_cat(const T*) {
 ////////////////////////////////////////////////////////////////////////
 template<typename _Iterator, typename _Container>
 class __normal_iterator
-  : public iterator<iterator_traits<_Iterator>::iterator_category,
-                    iterator_traits<_Iterator>::value_type,
-                    iterator_traits<_Iterator>::difference_type,
-                    iterator_traits<_Iterator>::pointer,
-                    iterator_traits<_Iterator>::reference>
+  : public std::iterator<std::iterator_traits<_Iterator>::iterator_category,
+                    std::iterator_traits<_Iterator>::value_type,
+                    std::iterator_traits<_Iterator>::difference_type,
+                    std::iterator_traits<_Iterator>::pointer,
+                    std::iterator_traits<_Iterator>::reference>
 {
 
 public:
   typedef __normal_iterator<_Iterator, _Container> normal_iterator_type;
-  typedef iterator_traits<_Iterator>  			__traits_type;
+  typedef std::iterator_traits<_Iterator> 		__traits_type;
   typedef typename __traits_type::iterator_category 	iterator_category;
   typedef typename __traits_type::value_type 		value_type;
   typedef typename __traits_type::difference_type 	difference_type;

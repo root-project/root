@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.8 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TMarker::~TMarker()
 }
 
 //______________________________________________________________________________
-TMarker::TMarker(const TMarker &marker)
+TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker)
 {
    ((TMarker&)marker).Copy(*this);
 }

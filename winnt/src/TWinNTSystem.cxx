@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.30 2002/03/25 20:52:44 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.31 2002/03/26 09:17:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1685,6 +1685,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       ntlibs = libs;
    }
 
+   fListLibs = ntlibs;
    fListLibs.ReplaceAll("/","\\");
    return fListLibs;
 }

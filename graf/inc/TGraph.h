@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.22 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.27 2002/07/16 08:04:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -61,6 +61,8 @@ public:
         TGraph(const TVector  &vx, const TVector  &vy);
         TGraph(const TVectorD &vx, const TVectorD &vy);
         TGraph(const TH1 *h);
+        TGraph(const TF1 *f, Option_t *option="");
+        TGraph(const char *filename, const char *format="%lg %lg", Option_t *option="");
         
         virtual ~TGraph();
         virtual void     Apply(TF1 *f);
@@ -74,6 +76,8 @@ public:
         virtual void     DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     DrawPanel(); // *MENU*
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+        virtual TObject *FindObject(const char *name) const;
+        virtual TObject *FindObject(const TObject *obj) const;
         virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
         virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
         virtual void     FitPanel(); // *MENU*
@@ -100,11 +104,13 @@ public:
         virtual void     LeastSquareFit(Int_t m, Double_t *a, Int_t first=0, Int_t last=0);
         virtual void     LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Int_t first, Int_t last);
         virtual void     Paint(Option_t *chopt="");
+        virtual void     PaintFit(TF1 *fit);
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     Print(Option_t *chopt="") const;
         static  void     RemoveFunction(TGraph *gr, TObject *obj);
         virtual Int_t    RemovePoint(); // *MENU*
+        virtual Int_t    RemovePoint(Int_t ipoint);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetEditable(Bool_t editable=kTRUE); // *MENU*
         virtual void     SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}

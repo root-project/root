@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.20 2002/04/17 21:14:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.24 2002/07/08 20:49:22 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -245,12 +245,13 @@ enum EFileType { kSource, kInclude, kTree };
 // Usage:
 // -----
 //
-//     Root> gHtml.MakeAll()             // invoke a make for all classes
-//     Root> gHtml.MakeClass("TMyClass") // create a HTML files for that class only
-//     Root> gHtml.MakeIndex()           // creates an index files only
-//     Root> gHtml.MakeTree("TMyClass")  // creates an inheritance tree for a class
+//     Root> THtml html;                // create a THtml object
+//     Root> html.MakeAll()             // invoke a make for all classes
+//     Root> html.MakeClass("TMyClass") // create a HTML files for that class only
+//     Root> html.MakeIndex()           // creates an index files only
+//     Root> html.MakeTree("TMyClass")  // creates an inheritance tree for a class
 //
-//     Root> gHtml.Convert( hist1.mac, "Histogram example" )
+//     Root> html.Convert( hist1.mac, "Histogram example" )
 //
 //
 // Environment variables:
@@ -275,8 +276,8 @@ ClassImp(THtml)
 //______________________________________________________________________________
     THtml::THtml()
 {
-   // Create a THtml object. Use object directly or via the global
-   // pointer gHtml. In case output directory does not exist an error
+   // Create a THtml object.
+   // In case output directory does not exist an error
    // will be printed and gHtml stays 0 also zombie bit will be set.
 
    fLen = 1024;
@@ -884,7 +885,12 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
 
    // find a .cxx file
-   char *tmp1 = GetSourceFileName(classPtr->GetImplFileName());
+   char *tmp1; 
+   if (classPtr->GetImplFileLine()) {
+      tmp1 = GetSourceFileName(classPtr->GetImplFileName());
+   } else {
+      tmp1 = GetSourceFileName(classPtr->GetDeclFileName());
+   }
    char *realFilename = StrDup(tmp1, 16);
    if (!realFilename)
       Error("Make", "Can't find file '%s' !", tmp1);
@@ -2177,6 +2183,9 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
 
    Bool_t hide;
    Bool_t mmf = 0;
+   static Bool_t pre_is_open = kFALSE;
+
+   Int_t ichar=0;
 
    do {
       tempEndPtr = end = funcName = funcNameEnd = funcSig = funcSigEnd = 0;
@@ -2191,13 +2200,27 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             // protect html code from special chars
             if ((unsigned char)*keyword>31)
                if (*keyword=='<'){
-                  if (keyword==strstr(keyword,"<pre>")
-                      || keyword==strstr(keyword,"<PRE>"))
-                     keyword+=4;
+                  if (!strcasecmp(keyword,"<pre>"))
+                     if (pre_is_open) keyword+=4;
+                     else {
+                        pre_is_open = kTRUE;
+                        out << *keyword;
+                        for (ichar=0; ichar<4; ichar++) {
+                           keyword++;
+                           out << *keyword;
+                        }
+                     }
                   else
-                  if (keyword==strstr(keyword,"</pre>")
-                      || keyword==strstr(keyword,"</PRE>"))
-                     keyword+=5;
+                  if (!strcasecmp(keyword,"</pre>"))
+                     if (!pre_is_open) keyword+=5;
+                     else {
+                        pre_is_open = kFALSE;
+                        out << *keyword;
+                        for (ichar=0; ichar<5; ichar++) {
+                           keyword++;
+                           out << *keyword;
+                        }
+                     }
                   else
                      out << *keyword;
                }
@@ -2239,11 +2262,13 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
          if (!strcasecmp(keyword, "end_html") && *(keyword - 1) != '\"') {
             flag = kFALSE;
             hide = kTRUE;
+            pre_is_open = kFALSE;
          }
       } else {
          if (!strcasecmp(keyword, "begin_html") && *(keyword - 1) != '\"') {
             flag = kTRUE;
             hide = kTRUE;
+            pre_is_open = kTRUE;
          } else {
             *end = c;
             tempEndPtr = end;
@@ -2672,7 +2697,11 @@ char *THtml::GetHtmlFileName(TClass * classPtr)
 
    if (classPtr) {
 
-      const char *filename = classPtr->GetImplFileName();
+      const char *filename;
+      if ( classPtr->GetImplFileLine() )
+         filename = classPtr->GetImplFileName();
+      else 
+         filename = classPtr->GetDeclFileName();
 
       char varName[80];
       const char *colon = strchr(filename, ':');
@@ -2767,7 +2796,10 @@ Bool_t THtml::IsModified(TClass * classPtr, const Int_t type)
 
    switch (type) {
    case kSource:
-      strPtr2 = GetSourceFileName(classPtr->GetImplFileName());
+      if (classPtr->GetImplFileLine()) 
+         strPtr2 = GetSourceFileName(classPtr->GetImplFileName());
+      else 
+         strPtr2 = GetSourceFileName(classPtr->GetDeclFileName());
       if (strPtr2)
          strcpy(sourceFile, strPtr2);
       strPtr =
@@ -3002,7 +3034,11 @@ void THtml::MakeIndex(const char *filter)
 
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
-      const char *impname = classPtr->GetImplFileName();
+      const char *impname;
+      if (classPtr->GetImplFileName()) 
+         impname = classPtr->GetImplFileName();
+      else 
+         impname = classPtr->GetDeclFileName();
 
       if (impname) {
          fileNames[numberOfImpFiles] = StrDup(impname, 64);

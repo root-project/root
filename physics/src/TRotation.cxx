@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.2 2001/07/13 09:02:21 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -160,8 +160,8 @@ TRotation::TRotation()
 : fxx(1.0), fxy(0.0), fxz(0.0), fyx(0.0), fyy(1.0), fyz(0.0),
   fzx(0.0), fzy(0.0), fzz(1.0) {}
 
-TRotation::TRotation(const TRotation & m)
-: fxx(m.fxx), fxy(m.fxy), fxz(m.fxz), fyx(m.fyx), fyy(m.fyy), fyz(m.fyz),
+TRotation::TRotation(const TRotation & m) : TObject(m),
+  fxx(m.fxx), fxy(m.fxy), fxz(m.fxz), fyx(m.fyx), fyy(m.fyy), fyz(m.fyz),
   fzx(m.fzx), fzy(m.fzy), fzz(m.fzz) {}
 
 TRotation::TRotation(Double_t mxx, Double_t mxy, Double_t mxz,

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.4 2000/10/08 14:27:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -115,6 +115,8 @@ public:
    virtual void  SetRange(Int_t range, Int_t page_size) = 0;
    virtual void  SetPosition(Int_t pos) = 0;
    virtual Int_t GetPosition() const { return fPos; }
+   virtual Int_t GetPageSize() const { return fPsize; }
+   virtual Int_t GetRange() const { return fRange; }
 
    virtual void MapSubwindows() { TGWindow::MapSubwindows(); }
 

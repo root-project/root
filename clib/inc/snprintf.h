@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:$:$Id:$ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.h,v 1.1 2000/12/10 10:54:53 rdm Exp $ */
 /* Author: Fons Rademakers  10/12/2000 */
 
 /*
@@ -16,6 +16,7 @@
 
 #ifdef NEED_SNPRINTF
 
+#include <stdio.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.23 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.26 2002/07/17 12:29:37 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -38,8 +38,8 @@
 #endif
 
 #include "TProofServ.h"
-#include "TProof.h"
 #include "TProofLimitsFinder.h"
+#include "TProof.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TSysEvtHandler.h"
@@ -57,15 +57,18 @@
 #include "TProofPlayer.h"
 #include "TDSetProxy.h"
 #include "TTimeStamp.h"
+#include "TProofDebug.h"
 
 #ifndef R__WIN32
 const char* const kCP = "/bin/cp -f";
 const char* const kRM = "/bin/rm -rf";
 const char* const kLS = "/bin/ls -l";
+const char* const kUNTAR = "/bin/zcat %s/%s | (cd %s; tar xf -)";
 #else
 const char* const kCP = "copy";
 const char* const kRM = "delete";
 const char* const kLS = "dir";
+const char* const kUNTAR = "...";
 #endif
 
 
@@ -446,10 +449,10 @@ TDSetElement *TProofServ::GetNextPacket()
       e = 0;
    }
    if (e != 0) {
-      Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
+      PDB(kLoop,2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d", e->GetFileName(),
             e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
    } else {
-      Info("GetNextPacket", "Done");
+      PDB(kLoop,2) Info("GetNextPacket", "Done");
    }
 
    return e;
@@ -496,8 +499,7 @@ void TProofServ::HandleSocketInput()
          if (IsMaster() && IsParallel()) {
             fProof->SendCommand(str);
          } else {
-            if (fLogLevel > 1)
-               Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+            PDB(kGlobal,1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -568,7 +570,7 @@ void TProofServ::HandleSocketInput()
             TList *input;
             Long64_t nentries, first;
 
-Info("HandleSocketInput", "### kPROOF_PROCESS:");
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS", "enter");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -586,7 +588,7 @@ Info("HandleSocketInput", "### kPROOF_PROCESS:");
 
             TIter next(input);
             for (TObject *obj; (obj = next()); ) {
-               Info("Copying: ", obj->GetName());
+               PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS", "Adding: %s", obj->GetName());
                p->AddInput(obj);
             }
             delete input;
@@ -594,17 +596,18 @@ Info("HandleSocketInput", "### kPROOF_PROCESS:");
             p->Process(dset, filename, nentries, first);
 
             // return output!
-Info("HandleSocketInput","### kPROOF_PROCESS: SendObject");
 
+            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
             fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
 
-Info("HandleSocketInput","### kPROOF_PROCESS: SendLogFile");
+            PDB(kGlobal,2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
 
             SendLogFile();
-Info("HandleSocketInput","### kPROOF_PROCESS: Done");
 
             delete dset;
             delete p;
+
+            PDB(kGlobal,1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
          }
          break;
 
@@ -614,27 +617,81 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             TMD5    md5;
             (*mess) >> filenam >> md5;
             if (filenam.BeginsWith("-")) {
-               // install package
-               //...
+               // install package:
+               // compare md5's, untar, store md5 in PROOF-INF, remove par file
+               Int_t  st  = 0;
+               Bool_t err = kFALSE;
+               filenam = filenam.Strip(TString::kLeading, '-');
+               TString packnam = filenam;
+               packnam.Remove(packnam.Length() - 4);  // strip off ".par"
+               // compare md5's to check if transmission was ok
+               TMD5 *md5local = TMD5::FileChecksum(fPackageDir + "/" + filenam);
+               if (md5local && md5 == (*md5local)) {
+                  // remove any previous package directory with same name
+                  st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                                     packnam.Data()));
+                  if (st)
+                     Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s %s/%s",
+                           kRM, fPackageDir.Data(), packnam.Data());
+                  // untar package
+                  st = gSystem->Exec(Form(kUNTAR, fPackageDir.Data(), filenam.Data(),
+                                     fPackageDir.Data()));
+                  if (st)
+                     Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s",
+                           Form(kUNTAR, fPackageDir.Data(), filenam.Data(), fPackageDir.Data()));
+                  // check that fPackageDir/packnam now exists
+                  if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
+                     // par file did not unpack itself in the expected directory, failure
+                     fSocket->Send(kPROOF_FATAL);
+                     err = kTRUE;
+                     if (fLogLevel > 1)
+                        Info("HandleSocketInput:kPROOF_CHECKFILE",
+                             "package %s did not unpack into %s", filenam.Data(),
+                             packnam.Data());
+                  } else {
+                     // store md5 in package/PROOF-INF/md5.txt
+                     TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
+                     TMD5::WriteChecksum(md5f, md5local);
+                     fSocket->Send(kPROOF_CHECKFILE);
+                     if (fLogLevel > 1)
+                        Info("HandleSocketInput:kPROOF_CHECKFILE",
+                             "package %s installed on node", filenam.Data());
+                  }
+               } else {
+                  fSocket->Send(kPROOF_FATAL);
+                  err = kTRUE;
+               }
+               if (!IsMaster() || err) {
+                  // delete par file when on slave or in case of error
+                  gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                                filenam.Data()));
+               } else
+                  // forward to slaves
+                  fProof->UploadPackage(fPackageDir + "/" + filenam);
+               delete md5local;
                UnlockPackage();
-               break;
-            }
-            if (filenam.BeginsWith("+")) {
+            } else if (filenam.BeginsWith("+")) {
                // check file in package directory
                filenam = filenam.Strip(TString::kLeading, '+');
-               TString packf = fPackageDir + "/" + filenam;
+               TString packnam = filenam;
+               packnam.Remove(packnam.Length() - 4);  // strip off ".par"
+               TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
                LockPackage();
-               TMD5 *md5local = TMD5::FileChecksum(packf);
+               TMD5 *md5local = TMD5::ReadChecksum(md5f);
                if (md5local && md5 == (*md5local)) {
                   // package already on server, unlock directory
                   UnlockPackage();
                   fSocket->Send(kPROOF_CHECKFILE);
                   if (fLogLevel > 1)
-                     Info("HandleSocketInput:kPROOF_CHECKFILE", "package %s already on node", filenam.Data());
+                     Info("HandleSocketInput:kPROOF_CHECKFILE",
+                          "package %s already on node", filenam.Data());
+                  if (IsMaster())
+                     fProof->UploadPackage(fPackageDir + "/" + filenam);
                } else {
                   fSocket->Send(kPROOF_FATAL);
                   if (fLogLevel > 1)
-                     Info("HandleSocketInput:kPROOF_CHECKFILE", "package %s not yet on node", filenam.Data());
+                     Info("HandleSocketInput:kPROOF_CHECKFILE",
+                          "package %s not yet on node", filenam.Data());
                }
                delete md5local;
             } else {
@@ -668,9 +725,11 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
-            LockCache();
-            gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-            UnlockCache();
+            if (size > 0) {
+               LockCache();
+               gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
+               UnlockCache();
+            }
             if (IsMaster())
                fProof->SendFile(name, bin);
          }
@@ -678,6 +737,8 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
 
       case kPROOF_OPENFILE:
          {
+            // NOT CURRENTLY USED, LEFT AS EXAMPLE (TFile::Open() will
+            // do the forwarding from master to slaves)
             // open file on master, if successfull this will also send the
             // connect message to the slaves
             TString clsnam, filenam, option;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.21 2002/04/12 09:18:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.24 2002/05/18 16:29:44 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1043,10 +1043,10 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
   Int_t ny = GetNbinsY();
   Int_t nz = GetNbinsZ();
   if (ixmin < 0)    ixmin = 1;
-  if (ixmax > 9000) ixmax = nx;
+  if (ixmax < 0)    ixmax = nx;
   if (ixmax > nx+1) ixmax = nx;
   if (iymin < 0)    iymin = 1;
-  if (iymax > 9000) iymax = ny;
+  if (iymax < 0)    iymax = ny;
   if (iymax > ny+1) iymax = ny;
 
 // Create the projection histogram
@@ -1518,7 +1518,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3C::TH3C(const TH3C &h3c)
+TH3C::TH3C(const TH3C &h3c) : TH3(), TArrayC()
 {
    ((TH3C&)h3c).Copy(*this);
 }
@@ -1731,7 +1731,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3S::TH3S(const TH3S &h3s)
+TH3S::TH3S(const TH3S &h3s) : TH3(), TArrayS()
 {
    ((TH3S&)h3s).Copy(*this);
 }
@@ -1944,7 +1944,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3F::TH3F(const TH3F &h3f)
+TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 {
    ((TH3F&)h3f).Copy(*this);
 }
@@ -2136,7 +2136,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3D::TH3D(const TH3D &h3d)
+TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 {
    ((TH3D&)h3d).Copy(*this);
 }

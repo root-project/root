@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.16 2002/02/13 11:34:41 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.21 2002/07/10 19:21:15 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -171,7 +171,16 @@ they are accurate.
 <H3>Statistical interpretation:</H3>
 <P>
 For discussuion of basic concepts, such as the meaning of the elements of
-the error matrix, or setting of exact confidence levels (see <A HREF=H1Bibliography.html#bib-EADIE>[bib-EADIE]</A>).
+the error matrix, or setting of exact confidence levels see:
+<ol>
+  <li>F.James. 
+     Determining the statistical Significance of experimental Results. 
+     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li> 
+
+  <li>W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet. 
+     Statistical Methods in Experimental Physics. 
+     North-Holland, 1971.</li> 
+</ol>
 <P>
 <H3>Reliability of MINUIT error estimates.</H3>
 <P>
@@ -273,6 +282,7 @@ some variables.
 #include "TMinuit.h"
 #include "TMath.h"
 #include "TError.h"
+#include "TPluginManager.h"
 #include "Api.h"
 
 TMinuit *gMinuit;
@@ -287,8 +297,16 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 //*-*-*-*-*-*-*-*-*-*-*Minuit normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   fEmpty      = 1;
+   BuildArrays(25);
+
+   fStatus     = 0;
+   fEmpty      = 0;
    fMethodCall = 0;
+   SetMaxIterations();
+
+   mninit(5,6,7);
+   gMinuit = this;
+   gROOT->GetListOfSpecials()->Add(gMinuit);
 
 }
 
@@ -313,7 +331,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 }
 
 //______________________________________________________________________________
-TMinuit::TMinuit(const TMinuit &)
+TMinuit::TMinuit(const TMinuit &minuit) : TNamed(minuit)
 {
    // Private TMinuit copy ctor. TMinuit can not be copied.
 
@@ -485,12 +503,15 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
     return (TObject *)0;
   }
   fStatus=0;
-  // check if TGraph class is loaded
-  if (gROOT->LoadClass("TGraph","Graf")) return 0;
-  // create graph via the interpreter
+  // create graph via the  PluginManager
   xcoor[npoints] = xcoor[0];  // add first point at end to get closed polyline
   ycoor[npoints] = ycoor[0];
-  TObject *gr =  (TObject *)gROOT->ProcessLineFast(Form("new TGraph(%d,(Double_t*)0x%lx,(Double_t*)0x%lx);",npoints+1,xcoor,ycoor));
+  TObject *gr = 0;
+  TPluginHandler *h;
+  if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
+     if (h->LoadPlugin() != -1)
+       gr = (TObject*)h->ExecPlugin(3,npoints,xcoor,ycoor);
+  }
   delete [] xcoor;
   delete [] ycoor;
   return gr;
@@ -2309,11 +2330,11 @@ L205:
 //______________________________________________________________________________
 void TMinuit::mnemat(Double_t *emat, Int_t ndim)
 {
-//*-*-*-*-*-*Calculates the external error matrix from the internal matrix*-*
-//*-*        =============================================================
-//*-*        Calculates the external error matrix from the internal
-//*-*        to be called by user.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// Calculates the external error matrix from the internal matrix
+//
+// Note that if the matrix is declared like Double_t matrix[5][5]
+// in the calling program, one has to call mnemat with, eg
+//     gMinuit->mnemat(&matrix[0][0],5);
 
     /* System generated locals */
     Int_t emat_dim1, emat_offset;

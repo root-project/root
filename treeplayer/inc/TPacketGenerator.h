@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TPacketGenerator.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TPacketGenerator.h,v 1.2 2000/12/13 15:13:57 brun Exp $
 // Author: Fons Rademakers   28/03/97
 
 /*************************************************************************
@@ -59,7 +59,7 @@ private:
    TList     *fPackets;           //list of packets that have been processed
 
    TPacketGenerator();
-   TPacketGenerator(const TPacketGenerator &) { }
+   TPacketGenerator(const TPacketGenerator &p) : TObject(p) { }
    void operator=(const TPacketGenerator &) { }
    void Init();
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.11 2002/02/15 11:47:08 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TEllipse::~TEllipse()
 }
 
 //______________________________________________________________________________
-TEllipse::TEllipse(const TEllipse &ellipse)
+TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
 {
    ((TEllipse&)ellipse).Copy(*this);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.6 2002/03/25 18:10:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.7 2002/04/06 18:10:38 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -333,9 +333,15 @@ void TTimeStamp::Set()
    fSec     = tp.tv_sec;
    fNanoSec = tp.tv_usec * 1000;
 #endif
+   static Int_t sec = 0, nsec = 0, fake_ns = 0;
 
-   static Int_t fake_ns = 0;
-   fNanoSec += fake_ns++;
+   if (fSec == sec && fNanoSec == nsec)
+      fNanoSec += ++fake_ns;
+   else {
+      fake_ns = 0;
+      sec     = fSec;
+      nsec    = fNanoSec;
+   }
 }
 
 //______________________________________________________________________________

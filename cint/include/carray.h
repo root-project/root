@@ -549,9 +549,79 @@ array phase(carray& a)
   return(c);
 }
 
+/***********************************************
+ * parallel
+ ***********************************************/
+carray parallel(const carray& a,const carray& b) {
+  carray c = a*b/(a+b);
+  return(c);
+}
+
+/***********************************************
+ * phase margin
+ ***********************************************/
+#include <utility>
+pair<double,double> phasemargin(array f,array amp,array p) {
+  int n = amp.getsize();
+  pair<double,double> result;
+  for(int i=0;i<n;i++) {
+    if(amp[i]<0) {
+      if(i==0) {
+        result.first  = p[i];
+        result.second = f[i];
+      }
+      else {
+        result.first  = p[i] - (p[i-1]-p[i])*amp[i]/(amp[i-1]-amp[i]);
+        result.second = f[i] - (f[i-1]-f[i])*amp[i]/(amp[i-1]-amp[i]);
+      }
+      return(result);
+    }
+  }
+  cerr << "!!! Error : can not find 0dB cross" << endl;
+  result.first  = 99e99;
+  result.second = 99e99;
+  return(result);
+}
+
+/***********************************************
+ * phase margin
+ ***********************************************/
+double phasemargin(array amp,array p) {
+  int n = amp.getsize();
+  double pm;
+  for(int i=0;i<n;i++) {
+    if(amp[i]<0) {
+      if(i==0) {
+        pm = p[i];
+      }
+      else {
+        pm = p[i] - (p[i-1]-p[i])*amp[i]/(amp[i-1]-amp[i]);
+      }
+      return(pm);
+    }
+  }
+  cerr << "!!! Error : can not find 0dB cross" << endl;
+  return(99e99);
+}
+
 
 #ifndef G__ARRAY_H
 #include <array.h>
+#endif
+
+#ifdef __CINT__
+int G__ateval(const carray& x) {
+  int n = x.getsize();
+#ifdef G__DISPALL
+  for(int i=0;i<n-1;i++) cout << x[i] << ",";
+#else
+  for(int i=0;i<5;i++) cout << x[i] << ",";
+  cout << ",,,";
+  for(int i=n-5;i<n-1;i++) cout << x[i] << ",";
+#endif
+  cout << x[n-1] << endl;
+  return(1); 
+}
 #endif
 
 #endif

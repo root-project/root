@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.2 2001/05/21 11:18:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.3 2001/05/21 12:44:00 rdm Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TExMap::TExMap(Int_t mapSize)
 }
 
 //______________________________________________________________________________
-TExMap::TExMap(const TExMap &map)
+TExMap::TExMap(const TExMap &map) : TObject(map)
 {
    // Copy constructor.
 

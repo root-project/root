@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmfiles.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id: makerpmfiles.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
 #
 # Make filelists files for all packages. 
 #  
@@ -121,7 +121,8 @@ for p in $pkgs ; do
     ### echo %%% confuguration files and files in @prefix@/share/doc as
     ### echo %%% documentation files
     tar --list --file=${blddir}/${p}.tar | \
-	sed -e 's|^\(.*\)|/\1|' \
+	sed -e 's|^\(.*man1/.*\.1\)|/\1*|' \
+	    -e 's|^\(.*\)|/\1|' \
 	    -e "s|^/${etcdir}|%config /${etcdir}|" \
 	    -e '\|.*/$|d' | \
 	sort -u >> \
@@ -139,6 +140,16 @@ done
 
 #
 # $Log: makerpmfiles.sh,v $
+# Revision 1.2  2002/01/20 14:23:52  rdm
+# Mega patch by Christian Holm concerning the configure, build and
+# Debian and RedHat packaging scripts. The configure script has been
+# rationalized (introduction of two shell functions to find package
+# headers and libraries). Extensive update of the INSTALL writeup,
+# including description of all new packages (SapDB, PgSql, etc.).
+# More options to the root-config script. Man page for memprobe.
+# Big overhaul of the Debian and RedHat packaging scripts, supporting
+# the new libraries.
+#
 # Revision 1.1  2001/04/23 14:11:47  rdm
 # part of the debian and redhat build system.
 #

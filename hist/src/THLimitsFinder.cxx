@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.1.1.1 2000/05/16 17:00:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.1 2002/01/15 10:22:27 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -177,6 +177,7 @@ void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &
 
 L20:
    awidth = (AH-AL)/Double_t(ntemp);
+   timemulti = 1;
    if (awidth >= FLT_MAX) goto LOK;  //in float.h
    if (awidth <= 0)       goto LOK;
 
@@ -293,7 +294,7 @@ L90:
       nbins    = 1;
       goto LOK;
    }
-   if (2*nbins == nold) { ntemp++; goto L20; }
+   if (2*nbins == nold && !OptionTime) {ntemp++; goto L20; }
 
 LOK:
    Double_t oldBinLow = BinLow;

@@ -85,6 +85,10 @@ N: Valerio Filippini
 E: Valerio.Filippini@pv.infn.it
 D: contribution of TGenPhaseSpace class
 
+N: Frank Filthaut
+E: filthaut@hef.kun.nl
+D: contribution of TFractionFitter class
+
 N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
@@ -161,6 +165,10 @@ N: Axel Naumann
 E: axel@fnal.gov
 D: THtml improvements (namespace, header/footer)
 D: many suggestions for Trees
+
+N: Anne-Sylvie Nicollerat
+E: Anne-Sylvie.Nicollerat@cern.ch
+D: Improvements in tutorial hadd.C to take into account Trees
 
 N: John Odonnell
 E: odonnell@lanl.gov

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.5 2000/12/13 16:58:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.6 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -321,7 +321,7 @@ void TGFileItem::SetViewMode(EListViewMode viewMode)
    else
       fLcurrent = fSlpic;
 
-   fClient->NeedRedraw(this);
+   if (fClient) fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -357,7 +357,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fSortType  = kSortByName;
    fFilter    = 0;
    fDirectory = gSystem->WorkingDirectory();
-   fRefresh   = new TViewUpdateTimer(this, 5000);
+   fRefresh   = new TViewUpdateTimer(this, 1000);
    gSystem->AddTimer(fRefresh);
 
    fFolder_s = fClient->GetPicture("folder_s.xpm");

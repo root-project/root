@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.4 2001/05/21 11:18:02 rdm Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.5 2001/10/03 19:55:26 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,18 +27,18 @@
 #pragma link C++ class TArrayL-!;
 #pragma link C++ class TArrayS-!;
 #pragma link C++ class TBits+;
+#pragma link C++ class TCollection-;
 #pragma link C++ class TBtree-;
 #pragma link C++ class TBtreeIter;
 #pragma link C++ class TClassTable;
 #pragma link C++ class TClonesArray-;
-#pragma link C++ class TCollection-;
-#pragma link C++ class THashList;
 #pragma link C++ class THashTable;
 #pragma link C++ class THashTableIter;
 #pragma link C++ class TIter;
 #pragma link C++ class TIterator;
 #pragma link C++ class TList-;
 #pragma link C++ class TListIter;
+#pragma link C++ class THashList;
 #pragma link C++ class TMap-;
 #pragma link C++ class TMapIter;
 #pragma link C++ class TAssoc;

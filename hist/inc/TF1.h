@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.21 2002/03/02 04:40:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.22 2002/04/10 17:20:42 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -88,6 +88,8 @@ public:
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual TF1     *DrawCopy(Option_t *option="");
+   virtual void     DrawDerivative(Option_t *option="al"); // *MENU*
+   virtual void     DrawIntegral(Option_t *option="al");   // *MENU*
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual void     DrawPanel(); // *MENU*
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0);

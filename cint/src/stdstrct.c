@@ -112,7 +112,7 @@ void G__c_setup_memvarG__stdstrct() {
 /*********************************************************
 * Global variable information setup for each class
 *********************************************************/
-void G__c_setup_globalG__stdstrct() {
+static void G__cpp_setup_global0() {
 
    /* Setting up global variables */
    G__resetplocal();
@@ -121,15 +121,22 @@ void G__c_setup_globalG__stdstrct() {
 
    G__resetglobalenv();
 }
+void G__c_setup_globalG__stdstrct() {
+  G__cpp_setup_global0();
+}
 
 /*********************************************************
 * Global function information setup for each class
 *********************************************************/
-void G__c_setup_funcG__stdstrct() {
+static void G__cpp_setup_func0() {
    G__lastifuncposition();
 
 
    G__resetifuncposition();
+}
+
+void G__c_setup_funcG__stdstrct() {
+  G__cpp_setup_func0();
 }
 
 /*********************************************************

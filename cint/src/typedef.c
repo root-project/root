@@ -180,7 +180,15 @@ void G__define_type()
    */
 
 #ifndef G__PHILIPPE8
+#ifndef G__OLDIMPLEMENTATION1685
+  c=G__fgetname_template(type1,"*{");
+  if('*'==c) { 
+    strcat(type1,"*");
+    c=' ';
+  }
+#else
   c=G__fgetname_template(type1,"{");
+#endif
   /* just ignore the following 4 keywords as long as they are
      followed by a space */
   while(isspace(c) &&
@@ -947,12 +955,21 @@ void G__define_type()
 	  do {
 	    c=G__fgetstream(memname,"=,}");
 	    if(c=='=') {
+#ifndef G__OLDIMPLEMENTATION1676
+	      int store_prerun = G__prerun;
+#endif
 #ifndef G__OLDIMPLEMENTATION1337
 	      char store_var_type = G__var_type;
 	      G__var_type = 'p';
 #endif
+#ifndef G__OLDIMPLEMENTATION1676
+	      G__prerun = 0;
+#endif
 	      c=G__fgetstream(val,",}");
 	      enumval=G__getexpr(val);
+#ifndef G__OLDIMPLEMENTATION1676
+	      G__prerun = store_prerun;
+#endif
 #ifndef G__OLDIMPLEMENTATION1337
 	      G__var_type = store_var_type;
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.3 2001/10/03 14:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.5 2002/07/09 21:10:26 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -37,10 +37,14 @@
 #include "TDatime.h"
 #endif
 
+// forward declaration
+class TBuffer;
+
 
 class TUUID {
 
-private:
+protected:
+   UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
    UShort_t  fTimeMid;               // middle 16 time bits
    UShort_t  fTimeHiAndVersion;      // high 12 time bits + 4 UUID version bits
@@ -64,6 +68,7 @@ private:
 public:
    TUUID();
    TUUID(const char *uuid_str);
+   virtual ~TUUID();
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;
@@ -73,10 +78,21 @@ public:
    TDatime      GetTime() const;
    void         GetUUID(UChar_t uuid[16]) const;
    void         SetUUID(const char *uuid_str);
+   UInt_t       GetUUIDNumber() const { return fUUIDIndex; }
+   void         SetUUIDNumber(UInt_t index) { fUUIDIndex = index; }
+   void         FillBuffer(char *&buffer);
+   void         ReadBuffer(char *&buffer);
+   Int_t        Sizeof() const { return 16; }
 
    ClassDef(TUUID,1)  // Universally Unique IDentifier
 };
 
+
+inline TBuffer &operator>>(TBuffer &buf, TUUID &uuid)
+{ uuid.Streamer(buf); return buf; }
+
+inline TBuffer &operator<<(TBuffer &buf, const TUUID &uuid)
+{ ((TUUID&)uuid).Streamer(buf); return buf; }
 
 inline Bool_t operator==(const TUUID &u1, const TUUID &u2)
 { return (!u1.Compare(u2)) ? kTRUE : kFALSE; }

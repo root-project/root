@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.35 2002/03/26 16:06:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.37 2002/06/18 19:03:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -655,7 +655,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    // you can use on Unix directly $XXX. This is a protected function called
    // from the OS specific system classes, like TUnixSystem and TWinNTSystem.
 
-   const int   kBufSize = 1024;
+   const int   kBufSize = 4096;
    int         n, ier, iter, lx, ncopy;
    char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*3];
    const char *p;
@@ -664,7 +664,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = (char *)fname + strspn(fname, " \t\f\r");
-   if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
+   //VP  if (isalnum(c[0])) { strcpy(inp, WorkingDirectory()); strcat(inp, "/"); } // add $cwd
 
    strcat(inp, c);
 

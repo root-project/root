@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.12 2002/03/20 09:01:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.13 2002/03/28 16:42:50 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char 
 }
 
 //____________________________________________________________________________
-TLegend::TLegend( const TLegend &legend )
+TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend)
 {
   // copy constuctor
   ((TLegend&)legend).Copy(*this);

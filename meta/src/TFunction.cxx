@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.5 2002/02/04 08:21:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.7 2002/06/26 08:04:00 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -190,4 +190,27 @@ void *TFunction::InterfaceMethod() const
       }
    }
    return (void*)pfunc;
+}
+
+//______________________________________________________________________________
+const char *TFunction::GetMangledName() const
+{
+   // Returns the mangled name as defined by CINT, or 0 in case of error.
+
+   if (fInfo)
+      return fInfo->GetMangledName();
+   else
+      return 0;
+}
+
+//______________________________________________________________________________
+const char *TFunction::GetPrototype() const
+{
+   // Returns the prototype of a function as defined by CINT, or 0 in
+   // case of error.
+
+   if (fInfo)
+      return fInfo->GetPrototype();
+   else
+      return 0;
 }

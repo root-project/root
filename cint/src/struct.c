@@ -405,6 +405,44 @@ int noerror;
     strcpy(p,temp);
   }
 
+#ifndef G__OLDIMPLEMENTATION1683
+  /* handles X<int > as X<int> */
+  p = tagname;
+  while((char*)NULL!=(p=strstr(p," >"))) {
+    if('>' != *(p-1)) {
+      strcpy(temp,p+1);
+      strcpy(p,temp);
+    }
+    ++p;
+  }
+  /* handles X <int> as X<int> */
+  p = tagname;
+  while((char*)NULL!=(p=strstr(p," <"))) {
+    strcpy(temp,p+1);
+    strcpy(p,temp);
+    ++p;
+  }
+  /* handles X<int>  as X<int> */
+  p = tagname;
+  while((char*)NULL!=(p=strstr(p,"> "))) {
+    if(strncmp(p,"> >",3)==0) {
+      p+=2;
+    }
+    else {
+      strcpy(temp,p+2);
+      strcpy(p+1,temp);
+      ++p;
+    }
+  }
+  /* handles X< int> as X<int> */
+  p = tagname;
+  while((char*)NULL!=(p=strstr(p,"< "))) {
+    strcpy(temp,p+2);
+    strcpy(p+1,temp);
+    ++p;
+  }
+#endif
+
   if(isspace(tagname[0])) strcpy(temp,tagname+1);
   else strcpy(temp,tagname);
   p = G__find_last_scope_operator (temp);

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.6 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.8 2002/06/29 13:21:08 brun Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
@@ -376,8 +376,7 @@ void Test_TBtree()
 }
 
 
-int main()
-{
+int tcollex() {
    Test_TObjArray();
    Test_TOrdCollection();
    Test_TList();
@@ -387,3 +386,9 @@ int main()
 
    return 0;
 }
+
+#ifndef __CINT__
+int main() {
+   return tcollex();
+}
+#endif

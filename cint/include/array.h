@@ -45,4 +45,7 @@
 #include <graphbuf.h>
 #include <arrayiostream.h>
 
+const double PI=3.141592;
+const complex j(0.0,1.0);
+
 #endif

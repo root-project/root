@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.8 2002/01/07 16:11:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.9 2002/01/22 10:53:28 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -446,7 +446,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-TMapFile::TMapFile(const TMapFile &f, Long_t offset)
+TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
 {
    // Private copy ctor. Used by the the ctor to create a new version
    // of TMapFile in the memory mapped heap. It's main purpose is to

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.7 2002/02/03 16:14:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.13 2002/06/16 09:10:19 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -32,11 +32,20 @@
 //                                                                      //
 // See an example in $ROOTSYS/test/Event.h                              //
 //                                                                      //
+// RESTRICTIONS when using TRefArray                                    //
+// ---------------------------------                                    //
+//  - Elements in a TRefArray cannot point to a TFile or TDirectory.    //
+//  - All elements of a TRefArray must be set in the same process,      //
+//    In particular, one cannot modify some elements of the array in    //
+//    a different process.                                              //
+// Use an array of TRef when one of the above restrictions is met.      //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRefArray.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TSystem.h"
 
 ClassImp(TRefArray)
 
@@ -58,7 +67,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 }
 
 //______________________________________________________________________________
-TRefArray::TRefArray(const TRefArray &a)
+TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
@@ -319,9 +328,14 @@ void TRefArray::Streamer(TBuffer &R__b)
       fLast = -1;
       R__b >> pidf;
       fPID = TProcessID::ReadProcessID(pidf,file);
+      if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
           R__b >> fUIDs[i];
           if (fUIDs[i] != 0) fLast = i;
+          if (gDebug > 1) {
+             printf(" %d",fUIDs[i]);
+             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+          }      
       }
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
@@ -334,8 +348,14 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b << fLowerBound;
       pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
+      if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
+      
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];
+          if (gDebug > 1) {
+             printf(" %d",fUIDs[i]);
+             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
+          }      
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
@@ -413,6 +433,20 @@ TObject **TRefArray::GetObjectRef(TObject *obj) const
 
    //Int_t index = IndexOf(obj);
    //return &fCont[index];
+   return 0;
+}
+
+//______________________________________________________________________________
+UInt_t TRefArray::GetUID(Int_t at) const
+{
+   // Return UID of element at.
+
+   int j = at-fLowerBound;
+   if (j >= 0 && j < fSize) {
+      if (!fPID) return 0;
+      return fUIDs[j];
+   }
+   BoundsOk("At", at);
    return 0;
 }
 
@@ -613,7 +647,7 @@ TRefArrayIter::TRefArrayIter(const TRefArray *arr, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TRefArrayIter::TRefArrayIter(const TRefArrayIter &iter)
+TRefArrayIter::TRefArrayIter(const TRefArrayIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 
@@ -654,21 +688,19 @@ TObject *TRefArrayIter::Next()
 {
    // Return next object in array. Returns 0 when no more objects in array.
 
-/*
    if (fDirection == kIterForward) {
-      for ( ; fCursor < fArray->Capacity() && fArray->fCont[fCursor] == 0;
+      for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor) == 0;
               fCursor++) { }
 
       if (fCursor < fArray->Capacity())
-         return fArray->fUIDs[fCursor++];
+         return fArray->At(fCursor++);
    } else {
-      for ( ; fCursor >= 0 && fArray->fUIDs[fCursor] == 0;
+      for ( ; fCursor >= 0 && fArray->At(fCursor) == 0;
               fCursor--) { }
 
       if (fCursor >= 0)
-         return fArray->fUIDs[fCursor--];
+         return fArray->At(fCursor--);
    }
-*/
    return 0;
 }
 

@@ -58,6 +58,8 @@ class basic_filebuf : public basic_streambuf<charT, traits> {
                                        ios_base::in | ios_base::out);
     virtual int sync();
     virtual streamsize xsputn(const char_type *s, streamsize n);
+ private:
+    basic_filebuf& operator=(const basic_filebuf& x);
 };
 
 template<class charT, class traits>

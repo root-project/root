@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.15 2002/02/18 10:06:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.18 2002/07/02 06:43:32 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
    static Double_t Ceil(Double_t x);
    static Double_t Floor(Double_t x);
    static Double_t Exp(Double_t);
+   static Double_t Factorial(Int_t);
    static Double_t Power(Double_t x, Double_t y);
    static Double_t Log(Double_t x);
    static Double_t Log2(Double_t x);
@@ -187,7 +188,7 @@ public:
    static Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
    static Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
    static Double_t Struve(Int_t n, Double_t x);      // Struve functions of order 0 and 1
-   
+
    ClassDef(TMath,0)  //Interface to math routines
 };
 
@@ -314,12 +315,8 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #      define isnan  _isnan
 #   endif
 #endif
-#if defined(R__GNU) && defined(__STRICT_ANSI__)
-#   define finite __finite
-#   define isnan  __isnan
-#endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__USESTHROW)
+    defined(R__HPUX11) || defined(R__GLIBC)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -344,10 +341,10 @@ extern "C" {
    extern double log(double);
    extern double log10(double);
 #ifndef R__WIN32
-#   ifndef finite
+#   if !defined(finite)
        extern int finite(double);
 #   endif
-#   ifndef isnan
+#   if !defined(isnan)
        extern int isnan(double);
 #   endif
 #endif

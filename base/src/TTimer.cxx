@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.4 2000/11/10 02:28:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.5 2001/04/28 16:31:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -43,6 +43,32 @@
 #include "TROOT.h"
 
 ClassImp(TTimer)
+
+
+class TSingleShotCleaner: public TTimer {
+private:
+   TList  *fGarbage;
+public:
+   TSingleShotCleaner() : TTimer(10, kTRUE) { fGarbage = new TList(); }
+   virtual ~TSingleShotCleaner() { fGarbage->Delete(); delete fGarbage; }
+   void TurnOn() {
+      TObject *obj = (TObject*) gTQSender;
+      fGarbage->Add(obj);
+      Reset();
+      if (gSystem)
+         gSystem->AddTimer(this);
+   }
+   Bool_t Notify() {
+      fGarbage->Delete();
+      Reset();
+      if (gSystem)
+         gSystem->RemoveTimer(this);
+      return kTRUE;
+   }
+};
+
+TSingleShotCleaner gSingleShotCleaner;  // single shot timer cleaner
+
 
 //______________________________________________________________________________
 TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
@@ -211,8 +237,10 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
    TQObject::Connect(singleShotTimer, "Timeout()",
                      receiver_class, receiver, method);
 
+   // gSingleShotCleaner will delete singleShotTimer a
+   // short period after Timeout() signal is emitted
    TQObject::Connect(singleShotTimer, "Timeout()",
-                     "TTimer", singleShotTimer, "Delete()");
+                     "TTimer", &gSingleShotCleaner, "TurnOn()");
 
    singleShotTimer->Start(milliSec, kTRUE);
 }

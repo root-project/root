@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.67 2002/02/23 09:45:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.73 2002/07/09 21:14:30 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -63,7 +63,8 @@
 #include "config.h"
 #endif
 
-#include <string.h>
+#include <string>
+#include <map>
 #include <stdlib.h>
 
 #include "Riostream.h"
@@ -95,8 +96,10 @@
 #include "TVirtualGL.h"
 #include "TFolder.h"
 #include "TQObject.h"
-#include "TProcessID.h"
+#include "TProcessUUID.h"
 #include "TPluginManager.h"
+#include "TMap.h"
+#include "TObjString.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -171,6 +174,77 @@ static void CleanUpROOTAtExit()
    }
 }
 
+//______________________________________________________________________________
+namespace ROOT {
+   // #define R__USE_STD_MAP
+   class TMapTypeToTClass {
+#if defined R__USE_STD_MAP
+     // This wrapper class allow to avoid putting #include <map> in the
+     // TROOT.h header file.
+   public:
+#ifdef R__GLOBALSTL
+      typedef map<string,TClass*> IdMap_t;
+#else
+      typedef std::map<std::string,TClass*> IdMap_t;
+#endif
+      typedef IdMap_t::key_type                   key_type;
+      typedef IdMap_t::const_iterator             const_iterator;
+      typedef IdMap_t::size_type                  size_type;
+#ifdef R__WIN32
+     // Window's std::map does NOT defined mapped_type
+      typedef TClass*                             mapped_type;
+#else
+      typedef IdMap_t::mapped_type                mapped_type;
+#endif
+
+   private:
+      IdMap_t fMap;
+
+   public:
+
+      void Add(const key_type &key, mapped_type &obj) {
+         fMap[key] = obj;
+      }
+
+      mapped_type Find(const key_type &key) const {
+
+         IdMap_t::const_iterator iter = fMap.find(key);
+         mapped_type cl = 0;
+         if (iter != fMap.end()) cl = iter->second;
+         return cl;
+      }
+
+      void Remove(const key_type &key) { fMap.erase(key); }
+
+      void printall() {
+         cerr << "Printing the typeinfo map in TROOT\n";
+         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++ ) {
+            cerr << "Key: " << iter->first.c_str()
+                 << " points to " << iter->second << endl;
+         }
+      }
+#else
+   private:
+      TMap fMap;
+   public:
+      void Add(const char* key, TClass *&obj) {
+         TObjString *realkey = new TObjString(key);
+         fMap.Add(realkey, obj);
+      }
+      TClass* Find(const char* key) const {
+         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+         if (a) return (TClass*) a->Value();
+         return 0;
+      }
+      void Remove(const char* key) {
+         TObjString realkey(key);
+         TObject *actual = fMap.Remove(&realkey);
+         delete actual;
+      }
+
+#endif
+   };
+}
 
 TROOT      *gROOT;         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
@@ -280,6 +354,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
+   fIdMap       = new IdMap_t;
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
 
@@ -287,6 +362,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fPluginManager->LoadHandlersFromEnv(gEnv);
 
    TProcessID::AddProcessID();
+   fUUIDs = new TProcessUUID();
 
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
@@ -309,9 +385,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
    // by default, add the list of tasks, canvases and browsers in the Cleanups list
-   fCleanups->Add(fCanvases);
-   fCleanups->Add(fBrowsers);
-   fCleanups->Add(fTasks);
+   fCleanups->Add(fCanvases); fCanvases->SetBit(kMustCleanup);
+   fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
+   fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
 
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
@@ -404,6 +480,7 @@ TROOT::~TROOT()
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
+      delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
@@ -439,6 +516,18 @@ TROOT::~TROOT()
       TStorage::PrintStatistics();
 
       gROOT = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TROOT::AddClass(TClass *cl)
+{
+   // Add a class to the list and map of classes.
+
+   if (!cl) return;
+   GetListOfClasses()->Add(cl);
+   if (cl->GetTypeInfo()) {
+      fIdMap->Add(cl->GetTypeInfo()->name(),cl);
    }
 }
 
@@ -706,6 +795,55 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       if (!ncl->IsZombie()) return ncl;
       delete ncl;
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
+{
+//*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*      =================================
+
+   if (!GetListOfClasses())    return 0;
+
+#ifdef DEBUG_ID
+   cerr << "While TROOT searches for " << typeinfo.name() << " at " << &typeinfo << endl;
+   fIdMap->printall();
+#endif
+   TClass* cl = fIdMap->Find(typeinfo.name());
+
+   if (cl) {
+      if (cl->IsLoaded()) return cl;
+      //we may pass here in case of a dummy class created by TStreamerInfo
+      load = kTRUE;
+   } else {
+     // Note we might need support for typedefs and simple types!
+
+     //      TDataType *objType = gROOT->GetType(name, load);
+     //if (objType) {
+     //    const char *typdfName = objType->GetTypeName();
+     //    if (typdfName && strcmp(typdfName, name)) {
+     //       cl = GetClass(typdfName, load);
+     //       return cl;
+     //    }
+     // }
+   }
+
+   if (!load) return 0;
+
+   VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
+   if (dict) {
+      (dict)();
+      return GetClass(typeinfo);
+   }
+   if (cl) return cl;
+
+   //last attempt. Look in CINT list of all (compiled+interpreted) classes
+   //   if (gInterpreter->CheckClassInfo(name)) {
+   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
+   //      if (!ncl->IsZombie()) return ncl;
+   //      delete ncl;
+   //   }
    return 0;
 }
 
@@ -1338,6 +1476,18 @@ void TROOT::Proof(const char *cluster)
    if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return;
 
    ProcessLine(Form("new TProof(\"%s\");", cluster));
+}
+
+//______________________________________________________________________________
+void TROOT::RemoveClass(TClass *oldcl)
+{
+   // Add a class to the list and map of classes
+
+   if (!oldcl) return;
+   GetListOfClasses()->Remove(oldcl);
+   if (oldcl->GetTypeInfo()) {
+      fIdMap->Remove(oldcl->GetTypeInfo()->name());
+   }
 }
 
 //______________________________________________________________________________

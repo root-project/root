@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.5 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TWbox::~TWbox()
 }
 
 //______________________________________________________________________________
-TWbox::TWbox(const TWbox &wbox)
+TWbox::TWbox(const TWbox &wbox) : TBox(wbox)
 {
    ((TWbox&)wbox).Copy(*this);
 }

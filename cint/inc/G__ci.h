@@ -21,19 +21,32 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015036
-#define G__CINTVERSIONSTR  "5.15.36, Apr 23 2002"
+#define G__CINTVERSION      5015050
+#define G__CINTVERSIONSTR  "5.15.50, July 7 2002"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
+
+/* For a machine which has unaddressable bool */
+#ifndef G__UNADDRESSABLEBOOL
+#define G__UNADDRESSABLEBOOL
+#endif
+
 /* Speed up G__strip_quotation */
 #ifdef G__ROOT 
 #ifndef G__CPPCONSTSTRING
 #define G__CPPCONSTSTRING
 #endif
+#endif
+
+/* Activate pointer to member function handling in interpreted code. 
+ * Seamless access of pointer to member between interpreted and compiled code
+ * is not implemented yet. */
+#ifndef G__PTR2MEMFUNC
+#define G__PTR2MEMFUNC
 #endif
 
 /* 1649 is not ready yet */

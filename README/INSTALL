@@ -342,7 +342,7 @@ For example:
   #export PYTHIA=             # must contain libPythia
   #export PYTHIA6=            # must contain libPythia6
   #export VENUS=              # must contain libVenus
-  #export STAR=yes            # to build the STAR contrib library
+  #export TABLE=yes           # to build the Table contrib library
 
 The ROOTBUILD environment variable is special and architecture
 dependent. To get an idea of which values it can take, take a look in
@@ -393,8 +393,8 @@ The flags consist of two classes:
      on whether your applications are linked to the proper runtime
      libraries. It's strongly encouraged to use this option. This
      options is only supported on some platforms. Default is false.
-   * star
-     Build STAR contributed library, including new containers and
+   * table
+     Build Table contributed library, including new containers and
      extended 3D geometry descriptions. Default is false.
    * thread
      Compile ROOT thread safe, as well as a thread API library. This

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.11 2002/02/21 17:36:15 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.12 2002/02/21 17:52:55 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -207,6 +207,7 @@ Bool_t TGWin32::Init(void *display)
   fCharacterUpY    = 1;
   fDrawMode        = kCopy;
   fTextFontModified = 1;
+  fhdCommonPalette = 0;
 
   fGLKernel = 0;
  // fGLKernel = new TWin32GLKernel();

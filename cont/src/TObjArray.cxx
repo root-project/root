@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.13 2001/11/16 02:47:36 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.16 2002/05/18 10:45:10 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TObjArray::TObjArray(Int_t s, Int_t lowerBound)
 }
 
 //______________________________________________________________________________
-TObjArray::TObjArray(const TObjArray &a)
+TObjArray::TObjArray(const TObjArray &a) : TSeqCollection()
 {
    // Create a copy of TObjArray a. Note, does not copy the kIsOwner flag.
 
@@ -301,6 +301,9 @@ void TObjArray::Streamer(TBuffer &b)
          TObject::Streamer(b);
       if (v > 1)
          fName.Streamer(b);
+
+      if (GetEntriesFast() > 0) Clear();
+      
       b >> nobjects;
       b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
@@ -596,7 +599,7 @@ TObjArrayIter::TObjArrayIter(const TObjArray *arr, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter)
+TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

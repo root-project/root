@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.13 2002/03/18 18:28:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.18 2002/06/05 10:52:56 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
+   void     MapObject(const void *obj, UInt_t offset = 1);
    virtual void Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
@@ -113,6 +114,9 @@ public:
 
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
+
+   //To be implemented void *ReadObjectXXXX(const TClass *cl);
+   void     WriteObject(const void *obj, TClass *actualClass);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
@@ -167,6 +171,10 @@ public:
    void     ReadFastArray(Float_t  *f, Int_t n);
    void     ReadFastArray(Double_t *d, Int_t n);
 
+   void     StreamObject(void *obj, const type_info &typeinfo);
+   void     StreamObject(void *obj, const char *className);
+   void     StreamObject(void *obj, TClass *cl);
+
    void     WriteFastArray(const Bool_t   *b, Int_t n);
    void     WriteFastArray(const Char_t   *c, Int_t n);
    void     WriteFastArray(const UChar_t  *c, Int_t n);
@@ -207,15 +215,53 @@ public:
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
    //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
-   friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
+   //friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
 
-   static void  SetGlobalReadParam(Int_t mapsize);
-   static void  SetGlobalWriteParam(Int_t mapsize);
-   static Int_t GetGlobalReadParam();
-   static Int_t GetGlobalWriteParam();
+   static void    SetGlobalReadParam(Int_t mapsize);
+   static void    SetGlobalWriteParam(Int_t mapsize);
+   static Int_t   GetGlobalReadParam();
+   static Int_t   GetGlobalWriteParam();
+   static TClass *GetClass(const type_info &typeinfo);
+   static TClass *GetClass(const char *className);
 
    ClassDef(TBuffer,0)  //Buffer base class used for serializing objects
 };
+
+//---------------------- TBuffer default external operators --------------------
+
+#if !defined(R__CONCRETE_INPUT_OPERATOR)
+#ifndef __CINT__
+template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
+{
+   // Read TObject derived classes from a TBuffer. Need to provide
+   // custom version for non-TObject derived classes.
+
+   // This operator has to be a templated and/or automatically
+   // generated if we want to be able to check the type of the
+   // incoming object. I.e. a operator>>(TBuffer &buf, TObject *&)
+   // would not be sufficient to pass the information 'which class do we want'
+   // since the pointer could be zero (so typeid(*obj) is not usable).
+
+   TClass *cl = TBuffer::GetClass(typeid(Tmpl));
+   // ReadObject returns a TObject* ... this is WRONG in the case where 
+   // the class does not inherit from TObject as a first base class.
+   // So for now we cast to void* before casting to the actual type.
+   obj = (Tmpl *) ( (void*) buf.ReadObject(cl) );
+   return buf;
+}
+
+template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
+{
+   TClass *cl = (obj) ? TBuffer::GetClass(typeid(*obj)) : 0;
+   buf.WriteObject(obj, cl);
+   return buf;
+}
+#else
+template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
+template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
+#endif
+#endif
+
 
 //---------------------- TBuffer inlines ---------------------------------------
 
@@ -372,6 +418,9 @@ inline TBuffer &TBuffer::operator>>(ULong_t &l)
    { return TBuffer::operator>>((Long_t&)l); }
 
 //______________________________________________________________________________
+#if defined(R__TEMPLATE_OVERLOAD_BUG)
+template <>
+#endif
 inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
    { buf.WriteObject(obj); return buf; }
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.45 2002/04/09 15:29:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.54 2002/07/13 11:35:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TChain::TChain(): TTree()
    fTreeOffsetLen  = 100;
    fNtrees         = 0;
    fTreeNumber     = -1;
-   fTreeOffset     = 0;
+   fTreeOffset     = new Int_t[fTreeOffsetLen];
    fTree           = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
@@ -106,8 +106,7 @@ TChain::TChain(const char *name, const char *title)
 //______________________________________________________________________________
 TChain::~TChain()
 {
-//*-*-*-*-*-*Default destructor for a Chain*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ==============================
+// destructor for a Chain
 
    fDirectory = 0;
    delete fFile; fFile = 0;
@@ -432,6 +431,28 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 }
 
 //______________________________________________________________________________
+TFriendElement *TChain::AddFriend(TTree *chain, const char* alias, Bool_t warn)
+{
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,chain,alias);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+            //         chain,filename,t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","Unknown TChain %s",chain->GetName());
+      }
+   } else {
+      Warning("AddFriend","Cannot add FriendElement %s",chain->GetName());
+   }
+   return fe;
+}
+
+//______________________________________________________________________________
 void TChain::Browse(TBrowser *)
 {
 
@@ -440,8 +461,7 @@ void TChain::Browse(TBrowser *)
 //_______________________________________________________________________
 void TChain::CreatePackets()
 {
-//*-*-*-*-*-*-*-*-*Initialize the packet descriptor string*-*-*-*-*-*-*-*-*-*
-//*-*              =======================================
+// Initialize the packet descriptor string
 
    TIter next(fFiles);
    TChainElement *element;
@@ -477,8 +497,7 @@ Int_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,I
 //______________________________________________________________________________
 TBranch *TChain::GetBranch(const char *name)
 {
-//*-*-*-*-*-*-*-*-*Return pointer to the branch name*-*-*-*-*
-//*-*              ==========================================
+// Return pointer to the branch name in the current tree
 
    if (fTree) return fTree->GetBranch(name);
    LoadTree(0);
@@ -511,11 +530,13 @@ Double_t TChain::GetEntries() const
 //______________________________________________________________________________
 Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 {
-//*-*-*-*-*-*-*-*-*Return entry in memory*-*-*-*-*-*-*-*-*-*
-//*-*              ======================
+// Get entry from the file to memory
+//
 //     getall = 0 : get only active branches
 //     getall = 1 : get all branches
-
+//
+// return the total number of bytes read
+   
    if (LoadTree(entry) < 0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
@@ -524,8 +545,7 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 //______________________________________________________________________________
 TLeaf *TChain::GetLeaf(const char *name)
 {
-//*-*-*-*-*-*-*-*-*Return pointer to the leaf name*-*-*-*-*
-//*-*              ==========================================
+//  Return pointer to the leaf name in the current tree
 
    if (fTree) return fTree->GetLeaf(name);
    LoadTree(0);
@@ -537,8 +557,7 @@ TLeaf *TChain::GetLeaf(const char *name)
 //______________________________________________________________________________
 TObjArray *TChain::GetListOfBranches()
 {
-//*-*-*-*-*-*-*-*-*Return pointer to list of branches of current tree*-*-*-*-*
-//*-*              ================================================
+// Return pointer to list of branches of current tree
 
    if (fTree) return fTree->GetListOfBranches();
    LoadTree(0);
@@ -550,8 +569,7 @@ TObjArray *TChain::GetListOfBranches()
 //______________________________________________________________________________
 TObjArray *TChain::GetListOfLeaves()
 {
-//*-*-*-*-*-*-*-*-*Return pointer to list of leaves of current tree*-*-*-*-*
-//*-*              ================================================
+// Return pointer to list of leaves of current tree
 
    if (fTree) return fTree->GetListOfLeaves();
    LoadTree(0);
@@ -571,8 +589,7 @@ Int_t TChain::GetMaxMergeSize()
 //______________________________________________________________________________
 Double_t TChain::GetMaximum(const char *columname)
 {
-//*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
-//*-*              ============================================
+// Return maximum of column with name columname
 
    Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
@@ -588,8 +605,7 @@ Double_t TChain::GetMaximum(const char *columname)
 //______________________________________________________________________________
 Double_t TChain::GetMinimum(const char *columname)
 {
-//*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
-//*-*              ============================================
+// Return minimum of column with name columname
 
    Double_t theMin = FLT_MAX; //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
@@ -605,8 +621,7 @@ Double_t TChain::GetMinimum(const char *columname)
 //______________________________________________________________________________
 Int_t TChain::GetNbranches()
 {
-//*-*-*-*-*-*-*-*-*Return number of branches of current tree*-*-*-*-*
-//*-*              =========================================
+// Return number of branches of current tree
 
    if (fTree) return fTree->GetNbranches();
    LoadTree(0);
@@ -653,6 +668,45 @@ Int_t TChain::LoadTree(Int_t entry)
    fReadEntry = entry - fTreeOffset[t];
    // If entry belongs to the current tree return entry
    if (t == fTreeNumber) {
+      // This need to be done first because it will set the friend tree's
+      // fReadEntry to the current one (which is possibly wrong).  The 
+      // call to t->LoadTree inside the chain would fix that.
+      fTree->LoadTree(fReadEntry);
+      if (fFriends) {
+         // The current tree as not change but some of its friend might.
+
+         //An Alternative would move this code to each of the function calling LoadTree 
+         //(and to overload a few more).
+         TIter next(fFriends);
+         TFriendElement *fe;
+         Bool_t needUpdate = kFALSE;
+         while ((fe = (TFriendElement*)next())) {
+            TTree *t = fe->GetTree();
+            if (t->InheritsFrom(TChain::Class())) {
+               Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
+               TTree* old = t->GetTree();
+
+               t->LoadTree(entry);
+               
+               Int_t newNumber = ((TChain*)t)->GetTreeNumber();
+               if (oldNumber!=newNumber) {
+                  // We can not compare the tree pointers because they could be reused.
+                  // so we compare the number number instead.
+                  needUpdate = kTRUE;
+                  fTree->RemoveFriend(old);
+                  fTree->AddFriend(t->GetTree(),fe->GetName());
+               }
+            } // else we assume it is a simple tree so we have nothing to do.
+         }
+
+         if (needUpdate) {
+            //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
+            if (fPlayer) fPlayer->UpdateFormulaLeaves();
+            //Notify user if requested
+            if (fNotify) fNotify->Notify();
+         }
+
+      }
       return fReadEntry;
    }
 
@@ -672,6 +726,13 @@ Int_t TChain::LoadTree(Int_t entry)
       return -3;
    }
    fTree = (TTree*)fFile->Get(element->GetName());
+   if (fTree==0) {
+      // Now that we do not check during the addition, we need to check here!
+      Error("LoadTree","cannot find tree with name %s in file %s", 
+            element->GetName(),element->GetTitle());
+      delete fFile; fFile = 0;
+      return -4;
+   }
    fTreeNumber = t;
    fDirectory = fFile;
 
@@ -680,10 +741,11 @@ Int_t TChain::LoadTree(Int_t entry)
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
+      element->SetNumberEntries(nentries);
       if (entry > fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
-         if (fTreeNumber < fNtrees) return LoadTree(entry);
-         else                       fReadEntry = -2;
+         if (fTreeNumber < fNtrees && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
+         else  fReadEntry = -2;
       }
    }
 
@@ -695,12 +757,34 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
-      void *add = element->GetBaddress();
-      if (add)        fTree->SetBranchAddress(element->GetName(),add);
       if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
+   }
+   next.Reset();
+   while ((element = (TChainElement*)next())) {
+      void *add = element->GetBaddress();
+      if (add) {
+         TBranch *br = fTree->GetBranch(element->GetName());
+         if (br) {
+            br->SetAddress(add);
+            if (TestBit(kAutoDelete)) br->SetAutoDelete(kTRUE);
+         }
+      }
    }
 
    if (cursav) cursav->cd();
+
+   if (fFriends) {
+      //An Alternative would move this code to each of the function calling LoadTree 
+      //(and to overload a few more).
+      TIter next(fFriends);
+      TFriendElement *fe;
+      while ((fe = (TFriendElement*)next())) {
+         TTree *t = fe->GetTree();
+         t->LoadTree(entry);
+         TTree *friend_t = t->GetTree();
+         if (friend_t) fTree->AddFriend(friend_t,fe->GetName());
+      }
+   }
 
    //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
    if (fPlayer) fPlayer->UpdateFormulaLeaves();
@@ -708,15 +792,14 @@ Int_t TChain::LoadTree(Int_t entry)
    //Notify user if requested
    if (fNotify) fNotify->Notify();
 
+   fTree->LoadTree(fReadEntry);
    return fReadEntry;
 }
 
 //______________________________________________________________________________
 void TChain::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Loop on nentries of this chain starting at firstentry
-//*-*              ===================================================
-
+// Loop on nentries of this chain starting at firstentry
 
    Error("Loop","Function not yet implemented");
 
@@ -945,7 +1028,7 @@ void TChain::Print(Option_t *option) const
       TFile *file = TFile::Open(element->GetTitle());
       if (!file->IsZombie()) {
          TTree *tree = (TTree*)file->Get(element->GetName());
-         tree->Print(option);
+         if (tree) tree->Print(option);
       }
       delete file;
    }
@@ -964,8 +1047,7 @@ Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, In
 //______________________________________________________________________________
 Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Process this chain executing the code in selector*-*-*-*-*
-//*-*              ================================================
+// Process this chain executing the code in selector
 
    return TTree::Process(selector,option,nentries,firstentry);
 }
@@ -991,10 +1073,21 @@ void TChain::Reset(Option_t *)
 }
 
 //_______________________________________________________________________
+void TChain::SetAutoDelete(Bool_t autodelete)
+{
+//  Set the global branch kAutoDelete bit
+//  When LoadTree loads a new Tree, the branches for which
+//  the address is set will have the option AutoDelete set
+//  For more details on AutoDelete, see TBranch::SetAutoDelete.
+            
+   if (autodelete) SetBit(kAutoDelete,1);
+   else            SetBit(kAutoDelete,0);
+}
+
+//_______________________________________________________________________
 void TChain::SetBranchAddress(const char *bname, void *add)
 {
-//*-*-*-*-*-*-*-*-*Set branch address*-*-*-*-*-*-*-*
-//*-*              ==================
+// Set branch address
 //
 //      bname is the name of a branch.
 //      add is the address of the branch.
@@ -1009,15 +1102,17 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 
    element->SetBaddress(add);
 
-   // invalidate current Tree
-   fTreeNumber = -1;
+   // Set also address in current Tree
+   if (fTreeNumber >= 0) {
+       TBranch *br = fTree->GetBranch(bname);
+       if (br) br->SetAddress(add);
+   }   
 }
 
 //_______________________________________________________________________
 void TChain::SetBranchStatus(const char *bname, Bool_t status)
 {
-//*-*-*-*-*-*-*-*-*Set branch status Process or DoNotProcess*-*-*-*-*-*-*-*
-//*-*              =========================================
+// Set branch status Process or DoNotProcess
 //
 //      bname is the name of a branch. if bname="*", apply to all branches.
 //      status = 1  branch will be processed
@@ -1026,15 +1121,18 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
-   if (!element) {
+   if (element)
+      fStatus->Remove (element);
+   else
       element = new TChainElement(bname,"");
-      fStatus->Add(element);
-   }
+   fStatus->Add(element);
 
    element->SetStatus(status);
 
-   // invalidate current Tree
-   fTreeNumber = -1;
+   // Set also status in current Tree
+   if (fTreeNumber >= 0) {
+       fTree->SetBranchStatus(bname,status);
+   }   
 }
 
 //______________________________________________________________________________
@@ -1071,8 +1169,7 @@ void TChain::SetMaxMergeSize(Int_t maxsize)
 //_______________________________________________________________________
 void TChain::SetPacketSize(Int_t size)
 {
-//*-*-*-*-*-*-*-*-*Set number of entries per packet for parallel root*-*-*-*-*
-//*-*              =================================================
+// Set number of entries per packet for parallel root
 
    fPacketSize = size;
    TIter next(fFiles);
@@ -1111,8 +1208,7 @@ void TChain::SetWeight(Double_t w, Option_t *option)
 //_______________________________________________________________________
 void TChain::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+// Stream a class object
 
    if (b.IsReading()) {
       UInt_t R__s, R__c;

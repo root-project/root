@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.6 2001/10/08 15:05:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.10 2002/07/11 21:46:22 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -104,12 +104,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TUUID.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TInetAddress.h"
 #include "TMD5.h"
+#include "Bytes.h"
 #include <string.h>
 #ifdef R__WIN32
 #include "Windows4Root.h"
@@ -143,7 +145,6 @@ typedef unsigned long long ULong64_t;   //Unsigned long integer 8 bytes
 #else
 #define R__LL(long) _NAME2_(long,LL)
 #endif
-
 
 
 ClassImp(TUUID)
@@ -181,6 +182,15 @@ TUUID::TUUID()
    Format(clockseq, timestamp);
 
    time_last = timestamp;
+   fUUIDIndex = 1<<30;
+}
+
+//______________________________________________________________________________
+TUUID::~TUUID()
+{
+   // delete this TUUID
+
+   //gROOT->GetUUIDs()->RemoveUUID(fUUIDIndex);
 }
 
 //______________________________________________________________________________
@@ -230,6 +240,7 @@ void TUUID::SetFromString(const char *uuid)
    fNode[3]               = (UChar_t) node[3];
    fNode[4]               = (UChar_t) node[4];
    fNode[5]               = (UChar_t) node[5];
+   fUUIDIndex             = 1<<30;
 }
 
 //______________________________________________________________________________
@@ -248,6 +259,34 @@ TUUID::TUUID(const char *uuid)
       Error("TUUID", "null string not allowed");
 
    SetFromString(uuid);
+}
+
+//______________________________________________________________________________
+void TUUID::FillBuffer(char *&buffer)
+{
+   // Stream UUID into output buffer.
+
+   tobuf(buffer, fTimeLow);
+   tobuf(buffer, fTimeMid);
+   tobuf(buffer, fTimeHiAndVersion);
+   tobuf(buffer, fClockSeqHiAndReserved);
+   tobuf(buffer, fClockSeqLow);
+   for (Int_t i = 0; i < 6; i++)
+      tobuf(buffer, fNode[i]);
+}
+
+//______________________________________________________________________________
+void TUUID::ReadBuffer(char *&buffer)
+{
+   // Stream UUID from input buffer.
+
+   frombuf(buffer, &fTimeLow);
+   frombuf(buffer, &fTimeMid);
+   frombuf(buffer, &fTimeHiAndVersion);
+   frombuf(buffer, &fClockSeqHiAndReserved);
+   frombuf(buffer, &fClockSeqLow);
+   for (Int_t i = 0; i < 6; i++)
+      frombuf(buffer, &fNode[i]);
 }
 
 //______________________________________________________________________________
@@ -361,9 +400,13 @@ void TUUID::GetNodeIdentifier()
    // network interface try random info based on some machine parameters.
 
    if (gSystem) {
-      TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-      if (addr.IsValid()) {
-         UInt_t adr = addr.GetAddress();
+      static UInt_t adr = 0;
+      if (!adr) {
+         TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
+         if (addr.IsValid())
+            adr = addr.GetAddress();
+      }
+      if (adr) {
          memcpy(fNode, &adr, 4);
          fNode[4] = 0xbe;
          fNode[5] = 0xef;
@@ -408,7 +451,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    GetComputerName(r.hostname, &r.l);
 #else
    struct randomness {
-#if defined(R__LINUX) 
+#if defined(R__LINUX)
       struct sysinfo   s;
 #endif
       struct timeval   t;
@@ -416,7 +459,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    };
    randomness r;
 
-#if defined(R__LINUX) 
+#if defined(R__LINUX)
    sysinfo(&r.s);
 #endif
    gettimeofday(&r.t, 0);

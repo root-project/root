@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -36,7 +36,7 @@ private:
    static Double_t        fgPrecision; //maximum precision
 
 public:
-   TVirtualFitter();
+   TVirtualFitter() { }
    virtual ~TVirtualFitter();
    virtual void     Clear(Option_t *option="") = 0;
    virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
@@ -60,7 +60,7 @@ public:
    static void      SetMaxIterations(Int_t niter=5000);
    static void      SetPrecision(Double_t prec=1e-6);
 
-    ClassDef(TVirtualFitter,0)  //Abstract interface for fitting
+   ClassDef(TVirtualFitter,0)  //Abstract interface for fitting
 };
 
 #endif

@@ -87,6 +87,7 @@ WinNT.*.Root.Html.SourceDir: .;src;include
 #Root.Html.Copyright:        * Copyright
 
 # GUI specific settings
+Gui.Backend:                native
 Unix.*.Gui.NormalFont:      -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Unix.*.Gui.BoldFont:        -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
 Unix.*.Gui.SmallFont:       -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
@@ -107,6 +108,7 @@ Gui.MimeTypeFile:           $(HOME)/.root.mimes
 Browser.IconStyle:          small
 # Can be either name, type, size, date
 Browser.SortBy:             name
+Browser.GroupView:          1000
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros
 Rint.Load:               rootalias.C
@@ -127,12 +129,26 @@ Rootd.Authentication:   0
 Proofd.Authentication:  0
 
 # Plugin library handlers
-+Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
-+Plugin.TFile:       ^dcache:  TDCacheFile   DCache
-+Plugin.TSQLServer:  ^mysql:   TMySQLServer  MySQL
-+Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
-+Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
-+Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle
+Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
++Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
+Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
++Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
++Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"
++Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle  "TOracleServer(const char*,const char*,const char*)"
+Plugin.TGrid:        ^alien    TAlien        RAliEn  "TAlien(const char*,const char*,const char*, const char*)"
+Plugin.TVirtualFitter:      *  TFitter       Minuit       "TFitter(Int_t)"
+Plugin.TVirtualHistPainter: *  THistPainter  HistPainter  "THistPainter()"
+Plugin.TVirtualTreePlayer:  *  TTreePlayer   TreePlayer   "TTreePlayer()"
+Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const char*)"
+Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter()"
+Plugin.TVirtualPS:          *  TPostScript   Postscript   "TPostScript()"
+Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
+Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*, const Double_t*)"
+Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,const char*)"
++Plugin.TVirtualX:   win32     TGWin32       Win32        "TGWin32(const char*,const char*)"
++Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
+Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
++Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

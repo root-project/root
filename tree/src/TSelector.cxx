@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.8 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.9 2002/04/19 18:24:02 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 //                 a convenient place to create your histograms.          //
 //                                                                        //
 //    Notify():    This function is called at the first entry of a new    //
-//                 in a chain.                                            //
+//                 tree in a chain.                                       //
 //    ProcessCut:  called at the beginning of each entry to return a flag //
 //                 true if the entry must be analyzed.                    //
 //    ProcessFill: called in the entry loop for all entries accepted      //
@@ -48,7 +48,7 @@ TSelector::TSelector() : TObject()
    fObject = 0;
    fInput  = 0;
    fOutput = new THashList;
-   fOutput->IsOwner();
+   fOutput->SetOwner();
 }
 
 //______________________________________________________________________________

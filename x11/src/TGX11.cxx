@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.21 2002/02/23 15:52:36 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.23 2002/05/18 08:22:01 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -262,8 +262,6 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 {
    // Normal Constructor.
 
-   gVirtualX  = this;
-
    fDisplay         = 0;
    fScreenNumber    = 0;
    fVisual          = 0;
@@ -292,7 +290,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 }
 
 //______________________________________________________________________________
-TGX11::TGX11(const TGX11 &org)
+TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 {
    // Copy constructor. Currently only used by TGX11TTF.
 

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.21 2001/12/04 18:55:35 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.22 2001/12/05 10:59:57 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -224,7 +224,6 @@ private:
    TGButton            *fOkButton, *fCancelButton, *fStartB, *fStopB;
    TGButton            *fBtn1, *fBtn2, *fChk1, *fChk2, *fRad1, *fRad2;
    TGPictureButton     *fPicBut1;
-   TGRadioButton       *fRadio1, *fRadio2;
    TGCheckButton       *fCheck1;
    TGCheckButton       *fCheckMulti;
    TGListBox           *fListBox;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.5 2002/04/04 10:28:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.11 2002/06/10 20:02:07 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -38,25 +38,47 @@ public:
    TArrayI    &operator=(const TArrayI &rhs);
    virtual    ~TArrayI();
 
-   void       Adopt(Int_t n, Int_t *array);
-   void       AddAt(Int_t i, Int_t idx);
-   Int_t      At(Int_t i) const ;
-   void       Copy(TArrayI &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
-   Int_t     *GetArray() const { return fArray; }
-   Stat_t     GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void       Reset(Int_t val=0)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void       Set(Int_t n);
-   void       Set(Int_t n, const Int_t *array);
-   Int_t     &operator[](Int_t i);
-   Int_t      operator[](Int_t i) const;
+   void         Adopt(Int_t n, Int_t *array);
+   void         AddAt(Int_t i, Int_t idx);
+   Int_t        At(Int_t i) const ;
+   void         Copy(TArrayI &array) {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   const Int_t *GetArray() const { return fArray; }
+   Int_t       *GetArray() { return fArray; }
+   Stat_t       GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
+   void         Reset()           {memset(fArray, 0, fN*sizeof(Int_t));}
+   void         Reset(Int_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void         Set(Int_t n);
+   void         Set(Int_t n, const Int_t *array);
+   Int_t       &operator[](Int_t i);
+   Int_t        operator[](Int_t i) const;
 
    ClassDef(TArrayI,1)  //Array of ints
 };
 
+
+#if defined R__TEMPLATE_OVERLOAD_BUG
+template <> 
+#endif
+inline TBuffer &operator>>(TBuffer &buf, TArrayI *&obj)
+{
+   // Read TArrayI object from buffer.
+
+   obj = (TArrayI *) TArray::ReadArray(buf, TArrayI::Class());
+   return buf;
+}
+
+#if defined R__TEMPLATE_OVERLOAD_BUG 
+template <> 
+#endif
+inline TBuffer &operator<<(TBuffer &buf, const TArrayI *obj) 
+{
+   // Write a TArrayI object into buffer
+   return buf << (TArray*)obj;
+}
+
 inline Int_t TArrayI::At(Int_t i) const
 {
-   if (!BoundsOk("TArrayI::At", i))
-      i = 0;
+   if (!BoundsOk("TArrayI::At", i)) return 0;
    return fArray[i];
 }
 
@@ -69,8 +91,7 @@ inline Int_t &TArrayI::operator[](Int_t i)
 
 inline Int_t TArrayI::operator[](Int_t i) const
 {
-   if (!BoundsOk("TArrayI::operator[]", i))
-      i = 0;
+   if (!BoundsOk("TArrayI::operator[]", i)) return 0;
    return fArray[i];
 }
 
