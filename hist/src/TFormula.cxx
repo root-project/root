@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.80 2004/08/20 10:35:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.81 2004/09/01 10:20:11 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -194,10 +194,10 @@ TFormula::TFormula(const char *name,const char *expression) :
    delete [] expr;
 
    if (Compile()) return;
-   
+
    if (gausNorm)   SetBit(kNormalized);
    if (landauNorm) SetBit(kNormalized);
-   
+
 //*-*- Store formula in linked list of formula in ROOT
 
    TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
@@ -1817,7 +1817,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 25 : cout<<" Degree of polynomial must be less than 20"<<endl; break;
         case 26 : cout<<" Unknown name : \""<<(const char*)chaine_error<<"\""<<endl; break;
         case 27 : cout<<" Too many constants in expression"<<endl; break;
-        case 28 : cout<<" strstr requires tow arguments"<<endl; break;
+        case 28 : cout<<" strstr requires two arguments"<<endl; break;
         case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
                       <<chaine_error<<endl; break;
         case 30 : cout<<" Bad numerical expression : \""<<(const char*)chaine_error<<"\""<<endl; break;
@@ -2610,7 +2610,7 @@ TString TFormula::GetExpFormula() const
             spos++;
             continue;
          }
-         
+
          //constants, variables x,y,z,t, pi
          if ((optype<=149 && optype>=140) || (optype == 40)) {
             tab[spos]=fExpr[i];
