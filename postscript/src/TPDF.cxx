@@ -1088,7 +1088,11 @@ void TPDF::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream = new ofstream();
-   fStream->open(fname, ofstream::out | ofstream::binary);
+#ifdef R__WIN32
+      fStream->open(fname, ofstream::out | ofstream::binary);
+#else
+      fStream->open(fname, ofstream::out);
+#endif
    if (fStream == 0) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
       return;
