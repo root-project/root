@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.14 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.15 2004/02/19 00:16:27 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -129,82 +129,40 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGLineStyleLBEntry                                                   //
+// TGLineLBEntry                                                        //
 //                                                                      //
-// Line style listbox entry.                                            //
-// Line example and number of style                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TGLineStyleLBEntry : public TGLBEntry {
-
-protected:
-   Style_t       fLineStyle;      // entry style
-   UInt_t        fTWidth;         // text width
-   UInt_t        fTHeight;        // text height
-
-   static        TGGC   *fgGC;
-   static  const TGFont *fgFont;
-   static  const int     fgLineLength = 60;
-
-   virtual void  DoRedraw();
-   virtual void  SetContextLineStyle(Style_t linestyle);
-   static  void  InitLineGC();
-
-public:
-   TGLineStyleLBEntry(const TGWindow *p, Style_t s, Int_t id,
-                      UInt_t options = kHorizontalFrame,
-                      Pixel_t back = GetWhitePixel());
-   virtual ~TGLineStyleLBEntry();
-
-   virtual TGDimension GetDefaultSize() const
-                          { return TGDimension(fTWidth, fTHeight+1); }
-   Style_t             GetStyle() const { return fLineStyle; }
-   virtual void        SetStyle(Style_t style);
-   virtual void        Update(TGLBEntry *e)
-                          {  SetStyle(((TGLineStyleLBEntry *)e)->GetStyle()); }
-
-   ClassDef(TGLineStyleLBEntry,0)  // Line style listbox entry
-};
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLineWidthLBEntry                                                   //
-//                                                                      //
-// Line width listbox entry.                                            //
+// Line style & width listbox entry.                                    //
 // Line example and width number                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLineWidthLBEntry : public TGLBEntry {
+class TGLineLBEntry : public TGTextLBEntry {
 
 protected:
-   UInt_t               fLineWidth;      // entry style
-   UInt_t               fTWidth;         // text width
-   UInt_t               fTHeight;        // text height
-   static const TGFont *fgFont;
-   static TGGC         *fgGC;
+   UInt_t      fLineWidth;       // line width
+   Style_t     fLineStyle;       // line style
+   UInt_t      fLineLength;      // line lenght
+   TGGC        *fLineGC;         // line graphics context
 
    virtual void DoRedraw();
-   static  void InitLineGC();
 
 public:
-   TGLineWidthLBEntry(const TGWindow *p, UInt_t w, Int_t id,
-                      UInt_t options = kHorizontalFrame,
-                      Pixel_t back = GetWhitePixel());
-   virtual ~TGLineWidthLBEntry();
+   TGLineLBEntry(const TGWindow *p, Int_t id, const char *str = 0,
+                     UInt_t w = 0, Style_t s = 0,
+                     UInt_t options = kHorizontalFrame,
+                     Pixel_t back = GetWhitePixel());
+   virtual ~TGLineLBEntry();
 
    virtual TGDimension GetDefaultSize() const
       { return TGDimension(fTWidth, fTHeight+1); }
-   virtual Int_t GetWidth() const { return fLineWidth; }
-   virtual void  SetWidth(Int_t width);
-   virtual void  Update(TGLBEntry *e)
-      {  SetWidth(((TGLineWidthLBEntry *)e)->GetWidth()); }
+   virtual Int_t GetLineWidth() const { return fLineWidth; }
+   virtual void  SetLineWidth(Int_t width);
+   Style_t       GetLineStyle() const { return fLineStyle; }
+   virtual void  SetLineStyle(Style_t style);
+   virtual void  Update(TGLBEntry *e);
 
-   ClassDef(TGLineWidthLBEntry,0)  // Line width listbox entry
+   ClassDef(TGLineLBEntry, 0)  // Line width listbox entry
 };
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

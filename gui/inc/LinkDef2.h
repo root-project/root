@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.14 2003/05/28 11:55:31 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.15 2004/02/18 20:13:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,8 +34,7 @@
 #pragma link C++ class TGCanvas;
 #pragma link C++ class TGLBEntry;
 #pragma link C++ class TGTextLBEntry;
-#pragma link C++ class TGLineStyleLBEntry;
-#pragma link C++ class TGLineWidthLBEntry;
+#pragma link C++ class TGLineLBEntry;
 #pragma link C++ class TGLBContainer;
 #pragma link C++ class TGListBox;
 #pragma link C++ class TGComboBoxPopup;

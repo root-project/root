@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.2 2004/02/18 20:31:36 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -19,6 +19,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedAttFrame.h"
+#include "TGColorSelect.h"
+#include "TGedMarkerSelect.h"
 #include "TGClient.h"
 #include "TGMsgBox.h"
 #include "TGGC.h"
@@ -30,8 +32,12 @@
 #include "TGToolTip.h"
 #include "TGButton.h"
 #include "TCint.h"
+#include "TCanvas.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+#include "TGToolTip.h"
+#include "TGLabel.h"
+#include "TGComboBox.h"
 
 #include "Api.h"
 #include "TGLabel.h"
@@ -255,21 +261,24 @@ TGedAttLineFrame::TGedAttLineFrame(const TGWindow *p, Int_t id, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGedAttFrame(p, id, width, height, options | kVerticalFrame, back)
 {
+
    MakeTitle("Line");
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    fColorSelect = new TGColorSelect(f2, 0, kCOLOR);
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
+
+   fStyleCombo = new TGLineStyleComboBox(this, kLINE_STYLE);
+   fStyleCombo->Resize(126, 20);
+   AddFrame(fStyleCombo, new TGLayoutHints(kLHintsLeft,1, 1, 1, 1));
+
    fWidthCombo = new TGLineWidthComboBox(f2, kLINE_WIDTH);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fWidthCombo->Resize(80, 20);
    fWidthCombo->Associate(this);
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));   
-   fStyleCombo = new TGLineStyleComboBox(this, kLINE_STYLE);
-   fStyleCombo->Resize(126, 20);
-   AddFrame(fStyleCombo, new TGLayoutHints(kLHintsLeft,1, 1, 1, 1));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.13 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.14 2004/02/19 09:44:38 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -356,12 +356,12 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 {
    // Create a line style combo box.
 
-   SetTopEntry(new TGLineStyleLBEntry(this, 0, 0),
+   SetTopEntry(new TGLineLBEntry(this, 0),
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
    for (int i = 1; i <= 4; i++)
-      AddEntry(new TGLineStyleLBEntry(GetListBox()->GetContainer(), i, i), 
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i), 
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    fComboFrame->SetHeight(25);
    Select(1);  // to have first entry selected
@@ -393,12 +393,12 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
 {
    // Create a line width combo box.
 
-   SetTopEntry(new TGLineWidthLBEntry(this, 0, 0),
+   SetTopEntry(new TGLineLBEntry(this,0),
                new TGLayoutHints(kLHintsLeft | kLHintsExpandY | kLHintsExpandX));
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
 
    for (int i = 0; i < 16; i++)
-      AddEntry(new TGLineWidthLBEntry(GetListBox()->GetContainer(), i, i), 
+      AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0), 
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1);  // to have first entry selected
 }

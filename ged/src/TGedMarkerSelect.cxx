@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.4 2003/07/28 11:55:31 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -130,7 +130,7 @@ TGedMarkerSelect::TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t
    : TGedSelect(p, id)
 {
    fPicture = 0;
-   SetPopup(new TGedMarkerPopup(gClient->GetRoot(), this, markerStyle));
+   SetPopup(new TGedMarkerPopup(gClient->GetDefaultRoot(), this, markerStyle));
    SetMarkerStyle(markerStyle);
 }
 

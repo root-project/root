@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.0 2003/07/28 11:55:31 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup ,Ilka  Antcheva 28/07/03
 // ***It nedds more fixes ***
 // 
@@ -23,30 +23,22 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGButton
-#include "TGButton.h"
+#include "TGWidget.h"
 #endif
-#ifndef ROOT_TGToolTip
-#include "TGToolTip.h"
-#endif
-#ifndef ROOT_TGComboBox
-#include "TGComboBox.h"
-#endif
-#ifndef ROOT_TCanvas
-#include "TCanvas.h"
-#endif
-#ifndef ROOT_TGColorSelect
-#include "TGColorSelect.h"
-#endif
-#ifndef ROOT_TGListBox
-#include "TGListBox.h"
-#endif
-#ifndef ROOT_TGedPatternSelect
-#include "TGedPatternSelect.h"
-#endif
-#ifndef ROOT_TGedMarkerSelect
-#include "TGedMarkerSelect.h"
+#ifndef ROOT_TGFrame
+#include "TGFrame.h"
 #endif
 
+class TVirtualPad;
+class TCanvas;
+class TGColorSelect;
+class TGedPatternSelect;
+class TGedMarkerSelect;
+class TGLabel;
+class TGLineStyleComboBox;
+class TGLineWidthComboBox;
+class TGComboBox;
+class TGFontTypeComboBox;
 
 class TGedAttFrame : public TGCompositeFrame, public TGWidget { 
 
@@ -137,7 +129,7 @@ public:
 class TGedAttTextFrame : public TGedAttFrame {
 
 protected:
-   TGFontTypeComboBox      *fTypeCombo;
+   TGFontTypeComboBox *fTypeCombo;
    TGComboBox        *fSizeCombo;
    TGComboBox        *fAlignCombo;
    TGColorSelect     *fColorSelect;

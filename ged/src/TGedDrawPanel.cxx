@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.3 2004/02/18 22:39:52 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.4 2004/02/19 14:52:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -426,13 +426,13 @@ void TGedDrawPanel::DrawHistogram()
       Int_t nbins   = h1->GetXaxis()->GetNbins();
       Int_t first   = 1 + Int_t(nbins*fSlider->GetMinPosition());
       Int_t last    =     Int_t(nbins*fSlider->GetMaxPosition());
-      h1->GetXaxis()->SetRange(first,last);
+      h1->GetXaxis()->SetRange(first, last);
    }
 
    Int_t keep = fHistogram->TestBit(kCanDelete);
-   fHistogram->SetBit(kCanDelete,0);
+   fHistogram->SetBit(kCanDelete, 0);
    fHistogram->Draw((char*)fOption.Data());
-   fHistogram->SetBit(kCanDelete,keep);
+   fHistogram->SetBit(kCanDelete, keep);
    fRefPad->Update();
 }
 
