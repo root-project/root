@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.26 2001/04/24 14:27:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.27 2001/04/27 19:06:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 #include "TMethodCall.h"
 #include "TRealData.h"
 
-static char includeName[100];
+static char gIncludeName[256];
 
 ClassImp(TStreamerElement)
 
@@ -99,10 +99,7 @@ TClass *TStreamerElement::GetClassPointer() const
    //returns a pointer to the TClass of this element
    
    if (fClassObject) return fClassObject;
-   char className[128];
-   sprintf(className,fTypeName.Data());
-   char *star = strchr(className,'*');
-   if (star) *star = 0;
+   TString className = fTypeName.Strip(TString::kTrailing, '*');
    return gROOT->GetClass(className);
 }
 
@@ -182,9 +179,9 @@ Bool_t TStreamerElement::IsOldFormat(const char *newTypeName)
 //______________________________________________________________________________
 void TStreamerElement::ls(Option_t *) const
 {
-   sprintf(includeName,GetTypeName());
-   if (IsaPointer() && !fTypeName.Contains("*")) strcat(includeName,"*");
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",includeName,GetFullName(),fOffset,fType,GetTitle());
+   sprintf(gIncludeName,GetTypeName());
+   if (IsaPointer() && !fTypeName.Contains("*")) strcat(gIncludeName,"*");
+   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",gIncludeName,GetFullName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
@@ -314,9 +311,9 @@ void TStreamerBase::Init(TObject *)
 //______________________________________________________________________________
 const char *TStreamerBase::GetInclude() const
 {
-   if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(includeName,"\"%s\"",fBaseClass->GetDeclFileName());
-   else                            sprintf(includeName,"\"%s.h\"",GetName());
-   return includeName;
+   if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",fBaseClass->GetDeclFileName());
+   else                            sprintf(gIncludeName,"\"%s.h\"",GetName());
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -524,8 +521,8 @@ void TStreamerLoop::Init(TObject *)
 //______________________________________________________________________________
 const char *TStreamerLoop::GetInclude() const
 {
-   sprintf(includeName,"<%s>","TString.h"); //to be generalized
-   return includeName;
+   sprintf(gIncludeName,"<%s>","TString.h"); //to be generalized
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -669,9 +666,9 @@ void TStreamerObject::Init(TObject *)
 const char *TStreamerObject::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
-   return includeName;
+   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -745,9 +742,9 @@ void TStreamerObjectAny::Init(TObject *)
 const char *TStreamerObjectAny::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
-   return includeName;
+   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -824,11 +821,11 @@ void TStreamerObjectPointer::Init(TObject *)
 const char *TStreamerObjectPointer::GetInclude() const
 {
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
-   char *star = strchr(includeName,'*');
+   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
+   char *star = strchr(gIncludeName,'*');
    if (star) strcpy(star,star+1);
-   return includeName;
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -1038,14 +1035,14 @@ void TStreamerSTL::ls(Option_t *) const
 //______________________________________________________________________________
 const char *TStreamerSTL::GetInclude() const
 {
-   if      (fSTLtype == kSTLvector)   sprintf(includeName,"<%s>","vector");
-   else if (fSTLtype == kSTLlist)     sprintf(includeName,"<%s>","list");
-   else if (fSTLtype == kSTLdeque)    sprintf(includeName,"<%s>","deque");
-   else if (fSTLtype == kSTLmap)      sprintf(includeName,"<%s>","map");
-   else if (fSTLtype == kSTLset)      sprintf(includeName,"<%s>","set");
-   else if (fSTLtype == kSTLmultimap) sprintf(includeName,"<%s>","multimap");
-   else if (fSTLtype == kSTLmultiset) sprintf(includeName,"<%s>","multiset");
-   return includeName;
+   if      (fSTLtype == kSTLvector)   sprintf(gIncludeName,"<%s>","vector");
+   else if (fSTLtype == kSTLlist)     sprintf(gIncludeName,"<%s>","list");
+   else if (fSTLtype == kSTLdeque)    sprintf(gIncludeName,"<%s>","deque");
+   else if (fSTLtype == kSTLmap)      sprintf(gIncludeName,"<%s>","map");
+   else if (fSTLtype == kSTLset)      sprintf(gIncludeName,"<%s>","set");
+   else if (fSTLtype == kSTLmultimap) sprintf(gIncludeName,"<%s>","multimap");
+   else if (fSTLtype == kSTLmultiset) sprintf(gIncludeName,"<%s>","multiset");
+   return gIncludeName;
 }
 
 //______________________________________________________________________________
@@ -1111,8 +1108,8 @@ TStreamerSTLstring::~TStreamerSTLstring()
 //______________________________________________________________________________
 const char *TStreamerSTLstring::GetInclude() const
 {
-   sprintf(includeName,"<string>");
-   return includeName;
+   sprintf(gIncludeName,"<string>");
+   return gIncludeName;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.1.1.17 2001/04/25 13:21:09 fisyak Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.23 2001/05/08 20:28:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
 public:
 
    //status bits
+   enum { kCannotOptimize = BIT(12)};
 
    enum EReadWrite {
       kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
