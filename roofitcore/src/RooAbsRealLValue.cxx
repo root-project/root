@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.19 2001/11/28 00:29:13 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.20 2001/12/06 07:06:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -391,7 +391,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
-  if ((!xlo && xhi) || (xlo || !xhi)) {
+  if ((!xlo && xhi) || (xlo && !xhi)) {
     cout << "RooAbsRealLValue::createHistogram(" << GetName() 
 	 << ") ERROR must specify either no range, or both limits" << endl ;
     return 0 ;
@@ -446,7 +446,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
-  if ((!xlo && xhi) || (xlo || !xhi)) {
+  if ((!xlo && xhi) || (xlo && !xhi)) {
     cout << "RooAbsRealLValue::createHistogram(" << GetName() 
 	 << ") ERROR must specify either no range, or both limits" << endl ;
     return 0 ;
