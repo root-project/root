@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.5 2002/03/15 15:51:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.6 2002/07/01 22:58:31 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -54,8 +54,9 @@ private:
    UChar_t   fDigest[16]; //message digest
    Bool_t    fFinalized;  //true if message digest has been finalized
 
-   void Transform(UInt_t buf[4], const UInt_t in[16]);
-   void ByteReverse(UChar_t *buf, UInt_t longs);
+   void Transform(UInt_t buf[4], const UChar_t in[64]);
+   void Encode(UChar_t *out, const UInt_t *in, UInt_t len);
+   void Decode(UInt_t *out, const UChar_t *in, UInt_t len);
 
 public:
    TMD5();
