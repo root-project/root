@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.7 2001/04/20 07:29:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.8 2001/08/17 07:27:43 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -172,6 +172,8 @@
 
 #include "TMath.h"
 #include "TRandom.h"
+#include "TFile.h"
+#include "TSystem.h"
 #include <time.h>
 
 ClassImp(TRandom)
@@ -525,6 +527,20 @@ void TRandom::Rannor(Double_t &a, Double_t &b)
    b = r * TMath::Cos(x);
 }
 
+//_____________________________________________________________________________
+void TRandom::ReadRandom(const char *filename)
+{
+  //
+  // Reads saved random generator status from filename
+  //
+  char *fntmp = gSystem->ExpandPathName(filename);
+  TFile *file = new TFile(fntmp,"r");
+  delete [] fntmp;
+  if(!file->IsZombie()) Read(GetName());
+  
+  delete file;
+}
+
 //______________________________________________________________________________
 Double_t TRandom::Rndm(Int_t)
 {
@@ -547,6 +563,16 @@ Double_t TRandom::Rndm(Int_t)
    return Double_t(random);
 }
 
+//______________________________________________________________________________
+void TRandom::RndmArray(Int_t n, Double_t *array)
+{
+  // Return an array of n random numbers uniformly distributed 
+  // between 0 and 1 not included
+   
+  for(Int_t i=0; i<n; i++) 
+    do array[i]=Rndm(); while(0>=array[i] || array[i]>=1);
+}
+   
 //______________________________________________________________________________
 void TRandom::SetSeed(UInt_t seed)
 {
@@ -573,4 +599,28 @@ Double_t TRandom::Uniform(Double_t x1)
    Double_t ans;
    do { ans = Rndm(); } while( ans==0 );
    return x1*ans;
+}
+
+//______________________________________________________________________________
+Double_t TRandom::Uniform(Double_t x1, Double_t x2)
+{
+// returns a uniform deviate on the interval ( x1, x2 ].
+
+   Double_t ans;
+   do { ans = Rndm(); } while( ans==0 );
+   return x1 + (x2-x1)*ans;
+}
+
+//_____________________________________________________________________________
+void TRandom::WriteRandom(const char *filename)
+{
+  //
+  // Writes random generator status to filename
+  //
+  char *fntmp = gSystem->ExpandPathName(filename);
+  TFile *file = new TFile(fntmp,"new");
+  delete [] fntmp;
+  if(!file->IsZombie()) Write();
+  
+  delete file;
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.2 2000/11/22 08:35:44 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -43,9 +43,13 @@ public:
    virtual  Int_t    Poisson(Double_t mean);
    virtual  void     Rannor(Float_t &a, Float_t &b);
    virtual  void     Rannor(Double_t &a, Double_t &b);
+   virtual  void     ReadRandom(const char *filename);
    virtual  void     SetSeed(UInt_t seed=65539);
    virtual  Double_t Rndm(Int_t i=0);
+   virtual  void     RndmArray(Int_t n, Double_t *array);
    virtual  Double_t Uniform(Double_t x1=1);
+   virtual  Double_t Uniform(Double_t x1, Double_t x2);
+   virtual  void     WriteRandom(const char *filename);
 
    ClassDef(TRandom,1)  // Random number generators
 };
