@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.14 2003/08/21 10:17:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.15 2003/08/22 07:03:30 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -102,7 +102,8 @@ public:
    virtual const char   *GetName() const;
    virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
-   static Bool_t         IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   static  Bool_t        IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 

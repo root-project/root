@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.8 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.9 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -33,6 +33,15 @@ class TGeoPgon : public TGeoPcon
 protected:
    // data members
    Int_t                 fNedges;    // number of edges (at least one)
+   
+   Int_t                 GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=kBig) const;
+   Bool_t                IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const;
+   void                  LocatePhi(Double_t *point, Int_t &ipsec) const;
+   Double_t              Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const;
+   Double_t              Rproj(Double_t z,Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const; 
+   Bool_t                SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+
 public:
    // constructors
    TGeoPgon();
@@ -51,8 +60,6 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   Double_t              DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &ipsec,
-                                      UChar_t &bits, Double_t *saf) const; 
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

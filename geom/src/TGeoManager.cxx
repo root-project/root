@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.63 2003/10/06 15:15:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.65 2003/10/20 08:46:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -535,6 +535,9 @@ void TGeoManager::Init()
    fUniqueVolumes = new TObjArray(256);
    fNodeIdArray = 0;
    fClippingShape = 0;
+   fIntSize = fDblSize = 1000;
+   fIntBuffer = new Int_t[1000];
+   fDblBuffer = new Double_t[1000];
    printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
@@ -578,6 +581,8 @@ TGeoManager::~TGeoManager()
    delete [] fCldir;
    delete fGVolumes;
    delete fGShapes;
+   delete [] fDblBuffer;
+   delete [] fIntBuffer;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -1888,7 +1893,7 @@ void TGeoManager::DefaultColors()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoManager::Safety()
+Double_t TGeoManager::Safety(Bool_t inside)
 {
 // Compute safe distance from the current point. This represent the distance
 // from POINT to the closest boundary.
@@ -1899,7 +1904,7 @@ Double_t TGeoManager::Safety()
    }   
    Double_t point[3];
    Double_t local[3];
-   fSafety = TGeoShape::kBig;
+   if (!inside) fSafety = TGeoShape::kBig;
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
 //      if (fSafety<0) {printf("%s (%f, %f, %f) kFALSE outside safe=%g\n", fTopVolume->GetName(), fPoint[0],fPoint[1],fPoint[2],fSafety); exit(1);}
@@ -1910,20 +1915,21 @@ Double_t TGeoManager::Safety()
 
    //---> compute safety to current node
    TGeoVolume *vol = fCurrentNode->GetVolume();
-   fSafety = vol->GetShape()->Safety(point, kTRUE);
+   if (!inside) {
+      fSafety = vol->GetShape()->Safety(point, kTRUE);
 //   if (fSafety<0) {printf("%s (%f, %f, %f) kTRUE current safe=%g\n", vol->GetName(), point[0],point[1],point[2],fSafety); exit(1);}
 
-   //---> if we were just entering, return this safety
-   if (fSafety<1E-3) return fSafety;
+      //---> if we were just entering, return this safety
+      if (fSafety<1E-3) return fSafety;
+   }   
 
    //---> now check the safety to the last node
 
-
    //---> if we were just exiting, return this safety
-   if (fSafety<1E-3) return fSafety;
+//   if (fSafety<1E-3) return fSafety;
 
    Int_t nd = fCurrentNode->GetNdaughters();
-   if (!nd) return fSafety;
+   if (!nd && !fCurrentOverlapping) return fSafety;
    TGeoNode *node;
    Double_t safe;
    Int_t id;
@@ -1938,7 +1944,7 @@ Double_t TGeoManager::Safety()
       node->MasterToLocal(point, local);
       safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
       if (safe<fSafety && safe>=0) fSafety=safe;
-      if (fSafety<1E-3) return fSafety;
+//      if (fSafety<1E-3) return fSafety;
       Int_t ilast = ifirst+finder->GetNdiv()-1;
       if (ilast==ifirst) return fSafety;
       node = vol->GetNode(ilast);
@@ -1946,7 +1952,9 @@ Double_t TGeoManager::Safety()
       node->MasterToLocal(point, local);
       safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
       if (safe<fSafety && safe>=0) fSafety=safe;
-      if (fSafety<1E-3) return fSafety;
+//      if (fSafety<1E-3) return fSafety;
+      if (fCurrentOverlapping  && !inside) SafetyOverlaps();
+      return fSafety;
    }
    
    //---> If no voxels just loop daughters
@@ -1957,9 +1965,10 @@ Double_t TGeoManager::Safety()
          node->MasterToLocal(point, local);
          safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
 //         if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE loop in %s safe=%g\n", node->GetVolume()->GetShape()->ClassName(),node->GetVolume()->GetName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
-         if (safe<0) continue; // ignore overlaps
+         if (safe<0) continue; // ignore overlaps for the time being
          if (safe<fSafety) fSafety=safe;
       }
+      if (fCurrentOverlapping  && !inside) SafetyOverlaps();
       return fSafety;
    }
          
@@ -1973,7 +1982,44 @@ Double_t TGeoManager::Safety()
       if (safe<0) continue;
       if (safe<fSafety) fSafety = safe;
    }   
+   if (fCurrentOverlapping  && !inside) SafetyOverlaps();
    return fSafety;
+}
+
+//_____________________________________________________________________________
+void TGeoManager::SafetyOverlaps()
+{
+// Compute safe distance from the current point within an overlapping node
+   Double_t point[3], local[3];
+   Double_t safe;
+   Bool_t contains;
+   TGeoNode *nodeovlp;
+   TGeoVolume *vol;
+   Int_t novlp, io;
+   Int_t *ovlp;
+   PushPath();
+   while (fCurrentOverlapping) {
+      ovlp = fCurrentNode->GetOverlaps(novlp);
+      CdUp();
+      vol = fCurrentNode->GetVolume();
+      if (!novlp) continue;
+      // we are now in the container, check safety to all candidates
+      gGeoManager->MasterToLocal(fPoint, point);
+      for (io=0; io<novlp; io++) {
+         nodeovlp = vol->GetNode(ovlp[io]);
+         nodeovlp->GetMatrix()->MasterToLocal(point,local);
+         contains = nodeovlp->GetVolume()->GetShape()->Contains(local);
+         if (contains) {
+            CdDown(ovlp[io]);
+            safe = Safety(kTRUE);
+            CdUp();
+         } else {
+            safe = nodeovlp->GetVolume()->GetShape()->Safety(local, kFALSE);
+         }   
+         if (safe<fSafety && safe>=0) fSafety=safe;
+      }
+   }
+   PopPath();     
 }
 
 //_____________________________________________________________________________
@@ -2432,8 +2478,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       fStep = stepmax;
       iact = 1;   
       if (stepmax<fSafety) {
-         fStep = TGeoShape::kBig;
-         return 0;
+         fStep = stepmax;
+         return fCurrentNode;
       }
    }   
    Double_t snext  = TGeoShape::kBig;
@@ -2787,6 +2833,19 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
 Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change)
 {
 // Checks if point (x,y,z) is still in the current node.
+   // check if this is an overlapping node
+   if (fCurrentOverlapping) {
+      TGeoNode *current = fCurrentNode;
+      Int_t cid = GetCurrentNodeId();
+      if (!change) PushPoint();
+      gGeoManager->FindNode(x,y,z);
+      Bool_t same = (cid>=0)?kTRUE:kFALSE;
+      if (same) same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
+      else      same = (current==fCurrentNode)?kTRUE:kFALSE;
+      if (!change) PopPoint();
+      return same;
+   }         
+            
    Double_t point[3];
    point[0] = x;
    point[1] = y;
@@ -2810,7 +2869,8 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
       CdUp();
       FindNode(x,y,z);
       return kFALSE;
-   }   
+   } 
+     
    // check if there are daughters
    Int_t nd = vol->GetNdaughters();
    if (!nd) return kTRUE;
@@ -3677,6 +3737,29 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    }
    return 0;
 }
+//______________________________________________________________________________
+Int_t *TGeoManager::GetIntBuffer(Int_t length)
+{
+// Get a temporary buffer of Int_t*
+   if (length>fIntSize) {
+      delete [] fIntBuffer;
+      fIntBuffer = new Int_t[length];
+      fIntSize = length;
+   }
+   return fIntBuffer;
+}      
+
+//______________________________________________________________________________
+Double_t *TGeoManager::GetDblBuffer(Int_t length)
+{
+// Get a temporary buffer of Double_t*
+   if (length>fDblSize) {
+      delete [] fDblBuffer;
+      fDblBuffer = new Double_t[length];
+      fDblSize = length;
+   }
+   return fDblBuffer;
+}      
 
 //______________________________________________________________________________
 Bool_t TGeoManager::GetTminTmax(Double_t &tmin, Double_t &tmax) const

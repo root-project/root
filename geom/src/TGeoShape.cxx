@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.12 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.13 2003/08/21 11:37:45 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -221,7 +221,24 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Dou
    if (saf<epsil) return kTRUE;
    return kFALSE;
 }   
-   
+
+//_____________________________________________________________________________  
+Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
+{
+// Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
+// also radius at crossing point. This might be negative in case the crossing is
+// on the other side of the semiplane.
+   snext = rxy = kBig;
+   Double_t ndot = dir[1]*cphi-dir[0]*sphi;
+   if (TMath::Abs(ndot)<1E-10) return kFALSE;
+   Double_t ndinv = 1./ndot;
+   snext = (point[0]*sphi-point[1]*cphi)*ndinv;
+   if (snext<0) return kFALSE;
+   rxy = (point[0]*dir[1]-point[1]*dir[0])*ndinv;
+   if (rxy<0) return kFALSE;
+   return kTRUE;
+}
+
 //_____________________________________________________________________________
 void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {

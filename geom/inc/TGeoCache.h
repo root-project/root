@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.16 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.17 2003/10/01 17:53:11 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -157,7 +157,7 @@ public:
    virtual void        *GetMatrices() const {return fMatrices;}
    virtual TGeoHMatrix *GetCurrentMatrix() const;
    Int_t                GetCurrentNode() const {return fCurrentNode;}
-   Int_t                GetCurrentNodeId() const {return fNodeIdArray[fIndex];}
+   Int_t                GetCurrentNodeId() const {return (fNodeIdArray)?fNodeIdArray[fIndex]:-1;}
    virtual TGeoNode    *GetMother(Int_t up=1) const;
    virtual TGeoNode    *GetNode() const;
    Int_t                GetStackLevel() const  {return fStackLevel;}
