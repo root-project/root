@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.14 2002/09/16 16:06:37 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.15 2002/10/17 17:51:16 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -34,7 +34,7 @@
 #include "TGraph.h"
 #include "TMath.h"
 int Error;   //to be removed soon
-#define PAWC_SIZE 10000000
+#define PAWC_SIZE 5000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
