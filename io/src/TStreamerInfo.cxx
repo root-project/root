@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.132 2002/05/17 07:16:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.133 2002/05/19 08:13:05 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1974,7 +1974,7 @@ SWIT: switch (kase) {
                             } else {
                               // if (gDebug >= 0) printf("WARNING, in ReadBuffer::kAnyP Streamer is null for %s\n",cle->GetName());
                                for (Int_t j=0;j<fLength[i];j++) {
-                                  obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for nsow
+                                  obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for now
                                }
                             } 
                          } else {
@@ -3085,7 +3085,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                           } else {
                              TClass *cle = aElement->GetClassPointer();
                              for (Int_t j=0;j<fLength[i];j++) {                             
-                                TClass *cl_actual = cle->GetActualClass(*obj);
+                                TClass *cl_actual = cle->GetActualClass(obj[j]);
                                 if (!cl_actual) {
                                    Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
                                           GetName(),aElement->GetName(),cle->GetName());
@@ -3422,7 +3422,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                  pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                  void **obj = (void**)(pointer+fOffset[i]);
                  for (Int_t j=0;j<fLength[i];j++) {
-                    TClass *cl_actual = cle->GetActualClass(*obj);
+                    TClass *cl_actual = cle->GetActualClass(obj[j]);
                     if (!cl_actual) {
                        Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
                               GetName(),aElement->GetName(),cle->GetName());
