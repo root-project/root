@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.32 2004/05/10 08:14:10 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.33 2004/05/11 00:19:59 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -126,19 +126,13 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <_string>",kTRUE); // for std::string iostream.
+   ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
-   // The following libs are also useful to have, make sure they are loaded...
-   gROOT->LoadClass("TGeometry",   "Graf3d");
-   gROOT->LoadClass("TTree",       "Tree");
-   gROOT->LoadClass("TMatrix",     "Matrix");
-   gROOT->LoadClass("TMinuit",     "Minuit");
-   gROOT->LoadClass("TPostScript", "Postscript");
-   gROOT->LoadClass("TCanvas",     "Gpad");
-   gROOT->LoadClass("THtml",       "Html");
+   // The following lib is also useful to have, make sure they are loaded...
+   gROOT->LoadClass("THtml",  "Html");
 
    // Load user functions
    const char *logon;

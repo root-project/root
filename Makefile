@@ -180,7 +180,7 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
+ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 RINTLIBS     := -lRint
 PROOFLIBS    := -lProof -lTreePlayer
 else
@@ -192,6 +192,15 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
+endif
+ifeq ($(PLATFORM),macosx)
+# MacOS X has very lazy linker, explicitly mark dictionary initializers undefined
+ROOTULIBS    := -u _G__cpp_setup_initializerG__Hist    \
+                -u _G__cpp_setup_initializerG__Graf1   \
+                -u _G__cpp_setup_initializerG__G3D     \
+                -u _G__cpp_setup_initializerG__GPad    \
+                -u _G__cpp_setup_initializerG__Tree    \
+                -u _G__cpp_setup_initializerG__Matrix
 endif
 
 ##### gcc version #####

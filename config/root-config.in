@@ -23,6 +23,16 @@ newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
+rootulibs="-u _G__cpp_setup_initializerG__Hist       \
+           -u _G__cpp_setup_initializerG__Graf1      \
+           -u _G__cpp_setup_initializerG__G3D        \
+           -u _G__cpp_setup_initializerG__GPad       \
+           -u _G__cpp_setup_initializerG__Tree       \
+           -u _G__cpp_setup_initializerG__Rint       \
+           -u _G__cpp_setup_initializerG__PostScript \
+           -u _G__cpp_setup_initializerG__Matrix     \
+           -u _G__cpp_setup_initializerG__Physics"
+rootuglibs="_G__cpp_setup_initializerG__Gui1"
 
 ### machine dependent settings ###
 
@@ -266,19 +276,15 @@ macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   expl1="-u _G__cpp_setup_initializerG__Tree"
-   expl2="-u _G__cpp_setup_initializerG__G3D"
-   auxlibs="$expl1 $expl2 -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   auxglibs=${auxlibs}
+   auxlibs="$rootulibs -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   auxglibs=${rootuglibs}
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   expl1="-u _G__cpp_setup_initializerG__Tree"
-   expl2="-u _G__cpp_setup_initializerG__G3D"
-   auxlibs="$expl1 $expl2 -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   auxglibs=${auxlibs}
+   auxlibs="$rootulibs -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   auxglibs=${rootuglibs}
    ;;
 hiux)
    # Hitachi HIUX
