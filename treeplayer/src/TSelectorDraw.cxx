@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.39 2004/10/13 10:06:09 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.40 2004/11/19 09:40:30 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TView.h"
-//#include "TPolyMarker.h"
 #include "TGraph.h"
 #include "TPolyMarker3D.h"
 #include "TDirectory.h"
@@ -225,7 +224,7 @@ void TSelectorDraw::Begin(TTree *tree)
                   ncomma=maxvalues-1;
                }
 
-               ncomma++; 	       // number of arguments
+               ncomma++; // number of arguments
                cdummy = pstart;
 
                //   number of columns
@@ -659,7 +658,29 @@ void TSelectorDraw::Begin(TTree *tree)
          fVar2->SetAxis(hp->GetYaxis());
          fVar3->SetAxis(hp->GetXaxis());
          fObject = hp;
-
+      } else if (opt.Contains("col")) {
+         TH2F *h2;
+         if (fOldHistogram) {
+            h2 = (TH2F*)fOldHistogram;
+         } else {
+            h2 = new TH2F(hname,htitle,fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2->SetLineColor(fTree->GetLineColor());
+            h2->SetFillColor(fTree->GetFillColor());
+            h2->SetFillStyle(fTree->GetFillStyle());
+            h2->SetMarkerStyle(fTree->GetMarkerStyle());
+            h2->SetMarkerColor(fTree->GetMarkerColor());
+            h2->SetMarkerSize(fTree->GetMarkerSize());
+            if (CanRebin)h2->SetBit(TH1::kCanRebin);
+            if (!hkeep) {
+               h2->SetBit(TH1::kNoStats);
+               h2->SetBit(kCanDelete);
+               if (!opt.Contains("goff")) h2->SetDirectory(0);
+            }
+         }
+         fVar1->SetAxis(h2->GetYaxis());
+         fVar2->SetAxis(h2->GetXaxis());
+         fObject = h2;
+         fAction = 33;
       } else {
          TH3F *h3;
          if (fOldHistogram) {
@@ -1142,6 +1163,41 @@ void TSelectorDraw::TakeAction()
       TH3 *h3 =(TH3*)fObject;
       for(i=0;i<fNfill;i++) h3->Fill(fV3[i],fV2[i],fV1[i],fW[i]);
    }
+   //__________________________3D scatter plot (3rd variable = col)__
+   else if (fAction == 33) {
+      TH2 *h2 = (TH2*)fObject;
+      TakeEstimate();
+      Int_t ncolors  = gStyle->GetNumberOfColors();
+      TObjArray *grs = (TObjArray*)h2->GetListOfFunctions()->FindObject("graphs");
+      Int_t col;
+      TGraph *gr;
+      if (!grs) {
+         grs = new TObjArray(ncolors);
+         grs->SetOwner();
+         grs->SetName("graphs");
+         h2->GetListOfFunctions()->Add(grs, "P");
+         for (col=0;col<ncolors;col++) {
+            gr = new TGraph();
+            gr->SetMarkerColor(col);
+            gr->SetMarkerStyle(fTree->GetMarkerStyle());
+            gr->SetMarkerSize(fTree->GetMarkerSize());
+            grs->AddAt(gr,col);
+         }
+      }
+      // Fill the graphs acording to the color
+      for (i=0;i<fNfill;i++) {
+         col = Int_t((ncolors-1)*((fV3[i]-fVmin[2])/(fVmax[2]-fVmin[2])));
+         if (col < 0) col = 0;
+         if (col > ncolors-1) col = ncolors-1;
+         gr = (TGraph*)grs->UncheckedAt(col);
+         gr->SetPoint(gr->GetN(),fV2[i],fV1[i]);
+      }
+      // Remove potential empty graphs
+      for (col=0;col<ncolors;col++) {
+         gr = (TGraph*)grs->At(col);
+	 if (gr->GetN() <= 0) grs->Remove(gr);
+      }
+   }
    //__________________________2D Profile Histogram__________________
    else if (fAction == 23) {
       TProfile2D *hp2 =(TProfile2D*)fObject;
@@ -1258,8 +1314,8 @@ void TSelectorDraw::TakeEstimate()
             // we must draw a copy before filling the histogram h2=myhist
             // because h2 will be filled below and we do not want to show
             // the binned scatter-plot, the TGraph being better.
-	    TH1 *h2c = h2->DrawCopy(fOption.Data());
-	    h2c->SetStats(kFALSE);
+            TH1 *h2c = h2->DrawCopy(fOption.Data());
+            h2c->SetStats(kFALSE);
          } else {
             // case like: T.Draw("y:x")
             // h2 is a temporary histogram (htemp). This histogram
@@ -1284,6 +1340,20 @@ void TSelectorDraw::TakeEstimate()
       }
       if (!h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+      }
+   //__________________________3D scatter plot with option col_______________________
+   } else if (fAction == 33) {
+      TH2 *h2 = (TH2*)fObject;
+      if (h2->TestBit(TH1::kCanRebin)) {
+         for (i=0;i<fNfill;i++) {
+            if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
+            if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
+            if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
+            if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
+            if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
+            if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+         }
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
    //__________________________3D scatter plot_______________________
    } else if (fAction == 3 || fAction == 13) {
