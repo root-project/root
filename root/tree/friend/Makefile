@@ -1,4 +1,4 @@
-CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES)
+CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES)
 TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
