@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.44 2001/10/09 00:44:00 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.45 2001/10/09 01:41:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -587,25 +587,41 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 
   RooDataSet *generated(0);
   RooGenContext *context= new RooGenContext(*this, whatVars,0,verbose);
-  if(context->isValid()) generated= context->generate(nEvents);
-  delete context;
+  if(0 != context && context->isValid()) {
+    generated= context->generate(nEvents);
+  }
+  else {
+    cout << ClassName() << "::" << GetName() << ":generate: cannot create a valid context" << endl;
+  }
+  if(0 != context) delete context;
   return generated;
 }
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype, Bool_t verbose) const {
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &prototype,
+				Int_t nEvents, Bool_t verbose) const {
   // Generate a new dataset with values of the whatVars variables
   // sampled from our distribution. Use the specified existing dataset
   // as a prototype: the new dataset will contain the same number of
-  // events as the prototype, and any prototype variables not in
+  // events as the prototype (by default), and any prototype variables not in
   // whatVars will be copied into the new dataset for each generated
-  // event and also used to set our PDF parameters. The result is a
+  // event and also used to set our PDF parameters. The user can specify a
+  // number of events to generate that will override the default. The result is a
   // copy of the prototype dataset with only variables in whatVars
   // randomized. Variables in whatVars that are not in the prototype
   // will be added as new columns to the generated dataset.  Returns
   // zero in case of an error. The caller takes ownership of the
   // returned dataset.
 
-  return 0;
+  RooDataSet *generated(0);
+  RooGenContext *context= new RooGenContext(*this, whatVars,&prototype,verbose);
+  if(0 != context && context->isValid()) {
+    generated= context->generate(nEvents);
+  }
+  else {
+    cout << ClassName() << "::" << GetName() << ":generate: cannot create a valid context" << endl;
+  }
+  if(0 != context) delete context;
+  return generated;
 }
 
 Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars) const {

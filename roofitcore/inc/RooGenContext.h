@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.rdl,v 1.3 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.4 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -21,6 +21,7 @@ class RooDataSet;
 class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
+class TIterator;
 
 class RooGenContext : public TNamed, public RooPrintable {
 public:
@@ -51,6 +52,8 @@ protected:
   RooRealIntegral *_acceptRejectFunc;
   RooAcceptReject *_generator;
   Bool_t _verbose;
+  TIterator *_protoIterator;
+  mutable Int_t _lastProtoIndex;
 
   ClassDef(RooGenContext,0) // Context for generating a dataset from a PDF
 };

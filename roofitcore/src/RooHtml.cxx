@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHtml.cc,v 1.3 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.4 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -68,7 +68,7 @@ void RooHtml::WriteHtmlHeader(ofstream &out, const char *title) {
     << "  </font></font></i></b></td>" << endl
     << "  <td><div align=right><b><i><font color=\"#000000\"><font size=+2>" << endl
     //-------------------------------------------------
-    << "    <a href=\"ClassIndex.html\"" << endl
+    << "    <a href=\"IndexByTopic.html\"" << endl
     << "      title=\"Visit List of Classes\">" << endl;
   out << getVersion() << " Version</a>" << endl;
   //-------------------------------------------------
@@ -245,9 +245,10 @@ void RooHtml::MakeIndexOfTopics()
     desc=(TObjString*)descIter->Next() ;
     ofs << "<LI> <A HREF=" << tag->String() << "_Index.html>" << desc->String() << "</A>" << endl ;
   }
-  ofs << "</UL>" << endl ;
+  ofs << "</UL>" << endl << "</H2>" << endl ;
 
-  WriteHtmlFooter(ofs,"") ;
+  TDatime now;
+  WriteHtmlFooter(ofs,"",now.AsString()) ;
 
   delete tagIter ;
   delete descIter ;

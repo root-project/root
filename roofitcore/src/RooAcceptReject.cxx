@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.11 2001/09/24 16:23:12 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.12 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.11 2001/09/24 16:23:12 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.12 2001/10/08 05:20:12 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -184,10 +184,6 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
   // maximum function value
   while(_totalEvents < _minTrials) addEvent(cache,nextCatVar,nextRealVar,funcVal);
 
-  // increase our maximum estimate slightly to give a safety margin (and corresponding
-  // loss of efficiency)
-  _maxFuncVal*= 1.05;
-
   Int_t generatedEvts(0);
   while(generatedEvts < nEvents) {
     // Use any cached events first.
@@ -261,8 +257,10 @@ void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterat
   Double_t val= _funcClone->getVal();
   funcVal->setVal(val);
 
-  // update the estimated integral and maximum value
-  if(val > _maxFuncVal) _maxFuncVal= val;
+  // Update the estimated integral and maximum value. Increase our
+  // maximum estimate slightly to give a safety margin with a
+  // corresponding loss of efficiency.
+  if(val > _maxFuncVal) _maxFuncVal= 1.05*val;
   _funcSum+= val;
 
   // fill a new entry in our cache dataset for this point

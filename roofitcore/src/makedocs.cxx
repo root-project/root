@@ -17,6 +17,7 @@ void makedocs(const char *version="Development", const char *where= "./html")
   docMaker.addTopic("PDF","Probability Density functions") ;
   docMaker.addTopic("REAL","Real valued functions") ;
   docMaker.addTopic("CAT","Discrete valued functions") ;
+  docMaker.addTopic("DATA","Unbinned and binned data") ;
   docMaker.addTopic("PLOT","Plotting and tabulating") ;
   docMaker.addTopic("CONT","Container classes") ;
   docMaker.addTopic("MISC","Miscellaneous") ;

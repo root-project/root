@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.16 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.17 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.16 2001/09/28 21:59:28 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.17 2001/10/08 05:20:15 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -58,7 +58,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   while(_isValid && (tmp= (const RooAbsArg*)iterator->Next())) {
     // is this argument derived?
     if(tmp->isDerived()) {
-      cout << fName << "::" << ClassName() << ": cannot generate values for derived \""
+      cout << ClassName() << "::" << GetName() << ": cannot generate values for derived \""
 	   << tmp->GetName() << "\"" << endl;
       _isValid= kFALSE;
       continue;
@@ -66,7 +66,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     // lookup this argument in the cloned set of PDF dependents
     arg= (const RooAbsArg*)_cloneSet->find(tmp->GetName());
     if(0 == arg) {
-      cout << fName << "::" << ClassName() << ":WARNING: model does not depend on \""
+      cout << ClassName() << "::" << GetName() << ":WARNING: model does not depend on \""
 	   << tmp->GetName() << "\" which will have uniform distribution" << endl;
       _uniformVars.add(*tmp);
     }
@@ -100,21 +100,22 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   delete servers;
   delete iterator;
   if(!_isValid) {
-    cout << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
+    cout << ClassName() << "::" << GetName() << ": constructor failed with errors" << endl;
     return;
   }
 
   // Analyze the prototype dataset, if one is specified
+  _lastProtoIndex= 0;
   if(_prototype) {
-    iterator= _prototype->get()->createIterator();
+    TIterator *protoIterator= _prototype->get()->createIterator();
     const RooAbsArg *proto(0);
-    while(proto= (const RooAbsArg*)iterator->Next()) {
+    while(proto= (const RooAbsArg*)protoIterator->Next()) {
       // is this variable being generated or taken from the prototype?
       if(!_directVars.contains(*proto) && !_otherVars.contains(*proto) && !_uniformVars.contains(*proto)) {
 	_protoVars.add(*proto);
       }
     }
-    delete iterator;
+    delete protoIterator;
   }
 
   // Can the model generate any of the direct variables itself?
@@ -146,6 +147,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 }
 
 RooGenContext::~RooGenContext() {
+  // Destructor.
+
   // Clean up the cloned objects used in this context.
   delete _cloneSet;
   // Clean up our accept/reject generator
@@ -160,8 +163,8 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // or else the expected number of events, if non-zero. The returned
   // dataset belongs to the caller. Return zero in case of an error.
   
-  if(!_isValid) {
-    cout << fName << "::" << ClassName() << ": context is not valid" << endl;
+  if(!isValid()) {
+    cout << ClassName() << "::" << GetName() << ": context is not valid" << endl;
     return 0;
   }
 
@@ -174,9 +177,13 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
       nEvents= (Int_t)(_pdfClone->expectedEvents() + 0.5);
     }
     if(nEvents <= 0) {
-      cout << fName << "::" << ClassName()
+      cout << ClassName() << "::" << GetName()
 	   << ":generate: cannot calculate expected number of events" << endl;
       return 0;
+    }
+    else if(_verbose) {
+      cout << ClassName() << "::" << GetName() << ":generate: will generate "
+	   << nEvents << " events" << endl;
     }
   }
 
@@ -189,7 +196,7 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
     Bool_t ok(kTRUE);
     while(arg= (const RooAbsArg*)iterator->Next()) {
       if(vars->contains(*arg)) continue;
-      cout << fName << "::" << ClassName() << ":generate: prototype dataset is missing \""
+      cout << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
 	   << arg->GetName() << "\"" << endl;
       ok= kFALSE;
     }
@@ -206,30 +213,39 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // preload the dataset with values from our accept-reject generator
   _generator->generateEvents(nEvents,*data);
 
-  // WVE should this be here?
+  // are we done?
+  if(_protoVars.getSize() == 0 && _directVars.getSize() == 0) return data;
+
+  // Attach the model to the new data set
+  _pdfClone->attachDataSet(*data);
+
+  // Reset the PDF's error counters
+  _pdfClone->resetErrorCounters();
+
+   // Loop over the events to generate
+  for(Int_t evt= 0; evt < nEvents; evt++) {
+    // load values from the prototype dataset if requested
+    if(0 != _prototype) {
+      if(++_lastProtoIndex > _prototype->numEntries()) _lastProtoIndex= 1;
+      const RooArgSet *protoEvt= _prototype->get(_lastProtoIndex);
+      if(0 != protoEvt) {
+	//_protoVars= *protoEvt;
+	cout << ">>> copied from prototype event " << _lastProtoIndex << ":" << endl;
+	protoEvt->Print();
+      }
+      else {
+	cout << ClassName() << "::" << GetName() << ":generate: cannot load event "
+	     << _lastProtoIndex << " from prototype dataset" << endl;
+	return 0;
+      }
+    }
+    // use the model's generator
+    //_pdfClone->generateEvent(_code);
+    // add this event to the dataset
+    //data->fill();
+  }
+
   return data;
-
-//   // Attach the model to the new data set
-//   _pdfClone->attachDataSet(*data);
-
-//   // Reset the PDF's error counters
-//   _pdfClone->resetErrorCounters();
-
-//   // Loop over the events to generate
-//   for(Int_t evt= 0; evt < nEvents; evt++) {
-//     // load values from the prototype dataset if requested
-//     if(_prototype) {
-//       //...
-//     }
-//     // generate values of the variables that the model cannot generate itself
-//     //acceptReject();
-//     // use the model's generator
-//     _pdfClone->generateEvent(_code);
-//     // add this event to the dataset
-//     data->fill();
-//   }
-
-//   return data;
 }
 
 void RooGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
