@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.107 2003/04/04 14:58:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.108 2003/04/06 22:03:05 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1561,7 +1561,7 @@ void TBranchElement::Streamer(TBuffer &R__b)
 
       // make sure that all TStreamerInfo objects referenced by
       // this class are written to the file
-      fInfo->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      if (fInfo) fInfo->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
       
       // if branch is in a separate file save this branch
       // as an independent key
