@@ -1,17 +1,15 @@
 #!/bin/sh -e 
 #
-# $Id: makedebclean.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id$
 #
 # Make the debian packaging directory 
 #
+. build/package/lib/common.sh debian 
 
 # Make the directory 
-rm -rf debian
+rm -rf ${tgtdir} 
 rm -f build-stamp  
 
 #
-# $Log: makedebclean.sh,v $
-# Revision 1.1  2001/04/23 14:11:47  rdm
-# part of the debian and redhat build system.
-#
+# $Log$
 #

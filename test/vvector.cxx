@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.7 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.5 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,7 @@
 #include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
-#include "Riostream.h"
+#include <iostream.h>
 
 //
 //------------------------------------------------------------------------

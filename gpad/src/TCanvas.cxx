@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.34 2001/11/18 17:19:10 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
@@ -25,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -41,6 +43,9 @@ public:
 };
 
 static TInitMakeDefCanvas makedefcanvas_init;
+
+
+
 
 //*-*x16 macros/layout_canvas
 
@@ -1353,24 +1358,15 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
-   char lcname[10];
-   const char *cname = GetName();
-   Bool_t invalid = kFALSE;
 //    if filename is given, open this file, otherwise create a file
 //    with a name equal to the canvasname.C
    if (lenfile) {
        fname = (char*)filename;
        out.open(fname, ios::out);
    } else {
-       Int_t nch = strlen(cname);
-       if (nch < 10) {
-          strcpy(lcname,cname);
-          for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-          if (lcname[0] == 0) {invalid = kTRUE; strcpy(lcname,"c1"); nch = 2;}
-          cname = lcname;
-       }
+       Int_t nch = strlen(GetName());
        fname = new char[nch+3];
-       strcpy(fname,cname);
+       strcpy(fname,GetName());
        strcat(fname,".C");
        out.open(fname, ios::out);
    }
@@ -1393,11 +1389,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   "<<ClassName()<<" *"<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TCanvas *"<<GetName()<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
@@ -1420,9 +1416,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
 
    out <<"}"<<endl;
    out.close();

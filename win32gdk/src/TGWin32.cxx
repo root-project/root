@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.3 2001/11/30 12:39:20 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.2 2001/11/30 09:21:48 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -3293,7 +3293,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
 }
 
 //______________________________________________________________________________
-Int_t TGWin32::WriteGIF(char *name)
+void TGWin32::WriteGIF(char *name)
 {
    // Writes the current window into GIF file.
 
@@ -3338,19 +3338,14 @@ Int_t TGWin32::WriteGIF(char *name)
 
    out = fopen(name, "wb");
 
-   if (out) {
-      GIFencode(gCws->width, gCws->height,
-             ncol, r, g, b, scline, GetPixel, PutByte);  
-      fclose(out);
-      i = 1;
-    } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
-   }
+   GIFencode(gCws->width, gCws->height,
+             ncol, r, g, b, scline, GetPixel, PutByte);
+
+   fclose(out);
+
    delete[]R;
    delete[]G;
    delete[]B;
-   return i;
 }
 
 //______________________________________________________________________________

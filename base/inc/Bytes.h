@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.5 2001/11/11 15:44:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.4 2001/04/11 17:24:17 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -156,7 +156,7 @@ inline void tobuf(char *&buf, Float_t x)
 inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
    *((unsigned long long *)buf) = Rbswap_64(*((unsigned long long *)&x));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
@@ -294,7 +294,7 @@ inline void frombuf(char *&buf, Float_t *x)
 inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
    *((unsigned long long*)x) = Rbswap_64(*((unsigned long long *)buf));
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
@@ -402,7 +402,7 @@ inline Float_t host2net(Float_t xx)
 
 inline Double_t host2net(Double_t x)
 {
-# if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
+# if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
    unsigned long long t = Rbswap_64(*((unsigned long long *)&x));
    return *(Double_t *)&t;
 # else

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.11 2001/12/02 16:50:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.10 2001/11/21 07:38:19 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -226,6 +226,10 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
    ClassRec_t *r = FindElement(cname);
    if (r) return r->dict;
    return 0;
+}
+
+extern "C" {
+   static int ClassComp(const void *a, const void *b);
 }
 
 //______________________________________________________________________________

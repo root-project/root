@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.5 2001/12/06 15:53:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.2 2001/02/08 17:04:18 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -58,12 +58,10 @@ public:
    Bool_t TestBitNumber(UInt_t bitnumber) const;
 
    //----- Utilities
-   void    Compact();               // Reduce the space used.
-   UInt_t  CountBits(UInt_t startBit=0)     const ;  // return number of bits set to 1
-   UInt_t  FirstNullBit(UInt_t startBit=0)  const;
-   UInt_t  FirstSetBit(UInt_t startBit=0)   const;
-   UInt_t  GetNbits()      const { return fNbits; }
-   UInt_t  GetNbytes()     const { return fNbytes; }
+   void    Compact();                         // Reduce the space used.
+   UInt_t  CountBits() const ;                // return number of bits set to 1
+   UInt_t  GetNbits() { return fNbits; }
+   UInt_t  GetNbytes() { return fNbytes; }
 
    void   Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
    void   Print(Option_t *option="") const;  // to show the list of active bits

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.40 2002/01/10 08:25:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.37 2001/11/22 18:10:01 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -86,9 +86,8 @@ Bool_t TStreamerElement::CannotSplit() const
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type or STL
-   if (cl->InheritsFrom("TRef"))      return kTRUE;
-   if (cl->InheritsFrom("TRefArray")) return kTRUE;
-   if (cl->InheritsFrom("TArray"))    return kTRUE;
+   if (cl->InheritsFrom("TRef")) return kTRUE;
+   if (cl->InheritsFrom("TArray")) return kTRUE;
    
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
@@ -247,8 +246,7 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
 
    fStreamer = streamer;
    if (streamer) {
-      //if (fArrayLength == 0 && fType != kSTL) return;
-      if (fType != kSTL) return;
+      if (fArrayLength == 0 && fType != kSTL) return;
       //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
       fType = TStreamerInfo::kStreamer;
       fNewType = fType;
@@ -378,7 +376,7 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
       //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      if (!fBaseClass->GetClassInfo()) fBaseClass->ReadBuffer(b,pointer);
+      fBaseClass->ReadBuffer(b,pointer);
    }
    return 0;
 }
@@ -417,7 +415,6 @@ void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
 //______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
-   if (!fMethod) return 0;
    ULong_t args[1];
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
@@ -903,16 +900,6 @@ Int_t TStreamerObjectPointer::GetSize() const
    
    if (fArrayLength) return fArrayLength*sizeof(void *);
    return sizeof(void *);
-}
-
-//______________________________________________________________________________
-void TStreamerObjectPointer::SetArrayDim(Int_t dim)
-{
-   // Set number of array dimensions.
-   
-   fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
-   fNewType = fType;
 }
 
 //______________________________________________________________________________

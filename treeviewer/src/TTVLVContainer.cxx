@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.4 2001/03/09 11:02:41 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -16,8 +16,6 @@
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
-#include "TList.h"
-
 
 ClassImp(TGItemContext)
 
@@ -117,7 +115,7 @@ const char *TTVLVEntry::ConvertAliases()
             fConvName.ReplaceAll(item->GetAlias(), item->GetTrueName());
       }
       if (fConvName == start) {
-         Warning(item->GetAlias(), "Cannot convert aliases for this expression.");
+         Warning(item->GetAlias(), "Cannot convert aliases for this expression."); 
          return(fConvName.Data());
       }
    }
@@ -646,8 +644,8 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       Window_t wdum;
       Int_t ax, ay;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
+                                      (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                                      ax, ay, wdum);
       MoveResize(ax, ay, w, GetDefaultHeight());
       MapWindow();
    }

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -387,38 +387,35 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
 //*-*                  H: number of boxes along the height
 //*-*                  x1,x2,y1,y2: First box coordinates.
 //*-*  CellArrayFill:  Is called for each box of the Cell Array. The first
-//*-*                  box is the top left one and the last box is the
+//*-*                  box is the top left one and the last box is the 
 //*-*                  bottom right one. The input parameters are the Red,
 //*-*                  Green, and Blue components of the box colour. These
 //*-*                  Levels are between 0 and 255.
 //*-*  CellArrayEnd:   Finishes the Cell Array.
 //*-*
-//*-* PostScript cannot handle arrays larger than 65535. So the Cell Array
+//*-* PostScript cannot handle arrays larger than 65535. So the Cell Array 
 //*-* is drawn in several pieces.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*
 {
    Int_t ix1 = XtoPS(x1);
+   Int_t ix2 = XtoPS(x2);
    Int_t iy1 = YtoPS(y1);
+   Int_t iy2 = YtoPS(y2);
 
-   Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
-              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));
-   Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
-              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));
-
-   fLastCellRed     = 300;
-   fLastCellGreen   = 300;
-   fLastCellBlue    = 300;
+   fLastCellRed = 300;
+   fLastCellGreen = 300;
+   fLastCellBlue = 300;
    fNBSameColorCell = 0;
 
    fNbinCT = 0;
    fNbCellW = W;
    fNbCellLine = 0;
    fMaxLines = 40000/(3*fNbCellW);
-//*-*- Define some paremeters
-   PrintStr("@/WT"); WriteInteger(WT)       ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
+//*-*- Define some paremeters 
+   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteInteger(iy2-iy1)  ; PrintStr(" def"); // Cells height
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
    PrintStr(" /Y") ; WriteInteger(iy1)      ; PrintStr(" def"); // Y start
    PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
@@ -435,7 +432,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    PrintStr(      " /IX 0 def} if");
    PrintStr(   " /IX IX 1 add def} def");
 //*-*- This PS procedure draws fMaxLines line. It takes care of duplicated
-//*-*- colors. Values "n" greater than 300 mean than the previous color
+//*-*- colors. Values "n" greater than 300 mean than the previous color 
 //*-*- should be duplicated n-300 times.
    PrintStr(" /DrawCT ");
    PrintStr(   "{/NBB NX NY mul def");
@@ -457,8 +454,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    PrintStr(         " DrawCell");
    PrintStr(         " /RC RC 3 add def");
    PrintStr(         " /GC GC 3 add def");
-   PrintStr(         " /BC BC 3 add def} ifelse NBBD NBB eq {exit} if} for");
-   PrintStr(         " /Y Y HT sub def clear} def");
+   PrintStr(         " /BC BC 3 add def} ifelse} for /Y Y HT sub def clear} def");
 
    PrintStr(" /CT [");
 }
@@ -470,7 +466,7 @@ void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
       fNBSameColorCell++;
    } else {
       if (fNBSameColorCell != 0 ) {
-         WriteInteger(fNBSameColorCell+300);
+         WriteInteger(fNBSameColorCell+300);       
 	 fNBSameColorCell = 0;
       }
       WriteInteger(r);
@@ -486,23 +482,18 @@ void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
       fNbCellLine++;
       fNbinCT = 0;
    }
-
+   
    if (fNbCellLine == fMaxLines) {
-      if (fNBSameColorCell != 0) WriteInteger(fNBSameColorCell+300);
+      if (fNBSameColorCell != 0 ) WriteInteger(fNBSameColorCell+300);       
       PrintStr("] def DrawCT /CT [");
       fNbCellLine = 0;
-      fLastCellRed = 300;
-      fLastCellGreen = 300;
-      fLastCellBlue = 300;
-      fNBSameColorCell = 0;
-      fNbinCT = 0;
    }
 }
 
 //______________________________________________________________________________
 void TPostScript::CellArrayEnd()
 {
-   if (fNBSameColorCell != 0 ) WriteInteger(fNBSameColorCell+300);
+   if (fNBSameColorCell != 0 ) WriteInteger(fNBSameColorCell+300);       
    PrintStr("] def /NY");
    WriteInteger(fNbCellLine);
    PrintStr(" def DrawCT ");
@@ -1228,13 +1219,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1431,11 +1422,9 @@ void TPostScript::Initialize()
    if( format == 0 )  format = 4;
    if( format == 99 ) format = 0;
 //*-*
-   PrintStr("%%Title: ");
-   const char *pstitle = gStyle->GetTitlePS();
-   if (!strlen(pstitle) && gPad) pstitle = gPad->GetMother()->GetTitle();
+   PrintStr("%%Title:");
    PrintStr(GetName());
-   if(!strlen(pstitle) && fMode != 3) {;
+   if( fMode != 3) {;
       if ( fMode == 1 || fMode == 4) PrintFast(10," (Portrait");
       if ( fMode == 2 || fMode == 5) PrintFast(11," (Landscape");
       if ( format <= 99 ) {;
@@ -1452,7 +1441,6 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
-      PrintStr(pstitle);
       PrintStr("@");
    }
 
@@ -1531,8 +1519,8 @@ void TPostScript::Initialize()
 //*-*-     mode=3 encapsulated PostScript
 //*-*
    if (fMode == 3)  {
-      width   = 20;
-      heigth  = 20;
+      width   = fX2w;
+      heigth  = fY2w;
       format  = 4;
       fNXzone = 1;
       fNYzone = 1;
@@ -1942,7 +1930,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.24 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

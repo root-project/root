@@ -42,7 +42,7 @@ class set {
   typedef Compare                               key_compare;
   typedef Compare                               value_compare;
   typedef Allocator                             allocator_type;
-#if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
+#if defined(G__GNUC) || defined(G__HPUX)
   typedef Key*                                  pointer;
   typedef const Key*                            const_pointer;
   typedef Key&                                  reference;
@@ -71,7 +71,7 @@ class set {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     iterator& operator=(const iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -88,7 +88,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC)
+#ifdef G__GNUC
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
@@ -108,7 +108,7 @@ class set {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -200,7 +200,7 @@ class set {
 
 #ifndef G__NOALGORITHM
   // Generic algorithm
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__BORLAND)
+#if defined(G__GNUC) || defined(G__BORLAND)
 
   friend set::iterator 
     find(set::iterator first,set::iterator last,const Key& value);
@@ -208,7 +208,7 @@ class set {
     search(set::iterator first1,set::iterator last1,
            set::iterator first2,set::iterator last2);
 
-#elif defined(G__VISUAL)
+#elif defind(G__VISUAL)
 
   friend void reverse(set::iterator first,set::iterator last);
 

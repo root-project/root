@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.13 2002/01/18 18:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.6 2001/12/03 12:46:07 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -110,16 +110,14 @@ public:
    static Double_t Max(Double_t a, Double_t b);
 
    // Locate Min, Max
-   static Int_t  LocMin(Int_t n, const Short_t *a);
-   static Int_t  LocMin(Int_t n, const Int_t *a);
-   static Int_t  LocMin(Int_t n, const Float_t *a);
-   static Int_t  LocMin(Int_t n, const Double_t *a);
-   static Int_t  LocMin(Int_t n, const Long_t *a);
-   static Int_t  LocMax(Int_t n, const Short_t *a);
-   static Int_t  LocMax(Int_t n, const Int_t *a);
-   static Int_t  LocMax(Int_t n, const Float_t *a);
-   static Int_t  LocMax(Int_t n, const Double_t *a);
-   static Int_t  LocMax(Int_t n, const Long_t *a);
+   static Int_t  LocMin(Int_t n, Short_t *a);
+   static Int_t  LocMin(Int_t n, Int_t *a);
+   static Int_t  LocMin(Int_t n, Float_t *a);
+   static Int_t  LocMin(Int_t n, Double_t *a);
+   static Int_t  LocMax(Int_t n, Short_t *a);
+   static Int_t  LocMax(Int_t n, Int_t *a);
+   static Int_t  LocMax(Int_t n, Float_t *a);
+   static Int_t  LocMax(Int_t n, Double_t *a);
 
    // Range
    static Short_t  Range(Short_t lb, Short_t ub, Short_t x);
@@ -129,27 +127,24 @@ public:
    static Double_t Range(Double_t lb, Double_t ub, Double_t x);
 
    // Binary search
-   static Int_t BinarySearch(Int_t n, const Short_t *array, Short_t value);
-   static Int_t BinarySearch(Int_t n, const Short_t **array, Short_t value);
-   static Int_t BinarySearch(Int_t n, const Int_t *array, Int_t value);
-   static Int_t BinarySearch(Int_t n, const Int_t **array, Int_t value);
-   static Int_t BinarySearch(Int_t n, const Float_t *array, Float_t value);
-   static Int_t BinarySearch(Int_t n, const Float_t **array, Float_t value);
-   static Int_t BinarySearch(Int_t n, const Double_t *array, Double_t value);
-   static Int_t BinarySearch(Int_t n, const Double_t **array, Double_t value);
-   static Int_t BinarySearch(Int_t n, const Long_t *array, Long_t value);
-   static Int_t BinarySearch(Int_t n, const Long_t **array, Long_t value);
+   static Int_t BinarySearch(Int_t n, Short_t *array, Short_t value);
+   static Int_t BinarySearch(Int_t n, Short_t **array, Short_t value);
+   static Int_t BinarySearch(Int_t n, Int_t *array, Int_t value);
+   static Int_t BinarySearch(Int_t n, Int_t **array, Int_t value);
+   static Int_t BinarySearch(Int_t n, Float_t *array, Float_t value);
+   static Int_t BinarySearch(Int_t n, Float_t **array, Float_t value);
+   static Int_t BinarySearch(Int_t n, Double_t *array, Double_t value);
+   static Int_t BinarySearch(Int_t n, Double_t **array, Double_t value);
 
    // Hashing
    static ULong_t Hash(const void *txt, Int_t ntxt);
    static ULong_t Hash(const char *str);
 
    // Sorting
-   static void Sort(Int_t n, const Short_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Int_t *a,    Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
-   static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, Short_t *a,  Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, Int_t *a,    Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, Float_t *a,  Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, Double_t *a, Int_t *index, Bool_t down=kTRUE);
 
    // Advanced
    static Float_t *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);     // Calculate the Cross Product of two vectors
@@ -173,18 +168,13 @@ public:
    static Double_t  KolmogorovProb(Double_t z);
 
    // Bessel functions
-   static Double_t BesselI(Int_t n,Double_t x);      // integer order modified Bessel function I_n(x)
-   static Double_t BesselK(Int_t n,Double_t x);      // integer order modified Bessel function K_n(x)
-   static Double_t BesselI0(Double_t x);             // modified Bessel function I_0(x)
-   static Double_t BesselK0(Double_t x);             // modified Bessel function K_0(x)
-   static Double_t BesselI1(Double_t x);             // modified Bessel function I_1(x)
-   static Double_t BesselK1(Double_t x);             // modified Bessel function K_1(x)
-   static Double_t BesselJ0(Double_t x);             // Bessel function J0(x) for any real x
-   static Double_t BesselJ1(Double_t x);             // Bessel function J1(x) for any real x
-   static Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
-   static Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
-   static Double_t Struve(Int_t n, Double_t x);      // Struve functions of order 0 and 1
-   
+   static Double_t BesselI(Int_t n,Double_t x);         // Compute integer order modified Bessel function I_n(x)
+   static Double_t BesselK(Int_t n,Double_t x);         // Compute integer order modified Bessel function K_n(x)
+   static Double_t BesselI0(Double_t x);                // Compute modified Bessel function I_0(x)
+   static Double_t BesselK0(Double_t x);                // Compute modified Bessel function K_0(x)
+   static Double_t BesselI1(Double_t x);                // Compute modified Bessel function I_1(x)
+   static Double_t BesselK1(Double_t x);                // Compute modified Bessel function K_1(x)
+
    ClassDef(TMath,0)  //Interface to math routines
 };
 
@@ -302,21 +292,14 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 //---- Trig and other functions ------------------------------------------------
 
-
-#include <float.h>
-
 #ifdef R__WIN32
 #   ifndef finite
 #      define finite _finite
 #      define isnan  _isnan
 #   endif
 #endif
-#if defined(R__GNU) && defined(__STRICT_ANSI__)
-#   define finite __finite
-#   define isnan  __isnan
-#endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__USESTHROW)
+    defined(R__USESTHROW)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -340,14 +323,8 @@ extern "C" {
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
-#ifndef R__WIN32
-#   ifndef finite
-       extern int finite(double);
-#   endif
-#   ifndef isnan
-       extern int isnan(double);
-#   endif
-#endif
+   extern int    finite(double);
+   extern int    isnan(double);
 }
 #endif
 
@@ -397,11 +374,7 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
-#ifdef R__HPUX11
-   { return isfinite(x); }
-#else
    { return finite(x); }
-#endif
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }

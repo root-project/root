@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.16 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.13 2001/10/01 10:31:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,12 +36,20 @@
 #ifndef ROOT_TStorage
 #include "TStorage.h"
 #endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 #ifdef WIN32
 #undef RemoveDirectory
+#endif
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
 #endif
 
 class TList;
@@ -113,8 +121,8 @@ public:
    virtual void        DrawClass() const; // *MENU*
    virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, int* error=0);
-   virtual void        Execute(TMethod *method, TObjArray *params, int* error=0);
+   virtual void        Execute(const char *method,  const char *params);
+   virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;

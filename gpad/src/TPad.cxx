@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.66 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.55 2001/11/05 15:06:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -54,6 +55,8 @@
 #include "TDatime.h"
 #include "TColor.h"
 
+const Int_t kDistanceMaximum = 5;
+
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 const Int_t kButton    = 101;
@@ -64,9 +67,7 @@ const Int_t kCurlyArc  = 201;
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
 
-Int_t TPad::fgMaxPickDistance = 5;
-
-ClassImpQ(TPad)
+ClassImp(TPad)
 
 //______________________________________________________________________________
 //  The Pad class is the most important graphics class in the ROOT system.
@@ -1532,7 +1533,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetMaximum(ymax);
    hframe->GetYaxis()->SetLimits(ymin,ymax);
    hframe->SetDirectory(0);
-   hframe->Draw("a");
+   hframe->Draw();
    Update();
    return hframe;
 }
@@ -2237,13 +2238,6 @@ TVirtualPad *TPad::GetVirtCanvas() const
 Color_t TPad::GetHighLightColor() const
 {
    return fCanvas->GetHighLightColor();
-}
-
-//______________________________________________________________________________
-Int_t TPad::GetMaxPickDistance()
-{
-   //static function (see also TPad::SetMaxPickDistance)
-   return fgMaxPickDistance;
 }
 
 //______________________________________________________________________________
@@ -3441,7 +3435,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    TPad *pick   = 0;
    TPad *picked = this;
    pickobj      = 0;
-   if (DistancetoPrimitive(px,py) < fgMaxPickDistance) {
+   if (DistancetoPrimitive(px,py) < kDistanceMaximum) {
       dummyLink.SetObject(this);
       pickobj = &dummyLink;
    }
@@ -3466,7 +3460,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
          if (!gotPrim) {
             if (!obj->TestBit(kCannotPick)) {
                dist = obj->DistancetoPrimitive(px, py);
-               if (dist < fgMaxPickDistance) {
+               if (dist < kDistanceMaximum) {
                   pickobj = lnk;
                   gotPrim = kTRUE;
                   if (dist == 0) break;
@@ -3585,9 +3579,8 @@ void TPad::Print(const char *filename, Option_t *option)
       Update();
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
-      if (gVirtualX->WriteGIF(psname)) {
-         Info("TPad::Print", "GIF file %s has been created", psname);
-      }
+      gVirtualX->WriteGIF(psname);
+      Info("TPad::Print", "GIF file %s has been created", psname);
       return;
    }
 
@@ -3641,9 +3634,10 @@ void TPad::Print(const char *filename, Option_t *option)
 //______________________________________________________________________________
 void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   // Set world coordinate system for the pad.
-   // Emits signal "RangeChanged()", in the slot get the range
-   // via GetRange().
+//*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
+//*-*                  =======================================
+
+   //if (!IsEditable()) return;
 
    if ((x1 >= x2) || (y1 >= y2)) {
       Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
@@ -3662,23 +3656,23 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fX2  = x2;
    fY2  = y2;
 
-   // compute pad conversion coefficients
+//*-*- Compute pad conversion coefficients
    ResizePad();
-
-   // emit signal
-   RangeChanged();
 }
 
 //______________________________________________________________________________
 void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
-   // Set axis coordinate system for the pad.
-   // The axis coordinate system is a subset of the world coordinate system
-   // xmin,ymin is the origin of the current coordinate system,
-   // xmax is the end of the X axis, ymax is the end of the Y axis.
-   // By default a margin of 10 per cent is left on all sides of the pad
-   // Emits signal "RangeAxisChanged()", in the slot get the axis range
-   // via GetRangeAxis().
+//*-*-*-*-*-*-*-*-*-*-*Set axis coordinate system for the pad*-*-*-*-*-*-*
+//*-*                  =======================================
+//  The axis coordinate system is a subset of the world coordinate system
+//  xmin,ymin are the origin of the current coordinate system
+//  xmax is the end of the X axis
+//  ymax is the end of the Y axis
+//  By default a margin of 10 per cent is left on all sides of the pad
+//
+
+   //if (!IsEditable()) return;
 
    if ((xmin >= xmax) || (ymin >= ymax)) {
       Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f",
@@ -3690,9 +3684,6 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    fUymin  = ymin;
    fUxmax  = xmax;
    fUymax  = ymax;
-
-   // emit signal
-   RangeAxisChanged();
 }
 
 //______________________________________________________________________________
@@ -3965,19 +3956,6 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 
    TPad *padsav = (TPad*)gPad;
    char quote='"';
-   char lcname[10];
-   const char *cname = GetName();
-   Int_t nch = strlen(cname);
-   if (nch < 10) {
-      strcpy(lcname,cname);
-      for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-      if (lcname[0] == 0) {
-         if (this == gPad->GetCanvas()) {strcpy(lcname,"c1");  nch = 2;}
-         else                           {strcpy(lcname,"pad"); nch = 3;}
-      }
-      cname = lcname;
-   }
-
 //   Write pad parameters
    if (this != gPad->GetCanvas()) {
       out <<"  "<<endl;
@@ -3988,17 +3966,17 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       } else {
          out<<"   TPad *";
       }
-      out<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<GetName()<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
-      out<<"   "<<cname<<"->Draw();"<<endl;
-      out<<"   "<<cname<<"->cd();"<<endl;
+      out<<"   "<<GetName()<<"->Draw();"<<endl;
+      out<<"   "<<GetName()<<"->cd();"<<endl;
    }
-   out<<"   "<<cname<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
+   out<<"   "<<GetName()<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
    TView *view = GetView();
    Double_t rmin[3], rmax[3];
    if (view) {
@@ -4008,102 +3986,78 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<endl;
    }
    if (GetFillColor() != 19) {
-      out<<"   "<<cname<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
    }
    if (GetBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetBorderMode("<<GetBorderMode()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBorderMode("<<GetBorderMode()<<");"<<endl;
    }
    if (GetBorderSize() != 4) {
-      out<<"   "<<cname<<"->SetBorderSize("<<GetBorderSize()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBorderSize("<<GetBorderSize()<<");"<<endl;
    }
    if (GetLogx()) {
-      out<<"   "<<cname<<"->SetLogx();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogx();"<<endl;
    }
    if (GetLogy()) {
-      out<<"   "<<cname<<"->SetLogy();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogy();"<<endl;
    }
    if (GetLogz()) {
-      out<<"   "<<cname<<"->SetLogz();"<<endl;
+      out<<"   "<<GetName()<<"->SetLogz();"<<endl;
    }
    if (GetGridx()) {
-      out<<"   "<<cname<<"->SetGridx();"<<endl;
+      out<<"   "<<GetName()<<"->SetGridx();"<<endl;
    }
    if (GetGridy()) {
-      out<<"   "<<cname<<"->SetGridy();"<<endl;
+      out<<"   "<<GetName()<<"->SetGridy();"<<endl;
    }
    if (GetTickx()) {
-      out<<"   "<<cname<<"->SetTickx();"<<endl;
+      out<<"   "<<GetName()<<"->SetTickx();"<<endl;
    }
    if (GetTicky()) {
-      out<<"   "<<cname<<"->SetTicky();"<<endl;
+      out<<"   "<<GetName()<<"->SetTicky();"<<endl;
    }
    if (GetTheta() != 30) {
-      out<<"   "<<cname<<"->SetTheta("<<GetTheta()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetTheta("<<GetTheta()<<");"<<endl;
    }
    if (GetPhi() != 30) {
-      out<<"   "<<cname<<"->SetPhi("<<GetPhi()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetPhi("<<GetPhi()<<");"<<endl;
    }
    if (TMath::Abs(fLeftMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetLeftMargin("<<GetLeftMargin()<<");"<<endl;
    }
    if (TMath::Abs(fRightMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetRightMargin("<<GetRightMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetRightMargin("<<GetRightMargin()<<");"<<endl;
    }
    if (TMath::Abs(fTopMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetTopMargin("<<GetTopMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetTopMargin("<<GetTopMargin()<<");"<<endl;
    }
    if (TMath::Abs(fBottomMargin-0.1) > 0.01) {
-      out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
    }
 
-   if (GetFrameFillColor() != GetFillColor()) {
-      out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<endl;
-   }
-   if (GetFrameFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<endl;
-   }
-   if (GetFrameLineStyle() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<endl;
-   }
-   if (GetFrameLineColor() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<endl;
-   }
-   if (GetFrameLineWidth() != 1) {
-      out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<endl;
-   }
-   if (GetFrameBorderMode() != 1) {
-      out<<"   "<<cname<<"->SetFrameBorderMode("<<GetFrameBorderMode()<<");"<<endl;
-   }
-   if (GetFrameBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<GetFrameBorderSize()<<");"<<endl;
-   }
-
-   TFrame *frame = fFrame;
-   if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
-   if (frame) {
-      if (frame->GetFillColor() != GetFillColor()) {
-         out<<"   "<<cname<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<endl;
+   if (fFrame) {
+      if (fFrame->GetFillColor() != 19) {
+         out<<"   "<<GetName()<<"->SetFrameFillColor("<<fFrame->GetFillColor()<<");"<<endl;
       }
-      if (frame->GetFillStyle() != 1001) {
-         out<<"   "<<cname<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<endl;
+      if (fFrame->GetFillStyle() != 1001) {
+         out<<"   "<<GetName()<<"->SetFrameFillStyle("<<fFrame->GetFillStyle()<<");"<<endl;
       }
-      if (frame->GetLineStyle() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<endl;
+      if (fFrame->GetLineStyle() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineStyle("<<fFrame->GetLineStyle()<<");"<<endl;
       }
-      if (frame->GetLineColor() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<endl;
+      if (fFrame->GetLineColor() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineColor("<<fFrame->GetLineColor()<<");"<<endl;
       }
-      if (frame->GetLineWidth() != 1) {
-         out<<"   "<<cname<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<endl;
+      if (fFrame->GetLineWidth() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameLineWidth("<<fFrame->GetLineWidth()<<");"<<endl;
       }
-      if (frame->GetBorderMode() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderMode("<<frame->GetBorderMode()<<");"<<endl;
+      if (fFrame->GetBorderMode() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderMode("<<fFrame->GetBorderMode()<<");"<<endl;
       }
-      if (frame->GetBorderSize() != 1) {
-         out<<"   "<<cname<<"->SetFrameBorderSize("<<frame->GetBorderSize()<<");"<<endl;
+      if (fFrame->GetBorderSize() != 1) {
+         out<<"   "<<GetName()<<"->SetFrameBorderSize("<<fFrame->GetBorderSize()<<");"<<endl;
       }
    }
 
@@ -4112,7 +4066,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
 
    while ((obj = next()))
          obj->SavePrimitive(out, (Option_t *)next.GetOption());
-   out<<"   "<<cname<<"->Modified();"<<endl;
+   out<<"   "<<GetName()<<"->Modified();"<<endl;
    out<<"   "<<GetMother()->GetName()<<"->cd();"<<endl;
    if (padsav) padsav->cd();
 }
@@ -4142,9 +4096,8 @@ void TPad::SetFixedAspectRatio(Bool_t fixed)
 void TPad::SetEditable(Bool_t mode)
 {
    // Set pad editable yes/no
-   // If a pad is not editable:
-   // - one cannot modify the pad and its objects via the mouse.
-   // - one cannot add new objects to the pad
+   // If a pad is not editable, one cannot modify the pad and its objects
+   // via the mouse.
 
    fEditable = mode;
 
@@ -4333,18 +4286,6 @@ void TPad::SetCrosshair(Int_t crhair)
 }
 
 //______________________________________________________________________________
-void TPad::SetMaxPickDistance(Int_t maxPick)
-{
-   // static function to set the maximum Pick Distance fgMaxPickDistance
-   // This parameter is used in TPad::Pick to select an object if
-   // its DistancetoPrimitive returns a value < fgMaxPickDistance
-   // The default value is 5 pixels. Setting a smaller value will make
-   // picking more precise but also more difficult
-
-   fgMaxPickDistance = maxPick;
-}
-
-//______________________________________________________________________________
 void TPad::SetToolTipText(const char *text, Long_t delayms)
 {
    // Set tool tip text associated with this pad. The delay is in
@@ -4358,14 +4299,6 @@ void TPad::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = CreateToolTip((TBox*)0, text, delayms);
-}
-
-//______________________________________________________________________________
-void TPad::SetVertical(Bool_t vert)
-{
-   // Set pad vertical (default) or horizontal
-   if (vert) ResetBit(kHori);
-   else      SetBit(kHori);
 }
 
 //_______________________________________________________________________

@@ -4,11 +4,10 @@
 # see: dh_installdeb(1)
 
 set -e
-
 if [ "$1" != "upgrade" ]
 then
-	update-alternatives --remove cint @prefix@/bin/cint.root
-	update-alternatives --remove makecint @prefix@/bin/makecint.root
+	update-alternatives --remove cint /usr/bin/cint.root
+	update-alternatives --remove makecint /usr/bin/makecint.root
 fi
 
 # dh_installdeb will replace this with shell code automatically

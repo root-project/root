@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.2 2001/11/30 12:39:20 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.1 2001/11/28 15:43:09 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -880,20 +880,14 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
                            &attr.fY,
                            &attr.fWidth, &attr.fHeight, &attr.fDepth);
    attr.fRoot = (Window_t) GDK_ROOT_PARENT();
-   attr.fColormap = (Colormap_t) gdk_window_get_colormap((GdkWindow *) id);
+   attr.fColormap = (Colormap_t) gdk_window_get_colormap((GdkWindow *) id);	//(Colormap_t)fColormap;
    attr.fBorderWidth = 0;
    attr.fVisual = gdk_window_get_visual((GdkWindow *) id);
    attr.fClass = kInputOutput;
    attr.fBackingStore = kNotUseful;
-   attr.fSaveUnder = kFALSE;
-   attr.fMapInstalled = kTRUE;
-   attr.fOverrideRedirect = kFALSE;   // boolean value for override-redirect
-   if (!gdk_window_is_visible((GdkWindow *) id))
-      attr.fMapState = kIsUnmapped;
-   else if (!gdk_window_is_viewable((GdkWindow *) id))
-      attr.fMapState = kIsUnviewable;
-   else
-      attr.fMapState = kIsViewable;
+   attr.fSaveUnder = FALSE;
+   attr.fMapInstalled = TRUE;
+   attr.fOverrideRedirect = FALSE;	// boolean value for override-redirect
 }
 
 //______________________________________________________________________________

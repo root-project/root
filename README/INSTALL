@@ -74,9 +74,7 @@ and that it is setup correctly, see:
 
    http://root.cern.ch/root/Cygwin.html
 
-Before proceeding read the complete document.  Note: With the advent
-of Cygwin 1.0 your system is mostly setup correctly by the setup.exe
-program. 
+Before proceeding read the complete document.
 
 
 Choosing the installation method
@@ -123,14 +121,14 @@ Linux packages.
 
    This scheme also makes it easier to make ROOT
    distributions/installations that fit with an existing system. E.g.,
-   it is trivial to install ROOT via a RedHat (.rpm) or Debian
-   GNU/Linux (.deb) package (see also below). 
+   it should be trivial to install ROOT via a RedHat (.rpm) or Debian
+   GNU/Linux (.deb) package.
 
    It's _strongly_ recommended to enable version numbers in sonames
    (if possible) using this method (see --enable-soversion
    below). Also, using the --enable-rpath option to "configure" you
    can set the load path to the ROOT libraries on the
-   applications. However, this is not  recommended if you have some
+   applications. However, this is not  recommended if you have soome
    other way (like /etc/ld.so.conf) of making the dynamic loader
    aware of where you installed the ROOT libraries.
 
@@ -155,11 +153,9 @@ outlined above and cd into the source directory. Then just do
 
 	make redhat 
 
-This will create a RPM spec file in the source tree. To build the
-packages do:  
+This will create a RPM spec file in "../". To build the packages do: 
 
-1) Make a tar-ball of the source tree. 
-
+1) 
         cd ../ 
 	tar -czvf root_v<version>.source.tar.gz root 
 	
@@ -176,11 +172,11 @@ packages do:
   B) However, if you don't have system privileges, you should set up a 
      build area by having the file ~/.rpmrc with a contents like 
 
-        %macrofiles: /usr/lib/rpm/macros:<your home dir>/.rpmmac 
+        %macros /usr/lib/rpm/macros:<your home dir>/.rpmmac 
 
      and a file <your home dir>/.rpmmac with a contents like 
 
-        %_topdir <some where you can write>/redhat 
+        %_topdir: <some where you can write>/redhat 
 
      Then you should make the appropiate directories: 
 
@@ -201,20 +197,16 @@ packages do:
 
        rpm -ba root.spec 
 
-  If you left the spec file in the source tree, you can build directly
-  from the tar-ball.  You still need to have a proper build area
-  setup, as outlined above.  All you need to do is 
-
-       rpm -ta root_v<version>.source.tar.gz 
-
 Per default the binaries will be build in /tmp/rootrpm, but one may
 change that at build time by passing the option --buildroot too rpm. 
 
 Please refer to man-page rpm(1) and http://www.rpm.org for more
-information on RPM. 
+infomation on RPM. 
 
-Please note, that all possible packages may not be specified in the
-spec file.  See also build/package/common/README. 
+Please note, that it is assumed you have OpenGL (Mesa), SHIFT, MySQL,
+CERNLIB, and true type fonts installed. If that is not the case,
+please see if there are pre-build rpms at http://root.cern.ch, or if
+you feel lucky, read build/package/common/README thourougly! 
 
 Debian GNU/Linux packages:
 --------------------------
@@ -223,10 +215,11 @@ outlined above and cd into the source directory. Then just do
 
 	make debian
 
-The packages will be build in "../". 
-
-Please note, that all possible packages may not be specified in the
-debian directory file.  See also build/package/common/README. 
+The packages will be build in "../". Please note, that it is assumed you
+have OpenGL (Mesa), SHIFT, MySQL, CERNLIB, and true type fonts
+install. If that is not the case, please see if there are pre-build
+debs at http://root.cern.ch, or if you feel lucky, read
+build/package/common/README thourougly!  
 
 Installation Location
 =====================
@@ -399,7 +392,7 @@ The flags consist of two classes:
      Compile ROOT thread safe, as well as a thread API library. This
      options is strongly recommended. This requires the system library
      libpthread (Posix threads). Default is false, except for the
-     "linux" architecture.
+     "linuxegcs" architecture.
    * ttf
      True Type Font support for those OSs with no native TTF
      support. This feature requires third-party library libtff, header
@@ -422,14 +415,6 @@ The flags consist of two classes:
      Build a thin MySQL client for ROOT. This requires the third-party
      library libmysqlclient and header files. Note that there may be
      licensing issues regarding linking against libmysqlclient.
-     Default is true.
-   * psql
-     Build a thin PostGreSQL client for ROOT. This requires the
-     third-party library libpsql and header files.  
-     Default is true.
-   * sapdb
-     Build a thin SapDB client for ROOT. This requires the
-     third-party library libsql and header files.
      Default is true.
    * shift
      Interface to SHIFT managed tape robots. This option requires you
@@ -454,7 +439,7 @@ The flags consist of two classes:
      Build daemons rootd and proofd with AFS support. This requires
      the third-party AFS libs and objects. Default is false.
 
-2) --with-<feature dir>=<dir> flags:
+2) "--with-<feature dir>=<dir>" flags:
    If "configure" isn't able to find some third-party library, header,
    or other file, corresponding to one of the above features, you can
    force it to look for these files in specific directories, using the
@@ -489,7 +474,7 @@ The flags consist of two classes:
      Directory containing libttf.{so,a}, needed by feature ttf.
    * ttf-fontdir
      Directory containing TTF font files, needed by feature ttf.
-     "configure" is looking for "arial.ttf".
+     "configure" is looking for "arial.ttf", which must be present.
    * opengl-incdir
      Directory containing GL/gl.h (note the sub-directory), needed by
      feature opengl.
@@ -512,27 +497,18 @@ The flags consist of two classes:
      needed by feature cern, for the ZEBRA file converters.
    * shift-libdir
      Directory containing libshift.a, needed for feature shify.
-   * srp-incdir
-     Path to header files for regular SRP library (not utilities)
-     This is needed for building the daemons rootd and proofd with
-     SRP support (authentication).
-   * srp-libdir
-     Path to regular SRP library (not utilities). This is needed for
-     building the daemons rootd and proofd with SRP support
-     (authentication). 
    * srp
      Top directory of the SRP (Secure Remote Passwd). This directory
      must contain:
           base/libmisc/libmisc.a
           base/lib/libshadow.a
-          base/lib/pwauth.h
           lib/libsrp.a
           include
      And alternatively
           lib/libgmp.a
           lib/libcrack.a
-     This is needed to build the utility programs for managing ROOT
-     related SRP access. 
+     This is needed for building the daemons rootd and proofd with
+     SRP support (authentication).
    * afs
      Top directory of the AFS distribution. This directory must
      contain:
@@ -563,14 +539,16 @@ hugely increase the appearance of text on the screen.
 
 Posix Thread usage
 ------------------
+
 To build the library providing thread support you need to have the
 library libpthread.{a,so} and header files installed. This is usually
-the case for any Un*x OS. For architecture "linux" thread support
+the case for any Un*x OS. For architecture "linuxegcs" thread support
 will always be build.
 
 
 True Type Font library and fonts
 --------------------------------
+
 On how to get the True Type ttf directory see:
 
    http://root.cern.ch/root/TrueType.html
@@ -588,6 +566,7 @@ get a minimal set of fonts from:
 
 OpenGL library
 --------------
+
 On how to get an open source version of OpenGL see:
 
    http://www.mesa3d.org
@@ -603,6 +582,7 @@ in XFree86 version 4 or above.
 
 SHIFT managed tape I/O
 ----------------------
+
 To build the library providing CERN RFIO (remote I/O) support you need
 to get the "libshift.a" library from CERN. You can get pre-build
 libraries from
@@ -626,6 +606,7 @@ Apply it with
 
 ZEBRA file conversion tools
 ---------------------------
+
 To build the HBOOK and Geant3 conversion programs `h2root' and
 `g2root' you need the CERNLIB components "libpacklib.{a,so}" and
 "libkernlib.{a,so}" from CERN. You can get it from
@@ -635,26 +616,15 @@ To build the HBOOK and Geant3 conversion programs `h2root' and
 
 MySQL client
 ------------
+
 To build the MySQL interface library you need to install MySQL first. See:
 
    http://www.mysql.com/
 
-PostGreSQL Client
------------------
-To build the PostGreSQL interface you need to install PostGreSQL
-first. See 
-
-   http://www.postgresql.org
-
-SapDB Client
-------------
-To build the SapDB interface you need to install the SapDB calling
-interface first, which can be found in the rpm sapdb-callif-xxxx. See
-
-   http://www.sapdb.org
 
 Pythia Event Generators
 -----------------------
+
 To build the event generator interfaces for Pythia and Pythia6, you
 first have to get the pythia libraries. You can get pre-build
 libraries from:
@@ -671,11 +641,13 @@ More information is avaliable from:
 
 Venus Event Generators
 ----------------------
+
 No information at this time.
 
 
 Secure Remote Password (SRP) Authentication
 -------------------------------------------
+
 To build the strong authentication module used by rootd and proofd,
 you first have to install the SRP (Secure Remote Password)
 system. See:
@@ -683,12 +655,12 @@ system. See:
    http://srp.stanford.edu/
 
 Please note, that the library "libsrp-dev" as distributed by Standford
-is not enough to build the two utility program in the srputil
-directory of the ROOT source tree. 
+is not enough.
 
 
 AFS Authentication
 ------------------
+
 To build rootd and proofd with support for AFS authentication, you
 first have to install AFS client libraries system. There are a few AFS
 distributions avaliable.
@@ -696,7 +668,7 @@ distributions avaliable.
 * OpenAFS
   IBMs OpenSource AFS distribution - see
 
-    http://www.openafs.org
+    http://oss.software.ibm.com/developerworks/opensource/afs/?dwzone=opensource
 
 * Transarc AFS
   IBMs commercial AFS ditribution - see

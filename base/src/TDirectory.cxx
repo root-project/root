@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.19 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.15 2001/08/30 13:04:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "Strlen.h"
 #include "TDirectory.h"
 #include "TMapFile.h"
@@ -688,53 +689,6 @@ void TDirectory::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TKey *TDirectory::FindKey(const char *keyname) const
-{
-   // Find key with name keyname in the current directory
-
-   Short_t  cycle;
-   char     name[256];
-
-   DecodeNameCycle(keyname, name, cycle);
-   return GetKey(name,cycle);
-}
-
-//______________________________________________________________________________
-TKey *TDirectory::FindKeyAny(const char *keyname) const
-{
-   // Find key with name keyname in the current directory or
-   // its subdirectories.
-   // NOTE that If a key is found, the directory containing the key becomes
-   // the current directory
-
-   TDirectory *dirsav = gDirectory;
-   Short_t  cycle;
-   char     name[256];
-
-   DecodeNameCycle(keyname, name, cycle);
-
-   TIter next(GetListOfKeys());
-   TKey *key;
-   while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName())) {
-         if (cycle == 9999)             return key;
-         if (cycle >= key->GetCycle())  return key;
-      }
-   }
-   //try with subdirectories
-   next.Reset();
-   while ((key = (TKey *) next())) {
-      if (!strcmp(key->GetClassName(),"TDirectory")) {
-         ((TDirectory*)this)->cd(key->GetName());
-         TKey *k = gDirectory->FindKeyAny(keyname);
-         if (k) return k;
-      }
-   }
-   dirsav->cd();
-   return 0;
-}
-
-//______________________________________________________________________________
 TObject *TDirectory::FindObject(const TObject *obj) const
 {
    // Find object in the list of memory objects.
@@ -748,47 +702,6 @@ TObject *TDirectory::FindObject(const char *name) const
    // Find object by name in the list of memory objects.
 
    return fList->FindObject(name);
-}
-
-//______________________________________________________________________________
-TObject *TDirectory::FindObjectAny(const char *aname) const
-{
-   // Find object by name in the list of memory objects of the current
-   // directory or its sub-directories.
-   // After this call the current directory is not changed.
-   // To automatically set the current directory where the object is found,
-   // use FindKeyAny(aname)->ReadObj().
-
-   //object may be already in the list of objects in memory
-   TObject *obj = fList->FindObject(aname);
-   if (obj) return obj;
-
-   TDirectory *dirsav = gDirectory;
-   Short_t  cycle;
-   char     name[256];
-
-   DecodeNameCycle(aname, name, cycle);
-
-   TIter next(GetListOfKeys());
-   TKey *key;
-   //may be a key in the current directory
-   while ((key = (TKey *) next())) {
-      if (!strcmp(name, key->GetName())) {
-         if (cycle == 9999)             return key->ReadObj();
-         if (cycle >= key->GetCycle())  return key->ReadObj();
-      }
-   }
-   //try with subdirectories
-   next.Reset();
-   while ((key = (TKey *) next())) {
-      if (!strcmp(key->GetClassName(),"TDirectory")) {
-         ((TDirectory*)this)->cd(key->GetName());
-         TKey *k = gDirectory->FindKeyAny(aname);
-         if (k) {dirsav->cd(); return k->ReadObj();}
-      }
-   }
-   dirsav->cd();
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -806,20 +719,6 @@ TObject *TDirectory::Get(const char *namecycle)
 //     foo;1 : get cycle 1 of foo on file
 //
 // WARNING: Never use TDirectory::Get when namecycle is a directory itself.
-//
-//  VERY IMPORTANT NOTE:
-//  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must cast the return value twice.
-//  Example1: Normal case:
-//      class MyClass : public TObject, public AnotherClass
-//   then on return, one can do:
-//    MyClass *obj = (MyClass*)directory->Get("some object of MyClass");
-//
-//  Example2: Special case:
-//      class MyClass : public AnotherClass, public TObject
-//   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)directory->Get("some object of MyClass");
-//
 
    Short_t  cycle;
    char     name[256];
@@ -882,7 +781,7 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-TKey *TDirectory::GetKey(const char *name, Short_t cycle) const
+TKey *TDirectory::GetKey(const char *name, Short_t cycle)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return pointer to key with name,cycle*-*-*-*-*-*-*-*
 //*-*                  =====================================

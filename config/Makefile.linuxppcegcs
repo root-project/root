@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for linuxppc with glibc and gcc2.95
 
 PLATFORM      = linux
@@ -35,7 +33,7 @@ SOEXT         = so
 # System libraries:
 SYSLIBS       = -lm -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lSM -lICE
-CILIBS        = -lm -ldl
+CILIBS        = -lm -ltermcap -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:

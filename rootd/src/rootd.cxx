@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.37 2002/01/27 17:44:18 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.33 2001/04/24 14:40:12 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -174,9 +174,6 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
@@ -186,8 +183,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -213,7 +209,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   //int initgroups(const char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
@@ -854,11 +850,7 @@ void RootdSRPUser(const char *user)
       return;
    }
 
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
    if (!ts)
       ErrorFatal(kErrNoUser, "RootdSRPUser: user %s not found SRP password file", gUser);
 
@@ -1409,21 +1401,20 @@ void RootdPutFile(const char *msg)
       }
    }
 
+
    // check file system space
-   if (strcmp(gFile, "/dev/null")) {
-      struct statfs statfsbuf;
+   struct statfs statfsbuf;
 #if defined(__sgi) || (defined(__sun) && !defined(linux))
-      if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
+   if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
 #else
-      if (fstatfs(fd, &statfsbuf) == 0) {
-         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
+   if (fstatfs(fd, &statfsbuf) == 0) {
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
-         if (space < size - restartat) {
-            Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
-            close(fd);
-            return;
-         }
+      if (space < size - restartat) {
+         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
+         close(fd);
+         return;
       }
    }
 

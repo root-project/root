@@ -284,9 +284,6 @@ char *expression;
       else if(strcmp(type,"unsignedlong")==0) var_type='l';
       else if(strcmp(type,"size_t")==0) var_type='l';
       else if(strcmp(type,"time_t")==0) var_type='l';
-#ifndef G__OLDIMPLEMENTATION1604
-      else if(strcmp(type,"bool")==0) var_type='g';
-#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION683
@@ -518,21 +515,14 @@ char *expression;
 	    /* construct = "TYPE" , bp = "ARG" */
 	    buf = G__getexpr(bp);
 	    /* G__ASSERT(-1!=buf.tagnum); */
+#ifndef G__OLDIMPLEMENTATION843
 	    G__abortbytecode(); /* Disable bytecode */
-	    if(-1!=buf.tagnum && 0==G__no_exec_compile) {
-#ifndef G__OLDIMPLEMENTATION1614
-	      if(buf.tagnum != G__tagnum) {
-		G__fprinterr(G__serr
-			     ,"Error: Illegal initialization of %s("
-			     ,G__fulltagname(G__tagnum,1));
-		G__fprinterr(G__serr,"%s)",G__fulltagname(buf.tagnum,1));
-		G__genericerror((char*)NULL);
-		return(G__null);
-	      }
+	    if(-1!=buf.tagnum && 0==G__no_exec_compile) 
+#else
+	    if(-1!=buf.tagnum) 
 #endif
 	      memcpy((void*)G__store_struct_offset,(void*)buf.obj.i
 		     ,G__struct.size[buf.tagnum]);
-	    }
 	  }
 #endif
 	  break;

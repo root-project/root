@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.50 2002/02/01 07:14:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.41 2001/10/02 16:47:35 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iostream.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -20,7 +21,6 @@
 #   include <sys/types.h>
 #endif
 
-#include "Riostream.h"
 #include "Strlen.h"
 #include "TFile.h"
 #include "TWebFile.h"
@@ -37,8 +37,6 @@
 #include "TArrayC.h"
 #include "TClassTable.h"
 #include "TProcessID.h"
-#include "TPluginManager.h"
-
 
 TFile *gFile;                 //Pointer to current file
 
@@ -64,7 +62,6 @@ TFile::TFile() : TDirectory()
    fSum2Buffer = 0;
    fClassIndex = 0;
    fCache      = 0;
-   fProcessIDs = 0;
 
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
@@ -190,7 +187,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fSeekInfo   = 0;
    fNbytesInfo = 0;
    fCache      = 0;
-   fProcessIDs = 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
@@ -308,7 +304,7 @@ TFile::~TFile()
    Close();
 
    delete fProcessIDs; fProcessIDs = 0;
-
+   
    SafeDelete(fFree);
    SafeDelete(fCache);
 
@@ -416,30 +412,29 @@ void TFile::Init(Bool_t create)
          Error("Init","Cannot read directory info");
          goto zombie;
       }
-//*-* -------------Check if file is truncated
-      Long_t id, size, flags, modtime;
-      gSystem->GetPathInfo(GetName(), &id, &size, &flags, &modtime);
 //*-* -------------Read keys of the top directory
-      if (fSeekKeys > fBEGIN && fEND <= size) {
+      if (fSeekKeys > fBEGIN) {
          TDirectory::ReadKeys();
          gDirectory = this;
       } else {
-         if (fEND > size) {
-            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
-         } else {
-            Warning("TFile","file %s probably not closed, trying to recover",GetName());
-         }
-         if (!Recover()) goto zombie;
+         Warning("TFile","file %s probably not closed, trying to recover",GetName());
+         Recover();
       }
    }
    gROOT->GetListOfFiles()->Add(this);
-
+   
    // Create StreamerInfo index
    {
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
       if (fSeekFree > fBEGIN) ReadStreamerInfo();
+   }
+
+   if (TClassTable::GetDict("TProof")) {
+      if (gROOT->ProcessLineFast("TProof::IsActive()"))
+         gROOT->ProcessLineFast(Form("TProof::This()->ConnectFile((TFile *)0x%lx);",
+                                (Long_t)this));
    }
 
    fProcessIDs = new TObjArray(10);
@@ -514,11 +509,18 @@ void TFile::Close(Option_t *)
    TProcessID *pid;
    while ((pid = (TProcessID*)next())) {
       if (!pid->DecrementCount()) {
-         if (pid != TProcessID::GetSessionProcessID()) delete pid;
+         fProcessIDs->Remove(pid);
+         if (pid != TProcessID::GetProcessID(0)) delete pid;
       }
-  }
-
+   }
+   
    gROOT->GetListOfFiles()->Remove(this);
+
+   if (TClassTable::GetDict("TProof")) {
+      if (gROOT->ProcessLineFast("TProof::IsActive()"))
+         gROOT->ProcessLineFast(Form("TProof::This()->DisConnectFile((TFile *)0x%lx);",
+                                (Long_t)this));
+   }
 
    TCollection::EmptyGarbageCollection();
 }
@@ -793,7 +795,7 @@ void TFile::Map()
 //     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
 //
 //  Example of output
-//  20010404/150437  At:64        N=150       TFile
+//  20010404/150437  At:64        N=150       TFile         
 //  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
 //  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
 //  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
@@ -813,10 +815,10 @@ void TFile::Map()
 //  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
 //  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
 //  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
-//  20010404/150442  At:402823    N=307       KeysList
+//  20010404/150442  At:402823    N=307       KeysList      
 //  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
-//  20010404/150443  At:407678    N=86        FreeSegments
-//  20010404/150443  At:407764    N=1         END
+//  20010404/150443  At:407678    N=86        FreeSegments  
+//  20010404/150443  At:407764    N=1         END           
 //
    Short_t  keylen,cycle;
    UInt_t   datime;
@@ -831,7 +833,7 @@ void TFile::Map()
 
    char header[kBegin];
    char classname[512];
-
+   
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
@@ -948,15 +950,11 @@ void TFile::ReadFree()
 }
 
 //______________________________________________________________________________
-Int_t TFile::Recover()
+void TFile::Recover()
 {
 //*-*-*-*-*-*-*-*-*Attempt to recover file if not correctly closed*-*-*-*-*
 //*-*              ===============================================
-//
-//  The function returns the number of keys that have been recovered.
-//  If no keys can be recovered, the file will be declared Zombie by 
-//  the calling function.
-       
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -969,7 +967,7 @@ Int_t TFile::Recover()
    Long_t id, size, flags, modtime;
    if (SysStat(fD, &id, &size, &flags, &modtime)) {
       Error("Recover", "cannot stat the file %s", GetName());
-      return 0;
+      return;
    }
 
    fEND = Seek_t(size);
@@ -1012,13 +1010,12 @@ Int_t TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (seekpdir == fSeekDir && strcmp(classname,"TBasket")) {
-         key = new TKey();
-         key->ReadBuffer(bufread);
-         AppendKey(key);
-         nrecov++;
-         Printf("Recovering key: %s:%s at address:%d",key->GetClassName(),key->GetName(),idcur);
-      }
+      if (!strcmp(classname,"TBasket")) {idcur += nbytes; continue;}
+      if (seekpdir != fSeekDir) {idcur += nbytes; continue;}
+      key = new TKey();
+      key->ReadBuffer(bufread);
+      AppendKey(key);
+      nrecov++;
       delete [] classname;
       idcur += nbytes;
    }
@@ -1028,8 +1025,7 @@ Int_t TFile::Recover()
    }
    delete [] header;
    if (nrecov) Warning("Recover", "successfully recovered %d keys", nrecov);
-   else        Warning("Recover", "no keys recovered: file is a Zombie");
-   return nrecov;
+   else        Warning("Recover", "no keys recovered");
 }
 
 //______________________________________________________________________________
@@ -1620,29 +1616,33 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    // Static member function allowing the creation/opening of either a
-   // TFile, TNetFile, TWebFile or any TFile derived class for which an
-   // plugin library handler has been registered with the plugin manager
-   // (for the plugin manager see the TPluginManager class). The returned
-   // type of TFile depends on the file name. If the file starts with
-   // "root:" or "roots:" a TNetFile object will be returned, with "http:"
-   // a TWebFile, with "file:" a local TFile, etc. (see the list of TFile
-   // plugin handlers for regular axpressions that will be checked) and
-   // as last a local file will be tried.
-   // Before opening a file via TNetFile a check is made to see if the URL
+   // TFile, TNetFile, TWebFile or a TRFIOFile. The returned type of TFile
+   // depends on the file name. If the file starts with "root:" a TNetFile
+   // object will be returned, with "http:" a TWebFile, with "rfio:" a
+   // TRFIOFile and with "file:" or the default a local TFile. However,
+   // before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
-   // via a normal TFile. To force the opening of a local file via a
+   // via a normal TFile (+). To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
    // For the meaning of the options and other arguments see the constructors
    // of the individual file classes. In case of error returns 0.
 
-   TPluginHandler *h;
+   // (+) Unless PROOF is active and this is not a PROOF master server, i.e.
+   // this is a PROOF client, in that case open as a TNetFile so the TNetFile
+   // gets propagated to PROOF to be opened there too (a TFile open does not
+   // get propagated to PROOF since it makes not much sense trying to open
+   // a local file on a remote machine).
+
    TFile *f = 0;
 
    if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6)) {
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName()))
+      if (strcmp(a.GetHostName(), b.GetHostName()) ||
+          (TClassTable::GetDict("TProof") &&
+           gROOT->ProcessLineFast("TProof::IsActive()") &&
+           !gROOT->ProcessLineFast("TProof::This()->IsMaster()")))
          f = new TNetFile(name, option, ftitle, compress, netopt);
       else {
          const char *fname = url.GetFile();
@@ -1652,16 +1652,17 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
             f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
                           option, ftitle, compress);
       }
+   } else if (!strncmp(name, "rfio:", 5)) {
+      if (gROOT->LoadClass("TRFIOFile", "RFIO")) return 0;
+      f = (TFile*) gROOT->ProcessLineFast(Form("new TRFIOFile(\"%s\",\"%s\",\"%s\",%d)",
+          name, option, ftitle, compress));
+   } else if (!strncmp(name, "hpss:", 5)) {
+
    } else if (!strncmp(name, "http:", 5))
       f = new TWebFile(name);
    else if (!strncmp(name, "file:", 5))
       f = new TFile(name+5, option, ftitle, compress);
-   else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
-      f = (TFile*) gROOT->ProcessLineFast(Form("new %s(\"%s\",\"%s\",\"%s\",%d)",
-                   h->GetClass(), name, option, ftitle, compress));
-   } else
+   else
       f = new TFile(name, option, ftitle, compress);
 
    return f;
@@ -1670,7 +1671,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 //______________________________________________________________________________
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open().
+   // Interface to system open. All arguments like in "man 2 open".
 
    return ::open(pathname, flags, mode);
 }
@@ -1678,7 +1679,7 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 //______________________________________________________________________________
 Int_t TFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close().
+   // Interface to system close. All arguments like in "man 2 close".
 
    return ::close(fd);
 }
@@ -1686,7 +1687,7 @@ Int_t TFile::SysClose(Int_t fd)
 //______________________________________________________________________________
 Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read().
+   // Interface to system read. All arguments like in "man 2 read".
 
    return ::read(fd, buf, len);
 }
@@ -1694,7 +1695,7 @@ Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 //______________________________________________________________________________
 Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write().
+   // Interface to system write. All arguments like in "man 2 write".
 
    return ::write(fd, buf, len);
 }
@@ -1702,9 +1703,9 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek()
-   // except that the offset and return value are of a type which will
-   // be able to handle 64 bit file systems in the future.
+   // Interface to system lseek. All arguments like in "man 2 lseek"
+   // except that the offset and return value are Long_t to be able to
+   // handle 64 bit file systems.
 
    return ::lseek(fd, offset, whence);
 }
@@ -1722,7 +1723,7 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
 //______________________________________________________________________________
 Int_t TFile::SysSync(Int_t fd)
 {
-   // Interface to system fsync. All arguments like in POSIX fsync().
+   // Interface to system fsync. All arguments like in "man 2 fsync".
 
 #ifndef WIN32
    return ::fsync(fd);

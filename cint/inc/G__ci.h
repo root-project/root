@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter parser header file
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015028
-#define G__CINTVERSIONSTR  "5.15.28, Jan 20 2002"
+#define G__CINTVERSION      5015020
+#define G__CINTVERSIONSTR  "5.15.20, Nov 23 2001"
 
 
 /**********************************************************************
@@ -1352,7 +1352,7 @@ struct G__typedef {
   short  tagnum[G__MAXTYPEDEF];
   char reftype[G__MAXTYPEDEF];
 #ifdef G__CPPLINK1
-  G__SIGNEDCHAR_T globalcomp[G__MAXTYPEDEF];
+  char globalcomp[G__MAXTYPEDEF];
 #endif
   int nindex[G__MAXTYPEDEF];
   int *index[G__MAXTYPEDEF];

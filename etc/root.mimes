@@ -7,23 +7,13 @@
 
 [application/postscript]
 pattern = *.e?ps
-icon = ps_s.xpm ps_t.xpm
+icon = ps.xpm
 action = !ghostview %s
 
 [application/pdf]
 pattern = *.pdf
 icon = pdf.xpm
 action = !acroread %s
-
-[application/x-deb]
-pattern = *.deb
-icon = deb_s.xpm deb_t.xpm
-action = !xterm -e dpkg -I %s
-
-[application/x-rpm]
-pattern = *.rpm
-icon = rpm_s.xpm rpm_t.xpm
-action = !xterm -e rpm -qip %s
 
 [audio/x-wav]
 pattern = *.wave?
@@ -47,22 +37,22 @@ action = !xanim %s
 
 [image/gif]
 pattern = *.gif
-icon = psp_s.xpm psp_t.xpm
+icon = image.xpm
 action = !xv %s
 
 [image/jpeg]
 pattern = *.jpeg *.jp[ge]
-icon = psp_s.xpm psp_t.xpm
+icon = image.xpm
 action = !xv %s
 
 [image/tiff]
 pattern = *.tiff?
-icon = psp_s.xpm psp_t.xpm
+icon = image.xpm
 action = !xv %s
 
 [image/x-xpixmap]
 pattern = *.x[bp]m
-icon = psp_s.xpm psp_t.xpm
+icon = image.xpm
 action = !xv %s
 
 [text/html]
@@ -92,22 +82,12 @@ action = !xterm -e vi %s &
 
 [text/source-c]
 pattern = *.c
-icon = c_src_s.xpm c_src_t.xpm
-action = !xterm -e vi %s &
-
-[text/source-h]
-pattern = *.h *.H
-icon = h_src_s.xpm h_src_t.xpm
+icon = c_source.xpm
 action = !xterm -e vi %s &
 
 [text/source-c++]
-pattern = *.cxx *.cpp *.cc
-icon = cpp_src_s.xpm cpp_src_t.xpm
-action = !xterm -e vi %s &
-
-[text/source-h++]
-pattern = *.hxx *.hpp
-icon = hpp_src_s.xpm hpp_src_t.xpm
+pattern = *.cxx *.cpp *.cc *.h
+icon = cpp_source.xpm
 action = !xterm -e vi %s &
 
 [root/script]

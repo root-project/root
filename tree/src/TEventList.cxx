@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.6 2001/10/22 14:26:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.5 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -210,29 +210,6 @@ Int_t TEventList::GetIndex(Int_t entry) const
       else                          nbelow = middle;
    }
    return -1;
-}
-
-//______________________________________________________________________________
-Int_t TEventList::Merge(TCollection *list)
-{
-// Merge entries in all the TEventList in the collection in this event list
-   
-   if (!list) return -1;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TEventList *el;
-   Int_t nevents = 0;
-   while ((el = (TEventList*)next())) {
-      if (!el->InheritsFrom(TEventList::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",el->ClassName(),this->ClassName());
-         return -1;
-      }
-      Add(el);
-      nevents += el->GetN();
-   }
-   
-   return nevents;   
 }
 
 //______________________________________________________________________________

@@ -247,7 +247,7 @@ int main(int argc, char** argv)
   Double_t cp11r = timer.CpuTime();
   cptot += cp11r;
   printf("19 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 70.94;
+  Double_t cpref = 76.33;
   Double_t rootmarks = cpref*200/cptot;
 
   //delete temp file used for the benchmark
@@ -293,17 +293,17 @@ int main(int argc, char** argv)
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        1.69    %6.2f        8.87     *\n",cp2w-cp1, cp3w-cp1);
-  printf("* vector<THit*>                 %6.2f        1.46    %6.2f        8.71     *\n",cp5w-cp1, cp6w-cp1);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.84    %6.2f        5.26     *\n",cp8w-cp1, cp9w-cp1);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.78    %6.2f        5.25     *\n",cp10w-cp1,cp11w-cp1);
+  printf("* vector<THit>                  %6.2f        1.69    %6.2f        9.74     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* vector<THit*>                 %6.2f        1.60    %6.2f        9.69     *\n",cp5w-cp1, cp6w-cp1);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.10    %6.2f        6.03     *\n",cp8w-cp1, cp9w-cp1);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.13    %6.2f        5.99     *\n",cp10w-cp1,cp11w-cp1);
   printf("******************************************************************************\n");
   printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.21     *\n",cp2r,cp3r);
-  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.12     *\n",cp5r,cp6r);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.36    %6.2f        1.92     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.36    %6.2f        1.93     *\n",cp10r,cp11r);
+  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.46     *\n",cp2r,cp3r);
+  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.32     *\n",cp5r,cp6r);
+  printf("* TClonesArray(TObjHit)         %6.2f        1.31    %6.2f        1.92     *\n",cp8r,cp9r);
+  printf("* TClonesArray(TObjHit) split   %6.2f        1.31    %6.2f        1.93     *\n",cp10r,cp11r);
   printf("******************************************************************************\n");
   printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
   printf("* Estimated ROOTMARKS         %8.2f      200.00                           *\n",rootmarks);

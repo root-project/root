@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TWin32GLViewerImp.cxx,v 1.2 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gl:$Name$:$Id$
 // Author: Valery Fine(fine@vxcern.cern.ch)   29/12/96
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#include <iostream.h>
 #include "TWin32GLViewerImp.h"
 #include "TROOT.h"
 #include "TSeqCollection.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.20 2002/01/27 13:57:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.16 2001/10/01 10:38:37 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -44,8 +44,6 @@ class TBrowser;
 class TGlobal;
 class TFunction;
 class TFolder;
-class TPluginManager;
-
 
 class TROOT : public TDirectory {
 
@@ -102,7 +100,6 @@ protected:
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
-   TPluginManager  *fPluginManager;       //Keeps track of plugin library handlers
    TString         fCutClassName;         //Name of default CutG class in graphics editor
    TString         fDefCanvasName;        //Name of default canvas
 
@@ -127,7 +124,6 @@ public:
    const char       *FindObjectPathName(const TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
    Bool_t            FromPopUp() const {return fFromPopUp;}
-   TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
    TColor           *GetColor(Int_t color) const;
@@ -183,14 +179,14 @@ public:
    Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
    Bool_t            IsProofServ() const { return fName == "Proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option="") const;
-   Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
-   void              LoadMacro(const char *filename, Int_t *error = 0);
-   Int_t             Macro(const char *filename, Int_t *error = 0);
+   Int_t             LoadClass(const char *classname, const char *libname);
+   void              LoadMacro(const char *filename);
+   Int_t             Macro(const char *filename);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() {return fMustClean;}
-   void              ProcessLine(const char *line, Int_t *error = 0);
-   void              ProcessLineSync(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
+   void              ProcessLine(const char *line);
+   void              ProcessLineSync(const char *line);
+   Long_t            ProcessLineFast(const char *line);
    void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() {return fReadingObject;}
    void              Reset(Option_t *option="");

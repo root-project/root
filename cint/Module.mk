@@ -52,18 +52,11 @@ else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
-ifeq ($(PLATFORM),hurd)
-CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 ifeq ($(PLATFORM),fbsd)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),hpux)
-ifeq ($(ARCH),hpuxia64acc)
-CINTS2       += $(MODDIRS)/fakestrm.cxx
-else
 CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)

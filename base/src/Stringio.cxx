@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.3 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Stringio.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <ctype.h>              // Looking for isspace()
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TString.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.6 2001/08/23 22:11:48 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.5 2001/03/23 18:04:50 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -10,14 +10,8 @@
 ClassImp(TParticle)
 
 //______________________________________________________________________________
-TParticle::TParticle() :
-  fPdgCode(0), fStatusCode(0), fWeight(0),fCalcMass(0), fPx(0), fPy(0),
-  fPz(0), fE(0), fVx(0), fVy(0), fVz(0), fVt(0), fPolarTheta(0), fPolarPhi(0)
+TParticle::TParticle()
 {
-  fMother[0]   = 0;
-  fMother[1]   = 0;
-  fDaughter[0] = 0;
-  fDaughter[1] = 0;
   fParticlePDG = 0;
 }
 

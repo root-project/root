@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.6 2001/10/04 16:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.5 2001/05/14 06:43:20 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -248,7 +248,7 @@ void TPadOpenGLView::PaintPolyLine(TPolyLine3D *line,Option_t *opt)
 {
     gVirtualGL->SetGLColorIndex(line->GetLineColor());
     gVirtualGL->SetGLLineWidth((Float_t)(line->GetLineWidth()));
-    gVirtualGL->PaintPolyLine(line->Size(), line->GetP(), opt);
+    gVirtualGL->PaintPolyLine(line->GetN(), line->GetP(), opt);
 }
 
 //______________________________________________________________________________
@@ -256,7 +256,7 @@ void TPadOpenGLView::PaintPolyMarker(TPolyMarker3D *marker,Option_t *opt)
 {
     gVirtualGL->SetGLColorIndex(marker->GetMarkerColor());
     gVirtualGL->SetGLPointSize((Float_t)(marker->GetMarkerSize()));
-    gVirtualGL->PaintGLPoints(marker->Size(), marker->GetP(), opt);
+    gVirtualGL->PaintGLPoints(marker->GetN(), marker->GetP(), opt);
 }
 //______________________________________________________________________________
 void TPadOpenGLView::PaintPoints3D(const TPoints3DABC *points,Option_t *opt)

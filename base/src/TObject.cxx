@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.33 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.29 2001/12/03 09:04:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,8 +29,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -184,7 +185,7 @@ TObject::TObject(const TObject &obj)
       fBits |= kIsOnHeap;
    else
       fBits &= ~kIsOnHeap;
-
+   
    fBits &= ~kIsReferenced;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
@@ -229,7 +230,7 @@ void TObject::Copy(TObject &obj)
 TObject::~TObject()
 {
    // TObject destructor. Removes object from all canvases and object browsers
-   // if observer bit is on and remove from the global object table.
+   // iff observer bit is on and remove from the global object table.
 
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
@@ -429,20 +430,20 @@ void TObject::Dump() const
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params, int* error)
+void TObject::Execute(const char *method, const char *params)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params, int* error)
+void TObject::Execute(TMethod *method, TObjArray *params)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:
@@ -451,7 +452,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
@@ -884,7 +885,7 @@ void TObject::Streamer(TBuffer &R__b)
       //and store it in the ProcessID map in gROOT
       if (!TestBit(kIsReferenced)) return;
       R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
+      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);   
       if (pid) pid->PutObjectWithID(this);
    } else {
       R__b.WriteVersion(TObject::IsA());

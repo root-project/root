@@ -1,8 +1,8 @@
-// @(#)root/test:$Name:  $:$Id: TestVectors.cxx,v 1.3 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Peter Malzacher   19/06/99
 
 #ifndef __CINT__
-#include <Riostream.h>
+#include <iostream.h>
 #include <TMath.h>
 #include <TVector3.h>
 #include <TLorentzVector.h>

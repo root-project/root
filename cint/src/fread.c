@@ -2304,13 +2304,6 @@ char *string,*endmark;
 	  if(strncmp(string+inew,"new",3)!=0)
 	    ignoreflag=1;
 	  break;
-#ifndef G__PHLIPPE33
-	case 5:
-          /* keep the space after const */
-	  if(strncmp(string+inew,"const",5)!=0)
-	    ignoreflag=1;
-	  break;
-#endif
 	default:
 	  inew=i;
 	  ignoreflag=1;
