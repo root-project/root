@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.16 2002/07/13 16:19:26 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.17 2002/08/12 06:20:13 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -305,6 +305,7 @@ UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
    file->cd();
    file->SetBit(TFile::kHasReferences);
    pids->Add(pid);
+   pid->IncrementCount();
    char name[32];
    sprintf(name,"ProcessID%d",npids);
    pid->Write(name);
