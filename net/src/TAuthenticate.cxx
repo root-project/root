@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.12 2003/09/02 15:10:17 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.13 2003/09/03 07:46:49 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -40,11 +40,11 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
-#ifndef R__WIN32
+#if !defined(R__WIN32) && !defined(R__MACOSX)
 #include <crypt.h>
 #endif
 
-#if defined(__osf__) || defined(__sgi)
+#if defined(R__ALPHA) || defined(R__SGI) || defined(R__MACOSX)
 extern "C" char *crypt(const char *, const char *);
 #endif
 
