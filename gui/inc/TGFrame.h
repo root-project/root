@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.27 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.28 2003/11/06 10:44:00 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -456,7 +456,6 @@ public:
                     UInt_t options = kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
-   virtual Bool_t  HandleKey(Event_t *event);
    virtual void    SaveSource(const char *filename, Option_t *option); // *MENU*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.29 2003/10/24 16:27:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.30 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -75,9 +75,10 @@
 #include "TBits.h"
 #include "TColor.h"
 #include "TROOT.h"
-#include "TGShutter.h"
 #include "KeySymbols.h"
 #include "TGFileDialog.h"
+#include "TGMsgBox.h"
+#include "TSystem.h"
 
 Bool_t      TGFrame::fgInit = kFALSE;
 Pixel_t     TGFrame::fgDefaultFrameBackground = 0;
@@ -100,9 +101,9 @@ const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
 
-static const char *gSaveTypes[] = { "Macro files", "*.C",
-                                    "All files",   "*",
-                                    0,             0 };
+static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
+                                         "All files",   "*",
+                                          0,             0 };
 
 ClassImp(TGFrame)
 ClassImp(TGCompositeFrame)
@@ -1013,9 +1014,32 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
       gVirtualX->SetKeyAutoRepeat(kTRUE);
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
-         SaveSource("MviaS.C","");
+      UInt_t keysym;
+      char str[2];
+      gVirtualX->LookupString(event, str, sizeof(str), keysym);
+      if (str[0] == 19) {  // ctrl-s
+         static TString dir(".");
+         TGFileInfo fi;
+         fi.fFileTypes = gSaveMacroTypes;
+         fi.fIniDir    = StrDup(dir);
+         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
+         if (!fi.fFilename) return kTRUE;
+         dir = fi.fIniDir;
+         const char *fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
+         if (strstr(fname, ".C"))
+            SaveSource(fname, "");
+         else {
+            Int_t retval;
+            new TGMsgBox(fClient->GetRoot(), this, "Error...",
+                        Form("file (%s) must have extension .C", fname),
+                        kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+            if (retval == kMBRetry)
+               HandleKey(event);
+         }
          return kTRUE;
+      }
    }
+
    if (!fBindList) return kFALSE;
 
    TIter next(fBindList);
@@ -1237,47 +1261,6 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
 
    if (fMain)
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());
-}
-
-//______________________________________________________________________________
-Bool_t TGTransientFrame::HandleKey(Event_t *event)
-{
-   // Handle keyboard events.
-
-   if (event->fType == kGKeyPress)
-      gVirtualX->SetKeyAutoRepeat(kFALSE);
-   else
-      gVirtualX->SetKeyAutoRepeat(kTRUE);
-
-   if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
-      SaveSource("TviaS.C","");
-      //static TString dir(".");
-      //TGFileInfo fi;
-      //fi.fFileTypes = gSaveTypes;
-      //fi.fIniDir    = StrDup(dir);
-      //new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
-      //if (!fi.fFilename) return kTRUE;
-      //dir = fi.fIniDir;
-      //if (strstr(fi.fFilename, ".C"))
-      //   SaveSource(strstr(fi.fFilename, dir),"");
-      //else
-      //   Warning("HandleKey", "file with extension (%s) cannot be saved ", fi.fFilename);
-      return kTRUE;
-   }
-
-   if (!fBindList) return kFALSE;
-
-   TIter next(fBindList);
-   TGMapKey *m;
-   TGFrame  *w;
-
-   while ((m = (TGMapKey *) next())) {
-      if (m->fKeyCode == event->fCode) {
-         w = (TGFrame *) m->fWindow;
-         return w->HandleKey(event);
-      }
-   }
-   return kFALSE;
 }
 
 //______________________________________________________________________________
