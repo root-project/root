@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.36 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.37 2001/09/04 01:37:41 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,7 +40,7 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 
-ClassImp(RooAbsReal) 
+ClassImp(RooAbsReal)
 ;
 
 

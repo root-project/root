@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.28 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.29 2001/08/29 19:14:20 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -579,6 +579,18 @@ TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const char * name, 
   return plot(&varX, &varY, name, newIntegral);
 }
 
+TH2F * RooAbsPdf::plot(RooAbsReal & varX, RooAbsReal & varY, const Double_t newIntegral, int nX, int nY)
+{
+  Int_t origNx = varX.getPlotBins();
+  Int_t origNy = varY.getPlotBins();
+  varX.setPlotBins(nX);
+  varY.setPlotBins(nY);
+  TH2F * newHist = plot(varX, varY, " ", newIntegral);
+  varX.setPlotBins(origNx);
+  varY.setPlotBins(origNy);
+  return newHist;
+}
+
 TH2F * RooAbsPdf::plot(RooAbsReal * varX, RooAbsReal * varY, const char * name, const Double_t newIntegral)
 {
   TString histName(name);
@@ -619,4 +631,3 @@ TH2F * RooAbsPdf::plot(RooAbsReal * varX, RooAbsReal * varY, const char * name, 
   }
   return histogram;
 }
-
