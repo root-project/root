@@ -1984,12 +1984,13 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
 }
 
 #if defined(_MSC_VER) && (_MSC_VER<1300)
-template <class Element, class Index> 
-void SortImp(Index n1, const Element *a, 
-             Index *index, Bool_t down) 
+#define SortImp SortImpStandalone
+template <class Element, class Index, class Size> 
+void SortImpStandalone(Size n1, const Element *a, 
+                       Index *index, Bool_t down) 
 #else
-template <class Element, class Index> 
-void TMath::SortImp(Index n1, const Element *a, 
+template <class Element, class Index, class Size> 
+void TMath::SortImp(Size n1, const Element *a, 
                     Index *index, Bool_t down) 
 #endif
 {
@@ -2003,8 +2004,8 @@ void TMath::SortImp(Index n1, const Element *a,
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Index i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Index i22 = 0;
+   Size i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Size i22 = 0;
    Element ai;
    n = n1;
    if (n <= 0) return;
