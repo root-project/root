@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.149 2003/06/30 09:03:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.150 2003/07/02 21:18:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1940,14 +1940,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    gF1 = f1;
    hFitter->SetUserFunc(f1);
    if (!f1) { Error("Fit", "Pointer to function is null"); return 0; }
+   if (f1->IsZombie()) { Error("Fit", "Function is zombie"); return 0; }
    npar = f1->GetNpar();
    if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return 0; }
-
 //   - Check that function has same dimension as histogram
-   if (f1->GetNdim() == 1 && GetDimension() > 1) {
-      Error("Fit", "Function %s is not 2-D",f1->GetName()); return 0; }
-   if (f1->GetNdim() == 2 && GetDimension() < 2) {
-      Error("Fit", "Function %s is not 1-D",f1->GetName()); return 0; }
+   if (f1->GetNdim() != GetDimension()) {
+      Error("Fit","Function dimension:%d does not match histogram dimension:%d",f1->GetNdim(),GetDimension());
+      return 0;
+   }
    if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //   - Decode list of options into Foption
