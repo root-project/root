@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.16 2004/08/11 04:42:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.17 2004/08/11 20:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -535,9 +535,11 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
    case Utility::kChar:
    case Utility::kShort:
    case Utility::kInt:
+   case Utility::kUInt:
    case Utility::kLong:
+   case Utility::kULong:
    case Utility::kLongLong: {
-      long returnValue;
+      long returnValue = 0;
       execute( self, returnValue );
       return PyLong_FromLong( returnValue );
    }
@@ -553,31 +555,41 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
          long address;
          execute( self, address );
 
-      // upgrade to real class for TObject and TGlobal returns
-         if ( address ) {
-            if ( m_rtShortName == "TObject" ) {
-               TClass* clActual = cls->GetActualClass( (void*)address );
-               if ( clActual ) {
-                  int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
-                  address -= offset;
-               }
-               cls = ((TObject*)address)->IsA();
-            }
-            else if ( m_rtShortName == "TGlobal" ) {
-               TGlobal* g = (TGlobal*)address;
-               cls = gROOT->GetClass( g->GetTypeName() );
-               if ( ! cls )
-                  cls = TGlobal::Class();
-               else {
-                  if ( Utility::isPointer( g->GetFullTypeName() ) )
-                     address = (long)(*(void**)g->GetAddress());
-                  else
-                     address = (long)g->GetAddress();
-               }
-            }
+      // return null object if failed
+         if ( ! address ) {
+            Py_INCREF( Py_None );
+            return Py_None;
          }
 
-         return bindRootObject( new ObjectHolder( (void*)address, cls, false ) );
+      // upgrade to real class for TObject and TGlobal returns
+         ObjectHolder* obh = 0;
+         if ( m_rtShortName == "TObject" ) {
+            TClass* clActual = cls->GetActualClass( (void*)address );
+            if ( clActual ) {
+               int offset = (cls != clActual) ? clActual->GetBaseClassOffset( cls ) : 0;
+               address -= offset;
+            }
+
+            obh = new ObjectHolder( (void*)address, ((TObject*)address)->IsA(), false );
+         }
+         else if ( m_rtShortName == "TGlobal" ) {
+            TGlobal* g = (TGlobal*)address;
+            cls = gROOT->GetClass( g->GetTypeName() );
+            if ( ! cls )
+               cls = TGlobal::Class();
+            else {
+               if ( Utility::isPointer( g->GetFullTypeName() ) ) {
+                  obh = new AddressHolder( (void**)g->GetAddress(), cls, false );
+                  return bindRootObject( obh, true );
+               }
+               else
+                  obh = new ObjectHolder( (void*)g->GetAddress(), cls, false );
+            }
+         }
+         else
+            obh = new ObjectHolder( (void*)address, cls, false );
+
+         return bindRootObject( obh );
       }
 
    // confused ...

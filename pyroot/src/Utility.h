@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.5 2004/07/29 04:41:38 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.6 2004/08/02 21:00:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -24,22 +24,24 @@ namespace PyROOT {
 
    // data/return types
       enum EDataType {
-         kBool        = 0x0001,
-         kChar        = 0x0002,
-         kShort       = 0x0004,
-         kInt         = 0x0008,
-         kLong        = 0x0010,
-         kFloat       = 0x0020,
-         kDouble      = 0x0040,
-         kVoid        = 0x0080,
-         kOther       = 0x0100,
-         kLongLong    = 0x0200,
-         kString      = 0x1000 | kChar,
-         kDoublePtr   = 0x1000 | kDouble,
-         kFloatPtr    = 0x1000 | kFloat,
-         kLongPtr     = 0x1000 | kLong,
-         kIntPtr      = 0x1000 | kInt,
-         kVoidPtr     = 0x1000 | kVoid
+         kBool        = 0x00000001,
+         kChar        = 0x00000002,
+         kShort       = 0x00000004,
+         kInt         = 0x00000008,
+         kUInt        = 0x00000010,
+         kLong        = 0x00000020,
+         kULong       = 0x00000040,
+         kFloat       = 0x00000080,
+         kDouble      = 0x00000100,
+         kVoid        = 0x00000200,
+         kOther       = 0x00000400,
+         kLongLong    = 0x00000800,
+         kString      = 0x00010000 | kChar,
+         kDoublePtr   = 0x00010000 | kDouble,
+         kFloatPtr    = 0x00010000 | kFloat,
+         kLongPtr     = 0x00010000 | kLong,
+         kIntPtr      = 0x00010000 | kInt,
+         kVoidPtr     = 0x00010000 | kVoid
       };
 
       EDataType effectiveType( const std::string& typeName );

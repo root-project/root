@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.4 2004/07/30 06:31:18 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.5 2004/08/02 21:00:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -9,6 +9,7 @@
 #include "TROOT.h"
 #include "TObject.h"
 #include "TClass.h"
+#include "TUnixSystem.h"
 
 // Standard
 #include <stdio.h>
@@ -69,6 +70,22 @@ void PyROOT::ObjectHolder::release() {
 
 std::string PyROOT::ObjectHolder::repr() const {
    char buf[256];
-   sprintf( buf, "Instance of type %s at address %p", m_class->GetName(), (void*)m_object );
+   sprintf( buf, "Instance of type %s at address %p", m_class->GetName(), getObject() );
    return buf;
+}
+
+void* PyROOT::ObjectHolder::getObject() const {
+   return const_cast< void* >( m_object );             // may be null
+}
+
+TClass* PyROOT::ObjectHolder::objectIsA() const {
+   return const_cast< TClass* >( m_class );      // may be null
+}
+
+
+void* PyROOT::AddressHolder::getObject() const {
+   void* address = ObjectHolder::getObject();
+   if ( address )
+      return *(reinterpret_cast< void** >( address ));
+   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.3 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -27,8 +27,8 @@ namespace PyROOT {
    PyObject* makeRootClass( PyObject* self, PyObject* args );
    PyObject* makeRootClassFromString( const char* className );
 
-// bind a held ROOT object into a Python object
-   PyObject* bindRootObject( ObjectHolder* obj );
+// bind a held ROOT object into a Python object (if force is false, allow recycle)
+   PyObject* bindRootObject( ObjectHolder* obj, bool force = false );
 
 } // namespace PyROOT
 

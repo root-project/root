@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.7 2004/08/11 04:42:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.8 2004/08/11 20:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -72,7 +72,7 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
 
    std::string shortName = TClassEdit::ShortType( G__TypeInfo( typeName.c_str() ).TrueName(), 1 );
 
-   int mask = isPointer( typeName ) == 1 ? 0x1000 : 0;
+   int mask = isPointer( typeName ) == 1 ? 0x10000 : 0;
 
    if ( shortName == "bool" )
       effType = EDataType( (int) kBool | mask );
@@ -82,8 +82,12 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
       effType = EDataType( (int) kShort | mask );
    else if ( shortName == "int" )
       effType = EDataType( (int) kInt | mask );
+   else if ( shortName == "unsigned int" )
+      effType = EDataType( (int) kUInt | mask );
    else if ( shortName == "long" )
       effType = EDataType( (int) kLong | mask );
+   else if ( shortName == "unsigned long" )
+      effType = EDataType( (int) kULong | mask );
    else if ( shortName == "long long" )
       effType = EDataType( (int) kLongLong | mask );
    else if ( shortName == "float" )

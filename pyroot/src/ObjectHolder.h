@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.5 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.6 2004/08/04 20:46:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_OBJECTHOLDER_H
@@ -16,7 +16,7 @@ namespace PyROOT {
 /** ROOT instance holder
       @author  WLAV
       @date    02/25/2003
-      @version 1.2
+      @version 1.3
  */
 
    class ObjectHolder {
@@ -42,15 +42,9 @@ namespace PyROOT {
 
       void release();
 
-      std::string repr() const;
-
-      void* getObject() const {
-         return const_cast< void* >( m_object );       // may be null
-      }
-
-      TClass* objectIsA() const {
-         return const_cast< TClass* >( m_class );      // may be null
-      }
+      virtual std::string repr() const;
+      virtual void* getObject() const;
+      virtual TClass* objectIsA() const;
 
    private:
       void copy_( const ObjectHolder& );
@@ -60,6 +54,15 @@ namespace PyROOT {
       void* m_object;
       TClass* m_class;
       int* m_ref;
+   };
+
+   class AddressHolder : public ObjectHolder {
+   public:
+      AddressHolder( void** address, TClass* cls, bool own = false ) :
+         ObjectHolder( (void*) address, cls, own ) {}
+
+   public:
+      virtual void* getObject() const;
    };
 
 } // namespace PyROOT

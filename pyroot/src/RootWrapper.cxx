@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.10 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.11 2004/08/04 20:46:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -351,7 +351,7 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 }
 
 
-PyObject* PyROOT::bindRootObject( ObjectHolder* obj ) {
+PyObject* PyROOT::bindRootObject( ObjectHolder* obj, bool force ) {
    TClass* cls = obj->objectIsA();
 
 // only known objects will be bound
@@ -362,10 +362,13 @@ PyObject* PyROOT::bindRootObject( ObjectHolder* obj ) {
       Py_DECREF( args );
 
       if ( pyclass ) {
-      // use the old reference if the object already exists
-         PyObject* oldObject = MemoryRegulator::RetrieveObject( obj->getObject() );
-         if ( oldObject )
-            return oldObject;
+
+         if ( force == false ) {
+         // use the old reference if the object already exists
+            PyObject* oldObject = MemoryRegulator::RetrieveObject( obj->getObject() );
+            if ( oldObject )
+               return oldObject;
+         }
 
       // if not: instantiate an object of this class, with the holder added to it
          PyObject* newObject = PyType_GenericNew( (PyTypeObject*)pyclass, NULL, NULL );

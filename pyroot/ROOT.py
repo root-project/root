@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.6 2004/06/17 21:12:25 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.7 2004/07/27 12:27:04 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 07/22/04
+# Last: 08/12/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -69,7 +69,14 @@ def _excepthook( exctype, value, traceb ):
       if glbdct.has_key( 'makeRootClass' ) or locdct.has_key( 'makeRootClass' ):
          try:
           # construct the ROOT shadow class in the current and the ROOT module (may throw)
-            exec '%s = makeRootClass( "%s" )' % (name,name) in glbdct, locdct
+            try:
+               exec '%s = makeRootClass( "%s" )' % (name,name) in glbdct, locdct
+            except:
+               gGlobal = gROOT.GetGlobal( name, 1 )
+               if gGlobal:
+                  glbdct[ name ] = gGlobal
+               else:
+                  raise NameError
          except (NameError, TypeError):      # ROOT not loaded or class lookup failed
             _orig_ehook( exctype, value, traceb )
          else:
@@ -143,7 +150,12 @@ class ModuleFacade:
 
    def __getattr__( self, name ):
       if not hasattr( _thismodule, name ):
-         exec 'global %s; %s = makeRootClass( "%s" )' % (name,name,name)
+         try:
+            exec 'global %s; %s = makeRootClass( "%s" )' % (name,name,name)
+         except:
+            aGlobal = gROOT.GetGlobal( name, 1 )
+            if aGlobal:
+               _thismodule.__dict__[ name ] = aGlobal
       return getattr( _thismodule, name )
 
 sys.modules[ __name__ ] = ModuleFacade()
