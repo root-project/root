@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.8 2004/05/13 11:42:15 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.9 2004/05/14 14:49:12 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -144,6 +144,8 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
    fstat(fileno(fp), &sbuf);
    size_t siz = sbuf.st_size;
 
+   if (!siz) return 0;
+
    // read file and remove lines matching specified libs
    char *fbuf = new char[siz+1];
    char *fptr = fbuf;
@@ -168,6 +170,12 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
          }
       }
       delete [] line;
+
+#ifdef __hpux
+      // fgets() should return 0 in this case but doesn't
+      if (siz - size_t(fptr - fbuf) <= 0)
+         break;
+#endif
    }
 
    ftruncate(fileno(fp), 0);
