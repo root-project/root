@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.47 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -68,7 +68,7 @@ TMatrixDSym::TMatrixDSym(Int_t row_lwb,Int_t row_upb,const Double_t *elements,Op
 }
 
 //______________________________________________________________________________
-TMatrixDSym::TMatrixDSym(const TMatrixDSym &another) : TMatrixDBase(another)
+TMatrixDSym::TMatrixDSym(const TMatrixDSym &another) : TMatrixDBase()
 {
   Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
@@ -76,7 +76,7 @@ TMatrixDSym::TMatrixDSym(const TMatrixDSym &another) : TMatrixDBase(another)
 }
 
 //______________________________________________________________________________
-TMatrixDSym::TMatrixDSym(const TMatrixFSym &another)
+TMatrixDSym::TMatrixDSym(const TMatrixFSym &another) : TMatrixDBase()
 {
   Assert(another.IsValid());
   Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
