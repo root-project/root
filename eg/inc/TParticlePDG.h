@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.3 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.4 2003/02/12 07:58:43 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -28,7 +28,7 @@ public:
 protected:
   Int_t            fPdgCode;		        // PDG code of the particle
   Double_t         fMass;                       // particle mass in GeV
-  Double_t         fCharge;                     // charge in units of |e|
+  Double_t         fCharge;                     // charge in units of |e|/3
   Double_t         fLifetime;                   // proper lifetime in nanoseconds
   Double_t         fWidth;                      // total width in GeV
   Int_t            fParity;
