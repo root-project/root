@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.100 2001/11/03 16:53:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.101 2001/11/13 10:28:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -572,6 +572,13 @@ void TTree::AutoSave()
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
    dirsav->cd();
+}
+
+//______________________________________________________________________________
+Int_t TTree::Branch(TList *list, Int_t bufsize, Int_t splitlevel)
+{
+//   Deprecated function. Use next function instead.
+   return Branch((TCollection*)list,bufsize,splitlevel);
 }
 
 //______________________________________________________________________________

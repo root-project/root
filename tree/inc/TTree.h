@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.33 2001/09/22 10:06:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.34 2001/11/13 10:28:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -137,6 +137,7 @@ public:
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
     virtual void      AutoSave();
     virtual Int_t     Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="");
+    virtual Int_t     Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t     Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
     virtual TBranch  *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
