@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.49 2004/01/05 13:58:14 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.50 2004/01/06 16:21:02 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ void stress(Int_t nevent, Int_t style = 1)
 
    //just in case an interactive version runs stress.cxx, check that
    //libEvent library is loaded
-   if (!gROOT->GetClass("event")) gSystem->Load("libEvent");
+   if (!gROOT->GetClass("Event")) gSystem->Load("libEvent");
    
    if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
