@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 
 #include "TGString.h"
 #include "TVirtualX.h"
+#include "ctype.h"
 
 
 ClassImp(TGString)
@@ -145,7 +146,7 @@ TGHotString::TGHotString(const char *s) : TGString(s)
          }
          // hot key marker - calculate the offset value
          fHotPos  = (p - dup) + 1;
-         fHotChar = p[1];
+         fHotChar = tolower(p[1]);
          for (; *p; p++) p[0] = p[1];  // copy down
          break;                        // allow only one hotkey per item
       }

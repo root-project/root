@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.29 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.30 2004/03/18 14:22:03 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -383,8 +383,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
    TGMenuTitle *target = 0;
 
-   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
-
+   if ((event->fType == kGKeyPress) && (event->fState == kKeyMod1Mask)) {
       TGFrameElement *el;
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {

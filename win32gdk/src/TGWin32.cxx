@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.54 2004/03/18 14:22:03 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.55 2004/03/22 11:00:40 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -5519,14 +5519,11 @@ void TGWin32::MapModifierState(UInt_t & state, UInt_t & xstate, Bool_t tox)
 
    if (tox) {
       xstate = state;
-      if ((state & kAnyModifier)) {
+      if (state & kAnyModifier) {
          xstate |= GDK_MODIFIER_MASK;
       }
    } else {
       state = xstate;
-      if ((xstate & GDK_MODIFIER_MASK)) {
-         state |= kAnyModifier;
-      }
    }
 }
 

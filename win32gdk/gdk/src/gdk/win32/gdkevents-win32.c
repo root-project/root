@@ -4497,7 +4497,7 @@ is_grabbed_key(GdkWindow **window, gint keycode, gint mod)
    GdkWindow *sav = *window;
 
    while (1) {
-      if (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod & mod) {
+      if (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod == mod) {
          found = *window;
       }
       if (((GdkWindowPrivate *) *window)->parent == gdk_parent_root) break;
