@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.28 2004/06/30 22:47:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.29 2004/07/01 18:41:05 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -477,7 +477,7 @@ TPacketizer2::TFileNode *TPacketizer2::NextActiveNode()
    }
 
    TFileNode *fn = (TFileNode*) fActive->First();
-   if (fn != 0 && fn->GetSlaveCnt() > fMaxSlaveCnt) {
+   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1) Info("NextActiveNode","Reached Slaves per Node Limit (%d)", fMaxSlaveCnt);
       fn = 0;
    }
@@ -604,10 +604,6 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
             PDB(kPacketizer,2) Info("TPacketizer2","sent to slave-%d (%s) via %p GETENTRIES on %s %s %s %s",
                 s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
-         } else {
-            // Done
-            done = kTRUE;
-            workers.Clear();
          }
       }
 
@@ -706,19 +702,12 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
       }
 
-      if ( !done ) {
-         workers.Add(slave); // Ready for the next job
-      }
+      workers.Add(slave); // Ready for the next job
    }
 
    // report std. output from slaves??
 
    ((TProof*)gProof)->ActivateAsyncInput();
-
-   if (!done) {
-      // we ran out of slaves ...
-      fValid = kFALSE;
-   }
 
 }
 
