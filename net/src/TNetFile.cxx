@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.44 2004/01/19 18:31:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.45 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -423,18 +423,18 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Create Authenticated socket
    Int_t sSize = netopt < -1 ? -netopt : 1;
-   TString Url(fUrl.GetProtocol());
-   if (Url.Contains("root")) {
-      Url.Insert(4,"dp");
+   TString url(fUrl.GetProtocol());
+   if (url.Contains("root")) {
+      url.Insert(4,"dp");
    } else {
-      Url = "rootdp";
+      url = "rootdp";
    }
-   Url += TString(Form("://%s@%s:%d",
-                        fUrl.GetUser(),fUrl.GetHost(),fUrl.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(Url, sSize, tcpwindowsize);
-   if (!fSocket || !fSocket->IsValid()) {
+   url += TString(Form("://%s@%s:%d",
+                        fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
+   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize);
+   if (!fSocket || !fSocket->IsAuthenticated()) {
       Error("TNetFile", "can't open %d-fold connections to rootd on "
-            "host %s at port %d",sSize, fUrl.GetHost(), fUrl.GetPort());
+            "host %s at port %d", sSize, fUrl.GetHost(), fUrl.GetPort());
       *kind = kROOTD_ERR;
       *stat = (Int_t)kErrAuthNotOK;
       goto zombie;
@@ -449,12 +449,12 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Open the file
    if (forceOpen)
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), 
+      fSocket->Send(Form("%s %s", fUrl.GetFile(),
                               ToLower("f"+fOption).Data()), kROOTD_OPEN);
    else if (forceRead)
       fSocket->Send(Form("%s %s", fUrl.GetFile(), "+read"), kROOTD_OPEN);
    else
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), 
+      fSocket->Send(Form("%s %s", fUrl.GetFile(),
                               ToLower(fOption).Data()), kROOTD_OPEN);
 
    EMessageTypes tmpkind;

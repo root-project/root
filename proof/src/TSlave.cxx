@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.23 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.24 2004/04/20 15:23:17 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -47,31 +47,31 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fSocket   = 0;
    fInput    = 0;
 
-   // The url contains information about the server type: make sure 
-   // it is 'proofd' or alike  
+   // The url contains information about the server type: make sure
+   // it is 'proofd' or alike
    TString hurl(proof->GetUrlProt());
-   hurl.Insert(5,'d');
+   hurl.Insert(5, 'd');
    // Add host, port (and user) information
    if (proof->GetUser() && strlen(proof->GetUser())) {
-      hurl += TString(Form("://%s@%s:%d",proof->GetUser(),host,port));
+      hurl += TString(Form("://%s@%s:%d", proof->GetUser(), host, port));
    } else {
-      hurl += TString(Form("://%s:%d",host,port));
+      hurl += TString(Form("://%s:%d", host, port));
    }
 
    // Add information about our status (Client or Master)
-   TString Iam;
+   TString iam;
    if (proof->IsMaster()) {
-      Iam = "Master";  
+      iam = "Master";
       hurl += TString("/?M");
    } else {
-      Iam = "Local Client";  
+      iam = "Local Client";
       hurl += TString("/?C");
    }
 
    // Open authenticated connection to remote PROOF slave server.
    Int_t wsize = 65536;
-   fSocket = TSocket::CreateAuthSocket(hurl,0,wsize);
-   if (fSocket && fSocket->IsValid()) {
+   fSocket = TSocket::CreateAuthSocket(hurl, 0, wsize);
+   if (fSocket && fSocket->IsAuthenticated()) {
 
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
@@ -88,8 +88,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
       PDB(kGlobal,3) {
          fSocket->GetSecContext()->Print("e");
-         Info("TSlave", 
-              "%s: fUser is .... %s", Iam.Data(), proof->fUser.Data());
+         Info("TSlave",
+              "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
       }
 
       TString Details = fSocket->GetSecContext()->GetDetails();

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.22 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.23 2004/04/20 21:32:02 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
    TString s = url;
    if (s.Contains("://")) {
       if (!s.BeginsWith("root")) {
-         Error("TFTP", 
+         Error("TFTP",
                "url must be of the form \"[root[up,s,k,g,h,ug]://]host[:port]\"");
          MakeZombie();
          return;
@@ -94,16 +94,16 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    TUrl url(surl);
    TString hurl(url.GetProtocol());
    if (hurl.Contains("root")) {
-      hurl.Insert(4,"dp"); 
+      hurl.Insert(4,"dp");
    } else {
       hurl = "rootdp";
    }
    hurl += TString(Form("://%s@%s:%d",
-                        url.GetUser(),url.GetHost(),url.GetPort()));
+                        url.GetUser(), url.GetHost(), url.GetPort()));
    fSocket = TSocket::CreateAuthSocket(hurl, par, wsize);
-   if (!fSocket || !fSocket->IsValid()) {
+   if (!fSocket || !fSocket->IsAuthenticated()) {
       Error("TFTP", "can't open %d-fold connections to rootd on "
-            "host %s at port %d",par, url.GetHost(), url.GetPort());
+            "host %s at port %d", par, url.GetHost(), url.GetPort());
       goto zombie;
    }
 
@@ -871,7 +871,7 @@ Int_t TFTP::Close()
       return -1;
    }
 
-   // Ask for remote shutdown   
+   // Ask for remote shutdown
    if (fProtocol > 6)
       fSocket->Send(kROOTD_BYE);
 
