@@ -6205,7 +6205,7 @@ int parameter00;
     var->next = 
       (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
     memset(var->next,0,sizeof(struct G__var_array));
-
+    
     /***************************************
      * assign local variable var to new array
      * This will be confusing, be careful

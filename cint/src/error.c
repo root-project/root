@@ -7,7 +7,7 @@
  * Description:
  *  Show error message 
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -364,7 +364,12 @@ char *message;
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;
 #endif
+#ifndef G__OLDIMPLEMENTATION1771
+  if(G__NOLINK!=G__globalcomp && (G__steptrace||G__stepover)) 
+    while(0==G__pause()) ;
+#else
   if(G__steptrace||G__stepover) while(0==G__pause()) ;
+#endif
   return(0);
 }
 

@@ -793,8 +793,6 @@ int type;
      * Allocate and initialize member variable table 
      ************************************************************/
     G__struct.memvar[i] = (struct G__var_array *)malloc(sizeof(struct G__var_array));
-    memset(G__struct.memvar[i],0,sizeof(struct G__var_array));
-    
     G__struct.memvar[i]->varlabel[0][0]=0;
     G__struct.memvar[i]->paran[0]=0;
     G__struct.memvar[i]->allvar=0;
@@ -915,8 +913,6 @@ int *pig15;
   }
   else {
     var->next = (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
-    memset(var->next,0,sizeof(struct G__var_array));
-
     var->next->tagnum=var->tagnum;
     var = var->next;
     var->varlabel[0][0]=0;

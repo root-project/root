@@ -11,13 +11,16 @@ using namespace std;
 #include <string>
 class G__exception : public exception {
   string msg;
+  string cname;
  public:
   G__exception() { }
-  G__exception(const G__exception& x) { msg=x.msg; }
-  G__exception(const char* x) : msg(x) { }
-  G__exception(const string& x) : msg(x) { }
-  G__exception& operator=(const G__exception& x) {msg=x.msg;return(*this);}
+  G__exception(const G__exception& x) { msg=x.msg; cname=x.cname; }
+  G__exception(const char* x,const char* cnm="") : msg(x),cname(cnm) { }
+  G__exception(const string& x,const string& cnm="") : msg(x),cname(cnm) { }
+  G__exception& operator=(const G__exception& x) 
+    {msg=x.msg;cname=x.cname;return(*this);}
   virtual const char* what() const throw() { return(msg.c_str()); }
+  virtual const char* classname() const throw() { return(cname.c_str()); }
   virtual ~G__exception() throw() { }
 };
 

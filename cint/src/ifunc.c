@@ -7,7 +7,7 @@
  * Description:
  *  interpret function and new style compiled function
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -855,7 +855,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #ifndef G__OLDIMPLEMENTATION1404
   struct G__ifunc_table *store_ifunc_tmp;
 #endif
-  
+
   /* system check */
   G__ASSERT(G__prerun);
   
@@ -2041,10 +2041,25 @@ char *funcheader;   /* funcheader = 'funcname(' */
   }
   
   if(dobody) {
+/*#define G__OLDIMPLEMENTATION1770*/ /* comment this out to activate the change*/
+#ifndef G__OLDIMPLEMENTATION1770
+    if(G__NOLINK>G__globalcomp) {
+      G__fignorestream("{");
+      G__fignorestream("}");
+    }
+    else {
+      store_def_struct_member = G__def_struct_member;
+      G__def_struct_member = 0;
+      G__exec_statement();
+      G__def_struct_member = store_def_struct_member;
+    }
+#else /* 1770 */
     store_def_struct_member = G__def_struct_member;
     G__def_struct_member = 0;
     G__exec_statement();
     G__def_struct_member = store_def_struct_member;
+#endif /* 1770 */
+
 #ifdef G__ASM_FUNC
 #ifndef G__OLDIMPLEMENTATION1706
     G__p_ifunc->pentry[func_now]->size = 
@@ -2059,7 +2074,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	G__ifile.line_number-G__p_ifunc->pentry[func_now]->line_number+1;
     }
 #endif /* 1706 */
-#endif
+#endif /* G__ASM_FUNC */
 #ifdef G__ASM_WHOLEFUNC
     /***************************************************************
     * compile as bytecode at load time if -O10 or #pragma bytecode
@@ -5725,7 +5740,6 @@ int memfunc_flag;
   store_asm_noverflow = G__asm_noverflow;
 #endif
   
-  memset(&G_local,0,sizeof(struct G__var_array));    
 #ifdef G__ASM_IFUNC
   if(G__asm_exec) {
     ifn = G__asm_index;
@@ -6200,9 +6214,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1605
 	  *result7 = G__null;
 #endif
-      if (0==G__const_noerror)
-           G__fprinterr(G__serr,"Error: %s() header declared but not defined"
-                        ,funcname);
+	  G__fprinterr(G__serr,"Error: %s() header declared but not defined"
+		  ,funcname);
 	  G__genericerror((char*)NULL);
 	  return(1);
 	}
@@ -6564,7 +6577,6 @@ asm_ifunc_start:   /* loop compilation execution label */
     store_no_exec_compile = G__no_exec_compile;
     G__no_exec_compile = 1;
     localvar = (struct G__var_array*)malloc(sizeof(struct G__var_array));
-    memset(localvar,0,sizeof(struct G__var_array));
 
     localvar->prev_local = G__p_local;
     localvar->ifunc = p_ifunc;

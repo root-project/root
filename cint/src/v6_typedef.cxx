@@ -1463,7 +1463,9 @@ int reftype;
 }
 
 #ifndef G__OLDIMPLEMENTATION1743
+#ifndef __CINT__
 void G__setnewtype_settypeum G__P((int typenum));
+#endif
 #endif
 /******************************************************************
 * G__search_typename2()

@@ -313,6 +313,87 @@ int G__IncludePathInfo::Next() {
 }
 ////////////////////////////////////////////////////////////////////
 
+#ifndef G__OLDIMPLEMENTATION1773
+/*********************************************************************
+* G__DemangleClassname
+*********************************************************************/
+static int G__DemangleClassname(char *buf,const char *orig)
+{
+  int tagnum;
+
+  /* try typeid.name() as is */
+  strcpy(buf,orig);
+  tagnum = G__defined_tagname(buf,2);
+  if(-1!=tagnum) return(1);
+  
+  /* try eliminating digit at the beginning "9exception" -> "exception" 
+   * this works for classes in global scope in g++ */
+  int ox=0;
+  while(isdigit(orig[ox])) ++ox; 
+  strcpy(buf,orig+ox);
+  tagnum = G__defined_tagname(buf,2);
+  if(-1!=tagnum) return(1);
+
+  /* try Q25abcde4hijk -> abcde::hijk 
+   * this works for classes in enclosed scope in g++ 2.96 */
+  int n=0;
+  int nest = orig[1]-'0';
+  int len;
+  int totallen=0;
+  ox = 2;
+  buf[0]=0;
+  for(n=0;n<nest;n++) {
+    len=0;
+    while(isdigit(orig[ox])){
+      len = len*10 + orig[ox]-'0';
+      ++ox; 
+    }
+    if(buf[0]) {
+      strcat(buf,"::");
+      totallen += (2+len);
+    }
+    else {
+      totallen=len;
+    }
+    strcat(buf,orig+ox);
+    buf[totallen] = 0;
+    ox += len;
+  }
+  tagnum = G__defined_tagname(buf,2);
+  if(-1!=tagnum) return(1);
+
+  /* try N5abcde4hijkE -> abcde::hijk 
+   * this works for classes in enclosed scope in g++ 3.x */
+  totallen=0;
+  ox = 1;
+  buf[0]=0;
+  for(;;) {
+    len=0;
+    while(isdigit(orig[ox])){
+      len = len*10 + orig[ox]-'0';
+      ++ox; 
+    }
+    if(buf[0]) {
+      strcat(buf,"::");
+      totallen += (2+len);
+    }
+    else {
+      totallen=len;
+    }
+    strcat(buf,orig+ox);
+    buf[totallen] = 0;
+    ox += len;
+    if(!isdigit(orig[ox])) break;
+  }
+  tagnum = G__defined_tagname(buf,2);
+  if(-1!=tagnum) return(1);
+
+  /* Give up and settle with G__exception */
+  return(0);
+  
+}
+#endif
+
 #ifdef G__EXCEPTIONWRAPPER
 #ifdef G__STD_EXCEPTION
 #include <exception>
@@ -342,17 +423,27 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     // translated to G__exception.
     sprintf(buf,"new G__exception(\"%s\")",x.what());
 #else
+#ifndef G__OLDIMPLEMENTATION1773
+    char buf2[G__ONELINE];
+    if(G__DemangleClassname(buf2,typeid(x).name())) {
+      sprintf(buf,"new %s(*(%s*)%ld)",buf2,buf2,(long)(&x));
+    }
+    else {
+      sprintf(buf,"new G__exception(\"%s\")",x.what());
+    }
+#else /* 1773 */
     char buf2[G__ONELINE];
     int ox=0;
     strcpy(buf2,typeid(x).name());
     while(isdigit(buf2[ox])) ++ox; /* why need this ??? */
     sprintf(buf,"new %s(*(%s*)%ld)",buf2+ox,buf2+ox,(long)(&x));
+#endif /* 1773 */
 #endif
     G__exceptionbuffer = G__getexpr(buf);
     G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
     G__return = G__RETURN_TRY;
   }
-#endif
+#endif 
   catch(...) {
     G__genericerror("Error: C++ exception caught");
   }

@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter parser header file
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015069
-#define G__CINTVERSIONSTR  "5.15.69, Dec 28 2002"
+#define G__CINTVERSION      5015070
+#define G__CINTVERSIONSTR  "5.15.70, Jan 4 2003"
 
 
 /**********************************************************************

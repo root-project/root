@@ -1660,8 +1660,15 @@ char *com;
     }
     ++i;
   }
+#define G__OLDIMPLEMENTATION1774
+#ifndef G__OLDIMPLEMENTATION1774
+  if(0!=nest) return(1);
+  if(single_quote || double_quote) return(-1);
+  return(0);
+#else
   if(0!=nest || single_quote || double_quote) return(1);
   else return(0);
+#endif
 }
 #endif
 
@@ -1789,6 +1796,21 @@ G__value *rslt;
       } 
       else if ('\0'!=command[0] && command[0] != '{') {
 #ifndef G__OLDIMPLEMENTATION892
+#ifndef G__OLDIMPLEMENTATION1774
+	switch(G__IsBadCommand(command)) {
+        case 0:
+	  break;
+        case 1:
+	  com=command;
+	  goto multi_line_command;
+        case -1:
+	default:
+	  fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
+	  G__UnlockCriticalSection();
+	  return(ignore=G__PAUSE_NORMAL);
+	  break;
+	}
+#else /* 1774 */
 	if(G__IsBadCommand(command)) {
 	  fprintf(stderr,"!!!Bad command input. Ignored!!!\n");
 #ifndef G__OLDIMPLEMENTATION1035
@@ -1796,6 +1818,7 @@ G__value *rslt;
 #endif
 	  return(ignore=G__PAUSE_NORMAL);
 	}
+#endif /* 1774 */
 #endif
 #ifndef G__OLDIMPLEMENTATION464
 	G__redirectoutput(command,&store_stdout,&store_stderr,&store_stdin,1
@@ -3582,6 +3605,9 @@ G__value *rslt;
       /*******************************************************
        * Evaluate sequencial statements
        *******************************************************/
+#ifndef G__OLDIMPLEMENTATION1774
+    multi_line_command:
+#endif
       if (*more == 0) {
 	do {
 	  G__tmpnam(tname);
@@ -3608,9 +3634,17 @@ G__value *rslt;
 	    if(double_quote==0) single_quote ^= 1;
 	    break;
 	  case '{':
+#ifndef G__OLDIMPLEMENTATION1774
+	  case '(':
+	  case '[':
+#endif
 	    if((single_quote==0)&&(double_quote==0)) temp++;
 	    break;
 	  case '}':
+#ifndef G__OLDIMPLEMENTATION1774
+	  case ')':
+	  case ']':
+#endif
 	    if((single_quote==0)&&(double_quote==0)) temp--;
 	    break;
 #ifndef G__OLDIMPLEMENTATION1679

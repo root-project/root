@@ -2449,6 +2449,11 @@ char *name;
     if(strlen(tempname)<L_tmpnam-6) strcat(tempname,appendix);
     return(tempname);
   }
+#elif defined(__CINT__)
+  const char *appendix="_cint";
+  tmpnam(name);
+  if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+  return(name);
 #elif ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
   const char *appendix="_cint";
   strcpy(name,"/tmp/XXXXXX");

@@ -20,7 +20,9 @@
 
 #include "common.h"
 
+#ifndef __CINT__
 void G__display_tempobject G__P((char* action));
+#endif
 
 #ifndef G__OLDIMPLEMENTATION863
 /* not ready yet
@@ -1119,8 +1121,10 @@ int memfunc_flag;
 	  if(double_quote==0&&single_quote==0) {
 	    result7[ig35]=0;
 	    if(0==strcmp(result7,"operator") ||
-               tmpltnest ||
-	       G__defined_templateclass(result7)) ++tmpltnest;
+#ifndef G__OLDIMPLEMENTATION1772
+               tmpltnest || 
+#endif
+	       G__defined_templateclass(result7) ) ++tmpltnest;
 	  }
 	  break;
 	case '>':
@@ -1880,12 +1884,17 @@ int memfunc_flag;
 	  if(!G__no_exec_compile || G__asm_noverflow) {
 #endif
 #ifndef G__OLDIMPLEMENTATION1185
+#ifndef G__OLDIMPLEMENTATION1775
 	    if (0==G__const_noerror) 
-              G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
-                           ,G__struct.name[G__tagnum],item);
+	      G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+			   ,G__struct.name[G__tagnum],item);
 #else
-              G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
-                           ,G__struct.name[G__tagnum],funcname);
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope"
+			 ,G__struct.name[G__tagnum],item);
+#endif
+#else
+	    G__fprinterr(G__serr, "Error: Can't call %s::%s() in current scope"
+			 ,G__struct.name[G__tagnum],funcname);
 #endif
 	    G__genericerror((char*)NULL);
 #ifndef G__OLDIMPLEMENTATION1505
