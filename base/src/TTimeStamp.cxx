@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.2 2002/02/02 10:09:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.3 2002/02/06 18:27:40 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -171,7 +171,7 @@ const char *TTimeStamp::AsString(Option_t *option) const
       return formatted[ibuffer];
    }
 
-#ifdef linux
+#ifdef R__LINUX
    // under linux %z is the hour offset and %Z is the timezone name
    const char *RFC822   = "%a, %d %b %Y %H:%M:%S %z (%Z) +#9ld nsec";
    const char *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
