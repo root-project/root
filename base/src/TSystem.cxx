@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.115 2005/01/06 23:18:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.116 2005/01/27 20:36:54 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2483,10 +2483,31 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
          line.Remove(0, posEOL+(line(posEOL)==';'?1:2));
       }
+
       if (!comp.Length())
          ::Info("ACLiC","Cannot extract compiler call from MakeSharedLibs().");
       else {
-         comp.ReplaceAll("$SourceFiles",filename);
+         // if filename is a header compiler won't compile it
+         // instead, create temp source file which is a copy of the header
+         Bool_t compileHeader=kFALSE;
+         size_t lenFilename=strlen(filename);
+         const char* endOfFilename=filename+lenFilename;
+         // check all known header extensions
+         for (Int_t iExt=0; !compileHeader && iExt<6; iExt++) {
+            size_t lenExt=strlen(extensions[iExt]);
+            compileHeader |=lenFilename>lenExt 
+               && !strcmp(extensions[iExt], endOfFilename-lenExt);
+         }
+
+         TString filenameForCompiler(filename);
+         if (compileHeader) {
+            // create temp source file
+            filenameForCompiler=BaseName( tmpnam(0) );
+            filenameForCompiler+=".check.cxx";
+            gSystem->Link(filename, filenameForCompiler);
+         }
+
+         comp.ReplaceAll("$SourceFiles",filenameForCompiler);
          comp.ReplaceAll("$ObjectFiles",dictObj);
          comp.ReplaceAll("$IncludePath",includes);
          comp.ReplaceAll("$SharedLib",library);
@@ -2499,6 +2520,11 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          if (gDebug>4)  ::Info("ACLiC",comp.Data());
 
          Int_t compilationResult = gSystem->Exec( comp );
+         
+         if (filenameForCompiler.CompareTo(filename))
+            // remove temporary file
+            gSystem->Unlink(filenameForCompiler);
+
          if (!compilationResult) {
             ::Info("ACLiC","The compiler has not found any problem with your macro.\n"
             "\tProbably your macro uses something rootcint can't parse.\n"
