@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.80 2002/09/03 18:39:44 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.81 2002/09/09 16:46:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3546,6 +3546,7 @@ void TPad::Print(const char *filename, Option_t *option)
 //   if option  =  0   - as "ps"
 //               "ps"  - Postscript file is produced (see special cases below)
 //               "eps" - an Encapsulated Postscript file is produced
+//               "svg" - a SVG file is produced
 //               "gif" - a GIF file is produced
 //               "cxx" - a C++ macro file is produced
 //
@@ -3642,6 +3643,47 @@ void TPad::Print(const char *filename, Option_t *option)
       return;
    }
 
+//==============Save pad/canvas as a SVG file====================================
+   if (strstr(opt,"svg")) {
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
+
+      Bool_t noScreen = kFALSE;
+      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
+         noScreen = kTRUE;
+         GetCanvas()->SetBatch(kTRUE);
+      }
+   
+      TPad *padsav = (TPad*)gPad;
+      cd();
+      TVirtualPS *psave = gVirtualPS;
+
+      if (!gVirtualPS) {
+         // Plugin Postscript/SVG driver
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TSVG"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+         }
+      }
+
+      // Create a new SVG file
+      gVirtualPS->SetName(psname);
+      gVirtualPS->Open(psname);
+      gVirtualPS->SetBit(kPrintingPS);
+      gVirtualPS->NewPage();
+      Paint();
+      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+      
+      Info("Print", "SVG file %s has been created", psname);
+
+      delete gVirtualPS;
+      gVirtualPS = psave;
+      gVirtualPS = 0;
+      padsav->cd();
+
+      return;
+   }
 
 //==============Save pad/canvas as a Postscript file==================================
 
@@ -4006,6 +4048,7 @@ void TPad::SaveAs(const char *filename)
 //   if filename is "", the file produced is padname.ps
 //   if filename starts with a dot, the padname is added in front
 //   if filename contains .eps, an Encapsulated Postscript file is produced
+//   if filename contains .svg, a SVG file is produced
 //   if filename contains .gif, a GIF file is produced
 //   if filename contains .C or .cxx, a C++ macro file is produced
 //   if filename contains .root, a Root file is produced
@@ -4029,6 +4072,8 @@ void TPad::SaveAs(const char *filename)
                Print(psname,"root");
    else if (strstr(psname,".eps"))
                Print(psname,"eps");
+   else if (strstr(psname,".svg"))
+               Print(psname,"svg");
    else
                Print(psname,"ps");
 

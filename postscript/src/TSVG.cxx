@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.4 2002/03/16 08:37:51 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.5 2002/04/11 11:41:30 rdm Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -90,7 +90,7 @@ TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    //  wtype : SVG workstation type. Not used in the SVG driver. But as TSVG
    //          inherits from TVirtualPS it should be kept. Anyway it is not
    //          necessary to specify this parameter at creation time because it
-   //          a default value (which is ignore in the SVG case).
+   //          has a default value (which is ignore in the SVG case).
 
    fStream = 0;
    Open(fname, wtype);
@@ -267,7 +267,7 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    //
    // mode = -1  the box looks as it is behind the screen
    // mode =  1  the box looks as it is in front of the screen
-   // border is the border size in already precomputed SVG units dark is the
+   // border is the border size in already pre-computed SVG units dark is the
    // color for the dark part of the frame light is the color for the light
    // part of the frame
 
@@ -683,15 +683,12 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 void TSVG::Initialize()
 {
    // Initialize the SVG file. The main task of the function is to ouput the
-   // SVG header file which constist in <title>, <desc> and <defs>. The
-   // HeaderPS porvided by the user program is written in the <defs> part.
+   // SVG header file which consist in <title>, <desc> and <defs>. The
+   // HeaderPS provided by the user program is written in the <defs> part.
 
    // Title
    PrintStr("<title>@");
-   const char *pstitle = gStyle->GetTitlePS();
-   if (!strlen(pstitle)) pstitle = gPad->GetMother()->GetTitle();
    PrintStr(GetName());
-   PrintStr(pstitle);
    PrintStr("@");
    PrintStr("</title>@");
 
@@ -720,7 +717,7 @@ void TSVG::Initialize()
 void TSVG::MovePS(Int_t ix, Int_t iy)
 {
    // Move to a new position (ix, iy). The move is done in relative coordinates
-   // which allows to have short numbers which decraese the sive of the file.
+   // which allows to have short numbers which decrease the size of the file.
    // This function use the full power of the SVG's paths by using the
    // horizontal and vertical move whenever it is possible.
 
@@ -770,7 +767,7 @@ void TSVG::NewPage()
 //______________________________________________________________________________
 void TSVG::Range(Float_t xsize, Float_t ysize)
 {
-   // Set the range for the paper in centimeters
+   // Set the range for the paper in centimetres
 
    Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
 
@@ -915,8 +912,8 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 {
    // Draw text
    //
-   // xx: x postion of the text
-   // yy: y postion of the text
+   // xx: x position of the text
+   // yy: y position of the text
    // chars: text to be drawn
 
    static const char *fontFamily[] = {

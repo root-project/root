@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.9 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.10 2001/10/30 17:21:46 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -55,6 +55,7 @@ enum ERootCanvasCommands {
    kFileSaveAsC,
    kFileSaveAsPS,
    kFileSaveAsEPS,
+   kFileSaveAsSVG,
    kFileSaveAsGIF,
    kFilePrint,
    kFileCloseCanvas,
@@ -105,6 +106,7 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
 
 static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Encapsulated PostScript", "*.eps",
+                                      "SVG",          "*.svg",
                                       "Gif files",    "*.gif",
                                       "Macro files",  "*.C",
                                       "ROOT files",   "*.root",
@@ -205,6 +207,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileMenu->AddEntry("Save As...",          kFileSaveAs);
    fFileMenu->AddEntry("Save As canvas.ps",   kFileSaveAsPS);
    fFileMenu->AddEntry("Save As canvas.eps",  kFileSaveAsEPS);
+   fFileMenu->AddEntry("Save As canvas.svg",  kFileSaveAsSVG);
    fFileMenu->AddEntry("Save As canvas.gif",  kFileSaveAsGIF);
    fFileMenu->AddEntry("Save As canvas.C",    kFileSaveAsC);
    fFileMenu->AddEntry("Save As canvas.root", kFileSaveAsRoot);
@@ -477,6 +480,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (strstr(fi.fFilename, ".root") ||
                             strstr(fi.fFilename, ".ps")   ||
                             strstr(fi.fFilename, ".eps")  ||
+                            strstr(fi.fFilename, ".svg")  ||
                             strstr(fi.fFilename, ".gif"))
                            fCanvas->SaveAs(fi.fFilename);
                         else if (strstr(fi.fFilename, ".C"))
@@ -496,6 +500,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileSaveAsEPS:
                      fCanvas->SaveAs(".eps");
+                     break;
+                  case kFileSaveAsSVG:
+                     fCanvas->SaveAs(".svg");
                      break;
                   case kFileSaveAsGIF:
                      fCanvas->SaveAs(".gif");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.2 2000/09/08 07:41:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.3 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -198,6 +198,7 @@ Each canvas has a toolbar menu with the following items:\n\
      <Save as Canvas.C>    generates a C++ macro to reproduce the canvas\n\
      <save as Canvas.ps>   makes a Postscript file\n\
      <save as Canvas.eps>  makes a Postscript encapsulated file\n\
+     <save as Canvas.svg>  makes a SVG file\n\
      <save as Canvas.gif>  makes a GIF file\n\
      <save as Canvas.root> saves canvas objects in a Root file\n\n\
   \"Edit\" with the items:\n\

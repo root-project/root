@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.4 2001/03/16 18:03:51 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.5 2001/11/08 07:21:04 brun Exp $
 // Author: Valery Fine   05/01/96
 
 #include "TWin32Canvas.h"
@@ -450,6 +450,7 @@ void TWin32Canvas::SaveAsCB(TWin32Canvas *obj, TVirtualMenuItem *item)
      "C++ macro (*.cpp,*.cxx,*.C)\0*.cpp,*.cxx,*.C\0"
      "Postscript (*.ps)\0*.ps\0"
      "Encapsulated Postscript (*.eps)\0*.eps\0"
+     "SVG (*.svg)\0*.svg\0"
      "ROOT file (*.root)\0*.root\0"
      "\0"};
 
