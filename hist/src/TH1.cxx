@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.155 2003/08/07 07:37:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.156 2003/08/11 08:27:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1642,9 +1642,9 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    integral[ibin] = 0;
    for (binx=1;binx<=nbinsx;binx++) {
       xv[0] = fXaxis.GetBinCenter(binx);
-//      xv[0] = fXaxis.GetBinUpEdge(binx);
       ibin++;
-      integral[ibin] = integral[ibin-1] + f1->Eval(xv[0])*fXaxis.GetBinWidth(binx);
+      Double_t fval = f1->Eval(xv[0]);
+      integral[ibin] = integral[ibin-1] + TMath::Abs(fval)*fXaxis.GetBinWidth(binx);
    }
 
 //   - Normalize integral to 1
