@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.rdl,v 1.6 2004/04/05 22:38:34 wverkerke Exp $
+ *    File: $Id: RooCBShape.rdl,v 1.7 2004/06/02 23:30:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,11 +32,16 @@ public:
 
   inline virtual ~RooCBShape() { }
 
+  virtual Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=0 ) const;
+  virtual Double_t analyticalIntegral( Int_t code, const char* rangeName=0 ) const;
+
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
   virtual Double_t maxVal(Int_t code) ;
 
 protected:
+
+  Double_t ApproxErf(Double_t arg) const ;
 
   RooRealProxy m;
   RooRealProxy m0;

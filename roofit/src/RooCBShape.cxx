@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.9 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.10 2004/11/29 21:15:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,9 +24,23 @@
 #include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooCBShape)
+;
+
+  
+Double_t RooCBShape::ApproxErf(Double_t arg) const 
+{
+  static const double erflim = 5.0;
+  if( arg > erflim )
+    return 1.0;
+  if( arg < -erflim )
+    return -1.0;
+  
+  return erf(arg);
+}
+
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.9 2004/11/29 13:06:21 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.10 2004/11/29 21:15:49 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,
@@ -63,6 +77,79 @@ Double_t RooCBShape::evaluate() const {
 
     return a/pow(b - t, n);
   }
+}
+
+Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+{
+  if( matchArgs(allVars,analVars,m) )
+    return 1 ;
+  
+  return 0;
+}
+
+
+Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
+{
+  static const double sqrtPiOver2 = 1.2533141373;
+  static const double sqrt2 = 1.4142135624;
+
+  assert(code==1);
+  double result = 0.0;
+  bool useLog = false;
+  
+  if( fabs(n-1.0) < 1.0e-05 )
+    useLog = true;
+  
+  double sig = fabs(sigma);
+  
+  double tmin = (m.min(rangeName)-m0)/sig;
+  double tmax = (m.max(rangeName)-m0)/sig;
+  
+  if(alpha < 0) {
+    double tmp = tmin;
+    tmin = -tmax;
+    tmax = -tmp;
+  }
+
+  double absAlpha = fabs(alpha);
+  
+  if( tmin >= -absAlpha ) {
+    result += sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
+                                - ApproxErf(tmin/sqrt2) );
+  }
+  else if( tmax <= -absAlpha ) {
+    double a = pow(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    double b = n/absAlpha - absAlpha;
+    
+    if(useLog) {
+      result += a*sig*( log(b-tmin) - log(b-tmax) );
+    }
+    else {
+      result += a*sig/(1.0-n)*(   1.0/(pow(b-tmin,n-1.0))
+                                - 1.0/(pow(b-tmax,n-1.0)) );
+    }
+  }
+  else {
+    double a = pow(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    double b = n/absAlpha - absAlpha;
+    
+    double term1 = 0.0;
+    if(useLog) {
+      term1 = a*sig*(  log(b-tmin) - log(n/absAlpha));
+    }
+    else {
+      term1 = a*sig/(1.0-n)*(   1.0/(pow(b-tmin,n-1.0))
+                              - 1.0/(pow(n/absAlpha,n-1.0)) );
+    }
+    
+    double term2 = sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
+                                     - ApproxErf(-absAlpha/sqrt2) );
+    
+    
+    result += term1 + term2;
+  }
+  
+  return result;
 }
 
 
