@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.2 2001/04/10 16:34:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.3 2001/04/27 08:03:06 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 // to T.                                                                //
 //                                                                      //
 // To add a TFriendElement to an existing TTree T, do:                  //
-//       T.AddFriend("friendTreename","friendTreeFilke");               //
+//       T.AddFriend("friendTreename","friendTreeFile");               //
 //                                                                      //
 //  see TTree::AddFriend for more information                           //
 //                                                                      //
