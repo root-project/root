@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.28 2004/09/12 10:43:49 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.29 2004/09/15 17:37:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -111,12 +111,12 @@ public:
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
    virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
-   virtual void         SetDown(Bool_t on = kTRUE);
+   virtual void         SetDown(Bool_t on = kTRUE, Bool_t emit = kFALSE);
    virtual Bool_t       IsOn() const { return IsDown(); }
-   virtual void         SetOn(Bool_t on = kTRUE) { SetDown(on); }
+   virtual void         SetOn(Bool_t on = kTRUE,  Bool_t emit = kFALSE) { SetDown(on, emit); }
    virtual Bool_t       IsToggleButton() const { return kFALSE; }
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
-   virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
+   virtual void         Toggle(Bool_t emit = kFALSE) { SetDown(IsDown() ? kFALSE : kTRUE, emit); }
    virtual void         SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.13 2004/09/22 10:13:36 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.14 2004/09/22 10:29:35 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1206,7 +1206,6 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
             static Int_t gDbx = 0;
             static Int_t gDby = 0;
 
-
             if ((event->fTime - gLastClick < 350) &&
                 (event->fCode == gLastButton) &&
                 (TMath::Abs(event->fXRoot - gDbx) < 6) &&
@@ -2158,7 +2157,9 @@ void TGuiBldDragManager::DoResize()
       default:
          break;
    }
-   fClient->NeedRedraw(fr);
+   gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
+                        gVirtualX->CreateCursor(fPimpl->fResizeType));
+   fClient->NeedRedraw(fr, kTRUE);
    DoRedraw();
 }
 
@@ -2318,7 +2319,7 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();
       ReparentFrames(frame, edit);
       frame->MapRaised();
-      //edit->SetLayoutBroken();
+      edit->SetLayoutBroken();
       UInt_t g = GetGridStep()/2;
       edit->AddFrame(frame, new TGLayoutHints(kLHintsNormal, g, g, g, g));
    }

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.2 2004/09/14 09:57:58 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldEditor.cxx,v 1.3 2004/09/20 15:33:26 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -216,6 +216,7 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    SetCleanup(kTRUE);
 
    fBtnGroup = new TGButtonGroup(this,"Border Mode",kVerticalFrame | kFitWidth);
+
    TGRadioButton *frame299 = new TGRadioButton(fBtnGroup," Sunken",kBldBorderSunken);
    frame299->SetToolTipText("Set a sunken border of the frame");
    TGRadioButton *frame302 = new TGRadioButton(fBtnGroup," Plain",kBldBorderPlain);
@@ -398,7 +399,7 @@ void  TGuiBldEditor::UpdateBorder(Int_t b)
    }
 
    fSelected->ChangeOptions(opt);
-   UpdateSelected();
+   fClient->NeedRedraw(fSelected, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -409,7 +410,7 @@ void  TGuiBldEditor::UpdateBackground(Pixel_t col)
    if (!fSelected) return;
 
    fSelected->SetBackgroundColor(col);
-   UpdateSelected();
+   fClient->NeedRedraw(fSelected, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -420,6 +421,6 @@ void  TGuiBldEditor::UpdateForeground(Pixel_t col)
    if (!fSelected) return;
 
    fSelected->SetForegroundColor(col);
-   UpdateSelected();
+   fClient->NeedRedraw(fSelected, kTRUE);
 }
 

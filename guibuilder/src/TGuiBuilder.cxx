@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.14 2004/09/22 09:28:47 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.15 2004/09/22 10:13:36 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -676,7 +676,7 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
 //______________________________________________________________________________
 Bool_t TGuiBuilder::HandleKey(Event_t *event)
 {
-   //
+   // keys handling
 
    if (!fClient->IsEditable()) return kFALSE;
 
@@ -702,7 +702,7 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TGuiBuilder::NewProject(Event_t *)
 {
-   //
+   // create a new project
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
