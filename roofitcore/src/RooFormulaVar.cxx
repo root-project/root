@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.22 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.23 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,8 +43,8 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* fo
   _actualVars("actualVars","Variables used by formula expression",this)
 {  
   // Constructor with formula expression and list of input variables
-  RooFormula tmpFormula(name,formula,dependents) ;
-  _actualVars.add(tmpFormula.actualDependents()) ;
+//   RooFormula tmpFormula(name,formula,dependents) ;
+  _actualVars.add(dependents) ; //tmpFormula.actualDependents()) ;
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
@@ -55,8 +55,8 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   _actualVars("actualVars","Variables used by formula expression",this)
 {  
   // Constructor with formula expression, title and list of input variables
-  RooFormula tmpFormula(name,title,dependents) ;
-  _actualVars.add(tmpFormula.actualDependents()) ;
+//   RooFormula tmpFormula(name,title,dependents) ;
+  _actualVars.add(dependents) ; //tmpFormula.actualDependents()) ;
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }

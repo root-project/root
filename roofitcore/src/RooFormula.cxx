@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.38 2001/12/03 03:49:56 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.39 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -138,11 +138,11 @@ void RooFormula::dump() {
   }
   cout << "labelList:" << endl ;
   for (i=0 ; i<_labelList.GetEntries() ; i++) {
-    cout << "[" << i << "] = " << (void*) _labelList.At(i) << _useList.At(i)->GetName() <<  endl ;
+    cout << "[" << i << "] = " << (void*) _labelList.At(i) << " " << _labelList.At(i)->GetName() <<  endl ;
   }
   cout << "origList:" << endl ;
   for (i=0 ; i<_origList.GetSize() ; i++) {
-    cout << "[" << i << "] = " << (void*) _origList.At(i)  << _useList.At(i)->GetName() <<  endl ;
+    cout << "[" << i << "] = " << (void*) _origList.At(i)  << " " << _origList.At(i)->GetName() <<  endl ;
   }
 }
 
