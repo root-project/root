@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.35 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.36 2004/03/31 01:37:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -223,7 +223,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   
   // Z
   RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : 0 ) ;
-  Double_t zmin(0) ;
+  Int_t zmin(0) ;
   if (zvar) {
     Double_t zlo = ((RooRealVar*)vars.at(2))->getFitMin() ;
     Double_t zhi = ((RooRealVar*)vars.at(2))->getFitMax() ;

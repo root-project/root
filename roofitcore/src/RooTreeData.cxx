@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.56 2003/05/07 21:06:25 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.57 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -840,7 +840,7 @@ RooCmdArg Cut(const char* cutSpec)              { return RooCmdArg("CutSpec",0,0
 RooCmdArg Cut(const RooAbsReal& cutVar)         { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
 RooCmdArg Binning(const RooAbsBinning& binning) { return RooCmdArg("Binning",0,0,0,0,0,0,&binning,0) ;}
 RooCmdArg MarkerStyle(Style_t style)            { return RooCmdArg("MarkerStyle",style,0,0,0,0,0,0,0) ; }
-RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",size,0,0,0,0,0,0,0) ; }
+RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",0,0,size,0,0,0,0,0) ; }
 RooCmdArg MarkerColor(Color_t color)            { return RooCmdArg("MarkerColor",color,0,0,0,0,0,0,0) ; }
 
 
@@ -874,7 +874,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
   pc.defineInt("markerColor","MarkerColor",0,-999) ;
   pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
-  pc.defineInt("markerSize","MarkerSize",0,-999) ;
+  pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Poisson) ;
   pc.defineMutex("DataError","Asymmetry") ;
 
@@ -904,7 +904,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   Int_t lineWidth   = pc.getInt("lineWidth") ;
   Int_t markerColor = pc.getInt("markerColor") ;
   Int_t markerStyle = pc.getInt("markerStyle") ;
-  Int_t markerSize  = pc.getInt("markerSize") ;
+  Size_t markerSize  = pc.getDouble("markerSize") ;
   if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
   if (lineStyle!=-999) ret->getAttLine()->SetLineStyle(lineStyle) ;
   if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
