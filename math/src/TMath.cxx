@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.2 2000/06/28 14:32:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.3 2000/06/30 06:53:18 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -107,12 +107,12 @@ Long_t TMath::NextPrime(Long_t x)
 {
    // Return next prime number after x.
 
-   if (x <= 3)
-      return 3;
-
-   if (x % 2 == 0)
-      x++;
-
+   if (x < 2)     return 2;
+   else if (x==2) return 3; 
+    
+   if (x % 2 == 0) x++;
+   else            x += 2;
+    
    Long_t sqr = (Long_t) sqrt((Double_t)x) + 1;
 
    for (;;) {
