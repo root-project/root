@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.77 2003/01/14 00:07:38 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.78 2003/05/10 01:37:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -603,9 +603,6 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 
   if (_operMode!=Auto || _inhibitDirty) return ;
 
-  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
-
   // Handle no-propagation scenarios first
   if (_clientListValue.GetSize()==0) {
     _valueDirty = kTRUE ;
@@ -623,13 +620,16 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
+  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
+			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+  
   _valueDirty = kTRUE ;
+  
   _clientValueIter->Reset() ;
   RooAbsArg* client ;
   while (client=(RooAbsArg*)_clientValueIter->Next()) {
     client->setValueDirty(source) ;
   }
-
 } 
 
 
@@ -1201,7 +1201,20 @@ void RooAbsArg::constOptimize(ConstOpCode opcode)
 
 void RooAbsArg::printCompactTree(const char* indent)
 {
-  cout << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ")" << endl ;
+  cout << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
+
+  if (_serverList.GetSize()>0) {
+    switch(operMode()) {
+    case Auto:   cout << " [Auto]" << endl ; break ;
+    case AClean: cout << " [ACLEAN]" << endl ; break ;
+    case ADirty: cout << " [ADIRTY]" << endl ; break ;
+    }
+  } else {
+    cout << endl ;
+  }
+
+  printCompactTreeHook(indent) ;
+
   TString indent2(indent) ;
   indent2 += "  " ;
   TIterator * iter = serverIterator() ;

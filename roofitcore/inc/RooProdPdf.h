@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.29 2003/04/28 20:42:40 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.30 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,9 +59,13 @@ protected:
   RooArgList* getPartIntList(const RooArgSet* nset, const RooArgSet* iset, Int_t& code) const ;
   
   mutable RooNormListManager _partListMgr ; // Partial normalization list manager
+  mutable RooNormListManager _partOwnedListMgr ; // Partial normalization list manager for owned components
   
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+
+
+  virtual void printCompactTreeHook(const char* indent="") ;
 
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 

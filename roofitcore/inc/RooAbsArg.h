@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.73 2003/04/28 20:42:37 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.74 2003/05/10 01:37:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -145,6 +145,7 @@ public:
 
 
   void printCompactTree(const char* indent="") ;
+  virtual void printCompactTreeHook(const char* indent="") {} ;
 
 
 protected:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.40 2003/05/14 06:15:03 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.41 2003/07/30 01:19:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,6 +43,7 @@ ClassImp(RooProdPdf)
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _partListMgr(10),
+  _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("_pdfList","List of PDFs",this),
@@ -57,6 +58,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 		       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
   RooAbsPdf(name,title), 
   _partListMgr(10),
+  _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("_pdfList","List of PDFs",this),
@@ -104,6 +106,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _partListMgr(10),
+  _partOwnedListMgr(10),
   _genCode(10),
   _cutOff(cutOff),
   _pdfList("_pdfList","List of PDFs",this),
@@ -159,6 +162,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _partListMgr(other._partListMgr),
+  _partOwnedListMgr(other._partOwnedListMgr),
   _genCode(other._genCode),
   _cutOff(other._cutOff),
   _pdfList("_pdfList",this,other._pdfList),
@@ -308,6 +312,8 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
   // Iterate over the irreducible terms to create normalized projection integrals for them
   TIterator* tIter = terms->MakeIterator() ;
   partIntList = new RooArgList("partIntList") ;
+  RooArgList* partIntOwnedList = new RooArgList("partIntList") ;
+
   RooArgSet* term ;
   
   while(term=(RooArgSet*)tIter->Next()) {
@@ -352,7 +358,8 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
 
 	RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet) ;
 	partInt->setOperMode(operMode()) ;
-	partIntList->addOwned(*partInt) ;
+	partIntList->add(*partInt) ;
+	partIntOwnedList->addOwned(*partInt) ;
 	continue ;
 
       } else {
@@ -361,7 +368,8 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
 	const char* name = makeRGPPName("PROJ_",*term,termISet,termNSet) ;
 	RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
 	partInt->setOperMode(operMode()) ;
-	partIntList->addOwned(*partInt) ;
+	partIntList->add(*partInt) ;
+	partIntOwnedList->addOwned(*partInt) ;
 	continue ;
 
       }      
@@ -372,7 +380,8 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
       const char* name = makeRGPPName("PROJ_",*term,termISet,termNSet) ;
       RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
       partInt->setOperMode(operMode()) ;
-      partIntList->addOwned(*partInt) ;
+      partIntList->add(*partInt) ;
+      partIntOwnedList->addOwned(*partInt) ;
       continue ;
     }
 
@@ -387,11 +396,16 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
 
   // Store the partial integral list and return the assigned code ;
   code = _partListMgr.setNormList(this,nset,iset,partIntList) ;
-//   cout << "RooProdPdf::getPIL(" << GetName() << ") creating new configuration with code " << code << endl
-//        << "    nset = " ; if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
-//   cout << "    iset = " ; if (iset) iset->Print("1") ; else cout << "<none>" << endl ;
-//   cout << "    Partial Integral List:" << endl ;
-//   partIntList->Print("1") ;
+  Int_t code2 = _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList) ;
+
+//    cout << "RooProdPdf::getPIL(" << GetName() << "," << this << ") creating new configuration with code " << code << endl
+//         << "    nset = " ; if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+//    cout << "    iset = " ; if (iset) iset->Print("1") ; else cout << "<none>" << endl ;
+//    cout << "    Partial Integral List:" << endl ;
+//    partIntList->Print("1") ;
+//    cout << "    Partial Owned Integral List:" << endl ;
+//    partIntOwnedList->Print("1") ;
+//    cout << endl  ;
 
   return partIntList ;
 }
@@ -646,15 +660,13 @@ void RooProdPdf::operModeHook()
 {
   Int_t i ;
   for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
-    RooArgList* plist = _partListMgr.getNormListByIndex(i) ;
-   if (plist->isOwning()) {
-     TIterator* iter = plist->createIterator() ;
-     RooAbsArg* arg ;
-     while(arg=(RooAbsArg*)iter->Next()) {
-       arg->setOperMode(_operMode) ;
-     }
-     delete iter ;
-   }
+    RooArgList* plist = _partOwnedListMgr.getNormListByIndex(i) ;
+    TIterator* iter = plist->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      arg->setOperMode(_operMode) ;
+    }
+    delete iter ;
   }
   return ;
 }
@@ -665,32 +677,12 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
 {
   Bool_t ret(kFALSE) ;  
 
+//    cout << "RooPrdoPdf::redirectServersHook(" << this << ") recursive = " << (isRecursive?"T":"F") << " newServerList = " ;
+//    newServerList.Print("1") ;
+
   Int_t i ;
   for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
     RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
-
-    if (isRecursive && plist->isOwning()) {
-
-      // Forward recurive redirection calls for owning lists
-      // Only redirect links to component PDFs, recursive link direction
-      // of servers of PDF is handled via the regular channels
-
-      TIterator* iter = plist->createIterator() ;
-      RooAbsArg* arg ;
-      RooAbsCollection* newPdfServerList = newServerList.selectCommon(_pdfList) ;
-      while(arg=(RooAbsArg*)iter->Next()) {
-
-	if (dynamic_cast<RooRealIntegral*>(arg)) {
-           ret |= arg->recursiveRedirectServers(*newPdfServerList,kFALSE,nameChange) ;
-	   ret |= arg->redirectServers(newServerList,mustReplaceAll,nameChange) ;
-        } else {
-  	  ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
-        }
-      }
-      delete iter ;
-      delete newPdfServerList ;
-
-    } else if (!plist->isOwning()) {
 
       // Update non-owning lists
       TIterator* iter = plist->createIterator() ;
@@ -698,15 +690,60 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
       while(arg=(RooAbsArg*)iter->Next()) {
 	RooAbsArg* newArg = arg->findNewServer(newServerList,nameChange) ;
 	if (newArg) {
+//  	  cout << "replacing server " << arg->GetName() << "(" << arg << ") with (" << newArg << ") in partList[" << i << "]" << endl ;
 	  plist->replace(*arg,*newArg) ;
 	}
       }
+      delete iter ;      
+    }
+
+
+
+  if (isRecursive) {
+    for (i=0 ; i<_partOwnedListMgr.cacheSize() ; i++) {
+      RooArgList* plist = _partOwnedListMgr.getNormListByIndex(i) ;    
+      
+      // Forward recurive redirection calls for owning lists
+      // Only redirect links to component PDFs, recursive link direction
+      // of servers of PDF is handled via the regular channels
+      
+      TIterator* iter = plist->createIterator() ;
+      RooAbsArg* arg ;
+      RooAbsCollection* newPdfServerList = newServerList.selectCommon(_pdfList) ;
+      while(arg=(RooAbsArg*)iter->Next()) {
+
+//  	cout << "recursivedRed newServerList on " << arg ->GetName() << "(" << arg << ") in partOwnedList[" << i << "]" << endl ;
+	ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+
+      }
       delete iter ;
-      
-      
+      delete newPdfServerList ;      
     }
   }
+  
+
   return ret ;
+}
+
+void RooProdPdf::printCompactTreeHook(const char* indent) 
+{
+  Int_t i ;
+  cout << indent << "RooProdPdf begin partial integral cache" << endl ;
+
+  for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
+    RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
+
+    TIterator* iter = plist->createIterator() ;
+    RooAbsArg* arg ;
+    TString indent2(indent) ;
+    indent2 += Form("[%d] ",i) ;
+    while(arg=(RooAbsArg*)iter->Next()) {      
+      arg->printCompactTree(indent2) ;
+    }
+    delete iter ;
+  }
+
+  cout << indent << "RooProdPdf end partial integral cache" << endl ;
 }
 
 
