@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.2 2000/05/30 06:12:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.3 2000/10/13 06:55:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 TStyle  *gStyle;
 
 ClassImp(TStyle)
+   
 
 //______________________________________________________________________________
 //
@@ -283,8 +284,14 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fFitFormat      = fFitFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
-   for (Int_t i=0;i<30;i++) {
+   Int_t i;
+   for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
+   }
+   Int_t ncolors = fPalette.fN;
+   ((TStyle&)obj).fPalette.Set(ncolors);
+   for (i=0;i<ncolors;i++) {
+      ((TStyle&)obj).fPalette.fArray[i] = fPalette.fArray[i];
    }
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
@@ -427,6 +434,7 @@ Int_t TStyle::GetColorPalette(Int_t i)
 //   return color number i in current palette
 {
    Int_t ncolors = GetNumberOfColors();
+   if (ncolors == 0) return 0;
    Int_t icol    = i%ncolors;
    if (icol < 0) icol = 0;
    return fPalette.fArray[icol];
@@ -876,7 +884,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       return;
    }
    // set Pretty Palette Spectrum Violet->Red
-      if (ncolors == 1 && colors == 0) {
+   if (ncolors == 1 && colors == 0) {
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
