@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.4 2000/10/17 12:21:29 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.5 2000/11/13 19:46:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,15 +43,15 @@
 #pragma link C++ class TMath;
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
-#pragma link C++ class TNamed;
-#pragma link C++ class TObjString;
+#pragma link C++ class TNamed+;
+#pragma link C++ class TObjString+;
 #pragma link C++ class TObject-;
 #pragma link C++ class TProcessEventTimer;
 #pragma link C++ class TRandom+;
 #pragma link C++ class TRandom2+;
-#pragma link C++ class TRandom3+;
+#pragma link C++ class TRandom3-;
 #pragma link C++ class TROOT;
-#pragma link C++ class TRealData;
+#pragma link C++ class TRealData+;
 #pragma link C++ class TRegexp;
 #pragma link C++ class TSignalHandler;
 #pragma link C++ class TStopwatch+;
@@ -60,9 +60,9 @@
 #pragma link C++ class TStringLong-;
 #pragma link C++ class TSubString;
 #pragma link C++ class TSysEvtHandler;
-#pragma link C++ class TSystem;
-#pragma link C++ class TSystemFile;
-#pragma link C++ class TSystemDirectory;
+#pragma link C++ class TSystem+;
+#pragma link C++ class TSystemFile+;
+#pragma link C++ class TSystemDirectory+;
 #pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;

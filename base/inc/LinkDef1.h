@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.3 2000/10/01 15:20:20 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.4 2000/10/21 09:17:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -74,36 +74,36 @@
 
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;
-#pragma link C++ class TAttFill;
-#pragma link C++ class TAttLine;
-#pragma link C++ class TAttMarker;
+#pragma link C++ class TAttFill+;
+#pragma link C++ class TAttLine+;
+#pragma link C++ class TAttMarker+;
 #pragma link C++ class TAttPad-;
 #pragma link C++ class TAttAxis-;
-#pragma link C++ class TAttText;
-#pragma link C++ class TAtt3D;
-#pragma link C++ class TBenchmark;
-#pragma link C++ class TBrowser;
-#pragma link C++ class TBrowserImp;
+#pragma link C++ class TAttText+;
+#pragma link C++ class TAtt3D+;
+#pragma link C++ class TBenchmark+;
+#pragma link C++ class TBrowser+;
+#pragma link C++ class TBrowserImp+;
 #pragma link C++ class TBuffer;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
-#pragma link C++ class TContextMenu;
-#pragma link C++ class TContextMenuImp;
-#pragma link C++ class TControlBarImp;
-#pragma link C++ class TInspectorImp;
+#pragma link C++ class TContextMenu+;
+#pragma link C++ class TContextMenuImp+;
+#pragma link C++ class TControlBarImp+;
+#pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
 #pragma link C++ class TDirectory-;
-#pragma link C++ class TEnv;
+#pragma link C++ class TEnv+;
 #pragma link C++ class TFile-;
-#pragma link C++ class TFileHandler;
+#pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
-#pragma link C++ class TPadView3D;
+#pragma link C++ class TPadView3D+;
 #pragma link C++ class TStyle+;
 #pragma link C++ class TView-;
-#pragma link C++ class TVirtualX;
-#pragma link C++ class TVirtualFitter;
-#pragma link C++ class TVirtualPad;
-#pragma link C++ class TVirtualGL;
-#pragma link C++ class TVirtualPS;
+#pragma link C++ class TVirtualX+;
+#pragma link C++ class TVirtualFitter+;
+#pragma link C++ class TVirtualPad-;
+#pragma link C++ class TVirtualGL+;
+#pragma link C++ class TVirtualPS+;
 
 #endif
