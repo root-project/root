@@ -72,7 +72,7 @@ public:
         RootPCellID      myArr[3];
         RootPCtemp<int> *myArrFix[4]; 
         int index;
-        RootPCellID    **myArrVar;    //! WAINTING on Vicktor's implementation [index]
+        RootPCellID    **myArrVar;    //! WAITING on Vicktor's implementation [index]
         RootPCnodict     mynocell;
 	RootPCellID     *mycellnull; 
 	RootPCellID     *mycellfix; //

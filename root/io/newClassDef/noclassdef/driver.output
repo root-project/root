@@ -64,7 +64,7 @@ itra                          2
 mycell.id                     3           
 mycell.base[4]                116         
 index                         2           
-*myArrVar                     ->0         ! WAINTING on Vicktor's implementation [index]
+*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
 *mycellnull                   ->0         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
@@ -162,7 +162,7 @@ itra                          2
 mycell.id                     3           
 mycell.base[4]                116         
 index                         2           
-*myArrVar                     ->0         ! WAINTING on Vicktor's implementation [index]
+*myArrVar                     ->0         ! WAITING on Vicktor's implementation [index]
 *mycellnull                   ->0         
 fUniqueID                     0           object unique identifier
 fBits                         50331648    bit field status word
