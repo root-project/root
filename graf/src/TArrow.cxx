@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.2 2000/06/13 10:43:51 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -49,10 +49,13 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 // Define an arrow between points x1,y1 and x2,y2
 // the arrowsize is in percentage of the pad height
 // Opening angle between the two sides of the arrow is fAngle (60 degrees)
-//  option = ">"     -------->
-//  option = "<"     <--------
-//  option = "<>"    <------->
-//  option = "<|>"   <|-----|>  arrow defined by a triangle
+//  option = ">"      -------->
+//  option = "<"      <--------
+//  option = "->-"    ---->----
+//  option = "-<-"    ----<----
+//  option = "-|>-"   ---|>----
+//  option = "<>"     <------->
+//  option = "<|>"    <|-----|>  arrow defined by a triangle
 //                   If FillColor == 0 draw open triangle
 //                   else  draw full triangle with fillcolor
 //
@@ -164,6 +167,24 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Double_t ct = (px2-px1)/lp;
    Double_t st = (py1-py2)/lp;
    Int_t P2x,P2y,P3x,P3y,P0x,P0y;
+
+// Otto start:  define default line  before move of origin of arrow
+   Double_t XP0;
+   Double_t YP0;
+   Double_t XP0L;
+   Double_t YP0L;
+   XP0  = gPad->AbsPixeltoX(px2);
+   YP0  = gPad->AbsPixeltoY(py2);
+   XP0L = gPad->AbsPixeltoX(px1);
+   YP0L = gPad->AbsPixeltoY(py1);
+// move origin of arrow
+   if (opt.Contains("-")) {
+      px1 = Int_t(0.5 *(px2 + px1));
+      py1 = Int_t(0.5 *(py2 + py1));
+      px2 = px1;
+      py2 = py1;
+   }
+// ----------
    if (opt.Contains(">")) {
       P2x = px2 - Int_t(rSiz*ct+st*dSiz-0.5);
       P2y = py2 + Int_t(rSiz*st-ct*dSiz+0.5);
@@ -180,6 +201,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       P0y = py2;
    }
    Int_t P2xL,P2yL,P3xL,P3yL,P0xL,P0yL;
+
    if (opt.Contains("<")) {
       P2xL = px1 + Int_t(rSiz*ct-st*dSiz+0.5);
       P2yL = py1 - Int_t(rSiz*st+ct*dSiz-0.5);
@@ -203,22 +225,14 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Double_t YP2L = gPad->AbsPixeltoY(P2yL);
    Double_t XP3L = gPad->AbsPixeltoX(P3xL);
    Double_t YP3L = gPad->AbsPixeltoY(P3yL);
-   Double_t XP0;
-   Double_t YP0;
-   Double_t XP0L;
-   Double_t YP0L;
-   if (opt.Contains("|")) {
+//   move up
+   if (opt.Contains("|") && !opt.Contains("-")) {
       XP0  = gPad->AbsPixeltoX(P0x);
       YP0  = gPad->AbsPixeltoY(P0y);
       XP0L = gPad->AbsPixeltoX(P0xL);
       YP0L = gPad->AbsPixeltoY(P0yL);
    }
-   else {
-      XP0  = gPad->AbsPixeltoX(px2);
-      YP0  = gPad->AbsPixeltoY(py2);
-      XP0L = gPad->AbsPixeltoX(px1);
-      YP0L = gPad->AbsPixeltoY(py1);
-   }
+   
    gPad->PaintLine(XP0,YP0,XP0L,YP0L);
 
 //*-*- Convert points to pad reference system
@@ -228,6 +242,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    xp1[1] = gPad->AbsPixeltoX(px2);     yp1[1] = gPad->AbsPixeltoY(py2);
    xp1[2] = XP3;    yp1[2] = YP3;
    xp1[3] = XP2;    yp1[3] = YP2;
+
    xp2[0] = XP2L;   yp2[0] = YP2L;
    xp2[1] = gPad->AbsPixeltoX(px1);     yp2[1] = gPad->AbsPixeltoY(py1);
    xp2[2] = XP3L;   yp2[2] = YP3L;
