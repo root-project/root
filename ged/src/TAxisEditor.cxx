@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -140,7 +140,7 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv1->GetNumberEntry()->SetToolTipText("Primary axis divisions");
    f5->AddFrame(fDiv1, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1));
-   AddFrame(f5, new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
+   AddFrame(f5, new TGLayoutHints(kLHintsLeft, 1, 1, 4, 4));
    fTicksFlag = 1;
 
    MakeTitle("Title");
@@ -188,7 +188,7 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                         TGNumberFormat::kNELLimitMinMax, 0.1, 10.);
    fTitleOffset->GetNumberEntry()->SetToolTipText("Set title offset");
    f8->AddFrame(fTitleOffset, new TGLayoutHints(kLHintsLeft, 6, 1, 0, 0));
-   AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 4));
 
    MakeTitle("Labels");
 
@@ -261,25 +261,33 @@ void TAxisEditor::ConnectSignals2Slots()
 
    fAxisColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoAxisColor(Pixel_t)");
    fTickLength->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTickLength()");
+   (fTickLength->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoTickLength()");
    fTicksBoth->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTicks()");
    fOptimize->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoDivisions()");
    fLogAxis->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoLogAxis()");
    fMoreLog->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoMoreLog()");
    fDiv3->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   (fDiv3->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoDivisions()");
    fDiv2->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   (fDiv2->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoDivisions()");
    fDiv1->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   (fDiv1->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoDivisions()");
    fTitle->Connect("TextChanged(const char *)", "TAxisEditor", this, "DoTitle(const char *)");;
    fTitleColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoTitleColor(Pixel_t)");
    fTitleSize->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTitleSize()");
+   (fTitleSize->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoTitleSize()");
    fTitleFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoTitleFont(Int_t)"); 
    fCentered->Connect("Toggled(Bool_t)","TAxisEditor",this, "DoTitleCentered()");
    fRotated->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTitleRotated()");
    fTitleOffset->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoTitleOffset()");
+   (fTitleOffset->GetNumberEntry())->Connect("ReturnPressed()","TAxisEditor",this,"DoTitleOffset()");
    fLabelColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoLabelColor(Pixel_t)");
    fLabelSize->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoLabelSize()");
+   (fLabelSize->GetNumberEntry())->Connect("ReturnPressed()","TAxisEditor",this,"DoLabelSize()");
    fNoExponent->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoNoExponent()");
    fDecimal->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoDecimal(Bool_t)");
    fLabelOffset->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoLabelOffset()");
+   (fLabelOffset->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoLabelOffset()");
    fLabelFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoLabelFont(Int_t)"); 
    fInit = kFALSE;
 }
