@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.cxx,v 1.1 2002/02/14 16:12:52 rdm Exp $
 // Author: Fons Rademakers   14/02/2002
 
 /*************************************************************************
@@ -39,3 +39,4 @@ ClassImp(TLockGuard)
 
 
 TVirtualMutex *gContainerMutex = 0;
+TVirtualMutex *gCINTMutex = 0;
