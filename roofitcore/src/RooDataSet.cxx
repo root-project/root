@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.35 2001/08/10 22:22:53 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.36 2001/08/17 00:35:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -575,7 +575,7 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
 }
 
 
-Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts)
+Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
 {
   // Create and fill a 1-dimensional table for given category column
 

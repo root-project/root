@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.9 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.10 2001/08/17 00:35:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,7 @@ public:
 
   // Binned fit interface (dummy)
   virtual Int_t getPlotBin() const ;
+  virtual Int_t numPlotBins() const { return 1 ; }
   virtual RooAbsBinIter* createPlotBinIterator() const ;
 
   // I/O streaming interface (machine readable)

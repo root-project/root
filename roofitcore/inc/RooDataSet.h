@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.23 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.24 2001/08/17 00:35:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -68,7 +68,7 @@ public:
   virtual const RooArgSet* get(Int_t index) const;
   virtual const RooArgSet* get() const { return &_vars ; } 
 
-  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
+  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
   // Plot the distribution of a real valued arg
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;

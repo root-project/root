@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.22 2001/08/03 21:44:56 david Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.23 2001/08/17 00:35:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,7 +56,7 @@ public:
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
   inline Double_t getPlotMax() const { return _plotMax; }
-  inline Int_t getPlotBins() const { return _plotBins; }
+  virtual Int_t getPlotBins() const { return _plotBins; }
   void setPlotMin(Double_t value) ;
   void setPlotMax(Double_t value) ;
   void setPlotRange(Double_t min, Double_t max) ;
@@ -67,6 +67,7 @@ public:
 
   // Plotting, binned fit interface
   virtual Int_t getPlotBin() const ;
+  virtual Int_t numPlotBins() const { return getPlotBins() ; }
   virtual RooAbsBinIter* createPlotBinIterator() const ;
   virtual Double_t plotBinCenter(Int_t i) const ;
   virtual Double_t plotBinLow(Int_t i) const ;
