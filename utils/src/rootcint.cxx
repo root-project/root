@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.155 2004/02/19 00:17:51 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.156 2004/03/11 06:17:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2083,7 +2083,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (NeedShadowClass(cl)) {
       fprintf(fp, "      // Make sure the shadow class has the right sizeof\n");
-      fprintf(fp, "      Assert(sizeof(::%s)", classname.c_str() );
+      fprintf(fp, "      //Assert(sizeof(::%s)", classname.c_str() );
       fprintf(fp, " == sizeof(%s));\n", GetFullShadowName(cl));
    }
 
