@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBCPEffDecay.cc,v 1.6 2001/11/14 19:15:30 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.7 2001/11/19 07:26:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,8 +25,8 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
 			       RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-			       RooAbsReal& a, RooRealVar& b,
-			       RooAbsReal& effRatio, RooRealVar& delMistag,
+			       RooAbsReal& a, RooAbsReal& b,
+			       RooAbsReal& effRatio, RooAbsReal& delMistag,
 			       const RooResolutionModel& model, DecayType type) :
   RooConvolutedPdf(name,title,model,t), 
   _absLambda("absLambda","Absolute value of lambda",this,a),

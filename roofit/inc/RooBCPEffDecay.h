@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBCPEffDecay.rdl,v 1.3 2001/10/30 07:38:53 verkerke Exp $
+ *    File: $Id: RooBCPEffDecay.rdl,v 1.4 2001/11/05 18:53:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,8 +27,8 @@ public:
 		 RooRealVar& t, RooAbsCategory& tag,
 		 RooAbsReal& tau, RooAbsReal& dm,
 		 RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-		 RooAbsReal& a, RooRealVar& b,
-		 RooAbsReal& effRatio, RooRealVar& delMistag,
+		 RooAbsReal& a, RooAbsReal& b,
+		 RooAbsReal& effRatio, RooAbsReal& delMistag,
 		 const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
   RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=0);
