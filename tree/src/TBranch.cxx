@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.15 2001/02/06 10:55:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.16 2001/02/09 14:09:13 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -644,7 +644,6 @@ TFile *TBranch::GetFile(Int_t mode)
    if (mode) file = TFile::Open(fFileName.Data(),"recreate");
    else      file = TFile::Open(fFileName.Data());
    if (file->IsZombie()) {delete file; return 0;}
-   fFileName = file->GetName();
    fDirectory = (TDirectory*)file;
    return file;
 }
