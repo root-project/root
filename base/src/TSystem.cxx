@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.59 2003/04/24 19:18:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.60 2003/04/28 15:20:40 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1523,8 +1523,12 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    includes += " -I" + build_loc;
    includes += " -I";
    includes += WorkingDirectory();
+   if (gEnv) {
+      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+      includes.Append(" ").Append(fromConfig).Append(" ");
+   }
 
-   // Extra the -D for the dependency generation.
+   // Extract the -D for the dependency generation.
    TString defines = " ";
    {
      TString cmd = GetMakeSharedLib();
@@ -1538,6 +1542,17 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      }
 
    }
+
+   // Calculate the libraries for linking:
+   TString linkLibraries;
+   /*
+     this is intentionally disable until it can become usefull
+     if (gEnv) {
+        linkLibraries =  gEnv->GetValue("ACLiC.ACLiC.Libraries","");
+        linkLibraries.Prepend(" ");
+     }
+   */
+   linkLibraries.Prepend(GetLibraries("","SDL"));
 
    // ======= Figure out a temporary directory.
    const char *tempDirs =  gSystem->Getenv("TEMP");
@@ -1777,6 +1792,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // First lets get the include directory list in the dir1:dir2:dir3 format
    TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
    incPath.Append(":").Prepend(" ");
+   if (gEnv) {
+      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+      incPath.Append(fromConfig);
+   }
    incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
    while ( incPath.Index(" :") != -1 ) {
       incPath.ReplaceAll(" :",":");
@@ -1819,6 +1838,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    TString rcint = "rootcint -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
+   if (gEnv) {
+      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+      rcint.Append(fromConfig).Append(" ");
+   }
    rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
 
    TString cmd = fMakeSharedLib;
@@ -1828,7 +1851,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    cmd.ReplaceAll("$ObjectFiles",dictObj);
    cmd.ReplaceAll("$IncludePath",includes);
    cmd.ReplaceAll("$SharedLib",library);
-   cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
+   cmd.ReplaceAll("$LinkedLibs",linkLibraries);
    cmd.ReplaceAll("$LibName",libname);
    cmd.ReplaceAll("$BuildDir",build_loc);
    if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
@@ -1855,7 +1878,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    testcmd.ReplaceAll("$ObjectFiles",dictObj);
    testcmd.ReplaceAll("$IncludePath",includes);
    testcmd.ReplaceAll("$ExeName",exec);
-   testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
+   testcmd.ReplaceAll("$LinkedLibs",linkLibraries);
    testcmd.ReplaceAll("$BuildDir",build_loc);
    // ======= Run the build
 

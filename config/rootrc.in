@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.45 2003/05/05 16:41:09 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.46 2003/05/08 09:07:16 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -130,6 +130,8 @@ Rint.History:            $(HOME)/.root_hist
 ACLiC.Linkdef:          _linkdef
 # Set a top directory for storing the libraries produced by ACLiC
 #ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
+# Add additional include directives for ACLiC compilations
+#ACLiC.IncludePaths:     -I/where/the/includes/are
 
 # Default authentication method for rootd (0=clear, 1=SRP, 2=Krb5)
 Rootd.Authentication:   0
