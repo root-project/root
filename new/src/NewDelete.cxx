@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.3 2000/09/14 17:11:44 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.4 2000/09/14 17:41:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -177,7 +177,7 @@ extern long G__globalvarpointer;
 #endif
 #endif
 
-static const char *spaceErr = "storage exhausted";
+static const char *spaceErr = "storage exhausted (failed to allocate %ld bytes)";
 static int newInit = 0;
 
 //______________________________________________________________________________
@@ -213,7 +213,7 @@ void *operator new(size_t size)
    else
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, spaceErr, RealSize(size));
    StoreSizeMagic(vp, size, where);
    return ExtStart(vp);
 }
@@ -248,7 +248,7 @@ void *operator new(size_t size, void *vp)
       else
          vp = ::calloc(RealSize(size), sizeof(char));
       if (vp == 0)
-         Fatal(where, spaceErr);
+         Fatal(where, spaceErr, RealSize(size));
       StoreSizeMagic(vp, size, where);
       return ExtStart(vp);
    }
@@ -337,7 +337,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, spaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 
@@ -373,7 +373,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    else
       vp = ::realloc((char*)RealStart(ovp), RealSize(size));
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, spaceErr, RealSize(size));
    if (size > oldsize)
       MemClearRe(ExtStart(vp), oldsize, size-oldsize);
 
