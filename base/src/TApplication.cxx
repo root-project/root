@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.47 2003/07/08 15:42:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.48 2003/10/22 17:20:50 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -713,7 +713,7 @@ void TApplication::ProcessFile(const char *name, int *error)
       file.getline(currentline,kBufSize);
       if (file.eof()) break;
       s = currentline;
-      while (s && *s == ' ') s++;     // strip-off leading blanks
+      while (s && (*s == ' ' || *s == '\t') ) s++;     // strip-off leading blanks
 
       // very simple minded pre-processor parsing, only works in case macro file
       // starts with "#ifndef __CINT__". In that case everything till next
