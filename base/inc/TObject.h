@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.10 2001/02/13 07:52:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.11 2001/02/21 07:30:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -69,6 +69,7 @@ enum EObjBits {
    kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
    kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
+   kNoContextMenu    = BIT(8),   // if object does not want context menu
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
 };
 
