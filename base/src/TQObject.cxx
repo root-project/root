@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.29 2002/12/03 11:20:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.30 2003/01/12 11:06:34 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -72,6 +72,7 @@
 #include "Api.h"
 #include "Riostream.h"
 #include "RQ_OBJECT.h"
+#include "TVirtualMutex.h"
 
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -189,6 +190,7 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    // Almost the same as TClass::GetMethodWithPrototype().
 
    if (!gInterpreter) return 0;
+   R__LOCKGUARD(gCINTMutex);
 
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
@@ -233,7 +235,8 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    // Almost the same as TClass::GetMethod().
 
    if (!gInterpreter) return 0;
-
+   R__LOCKGUARD(gCINTMutex);
+     
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
