@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.1 2005/03/20 19:35:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.2 2005/03/20 21:25:12 brun Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 // TClassRef                                                            //
 //                                                                      //
-// Reference to a TClass object                                         //
+// Reference to a TClass object.                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -29,8 +29,9 @@
 
 class TClassRef {
 
-   TString fClassName;
-   TClass *fClassPtr;  //! Ptr to the TClass object
+private:
+   TString   fClassName; //Name of referenced class
+   TClass   *fClassPtr;  //! Ptr to the TClass object
 
 public:
    TClassRef();
@@ -39,7 +40,7 @@ public:
    TClassRef(const TClassRef&);
    TClassRef& operator=(const TClassRef&);
 
-   ~TClassRef(); 
+   ~TClassRef();
 
    TClass *GetClass();
    void Reset() { fClassPtr = 0; }

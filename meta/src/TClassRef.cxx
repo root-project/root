@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.163 2005/02/25 17:06:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.1 2005/03/20 19:35:50 brun Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -11,32 +11,37 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TClassRef is used to implement a permanent references to a TClass    //
+// TClassRef is used to implement a permanent reference to a TClass     //
 // object.  In particular this reference will change if and when the    //
 // TClass object is regenerated.  This regeneration usually happens     //
 // when a library containing the described class is loaded after a      //
-// file containing instance of this class has been openeed.             //
+// file containing an instance of this class has been opened.           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClassRef.h"
 
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 TClassRef::TClassRef() :
-   fClassName("unknonw"), fClassPtr(0)
+   fClassName("unknown"), fClassPtr(0)
 {
+   // Default ctor.
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClassRef::TClassRef(const TClassRef &rhs) :
-   fClassName(rhs.fClassName), fClassPtr(rhs.fClassPtr)
+//______________________________________________________________________________
+TClassRef::TClassRef(const TClassRef &org) :
+   fClassName(org.fClassName), fClassPtr(org.fClassPtr)
 {
+   // Copy ctor, increases reference count to original TClass object.
+
    if (fClassPtr) fClassPtr->AddRef(this);
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClassRef &TClassRef::operator=(const TClassRef &rhs) 
+//______________________________________________________________________________
+TClassRef &TClassRef::operator=(const TClassRef &rhs)
 {
+   // Assignment operator, increases reference count to original class object.
+
    if (this != &rhs) {
       fClassName = rhs.fClassName;
       fClassPtr = rhs.fClassPtr;
@@ -45,30 +50,35 @@ TClassRef &TClassRef::operator=(const TClassRef &rhs)
    return *this;
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClassRef::TClassRef(const char *classname) : 
+//______________________________________________________________________________
+TClassRef::TClassRef(const char *classname) :
     fClassName(classname), fClassPtr(0)
 {
+   // Create reference to specified class name, but don't set referenced
+   // class object.
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClassRef::TClassRef(TClass *cl) : 
+//______________________________________________________________________________
+TClassRef::TClassRef(TClass *cl) :
     fClassName(cl?cl->GetName():"unknown"), fClassPtr(cl)
 {
+   // Add reference to specified class object.
+
    if (fClassPtr) fClassPtr->AddRef(this);
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClassRef::~TClassRef() 
+//______________________________________________________________________________
+TClassRef::~TClassRef()
 {
+   // Dtor, decreases reference count of TClass object.
+
    if (fClassPtr) fClassPtr->RemoveRef(this);
 }
 
-//////////////////////////////////////////////////////////////////////////
-TClass *TClassRef::GetClass() 
+//______________________________________________________________________________
+TClass *TClassRef::GetClass()
 {
-   // Return the current TClass object corresponding to
-   // fClassName.
+   // Return the current TClass object corresponding to fClassName.
 
    if (fClassPtr) return fClassPtr;
    fClassPtr = TClass::GetClass(fClassName.Data());
