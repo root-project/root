@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.8 2000/11/21 12:20:28 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.9 2000/12/01 14:22:26 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -30,6 +30,7 @@
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
+#   define NEED_SNPRINTF
 #endif
 
 #ifdef _AIX
@@ -42,6 +43,7 @@
 #if defined(__alpha) && !defined(linux)
 #   define R__ALPHA
 #   define ANSICPP
+#   define NEED_SNPRINTF
 #   ifndef __VMS
 #      define R__UNIX
 #      define R__B64
@@ -161,6 +163,7 @@
 #   define ANSICPP
 #   define NEED_SIGJMP
 #   define NEED_STRCASECMP
+#   define NEED_SNPRINTF
 #endif
 
 #if defined(__FreeBSD__)
@@ -174,6 +177,7 @@
 #   define R__HIUX
 #   define R__UNIX
 #   define NEED_SIGJMP
+#   define NEED_SNPRINTF
 #   define ANSICPP
 #endif
 
