@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.25 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.26 2003/01/16 18:49:11 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -114,6 +114,10 @@ public:
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}
+   virtual Int_t     GetNbytesFree() const {return fNbytesFree;}
+   virtual Seek_t    GetSeekFree() const {return fSeekFree;}
+   virtual Seek_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Seek_t    GetSize() const;
    TList            *GetStreamerInfoList();
    virtual void      IncrementProcessIDs() {fNProcessIDs++;}
