@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.2 2000/05/30 16:45:50 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.3 2000/05/30 17:15:20 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -594,6 +594,7 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
                                 Int_t indx = 0;
                                 Int_t indxlen = 0;
                                 while (indx < dim ){
+                                     if (member->GetMaxIndex(indx) <=0) break;
                                      classFile <<  "[" << member->GetMaxIndex(indx)<<"]";
                                      // Take in account the room this index will occupy
                                      indxlen += Int_t(TMath::Log10(member->GetMaxIndex(indx))) + 3;
