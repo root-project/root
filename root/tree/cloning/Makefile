@@ -27,7 +27,7 @@ event1.root: $(ROOTSYS)/test/Event.new.split0.root
 	$(CMDECHO) cp $(ROOTSYS)/test/Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
 
-treeCloneTest.log: hsimple1.root event1.root
+treeCloneTest.log: hsimple1.root event1.root runEvent.C
 	$(CMDECHO) ( root.exe -q -b -l run.C && root.exe -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
 
 treeCloneTest: treeCloneTest.log treeCloneTest.good 

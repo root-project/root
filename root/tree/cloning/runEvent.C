@@ -14,7 +14,7 @@ chain->GetEntry(0);
 TTree *clone2 = chain->CopyTree("");
 
 chain->LoadTree(0);
-int n = chain->GetTree()->GetEntries();
+Long64_t n = chain->GetTree()->GetEntries();
 
 TTree *clone3 = chain->CloneTree(0);
 

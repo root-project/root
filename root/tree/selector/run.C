@@ -13,5 +13,5 @@ TSelector *sel = TSelector::GetSelector("sel.C");
 tree1->Process(sel,"T1");
 tree2->Process(sel,"T2");
 tree3->Process(sel,"T3");
-
+return 0;
 }
