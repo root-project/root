@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.85 2003/11/01 10:48:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.86 2003/11/12 07:23:08 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -720,7 +720,7 @@ Int_t TChain::LoadTree(Int_t entry)
 //  in this tree.
 
    if (!fNtrees) return 1;
-   if (entry < 0 || entry >= fEntries) return -2;
+   if (entry < 0 || (entry > 0 && entry >= fEntries)) return -2;
 
    // Find in which tree this entry belongs to
    Int_t t;
@@ -811,7 +811,12 @@ Int_t TChain::LoadTree(Int_t entry)
       }
    }
    TChainElement *element = (TChainElement*)fFiles->At(t);
-   if (!element) return -4;
+   if (!element) {
+      if (fReadEntry) return -4;
+      //last attempt, just in case all Trees in the chain have 0 entries
+      element = (TChainElement*)fFiles->At(0);
+      if (!element) return -4;
+   }
    fFile = TFile::Open(element->GetTitle());
    if (fFile==0) return -3;
    if (fFile->IsZombie()) {
@@ -1023,6 +1028,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // Clone Chain tree
    //file->cd();  //in case a user wants to write in a file/subdir
    TTree *hnew = CloneTree(0);
+   if (!hnew) return 0;
    hnew->SetAutoSave(2000000000);
 
 // May be reset branches compression level?
