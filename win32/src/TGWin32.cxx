@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -457,7 +457,8 @@ Bool_t TGWin32::Init(void *display)
 //*-*  Check whether we can use palette
 
   static LPLOGPALETTE flpPalette = 0;
-
+  flpPalette = 0;
+  fMaxCol    = 0;
 //*-*
 //*-*   Create a critical section object to synchronize threads
 //*-*
