@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.2 2001/01/04 13:24:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.3 2002/03/28 01:45:45 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -37,6 +37,7 @@ private:
    TUrl     fUrl;        // URL of file
    Seek_t   fOffset;     // seek offset
 
+   TWebFile() : fUrl("dummy") { }
    void Init(Bool_t);
 
 public:

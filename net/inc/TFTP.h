@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.5 2001/02/26 02:49:06 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.6 2001/03/01 07:21:23 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -54,6 +54,7 @@ private:
    Double_t   fBytesWrite;  // number of bytes sent
    Double_t   fBytesRead;   // number of bytes received
 
+   TFTP() { fSocket = 0; }
    TFTP(const TFTP &);              // not implemented
    void   operator=(const TFTP &);  // idem
    void   Init(const char *url, Int_t parallel, Int_t wsize);
