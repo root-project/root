@@ -64,7 +64,7 @@ void graph2dfit()
    c->cd(1);
    f2->SetTitle("Original function with Graph2D points on top");
    f2->Draw("surf");
-   dt->Draw("p");
+   dt->Draw("same p");
 
    c->cd(3);
    dt->SetMargin(0.1);
