@@ -16,9 +16,25 @@ printUSAGE() {
 		exit 1; 
 	     }
 
-
+printALREADY_EXIST() {
+			echo "" ;
+			echo "Test name already exists" ;
+			exit 1 ;
+		     }
 
 printERROR() { echo "ERROR: $@." >&2 ; }
+
+
+check_target=`grep -F " $1 " $2/Makefile`
+echo $check_target
+
+if [ "$check_target" != "" ]; then
+	printALREADY_EXIST ;
+fi
+
+
+
+#printERROR ;
 
 # check whether sufficient args are given
 
