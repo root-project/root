@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.8 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.9 2002/12/06 16:45:03 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -199,7 +199,9 @@ void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    fRmax[snum] = rmax;
    if (snum==(fNz-1)) ComputeBBox();
 }
+
 //-----------------------------------------------------------------------------
+/*
 Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const
 {
 // compute distance to outside from a  pgon phi trapezoid
@@ -444,6 +446,108 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
 //   printf("phi2= %f\n", dist[5]);
    return dmin; 
 //   if (imin==0)
+}
+*/
+//-----------------------------------------------------------------------------
+Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const
+{
+// compute distance to outside from a  pgon phi trapezoid
+   Double_t saf;
+   Double_t snext[6];
+   Int_t i;
+   for (i=0; i<6; i++) snext[i]=kBig;
+   Double_t zmin = fZ[iz];
+   Double_t zmax = fZ[iz+1];
+   if (zmax==zmin) return 1E-12;
+   Double_t divphi = fDphi/fNedges;
+   Double_t phi1 = (fPhi1 + divphi*(isect-1))*kDegRad;
+   Double_t phi2 = phi1 + divphi*kDegRad;
+   Double_t phim = 0.5*(phi1+phi2);
+   Double_t cphim = TMath::Cos(phim);
+   Double_t sphim = TMath::Sin(phim);
+   Double_t minsafe = 0;
+   Double_t dmin = kBig;
+   Double_t no[3];
+   // check outer slanted face
+   Double_t ct, st;
+   Double_t fz = (fRmax[iz+1]-fRmax[iz])/(zmax-zmin);
+   st = 1./TMath::Sqrt(1.+fz*fz);
+   ct = -fz*st;
+   if (st<0) st=-st;
+   no[0] = st*cphim;
+   no[1] = st*sphim;
+   no[2] = ct;
+   saf = (fRmax[iz]*cphim-point[0])*no[0]+
+         (fRmax[iz]*sphim-point[1])*no[1]+
+         (fZ[iz]-point[2])*no[2];
+   minsafe = saf;
+   Double_t calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
+   if (calf>0) snext[0] = saf/calf;
+
+   // check inner slanted face
+   fz = (fRmin[iz+1]-fRmin[iz])/(zmax-zmin);
+   st = -1./TMath::Sqrt(1.+fz*fz);
+   ct = -fz*st;
+   if (st<0) st=-st;
+   no[0] = -st*cphim;
+   no[1] = -st*sphim;
+   no[2] = ct;
+   saf = (fRmin[iz]*cphim-point[0])*no[0]+
+         (fRmin[iz]*sphim-point[1])*no[1]+
+         (fZ[iz]-point[2])*no[2];
+   if (saf<minsafe) minsafe = saf;
+   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
+   if (calf>0) snext[1] = saf/calf;
+               
+   // check upper and lower Z planes
+   saf = point[2]-fZ[iz];
+   if (saf<minsafe) minsafe = saf;
+   if (dir[2]<0) snext[2]=-saf/dir[2];
+   saf = fZ[iz+1]-point[2];
+   if (saf<minsafe) minsafe = saf;
+   if (dir[2]>0) snext[3]=saf/dir[2];
+
+   // check phi1 and phi2 walls
+   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t phi = TMath::ATan2(point[1], point[0]);
+   if (phi<phi1) phi+=2*TMath::Pi();
+   no[0] = TMath::Sin(phi1);
+   no[1] = -TMath::Cos(phi1);
+   no[2] = 0;
+   saf = TMath::Abs(r*TMath::Sin(phi-phi1));
+   if (saf<minsafe) minsafe = saf;
+   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
+   if (calf>1E-6) snext[4] = saf/calf;
+
+   no[0] = -TMath::Sin(phi2);
+   no[1] = TMath::Cos(phi2);
+   no[2] = 0;
+   saf = TMath::Abs(r*TMath::Sin(phi2-phi));
+   if (saf<minsafe) minsafe = saf;
+   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
+   if (calf>1E-6) snext[5] = saf/calf;
+   Int_t icheck = TMath::LocMin(6, &snext[0]);
+   dmin = snext[icheck];
+   if (icheck<2) return dmin;
+   Double_t pt[3];
+   if (icheck<4) {
+      // z plane crossed
+      iz += 2*icheck-5;
+      if ((iz<0) || (iz>(fNz-2))) return dmin;
+      for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-10)*dir[i];
+      dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-10;
+      return dmin;
+   }
+   isect += 2*icheck-9;
+   if (fDphi==360) {
+      if (isect<1) isect=fNedges;
+      if (isect>fNedges) isect=1;
+   } else {      
+      if ((isect<1) || (isect>fNedges)) return dmin;
+   }      
+   for (i=0; i<3; i++) pt[i]=point[i]+(dmin+1E-10)*dir[i];
+   dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-10;
+   return dmin;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const

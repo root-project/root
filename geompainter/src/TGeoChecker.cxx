@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.16 2002/12/10 07:52:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.17 2002/12/10 08:40:15 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -342,14 +342,14 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          while (step<1E10) {
             // now see if we can make an other step
 	          iloop=0;
-            if (!fGeom->IsEntering()) printf("Looping %s\n", fGeom->GetPath());
+//            if (!fGeom->IsEntering()) printf("Looping %s\n", fGeom->GetPath());
             while (!fGeom->IsEntering()) {
 	             iloop++;
                fGeom->SetStep(1E-3);
 	             step += 1E-3;
                endnode = fGeom->Step();
             }
-            if (iloop>10) printf("%i steps\n", iloop);   
+            if (iloop>1000) printf("%i steps\n", iloop);   
             if (matprop>0) {
                x += step/matprop;
             }   

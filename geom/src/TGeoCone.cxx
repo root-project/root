@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.6 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.7 2002/12/03 16:13:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -222,14 +222,14 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Dou
       xp = point[0]+snxt*dir[0];
       yp = point[1]+snxt*dir[1];
       r2 = xp*xp+yp*yp;
-      if ((r2>=rmin2*rmin2) && (r2<=rmax2*rmax2)) return snxt;
+      if ((r2>=rmin1*rmin1) && (r2<=rmax1*rmax1)) return snxt;
    } else {
       if ((point[2]>z2) && (dir[2]<0)) {
          snxt = (z2-point[2])/dir[2];    
          xp = point[0]+snxt*dir[0];
          yp = point[1]+snxt*dir[1];
          r2 = xp*xp+yp*yp;
-         if ((r2>=rmin1*rmin1) && (r2<=rmax1*rmax1)) return snxt;
+         if ((r2>=rmin2*rmin2) && (r2<=rmax2*rmax2)) return snxt;
       }
    }           
    

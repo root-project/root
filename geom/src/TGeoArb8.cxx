@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.10 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.11 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -272,13 +272,6 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    yc=fXY[(ipl+1)%4][1];
    xd=fXY[4+(ipl+1)%4][0];
    yd=fXY[4+(ipl+1)%4][1];
-   if (xa==xc) {
-      if (ya==yc) {
-         if (xb==xd) {
-            if (yb==yd) return kBig;
-         }   
-      }
-   }            
    Double_t tx1=0.5*(xb-xa)/fDz;
    Double_t ty1=0.5*(yb-ya)/fDz;
    Double_t tx2=0.5*(xd-xc)/fDz;
@@ -297,7 +290,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
    Double_t s=kBig;
    Double_t x1,x2,y1,y2,xp,yp,zi;
-   if (a==0) {           
+   if (TMath::Abs(a)<1E-10) {           
       if (b==0) return kBig;
       s=-c/b;
       if (s>0) {
