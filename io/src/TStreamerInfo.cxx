@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.168 2003/04/15 17:54:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.169 2003/04/18 16:42:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -825,7 +825,16 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
    while ((element = (TStreamerElement*)next())) {
       TClass *cl = element->GetClassPointer();
       if (cl) {
-         cl->BuildRealData();
+	 const char *name = cl->GetName();
+	 static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+	 if (!strcmp(name, "string")||!strcmp(name,full_string_name)) continue; //reject string
+	 if (strstr(name, "vector<")   || strstr(name, "list<") ||
+	     strstr(name, "set<")      || strstr(name, "map<")  ||
+	     strstr(name, "deque<")    || strstr(name, "multimap<") ||
+	     strstr(name, "multiset<") || strstr(name, "::" ))
+ 	    continue; //reject STL containers
+
+	 cl->BuildRealData();
          cl->GetStreamerInfo()->ForceWriteInfo(file, force);
       }
    }
