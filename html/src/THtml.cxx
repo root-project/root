@@ -1,5 +1,5 @@
 // @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.10 2001/06/27 17:31:39 rdm Exp $
-// Author: Nenad Buncic   18/10/95
+// Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01) 
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,31 +49,128 @@ enum EFileType {kSource, kInclude, kTree};
 // appropriate for representing information from a wide range of domains.
 //
 //   The THtml class is designed to provide an easy way for converting ROOT
-// classes, and files as well, into HTML documents. Here is the few rules
-// and suggestions for a configuration, coding and usage.
+// classes, and files as well, into HTML documents. Here is the few rules and 
+// suggestions for a configuration, coding and usage.
 //
 //
 // Configuration:
 // -------------
 //
-//   The output directory could be specified using the Root.Html.OutputDir
-// environment variable ( default value: "html/" ). Also it is necessary to
-// define Root.Html.SourceDir to point to directories containing .cxx and .h
-// files ( see: TEnv ).
+// (i)   Input files
 //
-//       Examples:
-//                Root.Html.OutputDir: html
-//                Root.Html.SourceDir: src:include:.:/usr/user/source
-//                Root.Html.Root:      http://root.cern.ch/root/html
+//   Define Root.Html.SourceDir to point to directories containing .cxx and 
+// .h files ( see: TEnv ) of the classes you want to document. Better yet, 
+// specify separate Unix.*.Root.Html.SourceDir and WinNT.*.Root.Html.SourceDir.
+// Root.Html.SourcePrefix can hold an additional (relative) path to help THtml
+// find the source files. Its default value is "". Root's class documentation 
+// files can be linked in if Root.Html.Root is set to Root's class 
+// documentation root. It defaults to "".
+// 
+// Examples:
+//   Unix.*.Root.Html.SourceDir:  .:src:include
+//   WinNT.*.Root.Html.SourceDir: .;src;include
+//   Root.Html.SourcePrefix:
+//   Root.Html.Root:              http://root.cern.ch/root/html
 //
 //
-//   During the conversion, THtml will look for the certain number of
-// user defined strings, i.e. author's name, copyright note, etc.
-// This could be defined with following environment variables:
+// (ii)  Output directory
 //
-//       Root.Html.Author     ( default: // Author:)
-//       Root.Html.LastUpdate ( default: // @(#))
-//       Root.Html.Copyright  ( default:  * Copyright)
+//   The output directory can be specified using the Root.Html.OutputDir
+// environment variable ( default value: "htmldoc" ). If it doesn't exist, it 
+// will be created. 
+//
+// Examples (with defaults given):
+//   Root.Html.OutputDir:         htmldoc
+//
+//
+// (iii) Class documentation
+//
+//   The class documentation has to appear in the header file containing the 
+// class, right in front of its declaration. It is introduced by a string
+// defined by Root.Html.Description. See below, section "Coding", for 
+// further details. 
+//
+// Examples (with defaults given):
+//   Root.Html.Description:       //____________________
+//
+//
+// (iv)  Source file information
+//
+//   During the conversion, THtml will look for the certain number of user 
+// defined strings ("tags") in the source file, which have to appear right in
+// front of e.g. the author's name, copyright notice, etc. These tags can be 
+// defined with the following environment variables: Root.Html.Author, 
+// Root.Html.LastUpdate and Root.Html.Copyright. 
+//
+//   If the LastUpdate tag is not found, the current date and time are given. 
+// This makes sense if one uses THtml's default option force=kFALSE, in which 
+// case THtml generates documentation only for changed classes.
+//
+//   Authors can be a comma separated list of author entries. Each entry has 
+// one of the following two formats: 
+//  * "Name (non-alpha)". THtml will generate an HTML link for Name, taking 
+//    the Root.Html.XWho environment variable (defaults to 
+//    "http://consult.cern.ch/xwho/people?") and adding all parts of the name 
+//    with spaces replaces by '+'. Non-Alphas are printed out behind Name.
+//
+//    Example: "// Author: Enrico Fermi" appears in the source file. THtml 
+//    will generate the link 
+//    "http://consult.cern.ch/xwho/people?Enrico+Fermi". This works well for 
+//    people at CERN.
+//
+//  * "Name <link> Info" THtml will generate a HTML link for Name as specified 
+//    by "link" and print Info behind Name.
+//
+//    Example: "// Author: Enrico Fermi <http://www.enricos-home.it>" or 
+//    "// Author: Enrico Fermi <mailto:enrico@fnal.gov>" in the 
+//    source file. That's world compatible.
+// 
+// Examples (with defaults given):
+//       Root.Html.Author:     // Author:
+//       Root.Html.LastUpdate: // @(#)
+//       Root.Html.Copyright:  * Copyright
+//       Root.Html.XWho:       http://consult.cern.ch/xwho/people?
+//
+//
+// (v)   Style
+//
+//   THtml generates a default header and footer for all pages. You can 
+// specify your own versions with the environment variables Root.Html.Header 
+// and Root.Html.Footer. Both variables default to "", using the standard Root
+// versions. If set the parameter to your file and append a "+", THtml will
+// write both versions (user and root) to a file, for the header in the order
+// 1st root, 2nd user, and for the footer 1st user, 2nd root (the root 
+// versions containing "<html>" and </html> tags, resp).
+//
+// If you want to replace root's header you have to write a file containing 
+// all HTML elements necessary starting with the <DOCTYPE> tag and ending with 
+// (and including) the <BODY> tag. If you add your header it will be added 
+// directly after Root's <BODY> tag. Any occurence of the string "%TITLE%" 
+// (without the quotation marks) in the user's header file will be replaced by 
+// a sensible, automatically generated title.
+//
+// Root's footer starts with the tag "<!--SIGNATURE-->". It includes the 
+// author(s), last update, copyright, the links to the Root home page, to the
+// user home page, to the index file (ClassIndex.html), to the top of the page
+// and "this page is automatically generated" infomation. It ends with the 
+// tags "</body></html>. If you want to replace it, THtml will search for some 
+// tags in your footer: Occurences of the strings "%AUTHOR%", "%UPDATE%", and 
+// "%COPYRIGHT%" (without the quotation marks) are replaced by their 
+// corresponding values before writing the html file. The %AUTHOR% tag will be 
+// replaced by the exact string that follows Root.Html.Author, no link 
+// generation will occur.
+// 
+//
+// (vi)  Miscellaneous
+//
+//   Additional parameters can be set by Root.Html.Homepage (address of the 
+// user's home page) and Root.Html.SearchEngine (search engine for the class
+// documentation). Both default to "".
+//
+// Examples:
+//       Root.Html.Homepage:     http://www.enricos-home.it
+//       Root.Html.SearchEngine: http://root.cern.ch/root/Search.phtml
+//
 //
 //
 //
@@ -136,13 +233,22 @@ enum EFileType {kSource, kInclude, kTree};
 // The default escape character is backslash and can be changed
 // via the member function SetEscape.
 //
+//   ==> The ClassIndex
+//       --------------
+// All classes to be documented will have an entry in the ClassIndex.html, 
+// showing their name with a link to their documentation page and a miniature 
+// description. This discription for e.g. the class MyClass has to be given 
+// in MyClass's header as a comment right after ClassDef( MyClass, n ).
+//
+//
+//
 // Usage:
 // -----
 //
-//     Root> gHtml.MakeAll               // invoke a make for all classes
-//     Root> gHtml.MakeClass( TMyClass ) // create a HTML files for that class only
+//     Root> gHtml.MakeAll()             // invoke a make for all classes
+//     Root> gHtml.MakeClass("TMyClass") // create a HTML files for that class only
 //     Root> gHtml.MakeIndex()           // creates an index files only
-//     Root> gHtml.MakeTree( TMyClass )  // creates an inheritance tree for a class
+//     Root> gHtml.MakeTree("TMyClass")  // creates an inheritance tree for a class
 //
 //     Root> gHtml.Convert( hist1.mac, "Histogram example" )
 //
@@ -150,14 +256,18 @@ enum EFileType {kSource, kInclude, kTree};
 // Environment variables:
 // ---------------------
 //
-//   Root.Html.OutputDir    ( default: htmldoc/)
+//   Root.Html.OutputDir    ( default: htmldoc)
 //   Root.Html.SourceDir    ( default: .:src/:include/)
-//   Root.Html.Author       ( default: // Author:)
-//   Root.Html.LastUpdate   ( default: // @(#))
-//   Root.Html.Copyright    ( default:  * Copyright)
-//   Root.Html.Description  ( default: //____________________ )
-//   Root.Html.HomePage     ( URL to the user defined home page )
-//   Root.Html.SearchEngine ( link to the search engine )
+//   Root.Html.Author       ( default: // Author:) - start tag for authors
+//   Root.Html.LastUpdate   ( default: // @(#)) - start tag for last update
+//   Root.Html.Copyright    ( default:  * Copyright) - start tag for copyright notice
+//   Root.Html.Description  ( default: //____________________ ) - start tag for class descr
+//   Root.Html.HomePage     ( default: ) - URL to the user defined home page
+//   Root.Html.Header       ( default: ) - location of user defined header
+//   Root.Html.Footer       ( default: ) - location of user defined footer
+//   Root.Htnl.Root         ( default: ) - URL of Root's class documentation
+//   Root.Html.SearchEngine ( default: ) - link to the search engine
+//   Root.Html.XWho         ( default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,9 +293,9 @@ THtml::THtml()
    fSourceDir = gEnv->GetValue( "Root.Html.SourceDir", "./:src/:include/" );
 
    // check for output directory
-   fOutputDir = gEnv->GetValue( "Root.Html.OutputDir", "htmldoc/" );
+   fOutputDir = gEnv->GetValue( "Root.Html.OutputDir", "htmldoc" );
 
-   fXwho      = "http://consult.cern.ch/xwho/people?";
+   fXwho      = gEnv->GetValue( "Root.Html.XWho", "http://consult.cern.ch/xwho/people?");
 
    Int_t  st;
    Long_t sId, sSize, sFlags, sModtime;
@@ -518,7 +628,6 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
 
                 if( memberArray ) {
                     while (( member = ( TDataMember * ) nextMember() )) {
-
                         if(
                             !strcmp( member->GetName(), "fgIsA" )
                         ) continue;
@@ -675,15 +784,12 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
 
     // allocate memory
-    char *nextLine    = new char [256];
-    char *pattern     = new char [80];
+    char *nextLine    = new char [1024];
+    char *pattern     = new char [1024];
 
-    char *lastUpdate  = new char [256];
-    char *author      = new char [80];
-    char *copyright   = new char [80];
-
-
-    char *funcName   = new char [64];
+    char *lastUpdate  = new char [1024];
+    char *author      = new char [1024];
+    char *copyright   = new char [1024];
 
     const char *lastUpdateStr;
     const char *authorStr;
@@ -729,6 +835,14 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
     Bool_t extractComments     = kFALSE;
     Bool_t thisLineIsCommented = kFALSE;
     Bool_t thisLineIsPpLine    = kFALSE;
+
+	// for Doc++ style
+    Bool_t useDocxxStyle       = (strcmp(gEnv->GetValue( "Root.Html.DescriptionStyle","" ),"Doc++")==0);
+    Bool_t postponeMemberDescr = kFALSE;
+    Bool_t skipMemberName      = kFALSE;
+    Bool_t writeBracket        = kFALSE;
+    streampos postponedpos = 0;
+	
 
     // Class Description Title
     out << "<hr>" << endl;
@@ -898,12 +1012,25 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
                             classDescription = kFALSE;
                             extractComments = kTRUE;
                         }
+						// for Doc++ style
+						else if (useDocxxStyle) {
+                            postponeMemberDescr = kTRUE;
+                            postponedpos = sourceFile.tellg();
+						}
                     }
                 }
                 else {
                     Bool_t found = kFALSE;
                     // find method name
                     char *funcName = key + len;
+					char *tmpNameSpace=NULL;
+					// if we have a namespace check wether the method is given as namespace::class::method
+					if (nameSpace!=NULL) {
+						tmpNameSpace=fLine;
+						while (tmpNameSpace<key && NULL!=(tmpNameSpace=(strstr(&fLine[tmpNameSpace-fLine],classPtr->GetName()))))
+							if (key-tmpNameSpace==(int)strlen(classPtr->GetName())-(len-2)) key=tmpNameSpace;
+							else tmpNameSpace++;
+					}
 
                     while( *funcName && isspace( *funcName ) )
                         funcName++;
@@ -950,6 +1077,16 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
                     if( nameEndPtr ) *nameEndPtr = c1;
 
                     if( method ) {
+						// for Doc++Style
+						if (useDocxxStyle && skipMemberName)
+						{
+                            skipMemberName = kFALSE;
+                            writeBracket = kTRUE;
+                            sourceFile.seekg(postponedpos);
+                        }
+						else
+						{
+
                         char *typeEnd = NULL;
                         char c2 = 0;
 
@@ -957,23 +1094,20 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
                         // try to get type
                         typeEnd = key-1;
-                        while( ( typeEnd > fLine ) && (isspace( *typeEnd ) || *typeEnd == '*' ) )
+                        while( ( typeEnd > fLine ) && (isspace( *typeEnd ) || *typeEnd == '*' || *typeEnd == '&') )
                             typeEnd--;
                         typeEnd++;
                         c2 = *typeEnd;
                         *typeEnd = 0;
                         char *type = typeEnd - 1;
-						if (*type == '*' || *type == '&') {
-							type--; 
-							while (*type==' ' && ( type > fLine ))
-								type--;
-							if (type+1!=typeEnd-1) {
-								*(type+1)=*(typeEnd-1);
-								*(typeEnd-1)=' ';
-							}
-						}
                         while( IsName( *type )  && ( type > fLine ))
                             type--;
+						if (*type==':' && (type-1>fLine) && *(type-1)==':') { 
+							// found a namespace
+							type--; type--;
+							while( IsName( *type )  && ( type > fLine ))
+								type--;
+						}
                         if( !IsWord( *type )) type++;
 
                         while( (type > fLine ) && isspace( *( type-1 )) )
@@ -1065,23 +1199,43 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
                                     if( colonPtr ) *colonPtr = ':';
                                     ExpandKeywords( out, nameEndPtr, classPtr, flag );
                                     out << "<br>" << endl;
+
+									// for Doc++ Style
+									if (useDocxxStyle && postponeMemberDescr) {
+                                        streampos pos = sourceFile.tellg();
+                                        sourceFile.seekg(postponedpos);
+                                        postponedpos = pos;
+                                        skipMemberName = kTRUE;
+                                        postponeMemberDescr = kFALSE;
+                                    }
                                     extractComments = kTRUE;
                                 }
                             }
                             if( ptr ) *ptr = '{';
                         }
+		                } // if useDocxxStyle
                     }
-                }
+				}
 
                 // write to '.cxx.html' file
-                if( thisLineIsPpLine )
-                    ExpandPpLine( tempFile, fLine );
-                else {
-                    if( thisLineIsCommented ) tempFile << "<b>";
-                    ExpandKeywords( tempFile, fLine, classPtr, tempFlag, "../" );
-                    if( thisLineIsCommented ) tempFile << "</b>";
-                }
-                tempFile << endl;
+				// for Doc++ Style - if enabled, check if skipMemberName is set
+				if (!useDocxxStyle || !skipMemberName)
+				{
+					if( thisLineIsPpLine )
+						ExpandPpLine( tempFile, fLine );
+					else {
+						if( thisLineIsCommented ) tempFile << "<b>";
+						ExpandKeywords( tempFile, fLine, classPtr, tempFlag, "../" );
+						if( thisLineIsCommented ) tempFile << "</b>";
+					}
+					tempFile << endl;
+
+					if (useDocxxStyle && writeBracket)
+					{
+                        writeBracket = kFALSE;
+                        tempFile << "{" << endl;
+					}
+				}
             }
             tempFile << "</pre>" << endl;
 
@@ -1187,7 +1341,6 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
     if( lastUpdate )   delete [] lastUpdate;
     if( author )       delete [] author;
     if( copyright )    delete [] copyright;
-    if( funcName )     delete [] funcName;
 
     if( realFilename ) delete [] realFilename;
     if( filename )     delete [] filename;
@@ -2056,7 +2209,9 @@ void THtml::ExpandKeywords( ofstream &out, char *text, TClass *ptr2class,
                         keyword = end;
                     }
                     else {
-                        const char *anyname = gROOT->FindObjectClassName( keyword );
+						const char *anyname =NULL;
+						if (strcmp(keyword,"const"))
+                            anyname = gROOT->FindObjectClassName( keyword );
 
                         const char *namePtr = NULL;
                         TClass *cl  = 0;
@@ -2077,7 +2232,7 @@ void THtml::ExpandKeywords( ofstream &out, char *text, TClass *ptr2class,
                             }
                         }
 
-                        if( cl ) {
+                        if( cl && strlen(cl->GetDeclFileName())>0) {
                             char *htmlFile = GetHtmlFileName( cl );
 
                             if( htmlFile ) {
@@ -2883,7 +3038,7 @@ void THtml::WriteHtmlFooter( ofstream &out, const char *dir, const char *lastUpd
                 if( addFooterFile.eof() ) break;
 
                 if (fLine) {
-                                        char * updatePos=strstr(fLine, "%UPDATE%"); 
+					char * updatePos=strstr(fLine, "%UPDATE%"); 
 					char * authorPos=strstr(fLine, "%AUTHOR%");
 					char * copyPos=strstr(fLine, "%COPYRIGHT%");
 
@@ -2949,9 +3104,19 @@ void THtml::WriteHtmlFooter( ofstream &out, const char *dir, const char *lastUpd
 
 			Bool_t firstAuthor = kTRUE;
 
+			/* now we have two options. name is a comma separated list of tokens 
+			   either in the format
+			      (i) "FirstName LastName " or
+				  (ii) "FirstName LastName <link> "
+				  The first one generates an XWho link (CERN compatible), 
+				  the second a http link (WORLD compatible), e.g. 
+				  <mailto:user@host.bla> or <http://www.host.bla/page>.
+			*/
+
 			do {
 				char *ptr = name;
-				char c;
+				// do we have a link for the current name?
+				char* cLink=NULL;
 
 				// remove leading spaces
 				while( *ptr && isspace( *ptr ) ) ptr++;
@@ -2961,38 +3126,62 @@ void THtml::WriteHtmlFooter( ofstream &out, const char *dir, const char *lastUpd
 				if( !strncmp( ptr, "Nicolas", 7 ) ) {
 					out << "<a href=http://pcbrun.cern.ch/nicolas/index.html";
 					ptr += 12;
-				} else {
-					out << "<a href="<<GetXwho();
-				}
-				while( *ptr ) {
-					// Valery's specific case
-					if( !strncmp( ptr, "Valery", 6 ) ) {
-						out << "Valeri";
-						ptr += 6;
+				} 
+				else {
+					cLink=strchr(ptr, '<'); // look for link start tag
+					if (cLink) {
+						ptr=cLink;
+						out << "<a href=\"";
+						for(cLink++; *cLink != 0 && *cLink != '>';cLink++)
+							if (*cLink!=' ') out << *cLink;
 					}
-					else if( !strncmp( ptr, "Fine", 4 ) ) {
-						out << "Faine";
-						ptr += 4;
-					}
-					while( *ptr && !isspace( *ptr ) )
-						out << *ptr++;
+					else {
+						out << "<a href=\""<<GetXwho();
+						while( *ptr && !cLink ) {
+							// Valery's specific case
+							if( !strncmp( ptr, "Valery", 6 ) ) {
+								out << "Valeri";
+								ptr += 6;
+							}
+							else if( !strncmp( ptr, "Fine", 4 ) ) {
+								out << "Faine";
+								ptr += 4;
+							}
+							while( *ptr && !isspace( *ptr ) )
+								out << *ptr++;
 
-					if( isspace( *ptr ) ) {
-						while( *ptr && isspace( *ptr ) ) ptr++;
-						if( isalpha( *ptr) ) out << '+';
-						else break;
+							if( isspace( *ptr ) ) {
+								while( *ptr && isspace( *ptr ) ) ptr++;
+								if( isalpha( *ptr) ) out << '+';
+								else break;
+							}
+							else break;
+						}
 					}
-					else break;
 				}
-				c = *ptr;
-				*ptr = 0;
-				out << ">" << name << "</a>";
-				*ptr = c;
-				out << ptr;
+				out << "\">";
+
+				char* cCurrentPos=name;
+				// remove blanks in front of and behind the name
+				while (*cCurrentPos==' ') cCurrentPos++;
+				bool bBlank=kFALSE;
+				for (; cCurrentPos!=ptr && *cCurrentPos!=0; cCurrentPos++) {
+					if (*cCurrentPos!=' ') {
+						if (bBlank) {
+							out << ' '; 
+							bBlank=kFALSE;
+						}
+						out << *cCurrentPos;
+					}
+					else bBlank=kTRUE;
+				}
+				out << "</a>";
+				if (ptr && *ptr) out <<' '<< ptr;
 
 				firstAuthor = kFALSE;
+				name+=strlen(name)+1;
 
-			} while (( name = strtok( NULL, "," )));
+			} while ( (name-auth)<(int)strlen(author) && (name = strtok( name, "," )));
 			out << "</em><br>" << endl;
 			delete [] auth;
 		}
