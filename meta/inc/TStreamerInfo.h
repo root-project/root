@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.27 2001/05/31 10:01:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.28 2001/08/17 07:49:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -67,8 +67,8 @@ public:
 
    enum EReadWrite {
       kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
-      kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat   =  5, kDouble  =  8,
-      kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
+      kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat =  5, kDouble  =  8,
+      kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits  = 15,
       kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,
       kTString= 65,  kTObject = 66,  kTNamed  = 67,  kMissing = 99999,
       kSkip   =100,  kSkipL   =120,  kSkipP   =140,
