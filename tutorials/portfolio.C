@@ -76,9 +76,8 @@
 // under the condition sum (x_i) = 1, meaning we want all our money invested and
 // x_i >= 0 , we can not "short" a stock
 //  
-// For 11 stocks we got the historical daily data for Sep-2000 to Jun-2004:
+// For 10 stocks we got the historical daily data for Sep-2000 to Jun-2004:
 //
-// BRCD : Brocade Communications Systems Inc
 // GE   : General Electric Co
 // SUNW : Sun Microsystems Inc
 // QCOM : Qualcomm Inc
@@ -90,7 +89,7 @@
 // PFE  : Pfizer Inc
 // HD   : Home Depot Inc
 //
-// We calculate the optimal portfolio for 0.1 and 10.0 .
+// We calculate the optimal portfolio for 2.0 and 10.0 .
 //
 // Food for thought :
 // - We assumed that the stock returns have a Normal distribution . Check this assumption by 
@@ -107,23 +106,22 @@
 //   index like the S&P and "hedge" this exposure away . A perfect hedge this can be added
 //    as an equality constrain, otherwise add an inequality constrain .
 
-const Int_t nrStocks = 11;
+const Int_t nrStocks = 10;
 static const Char_t *stocks[] =
-     {"BRCD","GE","SUNW","QCOM","BRCM","TYC","IBM","AMAT","C","PFE","HD"};
+     {"GE","SUNW","QCOM","BRCM","TYC","IBM","AMAT","C","PFE","HD"};
 
 class TStockDaily  {
 public:
-  Int_t   fDate;
-  Float_t fOpen;
-  Float_t fHigh;
-  Float_t fLow;
-  Float_t fClose;
-  Int_t   fVol;
-  Float_t fCloseAdj;
+  Int_t fDate;
+  Int_t fOpen;     // 100*open_price
+  Int_t fHigh;     // 100*high_price
+  Int_t fLow;      // 100*low_price
+  Int_t fClose;    // 100*close_price
+  Int_t fVol;
+  Int_t fCloseAdj; // 100*close_price adjusted for splits and dividend
 
   TStockDaily() {
-     fDate = fVol = 0; 
-     fOpen = fHigh = fLow = fClose = fCloseAdj = 0; 
+     fDate = fVol = fOpen = fHigh = fLow = fClose = fCloseAdj = 0; 
   }
 
   ClassDef(TStockDaily,1)
@@ -151,12 +149,13 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
     b_date->GetEntry(i); 
     b_closeAdj->GetEntry(i); 
     if (data->fDate >= sDay && data->fDate <= eDay)
-      closeAdj[i] = data->fCloseAdj;
+      closeAdj[i] = data->fCloseAdj/100.;
   }
 
   TArrayF *r = new TArrayF(nrEntries-1);
   for (Int_t i = 1; i < nrEntries; i++)
-    (*r)[i-1] = closeAdj[i]-closeAdj[i-1];
+//    (*r)[i-1] = closeAdj[i]-closeAdj[i-1];
+    (*r)[i-1] = closeAdj[i]/closeAdj[i-1];
 
   return *r;
 }
@@ -279,7 +278,7 @@ void portfolio()
     }
   }
 
-  const TVectorD weight1 = OptimalInvest(0.1,r,Covar);
+  const TVectorD weight1 = OptimalInvest(2.0,r,Covar);
   const TVectorD weight2 = OptimalInvest(10.,r,Covar);
 
   cout << "stock     daily  daily   w1     w2" <<endl;
@@ -296,21 +295,21 @@ void portfolio()
   gPad->SetGridx();
   gPad->SetGridy();
 
-  TF1 *f1 = new TF1("f1",RiskProfile,0,10,1);
-  f1->SetParameter(0,0.1);
+  TF1 *f1 = new TF1("f1",RiskProfile,0,2.5,1);
+  f1->SetParameter(0,2.0);
   f1->SetLineColor(49);
   f1->Draw("AC");
   f1->GetHistogram()->SetXTitle("dollar");
   f1->GetHistogram()->SetYTitle("utility");
   f1->GetHistogram()->SetMinimum(0.0);
   f1->GetHistogram()->SetMaximum(1.0);
-  TF1 *f2 = new TF1("f2",RiskProfile,0,10,1);
+  TF1 *f2 = new TF1("f2",RiskProfile,0,2.5,1);
   f2->SetParameter(0,10.);
   f2->SetLineColor(50);
   f2->Draw("CSAME");
 
   TLegend *legend1 = new TLegend(0.50,0.65,0.70,0.82);
-  legend1->AddEntry(f1,"1-exp(-0.1*x)","l");
+  legend1->AddEntry(f1,"1-exp(-2.0*x)","l");
   legend1->AddEntry(f2,"1-exp(-10.*x)","l");
   legend1->Draw();
 
