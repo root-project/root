@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.7 2003/07/04 08:48:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 
 #include "TGDoubleSlider.h"
 #include "Riostream.h"
+#include "TSystem.h"
 
 
 ClassImp(TGDoubleSlider)
@@ -257,6 +258,12 @@ Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in vertical slider.
 
+   static Long_t was = gSystem->Now();
+   Long_t now = (long)gSystem->Now();
+
+   if ((now-was) < 50) return kTRUE;
+   was = now;
+
    int       diff;
    Float_t   oldMin, oldMax;
 
@@ -419,6 +426,12 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in horizontal slide widget.
+
+   static Long_t was = gSystem->Now();
+   Long_t now = (long)gSystem->Now();
+
+   if ((now-was) < 50) return kTRUE;
+   was = now;
 
    int     diff;
    Float_t oldMin, oldMax;
