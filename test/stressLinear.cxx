@@ -1043,9 +1043,13 @@ void mstress_norms(Int_t rsize_req,Int_t csize_req)
   Bool_t ok = kTRUE;
   const Double_t pattern = 10.25;
 
-  const Int_t rsize = (rsize %2 == 0) ? rsize_req : rsize_req-1;
-  const Int_t csize = (csize %2 == 0) ? csize_req : csize_req-1;
-  if (rsize % 2 == 1 || csize %2 == 1) {
+//  const Int_t rsize = (rsize%2 == 0) ? rsize_req : rsize_req-1;
+//  const Int_t csize = (csize%2 == 0) ? csize_req : csize_req-1;
+  Int_t rsize = rsize_req;
+  if (rsize%2 != 0)  rsize--;
+  Int_t csize = csize_req;
+  if (csize%2 != 0)  csize--;
+  if (rsize%2 == 1 || csize%2 == 1) {
     cout << "rsize: " << rsize <<endl;
     cout << "csize: " << csize <<endl;
     Fatal("mstress_norms","Sorry, size of the matrix to test must be even for this test\n");
