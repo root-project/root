@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine      23/05/97
 
 /*************************************************************************
@@ -34,7 +34,6 @@ class TPadOpenGLView;
 class TGLViewerImp  {
 
 protected:
-
    UInt_t               fDrawList;      // GL list used to redraw the contents
    TPadOpenGLView      *fGLView;        // Pointer to Pad GL View object
    Bool_t               fPaint;         // Allows "Refresh" OpenGL window
@@ -68,7 +67,7 @@ public:
    virtual void   Show() { };
    virtual void   Update() { fPaint = kTRUE; }
 
-   // ClassDef(TGLViewerImp,0)  //ROOT OpenGL viewer implementation
+   ClassDef(TGLViewerImp,0)  //ROOT OpenGL viewer implementation
 };
 
 inline void TGLViewerImp::CreateStatusBar(Int_t) { }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGLViewerImp.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Valery Fine      23/05/97
 
 /*************************************************************************
@@ -26,7 +26,8 @@
 #include "TVirtualGL.h"
 
 
-// ClassImp(TGLViewerImp)
+ClassImp(TGLViewerImp)
+
 //______________________________________________________________________________
 TGLViewerImp::TGLViewerImp()
 {
