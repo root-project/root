@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.6 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.7 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@
 ClassImp(RooCBShape)
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.6 2002/09/10 02:01:31 verkerke Exp $";
+"$Id: RooCBShape.cc,v 1.7 2004/04/05 22:38:34 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,
@@ -55,7 +55,7 @@ Double_t RooCBShape::evaluate() const {
 
   Double_t absAlpha = fabs(alpha);
 
-  if (t > -absAlpha) {
+  if (t >= -absAlpha) {
     return exp(-0.5*t*t);
   }
   else {
@@ -65,4 +65,26 @@ Double_t RooCBShape::evaluate() const {
     return a/pow(b - t, n);
   }
 }
+
+
+Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const 
+{
+  // Advertise that we know the maximum of self for given (m0,alpha,n,sigma)
+  RooArgSet dummy ;
+
+  if (matchArgs(vars,dummy,m)) {
+    return 1 ;  
+  }
+  return 0 ;  
+}
+
+
+Double_t RooCBShape::maxVal(Int_t code) 
+{
+  assert(code==1) ;
+
+  // The maximum value for given (m0,alpha,n,sigma)
+  return 1.0 ;
+}
+
 

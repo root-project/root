@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.rdl,v 1.5 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooCBShape.rdl,v 1.6 2004/04/05 22:38:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,10 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCBShape(*this,newname); }
 
   inline virtual ~RooCBShape() { }
+
+  // Optimized accept/reject generator support
+  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
+  virtual Double_t maxVal(Int_t code) ;
 
 protected:
 
