@@ -1,0 +1,69 @@
+{
+  gROOT->ProcessLine(".L func.C");
+  bool result = true;
+
+
+  TChain *chain = new TChain("ntuple");
+  chain->Add("hsimple1.root");
+  chain->Add("hsimple2.root");
+
+  TTree *tupleClone1 = (TTree*)chain->CopyTree("");
+  TTree *tupleClone2 = (TTree*)chain->CopyTree("");
+
+
+  TLeaf *origleaf  = chain->GetLeaf("pz");
+  TLeaf *clone1leaf = tupleClone1->GetLeaf("pz");
+
+  if (origleaf->GetValuePointer() != clone1leaf->GetValuePointer()) {
+     cerr << "We have a problem since the address of the value is different in the original and in the first copy!" << endl;
+     result = false;
+  }
+
+  TLeaf *clone2leaf = tupleClone2->GetLeaf("pz");
+
+  if (origleaf->GetValuePointer() != clone2leaf->GetValuePointer()) {
+     cerr << "We have a problem since the address of the value is different in the original and in the second copy!" << endl;
+     result = false;
+  }
+
+  // We know all 3 are TNuple and pz is the 3rd 'arguments'
+
+  TNtuple *tuple = dynamic_cast<TNtuple*>(chain->GetTree());
+  if ( (&(tuple->GetArgs()[2])) != origleaf->GetValuePointer()) {
+     cerr << "Error: the original should own the memory\n";
+     result = false;
+  }
+
+  
+  tuple = dynamic_cast<TNtuple*>(tupleClone1);
+  if ( (&(tuple->GetArgs()[2])) == clone1leaf->GetValuePointer() ) {
+     cerr << "Error: the 1st clone should NOT own the memory\n";
+     result = false;
+  }
+
+  tuple = dynamic_cast<TNtuple*>(tupleClone2);
+  if ( (&(tuple->GetArgs()[2])) == clone2leaf->GetValuePointer() ) {
+     cerr << "Error: the 2nd clone should NOT own the memory\n";
+     result = false;
+  }
+  
+  delete chain;
+
+  clone1leaf = tupleClone1->GetLeaf("pz");
+
+  clone2leaf = tupleClone2->GetLeaf("pz");
+
+  tuple = dynamic_cast<TNtuple*>(tupleClone1);
+  if ( (&(tuple->GetArgs()[2])) != clone1leaf->GetValuePointer() ) {
+     cerr << "Error: the 1st clone should own the memory\n";
+     result = false;
+  }
+
+  tuple = dynamic_cast<TNtuple*>(tupleClone2);
+  if ( (&(tuple->GetArgs()[2])) != clone2leaf->GetValuePointer() ) {
+     cerr << "Error: the 2nd clone should own the memory\n";
+     result = false;
+  }
+  if (!result) gApplication->Terminate(1);
+
+}
