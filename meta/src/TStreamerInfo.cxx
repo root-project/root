@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.32 2001/01/23 21:10:20 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.33 2001/01/27 20:43:57 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -293,7 +293,8 @@ void TStreamerInfo::BuildCheck()
    if (fClass) {
       array = fClass->GetStreamerInfos();
       if (fClassVersion == fClass->GetClassVersion()) {
-         if (array->At(fClassVersion)) {SetBit(kCanDelete); return;}
+         TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
+         if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
          if (fClass->GetListOfDataMembers() && (fCheckSum != fClass->GetCheckSum())) {
             printf("\nWARNING, class:%s StreamerInfo read from file:%s\n",GetName(),gFile->GetName());
             printf("        has the same version:%d than the active class\n",fClassVersion);
@@ -303,7 +304,7 @@ void TStreamerInfo::BuildCheck()
             printf("        the files will not be readable.\n\n");
             array->RemoveAt(fClassVersion);
          } else {
-            if (array->At(fClassVersion)) {SetBit(kCanDelete); return;}
+            if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
          }
       }
    } else {
@@ -316,6 +317,10 @@ void TStreamerInfo::BuildCheck()
    array->AddAt(this,fClassVersion);
    fgCount++;
    fNumber = fgCount;
+   
+   //add to the global list of StreamerInfo
+   TObjArray *infos = (TObjArray*)gROOT->GetListOfStreamerInfo();
+   infos->AddAtAndExpand(this,fNumber);
 }
 
 
@@ -497,7 +502,11 @@ void TStreamerInfo::Compile()
 // of time compared to an explicit iteration on all elements.
 
    TObjArray *infos = (TObjArray*)gROOT->GetListOfStreamerInfo();
-   infos->AddAtAndExpand(this,fNumber);
+   if (fNumber > infos->GetSize()) {
+      infos->AddAtAndExpand(this,fNumber);
+   } else {
+      if (!infos->At(fNumber)) infos->AddAt(this,fNumber);
+   }
 
    if (fNdata) {
       delete [] fType;

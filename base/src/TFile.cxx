@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.29 2001/01/23 19:16:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.30 2001/01/26 16:37:51 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -425,7 +425,7 @@ void TFile::Init(Bool_t create)
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
-      if (!create) ReadStreamerInfo();
+      if (fSeekFree > fBEGIN) ReadStreamerInfo();
    }
 
    if (TClassTable::GetDict("TProof")) {
@@ -1477,7 +1477,7 @@ void TFile::ReadStreamerInfo()
       info->BuildCheck();
       Int_t uid = info->GetNumber();
       fClassIndex->fArray[uid] = 1;
-      if (gDebug > 1) printf(" -class: %s version: %d info read\n",info->GetName(), info->GetClassVersion());
+      if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
    }
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
