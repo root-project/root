@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.6 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.7 2002/07/06 06:54:35 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -165,7 +165,7 @@ TFile *TFriendElement::GetFile()
 {
 // Return pointer to TFile containing this friend TTree.
 
-   if (fFile) return fFile;
+   if (fFile || IsZombie()) return fFile;
    if (strlen(GetTitle()))
       fFile = new TFile(GetTitle());
    else {
@@ -176,6 +176,7 @@ TFile *TFriendElement::GetFile()
       }
    }
    if (fFile && fFile->IsZombie()) {
+      MakeZombie();
       delete fFile;
       fFile = 0;
    }
@@ -191,13 +192,15 @@ TTree *TFriendElement::GetTree()
    if (!GetFile()) {
       // This could be a memory tree or chain
       fTree = (TTree*)gROOT->FindObject(GetTreeName());
-      if (! fTree->InheritsFrom(TTree::Class()) ) {
-         fTree = 0;
-      } else {
-         // Since we did NOT create it ourself, let's not 
-	 // take ownership of it.
-         fOwnTree = kFALSE;
-      } 
+      if (fTree) {
+         if (!fTree->InheritsFrom(TTree::Class()) ) {
+            fTree = 0;
+         } else {
+            // Since we did NOT create it ourself, let's not 
+            // take ownership of it.
+            fOwnTree = kFALSE;
+         } 
+      }
       return fTree;
    }
    fTree = (TTree*)fFile->Get(GetTreeName());

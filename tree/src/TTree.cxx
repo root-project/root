@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.130 2002/07/11 19:46:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.131 2002/08/05 09:27:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1929,6 +1929,7 @@ TBranch *TTree::FindBranch(const char* branchname)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
+      if (t==0) continue;
       // If the alias is present replace it with the real name.
       char *subbranch = (char*)strstr(branchname,fe->GetName());
       if (subbranch!=branchname) subbranch = 0;
@@ -2023,6 +2024,7 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
+      if (t==0) continue;
       // If the alias is present replace it with the real name.
       char *subsearchname = (char*)strstr(searchname,fe->GetName());
       if (subsearchname!=searchname) subsearchname = 0;
@@ -2112,8 +2114,10 @@ TBranch *TTree::GetBranch(const char *name)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      branch = t->GetBranch(name);
-      if (branch) return branch;
+      if (t) {
+         branch = t->GetBranch(name);
+         if (branch) return branch;
+      }
    }
 
    //second pass in the list of friends when the branch name
@@ -2121,6 +2125,7 @@ TBranch *TTree::GetBranch(const char *name)
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
+      if (t==0) continue;
       char *subname = (char*)strstr(name,fe->GetName());
       if (subname != name) continue;
       Int_t l = strlen(fe->GetName());
@@ -2176,7 +2181,9 @@ Stat_t TTree::GetEntriesFriend() const
    if (!fFriends) return 0;
    TFriendElement *fr = (TFriendElement*)fFriends->At(0);
    if (!fr) return 0;
-   return fr->GetTree()->GetEntriesFriend();
+   TTree *t = fr->GetTree();
+   if (t==0) return 0;
+   return t->GetEntriesFriend();
 }
 
 //______________________________________________________________________________
@@ -2435,8 +2442,10 @@ TLeaf *TTree::GetLeaf(const char *aname)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      leaf = t->GetLeaf(aname);
-      if (leaf) return leaf;
+      if (t) {
+         leaf = t->GetLeaf(aname);
+         if (leaf) return leaf;
+      }
    }
 
    //second pass in the list of friends when the leaf name
@@ -2445,6 +2454,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
+      if (t==0) continue;
       char *subname = (char*)strstr(name,fe->GetName());
       if (subname != name) continue;
       Int_t l = strlen(fe->GetName());
@@ -2554,7 +2564,7 @@ Int_t TTree::LoadTree(Int_t entry)
       TFriendElement *fe;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
-         t->LoadTree(entry);
+         if (t) t->LoadTree(entry);
       }
    }
 
@@ -2855,7 +2865,8 @@ void TTree::Print(Option_t *option) const
   TIter nextf(fFriends);
   TFriendElement *fr;
   while ((fr = (TFriendElement*)nextf())) {
-     fr->GetTree()->Print(option);
+     TTree * t = fr->GetTree();
+     if (t) t->Print(option);
   }
 }
 
@@ -3498,7 +3509,7 @@ TObject *TTreeFriendLeafIter::Next()
       ///nextTree = (TTree*)fTreeIter->Next();
       if (nextFriend) {
          nextTree = (TTree*)nextFriend->GetTree();
-         if (!nextTree) return 0;
+         if (!nextTree) return Next();
          SafeDelete(fLeafIter);
          fLeafIter = nextTree->GetListOfLeaves()->MakeIterator(fDirection);
          next = fLeafIter->Next();
