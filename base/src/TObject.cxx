@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.12 2000/11/21 16:35:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.13 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -80,7 +80,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, voi
 
    const Int_t kvalue = 25;
    const Int_t ktitle = 37;
-   const Int_t kline  = 350;
+   const Int_t kline  = 1024;
    Int_t cdate = 0;
    Int_t ctime = 0;
    UInt_t *cdatime = 0;
@@ -97,7 +97,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, voi
    for (i = 0;i < kline; i++) line[i] = ' ';
    line[kline-1] = 0;
    sprintf(line,"%s%s ",pname,mname);
-   i = strlen(&line[0]); line[i] = ' ';
+   i = strlen(line); line[i] = ' ';
 
    // Encode data value or pointer value
    char *pointer = (char*)add;
@@ -110,15 +110,23 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, voi
       else if (!member->IsBasic())
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
       else if (membertype) {
-         if (!strcmp(membertype->GetTypeName(), "char"))
-            sprintf(&line[kvalue], "%s", *ppointer);
-         else
+         if (!strcmp(membertype->GetTypeName(), "char")) {
+            i = strlen(*ppointer);
+            if (kvalue+i >= kline) i=kline-kvalue;
+            strncpy(&line[kvalue],*ppointer,i);
+            line[kvalue+i] = 0;
+         } else {
             strcpy(&line[kvalue], membertype->AsString(p3pointer));
+         }
       } else if (!strcmp(member->GetFullTypeName(), "char*") ||
-                 !strcmp(member->GetFullTypeName(), "const char*"))
-         sprintf(&line[kvalue], "%s", *ppointer);
-      else
+                 !strcmp(member->GetFullTypeName(), "const char*")) {
+         i = strlen(*ppointer);
+         if (kvalue+i >= kline) i=kline-kvalue;
+         strncpy(&line[kvalue],*ppointer,i);
+         line[kvalue+i] = 0;
+      } else {
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
+      }
    } else if (membertype)
        if (isdate) {
           cdatime = (UInt_t*)pointer;
