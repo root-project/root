@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.77 2002/07/15 10:38:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.78 2002/07/16 17:22:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -592,12 +592,12 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
    return code;
 }
 
-
 //______________________________________________________________________________
 void TPad::Close(Option_t *)
 {
    // Delete all primitives in pad and pad itself.
    // Pad cannot be used anymore after this call.
+   // Emits signal "Closed()".
 
    if (!TestBit(kNotDeleted)) return;
    if (!fMother) return;
@@ -612,6 +612,9 @@ void TPad::Close(Option_t *)
       if (fFrame->TestBit(kNotDeleted)) delete fFrame;
       fFrame = 0;
    }
+
+   // emit signal
+   Closed();
 
    if (fPixmapID != -1) {
       if (gPad) {
@@ -635,7 +638,7 @@ void TPad::Close(Option_t *)
    }
 
    fMother = 0;
-   if (gROOT->GetSelectedPad()== this) gROOT->SetSelectedPad(0);
+   if (gROOT->GetSelectedPad() == this) gROOT->SetSelectedPad(0);
 }
 
 //______________________________________________________________________________
@@ -3587,7 +3590,7 @@ void TPad::Print(const char *filename, Option_t *option)
 //    TCanvas c1("c1");
 //    h1.Draw();
 //    c1.Print("c1.ps");
-//    
+//
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
@@ -3595,7 +3598,7 @@ void TPad::Print(const char *filename, Option_t *option)
 
 //*-*   Set the default option as "Postscript" (Should be a data member of TPad)
 
-   
+
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
 
@@ -3641,7 +3644,7 @@ void TPad::Print(const char *filename, Option_t *option)
 
 
 //==============Save pad/canvas as a Postscript file==================================
-   
+
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
@@ -3652,7 +3655,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
    if (copen)  mustClose = kFALSE;
    if (cclose) mustClose = kTRUE;
-   
+
    Bool_t noScreen = kFALSE;
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
       noScreen = kTRUE;
@@ -3693,7 +3696,7 @@ void TPad::Print(const char *filename, Option_t *option)
       } else {
          gVirtualPS->PrintStr("@showpage gr"); //only at the end of the first picture
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
-         gVirtualPS = 0;         
+         gVirtualPS = 0;
       }
    } else {
       // Append to existing Postscript file
@@ -3705,7 +3708,7 @@ void TPad::Print(const char *filename, Option_t *option)
          delete gVirtualPS;
          gVirtualPS = 0;
       } else {
-         gVirtualPS = 0;         
+         gVirtualPS = 0;
       }
    }
 

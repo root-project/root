@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.17 2002/02/27 11:41:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.18 2002/03/14 18:14:22 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -153,6 +153,7 @@ public:
    virtual Int_t     Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt);
    virtual Int_t     ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, Double_t xcl2, Double_t ycl2);
    virtual void      Close(Option_t *option="");
+   virtual void      Closed() { Emit("Closed()"); } // *SIGNAL*
    virtual void      CopyPixmap();
    virtual void      CopyPixmaps();
    virtual void      CreateNewLine(Int_t event, Int_t px, Int_t py, Int_t mode);
