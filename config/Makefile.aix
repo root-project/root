@@ -59,8 +59,8 @@ HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
 HISTPAINTERLIBEXTRA = -lGraf -lHist
 PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = -lTree -lHist
-TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-TREEPLAYERLIBEXTRA  = -lTree -lProof -lGraf3d -lGraf -lHist
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = -lTree -lGraf3d -lGraf -lHist
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf -lHist -lGui
 X3DLIBDEP           = $(G3DLIB) $(GUILIB)
@@ -75,9 +75,8 @@ VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = -lEG $(FVENUSLIBDIR) $(FVENUSLIB)
 X11TTFLIBDEP        = $(X11LIB)
 X11TTFLIBEXTRA      = -lGX11 -L$(TTFLIBDIR) -lttf -lX11
-STARLIBDEP          = $(TREELIB) $(PROOFLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
-                      $(HISTLIB)
-STARLIBEXTRA        = -lTree -lProof -lGpad -lGraf3d -lGraf -lHist
+STARLIBDEP          = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+STARLIBEXTRA        = -lTree -lGpad -lGraf3d -lGraf -lHist
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
                       $(OPENGLLIB) -lX11 -lXext -lXmu -lXi
