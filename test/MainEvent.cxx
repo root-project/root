@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.6 2000/10/21 10:56:25 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.7 2000/11/24 14:44:05 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -74,6 +74,7 @@
 
 #include "TROOT.h"
 #include "TFile.h"
+#include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -96,6 +97,7 @@ int main(int argc, char **argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
+   Int_t netf   = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
@@ -109,7 +111,10 @@ int main(int argc, char **argv)
    if (arg4 == 11) { write = 1; hfill = 1;}
    if (arg4 == 20) { write = 0; read  = 1;}  //read sequential
    if (arg4 == 25) { write = 0; read  = 2;}  //read random
-
+   if (arg4 >= 30) { netf  = 1; }            //use TNetFile
+   if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
+   if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
+   if (arg4 == 36) { write = 1; }            //netfile + write sequential
 
    TFile *hfile;
    TTree *tree;
@@ -133,7 +138,11 @@ int main(int argc, char **argv)
 
 //         Read case
    if (read) {
-      hfile = new TFile("Event.root");
+      if (netf) {
+         hfile = new TNetFile("root://localhost/root/test/EventNet.root");
+         hfile->UseCache(10);
+      } else
+         hfile = new TFile("Event.root");
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -163,7 +172,11 @@ int main(int argc, char **argv)
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-      hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+      if (netf) {
+         hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
+         hfile->UseCache(10);
+      } else
+         hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
@@ -179,7 +192,7 @@ int main(int argc, char **argv)
      // Create a ROOT Tree and one superbranch
       TTree *tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
-      bufsize = 256000;
+      bufsize = 64000;
       if (split)  bufsize /= 4;
       event = new Event();
       TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
