@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.47 2001/08/13 08:22:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.48 2001/08/14 06:49:46 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2835,6 +2835,14 @@ void THistPainter::PaintLego()
       raster  = 0;
    }
 
+   TView *view = gPad->GetView();
+   if (view) {
+      for (Int_t iv=0;iv<6;iv++) {
+         fXbuf[iv] = view->GetRmin()[iv];
+         fYbuf[iv] = view->GetRmax()[iv];
+      }
+   }
+
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
 
 //*-*-      Create axis object
@@ -2871,7 +2879,7 @@ void THistPainter::PaintLego()
 //*-*- Now ready to draw the lego plot
    Int_t irep = 0;
 
-   TView *view = gPad->GetView();
+   view = gPad->GetView();
    if (!view) {
       Error("PaintLego", "no TView in current pad");
       return;
@@ -2969,7 +2977,7 @@ void THistPainter::PaintLego()
       fLego->SetDrawFace(&TLego::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
-   if (!Hoption.Axis) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
    if (Hoption.Zscale) PaintPalette();  // MOD MWH
    fNIDS = 0;
    delete axis;
@@ -3753,6 +3761,14 @@ void THistPainter::PaintSurface()
       fYbuf[2] = z2c;
    }
 
+   TView *view = gPad->GetView();
+   if (view) {
+      for (Int_t iv=0;iv<6;iv++) {
+         fXbuf[iv] = view->GetRmin()[iv];
+         fYbuf[iv] = view->GetRmax()[iv];
+      }
+   }
+   
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
@@ -3806,7 +3822,7 @@ void THistPainter::PaintSurface()
 
 //*-*- Now ready to draw the surface plot
 
-   TView *view = gPad->GetView();
+   view = gPad->GetView();
    if (!view) {
       Error("PaintSurface", "no TView in current pad");
       return;
@@ -3924,7 +3940,7 @@ void THistPainter::PaintSurface()
       fLego->SetDrawFace(&TLego::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
-   if (!Hoption.Axis) PaintLegoAxis(axis, 90);
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
 
    if (Hoption.Zscale) PaintPalette();  // MOD MWH
 
