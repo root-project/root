@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.9 2004/04/16 11:32:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.10 2004/07/08 10:02:31 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -379,6 +379,12 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Handle context menu messages.
+   
+   TVirtualPad *savedPad = 0;
+   if (GetContextMenu()->GetSelectedPad()) {
+      savedPad = (TVirtualPad *) gPad;
+      gPad = GetContextMenu()->GetSelectedPad();
+   }
 
    switch (GET_MSG(msg)) {
 
@@ -387,7 +393,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
 
             case kCM_MENU:
-
+   
                if (parm1 < kToggleStart) {
                   TMethod *m = (TMethod *) parm2;
                   GetContextMenu()->Action(m);
@@ -447,6 +453,8 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       default:
          break;
    }
+
+   if (savedPad) gPad = savedPad;
 
    return kTRUE;
 }
