@@ -47,7 +47,7 @@ public:
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y, Double_t z);
         virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t ez);
 
-        ClassDef(TGraph2DErrors,3)  //A 2D graph with error bars
+        ClassDef(TGraph2DErrors,1)  //A 2D graph with error bars
 };
 
 #endif
