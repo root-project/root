@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.9 2000/12/13 15:13:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.10 2000/12/21 14:03:38 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
     virtual void           StartViewer(Int_t ww, Int_t wh) = 0;
     virtual Int_t          UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
+    virtual void           UpdateFormulaLeaves() = 0;
 
    static  TVirtualTreePlayer *TreePlayer(TTree *obj);
    static void        SetPlayer(const char *player);

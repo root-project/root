@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.40 2001/03/03 08:49:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.41 2001/04/04 14:16:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3207,4 +3207,20 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
       tFitter->PrintResults(1, amin);
    }
    return nsel;
+}
+
+
+//______________________________________________________________________________
+void TTreePlayer::UpdateFormulaLeaves()
+{
+   // this function is called by TChain::LoadTree when a new Tree is loaded.
+   // Because Trees in a TChain may have a different list of leaves, one
+   // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
+   
+   if (fVar1) fVar1->UpdateFormulaLeaves();
+   if (fVar2) fVar2->UpdateFormulaLeaves();
+   if (fVar3) fVar3->UpdateFormulaLeaves();
+   if (fVar4) fVar4->UpdateFormulaLeaves();
+   if (fSelect) fSelect->UpdateFormulaLeaves();
+   if (fMultiplicity) fMultiplicity->UpdateFormulaLeaves();
 }

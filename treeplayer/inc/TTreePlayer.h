@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.12 2000/12/21 14:03:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.13 2001/02/22 14:45:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -129,7 +129,8 @@ public:
     virtual void      StartViewer(Int_t ww, Int_t wh);
     virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option 
                        ,Int_t nentries, Int_t firstentry);
-
+    virtual void      UpdateFormulaLeaves();
+    
     ClassDef(TTreePlayer,1)  //manager class to play with TTrees
 };
 
