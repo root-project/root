@@ -4,9 +4,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ function TPython::exec;
-#pragma link C++ function TPython::eval;
-#pragma link C++ function TPython::bind;
-#pragma link C++ function TPython::prompt;
+#pragma link C++ function TPython::Exec;
+#pragma link C++ function TPython::Eval;
+#pragma link C++ function TPython::Bind;
+#pragma link C++ function TPython::Prompt;
 
 #endif
