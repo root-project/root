@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.11 2002/10/25 17:38:00 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.12 2002/11/01 21:37:02 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1113,11 +1113,8 @@ void TGWin32::DrawText(int x, int y, float angle, float mgn,
    old_align = fThreadP.uiRet;
 
    // Adjust y position for center align.
-   if ((fTextAlign >= 4) && (fTextAlign <= 6)) {
-      offset = 1 + (size * 0.3);
-      y2 = y + offset;
-   } else
-      y2 = y;
+   offset = size * 0.25;
+   y2 = y + offset;
 
    if (text) {
       length = strlen(text);
