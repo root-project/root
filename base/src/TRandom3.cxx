@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.4 2002/11/17 17:04:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.5 2003/01/26 21:03:16 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,6 +46,7 @@
 #include "TRandom3.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TUUID.h"
 
 ClassImp(TRandom3)
 
@@ -53,7 +54,8 @@ ClassImp(TRandom3)
 TRandom3::TRandom3(UInt_t seed)
 {
 //*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================
+// If seed is 0, the seed is automatically computed via a TUUID object.
+// In this case the seed is guaranteed to be unique in space and time.
 
    SetName("Random3");
    SetTitle("Random number generator: Mersenne Twistor");
@@ -133,12 +135,26 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
 void TRandom3::SetSeed(UInt_t seed)
 {
 //  Set the random generator sequence
-
+// if seed is 0 (default value) a TUUID is generated and used to fill
+// the first 8 integers of the seed array.
+// In this case the seed is guaranteed to be unique in space and time.
+   
    TRandom::SetSeed(seed);
    fCount624 = 624;
-   fMt[0] = fSeed;
-   Int_t i;
-   for(i=1; i<624; i++) {
+   Int_t i,j;
+   if (seed > 0) {
+      fMt[0] = fSeed;
+      j = 1;
+   } else {
+      TUUID uid;
+      UChar_t uuid[16];
+      uid.GetUUID(uuid);
+      for (i=0;i<8;i++) {
+         fMt[i] = uuid[2*i]*256 +uuid[2*i+1];
+      }
+      j = 9;
+   }
+   for(i=j; i<624; i++) {
      fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
    }
 }
