@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.48 2004/05/04 15:57:24 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.49 2004/05/07 09:11:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -147,6 +147,7 @@ public:
    Int_t              *GetNewTypes() const {return fNewType;}
    Int_t               GetOffset(const char *) const;
    Int_t              *GetOffsets() const {return fOffset;}
+   Version_t           GetOldVersion() const {return fOldVersion;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
