@@ -257,6 +257,8 @@ macosx)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
@@ -268,6 +270,8 @@ macosxxlc)
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
@@ -527,9 +531,10 @@ while test $# -gt 0; do
       fi
       ;;
     --glibs)
-      ### Output graphics an normal libraries
+      ### Output graphics and normal libraries
       ### If the user said --libs --glibs, we don't need to add the
       ### regular ROOT libraries.
+      glibsonly="no"
       if test "x$libsout" = "xno" ; then
          ### Set the flag
          libsout="yes"
@@ -538,6 +543,9 @@ while test $# -gt 0; do
          else
             glibs="${rootlibs} ${rootglibs}"
          fi
+      else
+         glibs="${rootglibs}"
+         glibsonly="yes"
       fi
       ### If we're on a win32 system, we need to change the -l prefix
       ### into a .lib suffix, and expand the paths to a backslash
@@ -553,10 +561,14 @@ while test $# -gt 0; do
            out="$out -L${libdir}"
         fi
       fi
-      if test "x$noauxlibs" = "xyes" ; then
-         out="$out $forcelibs $forceglibs $glibs"
+      if test "x$glibsonly" = "xyes" ; then
+         out="$out $forceglibs $glibs"
       else
-         out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
+         if test "x$noauxlibs" = "xyes" ; then
+            out="$out $forcelibs $forceglibs $glibs"
+         else
+            out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
+         fi
       fi
       ;;
     --auxlibs)
