@@ -210,7 +210,7 @@ include build/dummy.d          # must be last include
 endif
 
 
-rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT) $(CINTTMP) $(CINT)
+rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT)
 
 rootlibs:       rootcint compiledata $(ALLLIBS)
 
@@ -286,21 +286,27 @@ changelog:
 
 install:
 	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
-	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`;\
+	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`; \
 	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
 		echo "Everything already installed..."; \
 	else \
 		echo "Installing binaries in $(BINDIR)"; \
-		$(INSTALL) $(ALLEXECS) $(CINT) $(ROOTCINT) $(BINDIR); \
+		$(INSTALLDIR) $(BINDIR); \
+		$(INSTALL) $(CINT) $(MAKECINT) $(ROOTCINT) $(BINDIR); \
+		$(INSTALL) $(RMKDEP) $(BINDEXP) bin/root-config $(BINDIR); \
+		$(INSTALL) $(ALLEXECS) $(BINDIR); \
 		echo "Installing libraries in $(LIBDIR)"; \
+		$(INSTALLDIR) $(LIBDIR); \
 		chmod u+w $(LIBDIR)/*; \
 		$(INSTALL) $(ALLLIBS) $(LIBDIR); \
 		$(INSTALL) $(CINTLIB) $(LIBDIR); \
 		echo "Installing headers in $(INCDIR)"; \
+		$(INSTALLDIR) $(INCDIR); \
 		$(INSTALLDATA) include/*.h $(INCDIR); \
 		echo "Installing main/src/rmain.cxx in $(INCDIR)"; \
 		$(INSTALLDATA) main/src/rmain.cxx $(INCDIR); \
 		echo "Installing $(MAKEINFO) in $(CINTINCDIR)"; \
+		$(INSTALLDIR) $(CINTINCDIR); \
 		$(INSTALLDATA) $(MAKEINFO) $(CINTINCDIR); \
 		echo "Installing cint/include lib and stl in $(CINTINCDIR)"; \
 		$(INSTALLDATA) cint/include cint/lib cint/stl $(CINTINCDIR); \
