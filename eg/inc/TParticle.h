@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.5 2001/05/17 10:57:15 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.6 2002/12/06 16:36:21 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -138,6 +138,7 @@ public:
   else              return 1.e30;
   }
 
+  // note that Phi() returns an angle between 0 and 2pi
   Double_t         Phi   () const { return kPI+TMath::ATan2(-fPy,-fPx); }
 
   Double_t         Theta () const { return (fPz==0)?kPI/2:TMath::ACos(fPz/P()); }
