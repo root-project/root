@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.1 2003/04/03 17:12:22 pdk Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.5 2003/04/11 06:44:40 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -438,7 +438,7 @@ Double_t TRotation::GetXPhi(void) const {
   if (sinTheta != 0) {
     const Double_t cscTheta = 1/sinTheta;
     Double_t cosAbsPhi =  fzy * cscTheta;
-    if ( fabs(cosAbsPhi) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(cosAbsPhi) > 1 ) {	// NaN-proofing
         Warning("GetPhi()","finds | cos phi | > 1");
         cosAbsPhi = 1;
     }
@@ -450,7 +450,7 @@ Double_t TRotation::GetXPhi(void) const {
     } else if (fzy > 0) {
         finalPhi = 0.0;
     } else {
-        finalPhi = M_PI;
+        finalPhi = TMath::Pi();
     }
   }
   else {              // sinTheta == 0 so |Fzz| = 1
@@ -462,7 +462,7 @@ Double_t TRotation::GetXPhi(void) const {
     } else if (fxx>0) {
       finalPhi = 0.0;
     } else {
-      finalPhi = fzz * M_PI/2;
+      finalPhi = fzz * TMath::PiOver2();
     }
   }
   return finalPhi;
@@ -493,7 +493,7 @@ Double_t TRotation::GetXPsi(void) const {
   if (sinTheta != 0) {
     const Double_t cscTheta = 1/sinTheta;
     Double_t cosAbsPsi =  - fyz * cscTheta;
-    if ( fabs(cosAbsPsi) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(cosAbsPsi) > 1 ) {	// NaN-proofing
       Warning("GetPsi()","| cos psi | > 1 ");
       cosAbsPsi = 1;
     }
@@ -503,12 +503,12 @@ Double_t TRotation::GetXPsi(void) const {
     } else if (fxz < 0) {
       finalPsi = -absPsi;
     } else {
-      finalPsi = (fyz < 0) ? 0 : M_PI;
+      finalPsi = (fyz < 0) ? 0 : TMath::Pi();
     }
   }
   else {              // sinTheta == 0 so |Fzz| = 1
     Double_t absPsi = fxx;
-    if ( fabs(fxx) > 1 ) {	// NaN-proofing
+    if ( TMath::Abs(fxx) > 1 ) {	// NaN-proofing
       Warning("GetPsi()","| fxx | > 1 ");
       absPsi = 1;
     }
@@ -518,7 +518,7 @@ Double_t TRotation::GetXPsi(void) const {
     } else if (fyx < 0) {
       finalPsi = -absPsi;
     } else {
-      finalPsi = (fxx > 0) ? 0 : M_PI/2;
+      finalPsi = (fxx > 0) ? 0 : TMath::PiOver2();
     }
   }
   return finalPsi;
