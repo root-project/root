@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.6 2000/09/06 14:10:17 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.7 2000/11/27 10:47:26 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -140,7 +140,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    }
 
    if (!fUrl.IsValid()) {
-      Error("TNetFile", "invalid URL specified: %s", fUrl.GetUrl());
+      Error("TNetFile", "invalid URL specified: %s", url);
       goto zombie;
    }
 
