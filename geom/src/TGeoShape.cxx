@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.27 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.28 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -149,6 +149,7 @@
 #include "TGeoShape.h"
 #include "TVirtualGeoPainter.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoShape)
 
@@ -466,3 +467,13 @@ Int_t TGeoShape::GetBasicColor() const
    }
    return basicColor;
 }
+
+//_____________________________________________________________________________
+const TBuffer3D &TGeoShape::GetBuffer3D(Int_t /*reqSections*/, Bool_t /*localFrame*/) const
+{
+   // Stub implementation to avoid forcing implementation at this stage
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   Warning("GetBuffer3D", "this must be implemented for shapes in a TGeoPainter hierarchy. This will be come a pure virtual fn eventually.");
+   return buffer;
+}
+

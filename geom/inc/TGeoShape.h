@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.32 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.33 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const = 0;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const                          = 0;
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const = 0;
    Int_t                 GetId() const  {return fShapeId;}
@@ -130,7 +130,7 @@ public:
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *points) const         = 0;
-   virtual void          SetPoints(Float_t *points) const          = 0; // Why two - does this respect float limits?
+   virtual void          SetPoints(Float_t *points) const          = 0;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const   = 0;
    void                  SetRuntime(Bool_t flag=kTRUE) {SetShapeBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
