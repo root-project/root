@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -250,7 +250,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 }
 
 //______________________________________________________________________________
-void TGondzioSolver::DefMonitor(TQpDataBase * /* data */,TQpVar */* vars */,
+void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
                                 TQpResidual *resid,
                                 Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                                 Int_t status_code,Int_t level)
