@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.13 2002/05/03 15:18:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.15 2002/07/06 15:55:38 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -118,7 +118,7 @@ public:
 
    virtual ~TMatrixD();
 
-   void Draw(Option_t *option="");
+   void Draw(Option_t *option=""); // *MENU*
    void ResizeTo(Int_t nrows, Int_t ncols);
    void ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
    void ResizeTo(const TMatrixD &m);
@@ -169,11 +169,17 @@ public:
 
    TMatrixD EigenVectors(TVectorD &eigenValues);
 
+   TMatrixD &MakeSymmetric();
    TMatrixD &UnitMatrix();
    TMatrixD &HilbertMatrix();
 
    TMatrixD &operator*=(const TMatrixD &source);
    TMatrixD &operator*=(const TMatrixDDiag &diag);
+   TMatrixD &operator/=(const TMatrixDDiag &diag);
+   TMatrixD &operator*=(const TMatrixDRow &diag);
+   TMatrixD &operator/=(const TMatrixDRow &diag);
+   TMatrixD &operator*=(const TMatrixDColumn &diag);
+   TMatrixD &operator/=(const TMatrixDColumn &diag);
 
    void Mult(const TMatrixD &a, const TMatrixD &b);
 
@@ -182,10 +188,13 @@ public:
    Double_t ColNorm() const;
    Double_t Norm1() const { return ColNorm(); }
    Double_t E2Norm() const;
+   TMatrixD &NormByDiag(const TVectorD &v, Option_t *option="D");
+   TMatrixD &NormByColumn(const TVectorD &v, Option_t *option="D");
+   TMatrixD &NormByRow(const TVectorD &v, Option_t *option="D");
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="") const; // *MENU*
 
    friend TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);

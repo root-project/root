@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.12 2002/05/03 15:18:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.13 2002/07/05 22:25:20 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
 
    virtual ~TVectorD();
 
-   void Draw(Option_t *option="");
+   void Draw(Option_t *option=""); // *MENU*
    void ResizeTo(Int_t n);
    void ResizeTo(Int_t lwb, Int_t upb);
    void ResizeTo(const TVectorD &v);
@@ -155,7 +155,7 @@ public:
    Double_t Norm2Sqr() const;
    Double_t NormInf() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="") const;  // *MENU*
 
    friend TVectorD &operator+=(TVectorD &target, const TVectorD &source);
    friend TVectorD &operator-=(TVectorD &target, const TVectorD &source);

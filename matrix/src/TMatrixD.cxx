@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.20 2002/05/18 08:43:30 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.22 2002/07/06 15:55:38 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -224,7 +224,7 @@ void TMatrixD::Draw(Option_t *option)
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrixD" by default and no title
 
-   gROOT->ProcessLine(Form("TH2D *R__TV = new TH2D((TMatrixD&)((TMatrixD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH2D *R__TMatrixD = new TH2D((TMatrixD&)((TMatrixD*)(0x%lx)));R__TMatrixD->SetBit(kCanDelete);R__TMatrixD->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -343,6 +343,34 @@ TMatrixD::TMatrixD(const TMatrixD &a, EMatrixCreatorsOp2 op, const TMatrixD &b)
       default:
          Error("TMatrixD(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
    }
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::MakeSymmetric()
+{
+   // symmetrize matrix (matrix needs to be a square one).
+
+   if (!IsValid()) {
+      Error("MakeSymmetric", "matrix not initialized");
+      return *this;
+   }
+
+   if (fNrows != fNcols) {
+      Error("MakeSymmetric", "matrix to symmetrize must be square");
+      return *this;
+   }
+
+   Int_t irow;
+   for (irow = 0; irow < fNrows; irow++) {
+     Int_t icol;
+     for (icol = 0; icol < irow; icol++) {
+       fElements[irow*fNrows+icol] += fElements[icol*fNrows+irow];
+       fElements[irow*fNrows+icol] /= 2.0;
+       fElements[icol*fNrows+irow] = fElements[irow*fNrows+icol];
+     }
+   }
+
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -864,6 +892,147 @@ Double_t E2Norm(const TMatrixD &m1, const TMatrixD &m2)
 }
 
 //______________________________________________________________________________
+TMatrixD &TMatrixD::NormByDiag(const TVectorD &v, Option_t *option)
+{
+   // b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j))) 
+
+   if (!IsValid()) {
+      Error("NormByDiag", "matrix not initialized");
+      return *this;
+   }
+
+   if (!v.IsValid()) {
+      Error("NormByDiag", "vector is not initialized");
+      return *this;
+   }
+
+   const Int_t nMax = TMath::Max(fNrows,fNcols);
+   if (v.fNrows < nMax) {
+      Error("NormByDiag", "norm vector is too short");
+      return *this;
+   }
+
+   TString opt(option);
+   opt.ToUpper();
+   const Int_t divide = (opt.Contains("D")) ? 1 : 0;
+
+   const Double_t* pV = v.fElements;
+   Double_t *mp = fElements;
+
+   Int_t irow;
+   if (divide) {
+     for (irow = 0; irow < fNrows; irow++) {
+       Int_t icol;
+       for (icol = 0; icol < fNcols; icol++) {
+         Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
+         Assert(val != 0.0);
+         mp[irow*fNcols+icol] /= val;
+       }
+     }
+   } else {
+     for (irow = 0; irow < fNrows; irow++) {
+       Int_t icol;
+       for (icol = 0; icol < fNcols; icol++) {
+         Double_t val = TMath::Sqrt(TMath::Abs(pV[irow]*pV[icol]));
+         mp[irow*fNcols+icol] *= val;
+       }
+     }
+   }
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::NormByColumn(const TVectorD &v, Option_t *option)
+{
+   // Multiply/divide a matrix columns with a vector:
+   // matrix(i,j) *= v(i)
+
+   if (!IsValid()) {
+      Error("NormByColumn", "matrix not initialized");
+      return *this;
+   }
+
+   if (!v.IsValid()) {
+      Error("NormByColumn", "vector is not initialized");
+      return *this;
+   }
+
+   if (fNcols != v.fNrows) {
+      Error("NormByColumn", "matrix cannot be normed column-wise by this vector");
+      return *this;
+   }
+
+   TString opt;
+   opt.ToUpper();
+   const Int_t divide = (opt.Contains("D")) ? 1 : 0;
+
+   const Double_t* pv = v.fElements;
+   Double_t *mp = fElements;
+
+   Int_t i;
+   if (divide) {
+     for ( ; mp < fElements + fNelems; pv++)
+       for (i = 0; i < fNrows; i++) {
+         Assert(*pv != 0.0);
+         *mp++ /= *pv;
+       }
+   } else {
+     for ( ; mp < fElements + fNelems; pv++)
+       for (i = 0; i < fNrows; i++)
+         *mp++ *= *pv;
+   }
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::NormByRow(const TVectorD &v, Option_t *option)
+{
+   // Multiply/divide a matrix row with a vector:
+   // matrix(i,j) *= v(j)
+
+   if (!IsValid()) {
+      Error("NormByRow", "matrix not initialized");
+      return *this;
+   }
+
+   if (!v.IsValid()) {
+      Error("NormByRow", "vector is not initialized");
+      return *this;
+   }
+
+   if (fNcols != v.fNrows) {
+      Error("NormByRow", "matrix cannot be normed column-wise by this vector");
+      return *this;
+   }
+
+   TString opt;
+   opt.ToUpper();
+   const Int_t divide = (opt.Contains("D")) ? 1 : 0;
+
+   const Double_t* pv = v.fElements;
+   Double_t *mp = fElements;
+
+   Int_t i;
+   if (divide) {
+     for ( ; mp < fElements + fNelems; pv = v.fElements) {
+       for (i = 0; i < fNrows; i++)
+       {
+         Assert(*pv != 0.0);
+         *mp++ /= *pv++;
+       }
+     }
+   } else {
+     for ( ; mp < fElements + fNelems; pv = v.fElements)
+       for (i = 0; i < fNrows; i++)
+         *mp++ *= *pv++;
+   }
+
+   return *this;
+}
+
+//______________________________________________________________________________
 void TMatrixD::Print(Option_t *) const
 {
    // Print the matrix as a table of elements (zeros are printed as dots).
@@ -967,23 +1136,11 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
 
    Int_t symmetric = IsSymmetric();
 
-   // store matrix diagonal
-   Double_t *diag = 0;
+   // condition the matrix
+   TVectorD diag(fNrows);
    if (symmetric) {
-      diag = new Double_t[fNrows];
-      Int_t idiag;
-      for (idiag = 0; idiag < fNrows; idiag++)
-        diag[idiag] = fElements[idiag*(1+fNrows)];
-
-     // condition the matrix
-     Int_t irow;
-     for (irow = 0; irow < fNrows; irow++) {
-        Int_t icol;
-        for (icol = 0; icol < fNcols; icol++) {
-           Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-           if (val != 0.0) fElements[irow*fNcols+icol] /= val;
-       }
-     }
+     diag = TMatrixDDiag(*this);
+     this->NormByDiag(diag);
    }
 
    // Locations of pivots (indices start with 0)
@@ -1007,7 +1164,6 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
              }
          if (max_value < singularity_tolerance) {
             // free allocated heap memory before returning
-            if (symmetric) delete [] diag;
             delete [] pivots;
             delete [] was_pivoted;
             if (determ_ptr) {
@@ -1068,16 +1224,10 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
 
    // revert our scaling
    if (symmetric) {
+      this->NormByDiag(diag);
       Int_t irow;
-      for (irow = 0; irow < fNrows; irow++) {
-         Int_t icol;
-         for (icol = 0; icol < fNcols; icol++) {
-            Double_t val = TMath::Sqrt(TMath::Abs(diag[irow]*diag[icol]));
-            if (val != 0.0) fElements[irow*fNcols+icol] /= val;
-         }
-         determinant *= TMath::Abs(diag[irow]);
-      }
-      delete [] diag;
+      for (irow = 0; irow < fNrows; irow++)
+         determinant *= TMath::Abs(diag(irow));
    }
 
    if (determ_ptr)
@@ -1784,18 +1934,192 @@ TMatrixD &TMatrixD::operator*=(const TMatrixDDiag &diag)
    }
 
    if (fNcols != diag.fNdiag) {
-      Error("operator*=(const TMatrixDDiag&)", "matrix cannot be multiplied by the diagonal of the other matrix");
+      Error("operator*=(const TMatrixDDiag&)", "matrix cannot be divided by the diagonal of the other matrix");
       return *this;
    }
 
    Double_t *dp = diag.fPtr;                // Diag ptr
    Double_t *mp = fElements;                // Matrix ptr
    Int_t i;
-   for ( ; mp < fElements + fNelems; dp += diag.fInc)
-      for (i = 0; i < fNrows; i++)
-         *mp++ *= *dp;
 
+   for ( ; mp < fElements + fNelems; dp += diag.fInc)
+     for (i = 0; i < fNrows; i++)
+       *mp++ *= *dp;
    Assert(dp < diag.fPtr + diag.fMatrix->fNelems + diag.fInc);
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator/=(const TMatrixDDiag &diag)
+{
+   // Divide a matrix by the diagonal of another matrix
+   // matrix(i,j) *= diag(j)
+
+   if (!IsValid()) {
+      Error("operator/=(const TMatrixDDiag&)", "matrix not initialized");
+      return *this;
+   }
+
+   if (!diag.fMatrix->IsValid()) {
+      Error("operator/=(const TMatrixDDiag&)", "diag matrix not initialized");
+      return *this;
+   }
+
+   if (fNcols != diag.fNdiag) {
+      Error("operator/=(const TMatrixDDiag&)", "matrix cannot be divided row-wise by the diagonal of the other matrix");
+      return *this;
+   }
+
+   Double_t *dp = diag.fPtr;                // Diag ptr
+   Double_t *mp = fElements;                // Matrix ptr
+   Int_t i;
+
+   for ( ; mp < fElements + fNelems; dp += diag.fInc)
+     for (i = 0; i < fNrows; i++) {
+       Assert(*dp != 0.0);
+       *mp++ /= *dp;
+     }
+   Assert(dp < diag.fPtr + diag.fMatrix->fNelems + diag.fInc);
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator*=(const TMatrixDColumn &col)
+{
+   // Multiply a matrix by the column of another matrix
+   // matrix(i,j) *= another(i,k) for fixed k
+
+   if (!IsValid()) {
+      Error("operator*=(const TMatrixDColumn&)", "matrix not initialized");
+      return *this;
+   }
+
+   if (!col.fMatrix->IsValid()) {
+      Error("operator*=(const TMatrixDColumn&)", "column matrix not initialized");
+      return *this;
+   }
+
+   if (fNcols != col.fMatrix->fNcols) {
+      Error("operator*=(const TMatrixDColumn&)", "matrix cannot be multiplied by the column of the other matrix");
+      return *this;
+   }
+
+   Double_t *cp = col.fPtr;                // Column ptr
+   Double_t *mp = fElements;               // Matrix ptr
+   Int_t i;
+   for ( ; mp < fElements + fNelems; cp++)
+      for (i = 0; i < fNrows; i++)
+         *mp++ *= *cp;
+
+   Assert(cp < col.fPtr + col.fMatrix->fNelems);
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator/=(const TMatrixDColumn &col)
+{
+   // Divide a matrix by the column of another matrix
+   // matrix(i,j) /= another(i,k) for fixed k
+
+   if (!IsValid()) {
+      Error("operator/=(const TMatrixDColumn&)", "matrix not initialized");
+      return *this;
+   }
+
+   if (!col.fMatrix->IsValid()) {
+      Error("operator/=(const TMatrixDColumn&)", "column matrix not initialized");
+      return *this;
+   }
+
+   if (fNcols != col.fMatrix->fNcols) {
+      Error("operator/=(const TMatrixDColumn&)", "matrix cannot be divided by the column of the other matrix");
+      return *this;
+   }
+
+   Double_t *cp = col.fPtr;                // Column ptr
+   Double_t *mp = fElements;               // Matrix ptr
+   Int_t i;
+   for ( ; mp < fElements + fNelems; cp++) {
+     Assert(*cp != 0.0);
+     for (i = 0; i < fNrows; i++)
+       *mp++ /= *cp;
+   }
+
+   Assert(cp < col.fPtr + col.fMatrix->fNelems);
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator*=(const TMatrixDRow &row)
+{
+   // Multiply a matrix by the row of another matrix
+   // matrix(i,j) *= another(k,j) for fixed k
+
+   if (!IsValid()) {
+      Error("operator*=(const TMatrixDRow&)", "matrix not initialized");
+      return *this;
+   }
+
+   if (!row.fMatrix->IsValid()) {
+      Error("operator*=(const TMatrixDRow&)", "row matrix not initialized");
+      return *this;
+   }
+
+   if (fNrows != row.fMatrix->fNrows) {
+      Error("operator*=(const TMatrixDRow&)", "matrix cannot be multiplied by the row of the other matrix");
+      return *this;
+   }
+
+   Double_t *rp = row.fPtr;                // Row ptr
+   Double_t *mp = fElements;               // Matrix ptr
+   Int_t i;
+   for ( ; mp < fElements + fNelems; rp = row.fPtr) {
+     for (i = 0; i < fNrows; i++) {
+       Assert(rp < row.fPtr+row.fMatrix->fNelems);
+       *mp++ *= *rp;
+       rp += row.fInc;
+     }
+   }
+
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator/=(const TMatrixDRow &row)
+{
+   // Divide a matrix by the row of another matrix
+   // matrix(i,j) /= another(k,j) for fixed k
+
+   if (!IsValid()) {
+      Error("operator/=(const TMatrixDRow&)", "matrix not initialized");
+      return *this;
+   }
+
+   if (!row.fMatrix->IsValid()) {
+      Error("operator/=(const TMatrixDRow&)", "row matrix not initialized");
+      return *this;
+   }
+
+   if (fNrows != row.fMatrix->fNrows) {
+      Error("operator/=(const TMatrixDRow&)", "matrix cannot be divided by the row of the other matrix");
+      return *this;
+   }
+
+   Double_t *rp = row.fPtr;                // Row ptr
+   Double_t *mp = fElements;               // Matrix ptr
+   Int_t i;
+   for ( ; mp < fElements + fNelems; rp = row.fPtr) {
+     for (i = 0; i < fNrows; i++) {
+       Assert(rp < row.fPtr+row.fMatrix->fNelems);
+       Assert(*rp != 0.0);
+       *mp++ /= *rp;
+       rp += row.fInc;
+     }
+   }
 
    return *this;
 }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.11 2002/05/18 08:48:42 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.12 2002/07/05 22:26:50 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TVector::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
 
-   gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1F *R__TVector = new TH1F((TVector&)((TVector*)(0x%lx)));R__TVector->SetBit(kCanDelete);R__TVector->Draw(\"%s\");",
       (Long_t)this,option));
 }
 

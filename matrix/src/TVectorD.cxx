@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.10 2002/05/18 08:48:42 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.11 2002/07/05 22:26:50 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TVectorD::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVectorD" by default and no title
 
-   gROOT->ProcessLine(Form("TH1D *R__TV = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH1D *R__TVectorD = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TVectorD->SetBit(kCanDelete);R__TVectorD->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
@@ -433,22 +433,6 @@ TVectorD &TVectorD::operator-=(Double_t val)
 }
 
 //______________________________________________________________________________
-TVectorD operator+(const TVectorD &source1, const TVectorD &source2)
-{
-   TVectorD target = source1;
-   target += source2;
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD operator-(const TVectorD &source1, const TVectorD &source2)
-{
-   TVectorD target = source1;
-   target -= source2;
-   return target;
-}
-
-//______________________________________________________________________________
 Bool_t TVectorD::operator==(Double_t val) const
 {
    // Are all vector elements equal to val?
@@ -686,6 +670,22 @@ TVectorD &operator-=(TVectorD &target, const TVectorD &source)
    for ( ; tp < target.fElements+target.fNrows; )
       *tp++ -= *sp++;
 
+   return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator+(const TVectorD &source1, const TVectorD &source2)
+{
+   TVectorD target = source1;
+   target += source2;
+   return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator-(const TVectorD &source1, const TVectorD &source2)
+{
+   TVectorD target = source1;
+   target -= source2;
    return target;
 }
 
