@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.30 2003/07/07 19:34:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.31 2003/08/25 17:31:42 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -143,6 +143,7 @@ public:
    virtual Bool_t      IsString() const;
    virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual char       *PrintValue(Int_t mode=0) const;
+   virtual char       *PrintValue(Int_t mode, Int_t instance) const;
    virtual void        SetAxis(TAxis *axis=0);
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        UpdateFormulaLeaves();

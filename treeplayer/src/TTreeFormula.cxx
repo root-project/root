@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.127 2003/10/20 18:19:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.128 2003/12/11 23:30:35 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3421,8 +3421,12 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 
       real_instance = GetRealInstance(instance,0);
 
+      // Since the only operation in this formula is reading this branch,
+      // we are guaranteed that this function is first called with instance==0 and
+      // hence we are guaranteed that the branch is always properly read
       if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
+     
       if (fAxis) {
          char * label;
          // This portion is a duplicate (for speed reason) of the code
@@ -3443,6 +3447,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
       }
    }
 
+   Bool_t haveSeenBooleanOptimization = kFALSE;
    pos  = 0;
    pos2 = 0;
    for (i=0; i<fNoper; i++) {
@@ -3507,6 +3512,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             int toskip = (action-kBoolOptimize) / 10;
             i += toskip;
          }
+         haveSeenBooleanOptimization = kTRUE;
          continue;
     }
 //*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
@@ -3539,8 +3545,17 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          real_instance = GetRealInstance(instance,string_code);
 
          if (!instance) leafc->GetBranch()->GetEntry(leafc->GetBranch()->GetTree()->GetReadEntry());
-         else if (real_instance>fNdata[string_code]) return 0;
-
+         else {
+            // In the cases where we are beind (i.e. right of) a potential boolean optimization
+            // this tree variable reading may have not been executed with instance==0 which would
+            // result in the branch being potentially not read in.
+            if (haveSeenBooleanOptimization) {
+               TBranch *br = leafc->GetBranch();
+               Int_t treeEntry = br->GetTree()->GetReadEntry();
+                if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+            }
+            if (real_instance>fNdata[string_code]) return 0;
+         }
          pos2++;
          if (fLookupType[string_code]==kDirect) {
             stringStack[pos2-1] = (char*)leafc->GetValuePointer();
@@ -3586,7 +3601,17 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                      real_instance = GetRealInstance(instance,code);
 
                      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
-                     else if (real_instance>fNdata[code]) return 0;
+                     else {
+                        // In the cases where we are beind (i.e. right of) a potential boolean optimization
+                        // this tree variable reading may have not been executed with instance==0 which would
+                        // result in the branch being potentially not read in.
+                        if (haveSeenBooleanOptimization) {
+                           TBranch *br = leaf->GetBranch();
+                           Int_t treeEntry = br->GetTree()->GetReadEntry();
+                            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );
+                        }
+                        if (real_instance>fNdata[code]) return 0;
+                     }
 
                      switch(fLookupType[code]) {
                         case kDirect: param = leaf->GetValue(real_instance); break;
@@ -3995,6 +4020,19 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 //      mode = -1 : Print column names
 //      mode = 0  : Print column values
 
+   return PrintValue(mode,0);
+}
+
+//______________________________________________________________________________
+char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
+{
+//*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
+//*-*            ====================================
+//
+//      mode = -2 : Print line with ***
+//      mode = -1 : Print column names
+//      mode = 0  : Print column values
+
    const int kMAXLENGTH = 1024;
    static char value[kMAXLENGTH];
 
@@ -4029,7 +4067,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
          //use the mutable keyword AND we should keep PrintValue const.
          Int_t ndata = ((TTreeFormula*)this)->GetNdata();
          if (ndata) {
-            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(0));
+            sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(instance));
             char *expo = strchr(value,'e');
             if (expo) {
                if (value[0] == '-') strcpy(expo-6,expo);

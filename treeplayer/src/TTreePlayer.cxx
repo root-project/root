@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.143 2003/11/22 22:02:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.144 2003/11/26 21:48:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1913,7 +1913,17 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       fFormulaList->Add(var[i]);
    }
 
-   //*-* Build the TPrincipal object
+//*-*- Create a TreeFormulaManager to coordinate the formulas
+   TTreeFormulaManager *manager=0;
+   if (fFormulaList->LastIndex()>=0) {
+      manager = new TTreeFormulaManager;
+      for(i=0;i<=fFormulaList->LastIndex();i++) {
+         manager->Add((TTreeFormula*)fFormulaList->At(i));
+      }
+      manager->Sync();
+   }
+
+//*-* Build the TPrincipal object
    if (opt.Contains("n")) principal = new TPrincipal(ncols, "n");
    else                   principal = new TPrincipal(ncols);
 
@@ -1927,17 +1937,36 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
-         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+         if (manager) manager->UpdateFormulaLeaves();
       }
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+      int ndata = 1;
+      if (manager && manager->GetMultiplicity()) {
+         ndata = manager->GetNdata();
       }
-      onerow = Form("* %8d ",entryNumber);
-      for (i=0;i<ncols;i++) {
-         xvars[i] = var[i]->EvalInstance(0);
+
+      for(int inst=0;inst<ndata;inst++) {
+         Bool_t loaded = kFALSE;
+         if (select) {
+            if (select->EvalInstance(inst) == 0) {
+               continue;
+            }
+         } 
+      
+         if (inst==0) loaded = kTRUE;
+         else if (!loaded) {
+            // EvalInstance(0) always needs to be called so that
+            // the proper branches are loaded.
+            for (i=0;i<ncols;i++) {
+               var[i]->EvalInstance(0);
+            }
+            loaded = kTRUE;
+         }
+
+         for (i=0;i<ncols;i++) {
+            xvars[i] = var[i]->EvalInstance(inst);
+         }
+         principal->AddRow(xvars);
       }
-      principal->AddRow(xvars);
    }
 
 //*-* some actions with principal ?
@@ -2149,7 +2178,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    }
 
 //*-*- Compile selection expression if there is one
-   TTreeFormula *select = 0;
+   TTreeFormula        *select  = 0;
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return -1;
@@ -2188,8 +2217,20 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
       fFormulaList->Add(var[i]);
    }
+
+//*-*- Create a TreeFormulaManager to coordinate the formulas
+   TTreeFormulaManager *manager=0;
+   if (fFormulaList->LastIndex()>=0) {
+      manager = new TTreeFormulaManager;
+      for(i=0;i<=fFormulaList->LastIndex();i++) {
+         manager->Add((TTreeFormula*)fFormulaList->At(i));
+      }
+      manager->Sync();
+   }
+
 //*-*- Print header
    onerow = "***********";
+   if (manager->GetMultiplicity()) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2198,6 +2239,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    else
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
+   if (manager->GetMultiplicity()) onerow += "* Instance ";
    for (i=0;i<ncols;i++) {
       onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
    }
@@ -2206,6 +2248,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    else
       printf("%s*\n",onerow.Data());
    onerow = "***********";
+   if (manager->GetMultiplicity()) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2216,37 +2259,64 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
 //*-*- loop on all selected entries
    fSelectedRows = 0;
    Int_t tnumber = -1;
-   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+   Bool_t exitloop = kFALSE;
+   for (entry=firstentry;
+        entry<(firstentry+nentries) && !exitloop;
+        entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Int_t localEntry = fTree->LoadTree(entryNumber);
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
-         for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
-          if (select) select->UpdateFormulaLeaves();
+         if (manager) manager->UpdateFormulaLeaves();
       }
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+
+      int ndata = 1;
+      if (manager && manager->GetMultiplicity()) {
+         ndata = manager->GetNdata();
       }
-      onerow = Form("* %8d ",entryNumber);
-      for (i=0;i<ncols;i++) {
-         onerow += Form("* %9.9s ",var[i]->PrintValue(0));
-      }
-      fSelectedRows++;
-   if (fScanRedirect)
-      out<<onerow.Data()<<"*"<<endl;
-   else
-      printf("%s*\n",onerow.Data());
-      if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
-         if (fSelectedRows%fTree->GetScanField() == 0) {
-            fprintf(stderr,"Type <CR> to continue or q to quit ==> ");
-            int answer, readch;
-            readch = getchar();
-            answer = readch;
-            while (readch != '\n' && readch != EOF) readch = getchar();
-            if (answer == 'q' || answer == 'Q') break;
+
+      for(int inst=0;inst<ndata;inst++) {
+         Bool_t loaded = kFALSE;
+         if (select) {
+            if (select->EvalInstance(inst) == 0) {
+               continue;
+            }
+         } 
+         if (inst==0) loaded = kTRUE;
+         else if (!loaded) {
+            // EvalInstance(0) always needs to be called so that
+            // the proper branches are loaded.
+            for (i=0;i<ncols;i++) {
+               var[i]->EvalInstance(0);
+            }
+            loaded = kTRUE;
+         }
+         onerow = Form("* %8d ",entryNumber);
+         if (manager->GetMultiplicity()) {
+            onerow += Form("* %8d ",inst);
+         }
+         for (i=0;i<ncols;i++) {
+            onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
+         }
+         fSelectedRows++;
+         if (fScanRedirect)
+            out<<onerow.Data()<<"*"<<endl;
+         else
+            printf("%s*\n",onerow.Data());
+         if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
+            if (fSelectedRows%fTree->GetScanField() == 0) {
+               fprintf(stderr,"Type <CR> to continue or q to quit ==> ");
+               int answer, readch;
+               readch = getchar();
+               answer = readch;
+               while (readch != '\n' && readch != EOF) readch = getchar();
+               if (answer == 'q' || answer == 'Q') {
+                  exitloop = kTRUE;
+                  break;
+               }
+            }
          }
       }
    }
@@ -2264,6 +2334,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
 
 //*-*- delete temporary objects
    fFormulaList->Clear();
+   // The TTreeFormulaManager is deleted by the last TTreeFormula.
    delete [] var;
    delete [] cnames;
    delete [] index;
