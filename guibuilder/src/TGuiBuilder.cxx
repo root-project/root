@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.19 2004/10/06 14:38:19 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.20 2004/10/07 09:56:53 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -310,8 +310,11 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    }
 
    AddSection("Projects");
-   AddSection("Standard");
+   AddSection("Buttons");
    AddSection("Containers");
+   AddSection("Input");
+   AddSection("Display");
+
 //   AddSection("Extended");
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
@@ -323,57 +326,67 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    act = new TGuiBldAction("TGTextButton", "Text Button", kGuiBldCtor);
    act->fAct = "new TGTextButton()";
    act->fPic = "bld_textbutton.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Buttons");
 
    act = new TGuiBldAction("TGCheckButton", "Check Button", kGuiBldCtor);
    act->fAct = "new TGCheckButton()";
    act->fPic = "bld_checkbutton.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Buttons");
 
    act = new TGuiBldAction("TGRadioButton", "Radio Button", kGuiBldCtor);
    act->fAct = "new TGRadioButton()";
    act->fPic = "bld_radiobutton.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Buttons");
 
    act = new TGuiBldAction("TGTextEntry", "Text Entry", kGuiBldCtor);
    act->fAct = "new TGTextEntry()";
    act->fPic = "bld_entry.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Input");
 
    act = new TGuiBldAction("TGNumberEntry", "Number Entry", kGuiBldCtor);
    act->fAct = "new TGNumberEntry()";
    act->fPic = "bld_numberentry.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGHSlider", "Horizontal Slider", kGuiBldCtor);
+   act->fAct = "new TGHSlider()";
+   act->fPic = "bld_hslider.xpm";
+   AddAction(act, "Input");
+
+   act = new TGuiBldAction("TGVSlider", "Vertical Slider", kGuiBldCtor);
+   act->fAct = "new TGVSlider()";
+   act->fPic = "bld_vslider.xpm";
+   AddAction(act, "Input");
 
    act = new TGuiBldAction("TGLabel", "Text Label", kGuiBldCtor);
    act->fAct = "new TGLabel()";
    act->fPic = "bld_label.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 
    act = new TGuiBldAction("TGHorizontal3DLine", "Horizontal Line", kGuiBldCtor);
    act->fAct = "new TGHorizontal3DLine()";
    act->fPic = "bld_hseparator.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 
    act = new TGuiBldAction("TGVertical3DLine", "Vertical Line", kGuiBldCtor);
    act->fAct = "new TGVertical3DLine()";
    act->fPic = "bld_vseparator.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 
    act = new TGuiBldAction("TGStatusBar", "Status Bar", kGuiBldCtor);
    act->fAct = "new TGStatusBar()";
    act->fPic = "bld_statusbar.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 
    act = new TGuiBldAction("TGHProgressBar", "Progress Bar", kGuiBldCtor);
    act->fAct = "new TGHProgressBar()";
    act->fPic = "bld_hprogressbar.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 /*
    act = new TGuiBldAction("TRootEmbeddedCanvas", "Embedded Canvas", kGuiBldCtor);
    act->fAct = "new TRootEmbeddedCanvas()";
    act->fPic = "bld_embedcanvas.xpm";
-   AddAction(act, "Standard");
+   AddAction(act, "Display");
 */
    // Containers
    act = new TGuiBldAction("TGHorizontalFrame", "Horizontal Frame", kGuiBldCtor);

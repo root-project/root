@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.18 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.19 2004/10/11 16:25:10 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1218,7 +1218,7 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
             }
 
             if (dbl_clk) {
-               if (event->fState == (kKeyControlMask | kButton1Mask)) {
+               if (event->fState & kKeyControlMask) {
                   TGWindow *root = (TGWindow *)fClient->GetRoot();
                   root->SetEditable(kFALSE);
                   SetEditable(kFALSE);
