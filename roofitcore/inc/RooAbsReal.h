@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.58 2003/05/12 20:25:51 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.59 2003/11/12 23:20:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,7 +39,7 @@ class TH3F;
 class RooAbsReal : public RooAbsArg {
 public:
   // Constructors, assignment etc
-  inline RooAbsReal() ;
+  RooAbsReal() ;
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
 	     const char *unit= "") ;
