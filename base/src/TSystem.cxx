@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.110 2004/12/15 16:04:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.111 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1351,7 +1351,9 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 #else
    // don't load libraries that have already been loaded
    TString libs = GetLibraries();
-   TString l    = BaseName(module);
+   TString moduleBasename = BaseName(module);
+   TString l(moduleBasename);
+
    Ssiz_t idx   = l.Index(".");
    if (idx != kNPOS)
       l.Remove(idx+1);
@@ -1365,7 +1367,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       return 1;
 
    // load any dependent libraries
-   TString deplibs = gInterpreter->GetSharedLibDeps(module);
+   TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
