@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.2 2000/11/22 08:35:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.h,v 1.3 2002/03/28 09:22:36 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@ public:
    virtual  UInt_t   Integer(UInt_t imax);
    virtual  Double_t Landau(Double_t mean=0, Double_t sigma=1);
    virtual  Int_t    Poisson(Double_t mean);
+   virtual  Double_t PoissonD(Double_t mean);
    virtual  void     Rannor(Float_t &a, Float_t &b);
    virtual  void     Rannor(Double_t &a, Double_t &b);
    virtual  void     ReadRandom(const char *filename);

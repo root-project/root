@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.8 2001/08/17 07:27:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.9 2002/03/28 09:22:36 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -489,6 +489,33 @@ Int_t TRandom::Poisson(Double_t mean)
       if (pir <= expmean) break;
    }
    return N;
+}
+
+//______________________________________________________________________________
+Double_t TRandom::PoissonD(Double_t mean)
+{
+// Generates a random number according to a Poisson law.
+// Coded from Los Alamos report LA-5061-MS
+// Prob(N) = exp(-mean)*mean^N/Factorial(N)
+//
+// This function is a variant of TRandom::Poisson returning a double
+// instead of an integer.
+   
+   Int_t N;
+   if (mean <= 0) return 0;
+     // use a gaussian approximation for large values of mean
+   if (mean > 88) {
+      return Gaus(0,1)*TMath::Sqrt(mean) + mean;
+   }
+   Double_t expmean = TMath::Exp(-mean);
+   Double_t pir = 1;
+   N = -1;
+   while(1) {
+      N++;
+      pir *= Rndm(N);
+      if (pir <= expmean) break;
+   }
+   return (Double_t)N;
 }
 
 //______________________________________________________________________________
