@@ -112,8 +112,7 @@ void TVirtualPadEditor::UpdateFillAttributes(Int_t color, Int_t style)
 
    ShowEditor();
 
-   if (fgEditorName == "Ged") return;
-   else fgPadEditor->FillAttributes(color, style);
+   fgPadEditor->FillAttributes(color, style);
 }
 
 //______________________________________________________________________________
@@ -126,8 +125,7 @@ void TVirtualPadEditor::UpdateTextAttributes(Int_t align, Float_t angle,
 
    ShowEditor();
 
-   if (fgEditorName == "Ged") return;
-   else fgPadEditor->TextAttributes(align, angle, col, font, tsize);
+   fgPadEditor->TextAttributes(align, angle, col, font, tsize);
 }
 
 //______________________________________________________________________________
@@ -140,8 +138,7 @@ void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style,
 
    ShowEditor();
 
-   if (fgEditorName == "Ged") return;
-   else fgPadEditor->LineAttributes(color, style, width);
+   fgPadEditor->LineAttributes(color, style, width);
 }
 
 //______________________________________________________________________________
@@ -154,6 +151,5 @@ void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style,
 
    ShowEditor();
 
-   if (fgEditorName == "Ged") return;
-   else fgPadEditor->MarkerAttributes(color, style, msize);
+   fgPadEditor->MarkerAttributes(color, style, msize);
 }

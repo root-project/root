@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.30 2004/02/20 12:32:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.31 2004/02/20 16:30:49 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TApplication.h"
 #include "TFile.h"
 #include "TInterpreter.h"
+#include "TEnv.h"
 #include "Riostream.h"
 
 #include "TG3DLine.h"
@@ -1014,8 +1015,11 @@ void TRootCanvas::CreateEditor()
 
    fEditorFrame->SetEditable();
    gPad = Canvas();
+   TString show = gEnv->GetValue("Canvas.ShowEditor","false");
+   gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditorFrame->SetEditable(0);
+   if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
 }
 
 //______________________________________________________________________________

@@ -28,6 +28,7 @@
 #include "TAttLineCanvas.h"
 #include "TAttMarkerCanvas.h"
 #include "TAttTextCanvas.h"
+#include "TEnv.h"
 
 
 ClassImp(TPadEditorOld)
@@ -37,8 +38,9 @@ TPadEditorOld::TPadEditorOld(TCanvas*) : TVirtualPadEditor()
 {
    // Create the old Editor 
 
-      fControlBar = new TControlBar("vertical");
-      Build();
+   fControlBar = 0;
+   TString show = gEnv->GetValue("Canvas.ShowEditor","false");
+   if (show == "true") Build();
 }
 
 //______________________________________________________________________________
@@ -53,6 +55,7 @@ TPadEditorOld::~TPadEditorOld()
 void TPadEditorOld::Build() 
 {
    // Create the Editor control bar
+   fControlBar = new TControlBar("vertical");
    fControlBar->AddButton("Arc",       "gROOT->SetEditorMode(\"Arc\")",       "Create an arc of circle");
    fControlBar->AddButton("Line",      "gROOT->SetEditorMode(\"Line\")",      "Create a line segment");
    fControlBar->AddButton("Arrow",     "gROOT->SetEditorMode(\"Arrow\")",     "Create an Arrow");
