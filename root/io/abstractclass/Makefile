@@ -1,10 +1,6 @@
 SHELL = /bin/sh
 NAME = all
 
-ObjSuf = o
-SrcSuf = cxx
-DllSuf = so
-OutPutOpt = -o
 
 # ROOT includes
 ROOTCFLAGS =  -I$(ROOTSYS)/include
@@ -13,7 +9,7 @@ INCLUDES = -I. $(ROOTCFLAGS)
 
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.$(ObjSuf) *~ core a.out $(CXXSO) DataCint.* Makefile.bak *.tar* *.log
 
-TEST_TARGETS += depend rootcint lib read_test 
+TEST_TARGETS += depend rootcint lib read_test abstractInVector
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -29,7 +25,7 @@ RANLIB   := ranlib
 INCLUDES := $(INCLUDES) $(LINUX_SYS_INCLUDES)
 SOCMD     = $(LD)
 
-CXXSOURCES  = $(wildcard *.cxx)
+CXXSOURCES  = DataBlock1.cxx  DataBlock2.cxx  DataBlockBase.cxx  PureAbstractInterface.cxx
 CINTLIST   := $(addsuffix .h, $(basename $(CXXSOURCES)))
 CINTLISTO  := $(addsuffix .$(ObjSuf), $(basename $(CINTLIST)))
 CPPSOURCES := $(CXXSOURCES) DataCint.cc
@@ -88,7 +84,10 @@ tar: FORCE
 	tar cvf badio.tar Makefile LinkDef.h $(CINTLIST) $(CXXSOURCES) *.C *.root
 	gzip badio.tar
 
-read_test.log:
+abstractInVector: abstractInVector_C.$(DllSuf)
+	$(CMDECHO) echo > /dev/null
+
+read_test.log: $(CXXSO)
 	$(CMDECHO) root.exe -b -l -q read_test.C > read_test.log
 
 read_test: read_test.log
