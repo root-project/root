@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.108 2002/10/03 18:09:51 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.109 2002/10/04 20:14:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1505,7 +1505,7 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
             fNfill = 0;
          }
       }
-      ww = treeWeight;
+      ww = fW[nfill0];
 
       for (i=1;i<ndata;i++) {
          if (SelectMultiple) {
