@@ -105,10 +105,8 @@ ifneq ($(ALIENCLILIB),)
 MODULES      += alien
 endif
 endif
-ifneq ($(ASTEPINCDIR),)
-ifneq ($(ASTEPLIB),)
+ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
-endif
 endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread

@@ -405,8 +405,6 @@ with options, prefix with --with-, enables corresponding support
    afs             AFS support, location of AFS distribution
    alien-incdir    AliEn support, location of AliEn.h
    alien-libdir    AliEn support, location of libAliEn
-   asimage-incdir  Image processing support, location of afterimage.h
-   asimage-libdir  Image processing support, location of libAfterImage
    cern-libdir     HBOOK converter, location of CERNLIB libraries
    chirp-incdir    Chirp support, location of chirp_client.h
    chirp-libdir    Chirp support, location of libchirp_client
@@ -503,8 +501,6 @@ if test $# -gt 0 ; then
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
-      --with-asimage-incdir=*) asimageincdir=$optarg ; enable_asimage="yes" ;;
-      --with-asimage-libdir=*) asimagelibdir=$optarg ; enable_asimage="yes" ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
@@ -1140,18 +1136,7 @@ fi
 # Check for libAfterImage
 #
 if test ! "x$enable_asimage" = "xno" ; then
-    check_header "afterimage.h" "$asimageincdir" $ASIMAGE $ASIMAGE/include \
-	/usr/local/include /usr/local/libAfterImage /usr/include \
-	/usr/include/libAfterImage /opt/libAfterImage
-    asimageincdir=$found_dir
-
-    check_library "libAfterImage" "$enable_shared" "$asimagelibdir" \
-	$ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/local/libAfterImage \
-	/usr/lib /opt/libAfterImage
-    asimagelib=$found_lib
-    asimagelibdir=$found_dir
-
-    if test "x$asimageincdir" = "x" || test "x$asimagelib" = "x"; then
+    if test "x$platform" = "xwin32"; then
         enable_asimage="no"
     fi
 fi
@@ -1647,10 +1632,8 @@ sed \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
     -e "s|@architecture@|$arch|"                \
-    -e "s|@asimageincdir@|$asimageincdir|"      \
-    -e "s|@asimagelib@|$asimagelib|"            \
-    -e "s|@asimagelibdir@|$asimagelibdir|"      \
     -e "s|@bindir@|$bindir|"                    \
+    -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@cernlibdir@|$cernlibdir|"            \
     -e "s|@cernlibs@|$cernlib|"                 \
     -e "s|@chirpincdir@|$chirpincdir|"          \

@@ -11,6 +11,14 @@ ASIMAGEDIR   := $(MODDIR)
 ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
+ASTEPVERS    := libAfterImage
+ASTEPDIRI    := $(MODDIRS)/$(ASTEPVERS)
+
+##### libAfterImage #####
+ASTEPLIBSO   := $(MODDIRS)/$(ASTEPVERS)/libAfterImage.so.0.92
+ASTEPLIB     := $(LPATH)/libRAfterImage.so
+ASTEPLIBS    := -lRAfterImage
+
 ##### libASImage #####
 ASIMAGEL     := $(MODDIRI)/LinkDef.h
 ASIMAGEDS    := $(MODDIRS)/G__ASImage.cxx
@@ -36,31 +44,65 @@ INCLUDEFILES += $(ASIMAGEDEP)
 include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
-$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(MAINLIBS)
+$(ASTEPLIB):    $(ASTEPLIBSO)
+		cp $< $@
+
+$(ASTEPLIBSO):
+		@(if [ ! -r $@ ]; then \
+			echo "*** Building $@..."; \
+			cd $(ASIMAGEDIRS); \
+			if [ ! -d $(ASTEPVERS) ]; then \
+				if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
+					gtar zxf $(ASTEPVERS).tar.gz; \
+				else \
+					gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
+				fi; \
+			fi; \
+			cd $(ASTEPVERS); \
+			ACC=""; \
+			ACFLAGS="CFLAGS=-O"; \
+			if [ $(CC) = "gcc" ]; then \
+				ACFLAGS="CFLAGS=\"-fPIC -O\""; \
+			fi; \
+			if [ $(CC) = "icc" ]; then \
+				ACC="CC=icc"; \
+			fi; \
+			export GNUMAKE=$(MAKE); export $$ACC; export $$ACFLAGS; \
+			./configure --enable-sharedlibs \
+				--with-ttf=no --with-afterbase=no; \
+			$(MAKE); \
+		fi)
+
+$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIBDIR) $(ASTEPLIB)"
+		   "-L$(LPATH) $(ASTEPLIBS) $(ASIMAGELIBEXTRA)"
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEH) $(ASIMAGEL)
 
-$(ASIMAGEDO):   $(ASIMAGEDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ASTEPINCDIR) -I. -o $@ -c $<
+$(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ASTEPDIRI) -I. -o $@ -c $<
 
-all-asimage:    $(ASIMAGELIB)
+all-asimage:    $(ASTEPLIB) $(ASIMAGELIB)
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
+		-@(if [ -d $(ASIMAGEDIRS)/$(ASTEPVERS) ]; then \
+			cd $(ASIMAGEDIRS)/$(ASTEPVERS); \
+			$(MAKE) clean; \
+		fi)
 
 clean::         clean-asimage
 
 distclean-asimage: clean-asimage
 		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB)
+		@rm -rf $(ASTEPLIB) $(ASIMAGEDIRS)/$(ASTEPVERS)
 
 distclean::     distclean-asimage
 
 ##### extra rules ######
-$(ASIMAGEO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(ASTEPINCDIR) -o $@ -c $<
+$(ASIMAGEO): %.o: %.cxx $(ASTEPLIB)
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(ASTEPDIRI) -o $@ -c $<
