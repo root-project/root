@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.9 2001/03/29 10:57:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.10 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -558,8 +558,10 @@ TObject *TList::Remove(TObject *obj)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast) fLast = fFirst;
-      else              fFirst->fPrev = 0;
+      if (lnk == fLast)
+         fLast = fFirst;
+      else
+         fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -589,8 +591,10 @@ TObject *TList::Remove(TObjLink *lnk)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast) fLast = fFirst;
-      else              fFirst->fPrev = 0;
+      if (lnk == fLast)
+         fLast = fFirst;
+      else
+         fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
