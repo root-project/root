@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.161 2003/03/05 23:31:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.162 2003/03/08 16:07:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2848,7 +2848,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t i, Int_t kase, TStreamerElement *aElement)
+Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray * /*clones*/,
+                      Int_t nc, Int_t i, Int_t kase, TStreamerElement *aElement)
 {
 //  Skip elements in a TClonesArray
 
