@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.1 2004/10/17 11:55:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.2 2004/10/17 20:59:58 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -151,30 +151,49 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(TMethod* m) {
 // A TMethod is browsable if it is const, public and not pure virtual,
 // if does not have any parameter without default value, and if it has 
 // a (non-void) return value.
+// A method called *, Get*, or get* will not be browsable if there is a 
+// data member called f*, _*, or m*, as data member access is faster
+// than method access. Examples: if one of fX, _X, or mX is a data
+// member, the methods GetX(), getX(), and X() will not be browsable.
 
-   return (m->GetNargs()-m->GetNargsOpt()==0
-           && (m->Property() & kIsConstant 
-               & ~kIsPrivate & ~kIsProtected & ~kIsPureVirtual )
-           && m->GetReturnTypeName()
-           && strcmp("void",m->GetReturnTypeName())
-           && !strstr(m->GetName(),"DeclFile")
-           && !strstr(m->GetName(),"ImplFile")
-           && strcmp(m->GetName(),"IsA")
-           && strcmp(m->GetName(),"Class")
-           && strcmp(m->GetName(),"CanBypassStreamer")
-           && strcmp(m->GetName(),"Class_Name")
-           && strcmp(m->GetName(),"ClassName")
-           && strcmp(m->GetName(),"Clone")
-           && strcmp(m->GetName(),"DrawClone")
-           && strcmp(m->GetName(),"GetName")
-           && strcmp(m->GetName(),"GetDrawOption")
-           && strcmp(m->GetName(),"GetIconName")
-           && strcmp(m->GetName(),"GetOption")
-           && strcmp(m->GetName(),"GetTitle")
-           && strcmp(m->GetName(),"GetUniqueID")
-           && strcmp(m->GetName(),"Hash")
-           && strcmp(m->GetName(),"IsFolder")
-           && strcmp(m->GetName(),"IsOnHeap")
-           && strcmp(m->GetName(),"IsSortable")
-           && strcmp(m->GetName(),"IsZombie")); 
+   if (m->GetNargs()-m->GetNargsOpt()==0
+       && (m->Property() & kIsConstant 
+           & ~kIsPrivate & ~kIsProtected & ~kIsPureVirtual )
+       && m->GetReturnTypeName()
+       && strcmp("void",m->GetReturnTypeName())
+       && !strstr(m->GetName(),"DeclFile")
+       && !strstr(m->GetName(),"ImplFile")
+       && strcmp(m->GetName(),"IsA")
+       && strcmp(m->GetName(),"Class")
+       && strcmp(m->GetName(),"CanBypassStreamer")
+       && strcmp(m->GetName(),"Class_Name")
+       && strcmp(m->GetName(),"ClassName")
+       && strcmp(m->GetName(),"Clone")
+       && strcmp(m->GetName(),"DrawClone")
+       && strcmp(m->GetName(),"GetName")
+       && strcmp(m->GetName(),"GetDrawOption")
+       && strcmp(m->GetName(),"GetIconName")
+       && strcmp(m->GetName(),"GetOption")
+       && strcmp(m->GetName(),"GetTitle")
+       && strcmp(m->GetName(),"GetUniqueID")
+       && strcmp(m->GetName(),"Hash")
+       && strcmp(m->GetName(),"IsFolder")
+       && strcmp(m->GetName(),"IsOnHeap")
+       && strcmp(m->GetName(),"IsSortable")
+       && strcmp(m->GetName(),"IsZombie")) {
+         // look for matching data member
+         TClass* cl=m->GetClass();
+         if (!cl) return kTRUE;
+         TList* members=cl->GetListOfDataMembers();
+         if (!members) return kTRUE;
+         const char* baseName=m->GetName();
+         if (!strncmp(m->GetName(), "Get", 3) ||
+             !strncmp(m->GetName(), "get", 3))
+            baseName+=3;
+         if (!baseName[0]) return kTRUE;
+         return (!members->FindObject(Form("f%s", baseName)) &&
+                 !members->FindObject(Form("_%s", baseName)) &&
+                 !members->FindObject(Form("m%s", baseName)));
+   };
+   return kFALSE;
 }
