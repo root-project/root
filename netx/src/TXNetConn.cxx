@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.4 2004/09/08 10:21:40 brun Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.5 2004/09/15 17:09:51 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -115,7 +115,7 @@ TXNetConn::~TXNetConn()
 }
 
 //_____________________________________________________________________________
-Short_t TXNetConn::Connect(TString Host, const Int_t Port, Int_t netopt)
+Short_t TXNetConn::Connect(TString Host, Int_t Port, Int_t netopt)
 {
    // Connect method (called the first time when TXNetFile is first created,
    // and used for each redirection). The global static connection manager
@@ -1155,7 +1155,7 @@ Bool_t TXNetConn::DoLogin()
 Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 {
    // Negotiate authentication with the remote server. Tries in turn
-   // all available protocols proposed by the server (in plist), 
+   // all available protocols proposed by the server (in plist),
    // starting from the first.
 
    if (!plist || !strlen(plist))
@@ -1165,7 +1165,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
       Info("DoAuthentication", "remote host: %s,"
            " list of available protocols: %s (%d)",
            fUrl.GetHost(), plist, strlen(plist));
- 
+
    // Prepare host/IP information of the remote xrootd. This is required
    // for the authentication.
    //
@@ -1178,7 +1178,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
    UInt_t addr = htonl(iaddr);
    memcpy((void *)&netaddr.sin_addr.s_addr, &addr,
           sizeof(netaddr.sin_addr.s_addr));
-      
+
    // Variables for negotiation
    XrdSecParameters   secToken;
    XrdSecProtocol    *protocol;
@@ -1187,11 +1187,11 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
    // Prepare tokenization
    //
    TString inPString((const char *)plist);
-   TObjArray *inPList = inPString.Tokenize(" "); 
+   TObjArray *inPList = inPString.Tokenize(" ");
 
    // Make sure that we got at least one token
    //
-   if (inPList->GetEntries() < 1) { 
+   if (inPList->GetEntries() < 1) {
       if (DebugLevel() >= TXDebug::kHIDEBUG)
          Warning("DoAuthentication", "Protocol list empty");
       return kFALSE;
@@ -1215,11 +1215,11 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
          Error("DoAuthentication", "can't locate %s",seclib.Data());
          return kFALSE;
       }
-      //   
+      //
       // Locate XrdSecGetProtocolClient
       Func_t f = gSystem->DynFindSymbol(seclib,"XrdSecGetProtocolClient");
       if (f) {
-         getp = (XrdSecProtocol *(*)(const struct sockaddr &, 
+         getp = (XrdSecProtocol *(*)(const struct sockaddr &,
                                      const XrdSecParameters &,
                                      XrdOucErrInfo*))(f);
       } else {
@@ -1239,17 +1239,17 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 
       // Assign the security token that we have received at the login request
       //
-      secToken.buffer = (char *)(token.Data());   
+      secToken.buffer = (char *)(token.Data());
       secToken.size   = token.Length();
-     
+
       // Retrieve the security protocol context from the xrootd server
       //
       if (getp) {
 
          protocol = (*getp)((const struct sockaddr &)netaddr,secToken, 0);
-         if (!protocol) { 
+         if (!protocol) {
             if (DebugLevel() >= TXDebug::kHIDEBUG)
-               Info("DoAuthentication", 
+               Info("DoAuthentication",
                     "Unable to get protocol object (token: %s)",token.Data());
             continue;
          }
@@ -1469,7 +1469,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 	    Error("HandleServerError",
 		  "Redirection to a server out-of-domain disallowed.");
             Error("HandleServerError", "New host: %s ", newhost.Data());
-            Error("HandleServerError", 
+            Error("HandleServerError",
                   "(list of allowed domains: %s) ", fClientHostDomain.Data());
             Error("HandleServerError", "Abort.");
 	    gSystem->Abort();
