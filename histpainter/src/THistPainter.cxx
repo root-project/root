@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.48 2001/08/14 06:49:46 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.49 2001/09/27 09:53:24 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2207,14 +2207,20 @@ void THistPainter::PaintErrors()
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
          if (yi1 + s2y < yi4) gPad->PaintLine(xi3,yi1 + s2y,xi4,yi4);
-         if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
-         if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
+  	 //don't duplicate the horizontal line 
+ 	 if (Hoption.Hist != 2){ 
+            if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
+            if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
+         }
       }
       if (optionE && !drawmarker) {
          if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
          if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
-         if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
-         if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
+ 	 //don't duplicate the horizontal line
+ 	 if (Hoption.Hist != 2){ 
+            if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
+            if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
+         }
       }
 
 //*-*-      draw line at the end of the error bars
