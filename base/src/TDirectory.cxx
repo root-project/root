@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.48 2004/05/26 09:44:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.49 2004/06/02 17:03:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1278,6 +1278,14 @@ Int_t TDirectory::ReadKeys()
       headerkey->ReadFile();
       buffer = headerkey->GetBuffer();
       headerkey->ReadBuffer(buffer);
+      if (fKeys->FindObject(headerkey)) {
+         // In some error cases headerkey->ReadBuffer will erroneously insert the
+         // header key in the list.  To prevent further crashes (due to the deletion
+         // below) we remove it explicit and warn of potential problems.
+         Error("ReadKeys","Abnormal case while reading the header key.  The %s (%s) is probably corrupted.",IsA()->GetName(),GetName());
+         
+         fKeys->Remove(headerkey); 
+      }
       TKey *key;
       frombuf(buffer, &nkeys);
       for (Int_t i = 0; i < nkeys; i++) {
