@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.33 2003/09/03 05:39:28 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.34 2003/09/10 07:40:10 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -6543,7 +6543,7 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 L40:
     return;
 L45:
-    Printf("   FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE%d VARIABLE PARAMETERS.",fNpar);
+    Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
     Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
     Printf(" *******************************************************************************");
     Printf(" *******************************************************************************");
