@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.10 2002/06/13 17:51:18 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.11 2002/06/18 22:21:27 verkerke Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -358,8 +358,10 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
   while (kTRUE) {
 
     // B flavor and rho charge (we do not use the integrated weights)
-    _tag  = (RooRandom::uniform()<=0.5) ? -1 : +1;
-    _rhoQ = (RooRandom::uniform()<=0.5) ? 1 : -1;
+    if (code != 1) {
+      if (code != 3) _tag  = (RooRandom::uniform()<=0.5) ? -1 : +1;
+      if (code != 2) _rhoQ = (RooRandom::uniform()<=0.5) ?  1 : -1;
+    }
 
     // opposite charge?
     Int_t rhoQc = _rhoQ*int(_correctQ);
