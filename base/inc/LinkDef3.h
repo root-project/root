@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.8 2002/12/04 12:13:32 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.9 2002/12/04 14:35:12 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -153,29 +153,5 @@
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class TLockGuard;
 #pragma link C++ class TVirtualProof;
-
-#pragma link C++ typedef TObjNumC;
-#pragma link C++ typedef TObjNumUC;
-#pragma link C++ typedef TObjNumS;
-#pragma link C++ typedef TObjNumUS;
-#pragma link C++ typedef TObjNumI;
-#pragma link C++ typedef TObjNumUI;
-#pragma link C++ typedef TObjNumL;
-#pragma link C++ typedef TObjNumUL;
-#pragma link C++ typedef TObjNumF;
-#pragma link C++ typedef TObjNumD;
-#pragma link C++ typedef TObjPtr;
-
-#pragma link C++ class TObjNum<Char_t>+;
-#pragma link C++ class TObjNum<UChar_t>+;
-#pragma link C++ class TObjNum<Short_t>+;
-#pragma link C++ class TObjNum<UShort_t>+;
-#pragma link C++ class TObjNum<Int_t>+;
-#pragma link C++ class TObjNum<UInt_t>+;
-#pragma link C++ class TObjNum<Long_t>+;
-#pragma link C++ class TObjNum<ULong_t>+;
-#pragma link C++ class TObjNum<Float_t>+;
-#pragma link C++ class TObjNum<Double_t>+;
-#pragma link C++ class TObjNum<void*>+;
 
 #endif
