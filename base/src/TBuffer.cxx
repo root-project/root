@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.15 2001/04/27 06:55:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.16 2001/06/01 11:01:53 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -844,7 +844,7 @@ void TBuffer::ReadFastArray(Char_t *c, Int_t n)
 {
    // Read array of n characters from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Char_t)*n;
    memcpy(c, fBufCur, l);
@@ -856,7 +856,7 @@ void TBuffer::ReadFastArray(Short_t *h, Int_t n)
 {
    // Read array of n shorts from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -878,7 +878,7 @@ void TBuffer::ReadFastArray(Int_t *ii, Int_t n)
 {
    // Read array of n ints from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -908,7 +908,7 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 {
    // Read array of n longs from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    if (gFile && gFile->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
@@ -922,7 +922,7 @@ void TBuffer::ReadFastArray(Float_t *f, Int_t n)
 {
    // Read array of n floats from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -952,7 +952,7 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
 {
    // Read array of n doubles from the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -1123,7 +1123,7 @@ void TBuffer::WriteFastArray(const Char_t *c, Int_t n)
 {
    // Write array of n characters into the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Char_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1137,7 +1137,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
 {
    // Write array of n shorts into the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Short_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1160,7 +1160,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
 void TBuffer::WriteFastArray(const Int_t *ii, Int_t n)
 {
    // Write array of n ints into the I/O buffer.
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Int_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1184,7 +1184,7 @@ void TBuffer::WriteFastArray(const Long_t *ll, Int_t n)
 {
    // Write array of n longs into the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = 8*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1197,7 +1197,7 @@ void TBuffer::WriteFastArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
@@ -1221,7 +1221,7 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 {
    // Write array of n doubles into the I/O buffer.
 
-   if (!n) return;
+   if (n <= 0) return;
 
    Int_t l = sizeof(Double_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
