@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.12 2003/02/14 08:23:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.13 2004/07/30 01:12:27 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    void               Browse(TBrowser *b);
    Int_t              Capacity() const { return fSize; }
    virtual void       Clear(Option_t *option="") = 0;
+   Int_t              Compare(const TObject *obj) const;
    Bool_t             Contains(const char *name) const { return FindObject(name) != 0; }
    Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
    virtual void       Delete(Option_t *option="") = 0;
@@ -84,10 +85,12 @@ public:
    virtual TObject  **GetObjectRef(const TObject *obj) const = 0;
    virtual Int_t      GetSize() const { return fSize; }
    virtual Int_t      GrowBy(Int_t delta) const;
+   ULong_t            Hash() const { return fName.Hash(); }
    Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
    virtual Bool_t     IsFolder() const { return kTRUE; }
    Bool_t             IsOwner() const { return TestBit(kIsOwner); }
+   Bool_t             IsSortable() const { return kTRUE; }
    virtual void       ls(Option_t *option="") const ;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }

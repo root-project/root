@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.23 2004/07/17 23:18:57 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.24 2004/07/30 01:12:27 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -117,6 +117,16 @@ void TCollection::Browse(TBrowser *b)
       while ((obj = next())) b->Add(obj);
    else
       TObject::Browse(b);
+}
+
+//______________________________________________________________________________
+Int_t TCollection::Compare(const TObject *obj) const
+{
+   // Compare two TCollection objects. Returns 0 when equal, -1 when this is
+   // smaller and +1 when bigger (like strcmp()).
+
+   if (this == obj) return 0;
+   return fName.CompareTo(obj->GetName());
 }
 
 //______________________________________________________________________________
