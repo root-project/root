@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
+TEST_TARGETS += multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -59,4 +59,7 @@ endif
 twodimvar.log: twodimvar_C.$(DllSuf)
 
 twodimvar: twodimvar.log
+	$(TestDiff)
+
+multidim: multidim.log
 	$(TestDiff)
