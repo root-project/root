@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.8 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.9 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -105,11 +105,11 @@ void RooAbsString::printToStream(ostream& os, PrintOption opt, TString indent) c
 Bool_t RooAbsString::isValid() const 
 {
   // Check if current value is valid
-  return isValid(getVal()) ;
+  return isValidString(getVal()) ;
 }
 
 
-Bool_t RooAbsString::isValid(TString value) const 
+Bool_t RooAbsString::isValidString(TString value, Bool_t printError) const 
 {
   // Check if given value is valid
 
@@ -127,7 +127,7 @@ TString RooAbsString::traceEval() const
   TString value = evaluate() ;
   
   //Standard tracing code goes here
-  if (!isValid(value)) {
+  if (!isValidString(value)) {
     cout << "RooAbsString::traceEval(" << GetName() << "): new output too long (>1023 chars): " << value << endl ;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.6 2001/07/31 05:54:19 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.7 2001/08/02 21:39:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -77,12 +77,6 @@ Double_t RooFormulaVar::evaluate(const RooArgSet* nset) const
 }
 
 
-Bool_t RooFormulaVar::isValid() const
-{
-  // Check if current value of object is valid
-  return isValid(getVal()) ;
-}
-
 
 Bool_t RooFormulaVar::setFormula(const char* formula) 
 {
@@ -95,7 +89,7 @@ Bool_t RooFormulaVar::setFormula(const char* formula)
 }
 
 
-Bool_t RooFormulaVar::isValid(Double_t value) const {
+Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
   // Check if given value is valid
   return kTRUE ;
 }

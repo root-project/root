@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.19 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.20 2001/08/02 21:39:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -82,7 +82,7 @@ protected:
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
-  virtual Bool_t isValid(Double_t value, Bool_t printError=kFALSE) const ;
+  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;

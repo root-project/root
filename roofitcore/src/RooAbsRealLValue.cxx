@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.7 2001/06/30 01:33:11 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.8 2001/07/31 05:54:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,7 +92,7 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
 
 
 
-Bool_t RooAbsRealLValue::isValid(Double_t value, Bool_t verbose) const 
+Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const 
 {
   // Check if given value is valid
   if (!inFitRange(value)) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.1 2001/07/31 05:54:21 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.2 2001/08/02 21:39:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -122,11 +122,15 @@ Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy) const
 
 Bool_t RooSimFitContext::optimize(Bool_t doPdf,Bool_t doData, Bool_t doCache) 
 {
+  Bool_t ret(kFALSE) ;
   Int_t i ;
   for (i=0 ; i<_nCtx ; i++) {
     cout << "RooSimFitContext::optimize: forwarding call to subContext " << i << endl ;
-    if (_ctxArray[i]) _ctxArray[i]->optimize(doPdf,doData,doCache) ;
+    if (_ctxArray[i]) {
+      if (_ctxArray[i]->optimize(doPdf,doData,doCache)) ret=kTRUE ;
+    }
   }
+  return ret ;
 }
 
 

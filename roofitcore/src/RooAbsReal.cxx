@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.27 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.28 2001/08/02 21:39:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -99,7 +99,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
   Double_t value = evaluate(nset) ;
   
   //Standard tracing code goes here
-  if (!isValid(value)) {
+  if (!isValidReal(value)) {
     cout << "RooAbsReal::traceEval(" << GetName() 
 	 << "): validation failed: " << value << endl ;
   }
@@ -232,11 +232,11 @@ Bool_t RooAbsReal::inPlotRange(Double_t value) const {
 
 Bool_t RooAbsReal::isValid() const {
   // Check if current value is valid
-  return isValid(getVal()) ;
+  return isValidReal(getVal()) ;
 }
 
 
-Bool_t RooAbsReal::isValid(Double_t value, Bool_t printError) const 
+Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const 
 {
   // Check if given value is valid
   return kTRUE ;

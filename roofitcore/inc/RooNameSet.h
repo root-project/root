@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.rdl,v 1.1 2001/08/01 01:27:55 verkerke Exp $
+ *    File: $Id: RooNameSet.rdl,v 1.2 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,7 +27,7 @@ public:
   RooNameSet();
   RooNameSet(const RooArgSet& argSet);
   RooNameSet(const RooNameSet& other) ;
-  virtual TObject* Clone(const char* newname=0) { return new RooNameSet(*this) ; }
+  virtual TObject* Clone(const char* newname=0) const { return new RooNameSet(*this) ; }
   virtual ~RooNameSet() ;
 
   void refill(const RooArgSet& argSet) ;

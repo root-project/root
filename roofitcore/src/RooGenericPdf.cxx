@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.5 2001/07/31 05:54:19 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.6 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,13 +58,6 @@ Double_t RooGenericPdf::evaluate(const RooArgSet* nset) const
 }
 
 
-Bool_t RooGenericPdf::isValid() const
-{
-  // Check if current value is valid
-  return isValid(getVal()) ;
-}
-
-
 Bool_t RooGenericPdf::setFormula(const char* formula) 
 {
   // Change formula expression to given expression
@@ -76,7 +69,7 @@ Bool_t RooGenericPdf::setFormula(const char* formula)
 }
 
 
-Bool_t RooGenericPdf::isValid(Double_t value) const {
+Bool_t RooGenericPdf::isValidReal(Double_t value, Bool_t printError) const {
   // Check if given value is valid
   return kTRUE ;
 }

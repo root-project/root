@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.1 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.2 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -147,8 +147,8 @@ RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t nOrder)
 
   // Allocate temporary array space for interpolation
   Int_t imIdx, reIdx ;
-  Double_t imYR[nOrder] ;
-  Double_t imYI[nOrder] ;
+  Double_t imYR[10] ;
+  Double_t imYI[10] ;
 
   // Loop over imaginary grid points
   for (imIdx=imIdxLo ; imIdx<=imIdxHi ; imIdx++) {
@@ -190,7 +190,7 @@ Double_t RooMath::ITPComplexErrFuncRe(const RooComplex& z, Int_t nOrder)
   if (nOrder==1) return _reCerfArray[imIdxLo][reIdxLo] ;
 
   Int_t imIdx ;
-  Double_t imYR[nOrder] ;
+  Double_t imYR[10] ;
 
   // Allocate temporary array space for interpolation
   for (imIdx=imIdxLo ; imIdx<=imIdxHi ; imIdx++) {
@@ -224,13 +224,13 @@ Double_t RooMath::ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder)
   }
 
   // Allocate temporary array space for interpolation
-  Int_t imIdx, reIdx ;
-  Double_t imYI[nOrder] ;
+  Int_t imIdx ;
+  Double_t imYI[10] ;
 
   // Loop over imaginary grid points
   for (imIdx=imIdxLo ; imIdx<=imIdxHi ; imIdx++) {
     // Interpolate real array and store as array point for imaginary interpolation
-    imYI[imIdx-imIdxLo] = interpolate(&_imCerfArray[imIdx][reIdx],nOrder,rePrime-reIdxLo) ;
+    imYI[imIdx-imIdxLo] = interpolate(&_imCerfArray[imIdx][reIdxLo],nOrder,rePrime-reIdxLo) ;
   }
   // Interpolate imaginary arrays and construct complex return value
   return interpolate(imYI,nOrder,imPrime-imIdxLo) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.8 2001/05/17 00:43:16 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.9 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,7 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
   RooAbsString(name, title)
 {
   // Constructor with initial value
-  if(!isValid(value)) {
+  if(!isValidString(value)) {
     cout << "RooStringVar::RooStringVar(" << GetName() 
 	 << "): initial contents too long and ignored" << endl ;
   } else {
@@ -64,7 +64,7 @@ RooStringVar::operator TString() {
 
 void RooStringVar::setVal(TString value) {
   // Set value to given TString
-  if (!isValid(value)) {    
+  if (!isValidString(value)) {    
     cout << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
     strcpy(_value,value) ;
@@ -76,7 +76,7 @@ void RooStringVar::setVal(TString value) {
 TString RooStringVar::operator=(TString newValue) 
 {
   // Set value to given TString
-  if (!isValid(newValue)) {
+  if (!isValidString(newValue)) {
     cout << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
     strcpy(_value,newValue) ;
@@ -87,14 +87,8 @@ TString RooStringVar::operator=(TString newValue)
 
 
 
-Bool_t RooStringVar::isValid() const
-{
-  // Check if current value is valid
-  return isValid(getVal()) ;
-}
 
-
-Bool_t RooStringVar::isValid(TString value, Bool_t verbose) const {
+Bool_t RooStringVar::isValidString(TString value, Bool_t verbose) const {
   // Test if given TString is valid
   return kTRUE ;
 }
@@ -111,7 +105,7 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
   TString newValue ;
   Bool_t ret = parser.readString(newValue,kTRUE) ;
-  if (!isValid(newValue)) {
+  if (!isValidString(newValue)) {
     if (verbose) 
       cout << "RooStringVar::readFromStreeam(" << GetName() 
 	   << "): new string too long and ignored" << endl ;

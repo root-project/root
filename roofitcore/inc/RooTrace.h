@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.rdl,v 1.1 2001/08/02 21:39:13 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.2 2001/08/02 22:36:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,7 +35,7 @@ public:
     //cout << "RooTraceObj::ctor obj=" << obj << " prev=" << _prev << " next=" << _next << endl ;
   }
 
-  inline checkPad() {
+  inline void checkPad() {
     Int_t i ;
     for(i=0 ; i<1000 ; i++) {
       if (_pad1[i]!=0) cout << "RooTraceObj(" << _obj << ") pad1[" << i << "] = (" << (void*)(_pad1+i) << ") = " << (char) _pad1[i] << endl ;

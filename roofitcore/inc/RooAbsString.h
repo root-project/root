@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.7 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.8 2001/08/02 21:39:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,7 @@ protected:
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
-  virtual Bool_t isValid(TString value) const ;
+  virtual Bool_t isValidString(TString value, Bool_t printError=kFALSE) const ;
 
   virtual void syncCache(const RooArgSet* nset=0) { getVal() ; }
   void copyCache(const RooAbsArg* source) ;
