@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.16 2000/12/04 17:16:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.17 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -184,7 +184,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fClassIndex = 0;
    fSeekInfo   = 0;
    fNbytesInfo = 0;
-   
+
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
 
@@ -584,17 +584,16 @@ Float_t TFile::GetCompressionFactor()
 //
    Short_t  keylen;
    UInt_t   datime;
-   Int_t    nbytes,objlen;
+   Int_t    nbytes, objlen, nwh = 64;
    char    *header = new char[kBegin];
    char    *buffer;
    Seek_t   idcur = fBEGIN;
    Float_t comp,uncomp;
    comp = uncomp = fBEGIN;
-   char nwh = 64;
 
    while (idcur < fEND-100) {
       Seek(idcur);
-      ReadBuffer(header,int(nwh));
+      ReadBuffer(header, nwh);
       buffer=header;
       frombuf(buffer, &nbytes);
       if (nbytes < 0) {
@@ -755,7 +754,7 @@ void TFile::Map()
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header,int(nread));
+      ReadBuffer(header, nread);
       buffer=header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
@@ -816,7 +815,7 @@ void TFile::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Bool_t TFile::ReadBuffer(char *buf, int len)
+Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read a buffer from the file. This is the basic low level read operation.
    // Returns kTRUE in case of failure.
@@ -896,7 +895,7 @@ void TFile::Recover()
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header,int(nread));
+      ReadBuffer(header, nread);
       buffer  = header;
       bufread = header;
       frombuf(buffer, &nbytes);
@@ -1059,7 +1058,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 }
 
 //______________________________________________________________________________
-Bool_t TFile::WriteBuffer(const char *buf, int len)
+Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
 {
    // Write a buffer to the file. This is the basic low level write operation.
    // Returns kTRUE in case of failure.
@@ -1384,7 +1383,7 @@ void TFile::ReadStreamerInfo()
    } else {
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
    }
-   
+
    if (list == 0) return;
    if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
 
@@ -1478,7 +1477,7 @@ void TFile::WriteStreamerInfo()
    fNbytesInfo = key.GetNbytes();
    SumBuffer(key.GetObjlen());
    key.WriteFile(0);
-     
+
    gFile = fileSave;
    gDirectory = dirSave;
    fCompress = compress;

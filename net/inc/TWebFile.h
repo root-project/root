@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    virtual ~TWebFile() { }
 
    Bool_t  IsOpen() const;
-   Bool_t  ReadBuffer(char *buf, int len);
+   Bool_t  ReadBuffer(char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
 
    ClassDef(TWebFile,1)  //A ROOT file that reads via a http server

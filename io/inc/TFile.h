@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.4 2000/12/04 16:48:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.5 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -49,7 +49,7 @@ protected:
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
-   
+
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
@@ -83,14 +83,14 @@ public:
    virtual void      FillBuffer(char *&buffer);
    virtual void      Flush();
    Int_t             GetBestBuffer() const;
-   TArrayC          *GetClassIndex() const {return fClassIndex;}
-   Int_t             GetCompressionLevel() const {return fCompress;}
+   TArrayC          *GetClassIndex() const { return fClassIndex; }
+   Int_t             GetCompressionLevel() const { return fCompress; }
    Float_t           GetCompressionFactor();
-   virtual Seek_t    GetEND() const {return fEND;}
+   virtual Seek_t    GetEND() const { return fEND; }
    Int_t             GetFd() const { return fD; }
-   TList            *GetListOfFree() const {return fFree;}
-   virtual Int_t     GetNfree() const {return fFree->GetSize();}
-   Option_t         *GetOption() const { return fOption.Data();}
+   TList            *GetListOfFree() const { return fFree; }
+   virtual Int_t     GetNfree() const { return fFree->GetSize(); }
+   Option_t         *GetOption() const { return fOption.Data(); }
    Double_t          GetBytesRead() const { return fBytesRead; }
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
@@ -102,18 +102,18 @@ public:
    virtual void      Map(); // *MENU*
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="") const;
-   virtual Bool_t    ReadBuffer(char *buf, int len);
+   virtual Bool_t    ReadBuffer(char *buf, Int_t len);
    virtual void      ReadFree();
    virtual void      ReadStreamerInfo();
    virtual void      Recover();
    virtual void      Seek(Seek_t offset, ERelativeTo pos = kBeg);
    virtual void      SetCompressionLevel(Int_t level=1);
-   virtual void      SetEND(Seek_t last) {fEND = last;}
-   virtual void      SetOption(Option_t *option=">") {fOption = option;}
+   virtual void      SetEND(Seek_t last) { fEND = last; }
+   virtual void      SetOption(Option_t *option=">") { fOption = option; }
    virtual void      ShowStreamerInfo();
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
-   virtual Bool_t    WriteBuffer(const char *buf, int len);
+   virtual Bool_t    WriteBuffer(const char *buf, Int_t len);
    virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void      WriteFree();
    virtual void      WriteHeader();
@@ -134,4 +134,3 @@ public:
 R__EXTERN TFile   *gFile;
 
 #endif
-
