@@ -74,7 +74,11 @@ char *item;
   *xx=0;
   result->tagnum = atoi(xtmp);
   *xx='_';
+#ifndef G__PHILIPPE36
+  result->obj.i = atol(xx+2);
+#else
   result->obj.i = atoi(xx+2);
+#endif
   if('M'==xx[1]) result->obj.i = -result->obj.i;
   result->ref = result->obj.i;
 }
