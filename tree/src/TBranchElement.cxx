@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.35 2001/05/15 17:09:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.36 2001/05/16 06:44:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -645,7 +645,6 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len) const
        } else {
           return fInfo->GetValue(fObject,fID,j,-1);
        }
-       return fInfo->GetValue(fObject,fID,j,-1);
      }   
    }
 
