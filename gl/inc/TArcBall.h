@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.3 2004/08/10 14:11:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 #define ROOT_TArcBall
 
 #ifndef ROOT_Rtypes
-#include <Rtypes.h>
+#include "Rtypes.h"
 #endif
 
 class TPoint;

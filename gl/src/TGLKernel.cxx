@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.20 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.21 2004/09/13 09:56:33 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#include <TError.h>
+#include "TError.h"
 #include "TGLKernel.h"
 #include "TView.h"
 #include "TGeometry.h"
@@ -437,7 +437,7 @@ void TGLKernel::DeleteGLLists(Int_t ilist, Int_t range)
 Int_t TGLKernel::CreateGLLists(Int_t range)
 {
    //
-   
+
    return glGenLists(range);
 }
 
@@ -1416,29 +1416,29 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
    glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
-   
+
    if (!fTessObj)
       fTessObj = gluNewTess();
-      
+
    for (UInt_t i = 0, j = 0; i < size; ++i) {
       Int_t npoints = pols[j++];
       if (fTessObj && npoints > 4) {
          gluTessCallback(fTessObj, (GLenum)GLU_BEGIN, (funcptr)glBegin);
          gluTessCallback(fTessObj, (GLenum)GLU_END, (funcptr)glEnd);
          gluTessCallback(fTessObj, (GLenum)GLU_VERTEX, (funcptr)glVertex3dv);
-         
+
          gluBeginPolygon(fTessObj);
          gluNextContour(fTessObj, (GLenum)GLU_UNKNOWN);
          glNormal3dv(normals + i * 3);
-         
+
          for (Int_t k = 0; k < npoints; ++k, ++j)
             gluTessVertex(fTessObj, (Double_t *)pnts + pols[j] * 3, (Double_t *)pnts + pols[j] * 3);
-         
+
          gluEndPolygon(fTessObj);
       } else {
          glBegin(GL_POLYGON);
          glNormal3dv(normals + i * 3);
-         
+
          for (Int_t k = 0; k < npoints; ++k, ++j)
             glVertex3dv(pnts + pols[j] * 3);
          glEnd();
@@ -1501,7 +1501,7 @@ void TGLKernel::DrawSphere(Color_t *rgba)
    Float_t mat[] = {rgba[0] / 100.f, rgba[1] / 100.f, rgba[2] / 100.f, rgba[3] / 100.f};
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
-   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);   
+   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    GLUquadric * quad = GetQuadric1();

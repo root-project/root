@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.17 2004/09/13 09:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.18 2004/09/14 15:15:46 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,27 +8,29 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <TRootHelpDialog.h>
-#include <TContextMenu.h>
-#include <TVirtualPad.h>
-#include <TVirtualGL.h>
-#include <KeySymbols.h>
-#include <TVirtualX.h>
-#include <TBuffer3D.h>
-#include <TGLKernel.h>
-#include <TGClient.h>
-#include <TGCanvas.h>
-#include <HelpText.h>
-#include <Buttons.h>
-#include <TAtt3D.h>
-#include <TGMenu.h>
-#include <TPoint.h>
-#include <TROOT.h>
-#include <TMath.h>
-#include <TColor.h>
+
+#include "TRootHelpDialog.h"
+#include "TContextMenu.h"
+#include "TVirtualPad.h"
+#include "TVirtualGL.h"
+#include "KeySymbols.h"
+#include "TVirtualX.h"
+#include "TBuffer3D.h"
+#include "TGLKernel.h"
+#include "TGClient.h"
+#include "TGCanvas.h"
+#include "HelpText.h"
+#include "Buttons.h"
+#include "TAtt3D.h"
+#include "TGMenu.h"
+#include "TPoint.h"
+#include "TROOT.h"
+#include "TMath.h"
+#include "TColor.h"
+#include "TTimer.h"
 ///////////////////////////
-#include <TGSplitter.h>
-#include <TGButton.h>
+#include "TGSplitter.h"
+#include "TGButton.h"
 #include "TGLEditor.h"
 /////////////////////////////
 #include "TGLSceneObject.h"
@@ -71,7 +73,8 @@ ClassImp(TViewerOpenGL)
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
-                  :TVirtualViewer3D(vp), TGMainFrame(gClient->GetRoot(), 750, 600),
+                  :TVirtualViewer3D(vp),
+                   TGMainFrame(gClient->GetRoot(), 750, 600),
                    fCanvasWindow(0), fCanvasContainer(0), fCanvasLayout(0),
                    fMenuBar(0), fFileMenu(0), fModeMenu(0), fViewMenu(0), fHelpMenu(0),
                    fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
@@ -79,7 +82,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
                    fActiveViewport(), fXc(0.), fYc(0.),
                    fZc(0.), fRad(0.), fPressed(kFALSE), fArcBall(0),
                    fSelected(0), fNbShapes(0), fConf(kPERSP), fMode(kNav),
-		             fMainFrame(0), fEdFrame(0), fEditor(0),
+                   fMainFrame(0), fEdFrame(0), fEditor(0),
                    fSelectedObj(0), fRGBA(), fV1(0), fV2(0),
                    fSplitter(0)
 {
@@ -133,13 +136,13 @@ void TViewerOpenGL::CreateViewer()
 
    // Create menubar
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame | kRaisedFrame);
-   fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);  
-   fMenuBar->AddPopup("&Mode", fModeMenu, fMenuBarItemLayout);   
-   fMenuBar->AddPopup("&View", fViewMenu, fMenuBarItemLayout);  
+   fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&Mode", fModeMenu, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&View", fViewMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
    AddFrame(fMenuBar, fMenuBarLayout);
 
-   fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);   
+   fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);
    fV1 = new TGVerticalFrame(fMainFrame, 150, 10, kSunkenFrame | kFixedWidth);
    fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
    fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
@@ -156,7 +159,7 @@ void TViewerOpenGL::CreateViewer()
    fV1->AddFrame(fEditor, fL4);
    fEditor->GetButton()->Connect("Pressed()", "TViewerOpenGL", this, "ModifySelected()");
    /////////////////////////create view part/////////////////////////////////////////////
-   fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder); 
+   fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
    fCanvasContainer = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
 
    TGLWindow * glWin = fCanvasContainer->GetGLWindow();
@@ -239,7 +242,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             fEditor->GetButton()->SetState(kButtonDisabled);
             fEditor->Stop();
          }
-      } 
+      }
    } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
       if ((fSelectedObj = TestSelection(event))) {
          fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
@@ -343,7 +346,7 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 	 default:
 	    break;
          }
-         
+
          DrawObjects();
          fLastPos.fX = event->fX;
          fLastPos.fY = event->fY;
@@ -439,7 +442,9 @@ void TViewerOpenGL::Show()
 void TViewerOpenGL::CloseWindow()
 {
    fPad->SetViewer3D(0);
-   delete this;
+
+   //DeleteWindow();
+   TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
 }
 
 //______________________________________________________________________________

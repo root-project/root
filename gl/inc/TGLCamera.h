@@ -1,7 +1,21 @@
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGLCamera
 #define ROOT_TGLCamera
 
-#include <TObject.h>
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
 
 class TGLCamera : public TObject{
 protected:

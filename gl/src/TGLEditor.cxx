@@ -1,13 +1,21 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.1 2004/09/13 09:56:33 brun Exp $
-// Author:  Timur Pocheptsov  13/09/2004
-   
-#include <TVirtualGL.h>
-#include <TVirtualX.h>
-#include <TGCanvas.h>
-#include <TGLayout.h>
-#include <TGButton.h>
-#include <TGSlider.h>
-#include <TGLabel.h>
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#include "TVirtualGL.h"
+#include "TVirtualX.h"
+#include "TGCanvas.h"
+#include "TGLayout.h"
+#include "TGButton.h"
+#include "TGSlider.h"
+#include "TGLabel.h"
 
 
 #include "TGLEditor.h"
@@ -70,7 +78,7 @@ TGLEditor::TGLEditor(const TGWindow *parent, Int_t r, Int_t g, Int_t b, Int_t a)
    fViewLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 2, 2, 2);
    AddFrame(fViewCanvas, fViewLayout);
 
-   //sliders creation   
+   //sliders creation
    fRedSlider = new TGHSlider(this, 100, kSlider1 | kScaleBoth, kHSr);
    fRedSlider->Connect("PositionChanged(Int_t)", "TGLEditor", this, "DoSlider(Int_t)");
    fRedSlider->SetRange(0, 100);
@@ -122,7 +130,7 @@ TGLEditor::TGLEditor(const TGWindow *parent, Int_t r, Int_t g, Int_t b, Int_t a)
    gVirtualGL->EnableGL(kCULL_FACE);
    gVirtualGL->CullFaceGL(kBACK);
    DrawSphere();
-} 
+}
 
 TGLEditor::~TGLEditor()
 {

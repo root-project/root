@@ -1,13 +1,24 @@
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifdef GDK_WIN32
-#include <Windows4Root.h>
+#include "Windows4Root.h"
 #endif
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <TAttMarker.h>
-#include <TBuffer3D.h>
-#include <TError.h>
+#include "TAttMarker.h"
+#include "TBuffer3D.h"
+#include "TError.h"
 
 #include "TGLSceneObject.h"
 

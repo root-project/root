@@ -1,5 +1,16 @@
+// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifdef GDK_WIN32
-#include <Windows4Root.h>
+#include "Windows4Root.h"
 #endif
 
 #include <algorithm>
@@ -9,7 +20,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <TError.h>
+#include "TError.h"
 
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
@@ -93,7 +104,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    TGLCamera *actCam = (TGLCamera *)fGLCameras.At(cam);
    static std::vector<UInt_t>selectBuff(fGLObjects.GetEntriesFast() * 4);
    std::vector<std::pair<Int_t, Int_t> >objNames;
-   
+
    glSelectBuffer(selectBuff.size(), &selectBuff[0]);
    glRenderMode(GL_SELECT);
    glInitNames();
@@ -118,7 +129,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
       for (Int_t j = 0; j < hits; ++j) {
          chosen = objNames[j].second;
          hitObject = (TGLSceneObject *)fGLObjects.At(chosen - 1);
-         if (!hitObject->IsTransparent()) 
+         if (!hitObject->IsTransparent())
             break;
       }
       if (hitObject->IsTransparent()) {

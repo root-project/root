@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.9 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.10 2004/09/13 09:56:33 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -14,13 +14,21 @@
 
 #include <utility>
 
-#include <TVirtualViewer3D.h>
-#include <RQ_OBJECT.h>
-#include <TGFrame.h>
-#include <TPoint.h>
-#include <Gtypes.h>
-
+#ifndef ROOT_TVirtualViewer3D
+#include "TVirtualViewer3D.h"
+#endif
+#ifndef ROOT_RQ_OBJECT
+#include "RQ_OBJECT.h"
+#endif
+#ifndef ROOT_TGFrame
+#include "TGFrame.h"
+#endif
+#ifndef ROOT_TPoint
+#include "TPoint.h"
+#endif
+#ifndef ROOT_TGLRender
 #include "TGLRender.h"
+#endif
 
 class TGLRenderArea;
 class TGLSelection;
@@ -43,7 +51,7 @@ private:
    TGCanvas      *fCanvasWindow;
    TGLRenderArea *fCanvasContainer;
    TGLayoutHints *fCanvasLayout;
-   
+
    TGMenuBar     *fMenuBar;
    TGPopupMenu   *fFileMenu, *fModeMenu, *fViewMenu, *fHelpMenu;
    TGLayoutHints *fMenuBarLayout;
@@ -94,7 +102,7 @@ public:
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
    void ModifySelected();
-   
+
 private:
    void CreateViewer();
    void DrawObjects()const;
