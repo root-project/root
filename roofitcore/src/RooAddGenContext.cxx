@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddGenContext.cc,v 1.3 2001/10/13 23:02:17 verkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.4 2002/07/18 20:42:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -33,6 +33,15 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
+
+
+  // Fix normalization set of this RooAddPdf
+  if (prototype) 
+    {
+      RooArgSet coefNSet(vars) ;
+      coefNSet.add(*prototype->get()) ;
+      _pdf->fixAddCoefNormalization(coefNSet) ;
+    }
 
   model._pdfIter->Reset() ;
   RooAbsPdf* pdf ;
