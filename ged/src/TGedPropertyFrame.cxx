@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.2 2004/02/19 08:45:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.3 2004/02/27 01:03:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -78,6 +78,10 @@ void TGedPropertyFrame::ConnectToCanvas(TCanvas *c)
 {
    TQObject::Connect(c, "Selected(TPad*,TObject*,Int_t)", "TGedPropertyFrame",
                      this, "SetModel(TPad*,TObject*,Int_t)");
+
+   // re-emit the last Selected() signal to have property frames 
+   // of the last selected object in the pad editor when the editor shows up
+   c->Selected((TPad *)c->GetSelectedPad(), c->GetSelected(), c->GetEvent());
 }
 
 //______________________________________________________________________________
