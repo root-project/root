@@ -32,7 +32,7 @@ public:
    char GetChar() {
       char *tmp;
       tmp = (char*)GetTitle();
-      return tmp[0];
+      return GetTitle()[0];
    }
 
    virtual Float_t GetWidth();

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.4 2001/01/09 08:06:07 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.5 2003/01/31 15:42:19 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -34,10 +34,7 @@ TChar::TChar(char ch, Coord_t x, Coord_t y) : TText(x, y, "")
 {
    // Create single character text.
 
-   char *tmp;
-   tmp = (char*)GetTitle();
-   tmp[0] = ch;
-   SetTitle(tmp);
+   SetTitle(Form("%c",ch));
 }
 
 Float_t TChar::GetWidth()
