@@ -3385,8 +3385,15 @@ int isnonpublicnew;
 #endif
        ) {
       fprintf(fp,"   else {\n");
+#ifndef G__OLDIMPLEMENTATION1518
+      fprintf(fp,"     long G__Xtmp=G__getgvp();\n");
+      fprintf(fp,"     G__setgvp(G__PVOID);\n");
+#endif
       fprintf(fp,"     ((%s *)(G__getstructoffset()))",G__fulltagname(tagnum,1));
       fprintf(fp,"->~%s();\n",dtorname);
+#ifndef G__OLDIMPLEMENTATION1518
+      fprintf(fp,"     G__setgvp(G__Xtmp);\n");
+#endif
       fprintf(fp,"     G__operator_delete((void*)G__getstructoffset());\n");
       fprintf(fp,"   }\n");
     }

@@ -24,6 +24,10 @@
 extern int G__const_noerror;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1516
+static int G__calldepth = 0;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1167
 /***********************************************************************
  * G__reftypeparam()
@@ -495,6 +499,9 @@ int iexist;
     store_ifile = G__ifile;
     G__asm_index = iexist;
     ++G__templevel;
+#ifndef G__OLDIMPLEMENTATION1516
+    ++G__calldepth;
+#endif
     strcpy(funcname,ifunc->funcname[iexist]);
     if(-1==ifunc->tagnum) funcstatus = G__TRYNORMAL;
     else                  funcstatus = G__CALLMEMFUNC;
@@ -506,6 +513,9 @@ int iexist;
 		      ,G__EXACT,funcstatus);
 #ifndef G__OLDIMPLEMENTATION842
     G__init_jumptable_bytecode();
+#endif
+#ifndef G__OLDIMPLEMENTATION1516
+    --G__calldepth;
 #endif
     --G__templevel;
     G__tagdefining = store_tagdefining;
@@ -6335,9 +6345,16 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 #ifdef G__SECURITY
   if((G__security&G__SECURE_STACK_DEPTH)&&
-     G__max_stack_depth && G__templevel>G__max_stack_depth) {
-    G__fprinterr(G__serr,"Error: Stack depth exceed %d",G__max_stack_depth);
+     G__max_stack_depth && 
+#ifndef G__OLDIMPLEMENTATION1516
+     G__calldepth>G__max_stack_depth
+#else
+     G__templevel>G__max_stack_depth
+#endif
+     ) {
+    G__fprinterr(G__serr,"Error: Stack depth exceeded %d",G__max_stack_depth);
     G__genericerror((char*)NULL);
+    G__pause();
     G__return=G__RETURN_EXIT1;
   }
 
@@ -6359,7 +6376,10 @@ asm_ifunc_start:   /* loop compilation execution label */
   store_iscpp=G__iscpp;
   G__iscpp=p_ifunc->iscpp[ifn];
 
-  G__templevel++;
+  ++G__templevel;
+#ifndef G__OLDIMPLEMENTATION1516
+  ++G__calldepth;
+#endif
 #ifdef G__ASM_DBG
   if(G__istrace>1) {
     if(G__istrace>G__templevel) {
@@ -6388,7 +6408,10 @@ asm_ifunc_start:   /* loop compilation execution label */
     G__interactivereturnvalue = G__null;
   }
 
-  G__templevel--;
+#ifndef G__OLDIMPLEMENTATION1516
+  --G__calldepth;
+#endif
+  --G__templevel;
 
 #ifdef G__ASM_DBG
   if(G__istrace>1) {

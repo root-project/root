@@ -316,7 +316,7 @@ int gen_time()
 #endif
 
 #ifdef CLK_TCK
-  fprintf(fp,"#define \tCLK_TCK (%d)\n",CLK_TCK);
+  fprintf(fp,"#define \tCLK_TCK (%ld)\n",(long)CLK_TCK);
 #endif
 
   fprintf(fp,"#endif\n");

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014086
-#define G__CINTVERSIONSTR  "5.14.86, Apr 30 2001"
+#define G__CINTVERSION      5014087
+#define G__CINTVERSIONSTR  "5.14.87, May 6 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -158,12 +158,12 @@
 #endif
 #endif
 
-#ifdef _MSC_VAR
+#ifdef _MSC_VER
 #ifndef G__VISUAL
 #define G__VISUAL
 #endif
-#ifndef G__MSC_VAR
-#define G__MSC_VAR
+#ifndef G__MSC_VER
+#define G__MSC_VER
 #endif
 #endif
 
@@ -1336,6 +1336,9 @@ struct G__tempobject_list {
   int  level;
 #ifdef G__CPPLINK3
   int cpplink;
+#endif
+#ifndef G__OLDIMPLEMENTATION1516
+  int no_exec;
 #endif
   struct G__tempobject_list *prev;
 };

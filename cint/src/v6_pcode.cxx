@@ -55,6 +55,15 @@ int G__asm_step=0;
 /****************************************************************
 * G__doubleM()
 ****************************************************************/
+#if 1
+double G__doubleM(buf)
+     G__value *buf;
+{
+  return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
+	  ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
+	  (double)(buf->obj.i) );
+}
+#else
 #ifndef G__OLDIMPLEMENTATION1494
 #define G__doubleM(buf)                                                \
   (('f'==buf->type||'d'==buf->type) ? buf->obj.d :                     \
@@ -63,6 +72,7 @@ int G__asm_step=0;
 #else
 #define G__doubleM(buf)                                                \
   (('f'==buf->type||'d'==buf->type) ? buf->obj.d : (double)(buf->obj.i) )
+#endif
 #endif
 
 /****************************************************************

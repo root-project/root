@@ -1,3 +1,7 @@
 namespace std {
+#ifdef __MAKECINT__
+#include <utility>
+#else
 #include <_pair.h>
+#endif
 }

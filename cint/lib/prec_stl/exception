@@ -1,6 +1,6 @@
 #ifndef PREC_STL_EXCEPTION
 #define PREC_STL_EXCEPTION
-#pragma link off global PREC_STL_VECTOR;
+#pragma link off global PREC_STL_EXCEPTION;
 
 //namespace std {
 

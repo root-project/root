@@ -690,7 +690,9 @@ int *known3;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1515
+#ifndef __CINT__
 int G__additional_paranthesis G__P((G__value* presult,struct G__param* libp));
+#endif
 /******************************************************************
 * G__additional_parenthesis()
 ******************************************************************/

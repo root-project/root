@@ -1008,6 +1008,26 @@ char* ttt;
 }
 #endif /* ON672 */
 
+
+/******************************************************************
+* G__redecl()
+******************************************************************/
+void G__redecl(var,ig15)
+struct G__var_array *var;
+int ig15;
+{
+  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
+#endif
+    G__asm_inst[G__asm_cp] = G__REDECL;
+    G__asm_inst[G__asm_cp+1]=ig15;
+    G__asm_inst[G__asm_cp+2]=(long)var;
+    G__inc_cp_asm(3,0);
+  }
+}
+
+
 /**************************************************************************
 * G__asm_gen_stvar()
 *
@@ -1061,6 +1081,11 @@ int var_type;
     }
 #endif
   }
+#ifndef G__OLDIMPLEMENTATION1517
+  else if(G__decl && G__reftype && !G__asm_wholefunction) {
+    G__redecl(var,ig15);
+  }
+#endif
   else {
 #ifdef G__ASM_DBG
     if(G__asm_dbg)
@@ -1723,6 +1748,7 @@ char *ttt;
   }
 }
 
+
 /******************************************************************
 * G__class_2nd_decl()
 *
@@ -1935,6 +1961,9 @@ int ig15;
   }
 #endif
 
+#if 1
+  G__redecl(var,ig15);
+#else
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
 #endif
@@ -1942,6 +1971,7 @@ int ig15;
   G__asm_inst[G__asm_cp+1]=ig15;
   G__asm_inst[G__asm_cp+2]=(long)var;
   G__inc_cp_asm(3,0);
+#endif
 
   G__store_struct_offset=store_struct_offset;
   G__tagnum=store_tagnum;
@@ -5609,23 +5639,6 @@ int paran;
   return;
 }
 
-/******************************************************************
-* G__redecl()
-******************************************************************/
-void G__redecl(var,ig15)
-struct G__var_array *var;
-int ig15;
-{
-  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
-#endif
-    G__asm_inst[G__asm_cp] = G__REDECL;
-    G__asm_inst[G__asm_cp+1]=ig15;
-    G__asm_inst[G__asm_cp+2]=(long)var;
-    G__inc_cp_asm(3,0);
-  }
-}
 
 /******************************************************************
 * G__value G__allocvariable()

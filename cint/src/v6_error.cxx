@@ -288,10 +288,15 @@ char *item;
       G__fprinterr(G__serr,
 	      "Error: No symbol %s in current scope ",item);
 #endif
+#ifndef G__OLDIMPLEMENTATION1519
+      G__genericerror((char*)NULL);
+#endif
 #ifndef G__OLDIMPLEMENTATION1103
     }
 #endif
+#ifdef G__OLDIMPLEMENTATION1519
     G__genericerror((char*)NULL);
+#endif
   }
 #ifdef G__SECURITY
   G__security_error = G__RECOVERABLE;

@@ -12,6 +12,7 @@ del ..\..\stl\valarray.dll
 del ..\..\stl\stack.dll
 del ..\..\stl\queue.dll
 del ..\..\stl\exception.dll
+del ..\..\stl\stdexcept.dll
 del G__*
 del *.dll
 
@@ -75,6 +76,10 @@ move Release\valarray.dll ..\..\stl\valarray.dll
 makecint -mk Makeeh -dl exception.dll -H eh.h -cint  -Z0
 nmake -f Makeeh CFG="exception - Win32 Release"
 move Release\exception.dll ..\..\stl\exception.dll
+
+makecint -mk Makese -dl stdexcept.dll -H se.h -cint  -Z0
+nmake -f Makese CFG="stdexcept - Win32 Release"
+move Release\stdexcept.dll ..\..\stl\stdexcept.dll
 
 rem del Release\*
 rem rmdir Release

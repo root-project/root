@@ -7,7 +7,7 @@
  * Description:
  *  Stub file for making iostream library
  ************************************************************************
- * Copyright(c) 1991~1999,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1991~2001,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  ************************************************************************/
 

@@ -1883,6 +1883,9 @@ void G__free_tempobject()
     store_return=G__return;
     G__return=G__RETURN_NON;
     
+#ifndef G__OLDIMPLEMENTATION1516
+    if(0==G__p_tempbuf->no_exec) {
+#endif
     if(G__dispsource) {
       G__fprinterr(G__serr,
 	      "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
@@ -1893,6 +1896,9 @@ void G__free_tempobject()
     
     sprintf(statement,"~%s()",G__struct.name[G__tagnum]);
     G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
+#ifndef G__OLDIMPLEMENTATION1516
+    }
+#endif
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -1957,6 +1963,9 @@ char *string;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
+#ifndef G__OLDIMPLEMENTATION1516
+  G__p_tempbuf->no_exec = 0;
+#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc(strlen(string)+1);
@@ -2004,6 +2013,9 @@ int tagnum,typenum;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 0;
+#ifndef G__OLDIMPLEMENTATION1516
+  G__p_tempbuf->no_exec = G__no_exec_compile;
+#endif
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
@@ -2063,6 +2075,9 @@ G__value reg;
   G__p_tempbuf->prev = store_p_tempbuf;
   G__p_tempbuf->level = G__templevel;
   G__p_tempbuf->cpplink = 1;
+#ifndef G__OLDIMPLEMENTATION1516
+  G__p_tempbuf->no_exec = G__no_exec_compile;
+#endif
 
   /* copy pointer to created class object */
   G__p_tempbuf->obj = reg;
@@ -3295,7 +3310,15 @@ G__value G__exec_statement()
 	    break;
 	  case 3:
 	    if(strcmp(statement,"int")==0) {
+#if 0
 	      G__DEFVAR('i');
+#else
+	      G__var_type='i' + G__unsigned;
+	      G__define_var(-1,-1);          
+	      spaceflag = -1;                
+	      iout=0;                      
+	      if(mparen==0) return(G__null);
+#endif
 	      break;
 	    }
 #ifndef G__OLDIMPLEMENTATION698

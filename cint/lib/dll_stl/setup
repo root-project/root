@@ -13,6 +13,7 @@ rm ../../stl/stack.dll
 rm ../../stl/queue.dll 
 rm ../../stl/valarray.dll 
 rm ../../stl/exception.dll 
+rm ../../stl/stdexcept.dll 
 rm G__*
 
 #makecint -mk Makeiter -dl iterator.dll -H iter.h  -cint -Z0
@@ -74,6 +75,10 @@ mv valarray.dll ../../stl/valarray.dll
 makecint -mk Makeeh -dl exception.dll -H eh.h -cint -Z0
 make -f Makeeh
 mv exception.dll ../../stl/exception.dll
+
+makecint -mk Makese -dl stdexcept.dll -H se.h -cint -Z0
+make -f Makese
+mv stdexcept.dll ../../stl/stdexcept.dll
 
 rm G__*
 rm Make*

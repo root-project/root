@@ -177,6 +177,12 @@ static long G__getstaticobject()
     }
     var = var->next;
   } while(var);
+#ifndef G__OLDIMPLEMENTATION1519
+  if(0==G__const_noerror) {
+    G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
+    G__genericerror((char*)NULL);
+  }
+#else
 #ifndef G__PHILIPPE21
   if(0==G__const_noerror) 
     G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
@@ -184,6 +190,7 @@ static long G__getstaticobject()
   G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
 #endif
   G__genericerror((char*)NULL);
+#endif
   return(0);
 }
 
