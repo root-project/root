@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.85 2002/02/01 06:55:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.86 2002/02/07 09:17:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2205,7 +2205,6 @@ void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t 
             }
             if (TF1::RejectedPoint()) continue;
             if (Foption.W1) {
-               if (cu == 0) continue;
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
