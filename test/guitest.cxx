@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.8 2000/10/11 16:13:23 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.9 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -506,6 +506,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fStatusFrame->AddFrame(fTestButton, new TGLayoutHints(kLHintsTop |
                           kLHintsLeft, 2, 0, 2, 2));
    fTestText = new TGTextEntry(fStatusFrame, new TGTextBuffer(100));
+   fTestText->SetToolTipText("This is a text entry widget");
    fTestText->Resize(300, fTestText->GetDefaultHeight());
    fStatusFrame->AddFrame(fTestText, new TGLayoutHints(kLHintsTop | kLHintsLeft,
                                                        10, 2, 2, 2));
