@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.218 2005/01/25 07:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.219 2005/01/28 14:49:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2496,7 +2496,7 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
           // computation of errors by Christos Leonidopoulos
           da    = h1->GetBinError(i,j,k); 
           db    = h2->GetBinError(i,j,k); 
-          error = 2*TMath::Sqrt(a*a*c2*c2*db*db + c2*c2*b*b*da*da+a*a*b*b*dc2*dc2)/(a+b);
+          error = 2*TMath::Sqrt(a*a*c2*c2*db*db + c2*c2*b*b*da*da+a*a*b*b*dc2*dc2)/(bot*bot);
           asym->SetBinError(i,j,k,error);
         }
       }
