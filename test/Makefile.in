@@ -48,9 +48,9 @@ endif
 ifeq ($(ARCH),hpuxia64acc)
 # HP-UX 11i 1.5 (IA-64) with aCC
 CXX           = aCC
-CXXFLAGS      = -O +Z
+CXXFLAGS      = +DD64 -O +Z
 LD            = aCC
-LDFLAGS       = -O -z
+LDFLAGS       = +DD64 -O -z
 SOFLAGS       = -b
 endif
 
