@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.9 2005/03/24 07:16:02 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.10 2005/03/25 19:41:03 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -302,15 +302,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
    if ((mask & kGCForeground)) {
       // xmask |= GDK_GC_FOREGROUND;
       // QColor paletteBackgroundColor - the background color of the widget
-#if 1            
        SetForeground(gval.fForeground);
-#else     
-        SETBIT(fMask,kBrush);
-        SETBIT(fMask,kPen);
-        setPaletteForegroundColor (QtColor(gval.fForeground));
-	     fBrush.setColor(QtColor(gval.fForeground));
-	     fPen.setColor(QtColor(gval.fForeground));
-#endif        
 	 // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
    }
    if ((mask & kGCBackground)) {
@@ -1141,7 +1133,11 @@ GContext_t   TGQt::CreateGC(Drawable_t /*id*/, GCValues_t *gval)
 {
   // Create a graphics context using the values set in gval (but only for
   // those entries that are in the mask).
-  QtGContext *context =  new QtGContext(*gval);
+   QtGContext *context = 0;
+   if (gval) 
+      context =  new QtGContext(*gval);
+   else 
+      context =  new QtGContext();      
 //   MapGCValues(*gval, context)
   return GContext_t(context);
 }
@@ -1405,6 +1401,7 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
    if ( attr->fMask & kWABackPixel) {
       // background pixel
       f.setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
+      f.setEraseColor(QtColor(attr->fBackgroundPixel));
    }
    if ( attr->fMask & kWABorderPixmap) {
       // fBorderPixmap;         // border of the window
@@ -1794,7 +1791,7 @@ void  TGQt::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
       const QColor &fontColor = qtcontext(gc).paletteForegroundColor ();
       paint.setPen(fontColor);
       paint.setBrush(fontColor);
-      paint.setFont(*qtcontext(gc).fFont);
+      if (qtcontext(gc).fFont)  paint.setFont(*qtcontext(gc).fFont);
       // fprintf(stderr,"TGQt::DrawString  \"%s\":%d with color %s\n",s,len,(const char *)fontColor.name());
       paint.drawText (x, y,  GetTextDecoder()->toUnicode(s),len);
    }

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.14 2005/03/25 19:41:03 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.15 2005/03/28 20:32:30 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -624,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.94 2005/03/28 18:41:00 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.95 2005/04/05 15:53:43 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -726,7 +726,9 @@ Bool_t TGQt::Init(void* /*display*/)
    // QApplication::desktop()->installEventFilter(QClientFilter());
    fWidgetArray =  new TQWidgetCollection();
    fDisplayOpened = kTRUE;
+#ifndef  R__QTGUITHREAD
    TQtEventInputHandler::Instance();
+#endif
    return fDisplayOpened;
 }
 

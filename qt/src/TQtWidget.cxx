@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.52 2005/03/25 18:30:55 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.53 2005/04/05 15:53:43 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -39,9 +39,9 @@ ClassImp(TQtWidget)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtClientWidget is QWidget with QPixmap double buffer
-//  It designed to back the ROOT TCanvasImp class interface  and it can be used
-//  as a regular Qt Widget to create Qt-based GUI with embedded TCanvas objects
+//  TQtWidget is a QWidget with the QPixmap double buffer
+//  It is designed to back the ROOT TCanvasImp class interface  and it can be used
+//  as a regular Qt Widget to create Qt-based GUI with the embedded TCanvas objects
 //
 //           This widget can be used as a Qt "custom widget" 
 //         to build a custom GUI interfaces with  Qt Designer
@@ -207,7 +207,7 @@ void TQtWidget::cd(int subpadnumber)
 //______________________________________________________________________________
 void TQtWidget::Disconnect()
 {
-   // Disconnect the Qt widget from CTanvas object before deleting
+   // [slot] Disconnect the Qt widget from CTanvas object before deleting
    // to avoid the dead lock
   qApp->lock();
  // one has to set CanvasID = 0 to disconnect things properly.
@@ -217,7 +217,7 @@ void TQtWidget::Disconnect()
 //_____________________________________________________________________________
 void TQtWidget::Refresh()
 {
-   // Qt slot to allow Qt signal refreshing TOOT TCanvas if needed
+   // [slot]  to allow Qt signal refreshing TOOT TCanvas if needed
 
    TCanvas *c = Canvas();
    if (!fPixmapID.paintingActive())  AdjustBufferSize();
