@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.2 2002/11/20 09:50:34 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.3 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -43,7 +43,7 @@ ClassImp(TPaletteAxis)
 //
 
 //______________________________________________________________________________
-TPaletteAxis::TPaletteAxis(): TBox()
+TPaletteAxis::TPaletteAxis(): TPave()
 {
 // palette default constructor
 
@@ -53,7 +53,7 @@ TPaletteAxis::TPaletteAxis(): TBox()
 
 //______________________________________________________________________________
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, TH1 *h)
-       :TBox(x1,y1,x2,y2)
+       :TPave(x1,y1,x2,y2)
 {
 // palette normal constructor
 
@@ -71,7 +71,7 @@ TPaletteAxis::~TPaletteAxis()
 }
 
 //______________________________________________________________________________
-TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TBox(palette)
+TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 {
    ((TPaletteAxis&)palette).Copy(*this);
 }
@@ -82,7 +82,7 @@ void TPaletteAxis::Copy(TObject &obj) const
 //*-*-*-*-*-*-*-*-*-*-*Copy this pave to pave*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
-   TBox::Copy(obj);
+   TPave::Copy(obj);
    ((TPaletteAxis&)obj).fH    = fH;
    ((TPaletteAxis&)obj).fName = fName;
 }
@@ -97,7 +97,7 @@ Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
    if (px > plxmax && px < plxmax+30 && py >= plymax &&py <= plymin) return px-plxmax;
 
    //otherwise check if inside the box
-   return TBox::DistancetoPrimitive(px,py);
+   return TPave::DistancetoPrimitive(px,py);
 }
 
 //______________________________________________________________________________
@@ -111,6 +111,15 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (event == kButton1Down) kmode = 1;
       TBox::ExecuteEvent(event,px,py);
       if (event == kButton1Up) kmode = 0;
+//*-* In case pave coordinates have been modified, recompute NDC coordinates
+      Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+      Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+      Double_t xp1  = gPad->GetX1();
+      Double_t yp1  = gPad->GetY1();
+      fX1NDC = (fX1-xp1)/dpx;
+      fY1NDC = (fY1-yp1)/dpy;
+      fX2NDC = (fX2-xp1)/dpx;
+      fY2NDC = (fY2-yp1)/dpy;
       return;
    }
    gPad->SetCursor(kHand);
@@ -173,6 +182,8 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TPaletteAxis::Paint(Option_t *)
 {
 
+   ConvertNDCtoPad();
+   
    SetFillStyle(1001);
    Double_t ymin = fY1;
    Double_t ymax = fY2;

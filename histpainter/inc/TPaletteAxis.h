@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.4 2002/10/31 07:27:34 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.1 2002/11/15 16:04:57 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBox
-#include "TBox.h"
+#ifndef ROOT_TPave
+#include "TPave.h"
 #endif
 #ifndef ROOT_TGaxis
 #include "TGaxis.h"
@@ -31,7 +31,7 @@
 #include "TH1.h"
 #endif
 
-class TPaletteAxis : public TBox {
+class TPaletteAxis : public TPave {
 
 protected:
    TGaxis       fAxis;          //palette axis
@@ -62,7 +62,7 @@ public:
    virtual void  SetTitleSize(Float_t titlesize) {fAxis.SetTitleSize(titlesize);} // *MENU*
    virtual void  UnZoom();  // *MENU*
 
-        ClassDef(TPaletteAxis,1)  //class used to display a color palette axis for 2-d plots
+        ClassDef(TPaletteAxis,2)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif
