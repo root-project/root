@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.94 2003/06/26 13:53:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.95 2003/07/03 11:46:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -835,7 +835,10 @@ TList *TFile::GetStreamerInfoList()
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
+      TFile *filesave = gFile;
+      gFile = this; // used in ReadObj
       list = (TList*)key->ReadObj();
+      gFile = filesave;
       list->SetOwner();
       delete [] buffer;
       delete key;
@@ -1778,11 +1781,14 @@ void TFile::ReadStreamerInfo()
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
+      TFile *filesave = gFile;
+      gFile = this; // used in ReadObj
       list = (TList*)key->ReadObj();
       if (!list) {
          gDirectory->GetListOfKeys()->Remove(key);
          MakeZombie();
       }
+      gFile = filesave;
       delete [] buffer;
       delete key;
    } else {
