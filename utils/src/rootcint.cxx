@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.95 2002/08/20 10:51:50 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.96 2002/08/24 17:17:02 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2373,8 +2373,6 @@ void WriteShadowClass(G__ClassInfo &cl)
       Info(0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n",
            cl.Fullname());
 
-      const char *prefix = "";
-
       fprintf(fp,"      #if !(defined(R__ACCESS_IN_SYMBOL) || defined(R__USE_SHADOW_CLASS))\n");
       string fullname;
       GetFullyQualifiedName(cl,fullname);
@@ -2430,18 +2428,17 @@ void WriteShadowClass(G__ClassInfo &cl)
 
          string type_name = d.Type()->Name();
 
-         // Remove the eventual ThisClass:: part in the data member class name.
-         int where = type_name.find(cl.Fullname());
-         // if (where==0) type_name.erase(where,strlen(cl.Fullname())+2);
-         if (where==0)
-            prefix="::";
-         else
-            prefix = "";
          if ((d.Type()->Property() & G__BIT_ISENUM) &&
              (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
             // We have unamed enums, let's fake it:
             fprintf(fp,"         enum {kDummy} %s", d.Name());
          } else {
+            // Add the '::' prefix in the case the datamember's class is nested in the local class or in a namespace.
+            const char *prefix = "";
+            if ( (type_name.find(cl.Fullname())==0) || (type_name.find("::")!= string::npos) )
+               prefix="::";
+            else
+               prefix = "";
             fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
          }
 

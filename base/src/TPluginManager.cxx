@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.9 2002/07/18 09:46:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.10 2002/07/19 13:00:22 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -371,7 +371,7 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
    }
 
    if (gDebug > 0)
-      Info("FindHandler", "did not find plugin for %s", h->GetClass());
+      Info("FindHandler", "did not find plugin for class %s and uri %s", base, uri);
 
    return 0;
 }

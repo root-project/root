@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.17 2002/05/10 21:32:09 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.18 2002/07/24 13:22:27 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -116,7 +116,18 @@ namespace ROOT {
 
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
-         fMap.Print();
+         TIter next(&fMap);
+         TObjString *key;
+         while((key = (TObjString*)next())) {
+            // fMap.Print();
+            printf("Key: %s\n",key->String().Data());
+            ClassRec_t *data = (ClassRec_t*)fMap.GetValue(key);
+            if (data) {
+               printf("  class: %s %d\n",data->name,data->id);
+            } else {
+               printf("  no class: \n");
+            }               
+         }
       }
 #endif
    };
@@ -311,6 +322,11 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
    // Given the class name returns the Dictionary() function of a class
    // (uses hash of name).
 
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
+      fgIdMap->Print();
+   }
+
    ClassRec_t *r = FindElement(cname);
    if (r) return r->dict;
    return 0;
@@ -322,7 +338,7 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
    // Given the type_info returns the Dictionary() function of a class
    // (uses hash of type_info::name()).
 
-   if (gDebug > 2) {
+   if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%x", info.name(), &info);
       fgIdMap->Print();
    }
