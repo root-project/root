@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.7 2004/02/17 17:11:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.8 2004/05/27 08:32:43 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -22,10 +22,7 @@
 #include "TTimeStamp.h"
 #include "TString.h"
 
-#if defined(R__MAC)
-#   include <time.h>
-static Double_t gTicks = CLOCKS_PER_SEC;
-#elif defined(R__UNIX)
+#if defined(R__UNIX)
 #   include <sys/times.h>
 #   include <unistd.h>
 static Double_t gTicks = 0;
@@ -145,9 +142,7 @@ Double_t TStopwatch::GetRealTime()
 {
    // Private static method returning system realtime.
 
-#if defined(R__MAC)
-   return (Double_t)clock() / gTicks;
-#elif defined(R__UNIX)
+#if defined(R__UNIX)
    return TTimeStamp();
 #elif defined(R__VMS)
    return (Double_t)clock() / gTicks;
@@ -168,9 +163,7 @@ Double_t TStopwatch::GetCPUTime()
 {
    // Private static method returning system CPU time.
 
-#if defined(R__MAC)
-   return (Double_t)clock() / gTicks;
-#elif defined(R__UNIX)
+#if defined(R__UNIX)
    struct tms cpt;
    times(&cpt);
    return (Double_t)(cpt.tms_utime+cpt.tms_stime) / gTicks;

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.74 2004/06/04 16:28:30 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.75 2004/06/22 22:00:07 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -356,22 +356,10 @@
 #   define R__ACCESS_IN_SYMBOL
 #endif
 
-
-#ifdef BORLAND
-#   define MSDOS        /* Windows will always stay MSDOS */
-#   define ANSICPP
-#   define R__INT16
-#   define R__BYTESWAP
-#endif
-
 #ifdef __SC__
 #   define SC
 #   define R__SC
-#   if defined(macintosh)
-#      define R__MAC
-#      define NEED_STRING
-#      define ANSICPP
-#   elif WIN32
+#   if defined(WIN32)
 #      define NEED_STRING
 #      define NEED_STRCASECMP
 #      define NEED_SNPRINTF
@@ -400,20 +388,9 @@
 #   endif
 #endif
 
-#ifdef __MWERKS__
-#   define R__MWERKS
-#   define R__MAC
-#   define ANSICPP
-#   define NEED_STRING
-#   define NEED_STRCASECMP
-#   define NEED_SNPRINTF
-#endif
-
-
 /*--- memory and object statistics -------------------------------------------*/
 
 /* #define R__NOSTATS */
-
 
 /*--- cpp --------------------------------------------------------------------*/
 

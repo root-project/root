@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.48 2004/07/23 14:29:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.49 2004/07/30 19:09:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -199,7 +199,7 @@ namespace TMath {
    Float_t   MaxElement(Long64_t n, const Float_t *a);
    Double_t  MaxElement(Long64_t n, const Double_t *a);
    Long64_t  MaxElement(Long64_t n, const Long64_t *a);
-   
+
    // Locate Min, Max element number in an array
    Long64_t  LocMin(Long64_t n, const Short_t *a);
    Long64_t  LocMin(Long64_t n, const Int_t *a);
@@ -211,7 +211,7 @@ namespace TMath {
    Long64_t  LocMax(Long64_t n, const Float_t *a);
    Long64_t  LocMax(Long64_t n, const Double_t *a);
    Long64_t  LocMax(Long64_t n, const Long64_t *a);
-   
+
    //Mean, Geometric Mean, Median, RMS
    Double_t  Mean(Long64_t n, const Short_t *a, const Double_t *w=0);
    Double_t  Mean(Long64_t n, const Int_t *a,   const Double_t *w=0);
@@ -239,7 +239,7 @@ namespace TMath {
 
    //k-th order statistic
    template <class Element, class Index, class Size>  Element KOrdStatImp(Size n, const Element *a, Size k, Index *work = 0);
-   
+
    Short_t   KOrdStat(Long64_t n, const Short_t *a,  Long64_t k, Long64_t *work=0);
    Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
    Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
@@ -273,7 +273,7 @@ namespace TMath {
    Bool_t IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y);
    Bool_t IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y);
    Bool_t IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y);
-   
+
    // Sorting
    template <class Element, class Index, class Size>  void SortImp(Size n, const Element*, Index* index, Bool_t down=kTRUE);
    void Sort(Int_t n,    const Short_t *a,  Int_t *index,    Bool_t down=kTRUE);
@@ -489,7 +489,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #      define isnan  _isnan
 #   endif
 #endif
-#if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
+#if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
     defined(R__HPUX11) || defined(R__GLIBC)
 // math functions are defined inline so we have to include them here
 #   include <math.h>

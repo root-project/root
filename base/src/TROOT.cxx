@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.128 2004/07/16 23:06:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.129 2004/07/30 14:19:46 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -112,8 +112,6 @@ namespace std {} using namespace std;
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
-#elif defined(R__MAC)
-#include "TMacSystem.h"
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #elif defined(R__VMS)
@@ -1315,8 +1313,6 @@ void TROOT::InitSystem()
    if (gSystem == 0) {
 #if defined(R__UNIX)
       gSystem = new TUnixSystem;
-#elif defined(R__MAC)
-      gSystem = new TMacSystem;
 #elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
 #elif defined(R__VMS)

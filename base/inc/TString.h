@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.31 2004/06/16 10:23:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.32 2004/07/01 18:45:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -46,11 +46,6 @@
 namespace std { using ::string; }
 #endif
 
-#ifdef R__MWERKS
-#   ifdef Length
-#      undef Length
-#   endif
-#endif
 
 class TRegexp;
 class TString;
@@ -557,7 +552,7 @@ inline char TSubString::operator()(Ssiz_t i) const
 { return fStr->fData[fBegin+i]; }
 
 // String Logical operators
-#if !defined(R__MWERKS) && !defined(R__ALPHA)
+#if !defined(R__ALPHA)
 inline Bool_t operator==(const TString &s1, const TString &s2)
 {
    return ((s1.Length() == s2.Length()) &&

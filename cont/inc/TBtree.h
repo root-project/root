@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.6 2001/03/31 15:01:57 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.7 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -29,12 +29,6 @@
 #ifndef ROOT_TError
 #include "TError.h"
 #endif
-
-#if defined(R__MAC) && defined(SetItem)
-#   undef SetItem
-#   undef GetItem
-#endif
-
 
 class TBtNode;
 class TBtInnerNode;

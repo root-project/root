@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: mmconfig.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -21,11 +21,7 @@
 #  endif
 #endif
 
-#if defined (R__MAC)
-#   define HAVE_STDDEF_H
-#   define HAVE_LIMITS_H
-#   define NO_SBRK_MALLOC
-#elif defined(R__UNIX)
+#if defined(R__UNIX)
 #   define HAVE_UNISTD_H
 #   define HAVE_STDLIB_H
 #   define HAVE_STDDEF_H

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.28 2004/05/10 08:12:54 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.29 2004/07/25 16:18:58 rdm Exp $ */
 /* Author: */
 
 /*
@@ -330,14 +330,6 @@ static void     search_forw(int s);     /* look forw for current string */
 #  include <windows.h>
 #endif /* WIN32 */
 
-#ifdef __MWERKS__
-#define R__MWERKS
-#endif
-
-#ifdef R__MWERKS
-#  include <unistd.h>
-#endif
-
 #if defined(_AIX) || defined(__Lynx__) || defined(__APPLE__)
 #define unix
 #endif
@@ -462,11 +454,6 @@ gl_char_init()                  /* turn off input echo */
     gl_quitc = 'Q' - '@';
 //    gl_suspc = ltch.t_suspc;
 #endif /* MSDOS */
-
-#ifdef R__MWERKS
-    gl_intrc = 'C' - '@';
-    gl_quitc = 'Q' - '@';
-#endif
 
 #ifdef vms
     descrip.dsc$w_length  = strlen("tt:");
@@ -599,11 +586,6 @@ gl_getc()
        errno = 0;
 #endif
 
-
-#if defined(R__MWERKS)
-    c = getchar();
-#endif
-
 #ifdef MSDOS
     c = pause_();
      if (c < 0) {
@@ -662,7 +644,7 @@ gl_putc(int c)
 
        write(1, &ch, 1);
     }
-#if defined(unix) || defined(MSDOS) || defined(WIN32) || defined(R__MWERKS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #ifdef TIOCSETP         /* BSD in RAW mode, map NL to NL,CR */
     if (ch == '\n') {
         ch = '\r';
@@ -969,7 +951,7 @@ Getlinem(int mode, const char *prompt)
                  break;
             default:          /* check for a terminal signal */
 
-#if defined(unix) || defined(WIN32) || defined(R__MWERKS)
+#if defined(unix) || defined(WIN32)
                 if (c > 0) {    /* ignore 0 (reset above) */
                     sig = 0;
 #ifdef SIGINT

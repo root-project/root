@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.33 2004/07/04 17:57:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.34 2004/07/05 17:52:55 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1017,7 +1017,7 @@ Bool_t operator==(const TString& s1, const char *s2)
    return (i == len);
 }
 
-#if defined(R__MWERKS) || defined(R__ALPHA)
+#if defined(R__ALPHA)
 //______________________________________________________________________________
 Bool_t operator==(const TString &s1, const TString &s2)
 {

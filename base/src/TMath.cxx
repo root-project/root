@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.76 2004/07/30 23:46:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.77 2004/07/31 16:26:17 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,8 +59,8 @@ template <class Element, class Index, class Size>
 #endif
 
 //______________________________________________________________________________
-#if defined(R__MAC) || defined(R__KCC)
-Double_t hypot(Double_t x, Double_t y)
+#if defined(R__KCC)
+static Double_t hypot(Double_t x, Double_t y)
 {
    Double_t ax = TMath::Abs(x), ay = TMath::Abs(y);
    Double_t amax, amin;

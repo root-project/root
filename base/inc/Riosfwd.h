@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riosfwd.h,v 1.1 2002/01/24 11:39:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Riosfwd.h,v 1.2 2002/09/10 14:54:06 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -27,18 +27,6 @@ using std::ostream;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
-#elif R__MWERKS
-template <class charT> class ios_traits;
-template <class charT, class traits> class basic_istream;
-template <class charT, class traits> class basic_ostream;
-template <class charT, class traits> class basic_fstream;
-template <class charT, class traits> class basic_ofstream;
-template <class charT, class traits> class basic_ifstream;
-typedef basic_istream<char, ios_traits<char> > istream;
-typedef basic_ostream<char, ios_traits<char> > ostream;
-typedef basic_fstream<char, ios_traits<char> > fstream;
-typedef basic_ofstream<char, ios_traits<char> > ofstream;
-typedef basic_ifstream<char, ios_traits<char> > ifstream;
 #else
 class istream;
 class ostream;
