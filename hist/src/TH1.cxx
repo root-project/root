@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.65 2001/11/13 07:36:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.66 2001/11/18 16:08:28 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4213,7 +4213,7 @@ TH1C::TH1C(): TH1(), TArrayC()
 
 //______________________________________________________________________________
 TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
-     : TH1(name,title,nbins,xlow,xup), TArrayC(nbins+2)
+     : TH1(name,title,nbins,xlow,xup)
 {
 //
 //    Create a 1-Dim histogram with fix bins of type char (one byte per channel)
@@ -4221,11 +4221,12 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //                    (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type char (one byte per channel)
@@ -4233,11 +4234,12 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //                    (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type char (one byte per channel)
@@ -4245,6 +4247,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //                    (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayC::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -4382,7 +4385,7 @@ TH1S::TH1S(): TH1(), TArrayS()
 
 //______________________________________________________________________________
 TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
-     : TH1(name,title,nbins,xlow,xup), TArrayS(nbins+2)
+     : TH1(name,title,nbins,xlow,xup)
 {
 //
 //    Create a 1-Dim histogram with fix bins of type short
@@ -4390,11 +4393,12 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type short
@@ -4402,11 +4406,12 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type short
@@ -4414,6 +4419,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayS::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -4550,7 +4556,7 @@ TH1F::TH1F(): TH1(), TArrayF()
 
 //______________________________________________________________________________
 TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
-     : TH1(name,title,nbins,xlow,xup), TArrayF(nbins+2)
+     : TH1(name,title,nbins,xlow,xup)
 {
 //
 //    Create a 1-Dim histogram with fix bins of type float
@@ -4558,11 +4564,12 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayF::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type float
@@ -4570,11 +4577,12 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayF::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type float
@@ -4582,11 +4590,12 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayF::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1F::TH1F(const TVector &v)
-     : TH1("TVector","",v.GetNrows(),0,v.GetNrows()), TArrayF(v.GetNrows()+2)
+     : TH1("TVector","",v.GetNrows(),0,v.GetNrows())
 {
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
@@ -4595,6 +4604,7 @@ TH1F::TH1F(const TVector &v)
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
    }
+   TArrayF::Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -4711,7 +4721,7 @@ TH1D::TH1D(): TH1(), TArrayD()
 
 //______________________________________________________________________________
 TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
-     : TH1(name,title,nbins,xlow,xup), TArrayD(nbins+2)
+     : TH1(name,title,nbins,xlow,xup)
 {
 //
 //    Create a 1-Dim histogram with fix bins of type double
@@ -4719,11 +4729,12 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type double
@@ -4731,11 +4742,12 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-     : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
+     : TH1(name,title,nbins,xbins)
 {
 //
 //    Create a 1-Dim histogram with variable bins of type double
@@ -4743,11 +4755,12 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //           (see TH1::TH1 for explanation of parameters)
 //
    fDimension = 1;
+   TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
 TH1D::TH1D(const TVectorD &v)
-     : TH1("TVectorD","",v.GetNrows(),0,v.GetNrows()), TArrayD(v.GetNrows()+2)
+     : TH1("TVectorD","",v.GetNrows(),0,v.GetNrows())
 {
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
@@ -4756,6 +4769,7 @@ TH1D::TH1D(const TVectorD &v)
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
    }
+   TArrayD::Set(fNcells);
 }
 
 //______________________________________________________________________________
