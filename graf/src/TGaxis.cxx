@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.15 2001/06/07 08:37:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.16 2001/08/23 13:41:36 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -176,8 +176,8 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 //   A2->SetTitleOffset(1.2);
 //   A2->Draw();
 //
-//   TF1 *f3=new TF1("f3","log10(x)",0,800);
-//   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505);
+//   TF1 *f3=new TF1("f3","log10(x)",1,1000);
+//   TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505,"G");
 //   A3->SetTitle("logarithmic axis");
 //   A3->SetLabelSize(0.03);
 //   A3->SetTitleSize(0.03);
@@ -598,7 +598,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             Yymax = alfa*Xxmax + beta;
          }
       }
-      if (!fFunction) {
+      if (fFunction) {
+         Yymin = ymin;
+         Yymax = ymax;
+      } else {
          wmin = BinLow;
          wmax = BinHigh;
       }
@@ -1055,7 +1058,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              First case : (wmax-wmin)/N1A less than 0.001
 //*-*-              (0.001 precision of 5 (precision) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
-
                if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < 0.00099) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
@@ -1338,6 +1340,8 @@ L110:
          if (X0 == X1 && j == 1) Ylabel += charheight*0.33;
          if (Y0 == Y1 && j == 1) Ylabel -= charheight*0.65;
          Xone = X00+AXMUL*(Double_t(decade)-XMNLOG);
+         //the following statement is a trick to circumvent a gcc bug
+         if (j < 0) printf("j=%d\n",j);
          if (X00 > Xone) goto L160;
          if (Xone > X11) break;
          Xtwo = Xone;
