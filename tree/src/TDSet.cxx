@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.8 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.9 2003/11/13 16:52:07 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TDSetElementMsn::TDSetElementMsn(TDSetElementPfn *dse)
    fNSiteDaemons         = -1;
    fMaxSiteDaemons       = 50;
    fDataPerSiteDaemon    = -1;
-   fMaxDataPerSiteDaemon = 5000000000; // heuristic 5 GByte
+   fMaxDataPerSiteDaemon = R__LL(5000000000); // heuristic 5 GByte
 }
 
 //______________________________________________________________________________
