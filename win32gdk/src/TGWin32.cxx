@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.5 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.11 2002/10/25 17:38:00 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -3636,12 +3636,7 @@ void TGWin32::SetOpacity(Int_t percent)
    int x, y;
    for (y = 0; y < (int) gCws->height; y++) {
       for (x = 0; x < (int) gCws->width; x++) {
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         ULong_t pixel = fThreadP.lRet;
+         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
    }
@@ -3659,20 +3654,9 @@ void TGWin32::SetOpacity(Int_t percent)
    // put opaque colors in image
    for (y = 0; y < (int) gCws->height; y++) {
       for (x = 0; x < (int) gCws->width; x++) {
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         ULong_t pixel = fThreadP.lRet;
+         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
-         
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         fThreadP.lParam = gCws->new_colors[idx];
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_PUT_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         PutPixel((Drawable_t)image, x, y, gCws->new_colors[idx]);
       }
    }
 
@@ -4229,23 +4213,15 @@ extern "C" {
                  int *Ncols, Byte_t * R, Byte_t * G, Byte_t * B);
    int GIFinfo(Byte_t * GIFarr, int *Width, int *Height, int *Ncols);
 }
+
+
 //______________________________________________________________________________
 static void GetPixel(int y, int width, Byte_t * scline)
 {
    // Get pixels in line y and put in array scline.
-/*
    for (int i = 0; i < width; i++) {
-      fThreadP.pParam = ximage;
-      fThreadP.x = i;
-      fThreadP.y = y;
-      PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      scline[i] = Byte_t(fThreadP.lRet);
+       scline[i] = Byte_t(TGWin32::GetPixel((Drawable_t)ximage, i, y));
    }
-*/
-   for (int i = 0; i < width; i++)
-//      scline[i] = Byte_t(gdk_image_get_pixel(ximage, i, y));
-      scline[i] = Byte_t(TGWin32::GetPixel((Drawable_t)ximage, i, y));
 }
 
 //______________________________________________________________________________
@@ -4277,12 +4253,7 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    int x, y;
    for (x = 0; x < (int) gCws->width; x++) {
       for (y = 0; y < (int) gCws->height; y++) {
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         ULong_t pixel = fThreadP.lRet;
+         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
          CollectImageColors(pixel, orgcolors, ncolors, maxcolors);
       }
    }
@@ -4327,20 +4298,9 @@ void TGWin32::ImgPickPalette(GdkImage * image, Int_t & ncol, Int_t * &R,
    // update image with indices (pixels) into the new RGB colormap
    for (x = 0; x < (int) gCws->width; x++) {
       for (y = 0; y < (int) gCws->height; y++) {
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         ULong_t pixel = fThreadP.lRet;
+         ULong_t pixel = GetPixel((Drawable_t)image, x, y);
          Int_t idx = FindColor(pixel, orgcolors, ncolors);
-
-         fThreadP.pParam = image;
-         fThreadP.x = x;
-         fThreadP.y = y;
-         fThreadP.lParam = idx;
-         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_PUT_PIXEL, 0, 0L);  
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         PutPixel((Drawable_t)image, x, y, idx);
       }
    }
 

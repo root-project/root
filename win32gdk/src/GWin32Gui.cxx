@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.4 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.10 2002/10/25 17:38:00 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -3392,29 +3392,55 @@ void TGWin32::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
 //______________________________________________________________________________
 void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
 {
-    EnterCriticalSection(flpCriticalSection);
-    fThreadP.pParam = (GdkImage*)id;
-    fThreadP.x = x;
-    fThreadP.y = y;
-    fThreadP.lParam = pixel;
-    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_PUT_PIXEL, 0, 0L);  
-    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-    LeaveCriticalSection(flpCriticalSection);
-//    gdk_image_put_pixel((GdkImage*)id, x, y, pixel);
+   GdkImage *image = (GdkImage *)id;
+   if (image->depth == 1)
+      if (pixel & 1)
+         ((UChar_t *) image->mem)[y * image->bpl + (x >> 3)] |= (1 << (7 - (x & 0x7)));
+      else
+         ((UChar_t *) image->mem)[y * image->bpl + (x >> 3)] &= ~(1 << (7 - (x & 0x7)));
+   else {
+      UChar_t *pixelp = (UChar_t *) image->mem + y * image->bpl + x * image->bpp;
+      // Windows is always LSB, no need to check image->byte_order.
+      switch (image->bpp) {
+         case 4:
+            pixelp[3] = 0;
+         case 3:
+            pixelp[2] = ((pixel >> 16) & 0xFF);
+         case 2:
+            pixelp[1] = ((pixel >> 8) & 0xFF);
+         case 1:
+            pixelp[0] = (pixel & 0xFF);
+      }
+   }
 }
 
 //______________________________________________________________________________
 ULong_t TGWin32::GetPixel(Drawable_t id, Int_t x, Int_t y)
 {
-    EnterCriticalSection(flpCriticalSection);
-    fThreadP.pParam = (GdkImage*)id;
-    fThreadP.x = x;
-    fThreadP.y = y;
-    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_GET_PIXEL, 0, 0L);  
-    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-    ULong_t pixel = fThreadP.lRet;
-    LeaveCriticalSection(flpCriticalSection);
-    return pixel;
+   GdkImage *image = (GdkImage *)id;
+   ULong_t pixel;
+
+   if (image->depth == 1)
+      pixel = (((char *) image->mem)[y * image->bpl + (x >> 3)] & (1 << (7 - (x & 0x7)))) != 0;
+   else {
+      UChar_t *pixelp = (UChar_t *) image->mem + y * image->bpl + x * image->bpp;
+      switch (image->bpp) {
+         case 1:
+            pixel = *pixelp;
+            break;
+         // Windows is always LSB, no need to check image->byte_order.
+         case 2:
+            pixel = pixelp[0] | (pixelp[1] << 8);
+            break;
+         case 3:
+            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
+            break;
+         case 4:
+            pixel = pixelp[0] | (pixelp[1] << 8) | (pixelp[2] << 16);
+            break;
+      }
+   }
+   return pixel;
 }
 //______________________________________________________________________________
 void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
