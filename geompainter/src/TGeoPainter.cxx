@@ -376,7 +376,7 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px
    }
 }
 //______________________________________________________________________________
-char *TGeoPainter::GetVolumeInfo(TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
+char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
 {
    const char *snull = "";
    if (!gPad) return (char*)snull;
@@ -1323,10 +1323,10 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    }
 } 
 //______________________________________________________________________________
-void TGeoPainter::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
+void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of a volume.
-   fChecker->RandomPoints(vol, npoints, option);
+   fChecker->RandomPoints((TGeoVolume*)vol, npoints, option);
 }   
 //______________________________________________________________________________
 void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)

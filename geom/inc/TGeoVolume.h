@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.13 2002/12/03 17:42:59 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.14 2002/12/11 17:10:19 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -38,14 +38,15 @@
 #include "TGeoShape.h"
 #endif
 
-#ifndef ROOT_TGeoMaterial
-#include "TGeoMaterial.h"
+#ifndef ROOT_TGeoMedium
+#include "TGeoMedium.h"
 #endif
 
 // forward declarations
 class TH2F;
 class TGeoNode;
 class TGeoShape;
+class TGeoMaterial;
 class TGeoMatrix;
 class TGeoVoxelFinder;
 class TGeoPatternFinder;
@@ -71,19 +72,19 @@ protected :
       kVoxelsCyl     =     BIT(21)
    };
 // data members
-   TObjArray        *fNodes;          // array of nodes inside this volume
-   TGeoShape        *fShape;          // shape
-   TGeoMaterial     *fMaterial;       // material
-   TGeoPatternFinder *fFinder;        // finder object for divisions
-   TGeoVoxelFinder  *fVoxels;         // finder object for bounding boxes
+   TObjArray         *fNodes;          // array of nodes inside this volume
+   TGeoShape         *fShape;          // shape
+   TGeoMedium        *fMedium;         // tracking medium
+   TGeoPatternFinder *fFinder;         // finder object for divisions
+   TGeoVoxelFinder   *fVoxels;         // finder object for bounding boxes
 
-   TObject          *fField;          //! just a hook for now
-   TString           fOption;         //! option - if any
+   TObject           *fField;          //! just a hook for now
+   TString            fOption;         //! option - if any
 // methods
 public:
    // constructors
    TGeoVolume();
-   TGeoVolume(const char *name, TGeoShape *shape=0, TGeoMaterial *mat=0);
+   TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med=0);
 
    // destructor
    virtual ~TGeoVolume();
@@ -99,9 +100,9 @@ public:
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
-   void            AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
-   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
+   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat=0, Option_t *option="");       // most general case
+   void            AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset=0, Option_t *option="");
+   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat=0, Option_t *option="");
 
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option="");
@@ -130,15 +131,15 @@ public:
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
    virtual Int_t   GetByteCount() const;
-   TGeoMaterial   *GetMaterial() const               {return fMaterial;}
-   Int_t           GetMedia() const                  {return fMaterial->GetMedia();}
+   TGeoMaterial   *GetMaterial() const               {return fMedium->GetMaterial();}
+   TGeoMedium     *GetMedium() const                 {return fMedium;}
    TObject        *GetField() const                  {return fField;}
    TGeoPatternFinder *GetFinder() const              {return fFinder;}
    TGeoVoxelFinder   *GetVoxels() const              {return fVoxels;}
-   Int_t           GetIndex(TGeoNode *node) const;
+   Int_t           GetIndex(const TGeoNode *node) const;
    TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
-   Int_t           GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
+   Int_t           GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
@@ -149,7 +150,7 @@ public:
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    TGeoVolume     *MakeCopyVolume();
-   void            MakeCopyNodes(TGeoVolume *other);
+   void            MakeCopyNodes(const TGeoVolume *other);
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
@@ -157,18 +158,18 @@ public:
    void            SetAsTopVolume(); // *MENU*
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);// *MENU*
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
-   void            SetMaterial(TGeoMaterial *material);
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
-   void            SetShape(TGeoShape *shape);
-   void            SetField(TObject *field)          {fField = field;}
+   void            SetShape(const TGeoShape *shape);
+   void            SetField(const TObject *field)          {fField = (TObject*)field;}
    void            SetOption(const char *option);
    virtual void    SetVisibility(Bool_t vis=kTRUE); // *MENU*
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);
    void            SetInvisible() {SetVisibility(kFALSE);} // *MENU*
-   void            SetVoxelFinder(TGeoVoxelFinder *finder) {fVoxels=finder;}
-   void            SetFinder(TGeoPatternFinder *finder) {fFinder=finder;}
+   void            SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
+   void            SetVoxelFinder(const TGeoVoxelFinder *finder) {fVoxels=(TGeoVoxelFinder*)finder;}
+   void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
    virtual void    Sizeof3D() const;
    void            SortNodes();
    Bool_t          Valid() const;
@@ -176,7 +177,7 @@ public:
    void            InvisibleAll() {SetInvisible(); VisibleDaughters(kFALSE);} // *MENU*
    void            Voxelize(Option_t *option);
 
-  ClassDef(TGeoVolume, 1)              // geometry volume descriptor
+  ClassDef(TGeoVolume, 2)              // geometry volume descriptor
 };
 
 /*************************************************************************
@@ -192,13 +193,13 @@ private:
    Bool_t          fAttSet;       // flag attributes set
 public:
    TGeoVolumeMulti();
-   TGeoVolumeMulti(const char* name, TGeoMaterial *mat=0);
+   TGeoVolumeMulti(const char* name, const TGeoMedium *med=0);
    virtual ~TGeoVolumeMulti();
 
-   void            AddVolume(TGeoVolume *vol) {fVolumes->Add(vol);}
+   void            AddVolume(const TGeoVolume *vol) {fVolumes->Add((TObject*)vol);}
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
-   virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
+   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");       // most general case
+   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *, Int_t, Option_t *) { return 0;}
    virtual TGeoVolume *Divide(const char *, Int_t, Double_t, Double_t, Option_t *) {return 0;}
    virtual TGeoVolume *Divide(const char *, Double_t, Double_t, Double_t, Option_t *) {return 0;}

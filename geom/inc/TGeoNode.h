@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.9 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.10 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 // forward declarations
 class TGeoVolume;
 class TGeoShape;
-class TGeoMaterial;
+class TGeoMedium;
 class TGeoMatrix;
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
 
    // constructors
    TGeoNode();
-   TGeoNode(TGeoVolume *vol);
+   TGeoNode(const TGeoVolume *vol);
    // destructor
    virtual ~TGeoNode();
 
@@ -76,7 +76,7 @@ public:
    void              Draw(Option_t *option="");
    void              DrawOnly(Option_t *option="");
    void              DrawOverlaps(); // *MENU*
-   Int_t             FindNode(TGeoNode *node, Int_t level);
+   Int_t             FindNode(const TGeoNode *node, Int_t level);
    virtual Int_t     GetByteCount() const {return 44;}
    TGeoNode         *GetDaughter(Int_t ind) const {return fVolume->GetNode(ind);}
    virtual TGeoMatrix *GetMatrix() const = 0;
@@ -84,7 +84,7 @@ public:
    Int_t             GetColour() const {return fVolume->GetLineColor();}
    virtual Int_t     GetIndex() const                    {return 0;}
    virtual TGeoPatternFinder *GetFinder() const          {return 0;}
-   Int_t             GetMedia() const                    {return fVolume->GetMedia();}
+   TGeoMedium       *GetMedium() const                   {return fVolume->GetMedium();}
    TGeoVolume       *GetMotherVolume() const             {return fMother;}
    Int_t             GetNdaughters() const {return fVolume->GetNdaughters();}
    TObjArray        *GetNodes() const {return fVolume->GetNodes();}
@@ -103,13 +103,13 @@ public:
    virtual TGeoNode *MakeCopyNode() const {return 0;}
    void              SaveAttributes(ofstream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
-   void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
+   void              SetVolume(const TGeoVolume *volume)       {fVolume = (TGeoVolume*)volume;}
    void              SetOverlapping()                    {TObject::SetBit(kGeoNodeOverlap, kTRUE);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
    void              SetInvisible()                      {SetVisibility(kFALSE);} // *MENU*
    void              SetAllInvisible()                   {VisibleDaughters(kFALSE);} // *MENU*
-   void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
+   void              SetMotherVolume(const TGeoVolume *mother) {fMother = (TGeoVolume*)mother;}
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
 
    virtual void      MasterToLocal(const Double_t *master, Double_t *local) const;
@@ -139,7 +139,7 @@ private:
 public:
    // constructors
    TGeoNodeMatrix();
-   TGeoNodeMatrix(TGeoVolume *vol, TGeoMatrix *matrix);
+   TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix);
    // destructor
    virtual ~TGeoNodeMatrix();
 
@@ -148,7 +148,7 @@ public:
    virtual Bool_t    IsFolder() const {return kTRUE;}
    virtual TGeoMatrix *GetMatrix() const   {return fMatrix;}
    virtual TGeoNode *MakeCopyNode() const;
-   void              SetMatrix(TGeoMatrix *matrix) {fMatrix = matrix;}
+   void              SetMatrix(const TGeoMatrix *matrix) {fMatrix = (TGeoMatrix*)matrix;}
 
   ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
 };
@@ -167,7 +167,7 @@ private:
 public:
    // constructors
    TGeoNodeOffset();
-   TGeoNodeOffset(TGeoVolume *vol, Int_t index, Double_t offset);
+   TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offset);
    // destructor
    virtual ~TGeoNodeOffset();
 
@@ -177,7 +177,7 @@ public:
    virtual TGeoPatternFinder *GetFinder() const {return fFinder;}
    virtual TGeoMatrix *GetMatrix() const {return fFinder->GetMatrix();}
    virtual TGeoNode *MakeCopyNode() const;
-   void              SetFinder(TGeoPatternFinder *finder) {fFinder = finder;}
+   void              SetFinder(const TGeoPatternFinder *finder) {fFinder = (TGeoPatternFinder*)finder;}
 
   ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset
 };

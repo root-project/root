@@ -67,7 +67,7 @@ public:
    virtual void       DrawPanel();
    virtual void       DrawPath(const char *path);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
-   virtual char      *GetVolumeInfo(TGeoVolume *volume, Int_t px, Int_t py) const;
+   virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
                                     {bombx=fBombX; bomby=fBombY; bombz=fBombZ; bombr=fBombR;}
    virtual Int_t      GetBombMode() const      {return fExplodedView;}
@@ -93,7 +93,7 @@ public:
    void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
-   virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="");
+   virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.14 2002/12/10 07:52:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.15 2002/12/11 17:10:20 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -34,7 +34,7 @@
 */
 //End_Html
 //
-//   A volume is referencing a shape and a material. These have to built BEFORE the 
+//   A volume is referencing a shape and a medium. These have to built BEFORE the 
 // volume itself - see TGeoMaterial::TGeoMaterial() , TGeoShape::TGeoShape() . 
 // Volumes must have unique names and any positioned volume (node) will append a
 // copy number to the volume's name. For instance if a volume named PAD is 
@@ -43,8 +43,8 @@
 //   A volume can be created with the sequence :
 //
 //        TGeoSphere   *sph = new TGeoSphere("sph1", 10.0, 11.0);
-//        TGeoMaterial *mat = gGeoManager->GetMaterial("lead");
-//        TGeoVolume   *vol = new TGeoVolume("shield", sph, mat);
+//        TGeoMedium   *med = gGeoManager->GetMedium("lead");
+//        TGeoVolume   *vol = new TGeoVolume("shield", sph, med);
 //   
 //   The volume is registering itself to the current TGeoManager and can be
 // retrieved at any time with :
@@ -110,24 +110,24 @@ TGeoVolume::TGeoVolume()
 // dummy constructor
    fNodes    = 0;
    fShape    = 0;
-   fMaterial = 0;
    fFinder   = 0;
    fVoxels   = 0;
    fField    = 0;
+   fMedium   = 0;
    fOption   = "";
 }
 //-----------------------------------------------------------------------------
-TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMaterial *mat)
+TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med)
            :TNamed(name, "")
 {
 // default constructor
    fNodes    = 0;
-   fShape    = shape;
-   fMaterial = mat;
+   fShape    = (TGeoShape*)shape;
    fFinder   = 0;
    fVoxels   = 0;
    fField    = 0;
    fOption   = "";
+   fMedium   = (TGeoMedium*)med;
    if (gGeoManager) gGeoManager->AddVolume(this);
 }
 //-----------------------------------------------------------------------------
@@ -251,7 +251,7 @@ Bool_t TGeoVolume::IsStyleDefault() const
 //-----------------------------------------------------------------------------
 void TGeoVolume::InspectMaterial() const
 {
-   fMaterial->Print();
+   fMedium->GetMaterial()->Print();
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::cd(Int_t inode) const
@@ -260,11 +260,11 @@ void TGeoVolume::cd(Int_t inode) const
    if (fFinder) fFinder->cd(inode-fFinder->GetDivIndex());
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
 // Add a TGeoNodePos to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
-   TGeoMatrix *matrix = (mat==0)?gGeoIdentity:mat;
+   TGeoMatrix *matrix = (mat==0)?gGeoIdentity:(TGeoMatrix*)mat;
    if (!vol) {
       Error("AddNodeMatrix", "Volume is NULL");
       return;
@@ -294,7 +294,7 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
+void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
 {
 // Add a division node to the list of nodes. The method is called by
 // TGeoVolume::Divide() for creating the division nodes.
@@ -316,13 +316,13 @@ void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, 
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
    if (!fFinder) {
       AddNode(vol, copy_no, mat, option);
       TGeoNode *node = (TGeoNode*)fNodes->At(GetNdaughters()-1);
       node->SetOverlapping();
-      if (vol->GetMaterial()->GetMedia() == fMaterial->GetMedia())
+      if (vol->GetMedium() == fMedium)
          node->SetVirtual();
       return;   
    } 
@@ -371,12 +371,12 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 // division a la G3
    TString stype = fShape->ClassName();
    TGeoVolume *vol = 0;
-   if (!ndiv && start) {
+   if (!ndiv && start == 0) {
       printf("Error : Divide %s type %s into %s- ndivisions=0\n",GetName(), stype.Data(), divname);
       return this;
    }
    if (!fNodes) fNodes = new TObjArray();
-   if ((!ndiv) && (!start)) return fShape->Divide(this, divname, iaxis, step);
+   if ((!ndiv) && (start != 0)) return fShape->Divide(this, divname, iaxis, step);
    if (fFinder) {
    // volume already divided. Divide again all its divisions.
       for (Int_t idiv=0; idiv<fFinder->GetNdiv(); idiv++) {
@@ -385,7 +385,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
       }
       return this;
    }
-   return fShape->Divide(this, divname, iaxis, ndiv, start, step); 
+   return fShape->Divide(this, divname, iaxis, ndiv, start, step);
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
@@ -511,7 +511,7 @@ TGeoNode *TGeoVolume::FindNode(const char *name) const
    return ((TGeoNode*)fNodes->FindObject(name));
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) const
+Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const
 {
    TGeoNode *current = 0;
    for (Int_t i=0; i<ncheck; i++) {
@@ -521,7 +521,7 @@ Int_t TGeoVolume::GetNodeIndex(TGeoNode *node, Int_t *check_list, Int_t ncheck) 
    return -1;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoVolume::GetIndex(TGeoNode *node) const
+Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
 {
 // get index number for a given daughter
    TGeoNode *current = 0;
@@ -556,7 +556,7 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
    return kFALSE;
 }      
 //-----------------------------------------------------------------------------
-void TGeoVolume::MakeCopyNodes(TGeoVolume *other)
+void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 {
 // make a new list of nodes and copy all nodes of other volume inside
    Int_t nd = other->GetNdaughters();
@@ -582,10 +582,10 @@ TGeoVolume *TGeoVolume::MakeCopyVolume()
     // make a copy of this volume
     char *name = new char[strlen(GetName())];
     sprintf(name, "%s", GetName());
-    // build a volume with same name, shape and material
+    // build a volume with same name, shape and medium
     Bool_t is_runtime = fShape->IsRunTimeShape();
     if (is_runtime) fShape->SetRuntime(kFALSE);
-    TGeoVolume *vol = new TGeoVolume(name, fShape, fMaterial);
+    TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
     if (is_runtime) fShape->SetRuntime();
     Int_t i=0;
     // copy volume attributes
@@ -629,24 +629,14 @@ void TGeoVolume::SetCurrentPoint(Double_t x, Double_t y, Double_t z)
    gGeoManager->SetCurrentPoint(x,y,z);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::SetMaterial(TGeoMaterial *material)
-{
-// set the material associated with this volume
-   if (!material) {
-      Error("SetMaterial", "No material");
-      return;
-   }
-   fMaterial = material;   
-}
-//-----------------------------------------------------------------------------
-void TGeoVolume::SetShape(TGeoShape *shape)
+void TGeoVolume::SetShape(const TGeoShape *shape)
 {
 // set the shape associated with this volume
    if (!shape) {
       Error("SetShape", "No shape");
       return;
    }
-   fShape = shape;  
+   fShape = (TGeoShape*)shape;  
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::Sizeof3D() const
@@ -768,10 +758,9 @@ Int_t TGeoVolume::GetByteCount() const
 // get the total size in bytes for this volume
    Int_t count = 28+2+6+4+0;    // TNamed+TGeoAtt+TAttLine+TAttFill+TAtt3D
    count += strlen(GetName()) + strlen(GetTitle()); // name+title
-   count += 4+4+4+4+4; // fShape + fMaterial + fFinder + fField + fNodes
+   count += 4+4+4+4+4; // fShape + fMedium + fFinder + fField + fNodes
    count += 8 + strlen(fOption.Data()); // fOption
-   if (fShape) count += fShape->GetByteCount();
-//   if (fMaterial) count += fMaterial->GetByteCount();
+   if (fShape)  count += fShape->GetByteCount();
    if (fFinder) count += fFinder->GetByteCount();
    if (fNodes) {
       count += 32 + 4*fNodes->GetEntries(); // TObjArray
@@ -874,14 +863,14 @@ TGeoVolumeMulti::TGeoVolumeMulti()
    TObject::SetBit(kVolumeMulti);
 }
 //-----------------------------------------------------------------------------
-TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMaterial *mat)
+TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
 {
 // default constructor
    fVolumes = new TObjArray();
    fAttSet = kFALSE;
    TObject::SetBit(kVolumeMulti);
    SetName(name);
-   SetMaterial(mat);
+   SetMedium(med);
    gGeoManager->GetListOfGVolumes()->Add(this);
 }
 //-----------------------------------------------------------------------------
@@ -891,7 +880,7 @@ TGeoVolumeMulti::~TGeoVolumeMulti()
    if (fVolumes) delete fVolumes;
 }
 //-----------------------------------------------------------------------------
-void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
 // Add a TGeoNodePos to the list of volumes. This is the usual method for adding
 // daughters inside the container volume.
@@ -910,7 +899,7 @@ void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, O
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, const TGeoMatrix *mat, Option_t *option)
 {
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
@@ -932,7 +921,7 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
 // division a la G3
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
-   TGeoVolumeMulti *div = new TGeoVolumeMulti(divname, fMaterial);
+   TGeoVolumeMulti *div = new TGeoVolumeMulti(divname, fMedium);
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
       vol = GetVolume(ivo);
       if (!fAttSet) {

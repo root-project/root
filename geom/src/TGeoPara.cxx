@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.6 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -173,7 +173,7 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       *safe = TMath::Min(*safe, TMath::Min(saf[2]*cty, -saf[3]*cty));
       *safe = TMath::Min(*safe, TMath::Min(saf[4], -saf[5]));
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step; 
+      if (iact==1 && step<*safe) return kBig; 
    }
    Double_t sn1, sn2, sn3;
    sn1 = sn2 = sn3 = kBig;
@@ -220,7 +220,7 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       *safe = TMath::Max(sn1, sn2);
       if (sn3>(*safe)) *safe=sn3;
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step; 
+      if (iact==1 && step<*safe) return kBig; 
    }
    // compute distance to PARA
 //   Double_t *norm = gGeoManager->GetNormalChecked();
@@ -334,7 +334,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          Error("Divide", "Wrong axis type for division");
          return voldiv;            
    }
-   vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+   vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    voldiv->SetFinder(finder);
    finder->SetBasicVolume(vol);
    finder->SetDivIndex(voldiv->GetNdaughters());

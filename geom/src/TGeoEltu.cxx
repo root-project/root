@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.5 2002/12/03 16:01:39 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -83,7 +83,7 @@ Bool_t TGeoEltu::Contains(Double_t *point) const
 {
 // test if point is inside the elliptical tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
-   Double_t r2 = (point[0]*point[0])/(fRmin*fRmin)+(point[1]*point[1])/(fRmin*fRmin);
+   Double_t r2 = (point[0]*point[0])/(fRmin*fRmin)+(point[1]*point[1])/(fRmax*fRmax);
    if (r2>1.)  return kFALSE;
    return kTRUE;
 }
@@ -138,7 +138,7 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       safr=TMath::Sqrt(d1)-1.0E-3;   
       *safe = TMath::Min(safz, safr);
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -176,7 +176,7 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the tube and safe distance
    Double_t snxt=kBig;
-   Double_t safz=TMath::Abs(point[2]-fDz);
+   Double_t safz=TMath::Abs(point[2])-fDz;
    Double_t a2=fRmin*fRmin;
    Double_t b2=fRmax*fRmax;
    if (iact<3 && safe) {
@@ -202,7 +202,7 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          *safe=TMath::Sqrt((*safe)*(*safe)+safz*safz);
       } 
       if (iact==0) return kBig;
-      if ((iact==1) && (step<*safe)) return step;
+      if ((iact==1) && (step<*safe)) return kBig;
    }
    // compute vector distance
    if ((safz>0) && (point[2]*dir[2]>=0)) return kBig;

@@ -5,9 +5,11 @@ void rootgeom()
    TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");
    
    //--- define some materials
-   TGeoMaterial *mat;
-   mat = new TGeoMaterial("mat1", "Vacuum", 0,0,0);
-   mat = new TGeoMaterial("mat2", "Al", 26.98,13,2.7);
+   TGeoMaterial *matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
+   TGeoMaterial *matAl = new TGeoMaterial("Al", 26.98,13,2.7);
+//   //--- define some media
+   TGeoMedium *Vacuum = new TGeoMedium("Vacuum",1, matVacuum);
+   TGeoMedium *Al = new TGeoMedium("Root Material",2, matAl);
 
    //--- define the transformations
    TGeoTranslation *tr1 = new TGeoTranslation(20., 0, 0.);
@@ -42,27 +44,27 @@ void rootgeom()
    Double_t worldx = 110.;
    Double_t worldy = 50.;
    Double_t worldz = 5.;
-   TGeoVolume *top = geom->MakeBox("TOP", "mat1", 270., 270., 120.);
+   TGeoVolume *top = geom->MakeBox("TOP", Vacuum, 270., 270., 120.);
    geom->SetTopVolume(top);
-   TGeoVolume *replica = geom->MakeBox("REPLICA", "mat1",120,120,120);
+   TGeoVolume *replica = geom->MakeBox("REPLICA", Vacuum,120,120,120);
    replica->SetVisibility(kFALSE);
-   TGeoVolume *rootbox = geom->MakeBox("ROOT", "mat1", 110., 50., 5.);
+   TGeoVolume *rootbox = geom->MakeBox("ROOT", Vacuum, 110., 50., 5.);
    rootbox->SetVisibility(kFALSE);
    
    //--- make letter 'R'
-   TGeoVolume *R = geom->MakeBox("R", "mat1", 25., 25., 5.);
+   TGeoVolume *R = geom->MakeBox("R", Vacuum, 25., 25., 5.);
    R->SetVisibility(kFALSE);
-   TGeoVolume *bar1 = geom->MakeBox("bar1", "mat2", 5., 25, 5.);
+   TGeoVolume *bar1 = geom->MakeBox("bar1", Al, 5., 25, 5.);
    bar1->SetLineColor(kRed);
    R->AddNode(bar1, 1, tr1);
-   TGeoVolume *bar2 = geom->MakeBox("bar2", "mat2", 5., 5., 5.);
+   TGeoVolume *bar2 = geom->MakeBox("bar2", Al, 5., 5., 5.);
    bar2->SetLineColor(kRed);
    R->AddNode(bar2, 1, tr2);
    R->AddNode(bar2, 2, tr3);
-   TGeoVolume *tub1 = geom->MakeTubs("tub1", "mat2", 5., 15., 5., 90., 270.);
+   TGeoVolume *tub1 = geom->MakeTubs("tub1", Al, 5., 15., 5., 90., 270.);
    tub1->SetLineColor(kRed);
    R->AddNode(tub1, 1, tr4);
-   TGeoVolume *bar3 = geom->MakeArb8("bar3", "mat2", 5.);
+   TGeoVolume *bar3 = geom->MakeArb8("bar3", Al, 5.);
    bar3->SetLineColor(kRed);
    TGeoArb8 *arb = (TGeoArb8*)bar3->GetShape();
    arb->SetVertex(0, 15., -5.);
@@ -76,24 +78,24 @@ void rootgeom()
    R->AddNode(bar3, 1, gGeoIdentity);
    
    //--- make letter 'O'
-   TGeoVolume *O = geom->MakeBox("O", "mat1", 25., 25., 5.);
+   TGeoVolume *O = geom->MakeBox("O", Vacuum, 25., 25., 5.);
    O->SetVisibility(kFALSE);
-   TGeoVolume *bar4 = geom->MakeBox("bar4", "mat2", 5., 7.5, 5.);
+   TGeoVolume *bar4 = geom->MakeBox("bar4", Al, 5., 7.5, 5.);
    bar4->SetLineColor(kYellow);
    O->AddNode(bar4, 1, tr5);
    O->AddNode(bar4, 2, tr6);
-   TGeoVolume *tub2 = geom->MakeTubs("tub1", "mat2", 7.5, 17.5, 5., 0., 180.);
+   TGeoVolume *tub2 = geom->MakeTubs("tub1", Al, 7.5, 17.5, 5., 0., 180.);
    tub2->SetLineColor(kYellow);
    O->AddNode(tub2, 1, tr7);
    O->AddNode(tub2, 2, combi1);
    
    //--- make letter 'T'
-   TGeoVolume *T = geom->MakeBox("T", "mat1", 25., 25., 5.);
+   TGeoVolume *T = geom->MakeBox("T", Vacuum, 25., 25., 5.);
    T->SetVisibility(kFALSE);
-   TGeoVolume *bar5 = geom->MakeBox("bar5", "mat2", 5., 20., 5.);
+   TGeoVolume *bar5 = geom->MakeBox("bar5", Al, 5., 20., 5.);
    bar5->SetLineColor(kBlue);
    T->AddNode(bar5, 1, tr8);
-   TGeoVolume *bar6 = geom->MakeBox("bar6", "mat2", 17.5, 5., 5.);
+   TGeoVolume *bar6 = geom->MakeBox("bar6", Al, 17.5, 5., 5.);
    bar6->SetLineColor(kBlue);
    T->AddNode(bar6, 1, tr9);
       

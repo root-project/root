@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.9 2002/10/22 07:43:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.10 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    virtual const char *GetDrawPath() const = 0; 
    virtual Int_t      GetVisLevel() const = 0; 
    virtual Int_t      GetVisOption() const = 0; 
-   virtual char      *GetVolumeInfo(TGeoVolume *volume, Int_t px, Int_t py) const = 0;
+   virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual void       GrabFocus() = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;
@@ -95,7 +95,7 @@ public:
    virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
-   virtual void       RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
+   virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,

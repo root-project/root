@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.6 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.7 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -152,7 +152,7 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Double
       saf[2] = dz-TMath::Abs(point[2]);
       *safe = saf[TMath::LocMin(3, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -197,7 +197,7 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       saf[2] = fDz-TMath::Abs(point[2]);
       *safe = TMath::Min(saf[0], TMath::Min(saf[1],saf[2]));
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -210,7 +210,7 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t t1=dir[0]*dir[0]+dir[1]*dir[1];  
    Double_t t2=point[0]*dir[0]+point[1]*dir[1];  
    Double_t t3=point[0]*point[0]+point[1]*point[1]; 
-   if (t1<0) return sz;
+   if (t1<=0) return sz;
    Double_t b=t2/t1;
    Double_t sr, c=0, d=0;
    // inner cylinder
@@ -315,7 +315,7 @@ Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       saf[3] = r-fRmax;
       *safe = saf[TMath::LocMax(4,&saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (step<=*safe)) return step;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    // find distance to shape
    return DistToInS(point, dir, fRmin, fRmax, fDz);
@@ -355,7 +355,7 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder->SetDivIndex(voldiv->GetNdaughters());
          for (id=0; id<ndiv; id++) {
             shape = new TGeoTube(start+id*step, start+(id+1)*step, fDz);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             opt = "R";
             voldiv->AddNodeOffset(vol, id, 0, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
@@ -367,7 +367,7 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -384,7 +384,7 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTube(fRmin, fRmax, step/2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Z";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
@@ -801,7 +801,7 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Dou
          saf[3] = TMath::Abs(point[0]*s2-point[1]*c2);
       *safe = saf[TMath::LocMin(4, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -868,7 +868,7 @@ Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
          saf[3] = TMath::Abs(point[0]*s2-point[1]*c2);
       *safe = saf[TMath::LocMin(4, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -1067,7 +1067,7 @@ Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
       }
       *safe = saf[TMath::LocMax(4,&saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (step<=*safe)) return step;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    // find distance to shape
    return TGeoTubeSeg::DistToInS(point, dir, fRmin, fRmax, fDz, c1, s1, c2, s2, cfio, sfio, cdfi);
@@ -1108,7 +1108,7 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          finder->SetDivIndex(voldiv->GetNdaughters());
          for (id=0; id<ndiv; id++) {
             shape = new TGeoTubeSeg(start+id*step, start+(id+1)*step, fDz, fPhi1, fPhi2);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             opt = "R";
             voldiv->AddNodeOffset(vol, id, 0, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
@@ -1122,7 +1122,7 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, fDz, -step/2, step/2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -1139,7 +1139,7 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTubeSeg(fRmin, fRmax, step/2, fPhi1, fPhi2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Z";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
@@ -1601,7 +1601,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 
    saf[0] = point[0]*fNlow[0] + point[1]*fNlow[1] + (fDz+point[2])*fNlow[2];
    saf[1] = point[0]*fNhigh[0] + point[1]*fNhigh[1] + (point[2]-fDz)*fNhigh[2];
-   if (iact<3 && *safe) {
+   if (iact<3 && safe) {
       saf[2] = fRmin-r;
       saf[3] = r-fRmax;
       if (!tub) {
@@ -1619,7 +1619,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }      
       *safe = saf[TMath::LocMax(5,&saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (step<=*safe)) return step;
+      if ((iact==1) && (step<=*safe)) return kBig;
    }
    // find distance to shape
    Double_t *norm = gGeoManager->GetNormalChecked();
@@ -1801,7 +1801,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       }         
       *safe = saf[TMath::LocMin(5, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z

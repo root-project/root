@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.8 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -141,7 +141,7 @@ Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // compute safe distance
       *safe = saf[TMath::LocMin(6, saf)];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step;
+      if (iact==1 && step<*safe) return kBig;
    }
    //--- Compute distance to this shape
    Double_t *norm = gGeoManager->GetNormalChecked();
@@ -300,7 +300,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute safe distance
       *safe = saf[TMath::LocMax(6, saf)];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step;
+      if (iact==1 && step<*safe) return kBig;
    }
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
@@ -453,7 +453,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoTrd1(fDx1, fDx2, step/2, fDz);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial()); 
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
          opt = "Y";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
@@ -475,7 +475,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             dx1n = 0.5*(fDx1*(fDz-zmin)+fDx2*(fDz+zmin))/fDz;
             dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
             shape = new TGeoTrd1(dx1n, dx2n, fDy, step/2.);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial()); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
             opt = "Z";             
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.10 2002/12/10 14:34:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.11 2002/12/11 17:10:20 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -656,15 +656,10 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       radmax = radmax/TMath::Cos(0.5*divphi*kDegRad);
       if (r2>(radmax*radmax)) {
          Double_t rpr=pt[0]*dir[0]+pt[1]*dir[1];
-         if (rpr>=0) {
+         if (rpr>TMath::Sqrt(r2-radmax*radmax)) {
             if (iact==3) return kBig;
             cross = kFALSE;
-         } else {   
-            if ((rpr*rpr)<(r2-radmax*radmax)) {
-               if (iact==3) return kBig;
-               cross=kFALSE;
-            }
-         }   
+         }
       }
    }        
 
@@ -761,7 +756,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 */
    if ((iact<3) && safe) {
       *safe = saf[TMath::LocMax(6, &saf[0])];
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
       if (iact==0) return kBig;
    }
    // compute distance to boundary   
@@ -954,7 +949,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          shape = new TGeoPgon(-step/2, step, nedges, fNz);
          for (is=0; is<fNz; is++)
             ((TGeoPgon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]); 
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             opt = "Phi";
             for (id=0; id<ndiv; id++) {
                voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -989,7 +984,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             shape = new TGeoPgon(fPhi1, fDphi, nedges, 2); 
             ((TGeoPgon*)shape)->DefineSection(0, -step/2, rmin1, rmax1); 
             ((TGeoPgon*)shape)->DefineSection(1,  step/2, rmin2, rmax2); 
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.7 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -147,7 +147,7 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // compute safe distance
       *safe = saf[TMath::LocMin(6, saf)];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step;
+      if (iact==1 && step<*safe) return kBig;
    }
    //--- Compute distance to this shape
    Double_t *norm = gGeoManager->GetNormalChecked();
@@ -253,7 +253,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute safe distance
       *safe = saf[TMath::LocMax(6, saf)];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step;
+      if (iact==1 && step<*safe) return kBig;
    }
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
@@ -485,7 +485,7 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             dy1n = 0.5*(fDy1*(fDz-zmin)+fDy2*(fDz+zmin))/fDz;
             dy2n = 0.5*(fDy1*(fDz-zmax)+fDy2*(fDz+zmax))/fDz;
             shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step/2.);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial()); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
             opt = "Z";             
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.6 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -37,13 +37,13 @@
  *   Shape objects embeed only the minimum set of parameters that are fully
  * describing a valid physical shape. For instance, a tube is represented by
  * its half length, the minimum radius and the maximum radius. Shapes are used
- * togeather with materials in order to create volumes, which in their turn 
+ * togather with media in order to create volumes, which in their turn 
  * are the main components of the geometrical tree. Volumes may contain other
  * positioned volumes inside, which are called nodes. Each component in this 
- * structure : materials, shapes and volumes (except nodes) are replicable (one
+ * structure : media, shapes and volumes (except nodes) are replicable (one
  * instance of an object can be used in several other combinations). 
  *    It is highly recomendable to use replicas as more as possible when volumes
- * have different materials but the same shape. One will never have to create 
+ * have different media but the same shape. One will never have to create 
  * an instance of the TGeoShape class, but only the one for specific shapes :
  *
  *   TGeoBBox *box = new TGeoBBox(halfX, halfY, halfZ);
@@ -60,7 +60,7 @@
  *
  *   Volumes can be assembled also from pieces :
  *  
- *   TGeoVolume *vol = new TGeoVolume(name, ptr_shape, ptr_material);  
+ *   TGeoVolume *vol = new TGeoVolume(name, ptr_shape, ptr_medium);  
  *
  * Point and segment classification
  *=================================

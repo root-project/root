@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.8 2002/11/20 08:55:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.9 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -166,7 +166,7 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          Error("Divide", "Wrong axis type for division");
          return voldiv;
    }
-   vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+   vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    voldiv->SetFinder(finder);
    finder->SetBasicVolume(vol);
    finder->SetDivIndex(voldiv->GetNdaughters());
@@ -244,7 +244,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // compute safe distance
       *safe = saf[TMath::LocMin(6, &saf[0])];
       if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return step; 
+      if (iact==1 && step<*safe) return kBig; 
    }
                                                    // compute distance to surface
    Double_t s0, s1, s2;
@@ -285,7 +285,7 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
       if (iact==0) return kBig;
    }
-   if (iact==1 && step<*safe) return step; 
+   if (iact==1 && step<*safe) return kBig; 
    // compute distance from point to box
    Double_t coord, snxt=kBig;
    Int_t ibreak=0;

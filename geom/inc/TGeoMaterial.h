@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.3 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.4 2002/10/09 14:03:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -44,7 +44,6 @@ class TGeoMaterial : public TNamed,
    };
 
 protected:
-   Int_t                    fId;         // unique Id
    Double_t                 fA;          // A of material
    Double_t                 fZ;          // Z of material
    Double_t                 fDensity;    // density of material
@@ -56,25 +55,23 @@ protected:
 public:
    // constructors
    TGeoMaterial();
-   TGeoMaterial(const char *name, const char *title);
-   TGeoMaterial(const char *name, const char *title, Double_t a, Double_t z, 
+   TGeoMaterial(const char *name);
+   TGeoMaterial(const char *name, Double_t a, Double_t z, 
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
    // destructor
    virtual ~TGeoMaterial();
    // methods
    static  Double_t         Coulomb(Double_t z);
-   Int_t                    GetMedia()     {return fId;}
-   virtual Int_t            GetByteCount() {return 32;}
-   virtual Double_t         GetA()       {return fA;}
-   virtual Double_t         GetZ()       {return fZ;}
-   virtual Int_t            GetDefaultColor();
-   virtual Double_t         GetDensity() {return fDensity;}
-   virtual Double_t         GetRadLen()  {return fRadLen;}
-   virtual Double_t         GetIntLen()  {return fIntLen;}
-   virtual Bool_t           IsEq(TGeoMaterial *other);
+   virtual Int_t            GetByteCount() const {return sizeof(this);}
+   virtual Double_t         GetA() const       {return fA;}
+   virtual Double_t         GetZ()  const      {return fZ;}
+   virtual Int_t            GetDefaultColor() const;
+   virtual Double_t         GetDensity() const {return fDensity;}
+   virtual Double_t         GetRadLen() const  {return fRadLen;}
+   virtual Double_t         GetIntLen() const  {return fIntLen;}
+   virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual void             Print(const Option_t *option="") const;
    static  Double_t         ScreenFactor(Double_t z);
-   void                     SetMedia(Int_t id) {fId = id;}
 
 
   ClassDef(TGeoMaterial, 1)              // base material class
@@ -100,17 +97,17 @@ protected :
 public:
    // constructors
    TGeoMixture();
-   TGeoMixture(const char *name, const char *title, Int_t nel, Double_t rho=-1);
+   TGeoMixture(const char *name, Int_t nel, Double_t rho=-1);
    // destructor
    virtual ~TGeoMixture();
    // methods
    void                     DefineElement(Int_t i, Double_t a, Double_t z, Double_t weight);
-   virtual Int_t            GetByteCount() {return 48+12*fNelements;}
-   Int_t                    GetNelements() {return fNelements;}
-   Double_t                *GetZmixt()     {return fZmixture;}
-   Double_t                *GetAmixt()     {return fAmixture;}
-   Double_t                *GetWmixt()     {return fWeights;}
-   virtual Bool_t           IsEq(TGeoMaterial *other);
+   virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
+   Int_t                    GetNelements() const {return fNelements;}
+   Double_t                *GetZmixt() const     {return fZmixture;}
+   Double_t                *GetAmixt() const     {return fAmixture;}
+   Double_t                *GetWmixt() const     {return fWeights;}
+   virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual void             Print(const Option_t *option="") const;
 
   ClassDef(TGeoMixture, 1)              // material mixtures

@@ -302,12 +302,12 @@ C
      +npflags(MAXPOS),nppflags(MAXPOS)  
 
       CHARACTER*4 KSHAP(30),klshap(30)
-      character*20 matname
+      character*20 matname,medname
       character*16 cname,mname,pname, rname
       character*(*) fname
       character*256 line
       character*128 creals
-      character*16 astring,ptrname
+      character*16 astring,astring2,ptrname
       dimension pmixt(3)
       logical map_found
 
@@ -329,11 +329,9 @@ C
      +'//',/,
      +'//  This file has been generated automatically via the root',/,
      +'//  utility g2root from an interactive version of GEANT',/,
-     +'//   (see ROOT class TGeometry header for an example of use)',/,
+     +'//   (see ROOT class TGeoManager for an example of use)',/,
      +'//',/,
      +'gSystem->Load("libGeom");',/,
-     +'TGeoMaterial *mat;',/,
-     +'TGeoMixture  *mix;',/,
      +'TGeoRotation *rot;',/,
      +'TGeoNode *Node, *Node1;')
 
@@ -353,6 +351,7 @@ C
      +,/)
       IF(JVOLUM.NE.0 ) NVOLUM = IQ(JVOLUM-2)
       IF(JMATE.NE.0 )  NMATE  = IQ(JMATE-2)
+      IF(JTMED.NE.0 )  NTMED  = IQ(JTMED-2)
       IF(JROTM.NE.0 )  NROTM  = IQ(JROTM-2)
 * Print Materials
 * =======================
@@ -375,9 +374,13 @@ C
                ncr=lenocc(creals)
             endif
             line=' '
-            write(line,3000)astring(1:nc),matname(1:ncn)
-     +        ,creals(1:ncr)
- 3000       format('mat = new TGeoMaterial("mat',a,'","',a,'"',a,');')
+            write(line,3000)astring(1:nc),matname(1:ncn),creals(1:ncr)
+ 3000       format('TGeoMaterial *mat',a,' = new TGeoMaterial("',a,
+     +       '"',a,');')
+            nch = lenocc(line)
+            write(51,'(a)')line(1:nch)
+            write(line,3005) astring(1:nc),imat
+ 3005       format(4x,'mat',a,'->SetUniqueID(',i4,');')
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
 *-*             Case of a mixture
@@ -391,26 +394,53 @@ C
                ncm=ncm+1
             endif
             line=' '
-            write(line,3010)astring(1:nc),matname(1:ncn)
-     +          ,mname(1:ncm),q(jma+8)
- 3010       format('mix = new TGeoMixture("mix',a,'","',a,'",',a,
+            write(line,3010)astring(1:nc),matname(1:ncn),mname(1:ncm),
+     +      q(jma+8)
+ 3010       format('TGeoMixture *mat',a,' = new TGeoMixture("',a,'",',a,
      +              ',',g14.6,');')
             nch = lenocc(line)
             write(51,'(a)')line(1:nch)
+            write(line,3011) astring(1:nc),imat
+ 3011       format(4x,'mat',a,'->SetUniqueID(',i4,');')
+            nch = lenocc(line)
+            write(51,'(a)')line(1:nch)
             do 292 im=1,nm
-               call toint(im-1,astring,nc)
+               call toint(im-1,astring2,nc2)
                pmixt(1) = q(jmixt+im)
                pmixt(2) = q(jmixt+nm+im)
                pmixt(3) = q(jmixt+2*nm+im)
                call toreals(3,pmixt,creals,ncr)
                line=' '
-               write(line,3020)astring(1:nc),creals(1:ncr)
- 3020          format('  mix->DefineElement(',a,a,');')
+               write(line,3020)astring(1:nc),astring2(1:nc2),
+     +         creals(1:ncr)
+ 3020          format(4x,'mat',a,'->DefineElement(',a,a,');')
                nch = lenocc(line)
                write(51,'(a)')line(1:nch)
  292        continue
          endif
  300  continue
+* Print Tracking Media
+* ====================
+      write(51,3069)
+ 3069 format(/,
+     +'//-----------List of Tracking Media--------------',/)
+      do 350 itmed=1,ntmed
+         jtm=lq(jtmed-itmed)
+         if(jtm.eq.0)go to 350
+         imat=q(jtm+6)
+         call toint(imat,astring2,ncm)
+         call uhtoc(iq(jtm+1),4,medname,20)
+         ncn=lenocc(medname)
+         call toint(itmed,astring,nc)
+         call toreals(8,q(jtm+7),creals,ncr)
+         line=' '
+         write(line,3050)astring(1:nc),medname(1:ncn),astring(1:nc),
+     +     astring2(1:ncm),creals(1:ncr)
+ 3050    format('TGeoMedium *med',a,' = new TGeoMedium("',a,'",',a,
+     +     ',',a,a,');')
+         nch = lenocc(line)
+         write(51,'(a)')line(1:nch)
+ 350  continue
 * Print Rotation matrices
 * =======================
       write(51,3021)
@@ -639,15 +669,8 @@ C
       ishape = qjv(2)
       numed  = qjv(4)
       jtm    = lq(jtmed-numed)
-      nmat   = q(jtm+6)
-      jma    = lq(jmate-nmat)
-      nmixt  = q(jma+11)
-      call toint(nmat,astring,nc)
-      if(abs(nmixt).eq.1)then
-         cmater='mat'//astring(1:nc)
-      else
-         cmater='mix'//astring(1:nc)
-      endif
+      call toint(numed,astring,nc)
+      cmater='med'//astring(1:nc)
       ncmat = lenocc(cmater)
       nord  = qjv(1)
       nin   = qjv(3)
@@ -714,12 +737,12 @@ C
          write(51,'(a)')line(1:nch) 
       endif           
 2000  format(
-     + 'TGeoVolume',' *',a,' = gGeoManager->Make',a,'("',a,'","'
-     +,a,'"',a,');')
+     + 'TGeoVolume',' *',a,' = gGeoManager->Make',a,'("',a,'",'
+     +,a,a,');')
 2001  format('TGeoVolumeMulti *',a,' = gGeoManager->MakeVolumeMulti("'
-     +,a,'", "',a,'");')
-2002  format(' ',a,'->AddVolume(gGeoManager->Make',a,'("',a,'","',
-     +a,'"',a,'));')          
+     +,a,'", ',a,');')
+2002  format(' ',a,'->AddVolume(gGeoManager->Make',a,'("',a,'",',
+     +a,a,'));')          
       nch = lenocc(line)
       if (iposp.eq.0) write(51,'(a)')line(1:nch)
       if(ishape.eq.11)then

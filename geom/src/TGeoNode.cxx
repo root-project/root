@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.11 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.12 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -96,14 +96,14 @@ TGeoNode::TGeoNode()
    fNovlp        = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoNode::TGeoNode(TGeoVolume *vol)
+TGeoNode::TGeoNode(const TGeoVolume *vol)
 {
 // Constructor
    if (!vol) {
       Error("ctor", "volume not specified");
       return;
    }
-   fVolume       = vol;
+   fVolume       = (TGeoVolume*)vol;
    fMother       = 0;
    fOverlaps     = 0;
    fNovlp        = 0;
@@ -192,7 +192,7 @@ void TGeoNode::DrawOverlaps()
    gGeoManager->GetTopVolume()->Draw();
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoNode::FindNode(TGeoNode *node, Int_t level)
+Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
 {
    Int_t nd = GetNdaughters();
    if (!nd) return -1;
@@ -405,11 +405,11 @@ TGeoNodeMatrix::TGeoNodeMatrix()
    fMatrix       = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoNodeMatrix::TGeoNodeMatrix(TGeoVolume *vol, TGeoMatrix *matrix) :
+TGeoNodeMatrix::TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix) :
              TGeoNode(vol)
 {
 // Constructor. Null pointer to matrix means identity transformation
-   fMatrix = matrix;
+   fMatrix = (TGeoMatrix*)matrix;
 }
 //-----------------------------------------------------------------------------
 TGeoNodeMatrix::~TGeoNodeMatrix()
@@ -480,7 +480,7 @@ TGeoNodeOffset::TGeoNodeOffset()
    fFinder = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoNodeOffset::TGeoNodeOffset(TGeoVolume *vol, Int_t index, Double_t offset) :
+TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offset) :
            TGeoNode(vol)
 {
 // Constructor. Null pointer to matrix means identity transformation

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.7 2002/12/03 16:13:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.8 2002/12/10 14:34:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -148,7 +148,7 @@ Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Double
       saf[2] = TMath::Min(point[2]-z1, z2-point[2]); 
       *safe = TMath::Min(saf[0], TMath::Min(saf[1],saf[2]));
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -187,7 +187,7 @@ Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       saf[2] = fDz-TMath::Abs(point[2]);
       *safe = TMath::Min(saf[0], TMath::Min(saf[1],saf[2]));
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -314,7 +314,7 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       saf[2]=TMath::Abs(point[2])-fDz;
       *safe = saf[TMath::LocMax(3, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
 //   return TGeoCone::DistToInS(point, dir,fRmin1,fRmax1,fRmin2,fRmax2,fDz,
 //                              ro1,tg1,cr1,zv1,ro2,tg2,cr2,zv2,r2,rin,rout);
@@ -391,7 +391,7 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoConeSeg(fDz, fRmin1, fRmax1, fRmin2, fRmax2, -step/2, step/2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -415,7 +415,7 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             Double_t rmin2n = 0.5*(fRmin1*(fDz-z2)+fRmin2*(fDz+z2))/fDz;
             Double_t rmax2n = 0.5*(fRmax1*(fDz-z2)+fRmax2*(fDz+z2))/fDz;
             shape = new TGeoCone(rmin1n, rmax1n, rmin2n, rmax2n, step/2); 
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             opt = "Z";
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
@@ -916,7 +916,7 @@ Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Int_t iact, Dou
       else                              saf[3]=TMath::Abs(point[0]*s2-point[1]*c2);
       *safe = saf[TMath::LocMin(4, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -973,7 +973,7 @@ Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
       else                              saf[3]=TMath::Abs(point[0]*s2-point[1]*c2);
       *safe = saf[TMath::LocMin(4, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    // compute distance to surface 
    // Do Z
@@ -1148,7 +1148,7 @@ Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
       }   
       *safe = saf[TMath::LocMax(4, &saf[0])];
       if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return step;
+      if ((iact==1) && (*safe>step)) return kBig;
    }
    return TGeoConeSeg::DistToInS(point, dir,fRmin1,fRmax1,-fDz, fRmin2,fRmax2,fDz, fPhi1, fPhi2);
 }
@@ -1195,7 +1195,7 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          voldiv->SetFinder(finder);
          finder->SetDivIndex(voldiv->GetNdaughters());            
          shape = new TGeoConeSeg(fDz, fRmin1, fRmax1, fRmin2, fRmax2, -step/2, step/2);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          opt = "Phi";
          for (id=0; id<ndiv; id++) {
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -1219,7 +1219,7 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
             Double_t rmin2n = 0.5*(fRmin1*(fDz-z2)+fRmin2*(fDz+z2))/fDz;
             Double_t rmax2n = 0.5*(fRmax1*(fDz-z2)+fRmax2*(fDz+z2))/fDz;
             shape = new TGeoConeSeg(step/2, rmin1n, rmax1n, rmin2n, rmax2n, fPhi1, fPhi2); 
-            vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             opt = "Z";
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);

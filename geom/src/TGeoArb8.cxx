@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.12 2002/12/10 14:34:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.13 2002/12/11 17:10:20 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -672,7 +672,7 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          ((TGeoArb8*)shape)->SetVertex(vert1, points_lo[2*vert1]-ox, points_lo[2*vert1+1]-oy);
       for (Int_t vert2=0; vert2<4; vert2++)
          ((TGeoArb8*)shape)->SetVertex(vert2+4, points_hi[2*vert2]-ox, points_hi[2*vert2+1]-oy);
-      vol = new TGeoVolume(divname, shape, voldiv->GetMaterial());
+      vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
       voldiv->AddNodeOffset(vol, idiv, oz, opt.Data());
       ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
    }
