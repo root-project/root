@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.21 2001/04/19 13:39:41 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.22 2001/04/20 17:56:50 rdm Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ class TTree;
 
 Double_t ntotin=0, ntotout=0;
 
-void stress(Int_t nevent, Int_t style)
+void stress(Int_t nevent, Int_t style = 1)
 {
    //Main control function invoking all test programs
 
