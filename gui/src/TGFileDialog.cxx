@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.18 2004/12/07 01:34:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.19 2004/12/07 16:40:12 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -339,7 +339,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                      "Missing File Name", txt, kMBIconExclamation,
                                      kMBOk);
                         return kTRUE;
-                     } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
+                     } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
+                                !strcmp(fOk->GetTitle(), "Save")) {
                         Int_t ret;
                         txt = Form("File name %s already exists, OK to overwrite it?",
                                    fTbfname->GetString());
@@ -462,7 +463,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                "Missing File Name", txt, kMBIconExclamation,
                                kMBOk);
                   return kTRUE;
-               } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
+               } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
+                          !strcmp(fOk->GetTitle(), "Save")) {
                   Int_t ret;
                   txt = Form("File name %s already exists, OK to overwrite it?",
                              fTbfname->GetString());
