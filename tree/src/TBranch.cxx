@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.55 2003/03/06 21:51:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.56 2003/04/24 19:00:05 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -86,6 +86,7 @@ TBranch::TBranch(): TNamed(), TAttFill(0,1001)
    fAddress        = 0;
    fOffset         = 0;
    fDirectory      = 0;
+   fSkipZip        = kFALSE;
    fFileName       = "";
    gBranch = this;
 }
@@ -156,6 +157,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fSplitLevel     = 0;
    fOffset         = 0;
    fNleaves        = 0;
+   fSkipZip        = kFALSE;
    fAddress        = (char*)address;
    fNBasketRAM     = kMaxRAM+1;
    fBasketRAM      = new Int_t[kMaxRAM]; for (i=0;i<kMaxRAM;i++) fBasketRAM[i] = -1;
@@ -364,56 +366,105 @@ Int_t TBranch::Fill()
    buf->ResetMap();
    Int_t lold = buf->Length();
    Int_t objectStart = 0;
+   Int_t last = 0;
+   Int_t lnew = 0;
+   Int_t nbytes = 0;
    if ( fEntryBuffer!=0 ) {
-     if ( fEntryBuffer->IsA() == TMessage::Class() ) {
-       objectStart = 8;
-     }
-     // We are required to copy starting at the version number (so not
-     // including the class name.
-     // See if byte count is here, if not it class still be a newClass
-     const UInt_t kNewClassTag       = 0xFFFFFFFF;
-     const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
-     UInt_t tag, startpos = fEntryBuffer->Length();
-     fEntryBuffer->SetBufferOffset(objectStart);
-     *fEntryBuffer >> tag;
-     if ( tag & kByteCountMask ) {
-       *fEntryBuffer >> tag;
-     }
-     if ( tag == kNewClassTag ) {
-       char s[80];
+      if ( fEntryBuffer->IsA() == TMessage::Class() ) {
+         objectStart = 8;
+      }
+      if ( fEntryBuffer->TestBit(TBasket::kNotDecompressed) ) {
+         // The buffer given as input as not been decompressed.
 
-       fEntryBuffer->ReadString(s, 80);
-     } else {
-       fEntryBuffer->SetBufferOffset(objectStart);
-     }
-     objectStart = fEntryBuffer->Length();
-     fEntryBuffer->SetBufferOffset(startpos);
+         if (basket->GetNevBuf()) {
+             // If the basket already contains entry we need to close it
+             // out. (This is because we can only transfer full compressed 
+             // buffer)
+             WriteBasket(basket);
 
-     basket->Update(lold, objectStart - fEntryBuffer->GetBufferDisplacement());
-   } else  basket->Update(lold);
-   fEntries++;
-   fEntryNumber++;
-   if ( fEntryBuffer!=0 ) {
+             // And restart from scratch
+             return Fill();
+         }            
 
-     UInt_t len, startpos = fEntryBuffer->Length();
-     if (startpos > UInt_t(objectStart)) {
-       // We assume this buffer have just been directly filled
-       // the current position in the buffer indicates the end of the object!
-       len = fEntryBuffer->Length() - objectStart;
-     } else {
-       // The buffer have been acquired either via TSocket or via
-       // TBuffer::SetBuffer(newloc,newsize)
-       // Only the actual size of the memory buffer gives us an hint about where
-       // the object ends.
-       len = fEntryBuffer->BufferSize() - objectStart;
-     }
-     buf->WriteBuf( fEntryBuffer->Buffer() + objectStart , len );
+         Int_t startpos = fEntryBuffer->Length();
+         fEntryBuffer->SetBufferOffset(0);
+         static TBasket toread_fLast;
+         fEntryBuffer->SetReadMode();
+         toread_fLast.Streamer(*fEntryBuffer); 
+         fEntryBuffer->SetWriteMode();
+         last = toread_fLast.GetLast(); // last now contains the decompressed number of bytes.
+         fEntryBuffer->SetBufferOffset(startpos);
+
+         buf->SetBufferOffset(0);
+         buf->SetBit(TBasket::kNotDecompressed);
+
+         basket->Update(lold);         
+
+      } else {
+         // We are required to copy starting at the version number (so not
+         // including the class name.
+         // See if byte count is here, if not it class still be a newClass
+         const UInt_t kNewClassTag       = 0xFFFFFFFF;
+         const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
+         UInt_t tag, startpos = fEntryBuffer->Length();
+         fEntryBuffer->SetBufferOffset(objectStart);
+         *fEntryBuffer >> tag;
+         if ( tag & kByteCountMask ) {
+            *fEntryBuffer >> tag;
+         }
+         if ( tag == kNewClassTag ) {
+            char s[80];
+           
+            fEntryBuffer->ReadString(s, 80);
+         } else {
+            fEntryBuffer->SetBufferOffset(objectStart);
+         }
+         objectStart = fEntryBuffer->Length();
+         fEntryBuffer->SetBufferOffset(startpos);
+
+         basket->Update(lold, objectStart - fEntryBuffer->GetBufferDisplacement());
+      }
+      fEntries++;
+      fEntryNumber++;
+
+      UInt_t len, startpos = fEntryBuffer->Length();
+      if (startpos > UInt_t(objectStart)) {
+         // We assume this buffer have just been directly filled
+         // the current position in the buffer indicates the end of the object!
+         len = fEntryBuffer->Length() - objectStart;
+      } else {
+         // The buffer have been acquired either via TSocket or via
+         // TBuffer::SetBuffer(newloc,newsize)
+         // Only the actual size of the memory buffer gives us an hint about where
+         // the object ends.
+         len = fEntryBuffer->BufferSize() - objectStart;
+      }
+      buf->WriteBuf( fEntryBuffer->Buffer() + objectStart , len );
+
+      if ( fEntryBuffer->TestBit(TBasket::kNotDecompressed) ) {
+         // The original buffer came pre-compressed and thus the buffer Length 
+         // does not really show the really object size
+         // lnew = nbytes = basket->GetLast();
+         lnew = nbytes = last;
+ 
+      } else {
+         lnew   = buf->Length();
+         nbytes = lnew - lold;
+      }
 
    } else {
-     FillLeaves(*buf);
+
+      basket->Update(lold);
+      fEntries++;
+      fEntryNumber++;
+
+      FillLeaves(*buf);
+
+      lnew   = buf->Length();
+      nbytes = lnew - lold;
+
    }
-   Int_t lnew   = buf->Length();
-   Int_t nbytes = lnew - lold;
+
    if (fEntryOffsetLen) {
       Int_t nevbuf = basket->GetNevBuf();
       nsize = nevbuf*sizeof(Int_t); //total size in bytes of EntryOffset table
@@ -422,7 +473,9 @@ Int_t TBranch::Fill()
    }
 
 //*-*- Should we create a new basket?
-   if ( (lnew +2*nsize +nbytes >= fBasketSize) ) { //NOTE: we should not need that|| (fEntryBuffer!=0) ) {
+   if ( (fSkipZip && (lnew>=TBuffer::kMinimalSize))  // fSkipZip force one entry per buffer
+        || (buf->TestBit(TBasket::kNotDecompressed)) // Transfer full compressed buffer only
+        || (lnew +2*nsize +nbytes >= fBasketSize) ) { 
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       fBasketBytes[fWriteBasket]  = basket->GetNbytes();
       fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
@@ -578,6 +631,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
+   if (fSkipZip) basket->SetBit(TBasket::kNotDecompressed);
    basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
@@ -1231,3 +1285,44 @@ void TBranch::Streamer(TBuffer &b)
       TBranch::Class()->WriteBuffer(b,this);
    }
 }
+
+//_______________________________________________________________________
+void TBranch::WriteBasket(TBasket* basket)
+{
+//*-*-*-*-*-*-*-*-*Write the current basket to disk*-*-*-*-*
+//*-*              =========================================
+
+   Int_t nout  = basket->WriteBuffer();    //  Write buffer
+   fBasketBytes[fWriteBasket]  = basket->GetNbytes();
+   fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
+   Int_t addbytes = basket->GetObjlen() + basket->GetKeylen() ;
+   if (fDirectory != gROOT && fDirectory->IsWritable()) {
+      delete basket;
+      fBaskets[fWriteBasket] = 0;
+   }
+   fZipBytes += nout;
+   fTotBytes += addbytes;
+   fTree->AddTotBytes(addbytes);
+   fTree->AddZipBytes(nout);
+   basket = new TBasket(GetName(),fTree->GetName(),this);   //  create a new basket
+   fWriteBasket++;
+   fBaskets.AddAtAndExpand(basket,fWriteBasket);
+   if (fWriteBasket >= fMaxBaskets) {
+      //Increase BasketEntry buffer of a minimum of 10 locations
+      // and a maximum of 50 per cent of current size
+      Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
+      fBasketEntry  = TStorage::ReAllocInt(fBasketEntry, newsize, fMaxBaskets);
+      fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
+#ifndef R__LARGEFILE64
+      fBasketSeek   = TStorage::ReAllocInt(fBasketSeek, newsize, fMaxBaskets);
+#else
+      fBasketSeek   = (Seek_t*)TStorage::ReAlloc(fBasketSeek,
+                          newsize*sizeof(Seek_t),fMaxBaskets*sizeof(Seek_t));
+#endif
+      fMaxBaskets   = newsize;
+   }
+   fBasketEntry[fWriteBasket] = fEntryNumber;
+   fBasketBytes[fWriteBasket] = 0;
+   fBasketSeek[fWriteBasket]  = 0;
+}
+

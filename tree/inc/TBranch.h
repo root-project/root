@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.16 2003/02/05 15:07:29 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.17 2003/03/04 22:24:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -90,6 +90,10 @@ protected:
     TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
     TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
     TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
+
+    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
+       void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
+       void     WriteBasket(TBasket* basket);
 
 public:
     TBranch();

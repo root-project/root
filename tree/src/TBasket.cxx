@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.18 2002/12/16 20:52:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.19 2003/02/26 10:11:51 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -170,11 +170,30 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    file->Seek(pos);
    file->ReadBuffer(buffer,len);
    Streamer(*fBufferRef);
-
    if (fObjlen > fNbytes-fKeylen || 
        (fObjlen==fNbytes-fKeylen 
         && GetBranch()->GetCompressionLevel()!=0
         && file->GetVersion()<=30401)) {
+      if (TestBit(TBasket::kNotDecompressed) && (fNevBuf==1)) {
+         // By-passing buffer unzipping has been requested and is
+         // possible (only 1 entry in this basket).
+         fBuffer = fBufferRef->Buffer();
+         
+         // Make sure that the buffer is set at the END of the data
+         fBufferRef->SetBufferOffset(fNbytes);
+        
+         // Indicate that this buffer is weird.
+         fBufferRef->SetBit(TBasket::kNotDecompressed); 
+        
+         // Usage of this mode assume the existance of only ONE 
+         // entry in this basket.
+         delete [] fEntryOffset; fEntryOffset = 0;
+         delete [] fDisplacement; fDisplacement = 0;
+         
+         fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
+
+         return badread;
+      }
       fBuffer = new char[fObjlen+fKeylen];
       memcpy(fBuffer,buffer,fKeylen);
       char *objbuf = fBuffer + fKeylen;
@@ -378,6 +397,29 @@ Int_t TBasket::WriteBuffer()
 
    fBranch->GetDirectory()->cd();
    if (!file->IsWritable()) { cursav->cd(); return 0;}
+
+   if (fBufferRef->TestBit(TBasket::kNotDecompressed)) {
+      // Read the basket information that was saved inside the buffer.
+      Bool_t writing = fBufferRef->IsWriting();
+      fBufferRef->SetReadMode();
+      fBufferRef->SetBufferOffset(0);
+      Streamer(*fBufferRef);
+      if (writing) fBufferRef->SetWriteMode();
+      Int_t nout = fNbytes - fKeylen;
+
+      fBuffer = fBufferRef->Buffer();
+
+      Create(nout);
+      fBufferRef->SetBufferOffset(0);
+      fHeaderOnly = kTRUE;
+      Streamer(*fBufferRef);         //write key itself again
+      TKey::WriteFile(0);
+      fHeaderOnly = kFALSE;
+      
+      cursav->cd();
+      return fKeylen+nout;
+   }
+
 //*-*- Transfer fEntryOffset table at the end of fBuffer. Offsets to fBuffer
 //     are transformed in entry length to optimize compression algorithm.
    fLast      = fBufferRef->Length();

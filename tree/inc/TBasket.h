@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.6 2002/01/16 18:10:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.7 2002/02/03 16:15:01 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -48,6 +48,8 @@ protected:
     TBranch    *fBranch;          //Pointer to the basket support branch
 
 public:
+    enum { kNotDecompressed = BIT(15) };
+
     TBasket();
     TBasket(const char *name, const char *title, TBranch *branch);
     virtual ~TBasket();
