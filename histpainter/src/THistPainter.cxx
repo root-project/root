@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.27 2001/01/30 08:27:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.28 2001/02/01 17:43:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1602,14 +1602,14 @@ void THistPainter::PaintContour()
    Int_t ndivz   = TMath::Abs(ncontour);
    
    Int_t k,ipoly;
-   for (j=Hparam.yfirst; j<=Hparam.ylast-1; j++) {
+   for (j=Hparam.yfirst; j<Hparam.ylast; j++) {
       y[0] = fYaxis->GetBinCenter(j);
       y[1] = y[0];
       y[2] = fYaxis->GetBinCenter(j+1);
       y[3] = y[2];
-      if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
-      if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
-      for (i=Hparam.xfirst; i<=Hparam.xlast-1; i++) {
+      //if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
+      //if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
+      for (i=Hparam.xfirst; i<Hparam.xlast; i++) {
          zc[0] = fH->GetCellContent(i, j);
          zc[1] = fH->GetCellContent(i+1, j);
          zc[2] = fH->GetCellContent(i+1, j+1);
@@ -1623,10 +1623,10 @@ void THistPainter::PaintContour()
             x[3] = x[0];
             x[1] = fXaxis->GetBinCenter(i+1);
             x[2] = x[1];
-            if (x[0] < gPad->GetUxmin() || x[0] > gPad->GetUxmax()) continue;
-            if (x[2] < gPad->GetUxmin() || x[2] > gPad->GetUxmax()) continue;
-            if (zc[0] < zc[1]) n = 0; else n = 1;
-            if (zc[2] < zc[3]) m = 2; else m = 3;
+            //if (x[0] < gPad->GetUxmin() || x[0] > gPad->GetUxmax()) continue;
+            //if (x[2] < gPad->GetUxmin() || x[2] > gPad->GetUxmax()) continue;
+            if (zc[0] <= zc[1]) n = 0; else n = 1;
+            if (zc[2] <= zc[3]) m = 2; else m = 3;
             if (zc[n] > zc[m]) n = m;
             n++;
             lj=1;
@@ -1637,8 +1637,8 @@ void THistPainter::PaintContour()
                lj += 2*ljfill;
                n = m;
             }
-            if (zc[0] < zc[1]) n = 0; else n = 1;
-            if (zc[2] < zc[3]) m = 2; else m = 3;
+            if (zc[0] <= zc[1]) n = 0; else n = 1;
+            if (zc[2] <= zc[3]) m = 2; else m = 3;
             if (zc[n] > zc[m]) n = m;
             n++;
             lj=2;
@@ -1720,7 +1720,7 @@ void THistPainter::PaintContour()
    Int_t istart;
    if (Hoption.Contour != 1) goto theEND;
    
-   //The 2 points line generated above are not sorted/merged to generate
+   //The 2 points line generated above are now sorted/merged to generate
    //a list of consecutive points.
    // If the option "List" has been specified, the list of points is saved
    // in the form of TGraph objects in the ROOT list of special objects.
@@ -1822,7 +1822,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
       tlen = x2 - x1;
    }
 
-   n = icont1 + 1;
+   n = icont1 +1;
    tdif = elev2 - elev1;
    i = 0;
    icount = 0;
@@ -2292,7 +2292,8 @@ void THistPainter::PaintHist()
       if (htype == 0 || htype == 1000) htype = 1001;
    }
 
-   Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetAbsHNDC() + 0.5);
+   //Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetAbsHNDC() + 0.5);
+   Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetWh()/800. + 0.5);
 
 //*-*-     Code option for GrapHist
 
