@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealSumPdf.cc,v 1.1 2002/01/19 01:53:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -47,7 +47,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
-  _codeReg(10)  
+  _haveLastCoef(kFALSE),
+  _codeReg(10)
 {
   // Dummy constructor 
   _funcIter   = _funcList.createIterator() ;
@@ -64,10 +65,10 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
+  _haveLastCoef(kFALSE),
   _codeReg(10)
 {
   // Special constructor with two functions and one coefficient
-
   _funcIter  = _funcList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
 
@@ -85,6 +86,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
+  _haveLastCoef(kFALSE),
   _codeReg(10)
 { 
   // Constructor from list of functions and list of coefficients.
@@ -93,9 +95,9 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   //
   // All functions and coefficients must inherit from RooAbsReal. 
 
-  if (funcList.getSize()!=coefList.getSize()+1) {
+  if (!(funcList.getSize()==coefList.getSize()+1 || funcList.getSize()==coefList.getSize())) {
     cout << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
-	 << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef+1" << endl ;
+	 << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
     assert(0) ;
   }
 
@@ -130,7 +132,9 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
       assert(0) ;
     }
     _funcList.add(*func) ;  
-  } 
+  } else {
+    _haveLastCoef = kTRUE ;
+  }
   
   delete funcIter ;
   delete coefIter  ;
@@ -147,6 +151,7 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
+  _haveLastCoef(other._haveLastCoef),
   _codeReg(other._codeReg)
 {
   // Copy constructor
@@ -196,17 +201,19 @@ Double_t RooRealSumPdf::evaluate() const
     }
   }
   
-  // Add last func with correct coefficient
-  func = (RooAbsReal*) _funcIter->Next() ;
-  value += func->getVal(nset)*lastCoef ;
-  
-  // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
-    cout << "RooRealSumPdf::evaluate(" << GetName() 
-	 << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-	 << 1-lastCoef << endl ;
-  } 
-  
+  if (!_haveLastCoef) {
+    // Add last func with correct coefficient
+    func = (RooAbsReal*) _funcIter->Next() ;
+    value += func->getVal(nset)*lastCoef ;
+    
+    // Warn about coefficient degeneration
+    if (lastCoef<0 || lastCoef>1) {
+      cout << "RooRealSumPdf::evaluate(" << GetName() 
+	   << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
+	   << 1-lastCoef << endl ;
+    } 
+  }
+
   return value ;
 }
 
@@ -309,17 +316,20 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     }
   }
   
-  // Add last func with correct coefficient
-  funcInt = (RooAbsReal*) funcIntIter->Next() ;
-  value += funcInt->getVal()*lastCoef ;
-//   cout << "aiWN value += " << funcInt->getVal() << " * " << lastCoef << endl ;
-  
-  // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
-    cout << "RooRealSumPdf::evaluate(" << GetName() 
-	 << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-	 << 1-lastCoef << endl ;
-  } 
+  if (!_haveLastCoef) {
+    // Add last func with correct coefficient
+    funcInt = (RooAbsReal*) funcIntIter->Next() ;
+    value += funcInt->getVal()*lastCoef ;
+    //   cout << "aiWN value += " << funcInt->getVal() << " * " << lastCoef << endl ;
+    
+    // Warn about coefficient degeneration
+    if (lastCoef<0 || lastCoef>1) {
+      cout << "RooRealSumPdf::evaluate(" << GetName() 
+	   << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
+	   << 1-lastCoef << endl ;
+    } 
+  }
+
   delete funcIntIter ;
   
   Double_t normVal(1) ;
@@ -341,10 +351,12 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     }
     
     // Add last func with correct coefficient
-    funcNorm = (RooAbsReal*) funcNormIter->Next() ;
-    normVal += funcNorm->getVal()*lastCoef ;
-//     cout << "aiWN norm += " << funcNorm->getVal() << " * " << lastCoef << endl ;
-    
+    if (!_haveLastCoef) {
+      funcNorm = (RooAbsReal*) funcNormIter->Next() ;
+      normVal += funcNorm->getVal()*lastCoef ;
+      //     cout << "aiWN norm += " << funcNorm->getVal() << " * " << lastCoef << endl ;
+    }
+      
     delete funcNormIter ;      
   }
 

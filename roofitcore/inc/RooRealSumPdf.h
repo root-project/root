@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealSumPdf.rdl,v 1.1 2002/01/19 01:53:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -50,6 +50,8 @@ protected:
   mutable RooArgList* _funcIntList ;  //!
   mutable RooArgList* _funcNormList ; //!
 
+  Bool_t _haveLastCoef ;
+
   RooListProxy _funcList ;   //  List of component FUNCs
   RooListProxy _coefList ;  //  List of coefficients
   TIterator* _funcIter ;     //! Iterator over FUNC list
@@ -57,7 +59,7 @@ protected:
   
 private:
 
-  ClassDef(RooRealSumPdf,0) // PDF representing a sum of real functions
+  ClassDef(RooRealSumPdf,1) // PDF representing a sum of real functions
 };
 
 #endif
