@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooTreeData.cc,v 1.50 2002/09/05 04:34:03 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -296,16 +296,13 @@ void RooTreeData::createTree(const char* name, const char* title)
   memDir.Append(":/") ;
   gDirectory->cd(memDir) ;
   if (!_tree) {
-    _tree = new TTree ;
-    _tree->SetName(name) ;
-    _tree->SetTitle(title) ;
+    _tree = new TTree(name,title) ;
   }
   if (!_cacheTree) {
-    _cacheTree = new TTree ;
-    _cacheTree->SetName(Form("%s_cache",name)) ;
-    _cacheTree->SetTitle(Form("%s_cache",title)) ;
+    _cacheTree = new TTree(name,title) ;
   }
   gDirectory->RecursiveRemove(_tree) ;
+  gDirectory->RecursiveRemove(_cacheTree) ;
   gDirectory->cd(pwd) ;
   
 }
