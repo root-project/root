@@ -34,10 +34,11 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/include $dir/lib $dir/cint/MAKEINFO $dir/cint/include \
    $dir/cint/lib $dir/cint/stl $dir/tutorials/*.cxx $dir/tutorials/*.C \
    $dir/tutorials/*.h $dir/tutorials/*.dat $dir/tutorials/mlpHiggs.root \
-   $dir/tutorials/runcatalog.sql $dir/test/*.cxx $dir/test/*.h \
-   $dir/test/Makefile* $dir/test/README $dir/test/RootShower/*.h \
-   $dir/test/RootShower/*.cxx $dir/test/RootShower/Makefile* \
-   $dir/test/RootShower/anim $dir/test/RootShower/icons \
+   $dir/tutorials/runcatalog.sql $dir/tutorials/*.py $dir/test/*.cxx \
+   $dir/test/*.h $dir/test/Makefile* $dir/test/README \
+   $dir/test/RootShower/*.h $dir/test/RootShower/*.cxx \
+   $dir/test/RootShower/Makefile* $dir/test/RootShower/anim \
+   $dir/test/RootShower/icons \
    $dir/macros $dir/icons $dir/fonts $dir/etc $dir/proof/etc $dir/proof/utils
 if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    gzip $TARFILE
