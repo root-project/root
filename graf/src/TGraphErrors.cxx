@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.28 2002/09/07 20:55:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.29 2002/11/16 15:17:47 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -327,7 +327,7 @@ void TGraphErrors::Paint(Option_t *option)
    arrow.SetFillColor(GetFillColor());
 
    symbolsize  = GetMarkerSize();
-   sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
+   sbase       = symbolsize*BASEMARKER;
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
    Double_t cy  = 0;

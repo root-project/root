@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.23 2002/11/08 17:45:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.24 2002/11/16 15:17:47 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -357,7 +357,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    arrow.SetFillColor(GetFillColor());
 
    symbolsize  = GetMarkerSize();
-   sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
+   sbase       = symbolsize*BASEMARKER;
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
    Double_t cy  = 0;
