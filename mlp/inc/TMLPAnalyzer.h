@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.2 2004/09/29 10:55:55 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.3 2004/12/16 21:20:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -52,10 +52,11 @@ public:
    void DrawNetwork(Int_t neuron, const char* signal, const char* bg);
    void DrawDInput(Int_t i);
    void DrawDInputs();
-   TProfile* DrawTruthDeviation(Int_t i, Option_t *option="");
+   TProfile* DrawTruthDeviation(Int_t outnode=0, Option_t *option="");
    THStack* DrawTruthDeviations(Option_t *option="");
-   TProfile* DrawTruthDeviationInOut(Int_t i, Int_t o, Option_t *option="");
-   THStack* DrawTruthDeviationInsOut(Int_t o, Option_t *option="");
+   TProfile* DrawTruthDeviationInOut(Int_t innode, Int_t outnode=0, 
+                                     Option_t *option="");
+   THStack* DrawTruthDeviationInsOut(Int_t outnode=0, Option_t *option="");
 
    void CheckNetwork();
    void GatherInformations();

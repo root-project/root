@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.23 2004/10/12 07:30:03 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.24 2004/12/16 21:20:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -688,6 +688,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       Error("Train","Training/Test samples still not defined. Cannot train the neural network");
       return;
    }
+   Info("Train","Using %d train and %d test entries.", 
+        fTraining->GetN(), fTest->GetN());
    // Text and Graph outputs
    if (verbosity % 2)
       cout << "Training the Neural Network" << endl;
