@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.2 2000/11/22 17:59:18 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.5 2000/11/27 12:24:25 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TGCanvas;
 class TGListTree;
 class TGListTreeItem;
 class TGListView;
-
+class TGHProgressBar;
 
 
 class TTreeViewer : public TGMainFrame {
@@ -120,6 +120,8 @@ private:
    TGLabel              *fLbl1;         // label for list tree
    TGLabel              *fLbl2;         // label for list view
    TGHorizontalFrame    *fBFrame;       // button frame
+   TGHorizontalFrame    *fHpb;          // progress bar frame
+   TGHProgressBar       *fProgressBar;  // progress bar 
    TGLabel              *fBLbl4;        // label for input list entry
    TGLabel              *fBLbl5;        // label for output list entry
    TGTextEntry          *fBarListIn;    // tree input event list name entry
@@ -167,6 +169,7 @@ public:
    Bool_t       HandleTimer(TTimer *timer);
    Int_t        MakeSelector(const char* selector = 0);         // *MENU*
    void         Message(const char* msg);
+   void         NewExpression();                                // *MENU*
    void         PrintEntries();
    Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
    Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

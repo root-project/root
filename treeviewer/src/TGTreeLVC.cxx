@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.cxx,v 1.5 2000/11/22 18:03:03 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.cxx,v 1.8 2000/11/27 12:24:25 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -258,7 +258,8 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
                           name += dragged;
                           f->SetTrueName(name.Data());
                        } else {
-                          printf("Name too long. Can not add any more items to scan box\n");		    
+                          Warning("HandleButton", 
+                                  "Name too long. Can not add any more items to scan box");		    
                        }
                     }
                  }
@@ -389,7 +390,8 @@ ClassImp(TGSelectBox)
 //////////////////////////////////////////////////////////////////////////
 
 enum ETransientFrameCommands {
-   kTFDone
+   kTFDone,
+   kTFCancel
 };
 
 TGSelectBox* TGSelectBox::fpInstance = 0;
@@ -403,12 +405,13 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
 
    if (!fpInstance) {
       fpInstance = this;
-      ULong_t color;
-      if (!gClient->GetColorByName("#808080",color))
-      gClient->GetColorByName("gray",color);
+//      ULong_t color;
+//      if (!gClient->GetColorByName("#808080",color))
+//      gClient->GetColorByName("gray",color);
       fEntry = 0;
       fLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterY | kLHintsExpandX, 0, 0, 0, 2);
-      fbLayout = new TGLayoutHints(kLHintsBottom | kLHintsCenterY | kLHintsExpandX, 0, 0, 0, 2);
+      fbLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 2, 2, 2);
+      fbLayout1= new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 0, 2, 2);
 
       fLabel = new TGLabel(this, "");
       AddFrame(fLabel,fLayout);
@@ -422,13 +425,22 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       fTeAlias = new TGTextEntry(this, new TGTextBuffer(100));
       AddFrame(fTeAlias, fLayout);
 
-      fbDone = new TGTextButton(this, "&Done", kTFDone);
-      AddFrame(fbDone, fbLayout);
+      fBf = new TGHorizontalFrame(this, 10, 10);
+
+      fbCancel = new TGTextButton(fBf, "&Cancel", kTFCancel);
+      fbCancel->Associate(this);
+      fBf->AddFrame(fbCancel, fbLayout);
+
+      fbDone = new TGTextButton(fBf, "&Done", kTFDone);
+      fbDone->Associate(this);
+      fBf->AddFrame(fbDone, fbLayout1);
+
+      AddFrame(fBf, fLayout);
 
       MapSubwindows();
       Resize(GetDefaultSize());
 
-      SetBackgroundColor(color);
+//      SetBackgroundColor(color);
       Window_t wdum;
       Int_t ax, ay;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
@@ -448,8 +460,12 @@ TGSelectBox::~TGSelectBox()
    delete fTe;
    delete fLabelAlias;
    delete fTeAlias;
+   delete fbDone;
+   delete fbCancel;
+   delete fBf;
    delete fLayout;
    delete fbLayout;
+   delete fbLayout1;
 }
 //______________________________________________________________________________
 void TGSelectBox::CloseWindow()
@@ -529,6 +545,9 @@ Bool_t TGSelectBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                switch (parm1) {
                   case kTFDone:
                      SaveText();
+                     CloseWindow();
+                     break;
+                  case kTFCancel:
                      CloseWindow();
                      break;
                   default:

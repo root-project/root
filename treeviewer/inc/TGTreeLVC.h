@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.h,v 1.4 2000/11/22 16:27:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.h,v 1.7 2000/11/27 12:24:25 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -118,8 +118,11 @@ private:
    TGLabel       *fLabelAlias;    // alias label
    TGTextEntry   *fTeAlias;       // alias text entry
    TGLayoutHints *fLayout;        // layout hints for widgets inside
-   TGLayoutHints *fbLayout;       // layout for close button
+   TGLayoutHints *fbLayout;       // layout for cancel button
+   TGLayoutHints *fbLayout1;      // layout for close button
+   TGHorizontalFrame *fBf;        // buttons frame
    TGTextButton  *fbDone;         // close button
+   TGTextButton  *fbCancel;       // cancel button
 
 protected:
    static TGSelectBox *fpInstance;// pointer to this select box
