@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.54 2001/06/26 12:47:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.55 2001/06/27 10:35:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2923,7 +2923,8 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
 //  add smoothed XX and smoothed residuals
 
       for  (ii = 0; ii < NN; ii++) {
-         XX[ii] = RR[ii] + ZZ[ii];
+         if (XX[ii] < 0) XX[ii] = RR[ii] + ZZ[ii];
+         else            XX[ii] = TMath::Abs(RR[ii] + ZZ[ii]);
       }
    }
    delete [] YY;
