@@ -284,6 +284,16 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
+  
+ifeq ($(ARCH),linuxdeb2ppc)
+# Debian/Linux on the PowerPC
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+ 
 
 ifeq ($(ARCH),linuxsuse6)
 # Linux with gcc 2.7.2.x
