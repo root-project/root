@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.51 2004/03/09 14:01:51 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.52 2004/03/10 14:43:10 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4564,6 +4564,34 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
 }
 
 //______________________________________________________________________________
+static char *EventMask2String(UInt_t evmask)
+{
+   // debug function for printing event mask
+
+   static char bfr[500];
+   char *p = bfr;
+
+   *p = '\0';
+#define BITmask(x) \
+  if (evmask & k##x##Mask) \
+    p += sprintf (p, "%s" #x, (p > bfr ? " " : ""))
+   BITmask(Exposure);
+   BITmask(PointerMotion);
+   BITmask(ButtonMotion);
+   BITmask(ButtonPress);
+   BITmask(ButtonRelease);
+   BITmask(KeyPress);
+   BITmask(KeyRelease);
+   BITmask(EnterWindow);
+   BITmask(LeaveWindow);
+   BITmask(FocusChange);
+   BITmask(StructureNotify);
+#undef BITmask
+
+   return bfr;
+}
+
+//______________________________________________________________________________
 void TGWin32::MapEventMask(UInt_t & emask, UInt_t & xemask, Bool_t tox)
 {
    // Map event mask to or from gdk.
@@ -4973,6 +5001,12 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    } else {
       attr.fMapState = kIsViewable;
    }
+
+   UInt_t tmp_mask = (UInt_t)gdk_window_get_events((GdkWindow *) id);
+   UInt_t evmask;
+   MapEventMask(evmask, tmp_mask, kFALSE);
+
+   attr.fYourEventMask = evmask;
 }
 
 //______________________________________________________________________________
