@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.75 2001/05/23 16:09:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.76 2001/05/24 16:41:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -703,6 +703,8 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
   // Note that with the new style, classname does not need to derive from TObject.
   // It must derived from TObject if the branch style has been set to 0 (old)
   //
+  // Use splitlevel < 0 instead of splitlevel=0 when the class
+  // has a custom Streamer
       
    if (fgBranchStyle == 1) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
@@ -968,6 +970,9 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //       tree.Branch("B2.","MyClass",&b2,8000,1);
 //    if MyClass has 3 members a,b,c, the two instructions above will generate
 //    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
+//
+//   Use splitlevel < 0 instead of splitlevel=0 when the class
+//   has a custom Streamer
 
    gTree = this;
    TClass *cl = gROOT->GetClass(classname);
@@ -976,11 +981,16 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       return 0;
    }
 
-   //if splitlevel = 0 and class has a custom Streamer, we must create
+   //if splitlevel <= 0 and class has a custom Streamer, we must create
    //a TBranchObject. We cannot assume that TClass::ReadBuffer is consistent
    //with the custom Streamer. The penalty is that one cannot process
    //this Tree without the class library containing the class.
-   if (splitlevel <= 0 && cl->GetClassInfo()->RootFlag() == 0) {
+   Bool_t HasCustomStreamer = kFALSE;
+   if (cl == TClonesArray::Class()) HasCustomStreamer = kTRUE;
+   //add here additional cases when RootFlag will be functional   
+   //if (splitlevel <= 0 && (cl->GetClassInfo()->RootFlag() == 0)) {
+   
+   if (splitlevel < 0 || (splitlevel == 0 && HasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
