@@ -1,21 +1,15 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.21 2004/01/27 19:56:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.22 2004/09/27 12:08:08 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
 //   THIS CLASS CONTAINS ADVANCED SPECTRA PROCESSING FUNCTIONS.            //
 //                                                                         //
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                       //
-//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                       //
 //   ONE-DIMENSIONAL SMOOTHING FUNCTIONS                                   //
-//   TWO-DIMENSIONAL SMOOTHING FUNCTIONS                                   //
 //   ONE-DIMENSIONAL DECONVOLUTION FUNCTIONS                               //
-//   TWO-DIMENSIONAL DECONVOLUTION FUNCTIONS                               //
 //   ONE-DIMENSIONAL PEAK SEARCH FUNCTIONS                                 //
-//   TWO-DIMENSIONAL PEAK SEARCH FUNCTIONS                                 //
 //   ONE-DIMENSIONAL PEAKS FITTING FUNCTIONS                               //
-//   TWO-DIMENSIONAL PEAKS FITTING FUNCTIONS                               //
 //   ONE-DIMENSIONAL ORTHOGONAL TRANSFORMS FUNCTIONS                       //
-//   TWO-DIMENSIONAL ORTHOGONAL TRANSFORMS FUNCTIONS                       //
 //                                                                         //
 //   These functions were written by:                                      //
 //   Miroslav Morhac                                                       //
