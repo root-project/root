@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.26 2001/11/02 08:38:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.27 2001/12/02 16:16:52 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -881,7 +881,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
   }
 
   const Double_t total = integral[npx];
-  for (Int_t i = 1; i <= npx; i++) integral[i] /= total;
+  for (i = 1; i <= npx; i++) integral[i] /= total;
   //the integral r for each bin is approximated by a parabola
   //  x = alpha + beta*r +gamma*r**2
   // compute the coefficients alpha, beta, gamma for each bin
