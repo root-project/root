@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -32,10 +32,10 @@
 class TBranchClones : public TBranch {
 
 protected:
-    TClonesArray     *fList;           //Pointer to the clonesarray
-    Int_t            fRead;            //flag = 1 if clonesarray has been read
-    Int_t            fN;               //Number of elements in ClonesArray
-    Int_t            fNdataMax;        //Maximum value of fN
+    TClonesArray     *fList;           //!Pointer to the clonesarray
+    Int_t            fRead;            //!flag = 1 if clonesarray has been read
+    Int_t            fN;               //!Number of elements in ClonesArray
+    Int_t            fNdataMax;        //!Maximum value of fN
     TString          fClassName;       //name of the class of the objets in the ClonesArray
     TBranch          *fBranchCount;    //Branch with clones count
 
@@ -55,7 +55,7 @@ public:
     virtual void    SetAddress(void *add);
     virtual void    SetBasketSize(Int_t buffsize);
 
-    ClassDef(TBranchClones,1)  //Branch in case of an array of clone objects
+    ClassDef(TBranchClones,2)  //Branch in case of an array of clone objects
 };
 
 #endif
