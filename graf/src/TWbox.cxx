@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TWbox::TWbox(): TBox()
 }
 
 //______________________________________________________________________________
-TWbox::TWbox(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+TWbox::TWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
              Color_t color ,Short_t bordersize ,Short_t bordermode)
        :TBox(x1,y1,x2,y2)
 {
@@ -94,7 +94,7 @@ void TWbox::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TWbox::DrawWbox(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TWbox::DrawWbox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Color_t color ,Short_t bordersize ,Short_t bordermode)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this wbox with new coordinates*-*-*-*-*-*-*-*-*-*
@@ -125,7 +125,7 @@ void TWbox::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TWbox::PaintWbox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2,
+void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
                       Color_t color, Short_t bordersize, Short_t bordermode)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this wbox with new coordinates*-*-*-*-*-*-*-*-*-*
@@ -140,7 +140,7 @@ void TWbox::PaintWbox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2,
 }
 
 //______________________________________________________________________________
-void TWbox::PaintFrame(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                        Color_t color, Short_t bordersize, Short_t bordermode,
                        Bool_t tops)
 {
@@ -150,7 +150,7 @@ void TWbox::PaintFrame(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
    if (bordersize <= 0) bordersize = 2;
 
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
-   Float_t xl, xt, yl, yt;
+   Double_t xl, xt, yl, yt;
 
 //*-*- Compute real left bottom & top right of the box in pixels
    px1 = gPad->XtoPixel(x1);   py1 = gPad->YtoPixel(y1);
@@ -201,7 +201,7 @@ void TWbox::PaintFrame(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
    if (!tops) return;
 
 //*-*- same for PostScript
-//   Float_t dx   = (xt - xl) *Float_t(bordersize)/Float_t(pxt - pxl);
+//   Double_t dx   = (xt - xl) *Double_t(bordersize)/Double_t(pxt - pxl);
 //   Int_t border = gVirtualPS->XtoPS(xt) - gVirtualPS->XtoPS(xt-dx);
 
    gPad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
