@@ -2,9 +2,7 @@
 
 #include <map>
 #include <algorithm>
-#if !defined(G__SUNPRO_C) && !defined(__SUNPRO_CC)
 #include <string>
-#endif
 #ifndef __hpux
 using namespace std;
 #endif

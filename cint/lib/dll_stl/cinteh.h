@@ -4,9 +4,6 @@
 #ifndef __hpux
 using namespace std;
 #endif
-#ifdef __SUNPRO_CC
-#define exception std::exception
-#endif
 
 #include <string>
 class G__exception : public std::exception {
@@ -23,6 +20,10 @@ class G__exception : public std::exception {
   virtual const char* name() const throw() { return(cname.c_str()); }
   virtual ~G__exception() throw() { }
 };
+
+#if !defined(__CINT__) && defined(__SUNPRO_CC)
+#define exception std::exception
+#endif
 
 #ifdef __MAKECINT__
 #ifndef G__EXCEPTION_DLL
