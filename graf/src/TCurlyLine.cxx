@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -54,63 +54,92 @@ void TCurlyLine::Build()
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) line*-*-*-*-*-*
 //*-*                  ===========================================
-
-   Double_t pixwave,pixampl;
+//---
+   Double_t PixeltoX = 1;
+   Double_t PixeltoY = 1;
+//---
+   Double_t wavelengthPix,amplitudePix, lengthPix, hPix;
+   Double_t px1, py1, px2, py2;
    if (gPad) {
-      Double_t hpixels  = gPad->GetAbsHNDC()*gPad->GetWh();
-      Int_t px1         = gPad->XtoAbsPixel(fX1);
-      Int_t py1         = gPad->YtoAbsPixel(fY1);
-      Int_t px2         = gPad->XtoAbsPixel(fX2);
-      Int_t py2         = gPad->YtoAbsPixel(fY2);
-      Double_t pl2      = Double_t((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
-      Double_t pixlength = TMath::Sqrt(pl2);
-      pixwave           = hpixels*fWaveLength/pixlength;
-      pixampl           = hpixels*fAmplitude/pixlength;
+   	Double_t ww = (Double_t)gPad->GetWw();
+   	Double_t wh = (Double_t)gPad->GetWh();
+   	Double_t pxrange = gPad->GetAbsWNDC()*ww;
+   	Double_t pyrange = - gPad->GetAbsHNDC()*wh;
+   	Double_t xrange  = gPad->GetX2() - gPad->GetX1();
+   	Double_t yrange  = gPad->GetY2() - gPad->GetY1();
+
+//    PixeltoX  = gPad->GetPixeltoX(); 
+//    PixeltoY  = gPad->GetPixeltoY(); 
+
+   	PixeltoX  = xrange / pxrange;
+   	PixeltoY  = yrange/pyrange;
+      hPix  = TMath::Max(gPad->GetAbsHNDC() * gPad->GetWh(), gPad->GetAbsWNDC() * gPad->GetWw());
+      px1      = gPad->XtoAbsPixel(fX1);
+      py1      = gPad->YtoAbsPixel(fY1);
+      px2      = gPad->XtoAbsPixel(fX2);
+      py2      = gPad->YtoAbsPixel(fY2);
+
+      lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
+      wavelengthPix = hPix*fWaveLength;
+      amplitudePix  = hPix*fAmplitude;
    } else {
-      pixwave           = fWaveLength;
-      pixampl           = fAmplitude;
+      wavelengthPix = fWaveLength;
+      amplitudePix  = fAmplitude;
+      px1           = fX1;
+      py1           = fY1;
+      px2           = fX2;
+      py2           = fY2;
+      lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
    }
+// construct the curly / wavy line in pixel coordinates at angle 0
    Double_t anglestep = 20;
    Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
-   Double_t length    = TMath::Sqrt((fX2-fX1)*(fX2-fX1) + (fY2-fY1)*(fY2-fY1));
-   Double_t  ampl     = length*pixampl;
-   Double_t wave      = length*pixwave;
-   Double_t dx        = wave/25;
+   Double_t dx        = wavelengthPix / 25;
    Double_t len2pi    = dx * anglestep;
-   if(length <= 4 * ampl){
-      cout << "CurlyLine:: too short " << length << endl;
+   if(lengthPix <= 4 * amplitudePix){
+      cout << "CurlyLine:: too short " << lengthPix << endl;
       SetBit(kTooShort);
       return;
    }
-   Double_t angle = TMath::ATan2(fY2-fY1, fX2-fX1);
-   if(angle < 0) angle += 2*TMath::Pi();
-   Double_t  lengthcycle = 0.5*len2pi + 2*ampl;
-   Int_t nperiods = (Int_t)((length - lengthcycle) / len2pi);
-   Double_t restlenght = 0.5 * (length - nperiods * len2pi - lengthcycle);
-   fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 +4);
+   Double_t  lengthcycle = 0.5 * len2pi + 2 * amplitudePix;
+   Int_t nperiods = (Int_t)((lengthPix - lengthcycle) / len2pi);
+   Double_t restlength = 0.5 * (lengthPix - nperiods * len2pi - lengthcycle);
+   fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 + 4);
    SetPolyLine(fNsteps);
    Double_t *xv = GetX();
    Double_t *yv = GetY();
    xv[0] = 0;          yv[0] = 0;
-   xv[1] = restlenght; yv[1] = 0;
+   xv[1] = restlength; yv[1] = 0;
    Double_t phase =  1.5 * TMath::Pi();
-   Double_t x0 = ampl + restlenght;
+   Double_t x0 = amplitudePix + restlength;
    Int_t i;
    for(i = 2; i < fNsteps-1; i++){
 //  distinguish between curly and wavy
-      if(fIsCurly) xv[i] = x0 + ampl*TMath::Sin(phase);
+      if(fIsCurly) xv[i] = x0 + amplitudePix * TMath::Sin(phase);
       else         xv[i] = x0;
-      yv[i]  = ampl*TMath::Cos(phase);
+      yv[i]  = amplitudePix*TMath::Cos(phase);
       phase += phimaxle;
       x0    += dx;
    }
-   xv[fNsteps-1] = length; yv[fNsteps-1] = 0;
+   xv[fNsteps-1] = lengthPix; yv[fNsteps-1] = 0;
+   
+   if (InheritsFrom("TCurlyArc")) return;  // called by TCurlyArc
+
+// rotate object and transform back to user coordinates 
+  Double_t angle = TMath::ATan2(py2-py1, px2-px1);
+   if(angle < 0) angle += 2*TMath::Pi();
+
    Double_t cosang = TMath::Cos(angle);
    Double_t sinang = TMath::Sin(angle);
    Double_t xx, yy;
+
    for(i = 0; i < fNsteps; i++){
       xx = xv[i] * cosang - yv[i] * sinang;
       yy = xv[i] * sinang + yv[i] * cosang;
+      if (gPad) {
+        xx *= PixeltoX;
+        yy *= PixeltoY;
+      }
       xv[i] = xx + fX1;
       yv[i] = yy + fY1;
    }

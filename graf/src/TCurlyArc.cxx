@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -57,6 +57,22 @@ void TCurlyArc::Build()
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) arc*-*-*-*-*-*
 //*-*                  ===========================================
+   Double_t PixeltoX = 1;
+   Double_t PixeltoY = 1;
+   Double_t rPix = fR1;
+   if (gPad) {
+   	Double_t ww = (Double_t)gPad->GetWw();
+   	Double_t wh = (Double_t)gPad->GetWh();
+   	Double_t pxrange = gPad->GetAbsWNDC()*ww;
+   	Double_t pyrange = - gPad->GetAbsHNDC()*wh;
+   	Double_t xrange  = gPad->GetX2() - gPad->GetX1();
+   	Double_t yrange  = gPad->GetY2() - gPad->GetY1();
+//    PixeltoX  = gPad->GetPixeltoX(); 
+//    PixeltoY  = gPad->GetPixeltoY(); 
+   	PixeltoX  = xrange / pxrange;
+   	PixeltoY  = yrange/pyrange;
+      rPix = fR1 / PixeltoX;
+   }
    Double_t dang = fPhimax - fPhimin;
    if(dang < 0) dang += 360;
    Double_t length = TMath::Pi() * fR1 * dang/180;
@@ -66,19 +82,22 @@ void TCurlyArc::Build()
    fX2 = length;
    fY2 = 0;
    TCurlyLine::Build();
+//   TCurlyLine::Build(kTRUE);
    fX1 = x1sav;
    fY1 = y1sav;
    Double_t *xv= GetX();
    Double_t *yv= GetY();
    Double_t xx, yy, angle;
    for(Int_t i = 0; i < fNsteps; i++){
-      angle = xv[i] / (fR1) + fPhimin * TMath::Pi()/180;
-      xx    = (yv[i] + fR1) * cos(angle);
-      yy    = (yv[i] + fR1) * sin(angle);
+      angle = xv[i] / rPix + fPhimin * TMath::Pi()/180;
+      xx    = (yv[i] + rPix) * cos(angle);
+      yy    = (yv[i] + rPix) * sin(angle);
+      xx *= PixeltoX;
+      yy *= TMath::Abs(PixeltoY);
       xv[i] = xx + fX1;
       yv[i] = yy + fY1;
    }
-
+   if (gPad) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -89,7 +108,7 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 //  Compute the closest distance of approach from point px,py to this arc.
 //  The distance is computed in pixels units.
 //
-
+//   static Int_t ncalls = 0;
 //*-*- Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
@@ -104,7 +123,7 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
    } else {
       if(phi > fPhimin && phi < fPhimax) return 9999;
    }
-   Int_t pxr = gPad->XtoAbsPixel(fR1 + gPad->GetUxmin());
+   Int_t pxr = gPad->XtoPixel(fR1)- gPad->XtoPixel(0);
    Double_t distr = TMath::Abs(dist-pxr);
    return Int_t(distr);
 }
@@ -148,8 +167,9 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          angle = Double_t(i)*dphi + phi0;
          dx    = fR1*TMath::Cos(angle);
          dy    = fR1*TMath::Sin(angle);
+         Int_t RpixY = gPad->XtoAbsPixel(dy) - gPad->XtoAbsPixel(0);
          x[i]  = gPad->XtoAbsPixel(fX1 + dx);
-         y[i]  = gPad->YtoAbsPixel(fY1 + dy);
+         y[i]  = gPad->YtoAbsPixel(fY1) + RpixY;
       }
       if (fPhimax-fPhimin >= 360 ) {
          x[np+1] = x[0];
@@ -166,11 +186,13 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       py1 = gPad->YtoAbsPixel(fY1);
       Tx = Bx = px1;
       Ly = Ry = py1;
-      Ty = gPad->YtoAbsPixel( fR1+fY1);
-      By = gPad->YtoAbsPixel(-fR1+fY1);
       Lx = gPad->XtoAbsPixel(-fR1+fX1);
       Rx = gPad->XtoAbsPixel( fR1+fX1);
-      R1 = TMath::Abs(By-Ty)/2;
+      R1 = TMath::Abs(Lx-Rx)/2;
+// a circle in pixels, radius measured along X     
+      Ty = gPad->YtoAbsPixel(fY1) + R1;
+      By = gPad->YtoAbsPixel(fY1) - R1;
+
       gVirtualX->DrawLine(Rx+4, py1+4, Rx-4, py1+4);
       gVirtualX->DrawLine(Rx-4, py1+4, Rx-4, py1-4);
       gVirtualX->DrawLine(Rx-4, py1-4, Rx+4, py1-4);
@@ -194,10 +216,12 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       py1 = gPad->YtoAbsPixel(fY1);
       Tx = Bx = px1;
       Ly = Ry = py1;
-      Ty = gPad->YtoAbsPixel(fR1+fY1);
-      By = gPad->YtoAbsPixel(-fR1+fY1);
       Lx = gPad->XtoAbsPixel(-fR1+fX1);
-      Rx = gPad->XtoAbsPixel(fR1+fX1);
+      Rx = gPad->XtoAbsPixel( fR1+fX1);
+      
+      Ty = gPad->YtoAbsPixel(fY1) + TMath::Abs(Lx-Rx)/2;
+      By = gPad->YtoAbsPixel(fY1) - TMath::Abs(Lx-Rx)/2;
+
       T = L = R = B = INSIDE = kFALSE;
       if ((TMath::Abs(px - Tx) < kMaxDiff) &&
           (TMath::Abs(py - Ty) < kMaxDiff)) {             // top edge
@@ -264,15 +288,19 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if(dphi<0) dphi += 2 * PI;
          dphi /= np;
          phi0 = fPhimin * PI / 180;
-         Double_t uR1 = gPad->PixeltoX(R1) - gPad->GetUxmin();
+//         Double_t uR1 = gPad->PixeltoX(R1) - gPad->GetUxmin();
+         Double_t uR1 = R1;
          Int_t pX1   = gPad->XtoAbsPixel(fX1);
          Int_t pY1   = gPad->YtoAbsPixel(fY1);
          for (i=0;i<=np;i++) {
             angle = Double_t(i)*dphi + phi0;
             dx    = uR1 * TMath::Cos(angle);
             dy    = uR1 * TMath::Sin(angle);
-            x[i]  = gPad->XtoAbsPixel(fX1 + dx);
-            y[i]  = gPad->YtoAbsPixel(fY1 + dy);
+            x[i]  = pX1 + (Int_t)dx;
+            y[i]  = pY1 + (Int_t)dy;
+
+//            x[i]  = gPad->XtoAbsPixel(fX1 + dx);
+//            y[i]  = gPad->YtoAbsPixel(fY1 + dy);
          }
          if (fPhimax-fPhimin >= 360 ) {
             x[np+1] = x[0];
@@ -329,7 +357,6 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       rLx = gPad->AbsPixeltoX(px1+R1);
       rRx = gPad->AbsPixeltoX(px1-R1);
       fR1 = TMath::Abs(rRx-rLx)/2;
-      fR1 = TMath::Abs(rTy-rBy)/2;
       Build();
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
