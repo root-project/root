@@ -2335,7 +2335,7 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION809
     p2ffpara = libp;
 #endif
-    result3=G__pointer2func(result7,pfparam,known3);
+    result3=G__pointer2func((G__value*)NULL,result7,pfparam,known3);
 #ifndef G__OLDIMPLEMENTATION809
     p2ffpara=(struct G__param*)NULL;
 #endif
@@ -2907,11 +2907,11 @@ int memfunc_flag;
       case '(':
       default:
 	/* function pointer */
-	return(G__pointer2func(fpara.parameter[0],fpara.parameter[1],known3));
+	return(G__pointer2func((G__value*)NULL,fpara.parameter[0],fpara.parameter[1],known3));
       }
 #else
       /* function pointer */
-      return(G__pointer2func(fpara.parameter[0],fpara.parameter[1],known3));
+      return(G__pointer2func((G__value*)NULL,fpara.parameter[0],fpara.parameter[1],known3));
 #endif
     }
 
@@ -4163,7 +4163,7 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION809
     p2ffpara = &fpara;
 #endif
-    result3=G__pointer2func(result7,pfparam,known3);
+    result3=G__pointer2func((G__value*)NULL,result7,pfparam,known3);
 #ifndef G__OLDIMPLEMENTATION809
     p2ffpara=(struct G__param*)NULL;
 #endif

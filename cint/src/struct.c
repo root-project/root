@@ -1027,6 +1027,7 @@ int type;
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION2027
+    /* reserve the first entry for dtor */
     G__struct.memfunc[i]->hash[0]=0;
     G__struct.memfunc[i]->funcname[0]=(char*)malloc(2);
     G__struct.memfunc[i]->funcname[0][0]=0;

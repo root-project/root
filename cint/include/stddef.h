@@ -6,5 +6,5 @@ typedef int ptrdiff_t;
 typedef long ptrdiff_t;
 #endif
 typedef unsigned int size_t;
-typedef unsigned int wchar_t;
+typedef unsigned short wchar_t;
 #endif

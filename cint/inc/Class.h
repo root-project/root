@@ -165,7 +165,7 @@ G__ClassInfo {
   long ClassProperty();
 #endif
 #ifndef G__OLDIMPLEMENTATION2118
-  unsigned char FuncFlag();
+  unsigned char FuncFlag(); 
 #endif
 
 };

@@ -1144,7 +1144,11 @@ int basen;
      || -1==pobject || 1==pobject
 #endif
      ) {
+#ifndef G__OLDIMPLEMENTATION2146
+    if(!G__cintv6) G__abortbytecode();
+#else
     G__abortbytecode();
+#endif
     return(0);
   }
 #else

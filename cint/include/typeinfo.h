@@ -104,7 +104,12 @@ const char* type_info::name() const
   static char namestring[100];
   //printf("%d %d %d %d\n",type,tagnum,typenum,reftype);
 #ifndef G__OLDIMPLEMENTATION1895
+#ifdef G__GNUC
+  char *cptr = G__type2string(type,tagnum,typenum,reftype,isconst);
+  sprintf(namestring,"%d%s",strlen(cptr),cptr);
+#else
   strcpy(namestring,G__type2string(type,tagnum,typenum,reftype,isconst));
+#endif
 #else
   strcpy(namestring,G__type2string(type,tagnum,typenum,reftype));
 #endif

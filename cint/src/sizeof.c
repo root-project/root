@@ -1274,11 +1274,19 @@ int objsize;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #endif
+#if defined(__GNUC__)
+    *(int*)(p) = (int)G__int(*pval);
+#else
     *(char*)(p) = (char)G__int(*pval);
+#endif
     break;
   case 'r':
   case 's':
+#if defined(__GNUC__)
+    *(int*)(p) = (int)G__int(*pval);
+#else
     *(short*)(p) = (short)G__int(*pval);
+#endif
     break;
   case 'h':
   case 'i':

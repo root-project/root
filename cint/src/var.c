@@ -913,7 +913,7 @@ G__value *presult;
     ltype.tagnum = var->p_tagtable[ig15];
     ltype.typenum = var->p_typetable[ig15];
     ltype.obj.reftype.reftype = var->reftype[ig15];
-    if(!G__Isvalidassignment_val(&ltype,presult)) {
+    if(!G__Isvalidassignment_val(&ltype,paran,var_type,presult)) {
       G__fprinterr(G__serr,"Error: assignment type mismatch %s "
                     ,var->varnamebuf[ig15]);
       G__genericerror((char*)NULL);
@@ -3353,6 +3353,10 @@ struct G__var_array *varglobal,*varlocal;
   int store_vartype;
   long store_struct_offset;
   int store_tagnum;
+#ifndef G__OLDIMPLEMENTATION2146
+  int posbracket=0;
+  int posparenthesis=0;
+#endif
 
   
 #ifdef G__ASM
@@ -3559,6 +3563,25 @@ struct G__var_array *varglobal,*varlocal;
       }
       break;
       
+#ifndef G__OLDIMPLEMENTATION2146
+    case '[':
+      if((single_quote==0)&&(double_quote==0)) {
+	if(!paran && !posbracket) posbracket=ig2;
+	paren++;
+      }
+      break;
+    case '(':
+      if((single_quote==0)&&(double_quote==0)) {
+	if(!paran && !posparenthesis) posparenthesis=ig2;
+	paren++;
+      }
+      break;
+    case '{':  /* this shouldn't appear */
+      if((single_quote==0)&&(double_quote==0)) {
+	paren++;
+      }
+      break;
+#else /* 2146 */
     case '[':
       
     case '{':  /* this shouldn't appear */
@@ -3567,6 +3590,7 @@ struct G__var_array *varglobal,*varlocal;
 	paren++;
       }
       break;
+#endif /* 2146 */
       
       /*************************************************
        * decrement paren for close parenthesis
@@ -3670,6 +3694,22 @@ struct G__var_array *varglobal,*varlocal;
     /* if 'func(xxxx)' return */
     return(G__null);
   }
+
+#ifndef G__OLDIMPLEMENTATION2146
+  /************************************************************
+   * var[x](a,b);
+   ************************************************************/
+  if(item[ig15]=='[' && posparenthesis) {
+    /* G__abortbytecode(); */
+    item[posparenthesis] = 0;
+    result = G__getvariable(item,known2,varglobal,varlocal);
+    if(!known2) return(G__null);
+    item[posparenthesis] = '(';
+    result = G__pointer2func(&result,(char*)NULL,item+posparenthesis,known2);
+    *known2=1;
+    return(result);
+  }
+#endif
   
   /************************************************************
    * set null char to varname. Should be move above.
@@ -3717,16 +3757,14 @@ struct G__var_array *varglobal,*varlocal;
 	case '(':
 	case '[':
 	case '{':
-	  if((double_quote==0)&&
-	     (single_quote==0)) { 
+	  if((double_quote==0)&&(single_quote==0)) { 
 	    nest++;
 	  }
 	  break;
 	case ')':
 	case ']':
 	case '}':
-	  if((double_quote==0)&&
-	     (single_quote==0)) { 
+	  if((double_quote==0)&&(single_quote==0)) { 
 	    nest--;
 	  }
 	  break;
@@ -4031,11 +4069,23 @@ struct G__var_array *varglobal,*varlocal;
 	result.ref=G__struct_offset+var->p[ig15];
 	G__var_type='p';
 	if('u'==tolower(var->type[ig15])) {
+#ifndef G__OLDIMPLEMENTATION2145
+	  int varparan=var->paran[ig15];
+	  if('U'==var->type[ig15]) ++varparan;
+	  if(var->reftype[ig15]>G__PARAREFERENCE)
+	    varparan += (var->reftype[ig15]%G__PARAREF)-G__PARAP2P;
+	  for(ig25=0;ig25<paran&&ig25<varparan;ig25++) ;
+	  while(ig25<paran&&var->varlabel[ig15][ig25+4]) ++ig25;
+	  if(ig25<paran) {
+	    G__tryindexopr(&result,para,paran,ig25);
+	  }
+#else
 	  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) ;
 	  while(ig25<paran&&var->varlabel[ig15][ig25+4]) ++ig25;
 	  if(ig25<paran) {
 	    G__tryindexopr(&result,para,paran,ig25);
 	  }
+#endif
 	}
 	return(result);
       }

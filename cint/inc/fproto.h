@@ -528,7 +528,7 @@ int G__dump_header G__P((char *outfile));
 void G__listshlfunc G__P((FILE *fout));
 void G__listshl G__P((FILE *G__temp));
 int G__free_shl_upto G__P((int allsl));
-G__value G__pointer2func G__P((char *parameter0,char *parameter1,int *known3));
+G__value G__pointer2func G__P((G__value* obj_p2f,char *parameter0,char *parameter1,int *known3));
 char *G__search_func G__P((char *funcname,G__value *buf));
 char *G__search_next_member G__P((char *text,int state));
 int G__sizeof G__P((G__value *object));
@@ -878,6 +878,11 @@ int G__bc_exec_normal_bytecode G__P((G__value *result7
 			,struct G__param *libp
 			,int hash              // ifn
 			)) ;
+int G__bc_exec_ctor_bytecode G__P((G__value *result7
+			,char *funcname        // ifunc
+			,struct G__param *libp
+			,int hash              // ifn
+			)) ;
 int G__bc_exec_ctorary_bytecode G__P((G__value *result7
 			,char *funcname        // ifunc
 			,struct G__param *libp
@@ -906,7 +911,7 @@ void G__bc_delete_operator G__P((const char *expression,int isarray)) ;
 int G__bc_exec_try_bytecode G__P((int start,int stack,G__value *presult,long localmem)) ;
 int G__bc_exec_throw_bytecode G__P((G__value* pval));
 int G__bc_exec_typematch_bytecode G__P((G__value* catchtype,G__value* excptobj));
-int G__Isvalidassignment_val G__P((G__value* ltype,G__value* rtype));
+int G__Isvalidassignment_val G__P((G__value* ltype,int lparan,int lvar_type,G__value* rtype));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2136

@@ -3012,6 +3012,61 @@ long localmem;
 #endif /* 0 */
 #endif /* 2042 */
 
+#ifndef G__OLDIMPLEMENTATION2140
+    case G__MEMCPY:
+      /***************************************
+      * inst
+      * 0 MEMCPY
+      * stack
+      * sp-4
+      * sp-3        ORIG  
+      * sp-2        DEST  <- sp-2   this implementation is quetionable
+      * sp-1        SIZE
+      * sp
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: MEMCPY %lx %lx %ld\n",pc,sp
+				  ,G__int(G__asm_stack[sp-2])
+				  ,G__int(G__asm_stack[sp-3])
+				  ,G__int(G__asm_stack[sp-1]));
+#endif
+      memcpy((void*)G__int(G__asm_stack[sp-2]),(void*)G__int(G__asm_stack[sp-3]),
+	     G__int(G__asm_stack[sp-1]));
+      ++pc;
+      /* -3 might be better, because MEMCPY instruction is only used in 
+       *implicit copy ctor and operator=. Need to be careful about other use */
+      sp -= 2;  
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2142
+    case G__PAUSE:
+      /***************************************
+      * inst
+      * 0 PAUSE
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: PAUSE\n",pc,sp);
+#endif
+      printf("%3x,%d: PAUSE ",pc,sp);
+      printf("inst=%p stack=%p localmem=%lx tag=%d stros=%lx gvp=%lx\n"
+	     ,G__asm_inst,G__asm_stack,localmem
+	     ,G__tagnum
+	     ,G__store_struct_offset
+	     ,G__globalvarpointer);
+      G__pause();
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif
+
 #ifdef G__NEVER_BUT_KEEP
     case G__NOP:
       /***************************************
@@ -6960,7 +7015,11 @@ int G__asm_clear()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION2134
-  if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]) G__inc_cp_asm(-2,0);
+  /* Issue, value of G__CL must be unique. Otherwise, following optimization
+   * causes problem. There is similar isseue, but the biggest risk is here. */
+  if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]
+     && (G__asm_inst[G__asm_cp-1]&0xffff0000)==0x7fff0000) 
+    G__inc_cp_asm(-2,0);
   G__asm_inst[G__asm_cp]=G__CL;
   G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
                     + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
@@ -7276,6 +7335,8 @@ int type;
 int G__asm_optimize(start)
 int *start;
 {
+  /* Issue, value of G__LD_VAR, G__LD_MVAR, G__LD, G__CMP2, G__CNDJMP must be
+   * unique. Otherwise, following optimization causes problem. */
   int *pb;
   /*******************************************************
    * i<100, i<=100, i>0 i>=0 at loop header
@@ -10884,6 +10945,39 @@ int *start;
 #endif /* 0 */
 #endif /* 2042 */
 
+#ifndef G__OLDIMPLEMENTATION2140
+    case G__MEMCPY:
+      /***************************************
+      * inst
+      * 0 MEMCPY
+      * stack
+      * sp-3        ORIG  <- sp-3
+      * sp-2        DEST
+      * sp-1        SIZE
+      * sp
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: MEMCPY\n",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2142
+    case G__PAUSE:
+      /***************************************
+      * inst
+      * 0 PAUSe
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: PAUSE\n",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif
+
     case G__NOP:
       /***************************************
       * 0 NOP
@@ -12209,6 +12303,38 @@ int isthrow;
       break;
 #endif /* 0 */
 #endif /* 2042 */
+
+#ifndef G__OLDIMPLEMENTATION2140
+    case G__MEMCPY:
+      /***************************************
+      * inst
+      * 0 MEMCPY
+      * stack
+      * sp-3        ORIG  <- sp-3
+      * sp-2        DEST
+      * sp-1        SIZE
+      * sp
+      ***************************************/
+      if(0==isthrow) {
+	fprintf(fout,"%3x: MEMCPY\n" ,pc);
+      }
+      ++pc;
+      break;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2142
+    case G__PAUSE:
+      /***************************************
+      * inst
+      * 0 PAUSe
+      ***************************************/
+      if(0==isthrow) {
+	fprintf(fout,"%3x: PAUSE\n" ,pc);
+      }
+      ++pc;
+      break;
+#endif
+
 
     case G__NOP:
       /***************************************

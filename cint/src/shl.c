@@ -1298,7 +1298,8 @@ void *p2f;
 *
 * Calling fucntion by pointer to function
 ******************************************************************/
-G__value G__pointer2func(parameter0,parameter1,known3)
+G__value G__pointer2func(obj_p2f,parameter0,parameter1,known3)
+G__value *obj_p2f;
 char *parameter0 ;
 char *parameter1;
 int *known3;
@@ -1312,7 +1313,8 @@ int *known3;
 #endif
 
   /* get value of pointer to function */
-  result3 = G__getitem(parameter0+1);
+  if(obj_p2f) result3 = *obj_p2f;
+  else        result3 = G__getitem(parameter0+1);
 
 #ifndef G__OLDIMPLEMENTATION679
   /* operator overloading */

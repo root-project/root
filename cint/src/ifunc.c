@@ -2130,8 +2130,21 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	  G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
 	  if(ifunc->para_name[iexist][iin]) {
 	    if(G__p_ifunc->para_name[func_now][iin]) {
+#ifndef G__OLDIMPLEMENTATION2143
+	      if(dobody && 0!=strcmp(ifunc->para_name[iexist][iin]
+				     ,G__p_ifunc->para_name[func_now][iin])) {
+		free((void*)ifunc->para_name[iexist][iin]);
+		ifunc->para_name[iexist][iin]
+		  =G__p_ifunc->para_name[func_now][iin];
+	      }
+	      else {
+		free((void*)G__p_ifunc->para_name[func_now][iin]);
+	      }
+	      G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+#else
 	      free((void*)G__p_ifunc->para_name[func_now][iin]);
 	      G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+#endif
 	    }
 	  }
 	  else {
@@ -6695,7 +6708,10 @@ asm_ifunc_start:   /* loop compilation execution label */
         G__asm_inst[G__asm_cp+1]=(long)p_ifunc;
         G__asm_inst[G__asm_cp+2]=ifn;
         G__asm_inst[G__asm_cp+3]=libp->paran;
-        G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
+        if(-1!=p_ifunc->tagnum && strcmp(funcname,G__struct.name[p_ifunc->tagnum])==0)
+          G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_ctor_bytecode;
+        else
+          G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
         G__inc_cp_asm(5,0);
       }
     }
@@ -8295,6 +8311,9 @@ int *piexist;
  int mask;
 {
   int i,j,paran;
+#ifndef G__OLDIMPLEMENTATION2144
+  int ref_diff;
+#endif
   while(ifunc) {
     for(i=0;i<ifunc->allifunc;i++) {
       if('~'==ifunc_now->funcname[allifunc][0] &&
@@ -8331,10 +8350,18 @@ int *piexist;
 	paran=ifunc_now->para_nu[allifunc];
       else
 	paran = 0;
+#ifndef G__OLDIMPLEMENTATION2144
+      ref_diff=0;
+#endif
       for(j=0;j<paran;j++) {
 	if(ifunc_now->para_type[allifunc][j]!=ifunc->para_type[i][j] ||
 	   ifunc_now->para_p_tagtable[allifunc][j]!=ifunc->para_p_tagtable[i][j]
-#ifndef G__OLDIMPLEMENTATION1120
+#if !defined(G__OLDIMPLEMENTATION2144)
+	   || (ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]
+	       && G__PARAREFERENCE !=
+	       ifunc_now->para_reftype[allifunc][j]+ifunc->para_reftype[i][j]
+	       )
+#elif !defined(G__OLDIMPLEMENTATION1120)
 	   || ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]
 #endif
 #ifndef G__OLDIMPLEMENTATION1977
@@ -8343,8 +8370,19 @@ int *piexist;
 	   ) {
 	  break; /* unmatch */
 	}
+#ifndef G__OLDIMPLEMENTATION2144
+	if(ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]) 
+	  ++ref_diff;
+#endif
       }
       if(j==paran) { /* all matched */
+#ifndef G__OLDIMPLEMENTATION2144
+	if(ref_diff) {
+	  G__fprinterr(G__serr,"Warning: %s(), parameter only differs in reference type or not"
+		       ,ifunc->funcname[i]);
+	  G__printlinenum();
+	}
+#endif
 #ifdef G__OLDIMPLEMENTATION1706_YET
 	/* This change causes problem with virtual func definition */
 	if(ifunc!=ifunc_now || allifunc!=i) {

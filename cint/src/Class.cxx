@@ -281,9 +281,8 @@ int G__ClassInfo::IsValid()
 #endif
 ///////////////////////////////////////////////////////////////////////////
 #ifndef G__OLDIMPLEMENTATION2118
-unsigned char G__ClassInfo::FuncFlag()
-{
-  return(IsValid()?G__struct.funcs[tagnum]:0);
+unsigned char G__ClassInfo::FuncFlag() { 
+  return(IsValid()?G__struct.funcs[tagnum]:0); 
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
