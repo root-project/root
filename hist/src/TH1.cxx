@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.169 2004/02/16 09:34:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.170 2004/02/27 04:59:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -636,7 +636,8 @@ void TH1::Build()
       if (hold) {
          Warning("Build","Replacing existing histogram: %s (Potential memory leak).",GetName());
          gDirectory->GetList()->Remove(hold);
-       //  delete hold;
+         hold->SetDirectory(0);
+         //  delete hold;
       }
       gDirectory->Append(this);
       fDirectory = gDirectory;
