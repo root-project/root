@@ -137,6 +137,13 @@ endif
 %_cxx.$(DllSuf) : %.cxx
 	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cxx.build.log
 
+%.log : run%.C
+	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
+
 define WarnFailTest
 	@echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
+endef
+
+define TestDiff
+	$(CMDECHO) diff -b $@.ref $<
 endef
