@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.1 2004/07/07 23:25:33 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************
@@ -129,7 +129,7 @@ Long64_t TZIPFile::FindEndHeader()
          }
    }
 
-   Error("FindEndHeader", "did not find end header in %s", fArchiveName);
+   Error("FindEndHeader", "did not find end header in %s", fArchiveName.Data());
 
    return 0;
 }
@@ -149,14 +149,14 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    fFile->Seek(pos);
    if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
        Get(buf, kZIP_MAGIC_LEN) != kEND_HEADER_MAGIC) {
-      Error("ReadEndHeader", "wrong end header magic in %s", fArchiveName);
+      Error("ReadEndHeader", "wrong end header magic in %s", fArchiveName.Data());
       return -1;
    }
 
    // read rest of the header
    if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kEND_HEADER_SIZE - kZIP_MAGIC_LEN)) {
       Error("ReadEndHeader", "error reading %d end header bytes from %s",
-            kEND_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName);
+            kEND_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
       return -1;
    }
 
@@ -170,14 +170,14 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
 
    if (disk != 0 || dirdisk != 0 || dhdrs != thdrs || diroff + dirsz != pos) {
       Error("ReadEndHeader", "inconsistency in end header data in %s",
-            fArchiveName);
+            fArchiveName.Data());
       return -1;
    }
 
    char *comment = new char[commlen+1];
    if (fFile->ReadBuffer(comment, commlen)) {
       Error("ReadEndHeader", "error reading %d end header comment bytes from %s",
-            commlen, fArchiveName);
+            commlen, fArchiveName.Data());
       return -1;
    }
    comment[commlen] = '\0';
@@ -204,7 +204,8 @@ Int_t TZIPFile::ReadDirectory()
    fFile->Seek(fDirPos);
    if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
        (n = Get(buf, kZIP_MAGIC_LEN)) != kDIR_HEADER_MAGIC) {
-      Error("ReadDirectory", "wrong directory header magic in %s", fArchiveName);
+      Error("ReadDirectory", "wrong directory header magic in %s",
+            fArchiveName.Data());
       return -1;
    }
 
@@ -213,7 +214,7 @@ Int_t TZIPFile::ReadDirectory()
       // read the rest of the header
       if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN, kDIR_HEADER_SIZE - kZIP_MAGIC_LEN)) {
          Error("ReadDirectory", "error reading %d directory bytes from %s",
-               kDIR_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName);
+               kDIR_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
          return -1;
       }
 
@@ -243,7 +244,7 @@ Int_t TZIPFile::ReadDirectory()
           csize > kMaxInt ||
           usize > kMaxInt) {
          Error("ReadDirectory", "inconsistency in directory data in %s",
-               fArchiveName);
+               fArchiveName.Data());
          return -1;
       }
 
@@ -254,7 +255,7 @@ Int_t TZIPFile::ReadDirectory()
           fFile->ReadBuffer(extra, extlen) ||
           fFile->ReadBuffer(comment, commlen)) {
          Error("ReadDirectory", "error reading additional directory data from %s",
-               fArchiveName);
+               fArchiveName.Data());
          return -1;
       }
       name[namelen]    = '\0';
@@ -295,7 +296,7 @@ Int_t TZIPFile::ReadDirectory()
       // done, read the next magic
       if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN)) {
          Error("ReadDirectory", "error reading %d directory bytes from %s",
-               kZIP_MAGIC_LEN, fArchiveName);
+               kZIP_MAGIC_LEN, fArchiveName.Data());
          return -1;
       }
       n = Get(buf, kZIP_MAGIC_LEN);
@@ -303,7 +304,7 @@ Int_t TZIPFile::ReadDirectory()
 
    // should now see end of archive
    if (n != kEND_HEADER_MAGIC) {
-      Error("ReadDirectory", "wrong end header magic in %s", fArchiveName);
+      Error("ReadDirectory", "wrong end header magic in %s", fArchiveName.Data());
       return -1;
    }
 
@@ -325,14 +326,15 @@ Int_t TZIPFile::ReadMemberHeader(TZIPMember *member)
    fFile->Seek(member->fPosition);
    if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
        Get(buf, kZIP_MAGIC_LEN) != kENTRY_HEADER_MAGIC) {
-      Error("ReadMemberHeader", "wrong entry header magic in %s", fArchiveName);
+      Error("ReadMemberHeader", "wrong entry header magic in %s",
+            fArchiveName.Data());
       return -1;
    }
 
    // read rest of the header
    if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kENTRY_HEADER_SIZE - kZIP_MAGIC_LEN)) {
       Error("ReadMemberHeader", "error reading %d member header bytes from %s",
-            kENTRY_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName);
+            kENTRY_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
       return -1;
    }
    Int_t namelen = Get(buf + kENTRY_NAMELEN_OFF,  kENTRY_NAMELEN_LEN);
@@ -510,4 +512,3 @@ void TZIPMember::Print(Option_t *) const
 
    printf("%-20lld %s   %s\n", fDsize, fModTime.AsSQLString(), fName.Data());
 }
-
