@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.21 2001/11/07 16:44:49 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.22 2001/12/01 09:13:47 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -379,7 +379,8 @@ void TClonesArray::Sort(Int_t upto)
    // If objects in array are sortable (i.e. IsSortable() returns true
    // for all objects) then sort array.
 
-   if (GetAbsLast() == -1 || fSorted) return;
+   Int_t nentries = GetAbsLast()+1;
+   if (nentries <= 0 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
       if (fCont[i]) {
          if (!fCont[i]->IsSortable()) {
@@ -388,7 +389,7 @@ void TClonesArray::Sort(Int_t upto)
          }
       }
 
-   QSort(fCont, fKeep->fCont, 0, TMath::Min(fSize, upto-fLowerBound));
+   QSort(fCont, fKeep->fCont, 0, TMath::Min(nentries, upto-fLowerBound));
 
    fLast   = -2;
    fSorted = kTRUE;
