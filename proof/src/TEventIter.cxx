@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.5 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.6 2002/07/26 15:33:15 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -96,7 +96,7 @@ Int_t TEventIter::LoadDir()
          // cleanup ?
          return -1;
       }
-      PDB(kLoop,2) Info("Process","Opening file: %s", fFilename.Data() );
+      PDB(kLoop,2) Info("LoadDir","Opening file: %s", fFilename.Data() );
       ret = 1;
    }
 
@@ -340,6 +340,7 @@ Long64_t TEventIterTree::GetNextEvent()
    if ( attach ) {
       PDB(kLoop,1) Info("GetNextEvent","Call Init(%p)",fTree);
       fSel->Init( fTree );
+      fSel->Notify();
       attach = kFALSE;
    }
    --fElemNum;
