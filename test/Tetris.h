@@ -306,7 +306,7 @@ protected:
    UInt_t   fValue;   // value  to be displayed
 
 public:
-   InfoPad(Text_t *title="",Float_t xlow=0, Float_t ylow=0, Float_t xup=0, Float_t yup=0);
+   InfoPad(const char *title="",Float_t xlow=0, Float_t ylow=0, Float_t xup=0, Float_t yup=0);
    virtual ~InfoPad() { }
 
    UInt_t  GetValue()                  { return fValue; }

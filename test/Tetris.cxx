@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.10 2001/07/15 18:01:39 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.11 2001/07/18 16:01:08 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -757,7 +757,7 @@ void NewGameButton::ExecuteEvent(Int_t event, Int_t, Int_t)
 ///////////////////////////////////////////////////////////////////
 //  InfoPad -
 ///////////////////////////////////////////////////////////////////
-InfoPad::InfoPad(Text_t* title, Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
+InfoPad::InfoPad(const char* title, Float_t xlow, Float_t ylow, Float_t xup, Float_t yup)
    : TPad("info_pad",title,xlow,ylow,xup,yup,14,4,-1), TAttText(22,0,2,71,0.65)
 {
    // InfoPad constructor
