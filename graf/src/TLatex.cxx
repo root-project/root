@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.36 2003/04/12 17:14:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.37 2003/05/08 16:55:25 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -357,7 +357,7 @@ const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
                  "vee","Leftrightarrow","Leftarrow","Uparrow","Rightarrow",
                  "Downarrow","diamond","LT","void1","copyright","void3","sum",
                  "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
-                 "ltbar","void04","void05","void06","GT","int" };
+                 "ltbar","AA","aa","void06","GT","int" };
 
 const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
@@ -951,6 +951,11 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          TextSpec_t NewSpec = spec;
          NewSpec.font = 122;
          char letter = '\243' + OpSpec;
+         if(OpSpec == 75 || OpSpec == 76) {
+            NewSpec.font = GetTextFont();
+            if (OpSpec == 75) letter = '\305'; // AA Angstroem
+            if (OpSpec == 76) letter = '\345'; // aa Angstroem
+         }
          Double_t props, propi;
          props = 1.8 ; // scale factor for #sum(66)
          propi = 2.3 ; // scale factor for  #int(79)
@@ -1081,7 +1086,6 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          Double_t div = 3;
          if (OpAbove==1) div=4;
          result.Set(fs1.Width(),fs1.Dessus()+GetHeight()*spec.size/div,fs1.Dessous());
-
       }
       else if (OpSquareBracket) { // operator #[]{arg}
          Double_t l = GetHeight()*spec.size/4;
