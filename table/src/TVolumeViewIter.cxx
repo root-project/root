@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.2 2003/01/03 15:03:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.2 2003/05/23 21:01:29 perev Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 #include "TVolumeViewIter.h"
@@ -110,6 +110,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
       newPosition = SetPositionAt(curNode
                                 ,newTranslation[0],newTranslation[1],newTranslation[2]
                                 ,new TRotMatrix(anum,"NodeView",newMatrix));
+      newPosition->SetMatrixOwner();
     }
     else {
        newTranslation[0] = oldTranslation[0] + curPosition->GetX();
