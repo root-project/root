@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.5 2004/02/18 07:28:02 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.6 2004/02/19 20:00:57 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -150,7 +150,6 @@ namespace ROOT {
                std::string inside = TClassEdit::ShortType(shortname.c_str(), 
                                                           TClassEdit::kInnerClass);
                inside = TClassEdit::ShortType(inside.c_str(), TClassEdit::kDropTrailStar);
-               fprintf(stderr,"looking up %s\n",inside.c_str() );
                fValueClass = TClass::GetClass( inside.c_str() );
             }
 #endif
@@ -162,7 +161,16 @@ namespace ROOT {
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
          return ROOT::IsPointer<nested>::val == 1;
 #else
-         return ROOT::IsPointer( (nested *) 0x0 );
+         // return ROOT::IsPointer( (nested *) 0x0 );         
+         TVectorProxy *This = const_cast<TVectorProxy*>(this);
+         TClass *cl = This->GetCollectionClass();
+         if (cl==0) return 0;
+         
+         std::string shortname = TClassEdit::ShortType(cl->GetName(),
+                                                       TClassEdit::kDropAlloc);
+         std::string inside = TClassEdit::ShortType(shortname.c_str(), 
+                                                    TClassEdit::kInnerClass);
+         return (inside[inside.size()-1]=='*');
 #endif
       }
       
