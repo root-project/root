@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.27 2004/01/26 07:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
   void      Adopt       (Int_t nrows,Int_t ncols,Double_t *data);
   void      Adopt       (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Double_t *data);
-  void      Adopt       (TMatrixD &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetElements()); }
+  void      Adopt       (TMatrixD &a);
   TMatrixD  GetSub      (Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
   void      SetSub      (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
@@ -163,6 +163,7 @@ public:
 
 inline const Double_t *TMatrixD::GetElements () const { return fElements; }
 inline       Double_t *TMatrixD::GetElements ()       { return fElements; }
+inline       void      TMatrixD::Adopt(TMatrixD &a) { Adopt(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),a.GetElements()); }
 inline const Double_t &TMatrixD::operator    ()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
