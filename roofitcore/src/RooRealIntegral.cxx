@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.59 2002/05/03 21:54:41 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.60 2002/05/29 23:23:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -568,9 +568,9 @@ Double_t RooRealIntegral::evaluate() const
 
   case PassThrough:
     {
-      setDirtyInhibit(kTRUE) ;
+      //setDirtyInhibit(kTRUE) ;
       retVal= _function.arg().getVal(_funcNormSet) ;      
-      setDirtyInhibit(kFALSE) ;
+      //setDirtyInhibit(kFALSE) ;
       break ;
     }
   }
