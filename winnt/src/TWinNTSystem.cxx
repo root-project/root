@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.37 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.38 2002/12/10 21:39:44 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -322,9 +322,11 @@ Bool_t TWinNTSystem::Init()
    fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 
 #ifdef GDK_WIN32
-    hEvent1 = CreateEvent(NULL, TRUE, FALSE, NULL);
-    hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
-        &thread1ID );
+    if (!gROOT->IsBatch()) {
+        hEvent1 = CreateEvent(NULL, TRUE, FALSE, NULL);
+        hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
+            &thread1ID );
+    }
 
 #endif
 
@@ -708,6 +710,14 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
  // Dispatch a single event via Command thread
 
+   if (gROOT->IsBatch()) {
+      if (!gApplication->HandleTermInput()) {
+          // wait ExitLoop()
+          WaitForSingleObject(fhTermInputEvent,INFINITE);
+          ResetEvent(fhTermInputEvent);
+      }
+      return;
+   }
    while (1) {
       fReadready  = fReadmask;
       fWriteready = fWritemask;
