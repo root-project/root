@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.5 2000/08/18 14:58:14 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.6 2000/11/17 13:29:14 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1033,12 +1033,14 @@ const char *TWinNTSystem::UnixPathName(const char *name)
    //     oscar to be the same.
 
 
-   char *CurrentChar = (char *)name;
+   static char temp[1024];
+   strcpy(temp,name);
+   char *CurrentChar = temp;
    while (*CurrentChar != '\0') {
      if (*CurrentChar == '\\') *CurrentChar = '/';
      CurrentChar++;
    }
-   return name;
+   return temp;
 
 }
 
