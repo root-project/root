@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.4 2000/10/31 14:07:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.5 2001/06/01 07:04:18 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +51,6 @@
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
 #include "TMath.h"
-   #define MAX_NUMBER_OF_PEAKS1 1000
-   #define MAX_NUMBER_OF_PEAKS2 100
    #define PEAK_WINDOW 1024
 
 ClassImp(TSpectrum)
@@ -62,6 +60,7 @@ TSpectrum::TSpectrum()
    :TNamed("Spectrum","Miroslav Morhac peak finder")
 {
    Int_t n = 100;
+   fMaxPeaks  = n;
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
@@ -82,6 +81,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution)
 //                 May be set later through SetResolution.
    
    Int_t n = TMath::Max(maxpositions,100);
+   fMaxPeaks  = n;
    fPosition  = new Float_t[n];
    fPositionX = new Float_t[n];
    fPositionY = new Float_t[n];
@@ -708,7 +708,7 @@ stav1:
          }
          if (stav!=0) {
             b = sumai/suma;
-            if (peak_index<MAX_NUMBER_OF_PEAKS1) {
+            if (peak_index < fMaxPeaks) {
                fPositionX[peak_index] = b;
                peak_index += 1;
             } else {
@@ -816,7 +816,7 @@ Int_t TSpectrum::PeakEvaluate(double *temp,int size,int xmax,double xmin)
          if (stav!=0) {
             if (suma!=0) b = sumai/suma;
             else         b = i4+xmin;
-            if (peak_index>=MAX_NUMBER_OF_PEAKS1)
+            if (peak_index >= fMaxPeaks)
                return(-1);
             else{
                fPosition[peak_index] = b;
@@ -1008,7 +1008,7 @@ Int_t TSpectrum::Search2(float **source,int sizex,int sizey,double sigma)
                                  }
                               }
                               dpeaky = fPosition[poly];
-                              if (peak_index<MAX_NUMBER_OF_PEAKS2) {
+                              if (peak_index < fMaxPeaks) {
                                  fPositionX[peak_index] = dpeakx;
                                  fPositionY[peak_index] = dpeaky;
                                  peak_index += 1;

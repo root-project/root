@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.2 2000/10/05 06:56:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.3 2000/12/13 15:13:51 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 
 class TSpectrum : public TNamed {
 protected:
+   Int_t         fMaxPeaks;       //Maximum number of peaks to be found
    Int_t         fNPeaks;         //number of peaks found
    Float_t      *fPosition;       //!array of current peak positions
    Float_t      *fPositionX;      //!X position of peaks
@@ -66,7 +67,7 @@ public:
    virtual  Int_t    Search2(float **source,int sizex,int sizey,double sigma);
    virtual  void     SetResolution(Float_t resolution=1);
    
-   ClassDef(TSpectrum,1)  //Peak Finder, background estimator, Deconvolution
+   ClassDef(TSpectrum,2)  //Peak Finder, background estimator, Deconvolution
 };
 
 #endif
