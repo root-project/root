@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.33 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.34 2002/11/26 17:33:14 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1514,14 +1514,14 @@ Int_t TFormula::Compile(const char *expression)
 
        if (fOper[i] == 62) {
           if (!before_last_string) {
-             Error("Compile", "Both operands of the operator == have too be either numbers or strings");
+             Error("Compile", "Both operands of the operator == have to be either numbers or strings");
              return -1;
           }
           fOper[i] = 76;
           SetBit(kIsCharacter);
        } else if (fOper[i] == 63) {
           if (!before_last_string) {
-             Error("Compile", "Both operands of the operator != have too be either numbers or strings");
+             Error("Compile", "Both operands of the operator != have to be either numbers or strings");
              return -1;
           }
           fOper[i] = 77;
