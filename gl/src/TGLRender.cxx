@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.21 2004/12/01 16:57:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.22 2004/12/03 12:03:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -344,9 +344,9 @@ void TGLRender::DrawScene()
 void TGLRender::GetStat()const
 {
    if (fNeedFrustum) {
-      std::cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
-      std::cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
+      cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
+      cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
    } else {
-      std::cout<<"Not frustuming\n";
+      cout<<"Not frustuming\n";
    }
 }
