@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.11 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.12 2001/01/26 16:40:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ ClassImp(TProofServ)
 
 //______________________________________________________________________________
 TProofServ::TProofServ(int *argc, char **argv)
-       : TApplication("proofserv", argc, argv)
+       : TApplication("proofserv", argc, argv, 0, -1)
 {
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
