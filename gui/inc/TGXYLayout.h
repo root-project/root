@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGXYLayout.h,v 1.1 2002/08/08 16:54:11 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 // It is not possible to use any other layout hint than the             //
 // TGXYLayoutHints for this layout manager!                             //
 //                                                                      //
-// The rubberFlag in the constructor of the TGLXYLayoutHins defines     //
+// The rubberFlag in the constructor of the TGLXYLayoutHints defines    //
 // how the position and the size of a widget is recalculated if the     //
 // size of the frame is increased:                                      //
 // - kLRubberX: The X - position (left edge) is increased by the same   //
@@ -50,7 +50,7 @@
 //                                                                      //
 // TGMyFrame::TGMyFrame()                                               //
 //    : TGMainFrame(gClient->GetRoot(), 30, 12)                         //
-//    // frame is 30 character long and 12 character heigh              //
+//    // frame is 30 characters wide and 12 characters high             //
 // {                                                                    //
 //    SetLayoutManager(new TGXYLayout(this));                           //
 //                                                                      //
@@ -61,12 +61,12 @@
 //                                                                      //
 //    // create a listbox of size 18 X 10 at position 1 / 1.            //
 //    // The height will increase if the frame height increases         //
-//    TGListBox * listBox;                                              //
+//    TGListBox *listBox;                                               //
 //    listBox = new TGListBox(this, 2);                                 //
 //    AddFrame(listBox, new TGXYLayoutHints(1, 1, 18, 10,               //
 //             TGXYLayoutHints::kLRubberX |                             //
 //             TGXYLayoutHints::kLRubberY |                             //
-//             TGXYLayoutHints::kLRubberH ));                           //
+//             TGXYLayoutHints::kLRubberH));                            //
 //    .                                                                 //
 //    .                                                                 //
 //    .                                                                 //
@@ -80,18 +80,8 @@
 // {                                                                    //
 //    // Destructor, deletes all frames and their layout hints.         //
 //                                                                      //
-//    TGFrameElement *ptr;                                              //
-//                                                                      //
 //    // delete all frames and layout hints                             //
-//    if (fList) {                                                      //
-//       TIter next(fList);                                             //
-//       while ((ptr = (TGFrameElement *) next())) {                    //
-//          if (ptr->fLayout)                                           //
-//             delete ptr->fLayout;                                     //
-//          if (ptr->fFrame)                                            //
-//             delete ptr->fFrame;                                      //
-//       }                                                              //
-//    }                                                                 //
+//    Cleanup();                                                        //
 // }                                                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.6 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.7 2003/01/28 18:31:12 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -510,7 +510,7 @@ void TGColorPick::CreateImages()
 //________________________________________________________________________________
 void TGColorPick::AllocColors()
 {
-   // Try to allocate first a palette of 64 colors. Usd by the dithered
+   // Try to allocate first a palette of 64 colors. Used by the dithered
    // version of the color maps.
 
    ColorStruct_t color;
