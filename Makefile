@@ -37,8 +37,10 @@ MODULES      += x11ttf
 endif
 endif
 ifneq ($(OPENGLINCDIR),)
-ifneq ($(OPENGLLIBDIR),)
+ifneq ($(OPENGLULIB),)
+ifneq ($(OPENGLLIB),)
 MODULES      += gl
+endif
 endif
 endif
 ifneq ($(MYSQLINCDIR),)
@@ -357,7 +359,8 @@ showbuild:
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"
 	@echo "TTFINCDIR          = $(TTFINCDIR)"
 	@echo "TTFFONTDIR         = $(TTFFONTDIR)"
-	@echo "OPENGLLIBDIR       = $(OPENGLLIBDIR)"
+	@echo "OPENGLULIB         = $(OPENGLULIB)"
+	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "THREAD             = $(THREAD)"

@@ -70,5 +70,4 @@ F77FLAGS      = -O0 -recursive -nofor_main
 F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
-		-lX11 -lXext -lXmu -lXi -lm
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm

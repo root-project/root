@@ -34,7 +34,7 @@ XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        =  -lm -lgen -lbsd -lstdc++
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
 
 # Fortran:
 F77LIBS       = -lftn

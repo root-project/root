@@ -228,7 +228,7 @@ echo $ac_n "Checking for ttf fonts (arial.ttf)... $ac_c"
 ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts /usr/lib/X11/fonts/ttf \
               /usr/share /usr/share/fonts /usr/share/fonts/ttf \
               /usr/share/ttf /usr/local/share /usr/local/share/fonts \
-              /usr/local/share/fonts/ttf /usr/local/share/ttf 
+              /usr/local/share/fonts/ttf /usr/local/share/ttf
               /opt/fonts /opt/fonts/ttf /opt/ttf"
 
 if [ -z "$ttffontdir" ]; then
@@ -268,27 +268,60 @@ if [ -z "$openglincdir" ]; then
 fi
 echo $openglincdir
 
-echo $ac_n "Checking for libGL.a... $ac_c"
+echo $ac_n "Checking for libGL... $ac_c"
 opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/X11 \
               /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
               /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
               /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
               /opt/Mesa/lib"
+opengllibs="libGL.a libGL.so"    # favour .a over .so
+opengllib=NO
 
 if [ -z "$opengllibdir" ]; then
-   opengllibdir=NO
    if [ "$OPENGL" != "NO" ]; then
       for i in $opengllibdirs; do
-         for j in libGL.a; do
+         for j in $opengllibs; do
             if [ -r "$i/$j" ]; then
-               opengllibdir=$i
+               opengllib=$i/$j
                break 2
             fi
          done
       done
    fi
+else
+   for j in $opengllibs; do
+      if [ -r "$opengllibdir/$j" ]; then
+         opengllib=$opengllibdir/$j
+         break 1
+      fi
+   done
 fi
-echo $opengllibdir
+echo $opengllib
+
+echo $ac_n "Checking for libGLU... $ac_c"
+openglulibs="libGLU.a libGLU.so"    # favour .a over .so
+openglulib=NO
+
+if [ -z "$opengllibdir" ]; then
+   if [ "$OPENGL" != "NO" ]; then
+      for i in $opengllibdirs; do
+         for j in $openglulibs; do
+            if [ -r "$i/$j" ]; then
+               openglulib=$i/$j
+               break 2
+            fi
+         done
+      done
+   fi
+else
+   for j in $openglulibs; do
+      if [ -r "$opengllibdir/$j" ]; then
+         openglulib=$opengllibdir/$j
+         break 1
+      fi
+   done
+fi
+echo $openglulib
 
 # Check for Xpm library
 echo $ac_n "Checking for libXpm.a... $ac_c"
@@ -492,7 +525,8 @@ if [ -n "$haveconfig" ] ; then
     if [ "$ttflibdir" = "NO" ]; then unset ttflibdir ; fi
     if [ "$ttffontdir" = "NO" ]; then unset ttffontdir ; fi
     if [ "$openglincdir" = "NO" ]; then unset openglincdir ; fi
-    if [ "$opengllibdir" = "NO" ]; then unset opengllibdir ; fi
+    if [ "$opengllib" = "NO" ]; then unset opengllib ; fi
+    if [ "$openglulib" = "NO" ]; then unset openglulib ; fi
     if [ "$cernlibdir" = "NO" ]; then unset cernlibdir ; fi
     if [ "$rfio" = "NO" ]; then unset rfio ; fi
     if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
@@ -529,7 +563,8 @@ else
     if [ "$ttflibdir" = "NO" ]; then unset ttflibdir ; fi
     if [ "$ttffontdir" = "NO" ]; then unset ttffontdir ; fi
     if [ "$openglincdir" = "NO" ]; then unset openglincdir ; fi
-    if [ "$opengllibdir" = "NO" ]; then unset opengllibdir ; fi
+    if [ "$opengllib" = "NO" ]; then unset opengllib ; fi
+    if [ "$openglulib" = "NO" ]; then unset openglulib ; fi
     if [ "$cernlibdir" = "NO" ]; then unset cernlibdir ; fi
     if [ "$rfio" = "NO" ]; then unset rfio ; fi
     if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
@@ -563,7 +598,8 @@ sed -e "s|@architecture@|$arch|"         \
     -e "s|@ttflibdir@|$ttflibdir|"       \
     -e "s|@ttffontdir@|$ttffontdir|"     \
     -e "s|@ttfincdir@|$ttfincdir|"       \
-    -e "s|@opengllibdir@|$opengllibdir|" \
+    -e "s|@openglulib@|$openglulib|" \
+    -e "s|@opengllib@|$opengllib|" \
     -e "s|@openglincdir@|$openglincdir|" \
     -e "s|@cernlibdir@|$cernlibdir|"     \
     -e "s|@rfio@|$rfio|"                 \

@@ -38,6 +38,6 @@ F77           = /opt/SUNWspro/bin/f77
 F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
 

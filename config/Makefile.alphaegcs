@@ -38,5 +38,4 @@ F77           = g77
 F77LD         = g77
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
-		-lX11 -lXext -lXmu -lXi -lm
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm

@@ -35,5 +35,4 @@ CILIBS        = -lm -ltermcap -lbsd -ldl -lg++ -rdynamic
 
 
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a \
-                -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

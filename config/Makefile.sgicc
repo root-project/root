@@ -40,5 +40,5 @@ else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 # Extras
-GLLIBEXTRA    = $(OPENGLLIBDIR)/libGLU.a $(OPENGLLIBDIR)/libGL.a 
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
 

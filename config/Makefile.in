@@ -24,7 +24,8 @@ TTFLIBDIR      := @ttflibdir@
 TTFFONTDIR     := @ttffontdir@
 TTFINCDIR      := @ttfincdir@
 
-OPENGLLIBDIR   := @opengllibdir@
+OPENGLULIB     := @openglulib@
+OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
 MYSQLINCDIR    := @mysqlincdir@
