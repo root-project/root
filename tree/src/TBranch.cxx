@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.36 2002/02/13 09:30:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.37 2002/02/13 15:38:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -948,6 +948,7 @@ void TBranch::SetAddress(void *add)
 //*-*            ====================
 //
 
+   if (TestBit(kDoNotProcess)) return 0;
    fReadEntry = -1;
    fAddress = (char*)add;
    Int_t i,offset;
