@@ -5,6 +5,13 @@ test: tests ;
 # The previous line contains just ';' in order to disable the implicit 
 # rule building an executable 'test' from test.C
 
+
+# Track the version of ROOT we are runing with
+
+ROOTV=$(ROOTTEST_HOME)/root_version
+dummy:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTV)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTV); echo "New ROOT version ($(ROOTSYS))" >&2))
+
+
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
 # TEST_TARGETS with the list of activated test
@@ -195,20 +202,23 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 %.obj: %.cpp
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 
-%_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT)
+%_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
-%_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT)
+%_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1
 
-%_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT)
+%_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
-%_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT)
+%_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
-%.log : run%.C $(ROOTCORELIBS) $(ROOTCINT)
+%.log : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
+
+%.clog : run%.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) root.exe -q -l -b $<+ > $@ 2>&1
 
 define BuildWithLib
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
