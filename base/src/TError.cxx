@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.7 2004/01/27 17:37:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.8 2004/01/27 20:01:16 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -42,14 +42,14 @@ static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
 
 //______________________________________________________________________________
-static void debugPrint(const char *fmt, ...) 
+static void DebugPrint(const char *fmt, ...)
 {
-   // print debugging message to stderr and to the system debugger under Windows
+   // Print debugging message to stderr and, on Windows, to the system debugger.
 
    static Int_t buf_size = 2048;
    static char *buf = 0;
 
-   va_list arg_ptr; 
+   va_list arg_ptr;
    va_start(arg_ptr, fmt);
 
 again:
@@ -117,15 +117,15 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
       type = "Fatal";
 
    if (level >= kBreak && level < kSysError)
-      debugPrint("%s %s\n", type, msg);
+      DebugPrint("%s %s\n", type, msg);
    else if (!location || strlen(location) == 0)
-      debugPrint("%s: %s\n", type, msg);
-   else 
-      debugPrint("%s in <%s>: %s\n", type, location, msg);
+      DebugPrint("%s: %s\n", type, msg);
+   else
+      DebugPrint("%s in <%s>: %s\n", type, location, msg);
 
    fflush(stderr);
    if (abort) {
-      debugPrint("aborting\n");
+      DebugPrint("aborting\n");
       fflush(stderr);
       if (gSystem) {
          gSystem->StackTrace();
