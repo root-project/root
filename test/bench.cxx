@@ -26,7 +26,7 @@
 #include "TBench.h"
 
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
   int nhits       = 1000;
   int nevents     = 400;
