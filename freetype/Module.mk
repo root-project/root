@@ -31,7 +31,7 @@ ifeq ($(PLATFORM),win32)
 			echo "*** Building $@..."; \
 			cd $(FREETYPEDIRS); \
 			if [ ! -d $(FREETYPEVERS) ]; then \
-				zcat $(FREETYPEVERS).tar.gz | tar xf -; \
+				gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
 			fi; \
 			cd $(FREETYPEVERS)/builds/win32/visualc; \
 			cp ../../../../win/freetype.mak .; \
@@ -45,11 +45,11 @@ else
 			echo "*** Building $@..."; \
 			cd $(FREETYPEDIRS); \
 			if [ ! -d $(FREETYPEVERS) ]; then \
-				TAR=`which gtar`; \
+				TAR=`which gtar 2>/dev/null`; \
 				if [ $$? -eq 0 ]; then \
 					gtar zxf $(FREETYPEVERS).tar.gz; \
 				else \
-					zcat $(FREETYPEVERS).tar.gz | tar xf -; \
+					gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
 				fi; \
 			fi; \
 			cd $(FREETYPEVERS); \
