@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.7 2003/07/25 17:22:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -64,14 +64,14 @@ public:
    virtual const TGWindow *GetMainFrame() const
       { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
 
-   void MapWindow() { gVirtualX->MapWindow(fId); }
-   void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
-   void MapRaised() { gVirtualX->MapRaised(fId); }
-   void UnmapWindow() { gVirtualX->UnmapWindow(fId); }
-   void DestroyWindow() { gVirtualX->DestroyWindow(fId); }
-   void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
-   void LowerWindow() { gVirtualX->LowerWindow(fId); }
-   void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
+   virtual void MapWindow() { gVirtualX->MapWindow(fId); }
+   virtual void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
+   virtual void MapRaised() { gVirtualX->MapRaised(fId); }
+   virtual void UnmapWindow() { gVirtualX->UnmapWindow(fId); }
+   virtual void DestroyWindow() { gVirtualX->DestroyWindow(fId); }
+   virtual void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
+   virtual void LowerWindow() { gVirtualX->LowerWindow(fId); }
+   virtual void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
    void SetBackgroundColor(Pixel_t color)
         { gVirtualX->SetWindowBackground(fId, color); }
    void SetBackgroundPixmap(Pixmap_t pixmap)
