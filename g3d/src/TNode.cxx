@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.18 2003/04/03 13:46:50 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.19 2003/04/14 20:06:01 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -667,7 +667,7 @@ void TNode::RecursiveRemove(TObject *obj)
 //*-*-*-*-*Recursively remove object from the list of nodes of this node*-*-*-*
 //*-*      =============================================================
 
-   if (fNodes) fNodes->RecursiveRemove(obj);
+   if (fNodes && dynamic_cast<TNode*>(obj) ) fNodes->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
