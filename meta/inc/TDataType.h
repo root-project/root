@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.4 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.5 2003/04/11 11:48:10 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -31,10 +31,10 @@
 
 
 enum EDataType {
-   kChar_t   = 1, kUChar_t    = 11, kShort_t = 2,  kUShort_t = 12,
-   kInt_t    = 3, kUInt_t     = 13, kLong_t  = 4,  kULong_t  = 14,
-   kFloat_t  = 5, kDouble_t   = 8,  kchar    = 10, kBool_t   = 11,
-   kLong64_t = 16, kULong64_t = 17, kOther_t = -1
+   kChar_t   = 1,  kUChar_t  = 11, kShort_t    = 2,  kUShort_t = 12,
+   kInt_t    = 3,  kUInt_t   = 13, kLong_t     = 4,  kULong_t  = 14,
+   kFloat_t  = 5,  kDouble_t =  8, kDouble32_t = 9,  kchar     = 10, 
+   kBool_t   = 11, kLong64_t = 16, kULong64_t  = 17, kOther_t  = -1
 };
 
 class G__TypedefInfo;

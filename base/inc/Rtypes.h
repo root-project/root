@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.40 2003/08/21 17:07:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.41 2003/08/21 17:51:25 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -65,7 +65,8 @@ typedef long           Long_t;      //Signed long integer 4 bytes (long)
 typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
 #endif
 typedef float          Float_t;     //Float 4 bytes (float)
-typedef double         Double_t;    //Float 8 bytes (double)
+typedef double         Double_t;    //Double 8 bytes
+typedef double         Double32_t;  //Double 8 bytes in memory, written as a Float 4 bytes 
 typedef char           Text_t;      //General string (char)
 typedef bool           Bool_t;      //Boolean (0=false, 1=true) (bool)
 typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)

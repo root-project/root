@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.6 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.7 2003/04/13 17:38:40 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -187,6 +187,10 @@ void TDataType::SetType(const char *name)
    } else if (!strcmp("double", name)) {
       fType = kDouble_t;
       fSize = sizeof(Double_t);
+   } 
+   
+   if (!strcmp("Double32_t", fName.Data())) {
+      fType = kDouble32_t;
    }
 }
 

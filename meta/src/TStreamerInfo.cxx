@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.181 2003/11/14 11:11:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.182 2003/12/25 17:51:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1224,6 +1224,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
       case kFloat:             {Float_t *val   = (Float_t*)ladd;   return Double_t(*val);}
       case kDouble:            {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
+      case kDouble32:          {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
       case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   return Double_t(*val);}
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
@@ -1243,6 +1244,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[j]);}
       case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   return Double_t(val[j]);}
       case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kDouble32:{Double_t *val  = (Double_t*)ladd;  return Double_t(val[j]);}
       case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   return Double_t(val[j]);}
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[j]);}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[j]);}
@@ -1261,6 +1263,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[j]);}
       case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   return Double_t((*val)[j]);}
       case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kDouble32:{Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[j]);}
       case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   return Double_t((*val)[j]);}
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[j]);}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[j]);}
@@ -1298,6 +1301,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
       case kFloat:             {Float_t *val   = (Float_t*)ladd;   return Double_t(*val);}
       case kDouble:            {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
+      case kDouble32:          {Double_t *val  = (Double_t*)ladd;  return Double_t(*val);}
       case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   return Double_t(*val);}
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
@@ -1317,6 +1321,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kDouble32:{Double_t *val  = (Double_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[k]);}
@@ -1335,6 +1340,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[k]);}
       case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   return Double_t((*val)[k]);}
       case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kDouble32:{Double_t **val  = (Double_t**)ladd;  return Double_t((*val)[k]);}
       case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   return Double_t((*val)[k]);}
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[k]);}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[k]);}
@@ -1496,6 +1502,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  printf("%lld",*val); break;}
       case kFloat:             {Float_t *val   = (Float_t*)ladd;   printf("%f",*val);   break;}
       case kDouble:            {Double_t *val  = (Double_t*)ladd;  printf("%g",*val);   break;}
+      case kDouble32:          {Double_t *val  = (Double_t*)ladd;  printf("%g",*val);   break;}
       case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   printf("%u",*val);   break;}
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  printf("%u",*val);   break;}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    printf("%u",*val);   break;}
@@ -1511,6 +1518,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<aleng;j++) {printf("%lld ",val[j]); PrintCR( 5)} break;}
       case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<aleng;j++) {printf("%f ",val[j]);   PrintCR( 5)} break;}
       case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<aleng;j++) {printf("%g ",val[j]);   PrintCR( 5)} break;}
+      case kOffsetL + kDouble32:{Double_t *val  = (Double_t*)ladd;  for(j=0;j<aleng;j++) {printf("%g ",val[j]);   PrintCR( 5)} break;}
       case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR(20)} break;}
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR(10)} break;}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<aleng;j++) {printf("%u ",val[j]);   PrintCR( 5)} break;}
@@ -1525,6 +1533,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%lld ",(*val)[j]); PrintCR( 5)} break;}
       case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%f ",(*val)[j]);   PrintCR( 5)} break;}
       case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%g ",(*val)[j]);   PrintCR( 5)} break;}
+      case kOffsetP + kDouble32:{Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%g ",(*val)[j]);   PrintCR( 5)} break;}
       case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR(20)} break;}
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR(10)} break;}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); aleng=*l; for(j=0;j<aleng;j++) {printf("%u ",(*val)[j]);   PrintCR( 5)} break;}
@@ -1687,6 +1696,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kLong64:            {Long64_t *val  = (Long64_t*)ladd;  {printf("%lld",*val); PrintCCR( 5)} break;}
       case kFloat:             {Float_t *val   = (Float_t*)ladd;   {printf("%f",*val);   PrintCCR( 5)} break;}
       case kDouble:            {Double_t *val  = (Double_t*)ladd;  {printf("%g",*val);   PrintCCR( 5)} break;}
+      case kDouble32:          {Double_t *val  = (Double_t*)ladd;  {printf("%g",*val);   PrintCCR( 5)} break;}
       case kUChar:             {UChar_t *val   = (UChar_t*)ladd;   {printf("%u",*val);   PrintCCR(20)} break;}
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  {printf("%u",*val);   PrintCCR(10)} break;}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    {printf("%u",*val);   PrintCCR( 5)} break;}
@@ -1702,6 +1712,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetL + kLong64:  {Long64_t *val  = (Long64_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%lld ",val[j]); break;}
       case kOffsetL + kFloat:   {Float_t *val   = (Float_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%f ",val[j]);   break;}
       case kOffsetL + kDouble:  {Double_t *val  = (Double_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%g ",val[j]);   break;}
+      case kOffsetL + kDouble32:{Double_t *val  = (Double_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%g ",val[j]);   break;}
       case kOffsetL + kUChar:   {UChar_t *val   = (UChar_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);   break;}
@@ -1716,6 +1727,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetP + kLong64:  {Long64_t **val  = (Long64_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%lld ",(*val)[j]); break;}
       case kOffsetP + kFloat:   {Float_t **val   = (Float_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);   break;}
       case kOffsetP + kDouble:  {Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);   break;}
+      case kOffsetP + kDouble32:{Double_t **val  = (Double_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);   break;}
       case kOffsetP + kUChar:   {UChar_t **val   = (UChar_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%u ",(*val)[j]);   break;}
@@ -1918,7 +1930,11 @@ SWIT: switch (kase) {
          case kUInt:              ReadBasicType(UInt_t)
          case kULong:             ReadBasicType(ULong_t)
          case kULong64:           ReadBasicType(ULong64_t)
-
+         case kDouble32: {
+            Double_t *x=(Double_t*)(pointer+fOffset[i]); 
+            Float_t afloat; b >> afloat; *x = (Double_t)afloat; 
+            break; 
+         }
          // read array of basic types  array[8]
          case kOffsetL + kChar:    ReadBasicArray(Char_t)
          case kOffsetL + kShort:   ReadBasicArray(Short_t)
@@ -1932,7 +1948,15 @@ SWIT: switch (kase) {
          case kOffsetL + kUInt:    ReadBasicArray(UInt_t)
          case kOffsetL + kULong:   ReadBasicArray(ULong_t)
          case kOffsetL + kULong64: ReadBasicArray(ULong64_t)
-
+         case kOffsetL + kDouble32: {
+            Double_t *x=(Double_t*)(pointer+fOffset[i]);
+            Float_t afloat;
+            for (Int_t ii=0;ii<fLength[i];ii++) {
+                b >> afloat; x[ii] = (Double_t)afloat;
+            } 
+            break;
+         }
+         
          // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:    ReadBasicPointer(Char_t)
          case kOffsetP + kShort:   ReadBasicPointer(Short_t)
@@ -1946,6 +1970,24 @@ SWIT: switch (kase) {
          case kOffsetP + kUInt:    ReadBasicPointer(UInt_t)
          case kOffsetP + kULong:   ReadBasicPointer(ULong_t)
          case kOffsetP + kULong64: ReadBasicPointer(ULong64_t)
+         case kOffsetP + kDouble32: {
+            Char_t isArray; 
+            b >> isArray; 
+            Int_t *l = (Int_t*)(pointer+fMethod[i]); 
+            Double_t **f = (Double_t**)(pointer+fOffset[i]); 
+            int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
+            int j; 
+            Float_t afloat;
+            for(j=0;j<len;j++) { 
+               delete [] f[j]; 
+               f[j] = 0; if (*l <=0) continue; 
+               f[j] = new Double_t[*l]; 
+               for (Int_t ii=0;ii<*l;ii++) {
+                   b >>afloat; f[j][ii] = Double_t(afloat);
+               } 
+            } 
+            break; 
+         }
 
          // char*
          case kCharStar: {
@@ -2293,6 +2335,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char *pointer, Int_t i,Int_t kas
       case kSkip + kULong:   SkipBasicType(ULong_t)
       case kSkip + kULong64: SkipBasicType(ULong64_t)
       case kSkip + kBits:    SkipBasicType(UInt_t)
+      case kSkip + kDouble32:SkipBasicType(Float_t)
 
       // skip array of basic types  array[8]
       case kSkipL + kChar:    SkipBasicArray(Char_t)
@@ -2307,6 +2350,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char *pointer, Int_t i,Int_t kas
       case kSkipL + kUInt:    SkipBasicArray(UInt_t)
       case kSkipL + kULong:   SkipBasicArray(ULong_t)
       case kSkipL + kULong64: SkipBasicArray(ULong64_t)
+      case kSkipL + kDouble32:SkipBasicArray(Float_t)
 
       // skip pointer to an array of basic types  array[n]
       case kSkipP + kChar:    SkipBasicPointer(Char_t)
@@ -2321,6 +2365,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char *pointer, Int_t i,Int_t kas
       case kSkipP + kUInt:    SkipBasicPointer(UInt_t)
       case kSkipP + kULong:   SkipBasicPointer(ULong_t)
       case kSkipP + kULong64: SkipBasicPointer(ULong64_t)
+      case kSkipP + kDouble32:SkipBasicPointer(Float_t)
 
       // skip char*
       case kSkip + kCharStar: {
@@ -2437,6 +2482,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
       case kUInt:    {UInt_t    *x=(UInt_t*)(pointer+fOffset[i]);    *x = (UInt_t)dummy;    break;} \
       case kULong:   {ULong_t   *x=(ULong_t*)(pointer+fOffset[i]);   *x = (ULong_t)dummy;   break;} \
       case kULong64: {ULong64_t *x=(ULong64_t*)(pointer+fOffset[i]); *x = (ULong64_t)dummy; break;} \
+      case kDouble32:{Double_t  *x=(Double_t*)(pointer+fOffset[i]);  *x = (Double_t)dummy;  break;} \
    } break; \
 }
 
@@ -2493,6 +2539,10 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
        case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
                         delete [] *f; *f = 0; \
                         if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
+                        b.ReadFastArray(*f,len); break;} \
+       case kDouble32:{Double_t **f=(Double_t**)(pointer+fOffset[i]); \
+                        delete [] *f; *f = 0; \
+                        if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
                         b.ReadFastArray(*f,len); break;} \
    } break; \
 }
@@ -2579,6 +2629,12 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
                        f[j] = new ULong64_t[*l]; ULong64_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (ULong64_t)dummy;} \
                     } break;} \
+      case kDouble32: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Double_t[*l]; Double_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> dummy; af[j] = (Double_t)dummy;} \
+                    } break;} \
    } break; \
 }
 
@@ -2603,6 +2659,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 #else
       case kConv + kULong64: ConvBasicType(ULong64_t)
 #endif
+      case kConv + kDouble32:ConvBasicType(Float_t)
       case kConv + kBits:    ConvBasicType(UInt_t)
 
       // convert array of basic types  array[8]
@@ -2622,6 +2679,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 #else
       case kConvL + kULong64: ConvBasicArray(ULong64_t)
 #endif
+      case kConvL + kDouble32:ConvBasicArray(Float_t)
 
       // convert pointer to an array of basic types  array[n]
       case kConvP + kChar:    ConvBasicPointer(Char_t)
@@ -2640,6 +2698,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 #else
       case kConvP + kULong64: ConvBasicPointer(ULong64_t)
 #endif
+      case kConvP + kDouble32:ConvBasicPointer(Float_t)
 
       default:
         //Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
@@ -2725,6 +2784,12 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kUInt:              ReadCBasicType(UInt_t)
          case kULong:             ReadCBasicType(ULong_t)
          case kULong64:           ReadCBasicType(ULong64_t)
+         case kDouble32: {
+            for (Int_t k=0;k<nc;k++) { 
+               Double_t *x=(Double_t*)((char*)clones->UncheckedAt(k)+offset); 
+               Float_t afloat; b >> afloat; *x = Double_t(afloat); 
+            } break; 
+         }
 
          // read array of basic types  array[8]
          case kOffsetL + kChar:    ReadCBasicArray(Char_t)
@@ -2739,6 +2804,16 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetL + kUInt:    ReadCBasicArray(UInt_t)
          case kOffsetL + kULong:   ReadCBasicArray(ULong_t)
          case kOffsetL + kULong64: ReadCBasicArray(ULong64_t)
+         case kOffsetL + kDouble32: {
+            for (Int_t k=0;k<nc;k++) { 
+               Double_t *x=(Double_t*)((char*)clones->UncheckedAt(k)+offset); 
+               Float_t afloat;
+               for (Int_t ii=0;ii<leng;ii++) {
+                   b >> afloat; x[ii] = Double_t(afloat);
+               } 
+            }
+            break; 
+         }
 
          // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:    ReadCBasicPointer(Char_t)
@@ -2753,6 +2828,27 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetP + kUInt:    ReadCBasicPointer(UInt_t)
          case kOffsetP + kULong:   ReadCBasicPointer(ULong_t)
          case kOffsetP + kULong64: ReadCBasicPointer(ULong64_t)
+         case kOffsetP + kDouble32: {
+            Char_t isArray; 
+            int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
+            int j; 
+            for (Int_t k=0;k<nc;k++) { 
+               b >> isArray; 
+               pointer = (char*)clones->UncheckedAt(k)+eoffset; 
+               Int_t *l = (Int_t*)(pointer+fMethod[i]); 
+               Double_t **f = (Double_t**)(pointer+fOffset[i]); 
+               Float_t afloat;
+               for(j=0;j<len;j++) { 
+                  delete [] f[j]; 
+                  f[j] = 0; if (*l <=0) continue; 
+                  f[j] = new Double_t[*l]; 
+                  for (Int_t ii=0;ii<*l;ii++) {
+                      b >> afloat; f[j][ii] = Double_t(afloat);
+                  } 
+               } 
+            } 
+            break; 
+         }
 
          // char*
          case kCharStar: {
@@ -3138,6 +3234,7 @@ Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray * /*clones*/,
       case kSkip + kULong:   SkipCBasicType(ULong_t)
       case kSkip + kULong64: SkipCBasicType(ULong64_t)
       case kSkip + kBits:    SkipCBasicType(UInt_t)
+      case kSkip + kDouble32:SkipCBasicType(Float_t)
 
       // skip array of basic types  array[8]
       case kSkipL + kChar:    SkipCBasicArray(Char_t)
@@ -3152,6 +3249,7 @@ Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray * /*clones*/,
       case kSkipL + kUInt:    SkipCBasicArray(UInt_t)
       case kSkipL + kULong:   SkipCBasicArray(ULong_t)
       case kSkipL + kULong64: SkipCBasicArray(ULong64_t)
+      case kSkipL + kDouble32:SkipCBasicArray(Float_t)
 
       // skip pointer to an array of basic types  array[n]
       case kSkipP + kChar:    SkipCBasicPointer(Char_t)
@@ -3166,6 +3264,7 @@ Int_t TStreamerInfo::ReadBufferClonesSkip(TBuffer &b, TClonesArray * /*clones*/,
       case kSkipP + kUInt:    SkipCBasicPointer(UInt_t)
       case kSkipP + kULong:   SkipCBasicPointer(ULong_t)
       case kSkipP + kULong64: SkipCBasicPointer(ULong64_t)
+      case kSkipP + kDouble32:SkipCBasicPointer(Float_t)
 
       // skip char*
       case kSkip + kCharStar: {
@@ -3313,6 +3412,7 @@ char *pointer = 0;
          case kUInt:    {UInt_t    *x=(UInt_t*)(pointer+fOffset[i]);    *x = (UInt_t)u;    break;} \
          case kULong:   {ULong_t   *x=(ULong_t*)(pointer+fOffset[i]);   *x = (ULong_t)u;   break;} \
          case kULong64: {ULong64_t *x=(ULong64_t*)(pointer+fOffset[i]); *x = (ULong64_t)u; break;} \
+         case kDouble32:{Double_t  *x=(Double_t*)(pointer+fOffset[i]);  *x = (Double_t)u; break;} \
       } \
    } break; \
 }
@@ -3371,6 +3471,10 @@ char *pointer = 0;
           case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
                            delete [] *f;  *f = 0;\
                            if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
+                           b.ReadFastArray(*f,len); break;} \
+          case kDouble32:{Double_t **f=(Double_t**)(pointer+fOffset[i]); \
+                           delete [] *f;  *f = 0;\
+                           if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
                            b.ReadFastArray(*f,len); break;} \
        } \
    } break; \
@@ -3460,6 +3564,12 @@ char *pointer = 0;
                        f[j] = new ULong64_t[*l]; ULong64_t *af = f[j]; \
                        for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (ULong64_t)u;} \
                     } break;} \
+         case kDouble32: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
+                    for (j=0;j<len;j++) { \
+                       delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
+                       f[j] = new Double_t[*l]; Double_t *af = f[j]; \
+                       for (Int_t j=0;j<*l;j++) {b >> u; af[j] = (Double_t)u;} \
+                    } break;} \
       } \
    } break; \
 }
@@ -3486,6 +3596,7 @@ char *pointer = 0;
       case kConv + kULong64: ConvCBasicType(ULong64_t)
 #endif
       case kConv + kBits:    ConvCBasicType(UInt_t)
+      case kConv + kDouble32:ConvCBasicType(Float_t)
 
       // convert array of basic types  array[8]
       case kConvL + kChar:    ConvCBasicArray(Char_t)
@@ -3504,6 +3615,7 @@ char *pointer = 0;
 #else
       case kConvL + kULong64: ConvCBasicArray(ULong64_t)
 #endif
+      case kConvL + kDouble32:ConvCBasicArray(Float_t)
 
       // convert pointer to an array of basic types  array[n]
       case kConvP + kChar:    ConvCBasicPointer(Char_t)
@@ -3522,6 +3634,7 @@ char *pointer = 0;
 #else
       case kConvP + kULong64: ConvCBasicPointer(ULong64_t)
 #endif
+      case kConvP + kDouble32:ConvCBasicPointer(Float_t)
 
       default:
         //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
@@ -3651,6 +3764,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kUInt:              WriteBasicType(UInt_t)
          case kULong:             WriteBasicType(ULong_t)
          case kULong64:           WriteBasicType(ULong64_t)
+         case kDouble32: {
+            Double_t *x=(Double_t*)(pointer+fOffset[i]); 
+            b << Float_t(*x); 
+            break; 
+         }
 
          // write array of basic types  array[8]
          case kOffsetL + kChar:    WriteBasicArray(Char_t)
@@ -3665,6 +3783,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kUInt:    WriteBasicArray(UInt_t)
          case kOffsetL + kULong:   WriteBasicArray(ULong_t)
          case kOffsetL + kULong64: WriteBasicArray(ULong64_t)
+         case kOffsetL + kDouble32: {
+            Double_t *x=(Double_t*)(pointer+fOffset[i]); 
+            for (Int_t ii=0;ii<fLength[i];ii++) b << Float_t(x[ii]);
+            break; 
+         }
 
          // write pointer to an array of basic types  array[n]
          case kOffsetP + kChar:    WriteBasicPointer(Char_t)
@@ -3679,6 +3802,19 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUInt:    WriteBasicPointer(UInt_t)
          case kOffsetP + kULong:   WriteBasicPointer(ULong_t)
          case kOffsetP + kULong64: WriteBasicPointer(ULong64_t)
+         case kOffsetP + kDouble32: {
+            Int_t *l = (Int_t*)(pointer+fMethod[i]); 
+            Double_t **f = (Double_t**)(pointer+fOffset[i]); 
+            Double_t *af = *f; 
+            if (af && *l)  b << Char_t(1); 
+            else          {b << Char_t(0); break;}
+            int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
+            int j; 
+            for(j=0;j<len;j++) { 
+               for (Int_t ii=0;ii<*l;ii++) b << Float_t(f[j][ii]);
+            }  
+            break; 
+         }
 
          // char*
          case kCharStar: {
@@ -4001,6 +4137,14 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kUInt:              WriteCBasicType(UInt_t)
          case kULong:             WriteCBasicType(ULong_t)
          case kULong64:           WriteCBasicType(ULong64_t)
+         case kDouble32: {
+            for (Int_t k=0;k<nc;k++) { 
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+               Double_t *x = (Double_t*)(pointer+fOffset[i]); 
+               b << Float_t(*x); 
+            } 
+            break; 
+        }
 
          // write array of basic types  array[8]
          case kOffsetL + kChar:    WriteCBasicArray(Char_t)
@@ -4015,6 +4159,16 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetL + kUInt:    WriteCBasicArray(UInt_t)
          case kOffsetL + kULong:   WriteCBasicArray(ULong_t)
          case kOffsetL + kULong64: WriteCBasicArray(ULong64_t)
+         case kOffsetL + kDouble32: {
+            for (Int_t k=0;k<nc;k++) { 
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+               Double_t *x = (Double_t*)(pointer+fOffset[i]); 
+               for (Int_t ii=0;ii<fLength[i];ii++) {
+                  b << Float_t(x[ii]);
+               } 
+            } 
+            break; 
+         }
 
          // write pointer to an array of basic types  array[n]
          case kOffsetP + kChar:    WriteCBasicPointer(Char_t)
@@ -4029,6 +4183,22 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetP + kUInt:    WriteCBasicPointer(UInt_t)
          case kOffsetP + kULong:   WriteCBasicPointer(ULong_t)
          case kOffsetP + kULong64: WriteCBasicPointer(ULong64_t)
+         case kOffsetP + kDouble32: {
+            int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
+            int j; 
+            for (Int_t k=0;k<nc;k++) { 
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+               Int_t *l = (Int_t*)(pointer+fMethod[i]); 
+               Double_t **f = (Double_t**)(pointer+fOffset[i]); 
+               Double_t *af = *f; 
+               if (af && *l)  b << Char_t(1); 
+               else          {b << Char_t(0); continue;} 
+               for(j=0;j<len;j++) { 
+                  for (Int_t ii=0;ii<*l;ii++) b << Float_t(f[j][ii]);
+               } 
+            } 
+            break; 
+         }
 
          // char*
          case kCharStar: {

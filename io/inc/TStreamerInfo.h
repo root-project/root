@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.42 2003/09/15 20:30:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.43 2003/11/14 11:11:20 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -66,17 +66,17 @@ public:
    enum { kCannotOptimize = BIT(12) };
 
    enum EReadWrite {
-      kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar=7,
-      kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat =  5,
-      kDouble =  8,
-      kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits  = 15,
-      kLong64 = 16,  kULong64 = 17,
-      kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString= 65,
-      kTObject = 66, kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,
-      kSkip    = 100,  kSkipL = 120, kSkipP   = 140,
-      kConv    = 200,  kConvL = 220, kConvP   = 240,
+      kBase     =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar= 7,
+      kChar     =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat   = 5,
+      kDouble   =  8,  kDouble32=  9,
+      kUChar    = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits  = 15,
+      kLong64   = 16,  kULong64 = 17,
+      kObject   = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString= 65,
+      kTObject  = 66,  kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,
+      kSkip     = 100, kSkipL   = 120, kSkipP   = 140,
+      kConv     = 200, kConvL   = 220, kConvP   = 240,
       kStreamer = 500, kStreamLoop = 501,
-      kMissing = 99999
+      kMissing  = 99999
    };
 
    TStreamerInfo();
