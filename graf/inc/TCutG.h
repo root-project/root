@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.4 2001/02/28 11:04:06 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -29,8 +29,8 @@ class TCutG : public TGraph {
 protected:
    TString      fVarX;         //X variable
    TString      fVarY;         //Y variable
-   TObject     *fObjectX;      //pointer to an object corresponding to X
-   TObject     *fObjectY;      //pointer to an object corresponding to Y
+   TObject     *fObjectX;      //!pointer to an object corresponding to X
+   TObject     *fObjectY;      //!pointer to an object corresponding to Y
 
 public:
    TCutG();
@@ -49,7 +49,7 @@ public:
    virtual void   SetVarX(const char *varx); // *MENU*
    virtual void   SetVarY(const char *vary); // *MENU*
 
-   ClassDef(TCutG,1)  // A Graphical cut.
+   ClassDef(TCutG,2)  // A Graphical cut.
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 //  A TCutG object defines a closed polygon in a x,y plot.              //
 //  It can be created via the graphics editor option "CutG"             //
 //  or directly by invoking its constructor.                            //
+//  To create a TCutG via the graphics editor, use the left button      //
+//  to select the points building the contour of the cut. Click on      //
+//  the right button to close the TCutG.                                //
 //  When it is created via the graphics editor, the TCutG object        //
 //  is named "CUTG". It is recommended to immediatly change the name    //
 //  by using the context menu item "SetName".                           //                                                                      //
@@ -36,8 +39,8 @@
 //  Note that, as shown in the example above, a graphical cut may be    //
 //  used in a selection expression when drawing TTrees expressions      //
 //  of 1-d, 2-d or 3-dimensions.                                        //
-//  The TTree expressions may or may not reference the same variables   //
-//  than in the fVarX, fVarY of the graphical cut.                      //
+//  The expressions used in TTree::Draw can reference the variables     //
+//  in the fVarX, fVarY of the graphical cut plus other variables.      //
 //                                                                      //
 //  When the TCutG object is created, it is added to the list of special//
 //  objects in the main TROOT object pointed by gROOT. To retrieve a    //
@@ -45,6 +48,9 @@
 //      TCutG *mycutg;                                                  //
 //      mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG") //
 //      mycutg->SetName("mycutg");                                      //
+//                                                                      //
+//  Example of use of a TCutG in TTree::Draw:                           //
+//       tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")                  //
 //                                                                      //
 //  A Graphical cut may be drawn via TGraph::Draw.                      //
 //  It can be edited like a normal TGraph.                              //
