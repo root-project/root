@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.38 2003/02/05 19:30:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.39 2003/05/07 17:52:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -211,7 +211,7 @@ TMatrixD::~TMatrixD()
    // TMatrixD destructor.
 
    if (IsValid()) {
-      if (fNcols != 1)
+      if (fNcols > 1)
          delete [] fIndex;
       delete [] fElements;
    }
@@ -2420,7 +2420,11 @@ void TMatrixD::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TMatrixD::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         if (fNcols == 1) {
+         if (fNcols <= 0) {
+            fNcols = 0;
+            fIndex = 0;
+            fElements = 0;
+         } else if (fNcols == 1) {
             fIndex = &fElements;
          } else {
             fIndex = new Double_t*[fNcols];
@@ -2440,7 +2444,7 @@ void TMatrixD::Streamer(TBuffer &R__b)
       R__b >> fRowLwb;
       R__b >> fColLwb;
       fNelems = R__b.ReadArray(fElements);
-      if (fNcols == 1) {
+      if (fNcols <= 1) {
          fIndex = &fElements;
       } else {
          fIndex = new Double_t*[fNcols];
