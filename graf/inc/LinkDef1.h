@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.6 2002/08/09 20:45:43 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.7 2003/01/22 11:23:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,7 @@
 #pragma link C++ class TGraph-;
 #pragma link C++ class TGraphErrors-;
 #pragma link C++ class TGraphAsymmErrors-;
+#pragma link C++ class TGraphBentErrors+;
 #pragma link C++ class TLine-;
 #pragma link C++ class TMarker-;
 #pragma link C++ class TMultiGraph+;
