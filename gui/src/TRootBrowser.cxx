@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.32 2002/11/21 15:27:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.33 2002/11/21 20:33:36 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1374,7 +1374,10 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      void *p = 0;
                      TGFileItem *item;
                      if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
+                        gVirtualX->SetCursor(fIconBox->GetId(),gVirtualX->CreateCursor(kPointer));
+                        gVirtualX->SetCursor(fLt->GetId(),gVirtualX->CreateCursor(kPointer));
                         IconBoxAction((TObject *)item->GetUserData());
+                        return kTRUE; //
                      }
                   }
                }
