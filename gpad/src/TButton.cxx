@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -67,8 +67,8 @@ ClassImp(TButton)
 //   button->Draw();
 //   button->cd();
 //
-//   Float_t x[8] = {0.08,0.21,0.34,0.48,0.61,0.7,0.81,0.92};
-//   Float_t y[8] = {0.2,0.65,0.4,0.34,0.24,0.43,0.75,0.52};
+//   Double_t x[8] = {0.08,0.21,0.34,0.48,0.61,0.7,0.81,0.92};
+//   Double_t y[8] = {0.2,0.65,0.4,0.34,0.24,0.43,0.75,0.52};
 //   TGraph *graph = new TGraph(8,x,y);
 //   graph->SetMarkerColor(4);
 //   graph->SetMarkerStyle(21);
@@ -94,7 +94,7 @@ TButton::TButton(): TPad()
 }
 
 //______________________________________________________________________________
-TButton::TButton(const char *title, const char *method, Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2)
+TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TPad("button",title,x1,y1,x2,y2,18,2,1), TAttText(22,0,1,61,0.65)
 {
 //*-*-*-*-*-*-*-*-*-*-*Button normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -243,7 +243,7 @@ void TButton::PaintModified()
 }
 
 //______________________________________________________________________________
-void TButton::Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
 //*-*                  =======================================
