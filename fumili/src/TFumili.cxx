@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.15 2003/12/21 14:49:55 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.16 2004/02/06 14:32:28 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -209,7 +209,7 @@ TFumili::~TFumili() {
 }
 
 //______________________________________________________________________________
-Double_t TFumili::Chisquare(Int_t npar, Double_t *params)
+Double_t TFumili::Chisquare(Int_t npar, Double_t *params) const
 {
    // return a chisquare equivalent
    
@@ -774,12 +774,25 @@ void TFumili::FixParameter(Int_t ipar) {
 }
 
 //______________________________________________________________________________
-Double_t *TFumili::GetCovarianceMatrix()
+Double_t *TFumili::GetCovarianceMatrix() const
 {
    // return a pointer to the covariance matrix
 
    return fZ;
 
+}
+
+//______________________________________________________________________________
+Double_t TFumili::GetCovarianceMatrixElement(Int_t i, Int_t j) const
+{
+   // return element i,j from the covariance matrix
+
+   if (!fZ) return 0;
+   if (i < 0 || i >= fNpar || j < 0 || j >= fNpar) {
+      Error("GetCovarianceMatrixElement","Illegal arguments i=%d, j=%d",i,j);
+      return 0;
+   }
+   return fZ[j+fNpar*i];
 }
 
 
@@ -803,7 +816,8 @@ Double_t TFumili::GetParameter(Int_t ipar) const
 
 
 //______________________________________________________________________________
-Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) {
+Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
+{
   // Get various ipar parameter attributs:
   // 
   // cname:    parameter name
@@ -828,7 +842,8 @@ Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &ver
 }
 
 //______________________________________________________________________________
-Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) {
+Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const
+{
   // Return errors after MINOs
   // not implemented
   eparab = 0;
@@ -844,7 +859,7 @@ Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
 }
 
 //______________________________________________________________________________
-Int_t TFumili::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx)
+Int_t TFumili::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const
 {
    // return global fit parameters
    //   amin     : chisquare

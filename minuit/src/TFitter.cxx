@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.18 2004/07/09 08:02:46 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.19 2004/07/09 08:14:42 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,7 +47,7 @@ TFitter::~TFitter()
 }
 
 //______________________________________________________________________________
-Double_t TFitter::Chisquare(Int_t npar, Double_t *params)
+Double_t TFitter::Chisquare(Int_t npar, Double_t *params) const
 {
    // return a chisquare equivalent
    
@@ -61,6 +61,7 @@ void TFitter::Clear(Option_t *)
 {
    // reset the fitter environment
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->mncler();
 
 }
@@ -72,6 +73,7 @@ Int_t TFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs)
    //   command : command string
    //   args    : list of nargs command arguments
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    Int_t ierr = 0;
    fMinuit->mnexcm(command,args,nargs,ierr);
    return ierr;
@@ -82,23 +84,38 @@ void TFitter::FixParameter(Int_t ipar)
 {
    // Fix parameter ipar.
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->FixParameter(ipar);
 }
 
 //______________________________________________________________________________
-Double_t *TFitter::GetCovarianceMatrix()
+Double_t *TFitter::GetCovarianceMatrix() const
 {
    // return a pointer to the covariance matrix 
 
-   delete [] fCovar;
+   if (fCovar) return fCovar;
    Int_t npars = fMinuit->GetNumPars();
-   fCovar = new Double_t[npars*npars];
+   ((TFitter*)this)->fCovar = new Double_t[npars*npars];
    fMinuit->mnemat(fCovar,npars);
    return fCovar;
 }
 
 //______________________________________________________________________________
-Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc)
+Double_t TFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const
+{
+   // return element i,j from the covariance matrix
+
+   GetCovarianceMatrix();
+   Int_t npars = fMinuit->GetNumPars();
+   if (i < 0 || i >= npars || j < 0 || j >= npars) {
+      Error("GetCovarianceMatrixElement","Illegal arguments i=%d, j=%d",i,j);
+      return 0;
+   }
+   return fCovar[j+npars*i];
+}
+
+//______________________________________________________________________________
+Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const
 {
    // return current errors for a parameter
    //   ipar     : parameter number
@@ -142,7 +159,7 @@ Double_t TFitter::GetParameter(Int_t ipar) const
 }
    
 //______________________________________________________________________________
-Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh)
+Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
    // return current values for a parameter
    //   ipar     : parameter number
@@ -160,7 +177,7 @@ Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &v
 }
 
 //______________________________________________________________________________
-Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx)
+Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const 
 {
    // return global fit parameters
    //   amin     : chisquare
@@ -208,6 +225,7 @@ void TFitter::ReleaseParameter(Int_t ipar)
 {
    // Release parameter ipar.
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->Release(ipar);
 }
 
@@ -216,6 +234,7 @@ void TFitter::SetFCN(void *fcn)
 {
    // Specify the address of the fitting algorithm (from the interpreter)
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    TVirtualFitter::SetFCN(fcn);
    fMinuit->SetFCN(fcn);
    
@@ -226,6 +245,7 @@ void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 {
    // Specify the address of the fitting algorithm
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    TVirtualFitter::SetFCN(fcn);
    fMinuit->SetFCN(fcn);
 }
@@ -235,6 +255,7 @@ void TFitter::SetFitMethod(const char *name)
 {
    // ret fit method (chisquare or loglikelihood)
    
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquare);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquare);
@@ -252,6 +273,7 @@ Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double
    //   vlow     : lower value for the parameter
    //   vhigh    : upper value for the parameter
 
+   if (fCovar)  {delete [] fCovar; fCovar = 0;}
    Int_t ierr = 0;
    fMinuit->mnparm(ipar,parname,value,verr,vlow,vhigh,ierr);
    return ierr;

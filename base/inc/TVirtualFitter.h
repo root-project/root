@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.7 2003/08/08 17:28:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.8 2003/11/24 14:11:02 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -57,21 +57,22 @@ protected:
 public:
    TVirtualFitter();
    virtual ~TVirtualFitter();
-   virtual Double_t  Chisquare(Int_t npar, Double_t *params) = 0;
+   virtual Double_t  Chisquare(Int_t npar, Double_t *params) const  = 0;
    virtual void      Clear(Option_t *option="") = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
-   virtual Double_t *GetCovarianceMatrix() = 0;
-   virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) = 0;
+   virtual Double_t *GetCovarianceMatrix() const = 0;
+   virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const = 0;
+   virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const = 0;
    virtual Foption_t GetFitOption() const {return fOption;}
    TMethodCall      *GetMethodCall() const {return fMethodCall;}
    virtual TObject  *GetObjectFit() const {return fObjectFit;}
    virtual Double_t  GetParError(Int_t ipar) const = 0;
    virtual Double_t  GetParameter(Int_t ipar) const = 0;
-   virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) = 0;
-   virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) = 0;
+   virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const  = 0;
+   virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const  = 0;
    virtual Double_t  GetSumLog(Int_t i) = 0;
-   virtual TObject  *GetUserFunc() {return fUserFunc;}
+   virtual TObject  *GetUserFunc() const {return fUserFunc;}
    virtual Int_t     GetXfirst() const {return fXfirst;}
    virtual Int_t     GetXlast()  const {return fXlast;}
    virtual Int_t     GetYfirst() const {return fYfirst;}

@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.2 2003/08/08 09:18:35 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.3 2003/08/08 17:28:29 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ public:
   virtual  ~TFumili();
 
   void             BuildArrays();
-  virtual Double_t Chisquare(Int_t npar, Double_t *params);
+  virtual Double_t Chisquare(Int_t npar, Double_t *params) const;
   virtual void     Clear(Option_t *opt=""); 
   void             DeleteArrays();
   void             Derivatives(Double_t*,Double_t*);
@@ -94,15 +94,16 @@ public:
   virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
   Int_t            ExecuteSetCommand(Int_t ); 
   virtual void     FixParameter(Int_t ipar); 
-  virtual Double_t *GetCovarianceMatrix();
-  virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc);
+  virtual Double_t *GetCovarianceMatrix() const;
+  virtual Double_t GetCovarianceMatrixElement(Int_t i, Int_t j) const;
+  virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
   Double_t*        GetPL0() const { return fPL0;} 
   virtual Double_t GetParError(Int_t ipar) const;
   virtual Double_t GetParameter(Int_t ipar) const ;
-  virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh);
-  virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx);
+  virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
+  virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
   virtual Double_t GetSumLog(Int_t );
-  Double_t*        GetZ() { return fZ;}
+  Double_t*        GetZ() const { return fZ;}
   void             InvertZ(Int_t); 
   Int_t            Minimize(); 
   virtual void     PrintResults(Int_t k,Double_t p) const;
