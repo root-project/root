@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.49 2001/10/25 19:16:10 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.50 2001/10/29 19:47:53 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2708,6 +2708,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 
+   Color_t fcolor;
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
       Int_t px2 = XtoPixel(x2);
@@ -2720,6 +2721,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       Int_t style = gVirtualX->GetFillStyle();
       if (style) {
          if (style > 3000 && style < 4000) {
+            fcolor = -1;
 #ifndef WIN32
             if (style < 3020) {
                // set solid background color
@@ -2736,6 +2738,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             if (style > 3020 && style < 3100) {
                gVirtualX->SetFillStyle(style-10);
             } else {
+               fcolor = gVirtualX->GetFillColor(); // save fill color
                gVirtualX->SetFillColor(1);
                gVirtualX->SetFillStyle(style);
             }
@@ -2743,7 +2746,13 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             // draw stipples
             gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
 
-         } else if (style >= 4000 && style <= 4100) {
+#ifndef WIN32
+            // restore fill color
+            if (fcolor >= 0) {
+               gVirtualX->SetFillColor(fcolor);
+            }
+#endif
+            } else if (style >= 4000 && style <= 4100) {
             // For style >=4000 we make the window transparent.
             // From 4000 to 4100 the window is 100% transparent to 100% opaque
 
