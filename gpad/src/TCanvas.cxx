@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.46 2003/08/18 00:09:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.48 2003/08/23 00:08:12 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -170,12 +170,14 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fWindowTopY   = 0;
    fWindowWidth  = ww;
    fWindowHeight = wh;
-   fCw           = ww;
-   fCh           = wh;
+   fCw           = ww + 4;
+   fCh           = wh +28;
    fMenuBar      = kFALSE;
    fBatch        = kFALSE;
-   fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
-
+   if (gROOT->IsBatch())
+     fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   else
+     fCanvasImp    = gGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
    Build();
 }
