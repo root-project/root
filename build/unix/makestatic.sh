@@ -19,7 +19,8 @@ ROOTAEXE=bin/roota
 rm -f $ROOTALIB $ROOTAEXE
 
 excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
-      hbook newdelete table utils srputils krb5auth dcache x11ttf"
+      hbook newdelete table utils srputils krb5auth dcache x11ttf \
+      geom geompainter alien"
 
 objs=""
 gobjs=""
