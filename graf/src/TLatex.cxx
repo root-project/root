@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.14 2001/02/21 11:50:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.15 2001/05/31 15:45:11 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1766,8 +1766,11 @@ FormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text) {
 //______________________________________________________________________________
 Double_t TLatex::GetHeight() const
 {
-// return height of current font in pixels
+// return height of current pad in pixels
 
+   if (gPad->GetWw() < gPad->GetWh())
+      return gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
+   else
       return gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
 }
 
@@ -1796,7 +1799,6 @@ Double_t TLatex::GetXsize()
 Double_t TLatex::GetYsize()
 {
 // return size of the formula along Y in pad coordinates
-      if (!gPad) return 0;
       if (!gPad) return 0;
       TString newText = GetTitle();
       if( newText.Length() == 0) return 0;
@@ -2253,8 +2255,8 @@ void TLatex::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
      65,65,65,62,60,68,46,63,65,65,65,60,64,64,64,59,68,61,65,65,65,62,60,51,50,65,65,65,60,84,87,79};
 
 
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t     wh = (Double_t)gPad->XtoAbsPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoAbsPixel(gPad->GetY1());
    Double_t tsize;
    if (wh < hh)  tsize = fTextSize*wh;
    else          tsize = fTextSize*hh;
