@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.2 2000/09/08 07:41:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -955,7 +955,9 @@ Bool_t TRootCanvas::HandleContainerCrossing(Event_t *event)
    Int_t x = event->fX;
    Int_t y = event->fY;
 
-   if (event->fType == kLeaveNotify)
+   // pointer grabs create also an enter and leave event but with fCode
+   // either kNotifyGrab or kNotifyUngrab, don't propagate these events
+   if (event->fType == kLeaveNotify && event->fCode == kNotifyNormal)
       fCanvas->HandleInput(kMouseLeave, x, y);
 
    return kTRUE;
