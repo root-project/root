@@ -40,6 +40,13 @@ int G__getoptimizemode G__P(());
 extern int G__const_noerror;
 #endif
 
+int G__get_return(int *exitval)
+{
+   if (exitval)
+      *exitval = 0;   /* should be value set by exit() */
+   return G__return;
+}
+
 #ifndef G__OLDIMPLEMENTATION1618
 /******************************************************************
 * G__bytecodedebugmode()

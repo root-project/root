@@ -1833,6 +1833,7 @@ extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 extern G__EXPORT void G__set_errmsgcallback(void* p);
 #endif
+extern G__EXPORT int G__get_return G__P((int *exitval));
 
 #else /* G__MULTITHREADLIBCINT */
 
