@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.2 2000/06/13 11:05:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.3 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -83,17 +83,18 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
   TClass *cl = gROOT->GetClass(GetName());
   if (!cl) return;
 
-//*-*- make a special case for top of Collections
+
+  //*-*- make a special case for top of Collections
 //*-*-    if status word is 0 take first member
 //*-*-    otherwise go back to parent of linked list
-  if (cl->InheritsFrom(TCollection::Class())) {
-     TList *lh = (TList*)idcur;
-     if (!TestBit(kObjIsParent))  idcur = lh->First();
-//     else                         idcur = lh->GetParent();
-     if (!idcur) return;
-     idcur->Inspect();
-     return;
-  }
+//  if (cl->InheritsFrom(TCollection::Class())) {
+//     TList *lh = (TList*)idcur;
+//     if (!TestBit(kObjIsParent))  idcur = lh->First();
+////     else                         idcur = lh->GetParent();
+//     if (!idcur) return;
+//     idcur->Inspect();
+//     return;
+//  }
 
 //*-*- check if link points to a TObject
    TClass *c1 = (TClass*)cl->GetBaseClass("TObject");

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.15 2000/09/08 07:41:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.16 2000/09/11 09:06:05 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1534,7 +1534,7 @@ void THistPainter::PaintContour()
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
       gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
-      if (Hoption.Zscale) PaintPalette();
+//      if (Hoption.Zscale) PaintPalette();
       return;
    }
 
@@ -2814,6 +2814,7 @@ void THistPainter::PaintLego()
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
+   if (Hoption.Lego == 12 && Hoption.Zscale) PaintPalette();  // MOD MWH
    fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
@@ -3776,7 +3777,7 @@ void THistPainter::PaintSurface()
    }
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
 
-   if (Hoption.Surf == 12 && Hoption.Zscale) PaintPalette();  // MOD MWH
+   if (Hoption.Surf >= 11 && Hoption.Zscale) PaintPalette();  // MOD MWH
    
    fNIDS = 0;
    delete axis;
