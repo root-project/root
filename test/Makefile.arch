@@ -511,9 +511,10 @@ ifeq ($(ARCH),win32gcc)
 DllSuf        = dll
 ExeSuf        = .exe
 CXX           = g++
-CXXFLAGS      = -O2 -Wall -Woverloaded-virtual -I/usr/X11R6/include
+CXXFLAGS      = -O -pipe -Wall -Woverloaded-virtual -I/usr/X11R6/include
 LD            = g++
-LDFLAGS       = -O2 -Wl,--enable-auto-import
+LDFLAGS       = -O -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc \
+		-L/usr/X11R6/lib 
 SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif

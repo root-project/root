@@ -352,10 +352,6 @@ endif
 
 
 ##### TARGETS #####
-ifeq ($(ARCH),win32gcc)
-POSTBIN=rebase
-endif
-
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \

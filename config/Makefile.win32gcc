@@ -5,7 +5,7 @@
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O3 -foptimize-sibling-calls -finline-functions
+OPTFLAGS      = -O -foptimize-sibling-calls -finline-functions
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -32,10 +32,11 @@ COMPILER      = gnu
 
 # Linker:
 LD            = build/unix/wingcc_ld.sh
-LDFLAGS       = $(OPT) -Wl,--enable-auto-image-base -Wl,--export-all-symbols \
+LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
+                -Wl,--enable-runtime-pseudo-reloc \
                 -L/usr/X11R6/lib \
                 $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Wl,-soname,
+SOFLAGS       = -shared -Wl,--export-all-symbols -Wl,-soname=
 # that's what cygwin ld looks for when searching for shared libs
 SOEXT         = dll
 EXEEXT        = .exe
@@ -52,4 +53,20 @@ F77           = g77
 F77FLAGS      =
 F77LIBS       = -lg2c
 
+# transform cygwin version 1.2.3-4 into integer
+# each of the four version parts but the first gets two digits,
+# filled up with 0 if necessary (i.e. if a version part only 
+# has one digit), and removing ".", "-"
+# thus, 1.2.3-4 becomes 1020304, 12.3.45-67 becomes 12034567
+CYGWINVERSION = $(shell cygcheck -c cygwin | egrep '^cygwin' \
+                | sed 's,^[^[:digit:]]\+\([^[:space:]]\+\).*$$,\1,' \
+                | sed 's,[.-]\([[:digit:]]\)\($$\|[^[:digit:]]\),0\1,g' \
+                | sed 's,[.-],,g' )
+# test whether the cygwin version is newer than 1051201 (i.e. 1.5.12-1)
+CYGVER1051201 = $(shell test $(CYGWINVERSION) -ge 1051201 \
+                && echo $(CYGWINVERSION) )
+
 # Extras
+ifeq ($(CYGVER1051201),)
+POSTBIN+=rebase
+endif

@@ -37,6 +37,7 @@ else
    soext="so"
 fi
 
+VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
    if [ $LIB != "lib/libCint.$soext" ]; then
@@ -141,7 +142,13 @@ elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
          EXPLLNKCORE="-Llib -lCint"
       fi
    fi
-   cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
+   if [ "x$MAJOR" != "x" ] ; then
+      MINORVERSION=`echo ${MINOR}$REVIS | sed 's,^0,,'`
+      VERSION="-Wl,--major-image-version,$MAJOR -Wl,--minor-image-version,$MINORVERSION"
+      SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
+      LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
+   fi
+   cmd="$LD $VERSION $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
    echo $cmd
    $cmd
 else

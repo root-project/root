@@ -1,8 +1,7 @@
 #! /bin/sh
 
-# Patch to create soname.dll.a archives and to use it 
-# for symbol-providers (--no-whole-archive) for linking
-# Also puts dlls to bin, symlinking them to lib
+# Put dlls into bin/, symlinking them to lib/, and create
+# a symlinked import archive .dll.a in lib/.
 
 args=
 isdll=0
@@ -12,7 +11,7 @@ while [ "$1" != "" ]; do
        dllname="$1"; dllbase=`basename $1`; 
        if [ "`echo $dllname | sed 's{^lib/.*\.dll${{'`" != "$dllname" ]; then
 	   isdll=1
-	   args="$args bin/$dllbase -Wl,--out-implib=$dllname.a" 
+	   args="$args bin/$dllbase" 
        else
 	   args="$args $1" 
        fi ;;
@@ -25,6 +24,7 @@ done
 g++ $args \
   && ( if [ "$isdll" != "0" ]; then \
           ln -sf ../bin/$dllbase $dllname; \
+          ln -sf ../bin/$dllbase $dllname.a; \
        fi )
 
 exit $?
