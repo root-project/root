@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.6 2001/01/24 12:02:22 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.7 2001/01/24 16:32:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TLeafD::~TLeafD()
 //*-*-*-*-*-*Default destructor for a LeafD*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ===============================
 
-   //if (ResetAddress(0,kTRUE)) delete [] fValue;
+   if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
 
