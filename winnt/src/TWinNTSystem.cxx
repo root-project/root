@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.88 2004/05/10 12:10:09 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.89 2004/05/18 09:33:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2820,29 +2820,31 @@ const char *TWinNTSystem::GetLinkedLibraries()
    }
 
    FILE *p = OpenPipe(Form("objdump -p %s", exe), "r");
-   TString odump;
-   while (odump.Gets(p)) {
-      if (odump.Contains("DLL Name:")) {
-         TString delim(" :\t");
-         TObjArray *tok = odump.Tokenize(delim);
+   if(p != 0) {
+      TString odump;
+      while (odump.Gets(p)) {
+         if (odump.Contains("DLL Name:")) {
+            TString delim(" :\t");
+            TObjArray *tok = odump.Tokenize(delim);
 
-         TObjString *dllName = (TObjString*)tok->At(2);
-         if (dllName) {
-            TString dll = dllName->String();
-            if (dll.EndsWith(".dll")) {
-               char *dllPath = DynamicPathName(dll, kTRUE);
-               if (dllPath) {
-                  if (!linkedLibs.IsNull())
-                     linkedLibs += " ";
-                  linkedLibs += dllPath;
+            TObjString *dllName = (TObjString*)tok->At(2);
+            if (dllName) {
+               TString dll = dllName->String();
+               if (dll.EndsWith(".dll")) {
+                  char *dllPath = DynamicPathName(dll, kTRUE);
+                  if (dllPath) {
+                     if (!linkedLibs.IsNull())
+                        linkedLibs += " ";
+                     linkedLibs += dllPath;
+                  }
+                  delete [] dllPath;
                }
-               delete [] dllPath;
             }
+            delete tok;
          }
-         delete tok;
       }
+      ClosePipe(p);
    }
-   ClosePipe(p);
 
    delete [] exe;
 
