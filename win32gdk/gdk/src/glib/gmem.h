@@ -100,7 +100,7 @@ void	 g_mem_check   (gpointer  mem);
  */
 GAllocator* g_allocator_new   (const gchar  *name,
 			       guint         n_preallocs);
-void        g_allocator_free  (GAllocator   *allocator);
+void        g_allocator_free  (GAllocator   *allocato);
 
 #define	G_ALLOCATOR_LIST	(1)
 #define	G_ALLOCATOR_SLIST	(2)

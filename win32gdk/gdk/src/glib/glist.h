@@ -42,7 +42,7 @@ struct _GList
 
 /* Doubly linked lists
  */
-void     g_list_push_allocator (GAllocator       *allocator);
+void     g_list_push_allocator (GAllocator       *allocato);
 void     g_list_pop_allocator  (void);
 GList*   g_list_alloc          (void);
 void     g_list_free           (GList            *list);

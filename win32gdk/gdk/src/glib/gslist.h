@@ -41,7 +41,7 @@ struct _GSList
 
 /* Singly linked lists
  */
-void     g_slist_push_allocator (GAllocator       *allocator);
+void     g_slist_push_allocator (GAllocator       *allocato);
 void     g_slist_pop_allocator  (void);
 GSList*  g_slist_alloc          (void);
 void     g_slist_free           (GSList           *list);
