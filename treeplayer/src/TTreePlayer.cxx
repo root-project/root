@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.12 2000/07/15 05:16:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.13 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2070,9 +2070,9 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //  of the EventList, starting at firstentry, otherwise the loop is on the 
 //  specified Tree entries.   
 
-   fTree->SetProcessOption(option);
+   selector->SetOption(option);
    
-   selector->ExecuteBegin(fTree); //<===call user initialisation function
+   selector->Begin(fTree); //<===call user initialisation function
 
    //Create a timer to get control in the entry loop(s)
    TProcessEventTimer *timer = 0;
@@ -2099,12 +2099,12 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
       else       entryNumber = fTree->LoadTree(entry);
       if (fTree->GetTreeNumber() != treeNumber) {
          treeNumber = fTree->GetTreeNumber();
-         selector->ExecuteNotify();
+         selector->Notify();
       }
-      if (selector->ExecuteProcessCut (entryNumber))
-          selector->ExecuteProcessFill(entryNumber); //<==call user analysis function
+      if (selector->ProcessCut (entryNumber))
+          selector->ProcessFill(entryNumber); //<==call user analysis function
    }
-   selector->ExecuteTerminate();  //<==call user termination function
+   selector->Terminate();  //<==call user termination function
       
    return fSelectedRows;
 }

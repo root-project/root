@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.1 2000/07/13 19:22:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.2 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@ TSelectorCint::TSelectorCint(): TSelector()
    fFuncTerm    = 0;
    fFuncCut     = 0;
    fFuncFill    = 0;
+   fFuncOption  = 0;
    fIntSelector = 0;
    
 }
@@ -47,6 +48,7 @@ TSelectorCint::~TSelectorCint()
    delete fFuncTerm;
    delete fFuncCut;
    delete fFuncFill;
+   delete fFuncOption;
 }
 
 //______________________________________________________________________________
@@ -60,17 +62,19 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    fFuncTerm    = new G__CallFunc();
    fFuncCut     = new G__CallFunc();
    fFuncFill    = new G__CallFunc();
+   fFuncOption  = new G__CallFunc();
    Long_t offset = 0;
    fFuncBegin->SetFuncProto(cl,"Begin","",&offset);
    fFuncNotif->SetFuncProto(cl,"Notify","",&offset);
    fFuncTerm->SetFuncProto (cl,"Terminate","",&offset);
    fFuncCut->SetFuncProto  (cl,"ProcessCut","int",&offset);
    fFuncFill->SetFuncProto (cl,"ProcessFill","int",&offset);
+   fFuncOption->SetFuncProto (cl,"SetOption","const char*",&offset);
 }
 
 
 //______________________________________________________________________________
-void TSelectorCint::ExecuteBegin(TTree *tree)
+void TSelectorCint::Begin(TTree *tree)
 {
    // Invoke the Begin function via the interpreter
 
@@ -80,7 +84,7 @@ void TSelectorCint::ExecuteBegin(TTree *tree)
 
 
 //______________________________________________________________________________
-Bool_t TSelectorCint::ExecuteNotify()
+Bool_t TSelectorCint::Notify()
 {
    // Invoke the Notify function via the interpreter
 
@@ -90,7 +94,7 @@ Bool_t TSelectorCint::ExecuteNotify()
 
 
 //______________________________________________________________________________
-Bool_t TSelectorCint::ExecuteProcessCut(Int_t entry)
+Bool_t TSelectorCint::ProcessCut(Int_t entry)
 {
    // Invoke the ProcessCut function via the interpreter
 
@@ -101,7 +105,7 @@ Bool_t TSelectorCint::ExecuteProcessCut(Int_t entry)
 
 
 //______________________________________________________________________________
-void TSelectorCint::ExecuteProcessFill(Int_t entry)
+void TSelectorCint::ProcessFill(Int_t entry)
 {
    // Invoke the ProcessFill function via the interpreter
 
@@ -109,9 +113,18 @@ void TSelectorCint::ExecuteProcessFill(Int_t entry)
    fFuncFill->Exec(fIntSelector);
 }
 
+//______________________________________________________________________________
+void TSelectorCint::SetOption(const char *option)
+{
+   // Set the selector option
+
+   fFuncOption->SetArg((Long_t)option);
+   fFuncOption->Exec(fIntSelector);
+}
+
 
 //______________________________________________________________________________
-void TSelectorCint::ExecuteTerminate()
+void TSelectorCint::Terminate()
 {
    // Invoke the Terminate function via the interpreter
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.1 2000/07/13 19:22:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.2 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -37,17 +37,19 @@ protected:
    G__CallFunc   *fFuncTerm;     //!
    G__CallFunc   *fFuncCut;      //!
    G__CallFunc   *fFuncFill;     //!
+   G__CallFunc   *fFuncOption;   //!
    TSelector     *fIntSelector;  //Pointer to interpreted selector (if interpreted)
    
 public:
    TSelectorCint();
    virtual            ~TSelectorCint();
    virtual void        Build(TSelector *iselector, G__ClassInfo *cl);
-   virtual void        ExecuteBegin(TTree *tree);
-   virtual Bool_t      ExecuteNotify();
-   virtual Bool_t      ExecuteProcessCut(Int_t entry);
-   virtual void        ExecuteProcessFill(Int_t entry);
-   virtual void        ExecuteTerminate();
+   virtual void        Begin(TTree *tree);
+   virtual Bool_t      Notify();
+   virtual Bool_t      ProcessCut(Int_t entry);
+   virtual void        ProcessFill(Int_t entry);
+   virtual void        SetOption(const char *option);
+   virtual void        Terminate();
 
    ClassDef(TSelectorCint,0)  //A utility class for Trees selections. (interpreted)
 };

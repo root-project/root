@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.7 2000/07/17 10:26:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.8 2000/07/17 10:29:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -109,7 +109,6 @@ protected:
     TArrayI       fIndex;             //Index of sorted values
     TList        *fStreamerInfoList;  //list of StreamerInfo for all TBranchObjects
     TVirtualTreePlayer *fPlayer;      //Pointer to current Tree player
-    TString       fProcessOption;     //Option specified in TTree::Process
     
 protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
@@ -176,7 +175,6 @@ public:
     virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
     TVirtualTreePlayer  *GetPlayer();
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
-    virtual const char  *GetProcessOption() const {return fProcessOption.Data();}
     virtual Int_t     GetReadEntry() {return fReadEntry;}
     virtual Int_t     GetReadEvent() {return fReadEntry;}
     virtual Int_t     GetScanField() {return fScanField;}
@@ -205,14 +203,14 @@ public:
     Bool_t            MemoryFull(Int_t nbytes);
     virtual void      Print(Option_t *option=""); // *MENU*
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
+                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Reset(Option_t *option="");
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
-                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetAutoSave(Int_t autos=10000000) {fAutoSave=autos;}
     virtual void      SetBasketSize(const char *bname,Int_t buffsize=16000);
     virtual void      SetBranchAddress(const char *bname,void *add);
@@ -225,7 +223,6 @@ public:
     virtual void      SetMaxVirtualSize(Int_t size=0) {fMaxVirtualSize = size;} // *MENU*
     virtual void      SetName(const char *name); // *MENU*
     virtual void      SetObject(const char *name, const char *title);
-    virtual void      SetProcessOption(Option_t *option="") {fProcessOption=option;}
     virtual void      SetScanField(Int_t n=50) {fScanField = n;} // *MENU*
     virtual void      SetTimerInterval(Int_t msec=333) {fTimerInterval=msec;}
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.3 2000/07/13 19:19:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.4 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -47,50 +47,6 @@ TSelector::TSelector(): TObject()
 TSelector::~TSelector()
 {
    // destructor for a Selector.
-}
-
-//______________________________________________________________________________
-void TSelector::ExecuteProcessFill(Int_t entry)
-{
-   // Invoke the ProcessFill function via the compiler
-
-   ProcessFill(entry);
-}
-
-
-//______________________________________________________________________________
-void TSelector::ExecuteBegin(TTree *tree)
-{
-   // Invoke the Begin function via the compiler
-
-   Begin(tree);
-}
-
-
-//______________________________________________________________________________
-Bool_t TSelector::ExecuteNotify()
-{
-   // Invoke the Notify function via the compiler
-
-   return Notify();
-}
-
-
-//______________________________________________________________________________
-void TSelector::ExecuteTerminate()
-{
-   // Invoke the Terminate function via the compiler
-
-   Terminate();
-}
-
-
-//______________________________________________________________________________
-Bool_t TSelector::ExecuteProcessCut(Int_t entry)
-{
-   // Invoke the ProcessCut function via the compiler
-
-   return ProcessCut(entry);
 }
 
 

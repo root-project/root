@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.3 2000/07/13 19:19:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.4 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -29,21 +29,20 @@
 class TTree;
 
 class TSelector : public TObject {
-   
+ protected:
+   TString   fOption;  //option given to TTree::Process
+    
 public:
    TSelector();
    virtual            ~TSelector();
    virtual void        Begin(TTree *) {;}
-   virtual void        ExecuteBegin(TTree *tree);
-   virtual Bool_t      ExecuteNotify();
-   virtual Bool_t      ExecuteProcessCut(Int_t entry);
-   virtual void        ExecuteProcessFill(Int_t entry);
-   virtual void        ExecuteTerminate();
    virtual Bool_t      Notify() {return kTRUE;}
-   virtual void        Terminate() {;}
+   virtual const char *GetOption() const {return fOption.Data();}
    static  TSelector  *GetSelector(const char *filename);
    virtual Bool_t      ProcessCut(Int_t entry) {return kTRUE;}
    virtual void        ProcessFill(Int_t entry) {;}
+   virtual void        SetOption(const char *option) {fOption=option;}
+   virtual void        Terminate() {;}
 
    ClassDef(TSelector,0)  //A utility class for Trees selections.
 };
