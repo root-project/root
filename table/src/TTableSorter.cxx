@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1 2004/05/19 00:56:42 fine Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// $Id: TTableSorter.cxx,v 1.1 2004/05/19 00:56:42 fine Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -206,10 +206,11 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
   fNumberOfRows  =  0;
   fColType       =  TTable::kNAN;
   fsimpleArray   =  0;
-  fCompareMethod =  0;
+  //yf  fCompareMethod =  0;
   fSortIndex     =  0;
-  fSearchMethod  =  0;
+  //yf fSearchMethod  =  0;
   fColDimensions =  0;
+  fColOffset     =  0;
 
   // Generate new object name 
   TString n = fParentTable->GetName();
@@ -266,8 +267,10 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
           }
      }
   }
+  if (colName != "user's defined") {
   LearnTable();
   SetSearchMethod();
+  }
   if (!FillIndexArray()) QSort();
 }
 
