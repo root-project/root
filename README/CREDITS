@@ -159,7 +159,7 @@ N: Oleksandr Grebenyuk
 E: Oleksandr.Grebenyuk@gsi.de
 D: OpenLDAP interface
 
-N: Kristjan Gulbrandsen
+N: Kristjan Gulbrandsen 
 E: gulbrand@mit.edu
 D: monitoring facility for PROOF
 
@@ -207,10 +207,6 @@ D: improvements in the ZIP package
 N: Susan Kasahara
 E: schubert@physics.umn.edu
 D: many contributions to the debuging phase of the I/O system
-
-N: Anna Kreshuk
-E: akrechtc@mail.cern.ch
-D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
@@ -304,7 +300,7 @@ N: Andreas Peters
 E: Andreas.Joachim.Peters@cern.ch
 D: TGrid extension and TAlien plugin
 
-N: Filip Pizlo
+N: Filip Pizlo 
 E: pizlo@purdue.edu
 D: TBits extension and test program testbits.cxx
 
@@ -343,10 +339,6 @@ D: TGNumberEntry GUI widget
 N: Evgenia Smirnova
 E: Evgenia.Smirnova@gsi.de
 D: OpenLDAP interface
-
-N: Abdelhalim Ssadik
-E: abdelhalim.ssadik@cern.ch
-D: contribution to GUI classes (TGDockableFrame)
 
 N: Christian Stratowa
 E: cstrato@EUnet.at

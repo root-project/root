@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.22 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.19 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -93,9 +93,10 @@ void TVectorF::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
   // Allocate new vector. Arguments are number of rows and row
   // lowerbound (0 default).
 
-  Assert(nrows >= 0);
+  Invalidate();
+  Assert(nrows > 0);
 
-  MakeValid();
+  SetBit(TMatrixFBase::kStatus);
   fNrows   = nrows;
   fRowLwb  = row_lwb;
   fIsOwner = kTRUE;
@@ -201,7 +202,7 @@ TVectorF::TVectorF(Int_t lwb,Int_t upb,Float_t va_(iv1), ...)
 }
 
 //______________________________________________________________________________
-TVectorF &TVectorF::ResizeTo(Int_t lwb,Int_t upb)
+void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
 {
   // Resize the vector to [lwb:upb] .
   // New dynamic elemenst are created, the overlapping part of the old ones are
@@ -210,8 +211,7 @@ TVectorF &TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Int_t new_nrows = upb-lwb+1;
@@ -219,10 +219,10 @@ TVectorF &TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   if (fNrows > 0) {
 
     if (fNrows == new_nrows && fRowLwb == lwb)
-      return *this;
+      return;
     else if (new_nrows == 0) {
       Clear();
-      return *this;
+      return;
     }
 
     Float_t     *elements_old = GetMatrixArray();
@@ -253,12 +253,22 @@ TVectorF &TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   } else {
     Allocate(upb-lwb+1,lwb,1);
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TVectorF &TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
+void TVectorF::Use(Int_t n,Float_t *data)
+{
+  Assert(n > 0);
+
+  Clear();
+  fNrows    = n;
+  fRowLwb   = 0;
+  fElements = data;
+  fIsOwner  = kFALSE;
+}
+
+//______________________________________________________________________________
+void TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
 {
   Assert(upb >= lwb);
 
@@ -267,12 +277,10 @@ TVectorF &TVectorF::Use(Int_t lwb,Int_t upb,Float_t *data)
   fRowLwb   = lwb;
   fElements = data;
   fIsOwner  = kFALSE;
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TVectorF &TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,TVectorF &target,Option_t *option) const
+TVectorF TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
 {
   // Get subvector [row_lwb..row_upb]; The indexing range of the
   // returned vector depends on the argument option:
@@ -283,18 +291,15 @@ TVectorF &TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,TVectorF &target,Option_t
   Assert(IsValid());
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("GetSub","row_lwb out of bounds");
-    target.Invalidate();
-    return target;
+    return TVectorF();
   }
   if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
     Error("GetSub","row_upb out of bounds");
-    target.Invalidate();
-    return target;
+    return TVectorF();
   }
   if (row_upb < row_lwb) {
     Error("GetSub","row_upb < row_lwb");
-    target.Invalidate();
-    return target;
+    return TVectorF();
   }
 
   TString opt(option);
@@ -311,20 +316,20 @@ TVectorF &TVectorF::GetSub(Int_t row_lwb,Int_t row_upb,TVectorF &target,Option_t
     row_upb_sub = row_upb;
   }
 
-  target.ResizeTo(row_lwb_sub,row_upb_sub);
+  TVectorF sub(row_lwb_sub,row_upb_sub);
   const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
 
   const Float_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
-        Float_t *bp = target.GetMatrixArray();
+        Float_t *bp = sub.GetMatrixArray();
 
   for (Int_t irow = 0; irow < nrows_sub; irow++)
-    *bp++ = *ap++;
+      *bp++ = *ap++;
 
-  return target;
+  return sub;
 }
 
 //______________________________________________________________________________
-TVectorF &TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
+void TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 {
   // Insert vector source starting at [row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source];
@@ -334,14 +339,12 @@ TVectorF &TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 
   if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   const Int_t nRows_source = source.GetNrows();
   if (row_lwb+nRows_source > fRowLwb+fNrows) {
     Error("SetSub","source vector too large");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Float_t *bp = source.GetMatrixArray();
@@ -349,8 +352,6 @@ TVectorF &TVectorF::SetSub(Int_t row_lwb,const TVectorF &source)
 
   for (Int_t irow = 0; irow < nRows_source; irow++)
     *ap++ = *bp++;
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -1631,17 +1632,15 @@ void TVectorF::Streamer(TBuffer &R__b)
     if (R__v > 1) {
       Clear();
       TVectorF::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    } else {
-      Error("TVectorF::Streamer:","Unknown version number: %d",R__v);
-      Assert(0);
-    }
-    if (fNrows <= kSizeMax) {
-      memcpy(fDataStack,fElements,fNrows*sizeof(Float_t));
-      delete [] fElements;
-      fElements = fDataStack;
-    }
-    if (R__v < 3)
       MakeValid();
+      return;
+    }
+    //====process old versions before automatic schema evolution
+    TObject::Streamer(R__b);
+    R__b >> fRowLwb;
+    fNrows = R__b.ReadArray(fElements);
+    MakeValid();
+    R__b.CheckByteCount(R__s, R__c, TVectorF::IsA());
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
   }
@@ -1658,10 +1657,12 @@ void TVector::Streamer(TBuffer &R__b)
     if (R__v > 2) {
       Clear();
       TVectorF::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-    } else if (R__v == 2) { //====process old version 2
+      return;
+    }
+    //====process old version 2
+    if (R__v > 1) {
       Clear();
       TObject::Streamer(R__b);
-      MakeValid();
       R__b >> fNrows;
       R__b >> fRowLwb;
       Char_t isArray;
@@ -1671,18 +1672,15 @@ void TVector::Streamer(TBuffer &R__b)
         R__b.ReadFastArray(fElements,fNrows);
       }
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
-    } else { //====process old version 1
-      TObject::Streamer(R__b);
       MakeValid();
-      R__b >> fRowLwb;
-      fNrows = R__b.ReadArray(fElements);
-      R__b.CheckByteCount(R__s, R__c, TVector::IsA());
+      return;
     }
-    if (fNrows <= kSizeMax) {
-      memcpy(fDataStack,fElements,fNrows*sizeof(Float_t));
-      delete [] fElements;
-      fElements = fDataStack;
-    }
+    //====process old version 1
+    TObject::Streamer(R__b);
+    R__b >> fRowLwb;
+    fNrows = R__b.ReadArray(fElements);
+    MakeValid();
+    R__b.CheckByteCount(R__s, R__c, TVector::IsA());
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
   }

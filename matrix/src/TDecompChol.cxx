@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.10 2004/05/27 20:20:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.9 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -327,14 +327,6 @@ void TDecompChol::Det(Double_t &d1,Double_t &d2)
   }
   d1 = fDet1;
   d2 = fDet2;
-}
-
-//______________________________________________________________________________
-void TDecompChol::Print(Option_t *opt) const
-{
-  TDecompBase::Print(opt);
-  fA.Print("fA");
-  fU.Print("fU");
 }
 
 //______________________________________________________________________________

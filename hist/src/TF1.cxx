@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.81 2004/06/22 15:36:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.78 2003/12/11 13:27:27 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -20,11 +20,9 @@
 #include "Api.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
-#include "TBrowser.h"
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
-static TF1 *gHelper = 0;
 
 ClassImp(TF1)
 
@@ -559,9 +557,9 @@ void TF1::AbsValue(Bool_t flag)
 }
 
 //______________________________________________________________________________
-void TF1::Browse(TBrowser *b)
+void TF1::Browse(TBrowser *)
 {
-    Draw(b ? b->GetDrawOption() : "");
+    Draw();
     gPad->Update();
 }
 
@@ -1122,8 +1120,9 @@ Double_t TF1::GetProb() const
 {
 // return the fit probability
    
-   if (fNDF <= 0) return 0;
-   return TMath::Prob(fChisquare,fNDF);
+   Int_t ndf = fNpfits - fNpar;
+   if (ndf <= 0) return 0;
+   return TMath::Prob(fChisquare,ndf);
 }
    
 //______________________________________________________________________________
@@ -2493,20 +2492,6 @@ Bool_t TF1::RejectedPoint()
 }
 
 //______________________________________________________________________________
-Double_t TF1_ExpValHelperx(Double_t *x, Double_t *par) {
-   return x[0]*gHelper->EvalPar(x,par);
-}
-
-//______________________________________________________________________________
-Double_t TF1_ExpValHelper(Double_t *x, Double_t *par) {
-   Int_t npar    = gHelper->GetNpar();
-   Double_t xbar = par[npar];
-   Double_t n    = par[npar+1];
-   return TMath::Power(x[0]-xbar,n)*gHelper->EvalPar(x,par);
-}
-
-
-//______________________________________________________________________________
 Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
 // Return nth moment of function between a and b
@@ -2522,15 +2507,7 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
       return 0;
    }
 
-   gHelper = this;
-   //TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
-   TF1 fnc("TF1_ExpValHelper",TF1_ExpValHelper,fXmin,fXmax,fNpar+2);
-   for (Int_t i=0;i<fNpar;i++) {
-      if(params) fnc.SetParameter(i,params[i]);
-      else       fnc.SetParameter(i,fParams[i]);
-   }
-   fnc.SetParameter(fNpar,0);
-   fnc.SetParameter(fNpar+1,n);
+   TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
    Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
    fgAbsValue = kFALSE;
    return res;
@@ -2552,26 +2529,10 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
       return 0;
    }
 
-   gHelper = this;
-   //TF1 fncx("TF1_ExpValHelperx",Form("%s*x",GetName()));
-   TF1 fncx("TF1_ExpValHelperx",TF1_ExpValHelperx,fXmin,fXmax,fNpar);
-   Int_t i;
-   for (i=0;i<fNpar;i++) {
-      if(params) fncx.SetParameter(i,params[i]);
-      else       fncx.SetParameter(i,fParams[i]);
-   }
+   TF1 fncx("TF1_ExpValHelperx",Form("%s*x",GetName()));
    Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
 
-   //TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
-   TF1 fnc("TF1_ExpValHelper",TF1_ExpValHelper,fXmin,fXmax,fNpar+2);
-   for (i=0;i<fNpar;i++) {
-      if(params) fnc.SetParameter(i,params[i]);
-      else       fnc.SetParameter(i,fParams[i]);
-   }
-   fnc.SetParameter(fNpar,0);
-   fnc.SetParameter(fNpar+1,n);
-   fnc.SetParameter(fNpar,xbar);
-   fnc.SetParameter(fNpar+1,n);
+   TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
    Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
    fgAbsValue = kFALSE;
    return res;

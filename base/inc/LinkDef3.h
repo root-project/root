@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.16 2004/06/25 17:27:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.13 2004/03/11 06:17:43 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -101,7 +101,6 @@
 #pragma link C++ global kMaxPixel;
 
 #pragma link C++ global gProof;
-#pragma link C++ global gPerfStats;
 
 #pragma link C++ enum EGuiConstants;
 #pragma link C++ enum EGEventType;
@@ -154,22 +153,16 @@
 #pragma link C++ function operator> (const TTimeStamp&, const TTimeStamp&);
 #pragma link C++ function operator>=(const TTimeStamp&, const TTimeStamp&);
 
-#pragma link C++ class TArchiveFile+;
-#pragma link C++ class TArchiveMember+;
-#pragma link C++ class TZIPFile+;
-#pragma link C++ class TZIPMember+;
 #pragma link C++ class TTimeStamp+;
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class TLockGuard;
 #pragma link C++ class TVirtualProof;
-#pragma link C++ class TVirtualPerfStats;
-#pragma link C++ enum TVirtualPerfStats::EEventType;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
 #pragma extra_include "string";
 // insure using namespace std and declaration of std::pair
-#pragma extra_include "Rpair.h";
+#pragma extra_include "Rpair.h"; 
 #include <utility>
 
 #pragma link C++ class std::pair<char*,int>+;
@@ -219,9 +212,5 @@
 #pragma link C++ class std::pair<const double,double>+;
 #pragma link C++ class std::pair<const double,void*>+;
 #pragma link C++ class std::pair<const double,char*>+;
-
-#pragma extra_include "Rtypes.h";
-#pragma link C++ class TParameter<Double_t>+;
-#pragma link C++ class TParameter<Long_t>+;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.1 2002/09/15 19:41:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.1 2002/09/14 16:19:13 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -28,9 +28,6 @@
 class TUtilPad : public TVirtualUtilPad {
 
 
-private:
-   static Int_t   fgPanelVersion;   //DrawPanel version (0=old, 1= new)
-
 public:
    TUtilPad();
    virtual     ~TUtilPad();
@@ -40,8 +37,7 @@ public:
    virtual void  InspectCanvas(const TObject *obj);
    virtual void  MakeCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
    virtual void  RemoveObject(TObject *parent, const TObject *obj);
-   static  void  SetPanelVersion(Int_t version=0);
-   
+
    ClassDef(TUtilPad,0)  //misc. pad/canvas  utilities 
 };
 

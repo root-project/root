@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbDens.h,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbDens.h,v 1.1 2004/05/24 12:04:27 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -72,22 +72,18 @@ public:
 
   virtual ~TQpProbDens() {}
 
-  virtual TQpDataBase      *MakeData     (Double_t *c,
-                                          Double_t *Q,
-                                          Double_t *xlo,Bool_t *ixlo,
-                                          Double_t *xup,Bool_t *ixup,
-                                          Double_t *A,  Double_t *bA,
-                                          Double_t *C,
-                                          Double_t *clo,Bool_t *iclo,
-                                          Double_t *cup,Bool_t *icup);
-  virtual TQpDataBase      *MakeData     (TVectorD     &c,
-                                          TMatrixDBase &Q_in,
-                                          TVectorD     &xlo, TVectorD &ixlo,
-                                          TVectorD     &xup, TVectorD &ixup,
-                                          TMatrixDBase &A_in,TVectorD &bA,
-                                          TMatrixDBase &C_in,
-                                          TVectorD     &clo, TVectorD &iclo,
-                                          TVectorD     &cup, TVectorD &icup);
+  virtual void MakeData      (Double_t *c,
+                              Double_t *Q,
+                              Double_t *xlow,Bool_t *ixlow,
+                              Double_t *xupp,Bool_t *ixupp,
+                              Double_t *A,
+                              Double_t *bA,
+                              Double_t *C,
+                              Double_t *clow,Bool_t *iclow,
+                              Double_t *cupp,Bool_t *icupp,
+                              TQpDataBase *&data);
+  virtual void MakeData      (TQpDataBase *&data);
+
   virtual TQpResidual      *MakeResiduals(const TQpDataBase *data);
   virtual TQpVar           *MakeVariables(const TQpDataBase *data);
   virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data);

@@ -105,7 +105,7 @@ int G__BaseClassInfo::Next()
   ++basep;
 #ifndef G__FONS56
   while (IsValid() &&
-     !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
+         !G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)
      ++basep;
   // initialize base class so we can get name of baseclass
   if (IsValid()) {

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.5 2004/05/28 13:38:21 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.4 2003/09/27 09:28:45 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -130,14 +130,15 @@ class TVirtualMC : public TNamed {
     //
  
     // set methods
-    virtual Bool_t   SetCut(const char* cutName, Double_t cutValue) = 0;
-    virtual Bool_t   SetProcess(const char* flagName, Int_t flagValue) = 0;
-    virtual Bool_t   DefineParticle(Int_t pdg, const char* name, 
+    virtual void     SetCut(const char* cutName, Double_t cutValue) = 0;
+    virtual void     SetProcess(const char* flagName, Int_t flagValue) = 0;
+    virtual void     DefineParticle(Int_t pdg, const char* name, 
                         TMCParticleType pType, 
                         Double_t mass, Double_t charge, Double_t lifetime) = 0; 
-    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,  
+    virtual void     DefineIon(const char* name, Int_t Z, Int_t A,  
                         Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0; 
     virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0; 
+            void     DefineParticles();
  
         // particle table usage         
     virtual Int_t   IdFromPDG(Int_t id) const =0;  

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.33 2004/07/04 17:57:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.28 2004/05/14 16:59:54 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -149,7 +149,7 @@ unsigned Hash(const char *str)
 {
    // Return a case-sensitive hash value.
 
-   unsigned len = str ? strlen(str) : 0;
+   unsigned len = strlen(str);
    unsigned hv  = len; // Mix in the string length.
    unsigned i   = hv*sizeof(char)/sizeof(unsigned);
 
@@ -275,7 +275,7 @@ TString::TString(const char *cs)
    // Create TString and initialize it with string cs.
 
    if (cs) {
-      Ssiz_t n = cs ? strlen(cs) : 0;
+      Ssiz_t n = strlen(cs);
       fData = TStringRef::GetRep(n, n)->Data();
       memcpy(fData, cs, n);
    } else
@@ -356,7 +356,7 @@ TString& TString::operator=(const char *cs)
 {
    // Assign string cs to TString.
 
-   if (!cs || !*cs) {
+   if (!cs || (cs && !*cs)) {
       Pref()->UnLink();
       gNullStringRef->AddReference();
       fData = gNullStringRef->Data();
@@ -421,6 +421,7 @@ TString& TString::Append(char c, Ssiz_t rep)
    return *this;
 }
 
+// Change the string capacity, returning the new capacity
 //______________________________________________________________________________
 Ssiz_t TString::Capacity(Ssiz_t nc)
 {
@@ -1060,7 +1061,7 @@ TString operator+(const TString &s, const char *cs)
 {
    // Use the special concatenation constructor.
 
-   return TString(s.Data(), s.Length(), cs, cs ? strlen(cs) : 0);
+   return TString(s.Data(), s.Length(), cs, strlen(cs));
 }
 
 //______________________________________________________________________________
@@ -1068,7 +1069,7 @@ TString operator+(const char *cs, const TString &s)
 {
    // Use the special concatenation constructor.
 
-   return TString(cs, cs ? strlen(cs) : 0, s.Data(), s.Length());
+   return TString(cs, strlen(cs), s.Data(), s.Length());
 }
 
 //______________________________________________________________________________
@@ -1092,7 +1093,7 @@ TString operator+(const TString &s, Long_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%ld", i);
+   const char *si = Form("%ld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1101,7 +1102,7 @@ TString operator+(const TString &s, ULong_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%lu", i);
+   const char *si = Form("%lu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1118,7 +1119,7 @@ TString operator+(Long_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%ld", i);
+   const char *si = Form("%ld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1127,7 +1128,7 @@ TString operator+(ULong_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%lu", i);
+   const char *si = Form("%lu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1217,7 +1218,7 @@ TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
    // overloaded version of operator(), but this would result in a type
    // conversion ambiguity with operator(Ssiz_t, Ssiz_t).
 
-   Ssiz_t len = pattern ? strlen(pattern) : 0;
+   Ssiz_t len = strlen(pattern);
    Ssiz_t i = Index(pattern, len, startIndex, cmp);
    return TSubString(*this, i, i == kNPOS ? 0 : len);
 }
@@ -1263,7 +1264,7 @@ TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
    // Return sub-string matching pattern, starting at index. Cmp selects
    // the type of case conversion.
 
-   Ssiz_t len = pattern ? strlen(pattern) : 0;
+   Ssiz_t len = strlen(pattern);
    Ssiz_t i = Index(pattern, len, startIndex, cmp);
    return TSubString(*this, i, i == kNPOS ? 0 : len);
 }
@@ -1285,7 +1286,7 @@ TSubString& TSubString::operator=(const char *cs)
    // Assign char* to sub-string.
 
    if (!IsNull())
-      fStr->Replace(fBegin, fExtent, cs, cs ? strlen(cs) : 0);
+      fStr->Replace(fBegin, fExtent, cs, strlen(cs));
 
    return *this;
 }
@@ -1370,72 +1371,11 @@ void TSubString::AssertElement(Ssiz_t i) const
 //______________________________________________________________________________
 Bool_t TString::IsAscii() const
 {
-   // Returns true if all characters in string are ascii.
+   // Return true if all characters in string are ascii.
 
    const char *cp = Data();
    for (Ssiz_t i = 0; i < Length(); ++i)
       if (cp[i] & ~0x7F)
-         return kFALSE;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TString::IsAlpha() const
-{
-   // Returns true if all characters in string are alphabetic.
-   // Returns false in case string length is 0.
-
-   const char *cp = Data();
-   Ssiz_t len = Length();
-   if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i)
-      if (!isalpha(cp[i]))
-         return kFALSE;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TString::IsAlnum() const
-{
-   // Returns true if all characters in string are alphanumeric.
-   // Returns false in case string length is 0.
-
-   const char *cp = Data();
-   Ssiz_t len = Length();
-   if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i)
-      if (!isalnum(cp[i]))
-         return kFALSE;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TString::IsDigit() const
-{
-   // Returns true if all characters in string are digits (0-9).
-   // Returns false in case string length is 0.
-
-   const char *cp = Data();
-   Ssiz_t len = Length();
-   if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i)
-      if (!isdigit(cp[i]))
-         return kFALSE;
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TString::IsHex() const
-{
-   // Returns true if all characters in string are hexidecimal digits
-   // (0-9,a-f,A-F). Returns false in case string length is 0.
-
-
-   const char *cp = Data();
-   Ssiz_t len = Length();
-   if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i)
-      if (!isxdigit(cp[i]))
          return kFALSE;
    return kTRUE;
 }
@@ -1505,35 +1445,6 @@ TObjArray *TString::Tokenize(const TString &delim) const
    return arr;
 }
 
-//______________________________________________________________________________
-void TString::Form(const char *va_(fmt), ...)
-{
-   // Formats a string using a printf style format descriptor.
-   // Existing string contents will be overwritten.
-
-   Ssiz_t buflen = 20 * strlen(va_(fmt));    // pick a number, any number
-   Clobber(buflen);
-
-   int n;
-   va_list ap;
-   va_start(ap, va_(fmt));
-again:
-   n = vsnprintf(fData, buflen, va_(fmt), ap);
-   // old vsnprintf's return -1 if string is truncated new ones return
-   // total number of characters that would have been written
-   if (n == -1 || n >= buflen) {
-      if (n == -1)
-         buflen *= 2;
-      else
-         buflen = n+1;
-      Clobber(buflen);
-      goto again;
-   }
-   va_end(ap);
-
-   Pref()->fNchars = strlen(fData);
-}
-
 //---- Global String Handling Functions ----------------------------------------
 
 static const int cb_size  = 4096;
@@ -1565,7 +1476,6 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    // total number of characters that would have been written
    if (n == -1 || n >= slowBufferSize) {
       if (n == -1) n = 2 * slowBufferSize;
-      if (n == slowBufferSize) n++;
       return SlowFormat(format, ap, n);
    }
 
@@ -1628,8 +1538,6 @@ char *Strip(const char *s, char c)
 {
    // Strip leading and trailing c (blanks by default) from a string.
    // The returned string has to be deleted by the user.
-
-   if (!s) return 0;
 
    int l = strlen(s);
    char *buf = new char[l+1];
@@ -1746,7 +1654,7 @@ int strcasecmp(const char *str1, const char *str2)
 {
    // Case insensitive string compare.
 
-   return strncasecmp(str1, str2, str2 ? strlen(str2)+1 : 0);
+   return strncasecmp(str1, str2, strlen(str2) + 1);
 }
 
 //______________________________________________________________________________

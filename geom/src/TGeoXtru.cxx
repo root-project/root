@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.5 2004/04/22 14:29:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.4 2004/04/22 14:07:15 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -651,7 +651,18 @@ void TGeoXtru::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintXtru(this, option);
+}
+
+//_____________________________________________________________________________
+void TGeoXtru::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintXtru(this, option, glmat);
 }
 
 //_____________________________________________________________________________

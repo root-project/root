@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.149 2004/06/09 06:10:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.147 2004/05/28 18:14:38 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -410,8 +410,6 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
-
-   fClassEditors  = new TList();
 }
 
 //______________________________________________________________________________
@@ -459,8 +457,6 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
 
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
-
-   fClassEditors  = new TList();
 
    if (!fClassInfo) {
       SetBit(kLoading);
@@ -546,7 +542,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fProperty       = -1;
    fInterStreamer  = 0;
    fClassMenuList  = 0;
-   fClassEditors   = 0;
 
    ResetInstanceCount();
 
@@ -571,10 +566,6 @@ void TClass::Init(const char *name, Version_t cversion,
       while ((info = (TStreamerInfo*)next())) {
          info->SetClass(this);
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
-         if (info->GetClassVersion()==cversion) {
-            // We need to force a recall to BuildOld
-            
-         }
       }
       oldcl->GetStreamerInfos()->Clear();
 
@@ -676,8 +667,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fClassMenuList = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
 
-   fClassEditors = new TList();
-
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl ) {
@@ -743,10 +732,6 @@ TClass::~TClass()
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList; fClassMenuList=0;
-
-   if (fClassEditors)
-      fClassEditors->Delete();
-   delete fClassEditors; fClassEditors=0;
 
    if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
    fInterStreamer=0;
@@ -987,7 +972,6 @@ Bool_t TClass::CanSplit() const
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
    if (InheritsFrom("TArray"))    return kFALSE;
-   if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
 
    // If we do not have a showMembers and we have a streamer,
    // we are in the case of class that can never be split since it is
@@ -998,24 +982,6 @@ Bool_t TClass::CanSplit() const
       if (GetCollectionProxy()==0) {
          // We do NOT have a collection.  The class is true opaque
          return kFALSE;
-
-      } else {
-
-         // However we do not split collections of collections 
-         // nor collections of strings
-         // nor collections of pointers 
-         // (actually we __could__ split collection of pointers to non-virtual class,
-         //  but we dont for now).
- 
-         if (GetCollectionProxy()->HasPointers()) return kFALSE;
-         
-         TClass *valueClass = GetCollectionProxy()->GetValueClass();
-         if (valueClass == 0) return kFALSE;
-         if (valueClass==TString::Class() || valueClass==gROOT->GetClass("string"))
-            return kFALSE;
-         if (!valueClass->CanSplit()) return kFALSE;
-         if (valueClass->GetCollectionProxy() != 0) return kFALSE;
-
       }
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.26 2004/05/10 12:08:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.25 2004/04/06 16:40:32 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -157,14 +157,12 @@ public:
    virtual void         MapRaised(Window_t id);
    virtual void         UnmapWindow(Window_t id);
    virtual void         DestroyWindow(Window_t id);
-   virtual void         DestroySubwindows(Window_t id);
    virtual void         RaiseWindow(Window_t id);
    virtual void         LowerWindow(Window_t id);
    virtual void         MoveWindow(Window_t id, Int_t x, Int_t y);
    virtual void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    virtual void         IconifyWindow(Window_t id);
-   virtual void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    virtual void         SetWindowBackground(Window_t id, ULong_t color);
    virtual void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
    virtual Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,

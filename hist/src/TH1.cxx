@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.190 2004/07/03 13:47:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.182 2004/05/24 15:39:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TStyle.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
-#include "TBrowser.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -411,7 +410,7 @@
 //      TH1::Smooth() smooths the bin contents of a 1-d histogram
 //      TH1::Integral() returns the integral of bin contents in a given bin range
 //      TH1::GetMean(int axis) returns the mean value along axis
-//      TH1::GetRMS(int axis)  returns the sigma distribution along axis
+//      TH1::GetRMS(int axis)  returns the Root Mean Square along axis
 //      TH1::GetEntries() returns the number of entries
 //      TH1::Reset() resets the bin contents and errors of an histogram
 //
@@ -592,9 +591,9 @@ Bool_t TH1::AddDirectoryStatus()
 }
 
 //______________________________________________________________________________
-void TH1::Browse(TBrowser *b)
+void TH1::Browse(TBrowser *)
 {
-    Draw(b ? b->GetDrawOption() : "");
+    Draw();
     gPad->Update();
 }
 
@@ -771,9 +770,10 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    for (i=0;i<10;i++) {s1[i] = s2[i] = 0;}
    GetStats(s1);
    h1->GetStats(s2);
+   Double_t ac1 = TMath::Abs(c1);
    for (i=0;i<10;i++) {
-      if (i == 1) s1[i] += c1*c1*s2[i];
-      else        s1[i] += c1*s2[i];
+      if (i == 1) s1[i] += ac1*ac1*s2[i];
+      else        s1[i] += ac1*s2[i];
    }
    PutStats(s1);
 
@@ -860,9 +860,11 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
    h1->GetStats(s1);
    h2->GetStats(s2);
+   Double_t ac1 = TMath::Abs(c1);
+   Double_t ac2 = TMath::Abs(c2);
    for (i=0;i<10;i++) {
-      if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
-      else        s3[i] = c1*s1[i]    + c2*s2[i];
+      if (i == 1) s3[i] = ac1*ac1*s1[i] + ac2*ac2*s2[i];
+      else        s3[i] = ac1*s1[i]     + ac2*s2[i];
    }
    PutStats(s3);
 
@@ -936,7 +938,6 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
 // The buffer is deleted if deleteBuffer is true.
 
    // do we need to compute the bin size?
-   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
    if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
@@ -975,7 +976,6 @@ Int_t TH1::BufferFill(Axis_t x, Stat_t w)
 // fBuffer[1] = w of first entry
 // fBuffer[2] = x of first entry
 
-   if (!fBuffer) return -2;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (2*nbentries+2 >= fBufferSize) {
       BufferEmpty(kTRUE);
@@ -985,120 +985,6 @@ Int_t TH1::BufferFill(Axis_t x, Stat_t w)
    fBuffer[2*nbentries+2] = x;
    fBuffer[0] += 1;
    return -2;
-}
-
-//______________________________________________________________________________
-Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint) 
-{
-  //The Chi2 (Pearson's) test for differences between h and this histogram. 
-  //a small value of prob indicates a significant difference between the distributions
-  //
-  //if the data was collected in such a way that the number of entries
-  //in the first histogram is necessarily equal to the number of entries
-  //in the second, the parameter _constraint_ must be made 1. Default is 0.
-  //any additional constraints on the data lower the number of degrees of freedom
-  //(i.e. increase constraint to more positive values) in accordance with
-  //their number
-  //
-  ///options:
-  //"O" -overflows included
-  //"U" - underflows included
-  //
-  //"P" - print information about number of degrees of freedom and
-  //the value of chi2
-  //by default underflows and overflows are not included
-
-  //algorithm taken from "Numerical Recipes in C++"
-  // implementation by Anna Kreshuk
-  
-  Int_t df;
-  Double_t chsq = 0;
-  Double_t prob;
-  Double_t temp;
-  Double_t koef1,koef2;
-  Double_t nen1, nen2;
-  Double_t bin1, bin2;
-  Int_t i_start, i_end;
-
-  TString opt = option;
-  opt.ToUpper();
-
-  TAxis *axis1 = this->GetXaxis();
-  TAxis *axis2 = h->GetXaxis();
-
-  Int_t nbins1 = axis1->GetNbins();
-  Int_t nbins2 = axis2->GetNbins();
-
-  //check dimensions
-  if (this->GetDimension()!=1 || h->GetDimension()!=1){
-     Error("Chi2Test","for 1-d only");
-     return 0;
-  }
-  //check that the histograms are not empty
-  nen1 = this->GetEntries();
-  nen2 = h->GetEntries();
-  if((nen1==0)||(nen2==0)){
-     Error("Chi2Test", "one of the histograms is empty\n");
-     return 0;
-  }
-  //check number of channels
-  if (nbins1 != nbins2){
-     Error("Chi2Test","different number of channels");
-     return 0;
-  }
-
-  //check binning
-  Double_t diffprec = 1e-5;
-  Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
-  Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
-  if ((diff1 > diffprec)||(diff2>diffprec)){
-     Error("Chi2Test","different binning");
-     return 0;
-  }
-
-  //see options
-
-  i_start = 1;
-  i_end = nbins1;
-  df=nbins1-constraint;
-
-  if(opt.Contains("O")) {
-     i_end = nbins1+1;
-     df++;
-  }
-  if(opt.Contains("U")) {
-     i_start = 0;
-     df++;
-  }
-
-   //the test
-  if (TMath::Abs(nen1-nen2) > diffprec){
-    koef1 = TMath::Sqrt(nen2/nen1);
-    koef2 = TMath::Sqrt(nen1/nen2);
-  } else{
-    koef1 = 1;
-    koef2 = 1;
-  }
-
-  for (Int_t i=i_start; i<=i_end; i++){
-     bin1 = this->GetBinContent(i);
-     bin2 = h->GetBinContent(i);
-     if (bin1 ==0 && bin2==0){
-        --df; //no data means one less degree of freedom
-     } else {
-        temp  = koef1*bin1-koef2*bin2;
-        chsq += temp*temp/(bin1+bin2);
-     }
-  }
-  
-  prob = TMath::Prob(0.5*chsq, Int_t(0.5*df));
-  
-  if (opt.Contains("P")){
-     Printf("the value of chi2 = %f\n", chsq);
-     Printf("the number of degrees of freedom = %d\n", df);
-  }
-
-  return prob;
 }
 
 //______________________________________________________________________________
@@ -4151,7 +4037,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
+            ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4159,12 +4045,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TMath::MedianSorted(3, hh);
+            ZZ[0] = TH1::SmoothMedian(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
          }
          if  (kk == 2)  {   //  median 5
   //  first point remains the same
@@ -4172,12 +4058,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TMath::MedianSorted(3, hh);
+            ZZ[1] = TH1::SmoothMedian(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN +nn2 -1 + ii];
             }
-            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 2] = TH1::SmoothMedian(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
@@ -4221,7 +4107,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++) {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
+            ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4229,12 +4115,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TMath::MedianSorted(3, hh);
+            ZZ[0] = TH1::SmoothMedian(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
          }
          if  (kk == 2)  {   //  median 5
 //  first point remains the same
@@ -4242,12 +4128,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TMath::MedianSorted(3, hh);
+            ZZ[1] = TH1::SmoothMedian(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN - 3 + ii];
             }
-            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 2] = TH1::SmoothMedian(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
@@ -4283,6 +4169,33 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
    delete [] YY;
    delete [] ZZ;
    delete [] RR;
+}
+
+// ------------------------------------------------------------------------
+Double_t  TH1::SmoothMedian(Int_t n, Double_t *a)
+{
+// return the median of a vector a in monotonic order with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  Int_t in, imin, imax;
+  Double_t  xm;
+
+  if  (n%2 == 0)  in = n / 2;
+  else            in = n / 2 + 1;
+
+  // find array element with maximum content
+  imax = TMath::LocMax(n,a);
+  xm = a[imax];
+
+  while (in < n) {
+     imin = TMath::LocMin(n,a);  // find array element with minimum content
+     a[imin] = xm;
+     in++;
+  }
+  imin = TMath::LocMin(n,a);
+  return a[imin];
 }
 
 
@@ -4740,17 +4653,14 @@ Stat_t TH1::GetMean(Int_t axis) const
 //______________________________________________________________________________
 Stat_t TH1::GetRMS(Int_t axis) const
 {
-//   -*-*-*-*-*-*Return the Sigma value of this histogram*-*-*-*-*
+//   -*-*-*-*-*-*Return the Root Mean Square value of this histogram*-*-*-*-*
 //               ===================================================
-//  Note that the mean value/sigma is computed using the bins in the currently
+//  Note that the mean value/RMS is computed using the bins in the currently
 //  defined range (see TAxis::SetRange). By default the range includes
 //  all bins from 1 to nbins included, excluding underflows and overflows.
 //  To force the underflows and overflows in the computation, one must
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
-//  Note that this function returns the Sigma of the distribution (not RMS).
-//  The name "RMS" was introduced many years ago (Hbook/PAW times).
-//  We kept the name for continuity.
 
   if (axis <1 || axis > 3) return 0;
   Stat_t x, rms2, stats[11];
@@ -5508,7 +5418,7 @@ void TH1::SetNameTitle(const char *name, const char *title)
 //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->GetList()->Remove(this);
    fName  = name;
-   SetTitle(title);
+   fTitle = title;
    if (fDirectory) fDirectory->GetList()->Add(this);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.35 2004/06/03 05:11:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.34 2004/05/17 12:03:59 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -409,7 +409,7 @@ Bool_t TRint::HandleTermInput()
       }
 #endif
 
-      if (gROOT->Timer()) timer.Print("u");
+      if (gROOT->Timer()) timer.Print();
 
       // enable again intput handler
       fInputHandler->Activate();

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.9 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.8 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -68,8 +68,6 @@ public :
   virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok);
   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
   virtual void     Det        (Double_t &d1,Double_t &d2);
-
-  void Print(Option_t *opt ="") const; // *MENU*
 
   TDecompQRH &operator= (const TDecompQRH &source);
 

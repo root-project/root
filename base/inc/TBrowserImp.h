@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.h,v 1.2 2004/06/22 15:36:42 brun Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -48,8 +48,6 @@ public:
    virtual void  RecursiveRemove(TObject *) { }
    virtual void  Refresh(Bool_t = kFALSE) { }
    virtual void  Show() { }
-   virtual void  SetDrawOption(Option_t *option="");
-   virtual Option_t *GetDrawOption() const { return 0; }
 
    ClassDef(TBrowserImp,0)  //ABC describing browser implementation protocol
 };

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.40 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.39 2003/06/17 07:03:38 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -44,12 +44,8 @@
 //      a.Delete();                                                     //
 //   }                                                                  //
 //                                                                      //
-// Note: the only supported way to add objects to a TClonesArray is     //
-// via the new with placement method. The diffrent Add() methods of     //
-// TObjArray and its base classes are not allowed.                      //
-//                                                                      //
-// Considering that a new/delete costs about 70 mus on a 300 MHz HP,    //
-// O(10^9) new/deletes will save about 19 hours.                        //
+// Considering that a new/delete costs about 70 mus, O(10^9)            //
+// new/deletes will save about 19 hours.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -110,7 +106,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    fKeep = new TObjArray(s);
 
    BypassStreamer(kTRUE);
-
+   
    if (!fClass) {
       MakeZombie();
       Error("TClonesArray", "%s is not a valid class name", classname);

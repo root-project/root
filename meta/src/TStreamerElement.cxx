@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.67 2004/01/31 08:59:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.66 2004/01/30 08:12:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -111,6 +111,10 @@ Bool_t TStreamerElement::CannotSplit() const
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type
+   if (cl->InheritsFrom("TRef"))      return kTRUE;
+   if (cl->InheritsFrom("TRefArray")) return kTRUE;
+   if (cl->InheritsFrom("TArray"))    return kTRUE;
+   if (cl->InheritsFrom("TCollection") && !cl->InheritsFrom("TClonesArray"))    return kTRUE;
 
    switch(fType) {
       case TStreamerInfo::kAny    +TStreamerInfo::kOffsetL:
@@ -120,9 +124,24 @@ Bool_t TStreamerElement::CannotSplit() const
       case TStreamerInfo::kTNamed +TStreamerInfo::kOffsetL:
          return kTRUE;
    }
-
-   if ( !cl->CanSplit() ) return kTRUE;
    
+   // If we do not have a showMembers and we have a streamer,
+   // we are in the case of class that can never be split since it is
+   // opaque to us.
+   if (cl->GetShowMembersWrapper()==0 && cl->GetStreamer()!=0) {
+      // the exception are the STL containers.
+      if (cl->GetCollectionProxy()==0) {
+         // We do NOT have a collection.  The class is true opaque
+         return kTRUE;
+      }
+   }
+
+   //iterate on list of base classes (cannot split if one base class is unknown)
+   TIter nextb(cl->GetListOfBases());
+   TBaseClass *base;
+   while((base = (TBaseClass*)nextb())) {
+      if (!gROOT->GetClass(base->GetName())) return kTRUE;
+   }
    return kFALSE;
 }
 

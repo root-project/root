@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.7 2004/06/11 14:39:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.5 2003/11/05 13:08:25 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -49,7 +49,7 @@
 // Selecting a color in this widget will generate the event:            //
 // kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
 // and the signal:                                                      //
-// ColorSelected(Pixel_t color)                                         //
+// ColorSelected(ULong_t pixel)                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -109,23 +109,22 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
 {
    SetLayoutManager(new TGMatrixLayout(this, 4, 4, 1, 1));
 
-   fCe[0]  = new TGColorFrame(this, TColor::Number2Pixel(0), 0);
-   fCe[1]  = new TGColorFrame(this, TColor::Number2Pixel(1), 1);
-   fCe[2]  = new TGColorFrame(this, TColor::Number2Pixel(2), 2);
-   fCe[3]  = new TGColorFrame(this, TColor::Number2Pixel(3), 3);
-   fCe[4]  = new TGColorFrame(this, TColor::Number2Pixel(4), 4);
-   fCe[5]  = new TGColorFrame(this, TColor::Number2Pixel(5), 5);
-   fCe[6]  = new TGColorFrame(this, TColor::Number2Pixel(6), 6);
-   fCe[7]  = new TGColorFrame(this, TColor::Number2Pixel(7), 7);
-   fCe[8]  = new TGColorFrame(this, TColor::Number2Pixel(8), 8);
-   fCe[9]  = new TGColorFrame(this, TColor::Number2Pixel(9), 9);
-   fCe[10] = new TGColorFrame(this, TColor::RGB2Pixel(0xDD, 0xBA, 0x87), 10);
-   fCe[11] = new TGColorFrame(this, TColor::RGB2Pixel(0xBC, 0x9E, 0x82), 11);
-   fCe[12] = new TGColorFrame(this, TColor::RGB2Pixel(0x84, 0xC1, 0xA3), 12);
-   fCe[13] = new TGColorFrame(this, TColor::RGB2Pixel(0xC0, 0xB6, 0xAC), 13);
-   fCe[14] = new TGColorFrame(this, TColor::RGB2Pixel(0x66, 0x66, 0x66), 14);
-   fCe[15] = new TGColorFrame(this, TColor::RGB2Pixel(0x99, 0x99, 0x99), 15);
-
+   fCe[0]  = new TGColorFrame(this, TColor::RGB2Pixel(0xFF, 0xFF, 0xFF), 0);
+   fCe[1]  = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0x00, 0x00), 1);
+   fCe[2]  = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0x00, 0x80), 2);
+   fCe[3]  = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0x80, 0x00), 3);
+   fCe[4]  = new TGColorFrame(this, TColor::RGB2Pixel(0xFF, 0x00, 0x00), 4);
+   fCe[5]  = new TGColorFrame(this, TColor::RGB2Pixel(0x80, 0x00, 0x00), 5);
+   fCe[6]  = new TGColorFrame(this, TColor::RGB2Pixel(0x80, 0x00, 0x80), 6);
+   fCe[7]  = new TGColorFrame(this, TColor::RGB2Pixel(0xFF, 0x80, 0x00), 7);
+   fCe[8]  = new TGColorFrame(this, TColor::RGB2Pixel(0xFF, 0xFF, 0x00), 8);
+   fCe[9]  = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0xFF, 0x00), 9);
+   fCe[10] = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0x80, 0x80), 10);
+   fCe[11] = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0xFF, 0xFF), 11);
+   fCe[12] = new TGColorFrame(this, TColor::RGB2Pixel(0x00, 0x00, 0xFF), 12);
+   fCe[13] = new TGColorFrame(this, TColor::RGB2Pixel(0xFF, 0x00, 0xFF), 13);
+   fCe[14] = new TGColorFrame(this, TColor::RGB2Pixel(0x80, 0x80, 0x80), 14);
+   fCe[15] = new TGColorFrame(this, TColor::RGB2Pixel(0xC0, 0xC0, 0xC0), 15);
 
    for (Int_t i = 0; i < 16; i++)
       AddFrame(fCe[i], new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
@@ -332,7 +331,6 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    SetState(kButtonUp);
    AddInput(kButtonPressMask | kButtonReleaseMask);
    SetColor(fColor);
-   ColorSelected(fColor);  // emit a signal
 }
 
 //________________________________________________________________________________
@@ -352,7 +350,7 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   SetColor(parm2);
                   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                               parm1, parm2);
-                  ColorSelected(fColor);
+                  ColorSelected();
                }
                break;
 
@@ -515,7 +513,6 @@ void TGColorSelect::SetColor(ULong_t color)
    fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
-   ColorSelected(fColor);   // emit a signal
 }
 
 //______________________________________________________________________________

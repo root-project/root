@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.125 2004/06/23 08:31:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.122 2004/05/26 07:38:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -22,28 +22,25 @@
 #   include <sys/types.h>
 #endif
 
-#include "Bytes.h"
 #include "Riostream.h"
 #include "Strlen.h"
+#include "TFile.h"
+#include "TWebFile.h"
+#include "TNetFile.h"
+#include "TROOT.h"
+#include "TFree.h"
+#include "TKey.h"
+#include "TDatime.h"
+#include "TSystem.h"
+#include "TError.h"
+#include "Bytes.h"
+#include "TInterpreter.h"
+#include "TStreamerInfo.h"
 #include "TArrayC.h"
 #include "TClassTable.h"
-#include "TDatime.h"
-#include "TError.h"
-#include "TFile.h"
-#include "TFree.h"
-#include "TInterpreter.h"
-#include "TKey.h"
-#include "TNetFile.h"
-#include "TPluginManager.h"
 #include "TProcessUUID.h"
+#include "TPluginManager.h"
 #include "TRegexp.h"
-#include "TROOT.h"
-#include "TStreamerInfo.h"
-#include "TSystem.h"
-#include "TTimeStamp.h"
-#include "TVirtualPerfStats.h"
-#include "TWebFile.h"
-#include "TArchiveFile.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -57,32 +54,28 @@ const Int_t kBEGIN = 100;
 ClassImp(TFile)
 
 //*-*x17 macros/layout_file
-
 //______________________________________________________________________________
 TFile::TFile() : TDirectory()
 {
-   // File default Constructor.
-
-   fD             = -1;
-   fFree          = 0;
-   fWritten       = 0;
-   fSumBuffer     = 0;
-   fSum2Buffer    = 0;
-   fClassIndex    = 0;
-   fCache         = 0;
-   fProcessIDs    = 0;
-   fNProcessIDs   = 0;
-   fArchiveOffset = 0;
-   fArchive       = 0;
-   fIsArchive     = kFALSE;
+//*-*-*-*-*-*-*-*-*-*-*-*File default Constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                    ========================
+   fD          = -1;
+   fFree       = 0;
+   fWritten    = 0;
+   fSumBuffer  = 0;
+   fSum2Buffer = 0;
+   fClassIndex = 0;
+   fCache      = 0;
+   fProcessIDs = 0;
+   fNProcessIDs= 0;
 
    if (gDebug)
-      Info("TFile", "default ctor");
+      cerr << "TFile default ctor" <<endl;
 }
 
 //1_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectory()
+           :TDirectory()
 {
    // Opens or creates a local ROOT file whose name is fname1. It is
    // recommended to specify fname1 as "<file>.root". The suffix ".root"
@@ -221,17 +214,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fOption.ToUpper();
 
-   fArchiveOffset = 0;
-   fIsArchive     = kFALSE;
-   fArchive = TArchiveFile::Open(fname1, this);
-   if (fArchive) {
-      fname1 = fArchive->GetArchiveName();
-      // if no archive member is specified then this TFile is just used
-      // to read the archive contents
-      if (!strlen(fArchive->GetMemberName()))
-         fIsArchive = kTRUE;
-   }
-
    if (fOption == "NET")
       return;
 
@@ -276,14 +258,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if ((fname = gSystem->ExpandPathName(fname1))) {
       SetName(fname);
       delete [] (char*)fname;
-      fRealName = GetName();
-      fname = fRealName.Data();
-      if (fArchive) {
-         TString full = fname;
-         if (!fIsArchive)
-            full += "#"; full += fArchive->GetMemberName();
-         SetName(full);
-      }
+      fname = GetName();
    } else {
       Error("TFile", "error expanding path %s", fname1);
       goto zombie;
@@ -322,6 +297,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
 
    // Connect to file system stream
+   fRealName = fname;
+
    if (create || update) {
 #ifndef WIN32
       fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
@@ -365,21 +342,20 @@ TFile::TFile(const TFile &file) : TDirectory()
 //______________________________________________________________________________
 TFile::~TFile()
 {
-   // File destructor.
+//*-*-*-*-*-*-*-*-*-*-*-*File destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                    ===============
 
-   if (!fIsArchive)
-      Close();
+   Close();
 
    SafeDelete(fProcessIDs);
    SafeDelete(fFree);
    SafeDelete(fCache);
-   SafeDelete(fArchive);
 
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (gDebug)
-      Info("~TFile", "dtor called for %s", GetName());
+      cerr <<"TFile dtor called for " << GetName() << endl;
 }
 
 //______________________________________________________________________________
@@ -387,30 +363,8 @@ void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
 
-   if (fArchive) {
-      if (fOption != "READ") {
-         Error("Init", "archive %s can only be opened in read mode", GetName());
-         delete fArchive;
-         fArchive = 0;
-         fIsArchive = kFALSE;
-         goto zombie;
-      }
-      fArchive->OpenArchive();
-      if (fIsArchive) return;
-      if (fArchive->SetCurrentMember() != -1)
-         fArchiveOffset = fArchive->GetMemberFilePosition();
-      else {
-         Error("Init", "member %s not found in archive %s",
-               fArchive->GetMemberName(), fArchive->GetArchiveName());
-         delete fArchive;
-         fArchive = 0;
-         fIsArchive = kFALSE;
-         goto zombie;
-      }
-   }
-
    Int_t nfree;
-   fBEGIN = (Long64_t)kBEGIN;    //First used word in file following the file header
+   fBEGIN  = (Long64_t)kBEGIN;    //First used word in file following the file header
 
    // make newly opened file the current file and directory
    cd();
@@ -440,9 +394,9 @@ void TFile::Init(Bool_t create)
    else {
       char *header = new char[kBEGIN];
       Seek(0);
-      ReadBuffer(header, kBEGIN);
+      ReadBuffer(header,kBEGIN);
 
-      // make sure this is a ROOT file
+      // make sure this is a root file
       if (strncmp(header, "root", 4)) {
          Error("Init", "%s not a ROOT file", GetName());
          delete [] header;
@@ -1124,10 +1078,6 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
    if (IsOpen()) {
       ssize_t siz;
-
-      Double_t start = 0;
-      if (gPerfStats != 0) start = TTimeStamp();
-
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
       if (siz < 0) {
@@ -1142,9 +1092,6 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       fBytesRead  += siz;
       fgBytesRead += siz;
 
-      if (gPerfStats != 0) {
-         gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
-      }
       return kFALSE;
    }
    return kTRUE;
@@ -1377,19 +1324,15 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 
    int whence = 0;
    switch (pos) {
-      case kBeg:
-         whence = SEEK_SET;
-         offset += fArchiveOffset;
-         break;
-      case kCur:
-         whence = SEEK_CUR;
-         break;
-      case kEnd:
-         whence = SEEK_END;
-         // this option is not used currently in the ROOT code
-         if (fArchiveOffset)
-            Error("Seek", "seeking from end in archive is not (yet) supported");
-         break;
+   case kBeg:
+      whence = SEEK_SET;
+      break;
+   case kCur:
+      whence = SEEK_CUR;
+      break;
+   case kEnd:
+      whence = SEEK_END;
+      break;
    }
    if (Long64_t retpos = SysSeek(fD, offset, whence) < 0)
       SysError("Seek", "cannot seek to position %lld in file %s, retpos=%lld",
@@ -1423,7 +1366,8 @@ void TFile::SetCompressionLevel(Int_t level)
 //______________________________________________________________________________
 Int_t TFile::Sizeof() const
 {
-   // Return the size in bytes of the file header.
+//*-*-*-*-*-*-*Return the size in bytes of the file header-*-*-*-*-*-*-*-*
+//*-*          ===========================================
 
    return 0;
 }
@@ -2009,48 +1953,28 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TRegexp re("^root.*:");
    TString sname = name;
    if (sname.Index(re) != kNPOS) {
-      // If the url points to the localhost and the file will be opened in
-      // readonly mode and the current user has read access or the specified
-      // user is equal to the current user then open local TFile.
-      const char *lfname = 0;
-      Bool_t localFile = kFALSE;
+      // If the url points to the local user on the localhost
+      // do not operate network machinery
+      Bool_t sameUser = kFALSE;
       TUrl url(name);
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u && !strcmp(u->fUser, url.GetUser())) sameUser = kTRUE;
+      delete u;
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (!strcmp(a.GetHostName(), b.GetHostName())) {
-         Bool_t read = kFALSE;
-         TString opt = option;
-         opt.ToUpper();
-         if (opt == "" || opt == "READ") read = kTRUE;
-         const char *fname = url.GetFile();
-         if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
-            lfname = &fname[1];
-         else
-            lfname = Form("%s%s", gSystem->HomeDirectory(), fname);
-         if (read) {
-            char *fn;
-            if ((fn = gSystem->ExpandPathName(lfname))) {
-               if (gSystem->AccessPathName(fn, kReadPermission))
-                  read = kFALSE;
-               delete [] fn;
-            }
-         }
-         Bool_t sameUser = kFALSE;
-         UserGroup_t *u = gSystem->GetUserInfo();
-         if (u && !strcmp(u->fUser, url.GetUser()))
-            sameUser = kTRUE;
-         delete u;
-         if (read || sameUser)
-            localFile = kTRUE;
-      }
-      if (!localFile) {
+      if (strcmp(a.GetHostName(), b.GetHostName()) || !sameUser) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
              h->LoadPlugin() == 0)
             f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
          else
             f = new TNetFile(name, option, ftitle, compress, netopt);
       } else {
-         f = new TFile(lfname, option, ftitle, compress);
+         const char *fname = url.GetFile();
+         if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
+            f = new TFile(&fname[1], option, ftitle, compress);
+         else
+            f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
+                          option, ftitle, compress);
       }
    } else if (!strncmp(name, "http:", 5)) {
       if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
@@ -2127,8 +2051,8 @@ Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in POSIX lseek()
-   // except that the offset and return value are of a type which are
-   // able to handle 64 bit file systems.
+   // except that the offset and return value are of a type which will
+   // be able to handle 64 bit file systems in the future.
 
 #if defined (R__SEEK64)
    return ::lseek64(fd, offset, whence);
@@ -2147,7 +2071,7 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags,
    // identical to TSystem::GetPathInfo(). The function returns 0 in
    // case of success and 1 if the file could not be stat'ed.
 
-   return gSystem->GetPathInfo(fRealName, id, size, flags, modtime);
+   return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
 }
 
 //______________________________________________________________________________

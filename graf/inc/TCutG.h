@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.6 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.h,v 1.5 2002/03/15 22:11:47 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -24,8 +24,6 @@
 #include "TGraph.h"
 #endif
 
-class TH2;
-
 class TCutG : public TGraph {
 
 protected:
@@ -45,7 +43,6 @@ public:
    TObject       *GetObjectY() const {return fObjectY;}
    const char    *GetVarX() const {return fVarX.Data();}
    const char    *GetVarY() const {return fVarY.Data();}
-   Double_t       Integral(TH2 *h, Option_t *option="") const;
    virtual Int_t  IsInside(Double_t x, Double_t y) const;
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
    virtual void   SetObjectX(TObject *obj) {fObjectX = obj;}

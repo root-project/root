@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.4 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 
 
 #include "TXMLBuffer.h"
+#include "TXMLDtdGenerator.h"
 #include "TXMLFile.h"
 
 #include "TObjArray.h"
@@ -205,14 +206,14 @@ class TXMLStackObj : public TObject {
          TObject(), 
          fNode(node), 
          fInfo(0), 
-         fElem(0), 
+         fLastElem(0), 
          fElemNumber(0),
          fCompressedClassNode(kFALSE),
          fClassNs(0) {}
 
       xmlNodePointer    fNode;
       TStreamerInfo*    fInfo;
-      TStreamerElement* fElem;
+      TStreamerElement* fLastElem;
       Int_t             fElemNumber;
       Bool_t            fCompressedClassNode;
       xmlNsPointer      fClassNs;
@@ -599,7 +600,7 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
 
     if (GetXmlLayout()==kGeneralized) {
       elemnode = fXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
-      fXML->NewAttr(elemnode, 0, xmlNames_Name, XmlGetElementName(elem));
+      fXML->NewAttr(elemnode, 0, xmlNames_Name, elem->GetName());
     } else {
        // take namesapce for element only if it is not a base class or class name  
        xmlNsPointer ns = Stack()->fClassNs; 
@@ -609,11 +610,11 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
            || ((elem->GetType()==TStreamerInfo::kTString) && !strcmp(elem->GetName(), TString::Class()->GetName())))
          ns = 0;  
        
-       elemnode = fXML->NewChild(StackNode(), ns, XmlGetElementName(elem), 0);
+       elemnode = fXML->NewChild(StackNode(), ns, elem->GetName(), 0);
     }
 
     TXMLStackObj* curr = PushStack(elemnode);
-    curr->fElem = (TStreamerElement*)elem;
+    curr->fLastElem = (TStreamerElement*)elem;
     curr->fElemNumber = number;
 }
 
@@ -624,15 +625,13 @@ Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number)
     
     if (GetXmlLayout()==kGeneralized) {
        if (!VerifyStackNode(xmlNames_Member)) return kFALSE;
-       if (!VerifyStackAttr(xmlNames_Name, XmlGetElementName(elem))) return kFALSE;
+       if (!VerifyStackAttr(xmlNames_Name, elem->GetName())) return kFALSE;
     } else {
-       if (!VerifyStackNode(XmlGetElementName(elem))) return kFALSE;
+       if (!VerifyStackNode(elem->GetName())) return kFALSE;
     }
-    
-    PerformPreProcessing(elem, StackNode());
-    
+
     TXMLStackObj* curr = PushStack(StackNode()); // set pointer to first data inside element
-    curr->fElem = (TStreamerElement*)elem;
+    curr->fLastElem = (TStreamerElement*)elem;
     curr->fElemNumber = number;
     return kTRUE;
 }
@@ -649,7 +648,7 @@ xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj, const TClass* cl)
    if (!cl) obj = 0;
    if (ProcessPointer(obj, objnode)) return objnode;
 
-   TString clname = XmlConvertClassName(cl ? cl->GetName() : "");
+   TString clname = XmlConvertClassName(cl);
 
    fXML->NewAttr(objnode, 0, xmlNames_ObjClass, clname);
 
@@ -735,7 +734,7 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
-   TString clname = XmlConvertClassName(info->GetClass()->GetName());
+   TString clname = XmlConvertClassName(info->GetClass());
 
    if (gDebug>2)
      cout << " IncrementLevel " << clname << endl;
@@ -804,10 +803,7 @@ void  TXMLBuffer::DecrementLevel(TStreamerInfo* info)
 
    TXMLStackObj* stack = Stack();
 
-   if (stack->fInfo==0) {
-     PerformPostProcessing();
-     stack = PopStack();  // remove stack of last element
-   }
+   if (stack->fInfo==0) stack = PopStack();  // remove stack of last element
 
    if (gDebug>3)
      cout << "### Dec.lvl Set stack = " << stack << "  sz =" << fStack.GetLast()+1 << endl;
@@ -843,8 +839,7 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
     }
    
    if (stack->fInfo==0) {  // this is not a first element
-     PerformPostProcessing();
-     PopStack();           // go level back
+     PopStack();         // go level back
      if (IsReading()) ShiftStack("startelem");   // shift to next element, only for reading
      stack = dynamic_cast<TXMLStackObj*> (fStack.Last());
    }
@@ -895,186 +890,6 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number)
       if (!VerifyElemNode(elem, number)) return;
    }
 }
-
-//______________________________________________________________________________
-void TXMLBuffer::PerformPostProcessing() 
-{
-// Function is converts TObject and TString structures to more compact representation
-
-   //cout << "PerformPostProcessing " << Stack() << "  " << Stack(1) << endl; 
-
-   if (GetXmlLayout()==kGeneralized) return;
-
-   const TStreamerElement* elem = Stack()->fElem;
-   xmlNodePointer elemnode = IsWriting() ? Stack()->fNode : Stack(1)->fNode;
-   
-   if ((elem==0) || (elemnode==0)) return;
-   
-   if (elem->GetType()==TStreamerInfo::kTString) { 
-//      cout << "Bad are " << int('<') << " " << int('>') << "  " << int ('\"') << endl;  
-   
-//      cout << "Has TString " << elem->GetName() << endl;
-   
-      xmlNodePointer node = fXML->GetChild(elemnode);
-      fXML->SkipEmpty(node);
-      
-      xmlNodePointer nodecharstar = 0;
-      xmlNodePointer nodeuchar = 0;
-      xmlNodePointer nodeint = 0;
-      
-      while (node!=0) {
-         const char* name = fXML->GetNodeName(node);
-//         cout << "Has name " << name << endl;
-         if (strcmp(name, xmlNames_UChar)==0) {
-            if (nodeuchar) return;
-            nodeuchar = node;
-         } else 
-         if (strcmp(name, xmlNames_Int)==0) {
-            if (nodeint) return;
-            nodeint = node;
-         } else 
-         if (strcmp(name, xmlNames_CharStar)==0) {
-            if (nodecharstar!=0) return;
-            nodecharstar = node;
-         } else return; // can not be something else
-         fXML->ShiftToNext(node);
-      }
-//      cout << "Looks good" << endl;
-      
-      if (nodeuchar==0) return;
-
-      TString str;
-      if (nodecharstar!=0)
-        str = fXML->GetAttr(nodecharstar, xmlNames_v);
-      fXML->NewAttr(elemnode, 0, "str", str);
-      
-//      cout << "Make string: " << str << endl;
-      
-      fXML->UnlinkFreeNode(nodeuchar);
-      fXML->UnlinkFreeNode(nodeint);  
-      fXML->UnlinkFreeNode(nodecharstar);
-   } else
-   if (elem->GetType()==TStreamerInfo::kTObject) { 
-      xmlNodePointer node = fXML->GetChild(elemnode);
-      fXML->SkipEmpty(node);
-      
-      xmlNodePointer vnode = 0;
-      xmlNodePointer idnode = 0;
-      xmlNodePointer bitsnode = 0;
-      xmlNodePointer prnode = 0;
-      while (node!=0) {
-         const char* name = fXML->GetNodeName(node);
-         
-         if (strcmp(name, xmlNames_OnlyVersion)==0) {
-            if (vnode) return;
-            vnode = node;
-         } else 
-         if (strcmp(name, xmlNames_UInt)==0) {
-            if (idnode==0) idnode = node; else
-            if (bitsnode==0) bitsnode = node; else return;
-         } else
-         if (strcmp(name, xmlNames_UShort)==0) {
-            if (prnode) return;
-            prnode = node;
-         } else return; 
-         fXML->ShiftToNext(node);
-      }
-      
-      if ((vnode==0) || (idnode==0) || (bitsnode==0)) return;
-      
-      TString str = fXML->GetAttr(idnode,xmlNames_v);
-      fXML->NewAttr(elemnode, 0, "fUniqueID", str);
-      
-      str = fXML->GetAttr(bitsnode, xmlNames_v);
-      UInt_t bits;
-      sscanf(str.Data(),"%u", &bits);
-      
-      char sbuf[20];
-      sprintf(sbuf,"%x",bits);
-      fXML->NewAttr(elemnode, 0, "fBits", sbuf);
-      
-      if (prnode!=0) {
-         str = fXML->GetAttr(prnode,xmlNames_v);   
-         fXML->NewAttr(elemnode, 0, "fProcessID", str);
-      }
-      
-      fXML->UnlinkFreeNode(vnode);
-      fXML->UnlinkFreeNode(idnode);
-      fXML->UnlinkFreeNode(bitsnode);
-      fXML->UnlinkFreeNode(prnode);
-   }
-}
-
-//______________________________________________________________________________
-void TXMLBuffer::PerformPreProcessing(const TStreamerElement* elem, xmlNodePointer elemnode) 
-{
-// Function is unpack TObject and TString structures to be able read 
-// them from custom streamers of this objects
-  
-   if (GetXmlLayout()==kGeneralized) return;
-   if ((elem==0) || (elemnode==0)) return;
-
-   if (elem->GetType()==TStreamerInfo::kTString) { 
-//     cout << "Has TString " << elem->GetName() << "  node : " << fXML->GetNodeName(elemnode) << endl;
-
-     if (!fXML->HasAttr(elemnode,"str")) return;
-     TString str = fXML->GetAttr(elemnode, "str");
-     fXML->FreeAttr(elemnode, "str");
-     Int_t len = str.Length();
-     
-//     cout << "Unpack string : " << str << endl;
-     
-     xmlNodePointer ucharnode = fXML->NewChild(elemnode, 0, xmlNames_UChar,0);
-     
-     char sbuf[20];
-     sprintf(sbuf,"%d", len);
-     if (len<255) {
-        fXML->NewAttr(ucharnode,0,xmlNames_v,sbuf); 
-     }
-     else {
-        fXML->NewAttr(ucharnode,0,xmlNames_v,"255"); 
-        xmlNodePointer intnode = fXML->NewChild(elemnode, 0, xmlNames_Int, 0); 
-        fXML->NewAttr(intnode, 0, xmlNames_v, sbuf); 
-        
-     }   
-     if (len>0) {
-       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_CharStar, 0);
-       fXML->NewAttr(node, 0, xmlNames_v, str); 
-     }
-   } else
-   if (elem->GetType()==TStreamerInfo::kTObject) { 
-       if (!fXML->HasAttr(elemnode, "fUniqueID")) return;
-       if (!fXML->HasAttr(elemnode, "fBits")) return;
-       
-       TString idstr = fXML->GetAttr(elemnode, "fUniqueID");
-       TString bitsstr = fXML->GetAttr(elemnode, "fBits");
-       TString prstr = fXML->GetAttr(elemnode, "fProcessID");
-
-       fXML->FreeAttr(elemnode, "fUniqueID");
-       fXML->FreeAttr(elemnode, "fBits");
-       fXML->FreeAttr(elemnode, "fProcessID");
-       
-       xmlNodePointer node = fXML->NewChild(elemnode, 0, xmlNames_OnlyVersion, 0);
-       fXML->NewAttr(node, 0, xmlNames_v, "1");  
-       
-       node = fXML->NewChild(elemnode, 0, xmlNames_UInt, 0);
-       fXML->NewAttr(node, 0, xmlNames_v, idstr);  
-       
-       UInt_t bits;
-       sscanf(bitsstr.Data(),"%x", &bits);
-       char sbuf[20];
-       sprintf(sbuf,"%u", bits);
-       
-       node = fXML->NewChild(elemnode, 0, xmlNames_UInt, 0);
-       fXML->NewAttr(node, 0, xmlNames_v, sbuf);  
-       
-       if (prstr.Length()>0) {
-         node = fXML->NewChild(elemnode, 0, xmlNames_UShort, 0);
-         fXML->NewAttr(node, 0, xmlNames_v, sbuf);  
-       }
-   }
-}
-
 
 //______________________________________________________________________________
 void TXMLBuffer::BeforeIOoperation() 
@@ -1231,8 +1046,8 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
    Int_t indx = 0; \
    while(indx<n) { \
      Int_t cnt = 1; \
-     if (fXML->HasAttr(StackNode(), xmlNames_cnt)) \
-        cnt = fXML->GetIntAttr(StackNode(), xmlNames_cnt); \
+     if (fXML->HasAttr(StackNode(), "cnt")) \
+        cnt = fXML->GetIntAttr(StackNode(), "cnt"); \
      XmlReadBasic(vname[indx]); \
      Int_t curr = indx; indx++; \
      while(cnt>1) {\
@@ -1677,7 +1492,7 @@ void TXMLBuffer::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
       Int_t curr = indx; indx++; \
       while ((indx<n) && (vname[indx]==vname[curr])) indx++; \
       if (indx-curr > 1)  \
-         fXML->NewIntAttr(elemnode, xmlNames_cnt, indx-curr); \
+         fXML->NewIntAttr(elemnode, "cnt", indx-curr); \
    } \
 }
 
@@ -1858,7 +1673,7 @@ void TXMLBuffer::WriteFastArray(const Char_t    *c, Int_t n)
    const Char_t* buf = c;
    if (!usedefault)
      for (int i=0;i<n;i++) {
-        if ((*buf<26)/* || (*buf=='<') || (*buf=='>') */ || (*buf=='\"'))
+        if ((*buf<26) || (*buf=='<') || (*buf=='>') || (*buf=='\"'))
          { usedefault = kTRUE; break; }
         buf++;
      }
@@ -2266,7 +2081,7 @@ xmlNodePointer TXMLBuffer::XmlWriteBasic(Char_t value)
 // converts Char_t to string and add xml node to buffer
 
    char buf[50];
-   sprintf(buf,"%d",value);
+   sprintf(buf,"%d", value);
    return XmlWriteValue(buf, xmlNames_Char);
 }
 
@@ -2335,7 +2150,7 @@ xmlNodePointer TXMLBuffer::XmlWriteBasic(Bool_t value)
 {
 // converts Bool_t to string and add xml node to buffer
     
-   return XmlWriteValue(value ? xmlNames_true : xmlNames_false, xmlNames_Bool);
+   return XmlWriteValue(value ? "true" : "false", xmlNames_Bool);
 }
 
 //______________________________________________________________________________
@@ -2400,7 +2215,7 @@ xmlNodePointer TXMLBuffer::XmlWriteValue(const char* value, const char* name)
    else 
      node = CreateItemNode(name);
 
-   fXML->NewAttr(node, 0, xmlNames_v, value);
+   fXML->NewAttr(node, 0, "v", value);
 
    fCanUseCompact = kFALSE;
 
@@ -2500,7 +2315,7 @@ void TXMLBuffer::XmlReadBasic(Bool_t& value)
     
    const char* res = XmlReadValue(xmlNames_Bool);
    if (res)
-     value = (strcmp(res, xmlNames_true)==0);
+     value = (strcmp(res,"true")==0);
    else
      value = kFALSE;
 }
@@ -2581,14 +2396,14 @@ const char* TXMLBuffer::XmlReadValue(const char* name)
    fCanUseCompact = kFALSE;
 
    if (trysimple)
-     if (fXML->HasAttr(Stack(1)->fNode,xmlNames_v))
-       fValueBuf = fXML->GetAttr(Stack(1)->fNode, xmlNames_v);
+     if (fXML->HasAttr(Stack(1)->fNode,"v"))
+       fValueBuf = fXML->GetAttr(Stack(1)->fNode, "v");
      else
        trysimple = kFALSE;
 
    if (!trysimple) {
      if (!VerifyItemNode(name, "XmlReadValue")) return 0;
-     fValueBuf = fXML->GetAttr(StackNode(), xmlNames_v);
+     fValueBuf = fXML->GetAttr(StackNode(), "v");
    }
 
    if (gDebug>4)

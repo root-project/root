@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.68 2004/06/24 14:54:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.65 2004/05/03 10:45:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -46,7 +46,6 @@
 #include "TEnv.h"
 #include "TPluginManager.h"
 #include "TCondor.h"
-#include "Riostream.h"
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -89,25 +88,7 @@ Bool_t TProofInputHandler::Notify()
 }
 
 
-//------------------------------------------------------------------------------
-
-ClassImp(TSlaveInfo)
-
-void TSlaveInfo::Print(Option_t * /*option*/ ) const
-{
-   cout <<"OBJ: " << IsA()->GetName()
-        << "  Ordinal: "   << fOrdinal
-        << "  Hostname: "  << fHostName
-        << "  PerfIdx: "   << fPerfIndex
-        << endl;
-}
-
-
-
-//------------------------------------------------------------------------------
-
 ClassImp(TProof)
-
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile,
@@ -154,7 +135,6 @@ TProof::~TProof()
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
    SafeDelete(fCondor);
-   SafeDelete(fSlaveInfo);
 
    if (gProof == this) {
       gProof = 0;
@@ -168,9 +148,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
    // directly starting as master server (if master = ""). For a description
-   // of the arguments see the TProof ctor. Returns the number of started
-   // master or slave servers, returns 0 in case of error, in which case
-   // fValid remains false.
+   // of the arguments see the TProof ctor.
 
    Assert(gSystem);
 
@@ -199,11 +177,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fProgressDialog = 0;
    fStatus         = 0;
    fParallel       = 0;
-   fSlaveInfo      = 0;
    fPlayer         = 0;
    fCondor         = 0;
    fSecContext     = 0;
-   fUrlProtocol    = u->GetProtocol();
+   fUrlProt        = u->GetProtocol();
 
    delete u;
 
@@ -224,19 +201,19 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // servers as specified in the config file
    if (IsMaster()) {
 
-      TString fconf;
-      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile);
-      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
+      char fconf[256];
+      sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
+      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         fconf.Form("%s/proof/etc/%s", confdir, conffile);
-         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
+         sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
+         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("Init", "no PROOF config file found");
             return 0;
          }
       }
 
-      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf.Data());
+      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
       Bool_t staticSlaves = gEnv->GetValue("Proofd.StaticSlaves", kTRUE);
       PDB(kGlobal,1) Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
@@ -248,23 +225,19 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             fConfFile = fconf;
 
             // read the config file
-            char line[1024];
+            char line[256];
             TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
             int  ord = 0;
 
-            // check for valid master line
             while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
+               char word[12][64];
                if (line[0] == '#') continue;   // skip comment lines
                int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
                    word[2], word[3], word[4], word[5], word[6],
                    word[7], word[8], word[9], word[10], word[11]);
 
-               // see if master may run on this node, accept both old "node"
-               // and new "master" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
-                   !fImage.Length()) {
+               // see if master may run on this node
+               if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
                   TInetAddress a = gSystem->GetHostByName(word[1]);
                   if (!host.CompareTo(a.GetHostName()) ||
                       !strcmp(word[1], "localhost")) {
@@ -274,26 +247,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      fImage = image;
                   }
                }
-            }
 
-            if (fImage.Length() == 0) {
-               fclose(pconf);
-               Error("Init", "no appropriate master line found in %s", fconf.Data());
-               return 0;
-            }
-
-            // check for valid slave lines and start slaves
-            rewind(pconf);
-            while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
-               if (line[0] == '#') continue;   // skip comment lines
-               int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
-                   word[2], word[3], word[4], word[5], word[6],
-                   word[7], word[8], word[9], word[10], word[11]);
-
-               // find all slave servers, accept both "slave" and "worker" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
+               // find all slave servers
+               if (nword >= 2 && !strcmp(word[0], "slave")) {
                   int perfidx  = 100;
                   int sport    = fPort;
 
@@ -337,6 +293,11 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          }
          fclose(pconf);
 
+         if (fImage.Length() == 0) {
+            Error("Init", "no appropriate node line found in %s", fconf);
+            return 0;
+         }
+
       } else {
          // non static config
 
@@ -344,8 +305,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
          fImage = fCondor->GetImage(gSystem->HostName());
          if (fImage.Length() == 0) {
-            Error("Init", "no appropriate master line found in %s for system %s",
-                  fconf.Data(), gSystem->HostName());
+            Error("Init", "no appropriate node line found in %s for system %s",
+                  fconf, gSystem->HostName());
             return 0;
          }
 
@@ -402,12 +363,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
 
-         if (!slave->IsValid()) {
-            delete slave;
-            Error("Init", "failed to setup connection with PROOF master server");
-            return 0;
-         }
-
          slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
 
          fIntHandler = new TProofInterruptHandler(this);
@@ -461,10 +416,10 @@ void TProof::Close(Option_t *)
          Interrupt(kShutdownInterrupt, kAll);
       }
 
+      fSlaves->Delete();
       fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
       fBadSlaves->Clear("nodelete");
-      fSlaves->Delete();
    }
 }
 
@@ -560,8 +515,8 @@ void TProof::AskStatus()
 
    if (!IsValid()) return;
 
-   Broadcast(kPROOF_STATUS, kActive);
-   Collect(kActive);
+   Broadcast(kPROOF_STATUS, kAll);
+   Collect(kAll);
 }
 
 //______________________________________________________________________________
@@ -713,39 +668,6 @@ Int_t TProof::GetParallel() const
       return GetNumberOfActiveSlaves();
 
    return fParallel;
-}
-
-//______________________________________________________________________________
-TList *TProof::GetSlaveInfo()
-{
-   // Returns number of slaves active in parallel mode. Returns 0 in case
-   // there are no active slaves. Returns -1 in case of error.
-
-   if (!IsValid()) return 0;
-
-   if (fSlaveInfo == 0) {
-      fSlaveInfo = new TList;
-      fSlaveInfo->SetOwner();
-   } else {
-      fSlaveInfo->Delete();
-   }
-
-   if (IsMaster()) {
-      TIter next(GetListOfSlaves());
-      TSlave *slave;
-
-      while((slave = (TSlave *) next()) != 0) {
-         TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(), slave->GetName(),
-                                                slave->GetPerfIdx());
-         fSlaveInfo->Add(slaveinfo);
-      }
-
-   } else {
-      Broadcast(kPROOF_GETSLAVEINFO);
-      Collect();
-   }
-
-   return fSlaveInfo;
 }
 
 //______________________________________________________________________________
@@ -964,13 +886,6 @@ Int_t TProof::Collect(TMonitor *mon)
          continue;
       }
 
-      if (!mess) {
-         // we get here in case the remote server died
-         MarkBad(s);
-         if (!mon->GetActive()) loop = 0;
-         continue;
-      }
-
       what = mess->What();
 
       switch (what) {
@@ -1109,16 +1024,6 @@ Int_t TProof::Collect(TMonitor *mon)
             }
             break;
 
-         case kPROOF_GETSLAVEINFO:
-            {
-               PDB(kGlobal,2) Info("Collect","Got kPROOF_GETSLAVEINFO");
-
-               (*mess) >> fSlaveInfo;
-               mon->DeActivate(s);
-               if (!mon->GetActive()) loop = 0;
-            }
-            break;
-
          default:
             Error("Collect", "unknown command received from slave (%d)", what);
             break;
@@ -1248,7 +1153,8 @@ void TProof::Print(Option_t *option) const
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
       Printf("Security context:         %s", fSecContext->AsString());
-      TSlave *sl = (TSlave *)fActiveSlaves->First();
+      TIter next(fActiveSlaves);
+      TSlave *sl = (TSlave *)next();
       Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());

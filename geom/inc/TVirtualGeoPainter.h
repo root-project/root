@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.25 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.24 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -101,21 +101,19 @@ public:
    virtual void      *MakeTorus3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeTube3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeParaboloid3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakePcon3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol) = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
-   virtual void       PaintBox(TGeoShape *shape, Option_t *option="") = 0;
+   virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintCompositeShape(TGeoVolume *vol, Option_t *option="") = 0;
-   virtual void       PaintParaboloid(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTorus(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTube(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintTubs(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintSphere(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintPcon(TGeoShape *shape, Option_t *option="") = 0;
-   virtual void       PaintXtru(TGeoShape *shape, Option_t *option="") = 0;
+   virtual void       PaintTorus(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
+   virtual void       PaintXtru(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
    virtual void       PrintOverlaps() const = 0;

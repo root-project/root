@@ -40,8 +40,7 @@ GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h \
-                TGColorDialog.h TGColorSelect.h TGFontDialog.h \
-                TGDockableFrame.h
+                TGColorDialog.h TGColorSelect.h TGFontDialog.h
 
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))

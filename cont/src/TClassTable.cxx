@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.27 2004/02/13 11:25:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.26 2004/01/30 18:27:29 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -174,7 +174,7 @@ void TClassTable::Print(Option_t *option) const
 {
    // Print the class table. Before printing the table is sorted
    // alphabetically. Only classes specified in option are listed.
-   // The default is to list all classes.
+   // The efault is to list all classes.
    // Standard wilcarding notation supported.
 
    if (fgTally == 0 || !fgTable)
@@ -189,8 +189,8 @@ void TClassTable::Print(Option_t *option) const
 
    Printf("");
    Printf("Defined classes");
-   Printf("class                                 version  bits  initialized");
-   Printf("================================================================");
+   Printf("class                              version  bits  initialized");
+   Printf("=============================================================");
    for (int i = 0; i < fgTally; i++) {
       ClassRec_t *r = fgSortedTable[i];
       n++;
@@ -199,13 +199,13 @@ void TClassTable::Print(Option_t *option) const
       nl++;
       if (gROOT->GetClass(r->name, kFALSE)) {
          ninit++;
-         Printf("%-35s %6d %7d       Yes", r->name, r->id, r->bits);
+         Printf("%-32s %6d %7d       Yes", r->name, r->id, r->bits);
       } else
-         Printf("%-35s %6d %7d       No",  r->name, r->id, r->bits);
+         Printf("%-32s %6d %7d       No",  r->name, r->id, r->bits);
    }
-   Printf("----------------------------------------------------------------");
+   Printf("-------------------------------------------------------------");
    Printf("Listed Classes: %4d  Total classes: %4d   initialized: %4d",nl, n, ninit);
-   Printf("================================================================");
+   Printf("=============================================================");
 
    Printf("");
 }
@@ -407,20 +407,20 @@ void TClassTable::PrintTable()
 
    Printf("");
    Printf("Defined classes");
-   Printf("class                                 version  bits  initialized");
-   Printf("================================================================");
+   Printf("class                              version  bits  initialized");
+   Printf("=============================================================");
    for (int i = 0; i < fgTally; i++) {
       ClassRec_t *r = fgSortedTable[i];
       n++;
       if (gROOT->GetClass(r->name, kFALSE)) {
          ninit++;
-         Printf("%-35s %6d %7d       Yes", r->name, r->id, r->bits);
+         Printf("%-32s %6d %7d       Yes", r->name, r->id, r->bits);
       } else
-         Printf("%-35s %6d %7d       No",  r->name, r->id, r->bits);
+         Printf("%-32s %6d %7d       No",  r->name, r->id, r->bits);
    }
-   Printf("----------------------------------------------------------------");
+   Printf("-------------------------------------------------------------");
    Printf("Total classes: %4d   initialized: %4d", n, ninit);
-   Printf("================================================================");
+   Printf("=============================================================");
 
    Printf("");
 }

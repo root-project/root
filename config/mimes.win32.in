@@ -121,17 +121,17 @@ icon = rootdb_s.xpm rootdb_t.xpm
 action = ->Browse()
 
 [root/th1]
-pattern = TH1[CSFDIK]
+pattern = TH1[CSFD]
 icon = h1_s.xpm h1_t.xpm
 action = ->Draw()
 
 [root/th2]
-pattern = TH2[CSFDI]
+pattern = TH2[CSFD]
 icon = h2_s.xpm h2_t.xpm
 action = ->Draw()
 
 [root/th3]
-pattern = TH3[CSFDI]
+pattern = TH3[CSFD]
 icon = h3_s.xpm h3_t.xpm
 action = ->Draw()
 

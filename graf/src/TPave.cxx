@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.15 2003/09/19 14:10:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TPave::ls(Option_t *) const
 //*-*-*-*-*-*-*-*-*-*-*-*List this pave with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    =================================
    TROOT::IndentLevel();
-   printf("OBJ: %s\t%s  \tX1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f %s\n",IsA()->GetName(),fX1,fY1,fX2,fY2,GetName());
 }
 
 //______________________________________________________________________________

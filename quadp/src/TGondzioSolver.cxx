@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.4 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,7 +55,7 @@ ClassImp(TGondzioSolver)
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver()
 {
-  fPrintlevel               = 0;
+  fPrintlevel               = 10;
   fTsig                     = 0.0;
   fMaximum_correctors       = 0;
   fNumberGondzioCorrections = 0;
@@ -73,14 +73,14 @@ TGondzioSolver::TGondzioSolver()
 }
 
 //______________________________________________________________________________
-TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
+TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob)
 {
   fFactory = of;
   fStep            = fFactory->MakeVariables(prob);
   fCorrector_step  = fFactory->MakeVariables(prob);
   fCorrector_resid = fFactory->MakeResiduals(prob);
 
-  fPrintlevel = verbose;
+  fPrintlevel = 10;
   fTsig       = 3.0; // the usual value for the centering exponent (tau)
 
   fMaximum_correctors = 3; // maximum number of Gondzio correctors
@@ -178,9 +178,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
       fNumberGondzioCorrections = 0;
 
       // enter the Gondzio correction loop:
-      if (fPrintlevel >= 10)
-        cout << "**** Entering the correction loop ****" << endl;
-
+      cout << "**** Entering the correction loop ****" << endl;
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
 	     alpha < 1.0 && !StopCorrections) {
 
@@ -250,7 +248,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 }
 
 //______________________________________________________________________________
-void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
+void TGondzioSolver::DefMonitor(TQpDataBase * /* data */,TQpVar */* vars */,
                                 TQpResidual *resid,
                                 Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                                 Int_t status_code,Int_t level)

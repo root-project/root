@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.h,v 1.10 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/hist:$Name:$:$Id:$
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -33,7 +33,7 @@ protected:
 
   TVectorD    fMeanValues;           // Mean value over all data points
   TVectorD    fSigmas;               // vector of sigmas
-  TMatrixD    fCovarianceMatrix;     // Covariance matrix
+  TMatrixDSym fCovarianceMatrix;     // Covariance matrix
 
   TMatrixD    fEigenVectors;         // Eigenvector matrix of trans
   TVectorD    fEigenValues;          // Eigenvalue vector of trans
@@ -60,7 +60,7 @@ public:
   virtual void       AddRow(const Double_t *x);
   virtual void       Browse(TBrowser *b);
   virtual void       Clear(Option_t *option="");
-  const TMatrixD    *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
+  const TMatrixDSym *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
   const TVectorD    *GetEigenValues() const      {return &fEigenValues;}
   const TMatrixD    *GetEigenVectors() const     {return &fEigenVectors;}
   TList             *GetHistograms() const {return fHistograms;}

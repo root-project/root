@@ -31,16 +31,16 @@ EXTRA=$8
 
 rm -f $LIB
 
-if [ $PLATFORM = "macosx" ]; then
-   soext="dylib"
-else
-   soext="so"
+if [ $PLATFORM = "aix" ]; then
+   makeshared="/usr/ibmcxx/bin/makeC++SharedLib"
+fi
+if [ $PLATFORM = "aix5" ]; then
+   makeshared="/usr/vacpp/bin/makeC++SharedLib"
 fi
 
-EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
-   if [ $LIB != "lib/libCint.$soext" ]; then
-      if [ $LIB != "lib/libCore.$soext" ]; then
+   if [ $LIB != "lib/libCint.so" ]; then
+      if [ $LIB != "lib/libCore.so" ]; then
          EXPLLNKCORE="-Llib -lCore -lCint"
       else
          EXPLLNKCORE="-Llib -lCint"
@@ -49,12 +49,6 @@ if [ "x$EXPLICIT" = "xyes" ]; then
 fi
 
 if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
-   if [ $PLATFORM = "aix" ]; then
-      makeshared="/usr/ibmcxx/bin/makeC++SharedLib"
-   fi
-   if [ $PLATFORM = "aix5" ]; then
-      makeshared="/usr/vacpp/bin/makeC++SharedLib"
-   fi
    if [ $LD = "xlC" ]; then
       EXPLLNKCORE=
       if [ $LIB != "lib/libCint.a" ]; then
@@ -65,31 +59,28 @@ if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
          fi
       fi
 
-      cmd="$makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
+      echo $makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE
+      $makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE
    fi
 elif [ $PLATFORM = "alphaegcs" ] || [ $PLATFORM = "hpux" ] || \
      [ $PLATFORM = "solaris" ]   || [ $PLATFORM = "sgi" ]; then
-   cmd="$LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
-   echo $cmd
-   $cmd
+   echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+   $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "lynxos" ]; then
-   cmd="ar rv $LIB $OBJS $EXTRA"
-   echo $cmd
-   $cmd
+   echo ar rv $LIB $OBJS $EXTRA
+   ar rv $LIB $OBJS $EXTRA
 elif [ $PLATFORM = "fbsd" ]; then
-    cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR \
-         `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
-    echo $cmd
-    $cmd
+    # for aout: echo $LD $SOFLAGS $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+    # for aout: $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
+    echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
+    $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    if [ $macosx_minor -ge 3 ]; then
       unset LD_PREBIND
-      export MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor
+      export MACOSX_DEPLOYMENT_TARGET=10.3
    fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
@@ -99,33 +90,29 @@ elif [ $PLATFORM = "macosx" ]; then
        SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
        LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
    fi
-   cmd="$LD $SOFLAGS$SONAME -o $LIB $OBJS \
-        `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-        -ldl $EXTRA $EXPLLNKCORE $VERSION"
-   echo $cmd
-   $cmd
+   echo $LD $SOFLAGS$SONAME -o $LIB $OBJS \
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA $VERSION
+   $LD $SOFLAGS$SONAME -o $LIB $OBJS \
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA $VERSION
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
    else
       opt=-O
    fi
    if [ $macosx_minor -ge 3 ]; then
-      cmd="$LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o \
-          $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-          -ldl $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
+      echo $LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+      $LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
    else
-      cmd="$LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
-	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-           -ldl $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
+      echo $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+      $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
    fi
 elif [ $LD = "KCC" ]; then
-   cmd="$LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
-   echo $cmd
-   $cmd
+   echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+   $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
    if [ $SONAME != "libCint.dll" ]; then
@@ -135,19 +122,18 @@ elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
          EXPLLNKCORE="-Llib -lCint"
       fi
    fi
-   cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
-   echo $cmd
-   $cmd
+   line="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
+         $EXTRA $EXPLLNKCORE"
+   echo $line
+   $line
 else
    if [ "x$MAJOR" = "x" ] ; then
-      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
+      echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
+      $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
    else
-      cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS \
-           -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
+      echo $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE
+      $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS \
+         -o $LIB.$MAJOR.$MINOR $OBJS $EXTRA $EXPLLNKCORE
    fi
 fi
 

@@ -47,13 +47,13 @@ MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 histpainter treeplayer treeviewer proof physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp
 
-ifeq ($(ARCH),win32old)
+ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
-ifeq ($(ARCH),win32)
+ifeq ($(ARCH),win32gdk)
 MODULES      += winnt win32gdk gl
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
@@ -144,11 +144,6 @@ ifneq ($(XMLCLILIB),)
 MODULES      += xml
 endif
 endif
-ifneq ($(QTINCDIR),)
-ifneq ($(QTLIB),)
-MODULES      += qt qtroot
-endif
-endif
 ifneq ($(TABLE),)
 MODULES      += table
 endif
@@ -176,7 +171,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot
+                mlp krb5auth rpdutils globusauth pyroot xml ruby
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -504,12 +499,10 @@ distclean:: clean
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
-	-@mv -f tutorials/stock.root tutorials/stock.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	-@mv -f tutorials/galaxy.pal.roott tutorials/galaxy.pal.root
 	-@mv -f tutorials/galaxy.roott tutorials/galaxy.root
 	-@mv -f tutorials/mlpHiggs.roott tutorials/mlpHiggs.root
-	-@mv -f tutorials/stock.roott tutorials/stock.root
 	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.20 2004/03/11 10:40:10 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.19 2003/05/13 10:29:07 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TThreadImp.h"
 #include "TThreadFactory.h"
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TVirtualPad.h"
 #include "TError.h"
 #include "CallFunc.h"
@@ -45,194 +44,12 @@ void **volatile TThread::fgXArr = 0;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
-
 ClassImp(TThread)
 
 //______________________________________________________________________________
-TThread::TThread(VoidRtnFunc_t fn, void *arg, EPriority pri)
+void TThread::Debu(const char *txt)
 {
-   // Create a thread. Specify the function or static class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // The user function should return a void*. To start the thread call Run().
-
-   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
-
-   fDetached  = kFALSE;
-   fFcnVoid   = 0;
-   fFcnRetn   = fn;
-   fPriority  = pri;
-   fThreadArg = arg;
-   Constructor();
-   fNamed     = kFALSE;
-}
-
-//______________________________________________________________________________
-TThread::TThread(VoidFunc_t fn, void *arg, EPriority pri)
-{
-   // Create a detached thread. Specify the function or class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // To start the thread call Run().
-
-   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
-
-   fDetached  = kTRUE;
-   fFcnRetn   = 0;
-   fFcnVoid   = fn;
-   fPriority  = pri;
-   fThreadArg = arg;
-   Constructor();
-   fNamed     = kFALSE;
-}
-
-//______________________________________________________________________________
-TThread::TThread(const char *thname, VoidRtnFunc_t fn, void *arg,
-                 EPriority pri) : TNamed(thname, "")
-{
-   // Create thread with a name. Specify the function or class method
-   // to be executed by the thread and a pointer to the argument structure.
-   // The user function should return a void*. To start the thread call Run().
-
-   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
-
-   fDetached  = kFALSE;
-   fFcnVoid   = 0;
-   fFcnRetn   = fn;
-   fPriority  = pri;
-   fThreadArg = arg;
-   Constructor();
-   fNamed     = kTRUE;
-}
-
-//______________________________________________________________________________
-TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
-                 EPriority pri) : TNamed(thname, "")
-{
-   // Create a detached thread with a name. Specify the function or class
-   // method to be executed by the thread and a pointer to the argument
-   // structure. To start the thread call Run().
-
-   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
-
-   fDetached  = kTRUE;
-   fFcnRetn   = 0;
-   fFcnVoid   = fn;
-   fPriority  = pri;
-   fThreadArg = arg;
-   Constructor();
-   fNamed     = kTRUE;
-}
-
-//______________________________________________________________________________
-TThread::TThread(Int_t id)
-{
-   // Create a TThread for a already running thread.
-
-   fDetached  = kTRUE;
-   fFcnRetn   = 0;
-   fFcnVoid   = 0;
-   fPriority  = kNormalPriority;
-   fThreadArg = NULL;
-   Constructor();
-   fNamed     = kFALSE;
-   fId = (id ? id : SelfId());
-   fState = kRunningState;
-
-   if (gDebug) Info("Thread", "%s.%ld is running", GetName(), fId);
-}
-
-//______________________________________________________________________________
-void TThread::Constructor()
-{
-   // Common thread constructor.
-
-   fHolder = 0;
-   fClean  = 0;
-   fState  = kNewState;
-
-   fId = 0;
-   if (!fgThreadImp) { // *** Only once ***
-      fgThreadImp = gThreadFactory->CreateThreadImp();
-      fgMainMutex = new TMutex(kTRUE);
-      fgXActMutex = new TMutex(kTRUE);
-      new TThreadTimer;
-      fgXActCondi = new TCondition;
-      gThreadTsd  = &(TThread::Tsd);
-      gThreadXAR  = &(TThread::XARequest);
-   }
-
-   PutComm("Constructor: MainMutex Locking");
-   Lock();
-   PutComm("Constructor: MainMutex Locked");
-   fTsd[0] = gPad;
-
-   if (fgMain) fgMain->fPrev = this;
-   fNext = fgMain; fPrev=0; fgMain = this;
-
-   // Create the global mutexes
-   if (!gContainerMutex)
-     gContainerMutex = new TMutex(kTRUE);
-   if (!gCINTMutex)
-     gCINTMutex = new TMutex(kTRUE);
-
-
-   UnLock();
-   PutComm();
-
-   // thread is set up in initialisation routine or Run().
-}
-
-//______________________________________________________________________________
-TThread::~TThread()
-{
-   // Cleanup the thread.
-
-   char cbuf[100];
-   if (gDebug) {
-      sprintf(cbuf, "Info in <TThread::~TThread>: %s.%ld DELETED\n",
-              GetName(), fId);
-      TThread::Printf("%s", cbuf);
-   }
-
-   // Disconnect thread instance
-
-   PutComm("Destructor: MainMutex Locking");
-   Lock();
-   PutComm("Destructor: MainMutex Locked");
-   if (fPrev) fPrev->fNext = fNext;
-   if (fNext) fNext->fPrev = fPrev;
-   if (fgMain == this) fgMain = fNext;
-   UnLock();
-   PutComm();
-   if (fHolder) *(fHolder) = 0;
-}
-
-//______________________________________________________________________________
-Int_t TThread::Delete(TThread *&th)
-{
-   char cbuf[100];
-
-   if (!th) return 0;
-   th->fHolder = &th;
-
-   if (th->fState == kRunningState) {     // Cancel if running
-      th->fState = kDeletingState;
-      if (gDebug) {
-         sprintf(cbuf,"Info in <TThread::Delete>: %s.%ld deleting\n",
-                 th->GetName(), th->fId);
-         TThread::Printf("%s", cbuf);
-      }
-      th->Kill();
-      return -1;
-   }
-
-   th->CleanUp();
-   return 0;
-}
-
-//______________________________________________________________________________
-void TThread::Debug(const char *txt)
-{
-   ::Info("TThread::Debug", "%s %ld", txt, fgMain->fId);
+   fprintf(stderr,"TThread::Debu %s %ld \n",txt,fgMain->fId);
 }
 
 //______________________________________________________________________________
@@ -302,7 +119,7 @@ TThread *TThread::GetThread(const char *name)
 //______________________________________________________________________________
 TThread *TThread::Self()
 {
-   // Static method returning pointer to current thread.
+   // Static method returning pointer to current thred.
 
    return GetThread(SelfId());
 }
@@ -314,6 +131,200 @@ Long_t TThread::Join(void **ret)
 
    return TThread::Join(0, ret);
 }
+
+
+//
+// Constructors for TThread - set up the thread object but don't
+// start it running.
+//
+
+// construct a Detached thread running a given function.
+
+//______________________________________________________________________________
+TThread::TThread(void *(*fn)(void*), void *arg, EPriority pri)
+{
+   // Create a thread. Specify the function or static class method
+   // to be executed by the thread, and a pointer to the argument structure.
+   // The user functions should return a void*.
+
+   fDetached  = kFALSE;
+   fFcnVoid   = 0;
+   fFcnRetn   = fn;
+   fPriority  = pri;
+   fThreadArg = arg;
+   Constructor();
+   fNamed     = kFALSE;
+}
+
+//______________________________________________________________________________
+TThread::TThread(void (*fn)(void*), void *arg, EPriority pri)
+{
+   // Create a thread. Specify the function or class method
+   // to be executed by the thread, and a pointer to the argument structure.
+
+   fDetached  = kTRUE;
+   fFcnRetn   = 0;
+   fFcnVoid   = fn;
+   fPriority  = pri;
+   fThreadArg = arg;
+   Constructor();
+   fNamed     = kFALSE;
+}
+
+
+//______________________________________________________________________________
+TThread::TThread(Int_t id)
+{
+   // Create a TThread for a already running thread
+
+   fDetached  = kTRUE;
+   fFcnRetn   = 0;
+   fFcnVoid   = 0;
+   fPriority  = kNormalPriority;
+   fThreadArg = NULL;
+   Constructor();
+   fNamed     = kFALSE;
+   fId = (id ? id : SelfId());
+   fState = kRunningState;
+
+   if (gDebug) printf("Thread %s.%ld is running\n",GetName(),fId);
+}
+
+////////// begin changes (J.A.):
+   // additional constructors with own threadname thname
+   // as useful for invoking thread with name from compiled program:
+
+
+//______________________________________________________________________________
+TThread::TThread(const char *thname, void *(*fn)(void*), void *arg,
+                 EPriority pri) : TNamed(thname, "")
+{
+   // Create thread with a name. Specify the function or class method
+   // to be executed by the thread, and a pointer to the argument structure.
+
+   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
+
+   fDetached  = kFALSE;
+   fFcnVoid   = 0;
+   fFcnRetn   = fn;
+   fPriority  = pri;
+   fThreadArg = arg;
+   Constructor();
+   fNamed     = kTRUE;
+
+   //TThread(fn,arg,pri); // use normal TThread joinable constructor
+}
+
+//______________________________________________________________________________
+TThread::TThread(const char *thname, void (*fn)(void*), void *arg,
+                 EPriority pri) : TNamed(thname, "")
+{
+   // Create thread with a name. Specify the function or class method
+   // to be executed by the thread, and a pointer to the argument structure.
+
+   //if G__p2f2funcname-method recognizes true name of fn (call by interpreter)
+
+   fDetached  = kTRUE;
+   fFcnRetn   = 0;
+   fFcnVoid   = fn;
+   fPriority  = pri;
+   fThreadArg = arg;
+   Constructor();
+   fNamed     = kTRUE;
+
+   //TThread(fn,arg,pri); // use normal TThread detached constructor
+}
+
+/////////////// end changes (J.A.)
+
+//______________________________________________________________________________
+void TThread::Constructor()
+{
+   // Common thread constructor.
+
+
+   fHolder = 0;
+   fClean  = 0;
+   fState  = kNewState;
+
+   fId = 0;
+   if (!fgThreadImp) { // *** Only once ***
+      fgThreadImp = gThreadFactory->CreateThreadImp();
+      fgMainMutex = new TMutex(kTRUE);
+      fgXActMutex = new TMutex(kTRUE);
+      new TThreadTimer;
+      fgXActCondi = new TCondition;
+      gThreadTsd  = &(TThread::Tsd);
+      gThreadXAR  = &(TThread::XARequest);
+   }
+
+   PutComm("Constructor: MainMutex Locking");
+   Lock();
+   PutComm("Constructor: MainMutex Locked");
+   fTsd[0] = gPad;
+
+   if (fgMain) fgMain->fPrev = this;
+   fNext = fgMain; fPrev=0; fgMain = this;
+
+   // Create the global mutexes
+   if(!gContainerMutex)
+     gContainerMutex = new TMutex(kTRUE);
+   if(!gCINTMutex)
+     gCINTMutex = new TMutex(kTRUE);
+
+
+   UnLock();
+   PutComm();
+
+   // thread is set up in initialisation routine or start().
+}
+
+//______________________________________________________________________________
+TThread::~TThread()
+{
+   char cbuf[100];
+   if (gDebug) {
+      sprintf(cbuf,"*** Thread %s.%ld is DELETED ***", GetName(), fId);
+      TThread::Printf("\n %s\n\n",cbuf);
+   }
+
+   // Disconnect thread instance
+
+   PutComm("Destructor: MainMutex Locking");
+   Lock();
+   PutComm("Destructor: MainMutex Locked");
+   if (fPrev) fPrev->fNext = fNext;
+   if (fNext) fNext->fPrev = fPrev;
+   if (fgMain == this) fgMain = fNext;
+   UnLock();
+   PutComm();
+   if (fHolder) *(fHolder) = 0;
+}
+
+//______________________________________________________________________________
+Int_t TThread::Delete(TThread *&th)
+{
+   char cbuf[100];
+
+   if (!th) return 0;
+   th->fHolder = &th;
+
+   if (th->fState == kRunningState) {     // Cancel if running
+      th->fState = kDeletingState;
+      if (gDebug) {
+         sprintf(cbuf,"*** Thread %s.%ld Deleting ***",th->GetName(),th->fId);
+         TThread::Printf("\n %s\n\n",cbuf);
+      }
+      th->Kill();
+      return -1;
+   }
+
+   th->CleanUp();
+   return 0;
+}
+
+
+// Implementation dependent part of member function
 
 //______________________________________________________________________________
 Long_t TThread::Join(Long_t jid, void **ret)
@@ -331,7 +342,7 @@ Long_t TThread::Join(Long_t jid, void **ret)
 //______________________________________________________________________________
 Long_t TThread::SelfId()
 {
-   if (!fgThreadImp) return -1L;
+   if(!fgThreadImp) return -1L;
    Long_t id = fgThreadImp->SelfId();
    if (!id) id = -1L;  // in some implementations 0 is main thread
    return id;
@@ -355,7 +366,7 @@ Int_t TThread::Run(void *arg)
 
    fState = iret ? kInvalidState : kRunningState;
    if (gDebug) {
-      Info("Run", "thread %s id=%ld requested", GetName(), fId);
+      fprintf(stderr,"\nThread %s ID=%ld requested\n\n",GetName(),fId);
    }
    UnLock();
    PutComm();
@@ -367,7 +378,7 @@ Int_t TThread::Kill()
 {
    if (fState != kRunningState && fState != kDeletingState) {
       if (gDebug) {
-         Info("Kill", "thread %ld is not running", fId);
+         fprintf(stderr,"TThread::Kill. thread %ld is not running\n",fId);
       }
       return 13;
    } else {
@@ -384,7 +395,7 @@ Int_t TThread::Kill(Long_t id)
       return fgThreadImp->Kill(th);
    } else  {
       if (gDebug) {
-         ::Info("TThread::Kill(Long_t)", "thread %ld not found ***", id);
+         fprintf(stderr,"TThread::Kill thread %ld not found ***\n",id);
       }
       return 13;
    }
@@ -398,7 +409,7 @@ Int_t TThread::Kill(const char *name)
       return fgThreadImp->Kill(th);
    } else  {
       if (gDebug) {
-         ::Info("TThread::Kill(const char*)", "thread %s not found ***", name);
+         fprintf(stderr,"TThread::Kill thread %s not found ***\n",name);
       }
       return 13;
    }
@@ -443,9 +454,8 @@ void TThread::AfterCancel(TThread *th)
    th->fState = kCanceledState;
    if (gDebug) {
       char cbuf[100];
-      sprintf(cbuf,"Info in <TThread::AfterCancel>: %s.%ld is killed\n",
-              th->GetName(), th->fId);
-      TThread::Printf("%s", cbuf);
+      sprintf(cbuf,"*** Thread %s.%ld is KILLED ***",th->GetName(),th->fId);
+      TThread::Printf("\n %s\n\n",cbuf);
    }
 }
 
@@ -472,66 +482,64 @@ Int_t TThread::TryLock() { return (fgMainMutex ? fgMainMutex->TryLock(): 0); } /
 Int_t TThread::UnLock()  { return (fgMainMutex ? fgMainMutex->UnLock() :0); }  // unlock main mutex
 
 //______________________________________________________________________________
-ULong_t TThread::Call(void *p2f, void *arg)
+ULong_t TThread::Call(void *p2f,void *arg)
 {
    char *fname;
    void *iPointer2Function;
+   G__CallFunc fFunc;
    int iPointerType = G__UNKNOWNFUNC;
-   G__CallFunc func;
    {
-      R__LOCKGUARD(gCINTMutex);
-      // reconstruct function name
-      fname = G__p2f2funcname(p2f);
-      iPointer2Function = p2f;
-      if (fname) {
-         G__ClassInfo globalscope;
-         G__MethodInfo method;
-         Long_t dummy;
+   R__LOCKGUARD(gCINTMutex);
+   // reconstruct function name
+   fname=G__p2f2funcname(p2f);
+   iPointer2Function=p2f;
+   if (fname) {
+      G__ClassInfo globalscope;
+      G__MethodInfo method;
+      long dummy;
+      // resolve function overloading
+      method=globalscope.GetMethod(fname,"void*",&dummy);
+      if (method.IsValid()) {
+         // get pointer to function again after overloading resolution
+         iPointer2Function=method.PointerToFunc();
+         // check what kind of pointer is it
+         iPointerType = G__isinterpretedp2f(iPointer2Function);
 
-         // resolve function overloading
-         method=globalscope.GetMethod(fname, "void*", &dummy);
-         if (method.IsValid()) {
-            // get pointer to function again after overloading resolution
-            iPointer2Function = method.PointerToFunc();
-            // check what kind of pointer is it
-            iPointerType = G__isinterpretedp2f(iPointer2Function);
+         switch(iPointerType) {
 
-            switch(iPointerType) {
+            case G__COMPILEDINTERFACEMETHOD: // using interface method
+               fFunc.SetFunc((G__InterfaceMethod)iPointer2Function);
+               break;
 
-               case G__COMPILEDINTERFACEMETHOD: // using interface method
-                  func.SetFunc((G__InterfaceMethod)iPointer2Function);
-                  break;
-
-               case G__BYTECODEFUNC: // bytecode version of interpreted func
-                  func.SetBytecode((struct G__bytecodefunc*)iPointer2Function);
-                  break;
-            }
-         } else {
-            ::Error("TThread:Call", "no overloading parameter matches");
+            case G__BYTECODEFUNC: // bytecode version of interpreted func
+               fFunc.SetBytecode((struct G__bytecodefunc*)iPointer2Function);
+               break;
          }
+      } else {
+         ::Error("TThread:Call", "no overloading parameter matches");
       }
    }
-
+   }
    // check what kind of pointer is it
    switch(iPointerType) {
 
-      case G__INTERPRETEDFUNC: // reconstruct function call as string
-         char temp[20],para[200];
-         strcpy(para, (char*)iPointer2Function);
-         strcat(para,"(");
-         sprintf(temp,"(void*)%#lx", (ULong_t)arg);
-         strcat(para, temp);
-         strcat(para, ")");
-         return G__int(G__calc(para));
+   case G__INTERPRETEDFUNC: // reconstruct function call as string
+      char temp[20],para[200];
+      strcpy(para,(char*)iPointer2Function);
+      strcat(para,"(");
 
-      case G__COMPILEDINTERFACEMETHOD: // using interface method
-      case G__BYTECODEFUNC:            // bytecode version of interpreted func
-         func.SetArg((long)arg);
-         return func.ExecInt((void*)0);
+      sprintf(temp,"(void*)%#lx,",(ULong_t)arg);
+      strcat(para,temp); strcat(para,")");
+      return G__int(G__calc(para));
 
-      case G__COMPILEDTRUEFUNC: // using true pointer to function
-      case G__UNKNOWNFUNC: // this case will never happen
-         return (*(int (*)(void*))iPointer2Function)(arg);
+   case G__COMPILEDINTERFACEMETHOD: // using interface method
+   case G__BYTECODEFUNC:            // bytecode version of interpreted func
+      fFunc.SetArg((long)arg);
+      return fFunc.ExecInt((void*)0);
+
+   case G__COMPILEDTRUEFUNC: // using true pointer to function
+   case G__UNKNOWNFUNC: // this case will never happen
+      return (*(int (*)(void*))iPointer2Function)(arg);
    }
 
    ::Error("TThread::Call", "*** Something very WRONG ***");
@@ -554,39 +562,37 @@ void *TThread::Fun(void *ptr)
 
    // Default cancel state is OFF
    // Default cancel type  is DEFERRED
-   // User can change it by call SetCancelOn() and SetCancelAsynchronous()
+   // User can change it by call SetCancelON & SetCancelAsynchronous()
    SetCancelOff();
    SetCancelDeferred();
    CleanUpPush((void *)&AfterCancel,th);  // Enable standard cancelling function
 
    if (gDebug) {
-      sprintf(cbuf, "Info in <TThread::Fun>: %s.%ld is running\n",
-              th->GetName(), th->fId);
-      TThread::Printf("%s", cbuf);
+      sprintf(cbuf,"Thread %s.%ld is running",th->GetName(),th->fId);
+      TThread::Printf("\n %s\n\n",cbuf);
    }
-
+   
    arg = th->fThreadArg;
    th->fState = kRunningState;
 
-   if (th->fDetached) {
-      //Detached, non joinable thread
-      TThread::Call((void*)th->fFcnVoid, arg);
+   if (th->fDetached) { //Detached, non joinable thread
+
+      TThread::Call((void*)th->fFcnVoid,arg);
       ret = 0;
       th->fState = kFinishedState;
-   } else {
-      //UnDetached, joinable thread
-      ret = (void*)TThread::Call((void*)th->fFcnRetn, arg);
+   } else {             //UnDetached, joinable thread
+      ret = (void*)TThread::Call((void*)th->fFcnRetn,arg);
       th->fState = kTerminatedState;
    }
 
+   //CleanUpPop(0);     // Disable standard cancelling function
    CleanUpPop(1);     // Disable standard cancelling function
 
    if (gDebug) {
-      sprintf(cbuf,"Info in <TThread::Fun>: %s.%ld has finished\n",
-              th->GetName(), th->fId);
-      TThread::Printf("%s", cbuf);
+      sprintf(cbuf,"Thread %s.%ld finished",th->GetName(),th->fId);
+      TThread::Printf("\n %s\n\n",cbuf);
    }
-
+   
    TThread::Exit(ret);
 
    return ret;
@@ -601,7 +607,7 @@ void TThread::Ps()
    int i;
 
    if (!fgMain) { //no threads
-      Info("Ps", "*** No threads, ***");
+      printf("*** No threads, ***\n");
       return;
    }
 
@@ -666,41 +672,47 @@ void TThread::Printf(const char *txt, Long_t in)
    arr[1] = (void*)txt; arr[2] = &in;
    if (XARequest("PRTF", 3, arr, 0)) return;
 
-   fprintf(stderr, txt, in);
+   fprintf(stderr,txt,in);
 }
 
 //______________________________________________________________________________
 Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 {
-   if (!gApplication || !gApplication->IsRunning()) return 0;
-
    TThread *th;
-   if ((th = Self())) { // we are in the thread
+   if ((th=Self())) { // we are in the thread
 
-      TConditionImp *condimp = fgXActCondi->fConditionImp;
-      TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
-
+     TConditionImp *fCondImp = fgXActCondi->fConditionImp;
+     TMutexImp *fCondMutex = fgXActCondi->GetMutex()->fMutexImp;
+     
       th->PutComm("XARequest: XActMutex Locking");
-      fgXActMutex->Lock();
+      fgXActMutex ->Lock();
       th->PutComm("XARequest: XActMutex Locked");
 
       // Mathieu de Naurois
       // Lock now, so the XAction signal will wait
       // and never come before the wait
-      condmutex->Lock();
+      fCondMutex->Lock();
 
       fgXAnb = nb;
       fgXArr = ar;
-      fgXArt = 0;
+      fgXArt = 0;      
       fgXAct = (char*)xact;
       th->PutComm((char *)fgXAct);
+      // while(fgXAct) {gSystem->Sleep(10);};
+      // th->PutComm("XARequest: Condition Wait");
+      //th->PutComm(fgXAct);
 
-      if (condimp) condimp->Wait();
-      condmutex->UnLock();
+      if(fCondImp) fCondImp->Wait();      
+      fCondMutex->UnLock();
+
+      // This nasty tric for Linux only
+      //printf("Waiting for condition\n");
+      //fgXActCondi->Wait();
+      //while (fgXAct) {fgXActCondi->TimedWait(time(NULL) + 2);}
 
       th->PutComm();
       if (iret) *iret = fgXArt;
-      fgXActMutex->UnLock();
+      fgXActMutex ->UnLock();
       th->PutComm();
       return 1997;
    } else            //we are in the main thread
@@ -710,9 +722,9 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
-   TConditionImp *condimp = fgXActCondi->fConditionImp;
-   TMutexImp *condmutex = fgXActCondi->GetMutex()->fMutexImp;
-   condmutex->Lock();
+   TConditionImp *fCondImp = fgXActCondi->fConditionImp;
+   TMutexImp *fCondMutex = fgXActCondi->GetMutex()->fMutexImp;
+   fCondMutex->Lock();
 
    char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
    enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
@@ -772,6 +784,7 @@ void TThread::XAction()
                break;
 
          }
+         //gSystem->Sleep(10000);
          break;
 
       case kCDEL:
@@ -788,16 +801,20 @@ void TThread::XAction()
                                   *((Int_t*)(fgXArr[6])));
          break;
       case kMETH:
-         ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
+      ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
          break;
 
-      default:
-         ::Error("TThread::XAction", "wrong case");
+         default:
+         fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
 
+   //usleep(10000); 
+   // Sometimes the XARequest is not already waiting for the signal
+   //fgXActCondi->Signal();
    fgXAct = 0;
-   if (condimp) condimp->Signal();
-   condmutex->UnLock();
+   if(fCondImp) fCondImp->Signal();      
+   fCondMutex->UnLock();
+
 }
 
 //______________________________________________________________________________
@@ -835,10 +852,10 @@ TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 Bool_t TThreadTimer::Notify()
 {
 
-   if (TThread::fgXAct) { TThread::XAction(); }
+   if( TThread::fgXAct ) { TThread::XAction();}
    Reset();
-
-   return kFALSE;
+  
+   return( kFALSE );
 }
 
 

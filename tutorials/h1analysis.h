@@ -1,11 +1,8 @@
 //////////////////////////////////////////////////////////
-//   This class has been automatically generated
+//   This class has been automatically generated 
 //     (Wed Apr 19 21:47:55 2000 by ROOT version 2.24/02)
 //   from TTree h42/
 //   found on file: Memory Directory
-//
-//   The example was modfied for the new TSelector version
-//   (Thu Sep 25 06:44:10 EDT 2003)
 //////////////////////////////////////////////////////////
 
 
@@ -330,21 +327,20 @@ class h1analysis : public TSelector {
 
    h1analysis(TTree *tree=0);
    ~h1analysis();
-   int     Version() const {return 1;}
    void    Begin(TTree *tree);
-   void    SlaveBegin(TTree *tree);
    void    Init(TTree *tree);
    Bool_t  Notify();
-   Bool_t  Process(Int_t entry);
+   Bool_t  Process(Int_t entry) {return kTRUE;}
+   Bool_t  ProcessCut(Int_t entry);
+   void    ProcessFill(Int_t entry);
    void    SetOption(const char *option) { fOption = option; }
    void    SetObject(TObject *obj) { fObject = obj; }
    void    SetInputList(TList *input) {fInput = input;}
    TList  *GetOutputList() const { return fOutput; }
-   void    SlaveTerminate();
    void    Terminate();
-
+   
    ClassDef(h1analysis,0);
-
+   
 };
 
 #endif
@@ -368,7 +364,7 @@ void h1analysis::Init(TTree *tree)
 //   Set branch addresses
    if (tree == 0) return;
    fChain    = tree;
-
+   
    fChain->SetBranchAddress("nrun",&nrun);
    fChain->SetBranchAddress("nevent",&nevent);
    fChain->SetBranchAddress("nentry",&nentry);

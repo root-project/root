@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.3 2001/11/16 18:58:39 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.2 2001/10/04 16:53:21 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TString.h"
 #include "TSapDBRow.h"
+#include "TString.h"
 
 
 ClassImp(TSapDBRow)

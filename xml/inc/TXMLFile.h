@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.5 2004/06/04 16:28:31 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 
 class TXMLKey;
 class TList;
+class TXMLDtdGenerator;
 class TStreamerElement;
 class TStreamerInfo;
 
@@ -103,6 +104,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      SetUseNamespaces(Bool_t iUseNamespaces = kTRUE);
 
       TXMLEngine*       XML() { return fXML; } 
+      TXMLDtdGenerator* GetDtdGenerator() const { return fDtdGener; }
 
    protected:
       // functions to store streamer infos
@@ -118,6 +120,8 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       xmlDocPointer     fDoc;                  //!
 
+      TXMLDtdGenerator* fDtdGener;             //!
+      
       xmlNodePointer    fStreamerInfoNode;     //!  pointer of node with streamer info data
       
       TXMLEngine*       fXML;                  //! object for interface with xml library

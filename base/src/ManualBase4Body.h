@@ -1,4 +1,4 @@
-static int G__ManualBase4_142_4_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__ManualBase4_104_4_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    // We need to emulate:
    //    return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
 
@@ -17,9 +17,9 @@ static int G__ManualBase4_142_4_8(G__value *result7,G__CONST char *funcname,stru
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualBase4_142_5_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__ManualBase4_104_5_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    // We need to emulate:
-   //     ptr = (T*)GetObjectChecked(namecycle,TClass::GetClass(typeid(T)));
+   //     ptr = (T*)GetObjectAnyChecked(namecycle,TClass::GetClass(typeid(T)));
 
    // Here find the class name 
    G__ClassInfo ti( libp->para[1].tagnum );
@@ -27,7 +27,7 @@ static int G__ManualBase4_142_5_8(G__value *result7,G__CONST char *funcname,stru
    G__setnull(result7);
    TDirectory *directory = ((TDirectory*)(G__getstructoffset()));
    const char* namecycle = (const char*)G__int(libp->para[0]);
-   void *ptr = directory->GetObjectChecked( namecycle, ti.Name() );
+   void *ptr = directory->GetObjectAnyChecked( namecycle, ti.Name() );
    void **ptrarg;
    if ( libp->para[1].ref ) {
       ptrarg = (void**)libp->para[1].ref;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.15 2002/09/09 19:52:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.14 2001/05/18 15:57:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -136,13 +136,8 @@ void TLeafI::PrintValue(Int_t l) const
 {
 // Prints leaf value
 
-   if (fIsUnsigned) {
-      UInt_t *uvalue = (UInt_t*)GetValuePointer();
-      printf("%u",uvalue[l]);
-   } else {
-      Int_t *value = (Int_t*)GetValuePointer();
-      printf("%d",value[l]);
-   }
+   Int_t *value = (Int_t*)GetValuePointer();
+   printf("%d",value[l]);
 }
 
 //______________________________________________________________________________

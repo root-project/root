@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.58 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.55 2004/05/28 16:39:37 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -682,7 +682,6 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fCleanup       = kFALSE;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -701,7 +700,6 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fCleanup       = kFALSE;
 
    SetLayoutManager(new TGVerticalLayout(this));
 }
@@ -711,7 +709,6 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
-   if (fCleanup) Cleanup();
    if (fList) fList->Delete();
    delete fList;
    delete fLayoutManager;
@@ -795,14 +792,6 @@ void TGCompositeFrame::Cleanup()
          delete el->fLayout;
    }
    fList->Delete();
-}
-
-//______________________________________________________________________________
-void TGCompositeFrame::SetCleanup(Bool_t on)
-{
-   // If fCleanup is kTRUE Cleanup() method is called automatically at destructor
-
-   fCleanup = on;
 }
 
 //______________________________________________________________________________
@@ -1159,12 +1148,12 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
 
    TIter next(fBindList);
    TGMapKey *m;
-   TGFrame  *w = 0;
+   TGFrame  *w;
 
    while ((m = (TGMapKey *) next())) {
       if (m->fKeyCode == event->fCode) {
          w = (TGFrame *) m->fWindow;
-         if (w->HandleKey(event)) return kTRUE;
+         return w->HandleKey(event);
       }
    }
    return kFALSE;
@@ -1487,7 +1476,7 @@ void TGGroupFrame::DrawBorder()
    l = 0;
    t = (max_ascent + max_descent + 2) >> 1;
    r = fWidth - 1;
-   b = fHeight - t;
+   b = fHeight - 1;
 
    sep = 3;
    UInt_t rr = 5 + (sep << 1) + tw;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.73 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.70 2004/04/11 18:18:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -51,27 +51,25 @@
 #endif
 
 #include "TProofServ.h"
-
-#include "TAuthenticate.h"
-#include "TDSetProxy.h"
-#include "TEnv.h"
-#include "TError.h"
-#include "TException.h"
-#include "TFile.h"
-#include "TInterpreter.h"
-#include "TMessage.h"
-#include "TPerfStats.h"
-#include "TProofDebug.h"
-#include "TProof.h"
 #include "TProofLimitsFinder.h"
-#include "TProofPlayer.h"
+#include "TProof.h"
 #include "TROOT.h"
-#include "TSocket.h"
-#include "TStopwatch.h"
+#include "TFile.h"
 #include "TSysEvtHandler.h"
 #include "TSystem.h"
-#include "TTimeStamp.h"
+#include "TInterpreter.h"
+#include "TException.h"
+#include "TSocket.h"
+#include "TAuthenticate.h"
+#include "TStopwatch.h"
+#include "TMessage.h"
 #include "TUrl.h"
+#include "TEnv.h"
+#include "TError.h"
+#include "TProofPlayer.h"
+#include "TDSetProxy.h"
+#include "TTimeStamp.h"
+#include "TProofDebug.h"
 
 #include "compiledata.h"
 
@@ -445,15 +443,11 @@ TDSetElement *TProofServ::GetNextPacket()
 {
    // Get next range of entries to be processed on this server.
 
-   Long64_t bytesRead = 0;
-
-   if (gPerfStats != 0) bytesRead = gPerfStats->GetBytesRead();
-
    if (fCompute.Counter() > 0)
       fCompute.Stop();
 
    TMessage req(kPROOF_GETPACKET);
-   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime() << bytesRead;
+   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime();
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);
@@ -660,9 +654,9 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
-      case kPROOF_GETENTRIES:
+      case kPROOF_REPORTSIZE:
          {
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETENTRIES", "Enter");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Enter");
             Bool_t         isTree;
             TString        filename;
             TString        dir;
@@ -671,21 +665,21 @@ void TProofServ::HandleSocketInput()
 
             (*mess) >> isTree >> filename >> dir >> objname;
 
-            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_GETENTRIES",
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
                                  "Report size of object %s (%s) in dir %s in file %s",
                                  objname.Data(), isTree ? "T" : "O",
                                  dir.Data(), filename.Data());
 
             entries = TDSet::GetEntries(isTree, filename, dir, objname);
 
-            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_GETENTRIES",
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
                                  "Found %lld %s", entries, isTree ? "entries" : "objects");
 
-            TMessage answ(kPROOF_GETENTRIES);
+            TMessage answ(kPROOF_REPORTSIZE);
             answ << entries;
             SendLogFile(); // in case of error messages
             fSocket->Send(answ);
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETENTRIES", "Done");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }
          break;
 
@@ -990,26 +984,6 @@ void TProofServ::HandleSocketInput()
                   break;
             }
             SendLogFile(status);
-         }
-         break;
-
-      case kPROOF_GETSLAVEINFO:
-         {
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Enter");
-
-            if (IsMaster()) {
-               TList *info = fProof->GetSlaveInfo();
-
-               TMessage answ(kPROOF_GETSLAVEINFO);
-               answ << info;
-               fSocket->Send(answ);
-            } else {
-               TMessage answ(kPROOF_GETSLAVEINFO);
-               answ << (TList *)0;
-               fSocket->Send(answ);
-            }
-
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");
          }
          break;
 
@@ -1492,14 +1466,14 @@ void TProofServ::Setup()
    fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
 
    // First receive, decode and store the public part of RSA key
-   Int_t retval, kind;
+   int retval, kind;
    fSocket->Recv(retval,kind);
 
-   Int_t RSAKey = 0;
    TApplication *lApp = gROOT->GetApplication();
    if (kind == kROOTD_RSAKEY) {
 
       if (retval > -1) {
+
          if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv(3)) > 0 &&
              gROOT->IsProofServ()) {
             // We got a file name ... extract the tmp directory path
@@ -1512,17 +1486,16 @@ void TProofServ::Setup()
             if (!gSystem->AccessPathName(KeyFile.Data(), kReadPermission)) {
                fKey = fopen(KeyFile.Data(), "r");
                if (fKey) {
-                  Int_t klen = fread((void *)PubKey,1,sizeof(PubKey),fKey);
+                  fgets(PubKey, sizeof(PubKey), fKey);
                   // Set RSA key
-                  RSAKey = TAuthenticate::SetRSAPublic(PubKey,klen);
+                  TAuthenticate::SetRSAPublic(PubKey);
                   fclose(fKey);
                }
             }
          }
 
          // Receive passwd
-         fSocket->SecureRecv(fPasswd, 2, RSAKey);
-
+         fSocket->SecureRecv(fPasswd, 2);
       } else if (retval == -1) {
 
          // Receive inverted passwd
@@ -1556,7 +1529,6 @@ void TProofServ::Setup()
    TAuthenticate::SetGlobalPasswd(fPasswd);
    TAuthenticate::SetGlobalPwHash(fPwHash);
    TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
-   TAuthenticate::SetDefaultRSAKeyType(RSAKey);
    if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv(7)) > 0) {
       Bool_t rha = (Bool_t)atoi(lApp->Argv(7));
       TAuthenticate::SetReadHomeAuthrc(rha);

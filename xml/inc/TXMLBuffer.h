@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.4 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.3 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TStreamerInfo;
 class TStreamerElement;
 class TObjArray;
 class TMemberStreamer;
+class TXMLDtdGenerator;
 class TXMLFile;
 class TXMLStackObj;
 
@@ -227,10 +228,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
 
       void             CreateElemNode(const TStreamerElement* elem, Int_t number = -1);
       Bool_t           VerifyElemNode(const TStreamerElement* elem, Int_t number = -1);
-
-      void             PerformPreProcessing(const TStreamerElement* elem, xmlNodePointer elemnode);
-      void             PerformPostProcessing();
-
+      
       xmlNodePointer   XmlWriteBasic(Char_t value);
       xmlNodePointer   XmlWriteBasic(Short_t value);
       xmlNodePointer   XmlWriteBasic(Int_t value);

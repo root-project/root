@@ -1,12 +1,8 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.1 2004/04/27 06:28:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
 #define PYROOT_UTILITY_H
-
-// Standard
-#include <string>
-
 
 namespace PyROOT {
 
@@ -17,15 +13,6 @@ namespace PyROOT {
 
    // convenience functions
       ObjectHolder* getObjectHolder( PyObject* self );
-      void* getObjectFromHolderFromArgs( PyObject* argsTuple );
-
-   // data/return types
-      enum EDataType { kBool, kChar, kShort, kInt, kLong, kFloat, kDouble,
-         kString, kVoid, kOther,
-         kDoublePtr, kFloatPtr, kLongPtr, kIntPtr, kVoidPtr };
-
-      EDataType effectiveType( const std::string& typeName );
-      bool isPointer( const std::string& typeName );
 
    // data
       extern char* theObject_;

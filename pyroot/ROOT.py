@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.5 2004/06/12 05:35:10 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.3 2004/04/28 22:04:06 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/16/04
+# Last: 04/29/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -25,9 +25,10 @@ except:
 ## PyROOT C++ extension module
 from libPyROOT import * 
 
-## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
-sys.setcheckinterval( 100 )
-
+### load most common ROOT libraries______________________________________________
+libraries = ('libHist', 'libGpad', 'libGraf', 'libMatrix', 'libTree', 
+             'libGraf3d', 'libGeom' )
+for l in libraries : gSystem.Load(l)
 
 ### data ________________________________________________________________________
 _NAME = 'name'
@@ -133,8 +134,7 @@ class ModuleFacade:
    def __init__( self ):
     # allow "from ROOT import *"
       self.__dict__[ 'makeRootClass' ] = makeRootClass
-      self.__dict__[ '__all__' ] = [ 'makeRootClass',
-          'gROOT', 'gSystem', 'gRandom', 'gInterpreter', 'gBenchmark', 'gStyle' ]
+      self.__dict__[ '__all__' ] = [ 'makeRootClass' ]
 
    def __getattr__( self, name ):
       if not hasattr( _thismodule, name ):

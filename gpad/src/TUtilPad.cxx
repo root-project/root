@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.1 2002/09/15 19:41:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TVirtualUtilPad.cxx,v 1.1 2002/09/15 10:16:44 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -26,8 +26,6 @@
 #include "TDrawPanelHist.h"
 #include "TInspectCanvas.h"
 
-Int_t TUtilPad::fgPanelVersion = 0;
-
 ClassImp(TUtilPad)
 
 //______________________________________________________________________________
@@ -47,14 +45,6 @@ void TUtilPad::DrawPanel()
 {
 // interface to the TDrawPanelHist
    
-   if (fgPanelVersion > 0) {
-      //new DrawPanel by Marek Biskup
-      gROOT->ProcessLine(Form("TGedDrawPanel::ShowPanel((TObject*)0x%x,(TPad*)0x%x);",
-                          gROOT->GetSelectedPrimitive(),gROOT->GetSelectedPad()));
-      return;
-   }
-   
-   // old Drawpanel (default)
    TList *lc = (TList*)gROOT->GetListOfCanvases();
    TDrawPanelHist *R__drawpanelhist = (TDrawPanelHist*)lc->FindObject("R__drawpanelhist");
    if (!R__drawpanelhist) {
@@ -119,14 +109,4 @@ void TUtilPad::RemoveObject(TObject *parent, const TObject *obj)
    if (!parent->InheritsFrom(TGraph::Class())) return;
    TGraph *gr = (TGraph*)parent;
    gr->GetListOfFunctions()->Remove((TObject*)obj);
-}
-
-//______________________________________________________________________________
-void TUtilPad::SetPanelVersion(Int_t version)
-{
-// static function to set teh DrawPanel version
-//   version = 0  (default) old DrawPanel
-//   version = 1  new prototype from Marek Biskup
-   
-   fgPanelVersion = version;
 }

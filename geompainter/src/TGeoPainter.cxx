@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name: HEAD $:$Id: TGeoPainter.cxx,v 1.38 2004/05/04 14:41:52 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.37 2004/04/22 14:07:15 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -777,23 +777,21 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    TGeoOverlap *overlap = (TGeoOverlap *)ovlp;
    if (!overlap) return;
    if (fOverlap != overlap) fOverlap = overlap;
-   TGeoHMatrix *hmat = fGeom->GetGLMatrix();
+   TGeoHMatrix *hmat = new TGeoHMatrix(); // id matrix
    TGeoVolume *vol = overlap->GetVolume();
    TGeoNode *node1, *node2;
-   fGeom->SetMatrixTransform(kTRUE);
    if (fOverlap->IsExtrusion()) {
       if (!fVisLock) fVisVolumes->Add(vol);
       fOverlap->SetLineColor(3);
       fOverlap->SetLineWidth(vol->GetLineWidth());
-      *hmat = gGeoIdentity;
-      vol->GetShape()->Paint(option);
+      vol->GetShape()->PaintNext(hmat, option);
       node1 = overlap->GetNode(0);
       *hmat = node1->GetMatrix();
       vol = node1->GetVolume();
       if (!fVisLock) fVisVolumes->Add(vol);
       fOverlap->SetLineColor(4);
       fOverlap->SetLineWidth(vol->GetLineWidth());
-      vol->GetShape()->Paint(option);
+      vol->GetShape()->PaintNext(hmat, option);
    } else {
       node1 = overlap->GetNode(0);
       vol = node1->GetVolume();
@@ -801,20 +799,20 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       fOverlap->SetLineWidth(vol->GetLineWidth());
       *hmat = node1->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
-      vol->GetShape()->Paint(option);
+      vol->GetShape()->PaintNext(hmat, option);
       node2 = overlap->GetNode(1);
       vol = node2->GetVolume();
       fOverlap->SetLineColor(4);
       fOverlap->SetLineWidth(vol->GetLineWidth());
       *hmat = node2->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
-      vol->GetShape()->Paint(option);
+      vol->GetShape()->PaintNext(hmat, option);
    }     
-   fGeom->SetMatrixTransform(kFALSE);
+   delete hmat;
    fVisLock = kTRUE;
 }
 //______________________________________________________________________________
-void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
+void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat)
 {
 //*-*-*-*-*Paint 3-D shape in current pad with its current attributes*-*-*-*-*
 //*-*      ==========================================================
@@ -835,8 +833,7 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView)
     if (fGeom) {
        for (Int_t j = 0; j < buff->numPoints; j++) {
            dlocal[0]=point[3*j]; dlocal[1]=point[3*j+1]; dlocal[2]=point[3*j+2];
-           if (fGeom->IsMatrixTransform()) {
-              TGeoHMatrix *glmat = fGeom->GetGLMatrix();
+           if (glmat) {
               glmat->LocalToMaster(&dlocal[0],&dmaster[0]);
            } else {   
               if (IsExplodedView()) 
@@ -907,7 +904,7 @@ void *TGeoPainter::MakeBox3DBuffer(const TGeoVolume *vol)
 }   
 
 //______________________________________________________________________________
-void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint any type of box with 8 vertices
    const Int_t numpoints = 8;
@@ -989,7 +986,7 @@ void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option)
        }
     }
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -1086,144 +1083,7 @@ void *TGeoPainter::MakeXtru3DBuffer(const TGeoVolume *vol)
 }   
 
 //______________________________________________________________________________
-void *TGeoPainter::MakeParaboloid3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-   TGeoShape *shape = vol->GetShape();
-   Int_t numpoints = shape->GetNmeshVertices();
-
-   buff->numPoints = numpoints;
-
-   Double_t *points = new Double_t[3*numpoints];
-
-   shape->SetPoints(points);
-
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void TGeoPainter::PaintParaboloid(TGeoShape *shape, Option_t *option)
-{
-   Int_t n = fNsegments;
-   Int_t indx, i, j;
-   Int_t numpoints = n*(n+1)+2;
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-   shape->SetPoints(points);
-   
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   Bool_t is3d = kFALSE;
-   if (strstr(option, "x3d")) is3d=kTRUE;   
-   X3DBuffer *buff = new X3DBuffer;
-   if (buff) {
-      buff->numPoints = numpoints;
-      buff->numSegs   = n*(2*n+3);
-      buff->numPolys  = (is3d)?(n*(n+2)):0;
-   }
-   buff->points = points;
-
-   Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-   if (c < 0) c = 0;
-   if (fPaintingOverlaps) {
-      if (fOverlap->IsExtrusion()) {
-         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      } else {
-         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
-         else c=12;
-      }   
-   }
-//*-* Allocate memory for segments *-*
-   buff->segs = new Int_t[buff->numSegs*3];
-   if (!buff->segs) return;
-   Int_t nn1 = (n+1)*n+1;
-   indx = 0;
-   // Lower end-cap (n radial segments)
-   for (j=0; j<n; j++) {
-      buff->segs[indx++] = c+2;
-      buff->segs[indx++] = 0;
-      buff->segs[indx++] = j+1;
-   }
-   // Sectors (n) 
-   for (i=0; i<n+1; i++) {
-      // lateral (circles) segments (n)
-      for (j=0; j<n; j++) {
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = n*i+1+j;
-         buff->segs[indx++] = n*i+1+((j+1)%n);
-      }
-      if (i==n) break;  // skip i=n for generators
-      // generator segments (n)
-      for (j=0; j<n; j++) { 
-         buff->segs[indx++] = c;
-         buff->segs[indx++] = n*i+1+j;
-         buff->segs[indx++] = n*(i+1)+1+j;
-      }
-   }
-   // Upper end-cap        
-   for (j=0; j<n; j++) {
-      buff->segs[indx++] = c+1;
-      buff->segs[indx++] = n*n+1+j;
-      buff->segs[indx++] = nn1;
-   }
-//*-* Allocate memory for polygons *-*
-   indx = 0;
-   buff->polys = 0;
-   if (is3d) {
-      buff->polys = new Int_t[2*n*5 + n*n*6];
-      if (!buff->polys) return;
-      // lower end-cap (n polygons)
-      for (j=0; j<n; j++) {
-         buff->polys[indx++] = c+2;
-         buff->polys[indx++] = 3;
-         buff->polys[indx++] = n+j;
-         buff->polys[indx++] = (j+1)%n;
-         buff->polys[indx++] = j;
-      }
-      // Sectors (n)
-      for (i=0; i<n; i++) {
-         // lateral faces (n)
-         for (j=0; j<n; j++) {
-            buff->polys[indx++] = c;
-            buff->polys[indx++] = 4;
-            buff->polys[indx++] = (2*i+1)*n+j;
-            buff->polys[indx++] = 2*(i+1)*n+j;
-            buff->polys[indx++] = (2*i+3)*n+j;
-            buff->polys[indx++] = 2*(i+1)*n+((j+1)%n);
-         }
-      }
-      // upper end-cap (n polygons)
-      for (j=0; j<n; j++) {
-         buff->polys[indx++] = c+1;
-         buff->polys[indx++] = 3;
-         buff->polys[indx++] = (2*n+1)*n+j;
-         buff->polys[indx++] = 2*n*(n+1)+((j+1)%n);
-         buff->polys[indx++] = 2*n*(n+1)+j;
-      }
-   }   
-   //*-* Paint in the pad
-   PaintShape(buff,rangeView);
-
-   if (is3d) {
-      if(buff && buff->points && buff->segs)
-         FillX3DBuffer(buff);
-      else {
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-      }
-   }
-
-   delete [] points;
-   if (buff->segs)     delete [] buff->segs;
-   if (buff->polys)    delete [] buff->polys;
-   if (buff)           delete    buff;              
-}
-
-//______________________________________________________________________________
-void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a torus in pad or x3d
    Int_t i, j;
@@ -1434,7 +1294,7 @@ void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option)
        }
     }           
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -1453,7 +1313,7 @@ void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint tubes
    Int_t i, j;
@@ -1569,7 +1429,7 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option)
        }
     }
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -1608,7 +1468,7 @@ void *TGeoPainter::MakeTubs3DBuffer(const TGeoVolume *vol)
    return buff;
 }   
 //______________________________________________________________________________
-void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint tubes
    Int_t i, j;
@@ -1742,7 +1602,7 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option)
        }
     }
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -1785,7 +1645,7 @@ void *TGeoPainter::MakeSphere3DBuffer(const TGeoVolume *vol)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a sphere
    Int_t i, j;
@@ -1983,7 +1843,7 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option)
     }
     
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -2041,7 +1901,7 @@ void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a pcon
    Int_t i, j;
@@ -2238,7 +2098,7 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option)
        }
     }
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -2257,7 +2117,7 @@ void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGeoPainter::PaintXtru(TGeoShape *shape, Option_t *option)
+void TGeoPainter::PaintXtru(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // Paint a TGeoXtru
    TGeoXtru *xtru = (TGeoXtru*)shape;
@@ -2360,7 +2220,7 @@ void TGeoPainter::PaintXtru(TGeoShape *shape, Option_t *option)
       }   
    }
     //*-* Paint in the pad
-    PaintShape(buff,rangeView);
+    PaintShape(buff,rangeView, glmat);
 
     if (is3d) {
         if(buff && buff->points && buff->segs)
@@ -2482,7 +2342,7 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
    Int_t level = node->GetLevel();
    Int_t i;
    TGeoShape *shape;
-   TGeoHMatrix *matrix = fGeom->GetGLMatrix();
+   TGeoHMatrix *matrix;
    TGeoVolume *vol = gGeoManager->GetCurrentVolume();
    TGeoVolume *vcrt;
    if (!node->IsVolAttributes()) {
@@ -2490,7 +2350,6 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
       vol->SetLineWidth(node->GetLineWidth());
       vol->SetLineStyle(node->GetLineStyle());
    }   
-   fGeom->SetMatrixTransform(kTRUE);
    if (!node->IsVisibleFull()) {
       // Paint only last node in the branch
       vcrt  = node->GetVolume();
@@ -2500,8 +2359,8 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
          vol->SetLineStyle(vcrt->GetLineStyle());
       }     
       shape = vcrt->GetShape();
-      *matrix = node->GetMatrix();
-      shape->Paint(option);
+      matrix = node->GetMatrix();
+      shape->PaintNext(matrix, option);
    } else {
       // Paint full branch, except top node
       for (i=1;i<=level; i++) {
@@ -2512,11 +2371,10 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
             vol->SetLineStyle(vcrt->GetLineStyle());
          }     
          shape = vcrt->GetShape();
-         *matrix = node->GetMatrix(i);
-         shape->Paint(option);
+         matrix = node->GetMatrix(i);
+         shape->PaintNext(matrix, option);
       }
    }      
-   fGeom->SetMatrixTransform(kFALSE);
 }   
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.14 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.11 2004/05/20 14:50:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -222,15 +222,15 @@ void TMatrixDSparse::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t co
   // and column lowerbound (0 default), 0 initialization flag and number of non-zero 
   // elements (only relevant for sparse format).
   
-  if ( (nr_nonzeros > 0 && (no_rows == 0 || no_cols == 0)) ||
-       (no_rows < 0 || no_cols < 0 || nr_nonzeros < 0) )
+  Invalidate();
+  
+  if (no_rows <= 0 || no_cols <= 0 || nr_nonzeros < 0)
   { 
     Error("Allocate","no_rows=%d no_cols=%d non_zeros=%d",no_rows,no_cols,nr_nonzeros);
-    Invalidate();
     return;
   }
   
-  MakeValid();
+  SetBit(kStatus);
   fNrows     = no_rows;
   fNcols     = no_cols;
   fRowLwb    = row_lwb;
@@ -309,7 +309,7 @@ void TMatrixDSparse::SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSpar
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
+void TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
 {
   // Insert in row rown, n elements of array v at column coln
 
@@ -319,20 +319,17 @@ TMatrixDBase &TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,
 
   if (arown >= fNrows || arown < 0) {
     Error("InsertRow","row %d out of matrix range",rown);
-    Invalidate();
-    return *this;
+    return;
   }
 
   if (acoln >= fNcols || acoln < 0) {
     Error("InsertRow","column %d out of matrix range",coln);
-    Invalidate();
-    return *this;
+    return;
   }
 
   if (acoln+nr > fNcols || nr < 0) {
     Error("InsertRow","row length %d out of range",nr);
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Int_t sIndex = fRowIndex[arown];
@@ -387,8 +384,6 @@ TMatrixDBase &TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,
   if (elements_old) delete [] (Double_t*) elements_old;
 
   Assert(fNelems == fRowIndex[fNrowIndex-1]);
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -1213,17 +1208,13 @@ void TMatrixDSparse::GetMatrix2Array(Double_t *data,Option_t * /*option*/) const
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Double_t *data)
+void TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Double_t *data)
 {
   // Copy nr elements from row/col index and data array to matrix . It is assumed
   // that arrays are of size >= nr
 
   Assert(IsValid());
-  if (nr <= 0) {
-    Error("SetMatrixArray(Int_t,Int_t*,Int_t*,Double_t*","nr <= 0");
-    Invalidate();
-    return *this;
-  }
+  if (nr <= 0) return;
 
   const Int_t irowmin = TMath::LocMin(nr,row);
   const Int_t irowmax = TMath::LocMax(nr,row);
@@ -1257,7 +1248,7 @@ TMatrixDBase &TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Doub
   }
 
   if (fNelems <= 0)
-    return *this;
+    return;
 
   fRowIndex[0] = 0;
   Int_t ielem = 0;
@@ -1277,21 +1268,16 @@ TMatrixDBase &TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Doub
     }
     fRowIndex[irow] = nr_nonzeros;
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDSparse &TMatrixDSparse::SetSparseIndex(const TMatrixDBase &source)
+void TMatrixDSparse::SetSparseIndex(const TMatrixDBase &source)
 {
   // Use non-zero data of matrix source to set the sparse structure
 
-  Assert(source.IsValid());
-  if (GetNrows()  != source.GetNrows()  || GetNcols()  != source.GetNcols() ||
-      GetRowLwb() != source.GetRowLwb() || GetColLwb() != source.GetColLwb()) {
+  if (!AreCompatible(*this,source)) {
     Error("SetSparseIndex","matrices not compatible");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Int_t nr_nonzeros = source.NonZeros();
@@ -1299,30 +1285,42 @@ TMatrixDSparse &TMatrixDSparse::SetSparseIndex(const TMatrixDBase &source)
   if (nr_nonzeros != fNelems)
     SetSparseIndex(nr_nonzeros);
 
-  if (source.GetRowIndexArray() && source.GetColIndexArray()) {
-    memmove(fRowIndex,source.GetRowIndexArray(),fNrowIndex*sizeof(Int_t));
-    memmove(fColIndex,source.GetColIndexArray(),fNelems*sizeof(Int_t));
-  } else {
-    const Double_t *ep = source.GetMatrixArray();
-    Int_t nr = 0;
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      fRowIndex[irow] = nr;
-      for (Int_t icol = 0; icol < fNcols; icol++) {
-        if (*ep != 0.0) {
-          fColIndex[nr] = icol;
-          nr++;
-        }
-        ep++;
+  const Double_t *ep = source.GetMatrixArray();
+  Int_t nr = 0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    fRowIndex[irow] = nr;
+    for (Int_t icol = 0; icol < fNcols; icol++) {
+      if (*ep != 0.0) {
+        fColIndex[nr] = icol;
+        nr++;
       }
+      ep++;
     }
-    fRowIndex[fNrows] = nr;
   }
-
-  return *this;
+  fRowIndex[fNrows] = nr;
 }
 
 //______________________________________________________________________________
-TMatrixDSparse &TMatrixDSparse::SetSparseIndex(Int_t nelems_new)
+void TMatrixDSparse::SetSparseIndex(const TMatrixDSparse &source)
+{
+  // copy the sparse structure from sparse matrix source
+
+  Assert(source.IsValid());
+  if (GetNrows()  != source.GetNrows()  || GetNcols()  != source.GetNcols() ||
+      GetRowLwb() != source.GetRowLwb() || GetColLwb() != source.GetColLwb()) {
+    Error("SetSparseIndex","matrices not compatible");
+    return;
+  }
+
+  const Int_t nelem_s = source.GetNoElements();
+  SetSparseIndex(nelem_s);
+
+  memmove(fRowIndex,source.GetRowIndexArray(),fNrowIndex*sizeof(Int_t));
+  memmove(fColIndex,source.GetColIndexArray(),fNelems*sizeof(Int_t));
+}
+
+//______________________________________________________________________________
+void TMatrixDSparse::SetSparseIndex(Int_t nelems_new)
 {
   // Increase/decrease the number of non-zero elements to nelems_new
 
@@ -1346,12 +1344,10 @@ TMatrixDSparse &TMatrixDSparse::SetSparseIndex(Int_t nelems_new)
           fRowIndex[irow] = nelems_new;
     }
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
+void TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
 {
   // Set size of the matrix to nrows x ncols with nr_nonzeros non-zero entries
   // if nr_nonzeros > 0 .
@@ -1361,18 +1357,17 @@ TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
-    Invalidate();
-    return *this;
+    return;
   }
 
   if (fNelems > 0) {
     if (fNrows == nrows && fNcols == ncols &&
        (fNelems == nr_nonzeros || nr_nonzeros < 0))
-      return *this;
+      return;
     else if (nrows == 0 || ncols == 0 || nr_nonzeros == 0) {
       fNrows = nrows; fNcols = ncols;
       Clear();
-      return *this;
+      return;
     }
 
     const Double_t *elements_old = GetMatrixArray();
@@ -1440,13 +1435,11 @@ TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros
     const Int_t nelems_new = (nr_nonzeros >= 0) ? nr_nonzeros : 0;
     Allocate(nrows,ncols,0,0,1,nelems_new);
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                       Int_t nr_nonzeros)
+void TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                              Int_t nr_nonzeros)
 {
   // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb] with nr_nonzeros
   // non-zero entries if nr_nonzeros > 0 .
@@ -1456,8 +1449,7 @@ TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb
   Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(Int_t,Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Int_t new_nrows = row_upb-row_lwb+1;
@@ -1467,12 +1459,12 @@ TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb
     if (fNrows  == new_nrows && fNcols  == new_ncols &&
         fRowLwb == row_lwb   && fColLwb == col_lwb &&
         (fNelems == nr_nonzeros || nr_nonzeros < 0))
-       return *this;
+       return;
     else if (new_nrows == 0 || new_ncols == 0 || nr_nonzeros == 0) {
       fNrows = new_nrows; fNcols = new_ncols;
       fRowLwb = row_lwb; fColLwb = col_lwb;
       Clear();
-      return *this;
+      return;
     }
 
     const Int_t    *rowIndex_old = GetRowIndexArray();
@@ -1545,25 +1537,21 @@ TMatrixDBase &TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb
     const Int_t nelems_new = (nr_nonzeros >= 0) ? nr_nonzeros : 0;
     Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1,nelems_new);
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDSparse &TMatrixDSparse::Use(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                    Int_t nr_nonzeros,Int_t *pRowIndex,Int_t *pColIndex,Double_t *pData)
+void TMatrixDSparse::Use(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                         Int_t nr_nonzeros,Int_t *pRowIndex,Int_t *pColIndex,Double_t *pData)
 {
   if (row_upb < row_lwb)
   {
     Error("Use","row_upb=%d < row_lwb=%d",row_upb,row_lwb);
-    Invalidate();
-    return *this;
+    return;
   }
   if (col_upb < col_lwb)
   {
     Error("Use","col_upb=%d < col_lwb=%d",col_upb,col_lwb);
-    Invalidate();
-    return *this;
+    return;
   }
 
   Clear();
@@ -1580,13 +1568,11 @@ TMatrixDSparse &TMatrixDSparse::Use(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,In
   fElements  = pData;
   fRowIndex  = pRowIndex;
   fColIndex  = pColIndex;
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                     TMatrixDBase &target,Option_t *option) const
+TMatrixDSparse TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,
+                                      Int_t col_lwb,Int_t col_upb,Option_t *option) const
 {
   // Get submatrix [row_lwb..row_upb][col_lwb..col_upb]; The indexing range of the
   // returned matrix depends on the argument option:
@@ -1597,41 +1583,32 @@ TMatrixDBase &TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,I
   Assert(IsValid());
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("GetSub","row_lwb out-of-bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixDSparse();
   }
   if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
     Error("GetSub","col_lwb out-of-bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixDSparse();
   }
   if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
     Error("GetSub","row_upb out-of-bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixDSparse();
   }
   if (col_upb < fColLwb || col_upb > fColLwb+fNcols-1) {
     Error("GetSub","col_upb out-of-bounds");
-    target.Invalidate();
-    return target;
+    return TMatrixDSparse();
   }
   if (row_upb < row_lwb || col_upb < col_lwb) {
     Error("GetSub","row_upb < row_lwb || col_upb < col_lwb");
-    target.Invalidate();
-    return target;
+    return TMatrixDSparse();
   }
 
   TString opt(option);
   opt.ToUpper();
   const Int_t shift = (opt.Contains("S")) ? 1 : 0;
 
-  const Int_t row_lwb_sub = (shift) ? 0               : row_lwb;
-  const Int_t row_upb_sub = (shift) ? row_upb-row_lwb : row_upb;
-  const Int_t col_lwb_sub = (shift) ? 0               : col_lwb;
-  const Int_t col_upb_sub = (shift) ? col_upb-col_lwb : col_upb;
-
   Int_t nr_nonzeros = 0;
-  for (Int_t irow = 0; irow < fNrows; irow++) {
+  Int_t irow;
+  for (irow = 0; irow < fNrows; irow++) {
     if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
     const Int_t sIndex = fRowIndex[irow];
     const Int_t eIndex = fRowIndex[irow+1];
@@ -1642,55 +1619,44 @@ TMatrixDBase &TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,I
     }
   }
 
-  target.ResizeTo(row_lwb_sub,row_upb_sub,col_lwb_sub,col_upb_sub,nr_nonzeros);
+  const Int_t row_lwb_sub = (shift) ? 0               : row_lwb;
+  const Int_t row_upb_sub = (shift) ? row_upb-row_lwb : row_upb;
+  const Int_t col_lwb_sub = (shift) ? 0               : col_lwb;
+  const Int_t col_upb_sub = (shift) ? col_upb-col_lwb : col_upb;
+
+  TMatrixDSparse sub(row_lwb_sub,row_upb_sub,col_lwb_sub,col_upb_sub);
+  sub.SetSparseIndex(nr_nonzeros);
 
   const Double_t *ep = this->GetMatrixArray();
 
-  Int_t    *rowIndex_sub = target.GetRowIndexArray();
-  Int_t    *colIndex_sub = target.GetColIndexArray();
-  Double_t *ep_sub       = target.GetMatrixArray();
+  Int_t    *rowIndex_sub = sub.GetRowIndexArray();
+  Int_t    *colIndex_sub = sub.GetColIndexArray();
+  Double_t *ep_sub       = sub.GetMatrixArray();
 
-  if (target.GetRowIndexArray() && target.GetColIndexArray()) {
-    Int_t nelems_copy = 0;
-    rowIndex_sub[0] = 0;
-    const Int_t row_off = fRowLwb-row_lwb;
-    const Int_t col_off = fColLwb-col_lwb;
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
-      const Int_t sIndex = fRowIndex[irow];
-      const Int_t eIndex = fRowIndex[irow+1];
-      for (Int_t index = sIndex; index < eIndex; index++) {
-        const Int_t icol = fColIndex[index];
-        if (icol+fColLwb <= col_upb && icol+fColLwb >= col_lwb) {
-          rowIndex_sub[irow+row_off+1] = nelems_copy+1;
-          colIndex_sub[nelems_copy]    = icol+col_off;
-          ep_sub[nelems_copy]          = ep[index];
-          nelems_copy++;
-        }
-      }
-    }
-  } else {
-    const Int_t row_off = fRowLwb-row_lwb;
-    const Int_t col_off = fColLwb-col_lwb;
-    const Int_t ncols_sub = col_upb_sub-col_lwb_sub+1;
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
-      const Int_t sIndex = fRowIndex[irow];
-      const Int_t eIndex = fRowIndex[irow+1];
-      const Int_t off = (irow+row_off)*ncols_sub;
-      for (Int_t index = sIndex; index < eIndex; index++) {
-        const Int_t icol = fColIndex[index];
-        if (icol+fColLwb <= col_upb && icol+fColLwb >= col_lwb)
-          ep_sub[off+icol+col_off] = ep[index];
+  Int_t nelems_copy = 0;
+  rowIndex_sub[0] = 0;
+  const Int_t row_off = fRowLwb-row_lwb;
+  const Int_t col_off = fColLwb-col_lwb;
+  for (irow = 0; irow < fNrows; irow++) {
+    if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
+    const Int_t sIndex = fRowIndex[irow];
+    const Int_t eIndex = fRowIndex[irow+1];
+    for (Int_t index = sIndex; index < eIndex; index++) {
+      const Int_t icol = fColIndex[index];
+      if (icol+fColLwb <= col_upb && icol+fColLwb >= col_lwb) {
+        rowIndex_sub[irow+row_off+1] = nelems_copy+1;
+        colIndex_sub[nelems_copy]    = icol+col_off;
+        ep_sub[nelems_copy]          = ep[index];
+        nelems_copy++;
       }
     }
   }
 
-  return target;
+  return sub;
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
+void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
 {
   // Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1];
@@ -1700,20 +1666,17 @@ TMatrixDBase &TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDB
 
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb out-of-bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
     Error("SetSub","col_lwb out-of-bounds");
-    Invalidate();
-    return *this;
+    return;
   }
   const Int_t nRows_source = source.GetNrows();
   const Int_t nCols_source = source.GetNcols();
   if (row_lwb+nRows_source > fRowLwb+fNrows || col_lwb+nCols_source > fColLwb+fNcols) {
     Error("SetSub","source matrix too large");
-    Invalidate();
-    return *this;
+    return;
   }
 
   // Determine how many non-zero's are already available in
@@ -1740,7 +1703,7 @@ TMatrixDBase &TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDB
   const Int_t    *colIndex_old = GetColIndexArray();
   const Double_t *elements_old = GetMatrixArray();
 
-  const Int_t nelems_new = nelems_old+source.NonZeros()-nr_nonzeros;
+  const Int_t nelems_new = nelems_old+source.GetNoElements()-nr_nonzeros;
   fRowIndex = new Int_t[fNrowIndex];
   fColIndex = new Int_t[nelems_new];
   fElements = new Double_t[nelems_new];
@@ -1774,23 +1737,13 @@ TMatrixDBase &TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDB
         nr++;
       }
 
-      if (rowIndex_s && colIndex_s) {
-        const Int_t sIndex_s = rowIndex_s[irow-row_off];
-        const Int_t eIndex_s = rowIndex_s[irow-row_off+1];
-        for (index = sIndex_s; index < eIndex_s; index++) {
-          rowIndex_new[irow+1]++;
-          colIndex_new[nr] = colIndex_s[index]+col_off;
-          elements_new[nr] = elements_s[index];
-          nr++;
-        }
-      } else {
-        const Int_t off = (irow-row_off)*nCols_source;
-        for (Int_t icol = 0; icol < nCols_source; icol++) {
-          rowIndex_new[irow+1]++;
-          colIndex_new[nr] = icol+col_off;
-          elements_new[nr] = elements_s[off+icol];
-          nr++;
-        }
+      const Int_t sIndex_s = rowIndex_s[irow-row_off];
+      const Int_t eIndex_s = rowIndex_s[irow-row_off+1];
+      for (index = sIndex_s; index < eIndex_s; index++) {
+        rowIndex_new[irow+1]++;
+        colIndex_new[nr] = colIndex_s[index]+col_off;
+        elements_new[nr] = elements_s[index];
+        nr++;
       }
 
       const Int_t icol_right = col_off+nCols_source-1;
@@ -1822,8 +1775,6 @@ TMatrixDBase &TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDB
   if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
   if (colIndex_old) delete [] (Int_t*)    colIndex_old;
   if (elements_old) delete [] (Double_t*) elements_old;
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -2151,7 +2102,7 @@ TMatrixDSparse &TMatrixDSparse::operator*=(Double_t val)
 }
 
 //______________________________________________________________________________
-TMatrixDBase &TMatrixDSparse::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
+void TMatrixDSparse::Randomize(Double_t alpha,Double_t beta,Double_t &seed)
 {
   // randomize matrix element values
 
@@ -2192,12 +2143,10 @@ TMatrixDBase &TMatrixDSparse::Randomize(Double_t alpha,Double_t beta,Double_t &s
     pRowIndex[icurrent+1] = length;
 
   Assert(chosen == length);
-
-  return *this;
 }
 
 //______________________________________________________________________________
-TMatrixDSparse &TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_t &seed)
+void TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_t &seed)
 {
   // randomize matrix element values but keep matrix symmetric positive definite
 
@@ -2208,8 +2157,7 @@ TMatrixDSparse &TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_
 
   if (fNrows != fNcols || fRowLwb != fColLwb) {
     Error("RandomizePD(Double_t &","matrix should be square");
-    Invalidate();
-    return *this;
+    return;
   }
 
   const Int_t n = fNcols;
@@ -2320,8 +2268,6 @@ TMatrixDSparse &TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_
       }
     }
   }
-
-  return *this;
 }
 
 //______________________________________________________________________________
@@ -2491,12 +2437,12 @@ Bool_t AreCompatible(const TMatrixDSparse &m1,const TMatrixDSparse &m2,Int_t ver
 {
   if (!m1.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 1 not valid");
+      ::Error("AreCompatible", "matrix 1 not initialized");
     return kFALSE; 
   }
   if (!m2.IsValid()) {
     if (verbose)
-      ::Error("AreCompatible", "matrix 2 not valid");
+      ::Error("AreCompatible", "matrix 2 not initialized");
     return kFALSE; 
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.134 2004/07/08 17:18:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.131 2004/05/11 07:04:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -339,7 +339,7 @@ void TPad::AutoExec()
 {
 // Execute the list of Execs when a pad event occurs.
 
-   if (GetCrosshair()) DrawCrosshair();
+   if (fCrosshair) DrawCrosshair();
 
    if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
@@ -1512,33 +1512,22 @@ void TPad::DrawCrosshair()
    // Root > hpxpy.Draw();
    // Root > c1.SetCrosshair();
    // When moving the mouse in the canvas, a crosshair is drawn
-   //
-   // if the canvas fCrosshair = 1 , the crosshair spans the full canvas 
-   // if the canvas fCrosshair > 1 , the crosshair spans only the pad
-    
+
    if (gPad->GetEvent() == kMouseEnter) return;
 
    TPad *cpad = (TPad*)gPad;
-   TCanvas *canvas = cpad->GetCanvas();
-   canvas->FeedbackMode(kTRUE);
+   cpad->GetCanvas()->FeedbackMode(kTRUE);
 
    //erase old position and draw a line at current position
-   Int_t pxmin,pxmax,pymin,pymax,pxold,pyold,px,py;
-   pxold = fCrosshairPos%10000;
-   pyold = fCrosshairPos/10000;
-   px    = cpad->GetEventX();
-   py    = cpad->GetEventY()+1;
-   if (canvas->GetCrosshair() > 1) {  //crosshair only in the current pad
-      pxmin = cpad->XtoAbsPixel(fX1);
-      pxmax = cpad->XtoAbsPixel(fX2);
-      pymin = cpad->YtoAbsPixel(fY1);
-      pymax = cpad->YtoAbsPixel(fY2);
-   } else { //default; crosshair spans the full canvas
-      pxmin = 0;
-      pxmax = canvas->GetWw();
-      pymin = 0;
-      pymax = cpad->GetWh();
-   }
+   int pxold = fCrosshairPos%10000;
+   int pyold = fCrosshairPos/10000;
+   int px    = cpad->GetEventX();
+   int py    = cpad->GetEventY()+1;
+   int pxmin = cpad->XtoAbsPixel(fX1);
+   int pxmax = cpad->XtoAbsPixel(fX2);
+   int pymin = cpad->YtoAbsPixel(fY1);
+   int pymax = cpad->YtoAbsPixel(fY2);
+//printf("event=%d, pxold=%d, pyold=%d, px=%d, py=%d, pxmin=%d, pymin=%d, pxmax=%d, pymax=%d\n",gPad->GetEvent(),pxold,pyold,px,py,pxmin,pymin,pxmax,pymax);
    if(pxold) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
    if(pyold) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
    if (cpad->GetEvent() == kButton1Down ||
@@ -1696,11 +1685,15 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       case kMarker:
       case kText:
+#ifndef WIN32
+         CreateNewText(event,px,py,newcode);
+#else
         {
             if (event == kButton1Down) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewText(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py, newcode));
         }
+#endif
          break;
       case kLine:
          CreateNewLine(event,px,py,kLine);
@@ -4556,36 +4549,22 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 }
 
 //______________________________________________________________________________
-Bool_t TPad::HasCrosshair() const
-{
-   // return kTRUE if the crosshair has been activated (via SetCrosshair)
-   
-   return (Bool_t)GetCrosshair();
-}
-
-//______________________________________________________________________________
-Int_t TPad::GetCrosshair() const
-{
-   // return the crosshair type (from the mother canvas)
-   // crosshair type = o means no crosshair
-   
-   if (this == (TPad*)fCanvas) return fCrosshair;
-   return fCanvas->GetCrosshair();
-}
-
-//______________________________________________________________________________
 void TPad::SetCrosshair(Int_t crhair)
 {
    // set crosshair active/inactive
    // if crhair != 0, a crosshair will be drawn in the pad and its subpads
-   //
-   // if the canvas crhair = 1 , the crosshair spans the full canvas 
-   // if the canvas crhair > 1 , the crosshair spans only the pad
 
    fCrosshair = crhair;
    fCrosshairPos = 0;
 
-   if (this != (TPad*)fCanvas) fCanvas->SetCrosshair(crhair);
+   TObject *obj;
+   TIter    next(GetListOfPrimitives());
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPad::Class())) {
+         TPad *pad = (TPad*)obj;
+         pad->SetCrosshair(crhair);
+      }
+   }
 }
 
 //______________________________________________________________________________

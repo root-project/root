@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -61,12 +61,12 @@ TMehrotraSolver::TMehrotraSolver()
 }
 
 //______________________________________________________________________________
-TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
+TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob)
 {
   fFactory = of;
   fStep = fFactory->MakeVariables(prob);
   
-  fPrintlevel = verbose;
+  fPrintlevel = 0;   // has no meaning right now 
   fTsig       = 3.0; // the usual value for the centering exponent (tau)
 }
 

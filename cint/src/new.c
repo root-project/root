@@ -440,9 +440,6 @@ char *expression;
 #endif
       result.type=toupper(result.type);
       result.ref=0;
-#ifndef G__OLDIMPLEMENTATION2068
-      result.isconst = G__VARIABLE;
-#endif
       G__cpp_aryconstruct=0;
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;

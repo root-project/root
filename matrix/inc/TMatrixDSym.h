@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.13 2004/05/18 14:21:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.12 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -69,33 +69,29 @@ public:
   virtual       Int_t    *GetRowIndexArray()       { return 0; }
   virtual const Int_t    *GetColIndexArray() const { return 0; }
   virtual       Int_t    *GetColIndexArray()       { return 0; }
+  virtual       void      SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void      SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
-  virtual       TMatrixDBase &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
-  virtual       TMatrixDBase &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
+  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
+                                                  else fElements = 0;  fNelems = 0; }
 
-  virtual void   Clear      (Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
-                                                          else fElements = 0; fNelems = 0; }
+  void         Use           (Int_t nrows,Double_t *data);
+  void         Use           (Int_t row_lwb,Int_t row_upb,Double_t *data);
+  void         Use           (TMatrixDSym &a);
+  TMatrixDSym  GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
+  void         SetSub        (Int_t row_lwb,const TMatrixDBase &source);
+  virtual void SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+
+  virtual void SetMatrixArray(const Double_t *data, Option_t *option="");
+
   virtual Bool_t IsSymmetric() const { return kTRUE; }
 
-
-          TMatrixDSym  &Use           (Int_t nrows,Double_t *data);
-          TMatrixDSym  &Use           (Int_t row_lwb,Int_t row_upb,Double_t *data);
-          TMatrixDSym  &Use           (TMatrixDSym &a);
-
-          TMatrixDSym  &GetSub        (Int_t row_lwb,Int_t row_upb,TMatrixDSym &target,Option_t *option="S") const;
-  virtual TMatrixDBase &GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                       TMatrixDBase &target,Option_t *option="S") const;
-          TMatrixDSym   GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-          TMatrixDSym  &SetSub        (Int_t row_lwb,const TMatrixDBase &source);
-  virtual TMatrixDBase &SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
-
-  virtual TMatrixDBase &SetMatrixArray(const Double_t *data, Option_t *option="");
-
-  virtual TMatrixDBase &Shift         (Int_t row_shift,Int_t col_shift);
-  virtual TMatrixDBase &ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-  virtual TMatrixDBase &ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
-  inline  TMatrixDBase &ResizeTo      (const TMatrixDSym &m) {
-                                        return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); }
+  virtual void Shift         (Int_t row_shift,Int_t col_shift);
+  virtual void ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual void ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  void ResizeTo      (const TMatrixDSym &m) {
+    ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+  }
 
   virtual Double_t Determinant   () const;
   virtual void     Determinant   (Double_t &d1,Double_t &d2) const;
@@ -125,29 +121,20 @@ public:
   TMatrixDBase &Apply(const TElementActionD    &action);
   TMatrixDBase &Apply(const TElementPosActionD &action);
 
-  virtual TMatrixDBase &Randomize  (Double_t alpha,Double_t beta,Double_t &seed);
-  virtual TMatrixDSym  &RandomizePD(Double_t alpha,Double_t beta,Double_t &seed);
+  virtual void Randomize  (Double_t alpha,Double_t beta,Double_t &seed);
+  virtual void RandomizePD(Double_t alpha,Double_t beta,Double_t &seed);
 
   const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
   ClassDef(TMatrixDSym,1) // Symmetric Matrix class (double precision)
 };
 
-inline const Double_t    *TMatrixDSym::GetMatrixArray() const { return fElements; }
-inline       Double_t    *TMatrixDSym::GetMatrixArray()       { return fElements; }
-inline       TMatrixDSym &TMatrixDSym::Use           (Int_t nrows,Double_t *data) { return Use(0,nrows-1,data); }
-inline       TMatrixDSym &TMatrixDSym::Use           (TMatrixDSym &a)
-                                                              { return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
-inline       TMatrixDSym  TMatrixDSym::GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                                      Option_t *option) const
-                                                              {
-                                                                TMatrixDSym tmp;
-                                                                this->GetSub(row_lwb,row_upb,col_lwb,col_upb,tmp,option);
-                                                                return tmp;
-                                                              }
+inline const Double_t *TMatrixDSym::GetMatrixArray() const { return fElements; }
+inline       Double_t *TMatrixDSym::GetMatrixArray()       { return fElements; }
+inline       void      TMatrixDSym::Use           (Int_t nrows,Double_t *data) { Use(0,nrows-1,data); }
+inline       void      TMatrixDSym::Use           (TMatrixDSym &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
 
-inline Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const
-{
+inline Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
@@ -156,8 +143,7 @@ inline Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const
   return (fElements[arown*fNcols+acoln]);
 }
 
-inline Double_t &TMatrixDSym::operator()(Int_t rown,Int_t coln)
-{
+inline Double_t &TMatrixDSym::operator()(Int_t rown,Int_t coln) {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;

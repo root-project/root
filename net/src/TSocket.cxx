@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.21 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.19 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -1014,14 +1014,14 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureSend(const char *in, Int_t enc, Int_t ktyp)
+Int_t TSocket::SecureSend(const char *in, Int_t keyType)
 {
    // If authenticated and related SecContext is active
    // secure-sends "in" to host using RSA "keyType" stored in TAuthenticate.
    // Returns # bytes send or -1 in case of error.
 
-   if (IsAuthenticated() && fSecContext->IsActive() )
-      return TAuthenticate::SecureSend(this, enc, ktyp, in);
+   if (IsAuthenticated() && fSecContext->IsActive())
+      return TAuthenticate::SecureSend(this, keyType, in);
    return -1;
 }
 
@@ -1043,7 +1043,7 @@ Int_t TSocket::SendHostAuth()
    while ((ha = (THostAuth *)next())) {
       TString Buf;
       ha->AsString(Buf);
-      if((ns = Send(Buf, kPROOF_HOSTAUTH)) < 1) {
+      if((ns = Send(Buf, kPROOF_SENDHOSTAUTH)) < 1) {
          retval = -1;
          break;
       }
@@ -1052,7 +1052,7 @@ Int_t TSocket::SendHostAuth()
    }
 
    // End of transmission ...
-   if ((ns = Send("END", kPROOF_HOSTAUTH)) < 1)
+   if ((ns = Send("END", kPROOF_SENDHOSTAUTH)) < 1)
       retval = -2;
    if (gDebug > 2)
       Info("SendHostAuth","sent %d bytes for closing",ns);
@@ -1081,7 +1081,7 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
    Int_t kind;
    char buf[kMAXSECBUF];
    Int_t nr = Recv(buf, kMAXSECBUF, kind);
-   if (nr < 0 || kind != kPROOF_HOSTAUTH) {
+   if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
       Error("RecvHostAuth", "received: kind: %d (%d bytes)", kind, nr);
       return -1;
    }
@@ -1157,7 +1157,7 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
 
       // Get the next one
       nr = Recv(buf, kMAXSECBUF, kind);
-      if (nr < 0 || kind != kPROOF_HOSTAUTH) {
+      if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
          Info("RecvHostAuth","Error: received: kind: %d (%d bytes)", kind, nr);
          return -1;
       }
@@ -1169,12 +1169,12 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
 }
 
 //______________________________________________________________________________
-Int_t TSocket::SecureRecv(TString &str, Int_t dec, Int_t key)
+Int_t TSocket::SecureRecv(TString &str, Int_t key)
 {
    // Receive encoded string and decode it with 'key' type
 
    char *buf = 0;
-   Int_t rc = TAuthenticate::SecureRecv(this, dec, key, &buf);
+   Int_t rc = TAuthenticate::SecureRecv(this, key, &buf);
    str = TString(buf);
    if (buf) delete[] buf;
 

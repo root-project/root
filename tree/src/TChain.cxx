@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.92 2004/06/15 08:19:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.89 2004/04/30 00:27:46 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -585,28 +585,10 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 // return the total number of bytes read
 // o bytes read indicates a failure.
 
-   if (LoadTree(entry) < 0) return 0;
-   if (fTree==0) return 0;
+   if (LoadTree(entry) < 0 || fTree==0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
 
-//______________________________________________________________________________
-Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
-{
-// Return entry  corresponding to major and minor number
-// For example:
-//     Int_t run   = 1234;
-//     Int_t event = 345;
-//     Int_t serial= chain.GetEntryNumberWithIndex(run,event);
-//    now the variable serial is in the range [0,nentries] and one can do
-//    chain.GetEntry(serial);
-//
-// WARNING: This function will not work if teh chain has friend chains.
-
-   Int_t serial = GetEntryNumberWithIndex(major, minor);
-   if (serial < 0) return -1;
-   return GetEntry(serial);
-}
 
 //______________________________________________________________________________
 TFile *TChain::GetFile() const
@@ -1182,11 +1164,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 //
 //      bname is the name of a branch.
 //      add is the address of the branch.
-//
-// IMPORTANT REMARK:
-// In case TChain::SetBranchStatus is called, it must be called
-// BEFORE calling this function.
-   
+
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1227,7 +1205,7 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 //      bname is the name of a branch. if bname="*", apply to all branches.
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
-//  See IMPORTANT REMARKS in TTree::SetBranchStatus and TChain::SetBranchAddress
+//  See IMPORTANT REMARKS in TTree::SetBranchStatus
 //
 //  If found is not 0, the number of branch(es) found matching the regular
 //  expression is returned in *found AND the error message 'unknown branch'

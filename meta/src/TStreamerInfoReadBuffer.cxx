@@ -83,7 +83,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
 
 
    //============
-   b.IncrementLevel(this);
+  b.IncrementLevel(this);
    
    char **arr = (arrayMode&1)? (char**)ptr:(char**)&ptr;
    Int_t last;

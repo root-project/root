@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.4 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBenchmark.h,v 1.3 2000/11/21 16:04:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    Int_t              GetBench(const char *name) const;
    Float_t            GetCpuTime(const char *name);
    Float_t            GetRealTime(const char *name);
-   virtual void       Print(Option_t *name="") const;
+   virtual void       Print(Option_t *name) const;
    virtual void       Reset();
    virtual void       Show(const char *name);
    virtual void       Start(const char *name);

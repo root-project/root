@@ -49,7 +49,6 @@ options="                 \
    enable_shared          \
    enable_soversion       \
    enable_srp             \
-   enable_ssl             \
    enable_table           \
    enable_thread          \
    enable_venus           \
@@ -70,8 +69,6 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_python=no
-enable_ruby=no
-enable_qt=no
 enable_thread=           # must be set explicitely via --enable-thread
 
 #
@@ -98,7 +95,6 @@ ASIMAGE          \
 LDAP             \
 GLOBUS_LOCATION  \
 SRP              \
-SSL              \
 AFS              \
 TABLE            \
 XMLDIR           \
@@ -456,9 +452,9 @@ guess_architecture () {
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
         sunos:sun*:4*)         arch=solaris         ;;
-        cygwin_*:*86:*)        arch=win32           ;;
-        cygwin_*:pentium:*)    arch=win32           ;;
-        cygwin_*:ia64)         arch=win32           ;;
+        cygwin_*:*86:*)        arch=win32gdk        ;;
+        cygwin_*:pentium:*)    arch=win32gdk        ;;
+        cygwin_*:ia64)         arch=win32gdk        ;;
         *)
             echo "Attempts at guessing your architecture failed."
             echo "Please specify the architecture as the first argument."
@@ -579,7 +575,6 @@ enable/disable options, prefix with either --enable- or --disable-
    shared          Use shared 3rd party libraries if possible
    soversion       Set version number in sonames (recommended)
    srp             SRP support, requires SRP source tree
-   ssl             SSL encryption support, requires openssl
    table           Build libTable contrib library
    thread          Thread support (currently only POSIX threads)
    venus           Venus EG support, requires libVenus
@@ -618,8 +613,6 @@ with options, prefix with --with-, enables corresponding support
    srp             Secure Remote Passwd support, location of SRP distribution
    srp-incdir      SRP support, location header of t_server.h
    srp-libdir      SRP support, location header of libsrp.a
-   ssl-incdir      OpenSSL support, location of openssl headers
-   ssl-libdir      OpenSSL support, location of libssl
    sys-iconpath    Extra icon path
    thread-libdir   Thread support, path to libpthread
    venus-libdir    VENUS support, location of libVenus
@@ -664,9 +657,6 @@ fi
 if test "$arch" = "linuxegcs" ; then
     arch="linux"
 fi
-if test "$arch" = "win32gdk" ; then
-    arch="win32"
-fi
 
 if `awk '{ print $1 }' $ARCHS | grep "^$arch$" > /dev/null  2>&1` ; then
    echo "Configuring for $arch"
@@ -675,16 +665,16 @@ else
    exit 1
 fi
 
-platform=`grep "^PLATFORM *=" config/Makefile.$arch | awk '{ print $3 }'`
-
+if test "x$arch" = "xwin32" || test "x$arch" = "xwin32gdk" ; then
+   platform="win32"
+else
+   platform=$arch
+fi
 if test "x$arch" = "xsgicc" ; then
    checklib32="yes"
 fi
 if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
    checklib64="yes"
-fi
-if test "x$platform" = "xmacosx" ; then
-   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
 fi
 
 ######################################################################
@@ -750,8 +740,6 @@ if test $# -gt 0 ; then
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
-      --with-ssl-incdir=*)     sslincdir=$optarg     ; enable_ssl="yes"     ;;
-      --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
@@ -869,28 +857,18 @@ fi
 if test ! "$platform" = "win32"; then
     check_library "libX11" "yes" "$x11libdir" \
 	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
-	/usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
 	/usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
 
     if test "x$found_lib" = "x" ; then
-	echo "`basename $0`: libX11 (package x11-devel) MUST be installed"
-        exit 1
-    fi
-
-    check_header "X11/Xlib.h" "" \
-	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
-	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-	/usr/X11/include /usr/include/X11R5
-
-    if test "x$found_dir" = "x" ; then
-	echo "`basename $0`: X11 headers (package x11-devel) MUST be installed"
+	echo "`basename $0`: libX11 MUST be installed"
         exit 1
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
 	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
-	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+	/usr/local/lib/X11 /usr/X11R6/lib /use/local/X11R6/lib \
 	/usr/X11/lib
     xpmlib=$found_lib
     xpmlibdir=$found_dir
@@ -920,28 +898,21 @@ fi
 # Check for posix thread library
 #
 case $platform in
-macosx)
+linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc|macosx*)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
     ;;
-linux|fbsd)
-    if test "x$enable_thread" = "x"; then
-        enable_thread="yes"
-        threadlib="-pthread"
-        threadlibdir=
+freebsd*)
+    if test "x$enable_thread" = "xyes"; then
+       threadlib="-pthread"
+       threadlibdir=
     fi
-    ;;
-esac
-case $arch in
-win32gcc)
-    enable_thread="yes"
-    threadlib=
     ;;
 esac
 if test "x$enable_thread" = "xyes" && \
    test ! "$platform" = "win32"    && \
-   test "x$threadlib" = "x" ; then
+   test ! "$platform" = "freebsd4" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
@@ -1083,8 +1054,8 @@ if test ! "x$enable_mysql" = "xno"; then
     # on linux, but maybe also other systems, explicitely add libz
     # (formally only needed when linking against the static libmysqlclient.a)
     if test ! "x$mysqllib" = "x" ; then
-	case $platform in
-	    linux) mysqllib="$mysqllib -lz" ;;
+	case $arch in
+	    linux*|win32gcc) mysqllib="$mysqllib -lz" ;;
 	esac
     fi
 
@@ -1227,8 +1198,8 @@ if test ! "x$enable_rfio" = "xno" ; then
         enable_rfio="no"
     else
         case $platform in
-           linux)      shiftlib="$shiftlib -lnsl" ;;
-           solaris)    shiftlib="$shiftlib -lposix4" ;;
+           linux*)     shiftlib="$shiftlib -lnsl" ;;
+           solarisCC5) shiftlib="$shiftlib -lposix4" ;;
            win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32"
                        shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
         esac
@@ -1438,6 +1409,8 @@ if test "x$platform" = "xwin32"; then
     enable_asimage="no"
 fi
 if test ! "x$enable_asimage" = "xno" ; then
+    #Figure out where fink on Mac OS X is installed (if any)
+    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
        /usr/local/include /usr/include /opt/include $finkdir/include
     asjpegincdir=$found_dir
@@ -1594,9 +1567,6 @@ if test ! "x$enable_ruby" = "xno" ; then
 
     if test "x$rubyincdir" = "x" || test "x$rubylib" = "x"; then
         enable_ruby="no"
-    else
-        # Ruby support requires the explicitlink option
-        enable_explicitlink="yes"
     fi
 fi
 
@@ -1644,10 +1614,10 @@ if test ! "x$enable_xml" = "xno" ; then
         enable_xml="no"
     else
         case $platform in
-            linux)     xmllib="$xmllib -lpthread"            ;;
-            solaris)   xmllib="$xmllib -liconv"              ;;
-            win32)     xmlincdir="$xmlincdir -I$iconvincdir"
-                       xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
+            linux*|win32gcc) xmllib="$xmllib -lpthread"            ;;
+            solaris*)        xmllib="$xmllib -liconv"              ;;
+            win32)           xmlincdir="$xmlincdir -I$iconvincdir"
+                             xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
         esac
     fi
 fi
@@ -1984,89 +1954,9 @@ fi
 
 ######################################################################
 #
-### echo %%% SSL Support - Third party libraries
-#
-# (See www.openssl.org)
-#
-# For public and symmetric key encryption. If missing, the local rsa
-# simple implementation is used to protect password exchange.
-# If configured with support for Globus/GSI authentication,
-# use the SSL libraries coming with the globus tool kit to avoid
-# conflicts.
-#
-if test "x$enable_ssl" = "xyes" ; then
-    libssl="libssl libcrypto"
-    if test "x$enable_globus" = "xyes" ; then
-        libssl="libssl_$flavour libcrypto_$flavour"
-        tmpglbslibdir="$globusdir/lib"
-    else
-        tmpglbslibdir=$ssllibdir
-    fi
-
-    for i in $libssl ; do
-        check_library "$i" "$enable_shared" "$tmpglbslibdir" \
-            $SSL $SSL/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib
-        if test "x$found_lib" = "x" ; then
-            ssllib=""
-            ssllibdir=""
-            enable_ssl="no"
-            break
-        fi
-        if test "x$ssllib" = "x" ; then
-            ssllib="$found_lib"
-            ssllibdir="$found_dir"
-        else
-            ssllib="$ssllib $found_lib"
-            ssllibdir="$ssllibdir $found_dir"
-        fi
-    done
-fi
-
-if test "x$enable_ssl" = "xyes" ; then
-    incssl="bio.h blowfish.h err.h pem.h rand.h rsa.h"
-    if test "x$enable_globus" = "xyes" ; then
-        tmpglbsincdir="$globusdir/include/$flavour"
-    else
-        tmpglbsincdir=$sslincdir
-    fi
-
-    for i in $incssl ; do
-        check_header "openssl/$i" "$tmpglbsincdir" $SSL $SSL/include \
-           /usr/include /usr/local/include /opt/include $finkdir/include
-        if test "x$found_hdr" = "x" ; then
-            ssl_incdir=""
-            enable_ssl="no"
-            break
-        fi
-        if test "x$ssl_incdir" = "x" ; then
-            ssl_incdir=$found_dir
-        else
-            for i in $ssl_incdir ; do
-                if test "x$i" != "x$found_dir" ; then
-                    if test "x$i" != "x-I$found_dir" ; then
-                        ssl_incdir="$found_dir -I$ssl_incdir"
-                    fi
-                fi
-            done
-        fi
-    done
-fi
-
-if test "x$enable_ssl" = "xno" ; then
-    ssllib=""
-    ssllibdir=""
-    sslincdir=""
-    sslextracflags=""
-else
-    sslincdir=$ssl_incdir
-    sslextracflags="-DR__SSL"
-fi
-
-######################################################################
-#
 ### echo %%% SRP Support - Third party libraries
 #
-# (See http://srp.stanford.edu/srp)
+# (see  http://srp.stanford.edu/srp)
 # Note: You can not make do with the libsrp package. You need the full
 # source for this add-on.
 #
@@ -2117,8 +2007,8 @@ if test ! "x$enable_srp" = "xno" ; then
         cryptolib=$found_lib
         cryptolibdir=$found_dir
         if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
-           case $platform in
-               linux) cryptolib="$cryptolib -ldl"
+           case $arch in
+               linux*) cryptolib="$cryptolib -ldl"
            esac
         fi
     fi
@@ -2280,8 +2170,8 @@ if test ! "x$enable_krb5" = "xno" ; then
             cryptolib=$found_lib
             cryptolibdir=$found_dir
             if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
-               case $platform in
-                   linux) cryptolib="$cryptolib -ldl"
+               case $arch in
+                   linux*) cryptolib="$cryptolib -ldl"
                esac
             fi
 	    if test "x$cryptolib" = "x" ; then
@@ -2356,8 +2246,8 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
 	comerrlibdir=$found_dir
     fi
 
-    case $platform in
-	linux|solaris) # Resolver lives in separate library
+    case $arch in
+	linux*|solarisCC5) # Resolver lives in separate library
 	    resolvlib="-lresolv"
 	    ;;
     esac
@@ -2432,8 +2322,8 @@ fi
 ### echo %%% check for setresuid and setresgid
 #
 setresuid="undef"
-case $platform in
-    linux)
+case $arch in
+    linux*)
         message "Checking whether setresuid declared in /usr/include/unistd.h"
         if `grep setresuid /usr/include/unistd.h > /dev/null 2>&1` ; then
             setresuid="define"
@@ -2447,7 +2337,7 @@ esac
 #
 ### echo %%% Explicitlink - explicitly link with all dependent libraries
 #
-case $arch in
+case $platform in
 freebsd*|aix*|win32*)
     enable_explicitlink="yes"
     ;;
@@ -2541,7 +2431,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$elispdir" = "x";     then elispdir=$prefix/share/emacs/site-lisp; fi
 
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$arch" = "solarisCC5"; then
+        if test "$platform" = "solarisCC5"; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
@@ -2586,7 +2476,7 @@ else
 
     # when using rpath in this case build product is not relocatable
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$arch" = "solarisCC5"; then
+        if test "$platform" = "solarisCC5"; then
             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
         else
@@ -2714,10 +2604,6 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@srputillib@|$srputillib|"            \
     -e "s|@srputillibdir@|$srputillibdir|"      \
     -e "s|@srpextracflags@|$srpextracflags|"    \
-    -e "s|@sslincdir@|$sslincdir|"              \
-    -e "s|@ssllib@|$ssllib|"                    \
-    -e "s|@ssllibdir@|$ssllibdir|"              \
-    -e "s|@sslextracflags@|$sslextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \
@@ -2791,7 +2677,6 @@ for f in $options ; do
     fi
 done
 sed -e "s|@architecture@|$arch|"           \
-    -e "s|@platform@|$platform|"           \
     -e "s|@prefix@|$prefix2|"              \
     -e "s|@bindir@|$bindir2|"              \
     -e "s|@libdir@|$libdir2|"              \
@@ -2928,8 +2813,7 @@ fi
 
 echo "To build ROOT type:"
 echo ""
-if test "x$platform" = "xwin32" || test "x$platform" = "xlinux" ||
-   test "x$platform" = "xmacosx" ; then
+if test "x$platform" = "xwin32" || test "x$platform" = "xwin32gcc" ; then
     echo "   make"
     if test ! "x$haveconfig" = "x" ; then
         echo "   make install"

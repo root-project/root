@@ -56,11 +56,8 @@ void G__MethodInfo::Init(long handlein,long indexin
   if(handlein) {
     handle = handlein;
     index = indexin;
-    if(belongingclassin && belongingclassin->IsValid()) 
-      belongingclass = belongingclassin;
-    else {
-      belongingclass=(G__ClassInfo*)NULL;
-    }
+    if(belongingclassin->IsValid()) belongingclass = belongingclassin;
+    else                belongingclass=(G__ClassInfo*)NULL;
 
     /* Set return type */
     struct G__ifunc_table *ifunc;

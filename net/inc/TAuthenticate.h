@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.23 2004/05/30 16:15:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.22 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -39,10 +39,6 @@
 #endif
 #ifndef ROOT_AuthConst
 #include "AuthConst.h"
-#endif
-#ifdef R__SSL
-// SSL specific headers for blowfish encryption
-#include <openssl/blowfish.h>
 #endif
 
 class TAuthenticate;
@@ -113,16 +109,12 @@ private:
    static Bool_t         fgPromptUser;   // kTRUE if user prompt required
    static TList         *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
    static Bool_t         fgPwHash;      // kTRUE if fgPasswd is a passwd hash
-   static Bool_t         fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
+   static Bool_t         fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc 
    static TString        fgRootAuthrc;    // Path to last rootauthrc-like file read
-   static Int_t          fgRSAKey;      // Default type of RSA key to be tried
    static Int_t          fgRSAInit;
    static rsa_KEY        fgRSAPriKey;
    static rsa_KEY        fgRSAPubKey;
-   static rsa_KEY_export fgRSAPubExport[2];
-#ifdef R__SSL
-   static BF_KEY         fgBFKey;       // Blowfish symmetric key
-#endif
+   static rsa_KEY_export fgRSAPubExport;
    static SecureAuth_t   fgSecAuthHook;
    static Bool_t         fgSRPPwd;      // kTRUE if fgPasswd is a SRP passwd
    static TString        fgUser;
@@ -149,17 +141,14 @@ public:
    THostAuth         *GetHostAuth() const { return fHostAuth; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
-   Int_t              GetRSAKeyType() const { return fRSAKey; }
    TSocket           *GetSocket() const { return fSocket; }
    const char        *GetUser() const { return fUser; }
-   void               SetRSAKeyType(Int_t key) { fRSAKey = key; }
    void               SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
    static void        CleanupSecContextAll(Option_t *opt = "k");
-   static Int_t       DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n,
-                                      rsa_NUMBER &d, void **rsassl = 0);
+   static void        DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n, rsa_NUMBER &d);
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);
    static Int_t       GetAuthMethodIdx(const char *meth);
@@ -178,21 +167,18 @@ public:
    static Bool_t      GetPromptUser();
    static TList      *GetProofAuthInfo();
    static Int_t       GetRSAInit();
-   static const char *GetRSAPubExport(Int_t key = 0);
+   static const char *GetRSAPubExport();
    static THostAuth  *HasHostAuth(const char *host, const char *user,
                                   Option_t *opt = "R");
-   static void        InitRandom();
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static char       *PromptUser(const char *remote);
    static void        ReadProofConf(const char *proofconf);
    static Int_t       ReadRootAuthrc(const char *proofconf = 0);
    static void        RemoveHostAuth(THostAuth *ha, Option_t *opt = "");
-   static Int_t       SecureRecv(TSocket *Socket, Int_t dec,
-                                 Int_t KeyType, char **Out);
-   static Int_t       SecureSend(TSocket *Socket, Int_t enc,
-                                 Int_t KeyType, const char *In);
-   static Int_t       SendRSAPublicKey(TSocket *Socket, Int_t key = 0);
+   static Int_t       SecureRecv(TSocket *Socket, Int_t KeyType, char **Out);
+   static Int_t       SecureSend(TSocket *Socket, Int_t KeyType, const char *In);
+   static Int_t       SendRSAPublicKey(TSocket *Socket);
    static void        SetAuthReUse(Bool_t authreuse);
    static void        SetDefaultUser(const char *defaultuser);
    static void        SetGlobalExpDate(TDatime expdate);
@@ -203,9 +189,8 @@ public:
    static void        SetGlobusAuthHook(GlobusAuth_t func);
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetPromptUser(Bool_t promptuser);
-   static void        SetDefaultRSAKeyType(Int_t key);
    static void        SetRSAInit();
-   static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
+   static void        SetRSAPublic(const char *rsapubexport);
    static void        SetSecureAuthHook(SecureAuth_t func);
    static void        Show(Option_t *opt="S");
 

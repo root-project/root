@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.12 2004/06/11 13:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.10 2004/03/04 11:29:43 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -114,21 +114,9 @@ void TGWindow::SetWindowName(const char *name)
 //______________________________________________________________________________
 const TGWindow *TGWindow::GetMainFrame() const
 {
-   // Returns top level main frame.
+   // Returns main frame.
 
    return (fParent == fClient->GetDefaultRoot()) ? this : fParent->GetMainFrame();
-}
-
-//______________________________________________________________________________
-void TGWindow::ReparentWindow(const TGWindow *p, Int_t x, Int_t y)
-{
-   // Reparent window, make p the new parent and position the window at
-   // position (x,y) in new parent.
-
-   if (p == fParent) return;
-
-   if (p) gVirtualX->ReparentWindow(fId, p->GetId(), x, y);
-   fParent = p;
 }
 
 //______________________________________________________________________________

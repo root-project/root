@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.h,v 1.2 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -37,7 +37,7 @@ class TRootContextMenu : public TGPopupMenu, public TContextMenuImp {
 
 private:
    TRootDialog *fDialog;    // dialog prompting for command line arguments
-   TList       *fTrash;     // list of objects to be deleted before refilling menu
+   TList       *fCleanup;   // list of objects to be deleted before refilling menu
 
    void CreateMenu(TObject *object);
 

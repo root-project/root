@@ -633,12 +633,12 @@ gdk_window_internal_destroy(GdkWindow * window,
 /* Like internal_destroy, but also destroys the reference created by
    gdk_window_new. */
 
-void gdk_window_destroy(GdkWindow * window, gboolean xdestroy)
+void gdk_window_destroy(GdkWindow * window)
 {
    GDK_NOTE(MISC,
             g_print("gdk_window_destroy: %#x\n",
                     GDK_DRAWABLE_XID(window)));
-   gdk_window_internal_destroy(window, xdestroy, TRUE);
+   gdk_window_internal_destroy(window, TRUE, TRUE);
    gdk_drawable_unref(window);
 }
 
@@ -685,7 +685,7 @@ void gdk_window_show(GdkWindow * window)
       } else {
          ShowWindow(GDK_DRAWABLE_XID(window), SW_SHOWNORMAL);
          ShowWindow(GDK_DRAWABLE_XID(window), SW_RESTORE);
-//         SetForegroundWindow(GDK_DRAWABLE_XID(window)); //vo
+         SetForegroundWindow(GDK_DRAWABLE_XID(window));
          BringWindowToTop(GDK_DRAWABLE_XID(window));
 #if 0
          ShowOwnedPopups(GDK_DRAWABLE_XID(window), TRUE);
@@ -1313,7 +1313,6 @@ void gdk_window_set_title(GdkWindow * window, const gchar * title)
    GDK_NOTE(MISC, g_print("gdk_window_set_title: %#x %s\n",
                           GDK_DRAWABLE_XID(window), title));
    if (!GDK_DRAWABLE_DESTROYED(window)) {
-#if 0 // bb
       /* As the title is in UTF-8 we must translate it
        * to the system codepage.
        */
@@ -1330,10 +1329,6 @@ void gdk_window_set_title(GdkWindow * window, const gchar * title)
 
       g_free(mbstr);
       g_free(wcstr);
-#else // bb
-      if (!SetWindowText(GDK_DRAWABLE_XID(window), title))
-         WIN32_API_FAILED("SetWindowText");
-#endif // bb
    }
 }
 
@@ -2075,8 +2070,8 @@ static gboolean gdk_window_gravity_works(void)
 
       gdk_window_get_geometry(child, NULL, &y, NULL, NULL, NULL);
 
-      gdk_window_destroy(parent, TRUE);
-      gdk_window_destroy(child, TRUE);
+      gdk_window_destroy(parent);
+      gdk_window_destroy(child);
 
       gravity_works = ((y == -20) ? YES : NO);
    }

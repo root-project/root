@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.h,v 1.1 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.hh,v 1.1 2001/02/22 14:16:14 murat Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
 
 				// ****** overloaded methods of TObject
 
- virtual void    Print(Option_t* opt="") const; // *MENU*
+ virtual void    Print(Option_t* opt) const; // *MENU*
 
   Bool_t IsFolder() const { return kTRUE; }
   virtual void   Browse(TBrowser* b);

@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.24 2004/05/18 22:20:49 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.23 2004/05/10 16:00:01 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -357,8 +357,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,TicketPrincipal.Data());
 
       // Create Options string
-      int Opt = ReUse * kAUTH_REUSE_MSK + 
-                auth->GetRSAKeyType() * kAUTH_RSATY_MSK;
+      int Opt = ReUse * kAUTH_REUSE_MSK;
       TString Options(Form("%d %ld %s", Opt, User.Length(), User.Data()));
 
       // Now we are ready to send a request to the rootd/proofd daemons
@@ -611,14 +610,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       Int_t RSAKey = 0;
       if (ReUse == 1) {
 
-         if (type != kROOTD_RSAKEY  || retval < 1 || retval > 2 )
+         if (type != kROOTD_RSAKEY)
             Warning("Krb5Auth",
                     "problems recvn RSA key flag: got message %d, flag: %d",
                      type,RSAKey);
-         RSAKey = retval - 1;
+         RSAKey = 1;
 
          // Send the key securely
-         TAuthenticate::SendRSAPublicKey(sock,RSAKey);
+         TAuthenticate::SendRSAPublicKey(sock);
 
          // get length of user + OffSet string
          Nrec = sock->Recv(retval, type);
@@ -652,7 +651,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       // Receive Token
       char *Token = 0;
       if (ReUse == 1 && OffSet > -1) {
-         if (TAuthenticate::SecureRecv(sock,1,RSAKey,&Token) == -1) {
+         if (TAuthenticate::SecureRecv(sock,RSAKey,&Token) == -1) {
             Warning("Krb5Auth",
                     "problems secure-receiving Token - may result in corrupted Token");
          }

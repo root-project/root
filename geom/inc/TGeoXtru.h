@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.4 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.3 2004/03/15 12:11:51 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual void          InspectShape() const;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetCurrentZ(Double_t z, Int_t iz);

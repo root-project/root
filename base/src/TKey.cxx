@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.43 2004/06/02 17:03:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.42 2004/05/22 06:08:05 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -703,7 +703,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
    // get version of key
    fBufferRef->SetBufferOffset(sizeof(fNbytes));
-   Version_t kvers = fBufferRef->ReadVersion();
+   fBufferRef->ReadVersion();
 
    fBufferRef->SetBufferOffset(fKeylen);
    TDirectory *cursav = gDirectory;
@@ -733,9 +733,6 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       Error("ReadObjectAny", "Cannot create new object of class %s", fClassName.Data());
       return 0;
    }
-
-   if (kvers > 1)
-      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;

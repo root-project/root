@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.8 2004/06/01 06:16:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.7 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,11 +20,10 @@
 // The following classes are defined here:                              //
 //                                                                      //
 // Different matrix views without copying data elements :               //
-//   TMatrixFRow_const        TMatrixFRow                               //
-//   TMatrixFColumn_const     TMatrixFColumn                            //
-//   TMatrixFDiag_const       TMatrixFDiag                              //
-//   TMatrixFFlat_const       TMatrixFFlat                              //
-//   TMatrixFSub_const        TMatrixFSub                               //
+//   TMatrixFRow_const    TMatrixFRow                                   //
+//   TMatrixFColumn_const TMatrixFColumn                                //
+//   TMatrixFDiag_const   TMatrixFDiag                                  //
+//   TMatrixFFlat_const   TMatrixFFlat                                  //
 //                                                                      //
 //   TElementActionF                                                    //
 //   TElementPosActionF                                                 //
@@ -59,7 +58,7 @@ friend class TMatrixFSym;
 friend class TVectorF;
 
 protected:
-  virtual void Operation(Float_t  &element) const = 0;
+  virtual void Operation(Float_t &element) const = 0;
 
 private:
   void operator=(const TElementActionF &) { }
@@ -87,7 +86,7 @@ friend class TVectorF;
 protected:
   mutable Int_t fI; // i position of element being passed to Operation()
   mutable Int_t fJ; // j position of element being passed to Operation()
-  virtual void Operation(Float_t  &element) const = 0;
+  virtual void Operation(Float_t &element) const = 0;
 
 private:
   void operator=(const TElementPosActionF &) { }
@@ -114,37 +113,33 @@ public:
   TMatrixFRow_const(const TMatrixF    &matrix,Int_t row);
   TMatrixFRow_const(const TMatrixFSym &matrix,Int_t row);
 
-  inline const TMatrixFBase *GetMatrix  () const { return fMatrix; }
-  inline       Int_t         GetRowIndex() const { return fRowInd; }
-  inline       Int_t         GetInc     () const { return fInc; }
-  inline const Float_t      *GetPtr     () const { return fPtr; }
-  inline const Float_t      &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                            const Int_t acoln = i-fMatrix->GetColLwb();
-                                                            Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                                            return fPtr[acoln]; }
+  inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
+  inline const Float_t      *GetPtr   () const { return fPtr; }
+  inline       Int_t         GetInc   () const { return fInc; }
+  inline const Float_t      &operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                                          Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                          return fPtr[acoln]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFRow_const *)this)(i); }
 
-  ClassDef(TMatrixFRow_const,0)  // One row of a dense matrix (single precision)
+  ClassDef(TMatrixFRow_const,0)  // One row of a matrix (single precision)
 };
 
 class TMatrixFRow : public TMatrixFRow_const {
 
-public:
+public: 
   TMatrixFRow() {}
   TMatrixFRow(TMatrixF    &matrix,Int_t row);
   TMatrixFRow(TMatrixFSym &matrix,Int_t row);
   TMatrixFRow(const TMatrixFRow &mr);
-
+   
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
 
-  inline const Float_t  &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     const Int_t acoln = i-fMatrix->GetColLwb();
+  inline const Float_t  &operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
                                                      Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                      return fPtr[acoln]; }
-  inline       Float_t  &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     const Int_t acoln = i-fMatrix->GetColLwb();
+  inline       Float_t  &operator()(Int_t i)       { const Int_t acoln = i-fMatrix->GetColLwb();
                                                      Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                                     return (const_cast<Float_t  *>(fPtr))[acoln]; }
+                                                     return (const_cast<Float_t *>(fPtr))[acoln]; }
   inline const Float_t  &operator[](Int_t i) const { return (*(const TMatrixFRow *)this)(i); }
   inline       Float_t  &operator[](Int_t i)       { return (*(      TMatrixFRow *)this)(i); }
 
@@ -153,13 +148,13 @@ public:
   void operator*=(Float_t  val);
 
   void operator=(const TMatrixFRow_const &r);
-  void operator=(const TMatrixFRow       &r) { operator=((TMatrixFRow_const &)r); }
+  void operator=(const TMatrixFRow       &r);
   void operator=(const TVectorF          &vec);
 
   void operator+=(const TMatrixFRow_const &r);
   void operator*=(const TMatrixFRow_const &r);
 
-  ClassDef(TMatrixFRow,0)  // One row of a dense matrix (single precision)
+  ClassDef(TMatrixFRow,0)  // One row of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -183,17 +178,15 @@ public:
   TMatrixFColumn_const(const TMatrixF    &matrix,Int_t col);
   TMatrixFColumn_const(const TMatrixFSym &matrix,Int_t col);
 
-  inline const TMatrixFBase *GetMatrix  () const { return fMatrix; }
-  inline       Int_t         GetColIndex() const { return fColInd; }
-  inline       Int_t         GetInc     () const { return fInc; }
-  inline const Float_t      *GetPtr     () const { return fPtr; }
-  inline const Float_t      &operator   ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                            const Int_t arown = i-fMatrix->GetRowLwb();
-                                                            Assert(arown < fMatrix->GetNrows() && arown >= 0);
-                                                            return fPtr[arown*fInc]; }
+  inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
+  inline const Float_t      *GetPtr   () const { return fPtr; }
+  inline       Int_t         GetInc   () const { return fInc; }
+  inline const Float_t      &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
+                                                          Assert(arown < fMatrix->GetNrows() && arown >= 0);
+                                                          return fPtr[arown*fInc]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFColumn_const *)this)(i); }
 
-  ClassDef(TMatrixFColumn_const,0)  // One column of a dense matrix (single precision)
+  ClassDef(TMatrixFColumn_const,0)  // One column of a matrix (single precision)
 };
 
 class TMatrixFColumn : public TMatrixFColumn_const {
@@ -206,12 +199,10 @@ public:
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
 
-  inline const Float_t  &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     const Int_t arown = i-fMatrix->GetRowLwb();
+  inline const Float_t  &operator()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
                                                      Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                      return fPtr[arown]; }
-  inline       Float_t  &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     const Int_t arown = i-fMatrix->GetRowLwb();
+  inline       Float_t  &operator()(Int_t i)       { const Int_t arown = i-fMatrix->GetRowLwb();
                                                      Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                      return (const_cast<Float_t  *>(fPtr))[arown*fInc]; }
   inline const Float_t  &operator[](Int_t i) const { return (*(const TMatrixFColumn *)this)(i); }
@@ -222,13 +213,13 @@ public:
   void operator*=(Float_t  val);
 
   void operator=(const TMatrixFColumn_const &c);
-  void operator=(const TMatrixFColumn       &c) { operator=((TMatrixFColumn_const &)c); }
+  void operator=(const TMatrixFColumn       &c);
   void operator=(const TVectorF             &vec);
 
   void operator+=(const TMatrixFColumn_const &c);
   void operator*=(const TMatrixFColumn_const &c);
 
-  ClassDef(TMatrixFColumn,0)  // One column of a dense matrix (single precision)
+  ClassDef(TMatrixFColumn,0)  // One column of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -255,13 +246,12 @@ public:
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
   inline       Int_t         GetInc   () const { return fInc; }
-  inline const Float_t      &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                          Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline const Float_t      &operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFDiag_const *)this)(i); }
 
   Int_t GetNdiags() const { return fNdiag; }
 
-  ClassDef(TMatrixFDiag_const,0)  // Diagonal of a dense matrix (single  precision)
+  ClassDef(TMatrixFDiag_const,0)  // Diagonal of a matrix (single precision)
 };
 
 class TMatrixFDiag : public TMatrixFDiag_const {
@@ -274,11 +264,9 @@ public:
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
 
-  inline const Float_t  &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
-  inline       Float_t  &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     Assert(i < fNdiag && i >= 0);
-                                                     return (const_cast<Float_t  *>(fPtr))[i*fInc]; }
+  inline const Float_t  &operator()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline       Float_t  &operator()(Int_t i)       { Assert(i < fNdiag && i >= 0);
+                                                     return (const_cast<Float_t *>(fPtr))[i*fInc]; }
   inline const Float_t  &operator[](Int_t i) const { return (*(const TMatrixFDiag *)this)(i); }
   inline       Float_t  &operator[](Int_t i)       { return (*(      TMatrixFDiag *)this)(i); }
 
@@ -287,13 +275,13 @@ public:
   void operator*=(Float_t  val);
 
   void operator=(const TMatrixFDiag_const &d);
-  void operator=(const TMatrixFDiag       &d) { operator=((TMatrixFDiag_const &)d); }
+  void operator=(const TMatrixFDiag       &d);
   void operator=(const TVectorF           &vec);
 
   void operator+=(const TMatrixFDiag_const &d);
   void operator*=(const TMatrixFDiag_const &d);
 
-  ClassDef(TMatrixFDiag,0)  // Diagonal of a dense matrix (single  precision)
+  ClassDef(TMatrixFDiag,0)  // Diagonal of a matrix (single precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -312,17 +300,16 @@ protected:
   const Float_t      *fPtr;     //  pointer to the a[0,0]
 
 public:
-  TMatrixFFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
+  TMatrixFFlat_const() { fMatrix = 0; fPtr = 0; }
   TMatrixFFlat_const(const TMatrixF    &matrix);
   TMatrixFFlat_const(const TMatrixFSym &matrix);
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
-  inline const Float_t      &operator ()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                          Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline const Float_t      &operator ()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
   inline const Float_t      &operator [](Int_t i) const { return (*(const TMatrixFFlat_const *)this)(i); }
 
-  ClassDef(TMatrixFFlat_const,0)  // Flat representation of a dense matrix
+  ClassDef(TMatrixFFlat_const,0)  // Flat representation of a matrix
 };
 
 class TMatrixFFlat : public TMatrixFFlat_const {
@@ -335,11 +322,9 @@ public:
 
   inline Float_t  *GetPtr() const { return const_cast<Float_t  *>(fPtr); }
 
-  inline const Float_t  &operator()(Int_t i) const { Assert(fMatrix->IsValid());
-                                                     Assert(i >=0 && i < fNelems); return fPtr[i]; }
-  inline       Float_t  &operator()(Int_t i)       { Assert(fMatrix->IsValid());
-                                                     Assert(i >=0 && i < fNelems);
-                                                     return (const_cast<Float_t  *>(fPtr))[i]; }
+  inline const Float_t  &operator()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline       Float_t  &operator()(Int_t i)       { Assert(i >=0 && i < fNelems);
+                                                     return (const_cast<Float_t *>(fPtr))[i]; }
   inline const Float_t  &operator[](Int_t i) const { return (*(const TMatrixFFlat *)this)(i); }
   inline       Float_t  &operator[](Int_t i)       { return (*(      TMatrixFFlat *)this)(i); }
 
@@ -348,86 +333,13 @@ public:
   void operator*=(Float_t  val);
 
   void operator=(const TMatrixFFlat_const &f);
-  void operator=(const TMatrixFFlat       &f) { operator=((TMatrixFFlat_const &)f); }
+  void operator=(const TMatrixFFlat       &f);
   void operator=(const TVectorF           &vec);
 
   void operator+=(const TMatrixFFlat_const &f);
   void operator*=(const TMatrixFFlat_const &f);
 
-  ClassDef(TMatrixFFlat,0)  // Flat representation of a dense matrix
-};
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixFSub_const                                                    //
-//                                                                      //
-// Class represents a sub matrix of a TMatrixFBase                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TMatrixFSub_const {
-
-protected:
-  const TMatrixFBase *fMatrix;    //  the matrix I am a submatrix of
-        Int_t         fRowOff;    //
-        Int_t         fColOff;    //
-        Int_t         fNrowsSub;  //
-        Int_t         fNcolsSub;  //
-
-  enum {kWorkMax = 100};
-
-public:
-  TMatrixFSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
-  TMatrixFSub_const(const TMatrixF    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixFSub_const(const TMatrixFSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-
-  inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
-  inline       Int_t         GetRowOff() const { return fRowOff; }
-  inline       Int_t         GetColOff() const { return fColOff; }
-  inline       Int_t         GetNrows () const { return fNrowsSub; }
-  inline       Int_t         GetNcols () const { return fNcolsSub; }
-  inline const Float_t      &operator ()(Int_t rown,Int_t coln) const
-                                                    { Assert(fMatrix->IsValid());
-                                                      Assert(rown < fNrowsSub && rown >= 0);
-                                                      Assert(coln < fNcolsSub && coln >= 0);
-                                                      const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fRowOff;
-                                                      const Float_t  *ptr = fMatrix->GetMatrixArray();
-                                                      return ptr[index]; }
-
-  ClassDef(TMatrixFSub_const,0)  // sub matrix (single precision)
-};
-
-class TMatrixFSub : public TMatrixFSub_const {
-
-public:
-  TMatrixFSub() {}
-  TMatrixFSub(TMatrixF    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixFSub(TMatrixFSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
-  TMatrixFSub(const TMatrixFSub &ms);
-
-  inline       Float_t  &operator()(Int_t rown,Int_t coln)
-                                                    { Assert(fMatrix->IsValid());
-                                                      Assert(rown < fNrowsSub && rown >= 0);
-                                                      Assert(coln < fNcolsSub && coln >= 0);
-                                                      const Int_t index = (rown+fRowOff)*fMatrix->GetNcols()+coln+fRowOff;
-                                                      const Float_t  *ptr = fMatrix->GetMatrixArray();
-                                                      return (const_cast<Float_t  *>(ptr))[index]; }
-
-  void operator= (Float_t  val);
-  void operator+=(Float_t  val);
-  void operator*=(Float_t  val);
-
-  void operator=(const TMatrixFSub_const &s);
-  void operator=(const TMatrixFSub       &s) { operator=((TMatrixFSub_const &)s); }
-  void operator=(const TMatrixFBase      &m);
-
-  void operator+=(const TMatrixFSub_const &s);
-  void operator*=(const TMatrixFSub_const &s);
-  void operator+=(const TMatrixFBase      &m);
-  void operator*=(const TMatrixF          &m);
-  void operator*=(const TMatrixFSym       &m);
-
-  ClassDef(TMatrixFSub,0)  // sub matrix (single precision)
+  ClassDef(TMatrixFFlat,0)  // Flat representation of a matrix
 };
 
 class TMatrixRow : public TMatrixFRow {

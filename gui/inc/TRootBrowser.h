@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.12 2004/07/06 10:55:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.9 2003/10/08 09:50:47 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -46,7 +46,6 @@ class TGListTreeItem;
 class TGFileItem;
 class TList;
 class TGFileContainer;
-class TGComboBox;
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
@@ -69,7 +68,6 @@ private:
    TGLayoutHints       *fMenuBarHelpLayout;
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
-   TGComboBox          *fDrawOption;        //drawing option entry
 
    TList               *fWidgets;
    Cursor_t             fWaitCursor;        // busy cursor
@@ -83,7 +81,6 @@ private:
    void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
    void  SetSortMode(Int_t new_mode);
    void  ToUpSystemDirectory();
-   void  UpdateDrawOption();
 
 protected:
    TGPopupMenu         *fFileMenu;
@@ -127,8 +124,6 @@ public:
    TGStatusBar     *GetStatusBar() const { return fStatusBar; }
    TGMenuBar       *GetMenuBar()   const { return  fMenuBar; }
    TGToolBar       *GetToolBar()   const { return fToolBar; }
-   void             SetDrawOption(Option_t *option="");
-   Option_t        *GetDrawOption() const;
 
    // overridden from TGMainFrame
    void     CloseWindow();

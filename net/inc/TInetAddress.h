@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.6 2003/09/24 08:57:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.5 2003/09/23 15:18:04 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -31,11 +31,6 @@
 #include "TString.h"
 #endif
 
-#include <vector>
-#ifdef R__GLOBALSTL
-namespace std { using ::vector; }
-#endif
-
 
 class TInetAddress : public TObject {
 
@@ -49,21 +44,13 @@ friend class TSocket;
 friend class TServerSocket;
 friend class TXSocket;   // special for BaBar
 
-public:
-   typedef std::vector<UInt_t>  AddressList_t;
-   typedef std::vector<TString> AliasList_t;
-
 private:
-   TString       fHostname;    // fully qualified hostname
-   UInt_t        fAddress;     // IP address in host byte order
-   Int_t         fFamily;      // address family
-   Int_t         fPort;        // port through which we are connected
-   AddressList_t fAddresses;   // list of alternative IP addresses in host byte order
-   AliasList_t   fAliases;     // list of aliases
+   TString fHostname;    // fully qualified hostname
+   UInt_t  fAddress;     // IP address in host byte order
+   Int_t   fFamily;      // address family
+   Int_t   fPort;        // port through which we are connected
 
    TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t port = -1);
-   void AddAddress(UInt_t addr);
-   void AddAlias(const char *alias);
 
 public:
    TInetAddress();
@@ -77,14 +64,10 @@ public:
    const char *GetHostName() const { return (const char *) fHostname; }
    Int_t       GetFamily() const { return fFamily; }
    Int_t       GetPort() const { return fPort; }
-   const AddressList_t &GetAddresses() const { return fAddresses; }
-   const AliasList_t   &GetAliases() const { return fAliases; }
    Bool_t      IsValid() const { return fFamily == -1 ? kFALSE : kTRUE; }
    void        Print(Option_t *option="") const;
 
-   static const char *GetHostAddress(UInt_t addr);
-
-   ClassDef(TInetAddress,2)  //Represents an Internet Protocol (IP) address
+   ClassDef(TInetAddress,1)  //Represents an Internet Protocol (IP) address
 };
 
 #endif

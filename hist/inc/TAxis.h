@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.30 2004/06/16 08:23:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.28 2004/03/12 00:30:43 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -44,7 +44,6 @@ private:
         TArrayD      fXbins;          //Bin edges array in X
         Int_t        fFirst;          //first bin to display
         Int_t        fLast;           //last bin to display
-        UShort_t     fBits2;          //second bit status word
         Bool_t       fTimeDisplay;    //on/off displaying time values instead of numerics
         TString      fTimeFormat;     //Date&time format, ex: 09/12/99 12:34:00
         TObject     *fParent;         //!Object owning this axis
@@ -52,11 +51,9 @@ private:
 
 public:
         // TAxis status bits
-        enum { kTickPlus      = BIT(9),
-               kTickMinus     = BIT(10),
-               kAxisRange     = BIT(11),
+        enum { kAxisRange     = BIT(11),
                kCenterTitle   = BIT(12),
-               kCenterLabels  = BIT(14), //bit 13 is used by TObject
+               kCenterLabels  = BIT(14),
                kRotateTitle   = BIT(15),
                kPalette       = BIT(16),
                kNoExponent    = BIT(17),
@@ -66,7 +63,8 @@ public:
                kLabelsUp      = BIT(21),
                kIsInteger     = BIT(22),
                kMoreLogLabels = BIT(23),
-               kDecimals      = BIT(11)}; //in fBits2
+               kTickPlus      = BIT(9),
+               kTickMinus     = BIT(10)};
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
@@ -97,7 +95,6 @@ public:
                 Bool_t   GetMoreLogLabels() const;
                 Int_t    GetNbins() const { return fNbins; }
                 Bool_t   GetNoExponent() const;
-                Bool_t   GetDecimals() const;
         virtual TObject *GetParent() const {return fParent;}
                 Bool_t   GetRotateTitle() const;
         virtual const char  *GetTicks() const;
@@ -110,7 +107,6 @@ public:
                  Int_t   GetLast() const;
                 Axis_t   GetXmin() const {return fXmin;}
                 Axis_t   GetXmax() const {return fXmax;}
-        virtual void     ImportAttributes(const TAxis *axis);
         virtual void     LabelsOption(Option_t *option="h");  // *MENU*
         virtual void     RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
@@ -122,7 +118,6 @@ public:
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void     SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
-        virtual void     SetDecimals(Bool_t dot=kTRUE);  // *TOGGLE* *GETTER=GetDecimals
         virtual void     SetParent(TObject *obj) {fParent = obj;}
         virtual void     SetRange(Int_t first=0, Int_t last=0);  // *MENU*
         virtual void     SetRangeUser(Axis_t ufirst, Axis_t ulast);  // *MENU*
@@ -132,7 +127,7 @@ public:
         virtual void     SetTimeOffset(Double_t toffset, Option_t *option="local");
         virtual void     UnZoom();  // *MENU*
 
-        ClassDef(TAxis,8)  //Axis class
+        ClassDef(TAxis,7)  //Axis class
 };
 
 #endif

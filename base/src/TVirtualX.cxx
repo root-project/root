@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.7 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.6 2003/12/21 19:07:57 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -830,13 +830,6 @@ void TVirtualX::DestroyWindow(Window_t /*id*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::DestroySubwindows(Window_t /*id*/)
-{
-   // The DestroySubwindows function destroys all inferior windows of the
-   // specified window, in bottom-to-top stacking order.
-}
-
-//______________________________________________________________________________
 void TVirtualX::RaiseWindow(Window_t /*id*/)
 {
    // Raises the specified window to the top of the stack so that no
@@ -889,17 +882,6 @@ void TVirtualX::ResizeWindow(Window_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
 void TVirtualX::IconifyWindow(Window_t /*id*/)
 {
    // Iconifies the window "id".
-}
-
-//______________________________________________________________________________
-void TVirtualX::ReparentWindow(Window_t /*id*/, Window_t /*pid*/,
-                               Int_t /*x*/, Int_t /*y*/)
-{
-   // If the specified window is mapped, ReparentWindow automatically
-   // performs an UnmapWindow request on it, removes it from its current
-   // position in the hierarchy, and inserts it as the child of the specified
-   // parent. The window is placed in the stacking order on top with respect
-   // to sibling windows.
 }
 
 //______________________________________________________________________________

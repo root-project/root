@@ -28,31 +28,10 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
 ALLLIBS      += $(THREADLIB)
-ifeq ($(PLATFORM),linux)
-ifneq ($(ARCH),win32gcc)
-CXXFLAGS     += -pthread
-CFLAGS       += -pthread
-CINTCXXFLAGS += -pthread
-CINTCFLAGS   += -pthread
-else
 CXXFLAGS     += -D_REENTRANT
 CFLAGS       += -D_REENTRANT
 CINTCXXFLAGS += -D_REENTRANT
 CINTCFLAGS   += -D_REENTRANT
-endif
-else
-ifeq ($(PLATFORM),fbsd)
-CXXFLAGS     += -pthread
-CFLAGS       += -pthread
-CINTCXXFLAGS += -pthread
-CINTCFLAGS   += -pthread
-else
-CXXFLAGS     += -D_REENTRANT
-CFLAGS       += -D_REENTRANT
-CINTCXXFLAGS += -D_REENTRANT
-CINTCFLAGS   += -D_REENTRANT
-endif
-endif
 
 # include all dependency files
 INCLUDEFILES += $(THREADDEP)

@@ -19,7 +19,7 @@ TREEVIEWERDH := $(TREEVIEWERDS:.cxx=.h)
 
 #TREEVIEWERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 #TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ifeq ($(ARCH),win32old)
+ifeq ($(ARCH),win32)
 TREEVIEWERL  := $(MODDIRI)/LinkDefWin32.h
 TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
 TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx

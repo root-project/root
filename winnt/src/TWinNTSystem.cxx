@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.96 2004/06/22 17:30:33 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.91 2004/05/28 20:21:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -416,7 +416,7 @@ static BOOL ConsoleSigHandler(DWORD sig)
    case CTRL_CLOSE_EVENT:
    default:
       printf("\n *** Break *** keyboard interrupt - ROOT is terminated\n");
-      gSystem->Exit(-1);
+      gSystem->Exit(-1); 
       return kTRUE;
    }
 }
@@ -644,13 +644,13 @@ Bool_t TWinNTSystem::Init()
       fNbGroups = fNbUsers = 0;
       HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
       if (!netapi) return kFALSE;
-
+  
       p2NetApiBufferFree  = (pfn1)::GetProcAddress(netapi, "NetApiBufferFree");
       p2NetUserGetInfo  = (pfn2)::GetProcAddress(netapi, "NetUserGetInfo");
       p2NetLocalGroupGetMembers  = (pfn3)::GetProcAddress(netapi, "NetLocalGroupGetMembers");
       p2NetLocalGroupEnum = (pfn4)::GetProcAddress(netapi, "NetLocalGroupEnum");
 
-      if (!p2NetApiBufferFree || !p2NetUserGetInfo ||
+      if (!p2NetApiBufferFree || !p2NetUserGetInfo || 
           !p2NetLocalGroupGetMembers || !p2NetLocalGroupEnum) return kFALSE;
 
       GetNbGroups();
@@ -1078,7 +1078,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
    while (1) {
-      if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
+      if (gROOT->IsLineProcessing()) {
          if (!pendingOnly) {
             SleepEx(1, TRUE);
             return;
@@ -1370,69 +1370,6 @@ Bool_t TWinNTSystem::ChangeDirectory(const char *path)
 }
 
 //______________________________________________________________________________
-__inline BOOL DBL_BSLASH(LPCTSTR psz)
-{
-   //
-   // Inline function to check for a double-backslash at the
-   // beginning of a string
-   //
-   return (psz[0] == TEXT('\\') && psz[1] == TEXT('\\'));
-}
-
-//______________________________________________________________________________
-BOOL PathIsUNC(LPCTSTR pszPath)
-{
-   // Returns TRUE if the given string is a UNC path.
-   //
-   // TRUE
-   //      "\\foo\bar"
-   //      "\\foo"         <- careful
-   //      "\\"
-   // FALSE
-   //      "\foo"
-   //      "foo"
-   //      "c:\foo"
-   return DBL_BSLASH(pszPath);
-}
-
-#pragma data_seg(".text", "CODE")
-const TCHAR c_szColonSlash[] = TEXT(":\\");
-#pragma data_seg()
-
-//______________________________________________________________________________
-BOOL PathIsRoot(LPCTSTR pPath)
-{
-   //
-   // check if a path is a root
-   //
-   // returns:
-   //  TRUE for "\" "X:\" "\\foo\asdf" "\\foo\"
-   //  FALSE for others
-   //
-   if (!IsDBCSLeadByte(*pPath)) {
-      if (!lstrcmpi(pPath + 1, c_szColonSlash))
-         // "X:\" case
-         return TRUE;
-   }
-   if ((*pPath == TEXT('\\')) && (*(pPath + 1) == 0))
-      // "\" case
-      return TRUE;
-   if (DBL_BSLASH(pPath)) {
-      // smells like UNC name
-      LPCTSTR p;
-      int cBackslashes = 0;
-      for (p = pPath + 2; *p; p = CharNext(p)) {
-         if (*p == TEXT('\\') && (++cBackslashes > 1))
-            return FALSE;   // not a bare UNC name, therefore not a root dir
-      }
-      // end of string with only 1 more backslash
-      // must be a bare UNC, which looks like a root dir
-      return TRUE;
-   }
-   return FALSE;
-}
-
-//______________________________________________________________________________
 void *TWinNTSystem::OpenDirectory(const char *dir)
 {
    // Open a directory. Returns 0 if directory does not exist.
@@ -1442,37 +1379,16 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
       return helper->OpenDirectory(dir);
    }
 
-   char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
 
-   if(PathIsUNC(dir)) {
-      strcpy(entry, dir);
-      if ((entry[strlen(dir)-1] == '/') || (entry[strlen(dir)-1] == '\\' )) {
-         entry[strlen(dir)-1] = '\0';
-      }
-      if(PathIsRoot(entry)) {
-         strcat(entry,"\\");
-      }
-      if (_stati64(entry, &finfo) < 0) {
-         delete [] entry;
-         return 0;
-      }
-   }
-   else {
-      strcpy(entry, dir);
-      if ((entry[strlen(dir)-1] == '/') || (entry[strlen(dir)-1] == '\\' )) {
-         if(!PathIsRoot(entry))
-            entry[strlen(dir)-1] = '\0';
-      }
-      if (_stati64(entry, &finfo) < 0) {
-         delete [] entry;
-         return 0;
-      }
+   if (_stati64(dir, &finfo) < 0) {
+      return 0;
    }
 
    if (finfo.st_mode & S_IFDIR) {
+      char *entry = new char[strlen(dir)+3];
       strcpy(entry, dir);
-      if (!(entry[strlen(dir)-1] == '/' || entry[strlen(dir)-1] == '\\' )) {
+      if (!(entry[strlen(dir)] == '/' || entry[strlen(dir)] == '\\' )) {
          strcat(entry,"\\");
       }
       strcat(entry,"*");
@@ -1487,7 +1403,6 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
       delete [] entry;
       return searchFile;
    } else {
-      delete [] entry;
       return 0;
    }
 }
@@ -2457,8 +2372,8 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
       memberIdx++;
       MemberInfo++;
    }
-   if(fActUser == -1)  fActUser = 0;
-
+   if(fActUser == -1)  fActUser = 0; 
+   
    if (Data)
       p2NetApiBufferFree(Data);
 
@@ -2891,11 +2806,6 @@ const char *TWinNTSystem::GetLinkedLibraries()
 {
    // Get list of shared libraries loaded at the start of the executable.
    // Returns 0 in case list cannot be obtained or in case of error.
-   char winPath[256];
-   char winDrive[256];
-   char winDir[256];
-   char winName[256];
-   char winExt[256];
 
    if (!gApplication) return 0;
 
@@ -2918,22 +2828,22 @@ const char *TWinNTSystem::GetLinkedLibraries()
    HANDLE hFile, hMapping;
    void *basepointer;
 
-   if((hFile = CreateFile(exe,GENERIC_READ,0,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
+   if((hFile = CreateFile(exe,GENERIC_READ,0,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) { 
       return 0;
    }
-   if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) {
-      CloseHandle(hFile);
+   if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) { 
+      CloseHandle(hFile); 
       return 0;
    }
-   if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) {
-      CloseHandle(hMapping);
-      CloseHandle(hFile);
+   if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) { 
+      CloseHandle(hMapping); 
+      CloseHandle(hFile); 
       return 0;
    }
 
    int sect;
    IMAGE_DOS_HEADER *dos_head = (IMAGE_DOS_HEADER *)basepointer;
-   struct header {
+   struct header { 
       DWORD signature;
       IMAGE_FILE_HEADER _head;
       IMAGE_OPTIONAL_HEADER opt_head;
@@ -2942,22 +2852,22 @@ const char *TWinNTSystem::GetLinkedLibraries()
    struct header *pheader;
    const IMAGE_SECTION_HEADER * section_header;
 
-   if(dos_head->e_magic!='ZM') {
+   if(dos_head->e_magic!='ZM') { 
       return 0;
    }  // verify DOS-EXE-Header
    // after end of DOS-EXE-Header: offset to PE-Header
-   pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew);
+   pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew); 
 
    if(IsBadReadPtr(pheader,sizeof(struct header))) { // start of PE-Header
       return 0;
    }
    if(pheader->signature!=IMAGE_NT_SIGNATURE) {      // verify PE format
       switch((unsigned short)pheader->signature) {
-         case IMAGE_DOS_SIGNATURE:
+         case IMAGE_DOS_SIGNATURE: 
             return 0;
-         case IMAGE_OS2_SIGNATURE:
+         case IMAGE_OS2_SIGNATURE: 
             return 0;
-         case IMAGE_OS2_SIGNATURE_LE:
+         case IMAGE_OS2_SIGNATURE_LE: 
             return 0;
          default: // unknown signature
             return 0;
@@ -2969,46 +2879,42 @@ const char *TWinNTSystem::GetLinkedLibraries()
    for(sect=0,section_header=pheader->section_header;
        sect<pheader->_head.NumberOfSections;sect++,section_header++) {
       int directory;
-      const void * const section_data =
+      const void * const section_data = 
             (char*)basepointer + section_header->PointerToRawData;
       for(directory=0;directory<IMAGE_NUMBEROF_DIRECTORY_ENTRIES;directory++) {
          if(isin(pheader->opt_head.DataDirectory[directory].VirtualAddress,
                  section_header->VirtualAddress,
                  section_header->SizeOfRawData)) {
-            const IMAGE_IMPORT_DESCRIPTOR *stuff_start =
-                 (IMAGE_IMPORT_DESCRIPTOR *)((char*)section_data +
-                 (pheader->opt_head.DataDirectory[directory].VirtualAddress -
+            const IMAGE_IMPORT_DESCRIPTOR *stuff_start = 
+                 (IMAGE_IMPORT_DESCRIPTOR *)((char*)section_data + 
+                 (pheader->opt_head.DataDirectory[directory].VirtualAddress - 
                   section_header->VirtualAddress));
-            // (virtual address of stuff - virtual address of section) =
+            // (virtual address of stuff - virtual address of section) = 
             // offset of stuff in section
-            const unsigned stuff_length =
+            const unsigned stuff_length = 
                   pheader->opt_head.DataDirectory[directory].Size;
             if(directory == IMAGE_DIRECTORY_ENTRY_IMPORT) {
-               while(!IsBadReadPtr(stuff_start,sizeof(*stuff_start)) &&
+               while(!IsBadReadPtr(stuff_start,sizeof(*stuff_start)) && 
                       stuff_start->Name) {
-                  TString dll = (char*)section_data +
+                  TString dll = (char*)section_data + 
                                ((DWORD)(stuff_start->Name)) -
                                 section_header->VirtualAddress;
                   if (dll.EndsWith(".dll")) {
                      char *dllPath = DynamicPathName(dll, kTRUE);
                      if (dllPath) {
-                        char *winPath = getenv("windir");
-                        _splitpath(winPath,winDrive,winDir,winName,winExt);
-                        if(!strstr(dllPath, winDir)) {
-                           if (!linkedLibs.IsNull())
-                              linkedLibs += " ";
-                           linkedLibs += dllPath;
-                        }
+                        if (!linkedLibs.IsNull())
+                           linkedLibs += " ";
+                        linkedLibs += dllPath;
                      }
                      delete [] dllPath;
                   }
-                  stuff_start++;
+                  stuff_start++; 
                }
             }
          }
       }
    }
-
+   
    UnmapViewOfFile(basepointer);
    CloseHandle(hMapping);
    CloseHandle(hFile);
@@ -3321,16 +3227,6 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
       if ((host_ptr = ::gethostbyaddr((const char *)&addr,
                                       sizeof(addr), AF_INET))) {
          host = host_ptr->h_name;
-         TInetAddress a(host, ntohl(addr), type);
-         UInt_t addr2;
-         Int_t  i;
-         for (i = 1; host_ptr->h_addr_list[i]; i++) {
-            memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-            a.AddAddress(ntohl(addr2));
-         }
-         for (i = 0; host_ptr->h_aliases[i]; i++)
-            a.AddAlias(host_ptr->h_aliases[i]);
-         return a;
       } else {
          host = "UnNamedHost";
       }
@@ -3343,16 +3239,6 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
       memcpy(&addr, host_ptr->h_addr, host_ptr->h_length);
       host = host_ptr->h_name;
       type = host_ptr->h_addrtype;
-      TInetAddress a(host, ntohl(addr), type);
-      UInt_t addr2;
-      Int_t  i;
-      for (i = 1; host_ptr->h_addr_list[i]; i++) {
-         memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-         a.AddAddress(ntohl(addr2));
-      }
-      for (i = 0; host_ptr->h_aliases[i]; i++)
-         a.AddAlias(host_ptr->h_aliases[i]);
-      return a;
    } else {
       if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
       return TInetAddress(hostname, 0, -1);

@@ -14,7 +14,7 @@ EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
 EVENT         = Event$(ExeSuf)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 EVENTLIB      = libEvent.lib
 else
 EVENTLIB      = $(EVENTSO)
@@ -145,7 +145,7 @@ ifeq ($(PLATFORM),macosx)
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
@@ -213,11 +213,7 @@ $(TESTBITS):    $(TESTBITSO)
 		@echo "$@ done"
 
 $(QPRANDOM):    $(QPRANDOMO)
-ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
-else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
-endif
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(GUITEST):     $(GUITESTO)
@@ -233,10 +229,11 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		@echo "$@ done"
 
 $(STRESSGEOM):  $(STRESSGEOMO)
-ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+ifeq ($(ARCH),win32)
+		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib \
+		   $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 

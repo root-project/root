@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.46 2004/06/18 15:48:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.43 2004/05/10 14:16:44 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -520,9 +520,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // by default status bar, tool bar and pad editor are hidden
    HideFrame(fStatusBar);
-   HideFrame(fToolBarSep);
-   HideFrame(fHorizontal1);
-   
+
    ShowToolBar(fCanvas->GetShowToolBar());
    ShowEditor(fCanvas->GetShowEditor());
 
@@ -585,8 +583,7 @@ void TRootCanvas::Close()
 void TRootCanvas::ReallyDelete()
 {
    // Really delete the canvas and this GUI.
-   
-   if (fEditor) fEditor->DeleteEditors();
+
    TVirtualPad *savepad = gPad;
    gPad = 0;        // hide gPad from CINT
    gInterpreter->DeleteGlobal(fCanvas);
@@ -779,11 +776,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fCanvas->Print();
                      break;
                   case kFileCloseCanvas:
-                     if (fEditor) fEditor->DeleteEditors();
                      SendCloseMessage();
                      break;
                   case kFileQuit:
-                     if (fEditor) fEditor->DeleteEditors();
                      delete this;
                      gApplication->Terminate(0);
                      break;
@@ -1159,12 +1154,10 @@ void TRootCanvas::ShowEditor(Bool_t show)
 
    if (show) {
       if (!fEditor) CreateEditor();
-      ShowFrame(fHorizontal1);
       fMainFrame->ShowFrame(fEditorFrame);
       fViewMenu->CheckEntry(kViewEditor);
       w = w + e;
    } else {
-      HideFrame(fHorizontal1);
       fMainFrame->HideFrame(fEditorFrame);
       fViewMenu->UnCheckEntry(kViewEditor);
       w = w - e;
@@ -1175,7 +1168,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
 //______________________________________________________________________________
 void TRootCanvas::CreateEditor()
 {
-   // Create editor.
+   // Create editor
 
    fEditorFrame->SetEditable();
    gPad = Canvas();

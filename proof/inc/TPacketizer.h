@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.11 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.9 2004/05/30 23:16:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:              // public because of Sun CC bug
 private:
    Long64_t       fProcessed;    // number of entries processed
    TList         *fPackets;      // all processed packets
+   TProofStats   *fStat;         // PROOF runtime statistics
 
    Long64_t       fTotalEntries; // total number of entries to be distributed
 
@@ -83,8 +84,7 @@ private:
 
 
 public:
-   TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-               TList *input);
+   TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
    virtual ~TPacketizer();
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }

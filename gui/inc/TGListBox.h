@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.17 2004/03/04 11:47:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.16 2004/02/19 15:36:45 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -261,7 +261,6 @@ public:
                                   { return fLbc->GetMultipleSelections(); }
    virtual Int_t GetNumberOfEntries() const
                                   { return fLbc->GetList()->GetSize(); }
-   virtual TGLBEntry *GetEntry(Int_t id) const;
 
    TGFrame     *GetContainer() const { return fVport->GetContainer(); }
    TGViewPort  *GetViewPort() const { return fVport; }

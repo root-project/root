@@ -35,7 +35,6 @@ void geodemo ()
    bar->AddButton("Cone segment","coneseg()","A conical segment");
    bar->AddButton("Sphere      ","sphere()","A spherical sector");
    bar->AddButton("Eliptical tube","eltu()","An eliptical tube");
-   bar->AddButton("Paraboloid  ","parab()","A paraboloid"); 
    bar->AddButton("Polygone    ","pgon()","A polygone"); 
    bar->AddButton("Polycone    ","pcon()","A polycone shape");
    bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
@@ -790,55 +789,6 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->Draw();
    c->cd(1);
 //   SavePicture("trd1",c,vol,iaxis,step);
-}
-
-//______________________________________________________________________________
-void parab()
-{
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,800);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(1);
-   }   
-   if (gGeoManager) delete gGeoManager;
-   new TGeoManager("parab", "paraboloid");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
-   TGeoMedium *med = new TGeoMedium("MED",1,mat);
-   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
-   gGeoManager->SetTopVolume(top);
-   TGeoVolume *vol = gGeoManager->MakeParaboloid("PARAB",med,0, 40, 50); 
-   TGeoParaboloid *par = (TGeoParaboloid*)vol->GetShape();
-   vol->SetLineColor(randomColor());
-   vol->SetLineWidth(2);
-   top->AddNode(vol,1);
-   gGeoManager->CloseGeometry();
-   top->Draw();
-   MakePicture();
-   if (!comments) return;
-   c->cd(2);
-   TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
-   pt->SetLineColor(1);
-   TText *text = pt->AddText("TGeoParaboloid - Paraboloid class");
-   text->SetTextColor(2);
-   AddText(pt,"fRlo",par->GetRlo(),"radius at Z=-dz");
-   AddText(pt,"fRhi",par->GetRhi(),"radius at Z=+dz");
-   AddText(pt,"fDz",par->GetDz(),"half-length on Z axis");
-   pt->AddText("----- A paraboloid is described by the equation:");
-   pt->AddText("-----    z = a*r*r + b;   where: r = x*x + y*y");
-   pt->AddText("----- Create with:    TGeoParaboloid *parab = new TGeoParaboloid(rlo, rhi, dz);");
-   pt->AddText("-----    dz:  half-length in Z (range from -dz to +dz");
-   pt->AddText("-----    rlo: radius at z=-dz given by: -dz = a*rlo*rlo + b");
-   pt->AddText("-----    rhi: radius at z=+dz given by:  dz = a*rhi*rhi + b");
-   pt->AddText("-----      rlo != rhi; both >= 0");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
-   pt->Draw();
-   c->cd(1);
 }
 
 //______________________________________________________________________________

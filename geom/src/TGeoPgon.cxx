@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.36 2004/06/04 08:17:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.35 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1081,7 +1081,18 @@ void TGeoPgon::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(this, option);
+}
+
+//_____________________________________________________________________________
+void TGeoPgon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
+{
+// paint this shape according to option
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->PaintPcon(this, option, glmat);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.14 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.13 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    Bool_t                IsPointInside(Double_t *point, Bool_t checkR=kTRUE, Bool_t checkTh=kTRUE, Bool_t checkPh=kTRUE) const;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
+   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
