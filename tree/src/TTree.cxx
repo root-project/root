@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.52 2001/02/12 07:35:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.53 2001/02/14 07:39:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1811,6 +1811,9 @@ void TTree::Print(Option_t *option) const
    // Print a summary of the Tree contents. In case options are "p" or "pa"
    // print information about the TPacketGenerator ("pa" is equivalent to
    // TPacketGenerator::Print("all")).
+   //
+   // Wildcarding can be used to print only a subset of the branches
+   // eg, T.Print("Elec*") will print all branches with name starting with "Elec"
 
   if (!strcasecmp(option, "p") || !strcasecmp(option, "pa")) {
 #ifdef NEVER
@@ -1842,10 +1845,15 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
+  TString reg = "*";
+  if (strlen(option)) reg = option;
+  TRegexp re(reg,kTRUE);
   TIter next(((TTree*)this)->GetListOfBranches());
   TBranch *br;
   TBranch::ResetCount();
   while ((br= (TBranch*)next())) {
+     TString s = br->GetName();
+     if (s.Index(re) == kNPOS) continue;
      br->Print(option);
   }
 }
