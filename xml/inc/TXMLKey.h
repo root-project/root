@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLKey.h,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLKey.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -22,15 +22,15 @@
 
 class TXMLFile;
 
-
 class TXMLKey : public TKey {
-   public:
+   protected:
       TXMLKey();
-
+    
+   public:
       TXMLKey(TXMLFile* file, const TObject* obj, const char* name = 0);
       TXMLKey(TXMLFile* file, const void* obj, const TClass* cl, const char* name);
       TXMLKey(TXMLFile* file, xmlNodePointer keynode);
-
+      virtual ~TXMLKey();
 
       // redefined TKey Methods
       virtual void      Browse(TBrowser *b);
@@ -38,15 +38,17 @@ class TXMLKey : public TKey {
       virtual void      DeleteBuffer() {}
       virtual void      FillBuffer(char *&) {}
       virtual char     *GetBuffer() const { return 0; }
-      virtual Long64_t  GetSeekKey() const  {return 0; }
-      virtual Long64_t  GetSeekPdir() const {return 0;}
+      virtual Long64_t  GetSeekKey() const  { return 1; }
+      virtual Long64_t  GetSeekPdir() const { return 1;}
       //virtual ULong_t   Hash() const { return 0; }
       virtual void      Keep() {}
-      virtual void      ls(Option_t* ="") const;
+      //virtual void      ls(Option_t* ="") const;
       //virtual void      Print(Option_t* ="") const {}
 
       virtual Int_t     Read(TObject*) { return 0; }
-      virtual TObject  *ReadObj() { return 0;}
+      virtual TObject  *ReadObj();
+      virtual void     *ReadObjectAny();
+      
       virtual void      ReadBuffer(char *&) {}
       virtual void      ReadFile() {}
       virtual void      SetBuffer() { fBuffer = 0; }
@@ -54,26 +56,23 @@ class TXMLKey : public TKey {
       virtual Int_t     Sizeof() const { return 0; }
       virtual Int_t     WriteFile(Int_t =1) { return 0; }
 
+      // TXMLKey specific methods
 
-      // TXML xpecific methods
+      xmlNodePointer    KeyNode() const { return fKeyNode; }
+      void              SetXML(TXMLEngine* xml) { fXML = xml; }
 
-      virtual ~TXMLKey();
-
-      xmlNodePointer KeyNode() const { return fKeyNode; }
-
-      TObject* GetObject();
-      void* GetObjectAny();
 
    protected:
-      virtual Int_t  Read(const char *name) { return TKey::Read(name); }
-      void StoreObject(TXMLFile* file, const void* obj, const TClass* cl);
-      xmlNodePointer ObjNode();
+      virtual Int_t     Read(const char *name) { return TKey::Read(name); }
+      void              StoreObject(const void* obj, const TClass* cl);
+      xmlNodePointer    ObjNode();
+      xmlNodePointer    BlockNode();
+      
+      TXMLFile*         fFile;     //!
+      TXMLEngine*       fXML;      //!
+      xmlNodePointer    fKeyNode;  //!
 
-      TXMLFile*      fFile;     //!
-      xmlNodePointer fKeyNode;  //!
-      void*          fObject;   //!
-
-   ClassDef(TXMLKey,1);
+   ClassDef(TXMLKey,1) // a special TKey for XML files      
 };
 
 

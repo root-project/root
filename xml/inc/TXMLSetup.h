@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.h,v 1.3 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -12,17 +12,12 @@
 #ifndef ROOT_TXMLSetup
 #define ROOT_TXMLSetup
 
-#ifndef ROOT_TXMLEngine
-#include "TXMLEngine.h"
-#endif
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-
-extern const char* NameSpaceBase;
 
 extern const char* xmlNames_Root;
 extern const char* xmlNames_Setup;
@@ -78,30 +73,27 @@ class TXMLSetup {
       TXMLSetup(const TXMLSetup& src);
       virtual ~TXMLSetup();
 
-      void           StoreSetup(xmlNodePointer node);
-      Bool_t         ReadSetup(xmlNodePointer node);
+      TString        GetSetupAsString();
 
       void           PrintSetup();
 
       EXMLLayout     GetXmlLayout() const { return fXmlLayout; }
-      void           SetXmlLayout(EXMLLayout layout) { fXmlLayout = layout; }
-
-      Bool_t         IsaSolidDataBlock() const { return fSolidDataBlock; }
-      void           SetSolidDataBlock(Bool_t iSolid = kTRUE) { fSolidDataBlock = iSolid; }
-
-      Bool_t         IsConvertBasicTypes() const { return fConvertBasicTypes; }
-      void           SetConvertBasicTypes(Bool_t iConvert = kTRUE) { fConvertBasicTypes = iConvert; }
-
+      Bool_t         IsStoreStreamerInfos() const { return fStoreStreamerInfos; }
       Bool_t         IsUseDtd() const { return fUseDtd; }
-      void           SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
-
       Bool_t         IsUseNamespaces() const { return fUseNamespaces; }
-      void           SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
+      
+      virtual void   SetXmlLayout(EXMLLayout layout) { fXmlLayout = layout; }
+      virtual void   SetStoreStreamerInfos(Bool_t iConvert = kTRUE) { fStoreStreamerInfos = iConvert; }
+      virtual void   SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
+      virtual void   SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
 
       const char*    XmlConvertClassName(const TClass* cl);
       const char*    XmlClassNameSpaceRef(const TClass* cl);
 
       Int_t          GetNextRefCounter() { return fRefCounter++; }
+      
+      static TString DefaultXmlSetup();
+      static void    SetNameSpaceBase(const char* namespacebase);
 
    protected:
 
@@ -109,22 +101,24 @@ class TXMLSetup {
       const char*    GetElItemName(TStreamerElement* el);
       const char*    GetElName(TStreamerElement* el);
 
+      Bool_t         IsValidXmlSetup(const char* setupstr);
       Bool_t         ReadSetupFromStr(const char* setupstr);
 
       Int_t          AtoI(const char* sbuf, Int_t def = 0, const char* errinfo = 0);
 
 
       EXMLLayout     fXmlLayout;
-      Bool_t         fSolidDataBlock;
-      Bool_t         fConvertBasicTypes;
+      Bool_t         fStoreStreamerInfos;
       Bool_t         fUseDtd;
       Bool_t         fUseNamespaces;
 
       Int_t          fRefCounter;      //!  counter , used to build id of xml references
 
       TString        fStrBuf;          //!  buffer, used in XmlDefineClass() function
+      
+      static TString fNameSpaceBase;   
 
-   ClassDef(TXMLSetup,1);
+   ClassDef(TXMLSetup,1) //settings to be stored in XML files
 };
 
 #endif

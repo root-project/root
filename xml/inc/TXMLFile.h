@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.3 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -32,6 +32,7 @@ class TStreamerInfo;
 
 class TXMLFile : public TFile, public TXMLSetup {
    protected:
+       void             InitXmlFile(Bool_t create);
        // Interface to basic system I/O routines
        virtual Int_t    SysOpen(const char*, Int_t, UInt_t) { return 0; }
        virtual Int_t    SysClose(Int_t) { return 0; }
@@ -51,12 +52,8 @@ class TXMLFile : public TFile, public TXMLSetup {
       TXMLFile(const char* filename, Option_t* option = "read", const char* title = "title", Int_t compression = 1);
       virtual ~TXMLFile();
 
-      virtual void      Browse(TBrowser *b);
-      virtual Bool_t    cd(const char* path = "");
-
-      virtual void      Close(Option_t* = "") {} // *MENU*
-      virtual void      Draw(Option_t* = "") {}
-      virtual void      DrawMap(const char* ="*",Option_t* ="") {} // *MENU*
+      virtual void      Close(Option_t *option=""); // *MENU*
+      virtual void      DrawMap(const char* ="*",Option_t* ="") {} 
       virtual void      FillBuffer(char* &) {}
       virtual void      Flush() {}
 
@@ -76,7 +73,7 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       virtual void      MakeFree(Long64_t, Long64_t) {}
       virtual void      MakeProject(const char *, const char* ="*", Option_t* ="new") {} // *MENU*
-      virtual void      Map() {} // *MENU*
+      virtual void      Map() {} // 
       virtual void      Paint(Option_t* ="") {}
       virtual void      Print(Option_t* ="") const {}
       virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
@@ -95,14 +92,19 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      WriteFree() {}
       virtual void      WriteHeader() {}
       virtual Int_t     WriteObject(const TObject* obj, const char* name = 0, Option_t *option="");
+      virtual Int_t     WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
       virtual Int_t     WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t *option="");
       virtual void      WriteStreamerInfo();
 
       // XML specific functions
+      
+      virtual void      SetXmlLayout(EXMLLayout layout);
+      virtual void      SetStoreStreamerInfos(Bool_t iConvert = kTRUE);
+      virtual void      SetUsedDtd(Bool_t use = kTRUE);
+      virtual void      SetUseNamespaces(Bool_t iUseNamespaces = kTRUE);
 
+      TXMLEngine*       XML() { return fXML; } 
       TXMLDtdGenerator* GetDtdGenerator() const { return fDtdGener; }
-      TObject*          Get(const char* name);
-      void*             GetAny(const char* name);
 
    protected:
       // functions to store streamer infos
@@ -118,11 +120,13 @@ class TXMLFile : public TFile, public TXMLSetup {
 
       xmlDocPointer     fDoc;                  //!
 
-      TXMLDtdGenerator* fDtdGener;            //!
+      TXMLDtdGenerator* fDtdGener;             //!
       
-      xmlNodePointer    fStreamerInfoNode;     //!
-
-   ClassDef(TXMLFile,1);
+      xmlNodePointer    fStreamerInfoNode;     //!  pointer of node with streamer info data
+      
+      TXMLEngine*       fXML;                  //! object for interface with xml library
+      
+   ClassDef(TXMLFile,1)  //ROOT file in XML format
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.3 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -9,6 +9,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//________________________________________________________________________
+//
+// Class TXMLSetup is used as storage of settings, relevant for storing data
+// in xml file. This class is used in TXMLFile and in TXmlBuffer classes.
+// Xml settings can be codded via a string in following format
+//
+//   "2xoo"
+//    ||| \ .
+//    || \ usage of name spaces.
+//    | \ usage of DTD;
+//     \ storage of TStreamerInfo objects in file;
+//      layout of xml file (= 2 - specialized (default), = 3 - generic) 
+//
+// For last three boolean parameters "x" means true, "o" - false
+//
+// Such string can be set as argument of TXMLFile constructor. In that
+// case new TXMLFile with such parameters will be created. 
+// These settings automatically stored in xml file.
+
+//________________________________________________________________________
+
+
+
 #include "TXMLSetup.h"
 
 #include "TROOT.h"
@@ -17,8 +40,6 @@
 #include "Riostream.h"
 
 ClassImp(TXMLSetup);
-
-const char* NameSpaceBase = "http://root.cern.ch/";
 
 const char* xmlNames_Root        = "root";
 const char* xmlNames_Setup       = "setup";
@@ -60,11 +81,24 @@ const char* xmlNames_ULong64     = "ULong64_t";
 const char* xmlNames_String      = "string";
 const char* xmlNames_CharStar    = "CharStar";
 
+
+TString TXMLSetup::fNameSpaceBase = "http://root.cern.ch/root/htmldoc/";   
+
+//______________________________________________________________________________
+TString TXMLSetup::DefaultXmlSetup() 
+{
+  return TString("2xox");    
+}
+
+//______________________________________________________________________________
+void TXMLSetup::SetNameSpaceBase(const char* namespacebase) {
+   fNameSpaceBase = namespacebase; 
+}
+
 //______________________________________________________________________________
 TXMLSetup::TXMLSetup() :
    fXmlLayout(kSpecialized),
-   fSolidDataBlock(kTRUE),
-   fConvertBasicTypes(kTRUE),
+   fStoreStreamerInfos(kTRUE),
    fUseDtd(kFALSE),
    fUseNamespaces(kFALSE),
    fRefCounter(0)
@@ -81,8 +115,7 @@ TXMLSetup::TXMLSetup(const char* opt) : fRefCounter(0)
 //______________________________________________________________________________
 TXMLSetup::TXMLSetup(const TXMLSetup& src) :
    fXmlLayout(src.fXmlLayout),
-   fSolidDataBlock(src.fSolidDataBlock),
-   fConvertBasicTypes(src.fConvertBasicTypes),
+   fStoreStreamerInfos(src.fStoreStreamerInfos),
    fUseDtd(src.fUseDtd),
    fUseNamespaces(src.fUseNamespaces),
    fRefCounter(0)
@@ -95,54 +128,52 @@ TXMLSetup::~TXMLSetup()
 }
 
 //______________________________________________________________________________
-void TXMLSetup::StoreSetup(xmlNodePointer node)
-{
-   if (node==0) return;
-
-   char setupstr[10] = "1xxxx";
+TString TXMLSetup::GetSetupAsString() {
+   char setupstr[10] = "2xxx";
 
    setupstr[0] = char(48+fXmlLayout);
-   setupstr[1] = fSolidDataBlock ? 'x' : 'o';
-   setupstr[2] = fConvertBasicTypes ? 'x' : 'o';
-   setupstr[3] = fUseDtd ? 'x' : 'o';
-   setupstr[4] = fUseNamespaces ? 'x' : 'o';
-
-   gXML->NewProp(node, 0, xmlNames_Setup, setupstr);
+   setupstr[1] = fStoreStreamerInfos ? 'x' : 'o';
+   setupstr[2] = fUseDtd ? 'x' : 'o';
+   setupstr[3] = fUseNamespaces ? 'x' : 'o';
+  
+   return TString(setupstr); 
 }
+
+//______________________________________________________________________________
+Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr) 
+{
+   if ((setupstr==0) || (strlen(setupstr)!=4)) return kFALSE;
+   TString str = setupstr;
+   str.ToLower();
+   if ((str[0]<48) || (str[0]>53)) return kFALSE;
+   for (int n=1;n<4;n++)
+     if ((str[n]!='o') && (str[n]!='x')) return kFALSE;
+   return kTRUE;  
+}
+
 
 //______________________________________________________________________________
 Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
 {
-   if ((setupstr==0) || (strlen(setupstr)<5)) return kFALSE;
+   if ((setupstr==0) || (strlen(setupstr)<4)) return kFALSE;
    Int_t lay          = EXMLLayout(setupstr[0] - 48);
    if (lay==kGeneralized) fXmlLayout = kGeneralized;
                      else fXmlLayout = kSpecialized;
 
-   fSolidDataBlock    = setupstr[1]=='x';
-   fConvertBasicTypes = kTRUE;
+   fStoreStreamerInfos = setupstr[1]=='x';
    fUseDtd            = kFALSE;
-   fUseNamespaces     = setupstr[4]=='x';
+   fUseNamespaces     = setupstr[3]=='x';
    return kTRUE;
 }
-
 
 //______________________________________________________________________________
 void TXMLSetup::PrintSetup()
 {
    cout << " *** Setup printout ***" << endl;
    cout << "Attribute mode = " << fXmlLayout << endl;
-   cout << "Solid data block = " << (fSolidDataBlock ? "true" : "false") << endl;
-   cout << "Convert basic types = " << (fConvertBasicTypes ? "true" : "false") << endl;
+   cout << "Store streamer infos = " << (fStoreStreamerInfos ? "true" : "false") << endl;
    cout << "Use dtd = " << (fUseDtd ? "true" : "false") << endl;
    cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << endl;
-}
-
-//______________________________________________________________________________
-Bool_t TXMLSetup::ReadSetup(xmlNodePointer node)
-{
-   if (node==0) return kFALSE;
-
-   return ReadSetupFromStr(gXML->GetProp(node, xmlNames_Setup));
 }
 
 //______________________________________________________________________________
@@ -160,8 +191,10 @@ const char* TXMLSetup::XmlConvertClassName(const TClass* cl)
 const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 {
    TString clname = XmlConvertClassName(cl);
-   fStrBuf = NameSpaceBase;
+   fStrBuf = fNameSpaceBase;
    fStrBuf += clname;
+   if (fNameSpaceBase == "http://root.cern.ch/root/htmldoc/")
+     fStrBuf += ".html";
    return fStrBuf.Data();
 }
 
@@ -196,9 +229,12 @@ TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
 }
 
 //______________________________________________________________________________
-Int_t TXMLSetup::AtoI(const char* sbuf, Int_t def, const char* errinfo) {
+Int_t TXMLSetup::AtoI(const char* sbuf, Int_t def, const char* errinfo) 
+{
    if (sbuf!=0) return atoi(sbuf);
-   if (errinfo) cerr << errinfo << " atoi report sbuf = 0" << endl;
+   if (errinfo) 
+     cerr << " AtoI conversion, character specified: " << errinfo << endl;
    return def;
 }
+
 

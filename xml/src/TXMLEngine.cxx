@@ -9,36 +9,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//________________________________________________________________________
+//
+//  The aim of TXMLEngine class is to provide interface to libxml2 library.
+//  It defines only used in ROOT functions of libxml2
+//  There is a problem to parse libxml2 include files through CINT, 
+//  therefore several wrappers for libxml2 types are defined.
+//  More information about libxml2 itself can be found in http://xmlsoft.org
+//________________________________________________________________________
+
+
 #include "TXMLEngine.h"
 
 #include "Riostream.h"
 #include "libxml/tree.h"
 
-TXMLEngine*  gXML;
-
 ClassImp(TXMLEngine);
 
 //______________________________________________________________________________
-TXMLEngine* TXMLEngine::fgInstance = new TXMLEngine();
-
-//______________________________________________________________________________
-TXMLEngine::TXMLEngine() {
-   gXML  = this;
+TXMLEngine::TXMLEngine() 
+{
+   
 };
 
 //______________________________________________________________________________
-TXMLEngine::~TXMLEngine() {
+TXMLEngine::~TXMLEngine() 
+{
 }
 
 //______________________________________________________________________________
-Bool_t TXMLEngine::HasProp(xmlNodePointer node, const char* name) {
+Bool_t TXMLEngine::HasAttr(xmlNodePointer node, const char* name) {
 
    if ((node==0) || (name==0)) return kFALSE;
    return xmlHasProp((xmlNodePtr) node, (const xmlChar*) name) != 0;
 }
 
 //______________________________________________________________________________
-const char* TXMLEngine::GetProp(xmlNodePointer node, const char* name) {
+const char* TXMLEngine::GetAttr(xmlNodePointer node, const char* name) {
    if (node==0) return 0;
    xmlChar* prop = xmlGetProp((xmlNodePtr) node, (const xmlChar*) name);
    if (prop) {
@@ -50,7 +57,21 @@ const char* TXMLEngine::GetProp(xmlNodePointer node, const char* name) {
 }
 
 //______________________________________________________________________________
-xmlAttrPointer TXMLEngine::NewProp(xmlNodePointer node,
+Int_t TXMLEngine::GetIntAttr(xmlNodePointer node, const char* name) {
+   if (node==0) return 0;
+   
+   Int_t res = 0;
+   
+   xmlChar* prop = xmlGetProp((xmlNodePtr) node, (const xmlChar*) name);
+   if (prop) {
+      sscanf((const char*) prop,"%d", &res);
+      xmlFree(prop);
+   }
+   return res;
+}
+
+//______________________________________________________________________________
+xmlAttrPointer TXMLEngine::NewAttr(xmlNodePointer node,
                                    xmlNsPointer ns,
                                    const char* name,
                                    const char* value) {
@@ -64,6 +85,25 @@ xmlAttrPointer TXMLEngine::NewProp(xmlNodePointer node,
                                            (const xmlChar*) name,
                                            (const xmlChar*) value);
 }
+
+//______________________________________________________________________________
+xmlAttrPointer TXMLEngine::NewIntAttr(xmlNodePointer node,
+                                      const char* name,
+                                      Int_t value)
+{
+  char sbuf[30];
+  sprintf(sbuf,"%d",value);
+  return NewAttr(node, 0, name, sbuf);
+}                                      
+
+//______________________________________________________________________________
+void TXMLEngine::FreeAttr(xmlNodePointer node, const char* name) 
+{
+   if ((node==0) || (name==0)) return;
+   xmlAttrPtr attr = xmlHasProp((xmlNodePtr) node, (const xmlChar*) name);
+   if (attr!=0) xmlRemoveProp(attr);
+}
+
 
 //______________________________________________________________________________
 xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent,
@@ -91,8 +131,9 @@ void TXMLEngine::AddChild(xmlNodePointer parent, xmlNodePointer child) {
 }
 
 //______________________________________________________________________________
-void TXMLEngine::UnlinkChild(xmlNodePointer node) {
-   xmlUnlinkNode((xmlNodePtr) node);
+void TXMLEngine::UnlinkNode(xmlNodePointer node) {
+   if (node!=0)  
+     xmlUnlinkNode((xmlNodePtr) node);
 }
 
 //______________________________________________________________________________
@@ -130,8 +171,6 @@ xmlNodePointer TXMLEngine::GetParent(xmlNodePointer node) {
    return ((xmlNodePtr) node)->parent;
 }
 
-
-
 //______________________________________________________________________________
 xmlNodePointer TXMLEngine::GetNext(xmlNodePointer node) {
    if (node==0) return 0;
@@ -139,18 +178,37 @@ xmlNodePointer TXMLEngine::GetNext(xmlNodePointer node) {
 }
 
 //______________________________________________________________________________
+Bool_t TXMLEngine::IsEmptyNode(xmlNodePointer node) 
+{
+// checks if provided node is empty
+  if (node==0) return kTRUE;
+  return xmlIsBlankNode((xmlNodePtr) node);
+}
+
+//______________________________________________________________________________
+void TXMLEngine::CleanNode(xmlNodePointer node) {
+   if (node==0) return;
+   xmlNodePointer child = GetChild(node);
+   while (child!=0) {
+      xmlNodePointer next = GetNext(child);
+      UnlinkNode(child);
+      FreeNode(child);
+      child = next;
+   }
+}
+
+//______________________________________________________________________________
 void TXMLEngine::ShiftToNext(xmlNodePointer &node, Bool_t skipempty) {
    if (node==0) return;
    node = ((xmlNodePtr) node)->next;
 
-   if (skipempty)
-     while (node && xmlIsBlankNode((xmlNodePtr) node))
-       node = ((xmlNodePtr) node)->next;
+   if (skipempty) 
+     SkipEmpty(node);
 }
 
 //______________________________________________________________________________
 void TXMLEngine::SkipEmpty(xmlNodePointer &node) {
-   while (node && xmlIsBlankNode((xmlNodePtr) node))
+   while (node && IsEmptyNode(node))
      node = ((xmlNodePtr) node) ->next;
 }
 

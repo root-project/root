@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.h,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -74,7 +74,7 @@ class TXMLDtdGenerator : public TXMLSetup {
       TString fDtdBuf;
       Bool_t  fUsedBaseTypes[MaxBaseTypeNum];
 
-   ClassDef(TXMLDtdGenerator,1);
+   ClassDef(TXMLDtdGenerator,1) // The XML DTD generator
 };
 
 

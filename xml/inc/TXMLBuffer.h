@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.2 2004/05/10 23:50:27 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.3 2004/05/11 18:52:17 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -41,44 +41,43 @@ class TXMLStackObj;
 
 class TXMLBuffer : public TBuffer, public TXMLSetup {
    public:
-
-      TXMLBuffer(TBuffer::EMode mode, const TXMLSetup& setup, TXMLFile* file = 0);
+   
+      TXMLBuffer(TBuffer::EMode mode);
+      TXMLBuffer(TBuffer::EMode mode, TXMLFile* file);
       virtual ~TXMLBuffer();
+      
+      void             SetCompressionLevel(int level) { fCompressLevel = level; }
+      void             SetXML(TXMLEngine* xml) { fXML = xml; }
 
-      xmlNodePointer XmlWrite(const TObject* obj);
-      xmlNodePointer XmlWrite(const void* obj, const TClass* cl);
+      void             XmlWriteBlock(xmlNodePointer node);
+      xmlNodePointer   XmlWrite(const TObject* obj);
+      xmlNodePointer   XmlWrite(const void* obj, const TClass* cl);
 
-      TObject* XmlRead(xmlNodePointer node);
-      void* XmlReadAny(xmlNodePointer node);
-
-      void SetDtdGenerator(TXMLDtdGenerator* gen) { fDtdGener = gen; }
+      void             XmlReadBlock(xmlNodePointer node);
+      TObject*         XmlRead(xmlNodePointer node);
+      void*            XmlReadAny(xmlNodePointer node, TClass** cl);
 
       // suppress class writing/reading
 
-      virtual TClass*   ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
-      virtual void      WriteClass(const TClass* cl);
+      virtual TClass*  ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
+      virtual void     WriteClass(const TClass* cl);
 
       // redefined virtual functions of TBuffer
 
-      virtual Int_t     CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss); // SL
-      virtual Int_t     CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
-      virtual void      SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);  // SL
+      virtual Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss); // SL
+      virtual Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
+      virtual void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);  // SL
 
       virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);  // SL
-      virtual UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);  // SL
+      virtual UInt_t   WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);  // SL
 
-      virtual void*     ReadObjectAny(const TClass* clCast);
+      virtual void*    ReadObjectAny(const TClass* clCast);
 
-      virtual void      IncrementLevel(TStreamerInfo*);
-      virtual void      SetStreamerElementNumber(Int_t);
-      virtual void      DecrementLevel(TStreamerInfo*);
+      virtual void     IncrementLevel(TStreamerInfo*);
+      virtual void     SetStreamerElementNumber(Int_t);
+      virtual void     DecrementLevel(TStreamerInfo*);
 
-      // end of redefined virtual functions of XMLStyle1
-
-      virtual void      WriteObject(const TObject *obj);
-
-
-      // redefined virtual functions of TBuffer
+      virtual void     WriteObject(const TObject *obj);
 
       virtual Int_t    ReadArray(Bool_t    *&b);
       virtual Int_t    ReadArray(Char_t    *&c);
@@ -196,101 +195,95 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       // end of redefined virtual functions
 
    protected:
+      TXMLBuffer();
+
       // redefined protected virtual functions
 
-      virtual void  WriteObject(const void *actualObjStart, const TClass *actualClass);
+      virtual void     WriteObject(const void *actualObjStart, const TClass *actualClass);
 
       // end redefined protected virtual functions
 
-      TXMLBuffer();
-
-      //TXMLBuffer(const TXMLBuffer&);
-
-      TXMLStackObj* PushStack(xmlNodePointer current, Bool_t simple = kFALSE);
-      void PopStack();
-      void ShiftStack(const char* info = 0);
-
-      xmlNodePointer StackNode();
-      TXMLStackObj* Stack(Int_t depth);
-
-      Bool_t VerifyNode(xmlNodePointer node, const char* name, const char* errinfo = 0);
-      Bool_t VerifyStackNode(const char* name, const char* errinfo = 0);
+      TXMLFile*        XmlFile();
       
-      xmlNodePointer CreateItemNode(const char* name);
-      Bool_t VerifyItemNode(const char* name, const char* errinfo = 0);
+      TXMLStackObj*    PushStack(xmlNodePointer current, Bool_t simple = kFALSE);
+      TXMLStackObj*    PopStack();
+      void             ShiftStack(const char* info = 0);
 
-      Bool_t VerifyProp(xmlNodePointer node, const char* propname, const char* propvalue, const char* errinfo = 0);
-      Bool_t VerifyStackProp(const char* propname, const char* propvalue, const char* errinfo = 0);
+      xmlNodePointer   StackNode();
+      TXMLStackObj*    Stack(Int_t depth = 0);
 
-      void XmlWriteBlock(Bool_t force = kFALSE);
-      void XmlReadBlock(xmlNodePointer node = 0);
-
-      Bool_t ProcessPointer(const void* ptr, xmlNodePointer node);
-      void RegisterPointer(const void* ptr, xmlNodePointer node);
-      Bool_t ExtractPointer(xmlNodePointer node, void* &ptr);
-      void ExtractObjectId(xmlNodePointer node, const void* ptr);
-
-      xmlNodePointer XmlWriteBasic(Char_t value);
-      xmlNodePointer XmlWriteBasic(Short_t value);
-      xmlNodePointer XmlWriteBasic(Int_t value);
-      xmlNodePointer XmlWriteBasic(Long_t value);
-      xmlNodePointer XmlWriteBasic(Long64_t value);
-      xmlNodePointer XmlWriteBasic(Float_t value);
-      xmlNodePointer XmlWriteBasic(Double_t value);
-      xmlNodePointer XmlWriteBasic(Bool_t value);
-      xmlNodePointer XmlWriteBasic(UChar_t value);
-      xmlNodePointer XmlWriteBasic(UShort_t value);
-      xmlNodePointer XmlWriteBasic(UInt_t value);
-      xmlNodePointer XmlWriteBasic(ULong_t value);
-      xmlNodePointer XmlWriteBasic(ULong64_t value);
-      xmlNodePointer XmlWriteValue(const char* value, const char* name);
-
-      void XmlReadBasic(Char_t& value);
-      void XmlReadBasic(Short_t& value);
-      void XmlReadBasic(Int_t& value);
-      void XmlReadBasic(Long_t& value);
-      void XmlReadBasic(Long64_t& value);
-      void XmlReadBasic(Float_t& value);
-      void XmlReadBasic(Double_t& value);
-      void XmlReadBasic(Bool_t& value);
-      void XmlReadBasic(UChar_t& value);
-      void XmlReadBasic(UShort_t& value);
-      void XmlReadBasic(UInt_t& value);
-      void XmlReadBasic(ULong_t& value);
-      void XmlReadBasic(ULong64_t& value);
-      const char* XmlReadValue(const char* name);
-
-      TXMLFile* XmlFile();
-
-      xmlNodePointer XmlWriteObject(const void* obj, const TClass* objClass);
-      void* XmlReadObject(void* obj);
-
-      void CreateElemNode(const TStreamerElement* elem, Int_t number = -1);
-      Bool_t VerifyElemNode(const TStreamerElement* elem, Int_t number = -1);
-
-      void              BeforeIOoperation();
-      void              CheckVersionBuf();
+      Bool_t           VerifyNode(xmlNodePointer node, const char* name, const char* errinfo = 0);
+      Bool_t           VerifyStackNode(const char* name, const char* errinfo = 0);
       
-      Int_t             fStoredBuffePos;       //!
+      Bool_t           VerifyAttr(xmlNodePointer node, const char* name, const char* value, const char* errinfo = 0);
+      Bool_t           VerifyStackAttr(const char* name, const char* value, const char* errinfo = 0);
 
-      TObjArray         fStack;                //!
+      Bool_t           ProcessPointer(const void* ptr, xmlNodePointer node);
+      void             RegisterPointer(const void* ptr, xmlNodePointer node);
+      Bool_t           ExtractPointer(xmlNodePointer node, void* &ptr, TClass* &cl);
+      void             ExtractReference(xmlNodePointer node, const void* ptr, const TClass* cl);
 
-      Version_t         fVersionBuf;           //!
+      xmlNodePointer   CreateItemNode(const char* name);
+      Bool_t           VerifyItemNode(const char* name, const char* errinfo = 0);
 
-      TXMLDtdGenerator* fDtdGener;             //!
-      TXMLFile*         fXmlFile;              //!
+      void             CreateElemNode(const TStreamerElement* elem, Int_t number = -1);
+      Bool_t           VerifyElemNode(const TStreamerElement* elem, Int_t number = -1);
+      
+      xmlNodePointer   XmlWriteBasic(Char_t value);
+      xmlNodePointer   XmlWriteBasic(Short_t value);
+      xmlNodePointer   XmlWriteBasic(Int_t value);
+      xmlNodePointer   XmlWriteBasic(Long_t value);
+      xmlNodePointer   XmlWriteBasic(Long64_t value);
+      xmlNodePointer   XmlWriteBasic(Float_t value);
+      xmlNodePointer   XmlWriteBasic(Double_t value);
+      xmlNodePointer   XmlWriteBasic(Bool_t value);
+      xmlNodePointer   XmlWriteBasic(UChar_t value);
+      xmlNodePointer   XmlWriteBasic(UShort_t value);
+      xmlNodePointer   XmlWriteBasic(UInt_t value);
+      xmlNodePointer   XmlWriteBasic(ULong_t value);
+      xmlNodePointer   XmlWriteBasic(ULong64_t value);
+      xmlNodePointer   XmlWriteValue(const char* value, const char* name);
 
-      TExMap*           fObjMap;               //!
-      TObjArray*        fIdArray;              //!
+      void             XmlReadBasic(Char_t& value);
+      void             XmlReadBasic(Short_t& value);
+      void             XmlReadBasic(Int_t& value);
+      void             XmlReadBasic(Long_t& value);
+      void             XmlReadBasic(Long64_t& value);
+      void             XmlReadBasic(Float_t& value);
+      void             XmlReadBasic(Double_t& value);
+      void             XmlReadBasic(Bool_t& value);
+      void             XmlReadBasic(UChar_t& value);
+      void             XmlReadBasic(UShort_t& value);
+      void             XmlReadBasic(UInt_t& value);
+      void             XmlReadBasic(ULong_t& value);
+      void             XmlReadBasic(ULong64_t& value);
+      const char*      XmlReadValue(const char* name);
 
-      TString           fValueBuf;             //!
+      xmlNodePointer   XmlWriteObject(const void* obj, const TClass* objClass);
+      void*            XmlReadObject(void* obj, TClass** cl = 0);
 
-      Int_t             fErrorFlag;            //!
+      void             BeforeIOoperation();
+      void             CheckVersionBuf();
+      
+      TXMLEngine*      fXML;                 //!
 
-      Bool_t            fCanUseCompact;        //!
-      Bool_t            fExpectedChain;        //!
+      TObjArray        fStack;                //!
 
-   ClassDef(TXMLBuffer,1);
+      Version_t        fVersionBuf;           //!
+
+      TExMap*          fObjMap;               //!
+      TObjArray*       fIdArray;              //!
+
+      TString          fValueBuf;             //!
+
+      Int_t            fErrorFlag;            //!
+      
+      Bool_t           fCanUseCompact;        //!   flag indicate that basic type (like Int_t) can be placed in the same tag
+      Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
+      TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
+      Int_t            fCompressLevel;        //!   compress level used to minimize size of file 
+
+   ClassDef(TXMLBuffer,1) //a specialized TBuffer to read/write to XML files
 };
 
 #endif

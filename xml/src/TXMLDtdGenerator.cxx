@@ -306,13 +306,11 @@ void TXMLDtdGenerator::ProduceDtdForBlackClass(ofstream& fs, TClass* cl) {
    TString clname = XmlConvertClassName(cl);
 
    fs << "<!ELEMENT " << clname << " (#PCDATA|" << xmlNames_Xmlobject << "|" << xmlNames_XmlBlock;
-   if (IsConvertBasicTypes()) {
-     fs << "|" << xmlNames_Array;
-     for (int n=0;n<MaxBaseTypeNum;n++) {
-        const char* iname = dtdBaseTypeName(n);
-        if (strlen(iname)>0)
-           fs << "|" << iname;
-     }
+   fs << "|" << xmlNames_Array;
+   for (int n=0;n<MaxBaseTypeNum;n++) {
+      const char* iname = dtdBaseTypeName(n);
+      if (strlen(iname)>0)
+         fs << "|" << iname;
    }
    fs << ")*>" << endl;
 
@@ -326,7 +324,6 @@ void TXMLDtdGenerator::ProduceDtdForBlackClass(ofstream& fs, TClass* cl) {
 //______________________________________________________________________________
 void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInfo* info) {
 
-   Int_t n;
    if (info==0) return;
    TString clname = XmlConvertClassName(info->GetClass());
 
@@ -334,10 +331,10 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
 
    TObjArray* elements = info->GetElements();
    if (elements==0) return;
-   bool first = true, canhasblock = IsaSolidDataBlock();
+   bool first = true, canhasblock = true;
 
    // producing list of elements inside class element
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
 
       Int_t typ = dtdType(el);
@@ -379,7 +376,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
      fs << "          xmlns:" << clname << " CDATA \"" << XmlClassNameSpaceRef(info->GetClass()) << "\"" << endl;
    fs << "          " << xmlNames_ClassVersion << " CDATA #IMPLIED" << endl;
 
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       if (dtdType(el) == dtd_attr)
         fs << "          " << GetElName(el) << " CDATA #REQUIRED" << endl;
@@ -388,7 +385,7 @@ void TXMLDtdGenerator::ProduceDtdForInstrumentedClass(ofstream& fs, TStreamerInf
 
    // produce description for each element
 
-   for (n=0;n<=elements->GetLast();n++) {
+   for (int n=0;n<=elements->GetLast();n++) {
       TStreamerElement* el = dynamic_cast<TStreamerElement*> (elements->At(n));
       int eltype = dtdType(el);
       Int_t arrlen = el->GetArrayLength();
@@ -515,9 +512,7 @@ void TXMLDtdGenerator::ProduceGeneralDtd(ofstream& fs, TClass* onlyclass) {
 
 //______________________________________________________________________________
 void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
-   
-   int n;
-   for (n=0;n<MaxBaseTypeNum;n++)
+   for (int n=0;n<MaxBaseTypeNum;n++)
      fUsedBaseTypes[n] = kFALSE;
 
    fClassSpace.Clear();
@@ -573,28 +568,25 @@ void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
    }
 */
 
-   for (n=0;n<MaxBaseTypeNum;n++)
-      if (fUsedBaseTypes[n] || IsConvertBasicTypes()) {
-        const char* iname = dtdBaseTypeName(n);
-        if (strlen(iname)>0)
-          ProduceDtdForItem(fs, iname);
-      }
-
-   if (IsConvertBasicTypes()) {
-     fs << "<!ELEMENT " << xmlNames_Array << " ";
-     bool first = true;
-     for (n=0;n<MaxBaseTypeNum;n++) {
-        const char* iname = dtdBaseTypeName(n);
-        if (strlen(iname)>0) {
-           fs << (first ? "(": "|") << iname;
-           first = false;
-        }
-     }
-     fs << ")*>" << endl;
-     fs << "<!ATTLIST " << xmlNames_Array << " " << xmlNames_Size << " CDATA #IMPLIED>" << endl;
+   for (int n=0;n<MaxBaseTypeNum;n++) {
+      const char* iname = dtdBaseTypeName(n);
+      if (strlen(iname)>0)
+        ProduceDtdForItem(fs, iname);
    }
 
-   if ((fBlackClasses.GetLast()>=0) || IsaSolidDataBlock()) {
+   fs << "<!ELEMENT " << xmlNames_Array << " ";
+   bool first = true;
+   for (int n=0;n<MaxBaseTypeNum;n++) {
+      const char* iname = dtdBaseTypeName(n);
+      if (strlen(iname)>0) {
+         fs << (first ? "(": "|") << iname;
+         first = false;
+      }
+   }
+   fs << ")*>" << endl;
+   fs << "<!ATTLIST " << xmlNames_Array << " " << xmlNames_Size << " CDATA #IMPLIED>" << endl;
+
+   if (fBlackClasses.GetLast()>=0) {
       fs << endl << "<!ELEMENT " << xmlNames_XmlBlock << " (#PCDATA)>" << endl;
       fs << "<!ATTLIST " << xmlNames_XmlBlock << endl
          << "          " << xmlNames_Size << " CDATA #REQUIRED" << endl
