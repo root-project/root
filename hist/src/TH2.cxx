@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.15 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.16 2001/02/28 08:00:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -889,7 +889,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      sprintf(pname,"%s%s",GetName(),name);
   }
   TProfile *h1;
-  TArrayD *bins = fYaxis.GetXbins();
+  TArrayD *bins = fXaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
   } else {
