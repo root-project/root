@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.3 2000/06/13 09:27:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.4 2000/06/16 07:34:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -230,7 +230,7 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-void TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
    // Draw expression varexp for selected entries.
    //
@@ -239,17 +239,17 @@ void TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries,
    //    ntuple.Draw("x",cut1+cut2+cut3);
    //
 
-   TChain::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
+   return TChain::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
-void TChain::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
    // Process all entries in this chain and draw histogram
    // corresponding to expression varexp.
 
-   if (LoadTree(firstentry) < 0) return;
-   TTree::Draw(varexp,selection,option,nentries,firstentry);
+   if (LoadTree(firstentry) < 0) return 0;
+   return TTree::Draw(varexp,selection,option,nentries,firstentry);
 }
 
 
@@ -583,6 +583,16 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 void TChain::Print(Option_t *option)
 {
    fFiles->ls(option);
+}
+
+//______________________________________________________________________________
+Int_t TChain::Process(const char *filename, Option_t *option,Int_t nentries, Int_t firstentry)
+{
+   // Process all entries in this chain, calling functions in filename
+   // see TTree::Process
+
+   if (LoadTree(firstentry) < 0) return 0;
+   return TTree::Process(filename,option,nentries,firstentry);
 }
 
 //_______________________________________________________________________

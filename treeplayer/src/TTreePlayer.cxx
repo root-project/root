@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.5 2000/06/14 09:07:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.6 2000/06/16 10:48:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -456,7 +456,7 @@ void TTreePlayer::CreatePacketGenerator(Int_t nentries, Stat_t firstEntry)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -672,7 +672,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //       - type the command  "TTreeViewer TV(treeName)"
 //       - execute statement "tree->StartViewer();"
 //
-   if (fTree->GetEntries() == 0) return;
+   if (fTree->GetEntries() == 0) return 0;
    TString  opt;
    char *hdefault = (char *)"htemp";
    char *varexp;
@@ -731,7 +731,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //*-*- Decode varexp and selection
 
    CompileVariables(varexp, selection);
-   if (!fVar1 && !elist) return;
+   if (!fVar1 && !elist) return -1;
 
 //*-*- In case oldh1 exists, check dimensionality
    Int_t nsel = strlen(selection);
@@ -761,7 +761,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
 //*-*- Create a default canvas if none exists
    fDraw = 0;
    if (!gPad && !gProofServ && !opt.Contains("goff") && fDimension > 0) {
-      if (!gROOT->GetMakeDefCanvas()) return;
+      if (!gROOT->GetMakeDefCanvas()) return -1;
       (gROOT->GetMakeDefCanvas())();
    }
 
@@ -1029,6 +1029,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
       fTree->SetEstimate(oldEstimate);
    }
    if (hkeep) delete [] varexp;
+   return fSelectedRows;
 }
 
 //______________________________________________________________________________
@@ -1271,7 +1272,7 @@ void TTreePlayer::FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Do
 }
 
 //______________________________________________________________________________
-void TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -1294,13 +1295,14 @@ void TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selec
    if (option) sprintf(opt,"%sgoff",option);
    else        strcpy(opt,"goff");
 
-   DrawSelect(varexp,selection,opt,nentries,firstentry);
+   Int_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
    delete [] opt;
 
    if (fHistogram) {
       fHistogram->Fit(formula,option,goption);
    }
+   return nsel;
 }
 
 //______________________________________________________________________________
@@ -2017,7 +2019,44 @@ void TTreePlayer::MakeIndex(TString &varexp, Int_t *index)
 }
 
 //______________________________________________________________________________
-void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
+Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
+//*-*              ================================================
+//
+//   The code in filename is loaded (interpreted or compiled , see below)
+//   filename must contain a valid class implementation derived from TTreeProcess.
+//   where TTreeProcess has the following member functions:
+//     void TTreeProcess::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TTreeProcess::Select(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//     void TTreeProcess::Analyze(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//     void TTreeProcess::Finish(). This function is called at the end of
+//          the loop on all events. 
+//
+//   if filename is of the form file.C, the file will be interpreted.
+//   if filename is of the form file.C++, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be deleted at the end of the function.
+//   if filename is of the form file.C+, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be kept at the end of the function. At next call, if file.C
+//      is older than file.o and file.so, the file.C is not compiled, only
+//      file.so is loaded.
+
+
+   printf("NOT YET IMPLEMENTED\n");
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
                        Int_t nentries, Int_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
@@ -2044,8 +2083,8 @@ void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    select = 0;
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
-      if (!select) return;
-      if (!select->GetNdim()) { delete select; return; }
+      if (!select) return -1;
+      if (!select->GetNdim()) { delete select; return -1; }
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -2132,6 +2171,7 @@ void TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    delete [] var;
    delete [] cnames;
    delete [] index;
+   return fSelectedRows;
 }
 
 //______________________________________________________________________________

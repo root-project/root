@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.2 2000/05/29 06:19:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.3 2000/06/13 09:21:09 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -42,9 +42,9 @@ public:
     virtual ~TVirtualTreePlayer() { }
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                             ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual void           DrawSelect(const char *varexp, const char *selection, Option_t *option
+    virtual Int_t          DrawSelect(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
-    virtual void           Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+    virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          GetDimension() = 0;
     virtual TH1           *GetHistogram() = 0;
@@ -62,7 +62,9 @@ public:
     virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          MakeClass(const char *classname) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;
-    virtual void           Scan(const char *varexp, const char *selection, Option_t *option
+    virtual Int_t          Process(const char *filename, Option_t *option=""
+                              ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
+    virtual Int_t          Scan(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual TSQLResult    *Query(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;

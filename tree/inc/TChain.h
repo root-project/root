@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.2 2000/06/13 09:27:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.3 2000/06/16 07:34:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -50,9 +50,9 @@ public:
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
-    virtual void      Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(TCut varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Draw(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TBranch  *GetBranch(const char *name);
             Int_t     GetNtrees() {return fNtrees;}
@@ -77,6 +77,8 @@ public:
     virtual void      Merge(const char *name);
     virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="");
+    virtual Int_t     Process(const char *filename, Option_t *option=""
+                     ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetPacketSize(Int_t size = 100);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.8 2000/06/14 09:09:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.9 2000/06/16 10:48:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -865,7 +865,7 @@ void TTree::Delete(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TTree::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TTree::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -876,11 +876,11 @@ void TTree::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, 
 //            ntuple.Draw("x",cut1+cut2+cut3);
 //
 
-   TTree::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
+   return TTree::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
-void TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -919,6 +919,9 @@ void TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int
 //
 //  nentries is the number of entries to process (default is all)
 //  first is the first entry to process (default is 0)
+//
+//  This function returns the number of selected entries. It returns -1
+//  if an error occurs.
 //
 //     Drawing expressions using arrays and array elements
 //     ===================================================
@@ -1097,7 +1100,8 @@ void TTree::Draw(const char *varexp, const char *selection, Option_t *option,Int
 //
 
    GetPlayer();
-   if (fPlayer) fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
+   if (fPlayer) return fPlayer->DrawSelect(varexp,selection,option,nentries,firstentry);
+   else return -1;
 }
 
 
@@ -1161,7 +1165,7 @@ Int_t TTree::Fill()
 }
 
 //______________________________________________________________________________
-void TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
+Int_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Fit  a projected item(s) from a Tree*-*-*-*-*-*-*-*-*-*
 //*-*              ======================================
@@ -1173,6 +1177,9 @@ void TTree::Fit(const char *funcname ,const char *varexp, const char *selection,
 //  By default the temporary histogram created is called htemp.
 //  If varexp contains >>hnew , the new histogram created is called hnew
 //  and it is kept in the current directory.
+//
+//  The function returns the number of selected entries.
+//
 //  Example:
 //    tree.Fit(pol4,sqrt(x)>>hsqrt,y>0)
 //    will fit sqrt(x) and save the histogram as "hsqrt" in the current
@@ -1181,7 +1188,8 @@ void TTree::Fit(const char *funcname ,const char *varexp, const char *selection,
 //   See also TTree::UnbinnedFit
 
    GetPlayer();
-   if (fPlayer) fPlayer->Fit(funcname,varexp,selection,option,goption,nentries,firstentry);
+   if (fPlayer) return fPlayer->Fit(funcname,varexp,selection,option,goption,nentries,firstentry);
+   else         return -1;
 }
 
 //______________________________________________________________________________
@@ -1549,7 +1557,47 @@ void TTree::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TTree::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
+//*-*              ================================================
+//
+//   The code in filename is loaded (interpreted or compiled , see below)
+//   filename must contain a valid class implementation derived from TTreeProcess.
+//   where TTreeProcess has the following member functions:
+//     void TTreeProcess::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TTreeProcess::Select(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//     void TTreeProcess::Analyze(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//     void TTreeProcess::Finish(). This function is called at the end of
+//          the loop on all events. 
+//
+//   if filename is of the form file.C, the file will be interpreted.
+//   if filename is of the form file.C++, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be deleted at the end of the function.
+//   if filename is of the form file.C+, the file file.C will be compiled
+//      and dynamically loaded. The corresponding binary file and shared library
+//      will be kept at the end of the function. At next call, if file.C
+//      is older than file.o and file.so, the file.C is not compiled, only
+//      file.so is loaded.
+//
+//   The function returns the number of processed entries. It returns -1
+//   in case of an error.
+
+   GetPlayer();
+   if (fPlayer) return fPlayer->Process(filename,option,nentries,firstentry);
+   else         return -1;
+}
+
+//______________________________________________________________________________
+Int_t TTree::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Make a projection of a Tree using selections*-*-*-*-*-*-*
 //*-*              =============================================
@@ -1567,10 +1615,11 @@ void TTree::Project(const char *hname, const char *varexp, const char *selection
    if (option) sprintf(opt,"%sgoff",option);
    else        strcpy(opt,"goff");
 
-   Draw(var,selection,opt,nentries,firstentry);
+   Int_t nsel = Draw(var,selection,opt,nentries,firstentry);
 
    delete [] var;
    delete [] opt;
+   return nsel;
 }
 
 //______________________________________________________________________________
@@ -1605,13 +1654,14 @@ void TTree::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Loop on Tree & print entries following selection*-*-*-*-*-*
 //*-*              ===============================================
 
    GetPlayer();
-   if (fPlayer) fPlayer->Scan(varexp,selection,option,nentries,firstentry);
+   if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
+   else         return -1;
 }
 
 //_______________________________________________________________________

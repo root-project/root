@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.3 2000/05/29 06:19:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.4 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -138,13 +138,13 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Delete(Option_t *option=""); // *MENU*
     virtual void      Draw(Option_t *opt);
-    virtual void      Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(TCut varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Draw(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      DropBuffers(Int_t nbytes);
     virtual Int_t     Fill();
-    virtual void      Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
+    virtual Int_t     Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
@@ -199,10 +199,12 @@ public:
     virtual Int_t     MakeCode(const char *filename=0);
     Bool_t            MemoryFull(Int_t nbytes);
     virtual void      Print(Option_t *option=""); // *MENU*
-    virtual void      Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
+    virtual Int_t     Process(const char *filename, Option_t *option=""
+                       ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Project(const char *hname, const char *varexp, const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Reset(Option_t *option="");
-    virtual void      Scan(const char *varexp="", const char *selection="", Option_t *option=""
+    virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Int_t nentries=1000000000, Int_t firstentry=0);

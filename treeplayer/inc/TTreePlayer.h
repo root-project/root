@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.2 2000/05/29 06:19:21 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.3 2000/06/13 09:18:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -83,13 +83,13 @@ public:
     virtual TTree    *CopyTree(const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      CreatePacketGenerator(Int_t nentries, Stat_t firstEntry);
-    virtual void      DrawSelect(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EstimateLimits(Int_t estimate, Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
 
             void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax);
-    virtual void      Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+    virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     GetDimension() {return fDimension;}
     TH1              *GetHistogram() {return fHistogram;}
@@ -111,7 +111,9 @@ public:
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     MakeClass(const char *classname=0);
     virtual Int_t     MakeCode(const char *filename=0);
-    virtual void      Scan(const char *varexp="", const char *selection="", Option_t *option=""
+    virtual Int_t     Process(const char *filename, Option_t *option=""
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual TSQLResult *Query(const char *varexp="", const char *selection="", Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
