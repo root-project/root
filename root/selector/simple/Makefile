@@ -25,7 +25,7 @@ endif
 testLoadingSelector.log: testSel_C.$(DllSuf)  testSelector_C.$(DllSuf)
 
 
-removepwd: 
+removepwd: testLoadingSelector.log 
 	$(CMDECHO)sed 's|<ACLiC>: unloading [/\\].*[/\\]|<ACLiC>: unloading |g' testLoadingSelector.log >& testLoadingSelector.temp
 	$(CMDECHO)mv testLoadingSelector.temp testLoadingSelector.log
 
