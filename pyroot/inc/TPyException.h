@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.0 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
@@ -65,4 +65,7 @@ public:
 
 } // namespace PyROOT
 
+#if defined(G__DICTIONARY) && defined(R__SOLARIS)
+#define exception std::exception
+#endif
 #endif
