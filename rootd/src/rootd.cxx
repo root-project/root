@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.3 2000/06/11 12:08:30 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1039,17 +1039,19 @@ void RootdOpen(const char *msg)
       ErrorFatal(kErrFileExists, "RootdOpen: file %s already exists", gFile);
 
    if (update) {
-      if (access(gFile, F_OK))
-         ErrorFatal(kErrNoFile, "RootdOpen: file %s does not exist", gFile);
-      if (access(gFile, W_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no write access for file %s", gFile);
+      if (access(gFile, F_OK)) {
+         update = 0;
+         create = 1;
+      }
+      if (update && access(gFile, W_OK))
+         ErrorFatal(kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
    }
 
    if (read) {
       if (access(gFile, F_OK))
          ErrorFatal(kErrNoFile, "RootdOpen: file %s does not exist", gFile);
       if (access(gFile, R_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no read access for file %s", gFile);
+         ErrorFatal(kErrNoAccess, "RootdOpen: no read permission for file %s", gFile);
    }
 
    if (create || update) {

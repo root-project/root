@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.3 2000/07/21 06:57:54 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -76,7 +76,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //            = UPDATE          open an existing file for writing.
 //                              if no file exists, it is created.
 //            = READ            open an existing file for reading.
-//  Use IsOpen() to check if the file is opened successfuly.
+//  If the constructor failed in any way IsZombie() will return true.
+//  Use IsOpen() to check if the file is (still) open.
 //
 //  The parameter name is used to identify the file in the current job
 //    name may be different in a job writing the file and another job
@@ -1146,6 +1147,8 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
    // TNetFile use either TNetFile directly or specify as host "localhost".
+   // For the meaning of the options and other arguments see the constructors
+   // of the individual file classes.
 
    TFile *f = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.2 2000/06/16 15:23:00 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -246,10 +246,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TMapFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TMapFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }

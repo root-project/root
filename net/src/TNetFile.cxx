@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.3 2000/06/11 12:07:48 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -106,6 +106,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    // sure this is not the case you can force open the file by preceding the
    // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
    // in cases when you are very sure nobody else is using the file.
+   // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
    fOffset = 0;
