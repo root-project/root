@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.6 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.7 2002/06/12 17:56:25 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -348,9 +348,35 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                      kMBOk);
                         return kTRUE;
                      }
-                     fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                                    fTbfname->GetString());
-                     delete this;
+#ifndef WIN32
+                     if (fFc->NumSelected() == 1) {
+                        f = (TGFileItem *) fFc->GetNextSelected(&p);
+                        if (S_ISDIR(f->GetType())) {
+                           fFc->ChangeDirectory(f->GetItemName()->GetString());
+                           fTreeLB->Update(fFc->GetDirectory());
+                           if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
+                           fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                        } else {
+                           fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                          fTbfname->GetString());
+                           delete this;
+                        }
+                     }
+#else
+#ifdef GDK_WIN32
+                     if (fFc->NumSelected() == 1) {
+                        f = (TGFileItem *) fFc->GetNextSelected(&p);
+                        if ((f->GetType()) & _S_IFDIR) {
+                           fFc->ChangeDirectory(f->GetItemName()->GetString());
+                           fTreeLB->Update(fFc->GetDirectory());
+                        } else {
+                           fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                          fTbfname->GetString());
+                           delete this;
+                        }
+                     }
+#endif
+#endif
                      break;
 
                   case kIDF_CANCEL:
@@ -477,9 +503,35 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                kMBOk);
                   return kTRUE;
                }
-               fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                              fTbfname->GetString());
-               delete this;
+#ifndef WIN32
+               if (fFc->NumSelected() == 1) {
+                  f = (TGFileItem *) fFc->GetNextSelected(&p);
+                  if (S_ISDIR(f->GetType())) {
+                     fFc->ChangeDirectory(f->GetItemName()->GetString());
+                     fTreeLB->Update(fFc->GetDirectory());
+                     if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
+                     fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                  } else {
+                     fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                    fTbfname->GetString());
+                     delete this;
+                  }
+               }
+#else
+#ifdef GDK_WIN32
+               if (fFc->NumSelected() == 1) {
+                  f = (TGFileItem *) fFc->GetNextSelected(&p);
+                  if ((f->GetType()) & _S_IFDIR) {
+                     fFc->ChangeDirectory(f->GetItemName()->GetString());
+                     fTreeLB->Update(fFc->GetDirectory());
+                  } else {
+                     fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                                    fTbfname->GetString());
+                     delete this;
+                  }
+               }
+#endif
+#endif
                break;
 
             default:
