@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.92 2002/04/30 22:47:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.93 2002/05/07 19:27:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3810,6 +3810,8 @@ void  TH1::Smooth(Int_t ntimes)
    for (i=0;i<nbins;i++) {
       SetBinContent(i+1,XX[i]);
    }
+   delete [] XX;
+   
    if (gPad) gPad->Modified();
 }
 
