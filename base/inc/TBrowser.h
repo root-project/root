@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.7 2002/09/18 12:21:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.8 2002/09/18 13:12:58 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -41,12 +41,12 @@ class TBrowserTimer;
 class TBrowser : public TNamed {
 
 private:
-   TObject       *fLastSelectedObject; //The last TObject selected by user
+   TObject       *fLastSelectedObject; //!The last TObject selected by user
 
 protected:
    TBrowserImp   *fImp;                //!Window system specific browser implementation
-   TBrowserTimer *fTimer;              //Browser's timer
-   TContextMenu  *fContextMenu;        //Context menu pointer
+   TBrowserTimer *fTimer;              //!Browser's timer
+   TContextMenu  *fContextMenu;        //!Context menu pointer
    Bool_t         fNeedRefresh;        //True if the browser needs refresh
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.8 2002/01/29 07:32:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.9 2002/01/30 11:02:22 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -63,12 +63,16 @@ TBrowser::TBrowser(const char *name, const char *title)
    // (depending on Rint.Canvas.UseScreenFactor to be true or false, default
    // is true).
 
-   Float_t cx = gStyle->GetScreenFactor();
-   UInt_t w = UInt_t(cx*640);
-   UInt_t h = UInt_t(cx*400);
+   if (TClass::IsCallingNew()) {
+      fImp = 0;
+   } else {
+      Float_t cx = gStyle->GetScreenFactor();
+      UInt_t w = UInt_t(cx*640);
+      UInt_t h = UInt_t(cx*400);
 
-   fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
-   Create();
+      fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
+      Create();
+   }
 }
 
 //______________________________________________________________________________
@@ -175,9 +179,10 @@ void TBrowser::Create(TObject *obj)
    if (obj) {
       Add(obj);
       if (fImp) fImp->BrowseObj(obj);
-   }
-   // Fill the first list with all browsable classes from TROOT
-   else if (fImp) fImp->BrowseObj(gROOT);
+   } else if (fImp)
+      // Fill the first list with all browsable classes from TROOT
+      fImp->BrowseObj(gROOT);
+
    // The first list will be filled by TWin32BrowserImp ctor
    // with all browsable classes from TROOT
 }
