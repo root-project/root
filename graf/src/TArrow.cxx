@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.7 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.8 2003/04/02 14:14:08 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -112,10 +112,20 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this arrow with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
-   TArrow *newarrow = new TArrow(x1,y1,x2,y2,arrowsize,option);
+// if arrowsize is <= 0, arrowsize will be the current arrow size
+// if option="", option will be the current arrow option
+   
+   Float_t size = arrowsize;
+   if (size <= 0) size = fArrowSize;
+   if (size <= 0) size = 0.05;
+   const char* opt = option;
+   if (!opt || strlen(opt) == 0) opt = fOption.Data();
+   if (!opt || strlen(opt) == 0) opt = "|>";
+   TArrow *newarrow = new TArrow(x1,y1,x2,y2,size,opt);
+   newarrow->SetAngle(fAngle);
    TAttLine::Copy(*newarrow);
    TAttFill::Copy(*newarrow);
-   newarrow->AppendPad(option);
+   newarrow->AppendPad(opt);
 }
 
 //______________________________________________________________________________
