@@ -914,6 +914,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
       while('*'==funcheader[numstar]) ++numstar;
 #endif
 #ifndef G__OLDIMPLEMENTATION853
+/*
       if(strlen(funcheader+2)>G__MAXNAME-1) {
 	G__fprinterr(G__serr,
 		"Limitation: Function name length overflow strlen(%s)>%d"
@@ -921,6 +922,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME+1]=0;
       }
+*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
       G__savestring(&G__p_ifunc->funcname[func_now],funcheader+numstar);
@@ -960,6 +962,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
     }
     else {
 #ifndef G__OLDIMPLEMENTATION853
+/*
       if(strlen(funcheader+1)>G__MAXNAME-1) {
 	G__fprinterr(G__serr,
 		"Limitation: Function name length overflow strlen(%s)>%d"
@@ -967,6 +970,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME]=0;
       }
+*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
       G__savestring(&G__p_ifunc->funcname[func_now],funcheader+1);
@@ -992,6 +996,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
   else {
     char *pt1;
 #ifndef G__OLDIMPLEMENTATION853
+/*
     if(strlen(funcheader)>G__MAXNAME-1) {
       funcheader[G__MAXNAME-1]=0;
       G__fprinterr(G__serr,
@@ -1000,6 +1005,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
       G__genericerror((char*)NULL);
       funcheader[G__MAXNAME-1]=0;
     }
+*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
     G__savestring(&G__p_ifunc->funcname[func_now],funcheader);
