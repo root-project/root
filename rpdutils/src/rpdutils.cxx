@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.57 2004/09/13 22:49:10 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.58 2004/09/16 20:18:46 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -4876,7 +4876,9 @@ int RpdGenRSAKeys(int setrndinit)
 
       // Generate keys
       if (rsa_genrsa(p1, p2, &rsa_n, &rsa_e, &rsa_d)) {
-         ErrorInfo("RpdGenRSAKeys: genrsa: unable to generate keys (%d)",NAttempts);
+         if (gDebug > 0)
+            ErrorInfo("RpdGenRSAKeys: genrsa: attempt %d to generate"
+                      " keys failed",NAttempts);
          continue;
       }
 
@@ -4951,7 +4953,8 @@ int RpdGenRSAKeys(int setrndinit)
    }
 
    if (NotOk) {
-      ErrorInfo("RpdGenRSAKeys: unable to generate good RSA key pair - return");
+      ErrorInfo("RpdGenRSAKeys: unable to generate good RSA key pair"
+                " (%d attempts)- return",kMAXRSATRIES);
       return 1;
    }
 
@@ -5027,11 +5030,12 @@ int RpdRecvClientRSAKey()
    if (gDebug > 3)
       ErrorInfo("RpdRecvClientRSAKey: got len '%s' %d ", buflen, gPubKeyLen);
 
+   int nrec = 0;
 
    if (gRSAKey == 1) {
 
       // Receive and decode encoded public key
-      NetRecvRaw(gPubKey, gPubKeyLen);
+      nrec = NetRecvRaw(gPubKey, gPubKeyLen);
 
       rsa_decode(gPubKey, gPubKeyLen, gRSAPriKey.n, gRSAPriKey.e);
       if (gDebug > 2)
@@ -5048,7 +5052,7 @@ int RpdRecvClientRSAKey()
       int kd = 0;
       while (nr > 0) {
          // Receive and decode encoded public key
-         NetRecvRaw(btmp, lcmax);
+         nrec += NetRecvRaw(btmp, lcmax);
          if ((ndec = RSA_private_decrypt(lcmax,(unsigned char *)btmp,
                                     (unsigned char *)&gPubKey[kd],
                                     gRSASSLKey,
@@ -5075,7 +5079,11 @@ int RpdRecvClientRSAKey()
 
    // Import Key and Determine key type
    if (RpdGetRSAKeys(gPubKey, 0) != gRSAKey) {
-      ErrorInfo("RpdRecvClientRSAKey: could not import a valid key");
+      ErrorInfo("RpdRecvClientRSAKey:"
+                " could not import a valid key (type %d)",gRSAKey);
+      ErrorInfo("RpdRecvClientRSAKey: length: %d",gPubKeyLen);
+      ErrorInfo("RpdRecvClientRSAKey: key: %s",gPubKey);
+      ErrorInfo("RpdRecvClientRSAKey: (%d bytes were received)",nrec);
       return 2;
    }
 
