@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_TRootGLViewer
 #define ROOT_TRootGLViewer
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.2 2000/06/05 07:28:06 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -285,7 +285,6 @@ void TRootGLViewer::DeleteGLWindow()
    // fGLWin is destroyed when parent is destroyed.
 }
 
-
 //______________________________________________________________________________
 void TRootGLViewer::CloseWindow()
 {
@@ -358,7 +357,7 @@ Bool_t TRootGLViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   // Handle File menu items...
                   case kFileNewViewer:
-                     if (fGLView) fGLView->GetPad()->x3d();
+                     if (fGLView) fGLView->GetPad()->x3d("OPENGL");
                      break;
                   case kFileSave:
                   case kFileSaveAs:
@@ -380,7 +379,7 @@ Bool_t TRootGLViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      break;
                   case kHelpOnViewer:
-                     hd = new TRootHelpDialog(this, "Help on Viewer...", 600, 400);
+                     hd = new TRootHelpDialog(this, "Help on OpenGL Viewer...", 600, 400);
                      hd->SetText(gHelpGLViewer);
                      hd->Popup();
                      break;
