@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.52 2004/10/08 15:09:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.53 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -43,8 +43,8 @@ class TGeoManager : public TNamed
 private :
    Double_t              fStep;             //! step to be done from current point and direction
    Double_t              fSafety;           //! safety radius from current point
-   Double_t              fPhimin;           // lowest range for phi cut
-   Double_t              fPhimax;           // highest range for phi cut
+   Double_t              fPhimin;           //! lowest range for phi cut
+   Double_t              fPhimax;           //! highest range for phi cut
    Double_t              fTmin;             //! lower time limit for tracks drawing
    Double_t              fTmax;             //! upper time limit for tracks drawing
    Int_t                 fLevel;            //! current geometry level;
@@ -57,6 +57,7 @@ private :
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
    Double_t             *fDirection;        //![3] current direction
+   Double_t              fVisDensity;       // transparency threshold by density
    Int_t                 fExplodedView;     // exploded view mode
    Int_t                 fVisOption;        // global visualization option
    Int_t                 fVisLevel;         // maximum visualization depth
@@ -173,12 +174,14 @@ public:
    TGeoShape             *GetClippingShape() const {return fClippingShape;}
    Int_t                  GetNsegments() const;
    TVirtualGeoPainter    *GetGeomPainter();
+   TVirtualGeoPainter    *GetPainter() const {return fPainter;}
    Int_t                  GetBombMode() const  {return fExplodedView;}
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
    Int_t                  GetMaxVisNodes() const {return fMaxVisNodes;}
    Bool_t                 GetTminTmax(Double_t &tmin, Double_t &tmax) const;
    Double_t               GetTmax() const {return fTmax;}
    TGeoVolume            *GetPaintVolume() const {return fPaintVolume;}
+   Double_t               GetVisDensity() const  {return fVisDensity;}
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
@@ -189,13 +192,14 @@ public:
    void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(((flag)?fClippingShape:0));} // *MENU*
    void                   SetClippingShape(TGeoShape *clip);
    void                   SetExplodedView(Int_t iopt=0); // *MENU*
-   void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
+   void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.);
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetPaintVolume(TGeoVolume *vol) {fPaintVolume = vol;}
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
    void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}
+   void                   SetVisDensity(Double_t dens=0.01); // *MENU*
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0);
    void                   ViewLeaves(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisLeaves
@@ -476,7 +480,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 8)          // geometry manager
+  ClassDef(TGeoManager, 9)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

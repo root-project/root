@@ -143,7 +143,6 @@ public:
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);
-   virtual void       Sizeof3D(const TGeoVolume *vol) const;
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;   
    virtual void       Test(Int_t npoints, Option_t *option);
    virtual void       TestOverlaps(const char *path);

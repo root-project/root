@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.33 2004/09/07 08:15:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.34 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -179,7 +179,6 @@ public:
    void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
    void            SetNumber(Int_t number) {fNumber = number;}
    void            SetNtotal(Int_t ntotal) {fNtotal = ntotal;}
-   virtual void    Sizeof3D() const;
    void            SortNodes();
    Bool_t          Valid() const;
    void            VisibleDaughters(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisibleDaughters

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.94 2004/10/08 15:09:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.95 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -538,6 +538,7 @@ void TGeoManager::Init()
    fIsOnBoundary = kFALSE;
    fIsSameLocation = kTRUE;
    fIsNullStep = kFALSE;
+   fVisDensity = 0.;
    fVisLevel = 3;
    fVisOption = 1;
    fExplodedView = 0;
@@ -2227,9 +2228,9 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
 void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
 // set the maximum number of visible nodes.   
    fMaxVisNodes = maxnodes;
-   GetGeomPainter();
-   fPainter->CountVisibleNodes();
    if (maxnodes>0) printf("--- Automatic visible depth for %d visible nodes\n", maxnodes);
+   if (!fPainter) return;
+   fPainter->CountVisibleNodes();
    Int_t level = fPainter->GetVisLevel();
    if (level != fVisLevel) fVisLevel = level;
 }
@@ -2246,9 +2247,8 @@ void TGeoManager::SetVisOption(Int_t option) {
 // option=0 (default) all nodes drawn down to vislevel
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
-   GetGeomPainter();
    if ((option>=0) && (option<3)) fVisOption=option;
-   fPainter->SetVisOption(option);
+   if (fPainter) fPainter->SetVisOption(option);
 }
 
 //_____________________________________________________________________________
@@ -2260,13 +2260,25 @@ void TGeoManager::ViewLeaves(Bool_t flag)
 }
 
 //_____________________________________________________________________________
+void TGeoManager::SetVisDensity(Double_t density)
+{
+// Set density threshold. Volumes with densities lower than this become
+// transparent.
+   fVisDensity = density;
+   if (fPainter) fPainter->ModifiedPad();
+}      
+
+//_____________________________________________________________________________
 void TGeoManager::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
-   GetGeomPainter();
-   if (level>0) fVisLevel = level;
-   fMaxVisNodes = 0;
-   fPainter->CountVisibleNodes();
-   printf("--- Automatic visible depth disabled\n");
+   if (level>0) {
+      fVisLevel = level;
+      fMaxVisNodes = 0;
+      printf("--- Automatic visible depth disabled\n");
+      if (fPainter) fPainter->CountVisibleNodes();
+   } else {
+      SetMaxVisNodes();
+   }      
 }
 
 //_____________________________________________________________________________
@@ -3229,10 +3241,6 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
           Error("GetGeomPainter", "could not create painter");
           return 0;
        }
-       fPainter->SetVisOption(fVisOption);
-       fPainter->SetVisLevel(fVisLevel);
-       fPainter->SetExplodedView(fExplodedView);
-       fPainter->SetNsegments(fNsegments);
     }
     return fPainter;
 }
@@ -3669,7 +3677,6 @@ TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const TGeoMedium
 void TGeoManager::SetExplodedView(Int_t ibomb)
 {
 // Set type of exploding view (see TGeoPainter::SetExplodedView())
-   GetGeomPainter();
    if ((ibomb>=0) && (ibomb<4)) fExplodedView = ibomb;
    if (fPainter) fPainter->SetExplodedView(ibomb);
 }
@@ -3691,7 +3698,6 @@ void TGeoManager::SetPhiRange(Double_t phimin, Double_t phimax)
 void TGeoManager::SetNsegments(Int_t nseg)
 {
 // Set number of segments for approximating circles in drawing.
-   GetGeomPainter();
    if (fNsegments==nseg) return;
    if (nseg>2) fNsegments = nseg;
    if (fPainter) fPainter->SetNsegments(nseg);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.26 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.27 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -126,7 +126,6 @@ public:
    virtual void       SetTopVisible(Bool_t vis=kTRUE) = 0;
    virtual void       SetVisLevel(Int_t level=3) = 0;
    virtual void       SetVisOption(Int_t option=0) = 0;
-   virtual void       Sizeof3D(const TGeoVolume *vol) const = 0;      
    virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const = 0;
    virtual void       Test(Int_t npoints, Option_t *option) = 0;
    virtual void       TestOverlaps(const char *path) = 0;

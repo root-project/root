@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.22 2004/09/13 10:12:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.23 2004/09/13 16:16:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -320,7 +320,10 @@ void TGeoShape::TransformPoints(TBuffer3D *buff) const
       buff->SetBit(TBuffer3D::kIsReflection, isReflection);
       TGeoVolume *vol = gGeoManager->GetPaintVolume();
       buff->fTransparency = (vol==0)?0:vol->GetTransparency();
-      if (vol->GetMedium() && vol->GetMaterial()->GetDensity() < 0.005) buff->fTransparency = 90;
+      Double_t visdensity = gGeoManager->GetVisDensity();
+      if (visdensity>0 && vol->GetMedium()) {
+         if (vol->GetMaterial()->GetDensity() < visdensity) buff->fTransparency = 90;
+      }   
       Double_t dlocal[3];
       Double_t dmaster[3];
       Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
