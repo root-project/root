@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.131 2003/08/04 20:04:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.132 2003/08/25 17:31:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2393,7 +2393,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
     else         logL += logEpsilon;
   }
 
-  r = -logL;
+  r = -2*logL;
 }
 
 
@@ -2532,6 +2532,11 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
       arglist[0] = 0;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
    }
+
+  // Set error criterion 
+  //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
+  arglist[0] = 1;
+  tFitter->ExecuteCommand("SET ERR",arglist,1);
 
   // Now ready for minimization step
   arglist[0] = TVirtualFitter::GetMaxIterations();
