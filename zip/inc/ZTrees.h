@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Trees.c,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Trees.h,v 1.1 2003/08/22 10:08:27 brun Exp $ */
 /* Author: */
 /*
 
