@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.67 2003/12/30 22:10:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.68 2004/01/05 11:22:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1303,7 +1303,7 @@ void TBranch::Streamer(TBuffer &b)
          Int_t i;
          //TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
          TNamed::Streamer(b);
-         TAttFill::Streamer(b);
+         if (v > 7) TAttFill::Streamer(b);
          b >> fCompress;
          b >> fBasketSize;
          b >> fEntryOffsetLen;
@@ -1311,7 +1311,7 @@ void TBranch::Streamer(TBuffer &b)
          b >> fEntryNumber;
          b >> fOffset;
          b >> fMaxBaskets;
-         b >> fSplitLevel;
+         if (v > 6) b >> fSplitLevel;
          b >> fEntries;
          b >> fTotBytes;
          b >> fZipBytes;
