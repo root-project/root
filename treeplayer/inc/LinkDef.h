@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.12 2004/06/25 18:42:19 brun Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.13 2004/06/28 16:38:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,7 +48,7 @@
 #pragma link C++ class ROOT::TArrayProxy<UChar_t>+;
 #pragma link C++ class ROOT::TArrayProxy<Int_t>+;
 #pragma link C++ class ROOT::TArrayProxy<Long_t>+;
-#pragma link C++ class ROOT::TArrayProxy<UShort_t>+;
+#pragma link C++ class ROOT::TArrayProxy<Short_t>+;
    //specialized ! typedef TArrayProxy<Char_t>+;
 
 #pragma link C++ class ROOT::TClaImpProxy<Double_t>+;
@@ -70,7 +70,7 @@
 #pragma link C++ class ROOT::TClaArrayProxy<UChar_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Int_t>+;
 #pragma link C++ class ROOT::TClaArrayProxy<Long_t>+;
-#pragma link C++ class ROOT::TClaArrayProxy<UShort_t>+;
+#pragma link C++ class ROOT::TClaArrayProxy<Short_t>+;
 
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)
