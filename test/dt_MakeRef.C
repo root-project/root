@@ -99,6 +99,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refAndValid = RefClone(where,"hAndValid");
 
    TH1F *refString = RefClone(where,"hString");
+   TH1F *refStringSpace = RefClone(where,"hStringSpace");
    TH1F *refAliasStr = RefClone(where,"hAliasStr");
 
    TH1F *refPxBx = RefClone(where,"hPxBx");
@@ -147,6 +148,9 @@ void MakeHisto(TTree *tree, TDirectory* To) {
         refString->Fill(event->GetHeader()->GetEvtNum());
       if (strstr(event->GetType(),"1")) {
         refString->Fill(event->GetHeader()->GetEvtNum());
+      }
+      if (strcmp("Event Histogram",event->GetHistogram()->GetTitle())==0) {
+         refStringSpace->Fill(1);
       }
       refAliasStr->Fill(strstr(event->GetType(),"1")!=0);
       refBool->Fill(event->IsValid());

@@ -143,6 +143,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    DrawSkippable(tree,"fEvtHdr.fEvtNum","1 && strstr(fType,\"1\") ","+hString",(level>0));
    tree->SetAlias("typ","fType");
    DrawSkippable(tree,"strstr(typ,\"1\") ", "hAliasStr", 1);
+   DrawSkippable(tree,"fH.fTitle.fData==\"Event Histogram\"","hStringSpace",1);
 
    // Test binary operators
    DrawSkippable(tree,"fValid<<4","hShiftValid",(level>0));

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.81 2004/09/01 10:20:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.82 2005/01/19 17:00:07 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1938,8 +1938,11 @@ Int_t TFormula::Compile(const char *expression)
 
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
+  bool inString = false;
   for (i=1; i<=chaine.Length(); i++) {
     lc =chaine.Length();
+    if (chaine(i-1,1) == "\"") inString = !inString;
+    if (inString) continue;
     if (chaine(i-1,2) == "**") {
        chaine = chaine(0,i-1) + "^" + chaine(i+1,lc-i-1);
        i=0;
