@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.108 2003/07/22 16:05:00 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.109 2003/08/26 12:39:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2457,6 +2457,10 @@ void TPad::GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t
 //______________________________________________________________________________
 void TPad::HighLight(Color_t color, Bool_t set)
 {
+
+   //do not highlight when printing on Postscript
+   if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) return;
+
    AbsCoordinates(kTRUE);
 
    // We do not want to have active(executable) buttons, etc highlighted
