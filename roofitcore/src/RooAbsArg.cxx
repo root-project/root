@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.81 2004/03/31 02:54:57 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.82 2004/04/05 22:43:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1213,6 +1213,9 @@ void RooAbsArg::constOptimize(ConstOpCode opcode)
 
 void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
 {
+  // Prevent recursion loops
+  if (mode==_operMode) return ;
+
   _operMode = mode ; 
   operModeHook() ; 
 
