@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.13 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.14 2001/05/11 21:06:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -11,6 +11,7 @@
  *****************************************************************************/
 
 #include <iostream.h>
+#include <stdlib.h>
 #include "TROOT.h"
 #include "TClass.h"
 #include "TObjString.h"
@@ -187,7 +188,22 @@ RooFormula::DefinedVariable(TString &name)
   }
 
   // Defined internal reference code for given named variable 
-  RooAbsArg* arg= (RooAbsArg*) _origList.FindObject(argName) ;
+  RooAbsArg *arg(0) ;
+  if (argName[0] == '@') {
+    // Access by ordinal number
+    Int_t index = atoi(argName+1) ;
+    if (index>=0 && index<_origList.GetSize()) {
+      arg = (RooAbsArg*) _origList.At(index) ;
+    } else {
+      cout << "RooFormula::DefinedVariable(" << GetName() 
+	   << ") ERROR: ordinal variable reference " << name 
+	   << " out of range (0 - " << _origList.GetSize()-1 << ")" << endl ;
+    }
+  } else {
+    // Access by name
+    arg= (RooAbsArg*) _origList.FindObject(argName) ;
+  }
+
   if (!arg) return -1 ;
 
   // Add variable to use list

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.9 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.10 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,46 +31,76 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooAbsReal(name,title), _function((RooAbsReal*)&function), _mode(0),
   _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
+  RooArgSet intDepList ;
 
-  // Filter out junk variables from dependent list
-  TIterator* depIter=depList.MakeIterator() ;
+  // Loop over list of servers of integrand
+  // to determine list of variables to integrate over
+  TIterator *sIter = function.serverIterator() ;
   RooAbsArg *arg ;
-  while (arg=(RooAbsArg*)depIter->Next()) {
+  while(arg=(RooAbsArg*)sIter->Next()) {
 
-    if (!function.dependsOn(*arg)) {
-      cout << "RooRealIntegral::RooIntegral(" << name << "): integrand " << arg->GetName()
-	   << " doesn't depend on function " << function.GetName() << ", ignored" << endl ;
+    // Dependent or parameter?
+    if (!arg->dependsOn(depList)) {
+      // Add to parameter as value server
+      addServer(*arg,kTRUE,kFALSE) ;
       continue ;
     }
     
-    if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class()) &&
-	!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-      cout << "RooRealIntegral::RooIntegral(" << name << "): integrand " << arg->GetName()
-	   << " is neither a RooAbsCategoryLValue nor a RooAbsRealLValue, ignored" << endl ;
-      continue ;
+    Bool_t expandArg(kTRUE) ;
+
+    // Check for integratable AbsRealLValue
+    if (arg->isDerived()) {
+      RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
+      RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
+      if ((realArgLV && realArgLV->isSafeForIntegration(depList)) || catArgLV) {
+	
+	// check for overlaps
+	Bool_t overlapOK = kTRUE ;
+	RooAbsArg *otherArg ;
+	TIterator* sIter2 = function.serverIterator() ;
+	
+	while(otherArg=(RooAbsArg*)sIter2->Next()) {
+	  // skip comparison with self
+	  if (arg==otherArg) continue ;
+	  if (arg->overlaps(*otherArg)) {
+	    overlapOK=kFALSE ;
+	  }
+	}
+	
+	// All clear for integration over this lvalue
+	if (overlapOK) expandArg=kFALSE ;      
+	delete sIter2 ;
+      }
     }
     
-    // Add integrand as shape server 
+    // Add server (directly or indirectly) to integration list
+    if (expandArg && arg->isDerived()) {
+      // Add final dependents of this direct server to integration list
+      RooArgSet *argDeps = arg->getDependents(depList) ;
+      intDepList.add(*argDeps) ;
+      argDeps->Print() ;
+      delete argDeps ;
+    } else {
+      // Add server to integration list
+      intDepList.add(*arg) ;
+    }
+  }
+  
+  // Register all args in intDepList as shape server
+  TIterator* iIter = intDepList.MakeIterator() ;
+  while (arg=(RooAbsArg*)iIter->Next()) {
     addServer(*arg,kFALSE,kTRUE) ;
   }
-  delete depIter ;
-
-  // Register all non-integrands of functions as value servers
-  TIterator* sIter = function.serverIterator() ;
-  while (arg=(RooAbsArg*)sIter->Next()) {
-    if (!depList.FindObject(arg))
-      addServer(*arg,kTRUE,kFALSE) ;
-  }
-  delete sIter ;
+  delete iIter ;
 
   // Determine which parts needs to be integrated numerically
-  RooArgSet numDepList("numDepList") ;
-  _mode = _function->getAnalyticalIntegral(depList,numDepList) ;    
+  RooArgSet numIntDepList("numIntDepList") ;
+  _mode = _function->getAnalyticalIntegral(intDepList,numIntDepList) ;    
   
   // Split numeric integration list in summation and integration lists
-  TIterator* numIter=numDepList.MakeIterator() ;
+  TIterator* numIter=numIntDepList.MakeIterator() ;
   while (arg=(RooAbsArg*)numIter->Next()) {
-  
+
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       _intList.add(*arg) ;
     } else if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
@@ -122,17 +152,16 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate() const 
 {
-  // Save current integrand values 
+  // Save current integral dependent values 
   RooArgSet *saveInt = _intList.snapshot() ;
   RooArgSet *saveSum = _sumList.snapshot() ;
 
   // Evaluate integral
   Double_t retVal = sum() ;
 
-  // Restore integrand values
+  // Restore integral dependent values
   _intList=*saveInt ;
   _sumList=*saveSum ;
-
   delete saveInt ;
   delete saveSum ;
 
@@ -182,6 +211,31 @@ Bool_t RooRealIntegral::isValid(Double_t value) const
 
 Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
+  RooAbsArg* arg ;
+  TIterator* iter ;
+  Bool_t error(kFALSE) ;
+
+  // Update contents of integration list
+  iter = _intList.MakeIterator() ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* newServer = newServerList.find(arg->GetName()) ;
+    if (newServer) _intList.replace(*arg,*newServer) ;
+    error |= (!newServer && mustReplaceAll) ;    
+  }
+  delete iter ;
+  
+  // Update contents of summing list
+  iter = _sumList.MakeIterator() ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* newServer = newServerList.find(arg->GetName()) ;
+    if (newServer) _sumList.replace(*arg,*newServer) ;
+    error |= (!newServer && mustReplaceAll) ;    
+  }
+  delete iter ;
+
+  // Restart numerical integrator engine, which uses _intlist
+  initNumIntegrator() ;
+  
   return kFALSE ;
 }
 

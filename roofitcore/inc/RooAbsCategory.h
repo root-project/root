@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.14 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.15 2001/05/11 06:29:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,6 +52,8 @@ public:
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
   virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+
+  virtual Bool_t isIntegrationSafeLValue(const RooDataSet* set) const { return kTRUE ; }
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.6 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.7 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,8 @@ public:
   virtual ~RooAbsPdf();
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
-
+  virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kFALSE ; }
+  
   // PDF-specific plotting & display
   TH1F *Scan(RooDataSet* data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
   TH1F *Scan(RooDataSet& data, RooRealVar &param, Int_t bins= 0) { return 0 ; } 
@@ -58,6 +59,9 @@ public:
   virtual Bool_t canBeExtended() const { return kFALSE ; } 
   virtual Double_t expectedEvents() const { return 0 ; } 
 
+  // Printing interface (human readable)
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+
   static void verboseEval(Bool_t stat) { _verboseEval = stat ; }
 
 private:
@@ -72,7 +76,7 @@ protected:
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
 
   mutable Double_t _rawValue ;
-  mutable RooRealIntegral* _norm   ; // Normalization integral
+  mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print

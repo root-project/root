@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.26 2001/05/11 21:06:22 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.27 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -241,44 +241,37 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 
 
 
-void RooAbsArg::leafNodeServerList(RooArgSet* list, Bool_t truncAtLValue, const RooAbsArg* arg) const
+void RooAbsArg::leafNodeServerList(RooArgSet* list, const RooAbsArg* arg) const
 {
-  treeNodeServerList(list,arg,kFALSE,kTRUE,truncAtLValue) ;
+  treeNodeServerList(list,arg,kFALSE,kTRUE) ;
 }
 
 
 
 void RooAbsArg::branchNodeServerList(RooArgSet* list, const RooAbsArg* arg) const 
 {
-  treeNodeServerList(list,arg,kTRUE,kFALSE,kFALSE) ;
+  treeNodeServerList(list,arg,kTRUE,kFALSE) ;
 }
 
 
-void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t lValueIsLeaf) const
+void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf) const
   // Do recursive deep copy of all 'ultimate' servers 
 {
   if (!arg) arg=this ;
 
-  // Optionally treat (derived) LValues as leaf nodes
-  Bool_t isDerived = arg->isDerived() ;
-  if (lValueIsLeaf) {
-    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) isDerived = kFALSE ;
-    if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) isDerived = kFALSE ;
-  }
-
   // Decide if to add current node
   if ((doBranch&&doLeaf) ||
-      (doBranch&&isDerived) ||
-      (doLeaf&&!isDerived)) {
+      (doBranch&&arg->isDerived()) ||
+      (doLeaf&&!arg->isDerived())) {
     list->add(*arg) ;  
   }
 
   // Recurse if current node is derived
-  if (isDerived) {
+  if (arg->isDerived()) {
     RooAbsArg* server ;
     TIterator* sIter = arg->serverIterator() ;
     while (server=(RooAbsArg*)sIter->Next()) {
-      treeNodeServerList(list,server,doBranch,doLeaf,lValueIsLeaf) ;
+      treeNodeServerList(list,server,doBranch,doLeaf) ;
     }  
     delete sIter ;
   }
@@ -312,64 +305,37 @@ RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const
 
 
 
-RooArgSet* RooAbsArg::getDependents(const RooDataSet* set, Bool_t truncAtLValue) const 
+RooArgSet* RooAbsArg::getDependents(const RooDataSet* set) const 
+{
+  return getDependents(*set->get()) ;
+}
+
+
+RooArgSet* RooAbsArg::getDependents(const RooArgSet& dataList) const 
 {
   RooArgSet* depList = new RooArgSet("dependents") ;
-  const RooArgSet* dataList = set->get() ;
 
-  // Create and fill deep server list
+  // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  leafNodeServerList(&leafList,truncAtLValue) ;
+  leafNodeServerList(&leafList) ;    
+  TIterator *sIter = leafList.MakeIterator() ;
 
-  // Copy dependent servers to dependent list
-  TIterator* sIter = leafList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
-    // If arg is derived LValue it is not in dataList, 
-    // but the following check handles this properly
-    if (arg->dependsOn(*dataList)) {
+    if (arg->dependsOn(dataList)) {
       depList->add(*arg) ;
     }
   }
+  
   delete sIter ;
-
   return depList ;
 }
 
 
+
 Bool_t RooAbsArg::checkDependents(const RooDataSet* set) const 
 {
-  // Always OK if we have no servers
-  if (!_serverList.First()) {
-    return kFALSE ;
-  }
-  
-  Bool_t ret=kFALSE ;
-
-  RooAbsArg *server, *server2 ;
-  TIterator *sIter  = serverIterator() ;
-  TIterator *sIter2 = serverIterator() ;
-  while(server=(RooAbsArg*)sIter->Next()) {
-
-    // First check if argument is OK
-    if (server->checkDependents(set)) {
-      ret = kTRUE ;
-    } else {    
-      sIter2->Reset() ;
-      while((server2=(RooAbsArg*)sIter2->Next()) && server2!=server) {
-	if (server->dependentOverlaps(set,*server2)) {
-	  cout << "RooAbsArg::checkDependents(" << GetName() << "): ERROR: components " << server->GetName() 
-	       << " and " << server2->GetName() << " have one or more dependents in common" << endl ;
-	  ret = kTRUE ;
-	}
-      }
-    }
-  }
-
-  delete sIter ;
-  delete sIter2 ;
-
-  return ret ;
+  return kFALSE ;
 }
 
 

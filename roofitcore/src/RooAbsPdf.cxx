@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.4 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.5 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooFitContext.hh"
+#include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -84,15 +85,18 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
       getProxy(i).changeDataSet(dset) ;
     }
  
-
-    // NB: Special getDependents call that considers LValues 
-    //     with 'dependent' servers as dependents
-    RooArgSet* depList = getDependents(dset,kTRUE) ;
+    RooArgSet* depList = getDependents(dset) ;
 
     // Destroy old normalization & create new
     if (_norm) delete _norm ;
-    _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
-                                TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+
+    if (selfNormalized(*depList)) {
+      _norm = new RooRealVar(TString(GetName()).Append("Norm"),
+			     TString(GetTitle()).Append(" Unit Normalization"),1) ;
+    } else {
+      _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
+				  TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+    }
     delete depList ;
   }
 
@@ -253,6 +257,23 @@ Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options = "", Double_t *minVa
 }
 
 
+
+void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) const
+{
+  // Print info about this object to the specified stream. In addition to the info
+  // from RooAbsArg::printToStream() we add:
+  //
+  //     Shape : value, units, plot range
+  //   Verbose : default binning and print label
+
+  RooAbsArg::printToStream(os,opt,indent);
+
+  if(opt >= Verbose) {
+    os << indent << "--- RooAbsPdf ---" << endl;
+    os << " Normalization integral: " << endl ;
+    _norm->printToStream(os,Standard,TString(indent).Append("  ")) ;
+  }
+}
 
 
 

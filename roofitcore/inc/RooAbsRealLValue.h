@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.2 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.3 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,6 +42,8 @@ public:
   virtual Double_t getFitMax() const = 0 ;
   inline Bool_t hasFitMin() const { return getFitMin() != -INFINITY; }
   inline Bool_t hasFitMax() const { return getFitMax() != +INFINITY; }
+
+  virtual Bool_t isSafeForIntegration(const RooArgSet& depList) const { return kTRUE ; }
 
   // Test a value against our fit range
   Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
