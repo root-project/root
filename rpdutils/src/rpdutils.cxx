@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.58 2004/09/16 20:18:46 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.59 2004/09/17 10:25:50 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -4541,46 +4541,53 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
       int k = 0;
       while (theKey[k] == 32) k++;
 
-      if (theKey[k] == '#') {
+      keytype = gRSAKey;
 
-         keytype = 1;
+      // The format of keytype 1 is #<hex_n>#<hex_d>#
+      char *pd1 = 0, *pd2 = 0, *pd3 = 0; 
+      pd1 = strstr(theKey, "#");
+      if (pd1) pd2 = strstr(pd1 + 1, "#");
+      if (pd2) pd3 = strstr(pd2 + 1, "#");
+      if (keytype == 1) {
+         if (!pd1 || !pd2 || !pd3) {
+            if (gDebug > 0)
+               ErrorInfo("RpdGetRSAKeys: bad format for keytype %d"
+                         " - exit", keytype);
+            keytype = 0;
+         }
+      }
+      if (keytype == 1) {
+
          if (gDebug > 2)
             ErrorInfo("RpdGetRSAKeys: keytype %d ", keytype);
 
-         // The format is #<hex_n>#<hex_d>#
-         char *pd1 = strstr(theKey, "#");
-         char *pd2 = strstr(pd1 + 1, "#");
-         char *pd3 = strstr(pd2 + 1, "#");
-         if (pd1 && pd2 && pd3) {
-            // Get <hex_n> ...
-            int l1 = (int) (pd2 - pd1 - 1);
-            char *RSA_n_exp = new char[l1 + 1];
-            strncpy(RSA_n_exp, pd1 + 1, l1);
-            RSA_n_exp[l1] = 0;
-            if (gDebug > 2)
-               ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_n_exp",
-                         strlen(RSA_n_exp));
-            // Now <hex_d>
-            int l2 = (int) (pd3 - pd2 - 1);
-            char *RSA_d_exp = new char[l2 + 1];
-            strncpy(RSA_d_exp, pd2 + 1, l2);
-            RSA_d_exp[l2] = 0;
-            if (gDebug > 2)
-               ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_d_exp",
-                         strlen(RSA_d_exp));
+         // Get <hex_n> ...
+         int l1 = (int) (pd2 - pd1 - 1);
+         char *RSA_n_exp = new char[l1 + 1];
+         strncpy(RSA_n_exp, pd1 + 1, l1);
+         RSA_n_exp[l1] = 0;
+         if (gDebug > 2)
+            ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_n_exp",
+                      strlen(RSA_n_exp));
+         // Now <hex_d>
+         int l2 = (int) (pd3 - pd2 - 1);
+         char *RSA_d_exp = new char[l2 + 1];
+         strncpy(RSA_d_exp, pd2 + 1, l2);
+         RSA_d_exp[l2] = 0;
+         if (gDebug > 2)
+            ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_d_exp",
+                      strlen(RSA_d_exp));
 
-            rsa_num_sget(&gRSA_n, RSA_n_exp);
-            rsa_num_sget(&gRSA_d, RSA_d_exp);
+         rsa_num_sget(&gRSA_n, RSA_n_exp);
+         rsa_num_sget(&gRSA_d, RSA_d_exp);
 
-            if (RSA_n_exp) delete[] RSA_n_exp;
-            if (RSA_d_exp) delete[] RSA_d_exp;
+         if (RSA_n_exp) delete[] RSA_n_exp;
+         if (RSA_d_exp) delete[] RSA_d_exp;
 
-         } else
-            return 0;
-      } else {
+      } else if (keytype == 2){
+
 #ifdef R__SSL
          // try SSL
-         keytype = 2;
          if (gDebug > 2)
             ErrorInfo("RpdGetRSAKeys: keytype %d ", keytype);
 
