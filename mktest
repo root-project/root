@@ -3,15 +3,20 @@
 # Error Message
 printERROR() { echo "Error: $@." >&2 ; exit 1; }
 
-f=${1%/*}
-echo $f
+PARENT_DIR=${1%/*}
+echo $PARENT_DIR
 
-#checks if the directory exists
-if [ ! -d "$f" ] ; then
-	#printERROR "the source $1 is not dir, or does not exist"
-	mktest $f
-fi
+count="'wc -m $1'"
+r=`echo $1 | grep '/'`
+echo $r
 
+	if [ "$r" == "$1" ]; then 
+	#	#printERROR "the source $1 is not dir, or does not exist"
+		if [ ! -d "$PARENT_DIR" ] ; then
+		mktest $PARENT_DIR
+		fi
+		
+	fi
 
 #Make Direcroty	
 mkdir $1
