@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMCStudy.rdl,v 1.11 2002/09/05 04:33:40 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -80,6 +80,7 @@ protected:
   TString     _fitOptions ;     // Fit options string
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
   Bool_t      _binGenData ;     // Bin data between generating and fitting
+  Double_t    _nExpGen ;        // Number of expected events to generate in extended mode
 
   Bool_t      _canAddFitResults ; // Allow adding of external fit results?
 

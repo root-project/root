@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.16 2003/04/01 22:34:44 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.17 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,6 +98,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _fitParams = fitModel.getParameters(&dependents) ;
   _fitInitParams = (RooArgSet*) _fitParams->snapshot(kTRUE) ;
 
+  _nExpGen = _extendedGen ? genModel.expectedEvents() : 0 ;
+
   // Place holder for NLL
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
 
@@ -161,8 +163,11 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     if (generate) {
       // Generate sample
       Int_t nEvt(nEvtPerSample) ;
-      if (_extendedGen) nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample) ;
-
+      
+     if (_extendedGen) {
+       nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
+     }
+ 
       genSample = _genContext->generate(nEvt) ;
 
     } else if (asciiFilePat && &asciiFilePat) {
