@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.66 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.67 2002/01/25 16:34:45 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -463,6 +463,12 @@ void TClass::BuildRealData(void *pointer)
       char parent[256];
       parent[0] = 0;
       TBuildRealData brd(realDataObject, this);
+      
+      //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
+      //It forces the loading of new typedefs in case some of them were not
+      //yet loaded.
+      InheritsFrom(TObject::Class());
+      
       //Always call ShowMembers via the interpreter. A direct call like
       //      realDataObject->ShowMembers(brd, parent);
       //will not work if the class derives from TObject but not as primary
