@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.3 2000/10/05 06:56:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.4 2000/10/31 14:07:38 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -578,7 +578,7 @@ Int_t TSpectrum::Search(TH1 *hin, Double_t sigma, Option_t *option)
 
       npeaks=Search1(source,size,sigma);
       for(i=0;i<npeaks;i++) {
-         bin = Int_t(fPositionX[i] +0.5);
+         bin = 1+Int_t(fPositionX[i] +0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
          fPositionY[i] = hin->GetBinContent(bin);
       }
