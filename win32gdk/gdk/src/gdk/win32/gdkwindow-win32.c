@@ -1447,8 +1447,7 @@ gdk_window_set_cursor (GdkWindow *window,
    /* but the cursor is still set to our old one. */
    if (prev_xcursor != NULL) {
       GDK_NOTE (MISC, g_print ("...DestroyCursor (%#x)\n",(guint) prev_xcursor));
-      if (!DestroyCursor (prev_xcursor))
-         WIN32_API_FAILED ("DestroyCursor");
+      DestroyCursor (prev_xcursor);
    }
 }
 
