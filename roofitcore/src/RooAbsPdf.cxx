@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.31 2001/09/11 00:30:31 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.32 2001/09/17 18:48:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -273,109 +273,6 @@ void RooAbsPdf::operModeHook()
   // WVE 08/21/01 Probably obsolete now
 }
 
-
-
-Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			      const RooArgProxy& a) const
-{
-  // Wrapper function for matchArgsByName()
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			      const RooArgProxy& a, const RooArgProxy& b) const
-{
-  // Wrapper function for matchArgsByName()
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;  
-  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			      const RooArgProxy& a, const RooArgProxy& b,
-			      const RooArgProxy& c) const
-{
-  // Wrapper function for matchArgsByName()
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;
-  nameList.Add(new TObjString(c.absArg()->GetName())) ;
-  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			      const RooArgProxy& a, const RooArgProxy& b,
-			      const RooArgProxy& c, const RooArgProxy& d) const
-{
-  // Wrapper function for matchArgsByName()
-  TList nameList ;
-  nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  nameList.Add(new TObjString(b.absArg()->GetName())) ;
-  nameList.Add(new TObjString(c.absArg()->GetName())) ;
-  nameList.Add(new TObjString(d.absArg()->GetName())) ;
-  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			    const RooArgSet& set) const 
-{
-  // Wrapper function for matchArgsByName()
-  TList nameList ;
-  TIterator* iter = set.createIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    nameList.Add(new TObjString(arg->GetName())) ;    
-  }
-  delete iter ;
-
-  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
-  nameList.Delete() ;
-  return result ;
-}
-
-
-
-Bool_t RooAbsPdf::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs,
-				  const TList &nameList) const {
-  // Check if allArgs contains matching elements for each name in nameList. If it does,
-  // add the corresponding args from allArgs to matchedArgs and return kTRUE. Otherwise
-  // return kFALSE and do not change matchedArgs.
-
-  RooArgSet matched("matched");
-  TIterator *iterator= nameList.MakeIterator();
-  TObjString *name(0);
-  Bool_t isMatched(kTRUE);
-  while(isMatched && (name= (TObjString*)iterator->Next())) {
-    RooAbsArg *found= allArgs.find(name->String().Data());
-    if(found) {
-      matched.add(*found);
-    }
-    else {
-      isMatched= kFALSE;
-    }
-  }
-  delete iterator;
-  if(isMatched) matchedArgs.add(matched);
-  return isMatched;
-}
 
 
 Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.28 2001/09/17 18:48:11 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.29 2001/09/18 02:03:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,10 +51,9 @@ public:
   RooAbsArg *createFundamental() const;
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
-  virtual Bool_t selfNormalized() const { return kFALSE ; }
   
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -96,6 +95,22 @@ public:
 
 protected:
 
+  // Support interface for subclasses to advertise their analytic integration
+  // and generator capabilities in their analticalIntegral() and generateEvent()
+  // implementations.
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b, 		   
+		   const RooArgProxy& c, const RooArgProxy& d) const ;
+
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgSet& set) const ;
+
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
@@ -125,6 +140,12 @@ protected:
   friend class RooAbsPdf ;
   friend class RooConvolutedPdf ;
   friend class RooRealProxy ;
+
+private:
+
+  Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
+
+protected:
 
   ClassDef(RooAbsReal,1) // Abstract real-valued variable
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.7 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.8 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -39,7 +39,7 @@ public:
 
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet=0) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
   
   // Coefficient Analytical integration support

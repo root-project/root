@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.8 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.9 2001/09/18 04:13:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,7 +59,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList, Double_t cutOff=0) :
+RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
@@ -69,7 +69,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, RooArgList& pdfList,
   TIterator* iter = pdfList.createIterator() ;
   RooAbsPdf* pdf ;
   while(pdf=(RooAbsPdf*)iter->Next()) {
-    if (pdf->IsA()!=RooAbsPdf::Class()) {
+    if (!dynamic_cast<RooAbsPdf*>(pdf)) {
       cout << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
 	   << pdf->GetName() << " is not a PDF, ignored" << endl ;
       continue ;
@@ -125,13 +125,41 @@ Double_t RooProdPdf::evaluate() const
 }
 
 
-Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
+Int_t RooProdPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
 
+  // Determine if we can express the integral as a partial product of pdfs:
+  // If integration is requested over all of a component pdfs' dependents
+  // we know a priori, because the pdf is by construction normalized, that
+  // it will evaluate to 1 and can thus be dropped from the product.
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  Int_t code(0), n(0) ;
+  Bool_t allFact(kTRUE) ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    Bool_t fact(kTRUE) ;
+    RooArgSet *pdfDepList = pdf->getDependents(normSet) ;
+    TIterator* depIter = pdfDepList->createIterator() ;
+    RooAbsArg* dep ;
+    while(dep=(RooAbsArg*)depIter->Next()) {
+      if (!allVars.find(dep->GetName())) {
+	fact=kFALSE ;
+	allFact=kFALSE ;
+      }
+    }
+    if (fact) {
+      code |= (1<<n) ;      
+      analVars.add(*pdfDepList) ;
+    } 
+    delete depIter ;
+    delete pdfDepList ;
+    n++ ;
+  }
+
   // This PDF is by construction normalized
-  return 0 ;
+  return allFact?-1:code ;
 }
 
 
@@ -139,6 +167,32 @@ Double_t RooProdPdf::analyticalIntegral(Int_t code) const
 {
   // Return analytical integral defined by given scenario code
 
-  // This PDF is by construction normalized
-  return 1.0 ;
+  // No integration scenario
+  if (code==0) {
+    return getVal() ;
+  }
+
+  // Full integration scenario
+  if (code==-1) {
+    return 1.0 ;
+  }
+
+  // Partial integration scenarios
+  RooAbsReal* pdf ;
+  _pdfIter->Reset() ;
+  Int_t n(0) ;
+  Double_t value(1) ;
+  const RooArgSet* nset(_pdfList.nset()) ;
+
+  // Calculate running product of pdfs, skipping factorized components
+  while(pdf=(RooAbsReal*)_pdfIter->Next()) {    
+    if (code & (1<<n)) {
+    } else {
+      value *= pdf->getVal(nset) ;
+    }
+    if (value<_cutOff) break ;
+    n++ ;
+  }
+
+  return value ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.25 2001/09/08 00:51:54 bevan Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.26 2001/09/11 00:30:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,6 +79,8 @@ public:
   void setTraceCounter(Int_t value) ;
   void traceEvalPdf(Double_t value) const ;
 
+  virtual Bool_t selfNormalized() const { return kFALSE ; }
+
   // Support for extended maximum likelihood, switched off by default
   virtual Bool_t canBeExtended() const { return kFALSE ; } 
   virtual Double_t expectedEvents() const { return 0 ; } 
@@ -108,28 +110,6 @@ protected:
   virtual void operModeHook() ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
-
-  // Support interface for subclasses to advertise their analytic integration
-  // and generator capabilities in their analticalIntegral() and generateEvent()
-  // implementations.
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgProxy& a) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgProxy& a, const RooArgProxy& b) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgProxy& a, const RooArgProxy& b, 		   
-		   const RooArgProxy& c, const RooArgProxy& d) const ;
-
-  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgSet& set) const ;
-
-private:
-
-  Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
-
-protected:
 
   friend class RooConvolutedPdf ;
   mutable Double_t _rawValue ;

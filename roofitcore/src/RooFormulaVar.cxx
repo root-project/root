@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.12 2001/09/04 01:37:42 david Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.13 2001/09/17 18:48:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -152,7 +152,7 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
-Int_t RooFormulaVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooFormulaVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code

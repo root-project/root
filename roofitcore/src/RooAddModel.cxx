@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.9 2001/09/06 20:49:15 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.10 2001/09/19 00:26:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -368,7 +368,7 @@ Bool_t RooAddModel::checkDependents(const RooArgSet* set) const
 }
 
 
-Int_t RooAddModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const 
+Int_t RooAddModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code

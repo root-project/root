@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.35 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.36 2001/09/18 02:03:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -87,7 +87,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet anIntOKDepList ;
   depIter = depList.createIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
-    if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
+    if (function.forceAnalyticalInt(*arg)) {
+      anIntOKDepList.add(*arg) ;
+    }
   }
   delete depIter ;
 
@@ -125,8 +127,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
 
     // If this dependent arg is self-normalized, stop here
-    if (function.selfNormalized()) continue ;
-    
+    //if (function.selfNormalized()) continue ;
     Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue
     if (arg->isDerived()) {
@@ -158,15 +159,19 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
     
     // Add server to list of dependents that are OK for analytical integration
-    if (depOK) anIntOKDepList.add(*arg) ;
+    if (depOK) {
+      anIntOKDepList.add(*arg) ;      
+    }
   }
-
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * B) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
+  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList,_funcNormSet) ;    
+
+  // WVE kludge: synchronize dset for use in analyticalIntegral
+  function.getVal(funcNormSet) ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Make list of numerical integration variables consisting of:            *  
@@ -208,7 +213,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(depList)) {
-      
+
       // Expand server in final dependents 
       RooArgSet *argDeps = arg->getDependents(&depList) ;
 
@@ -217,8 +222,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       TIterator* iter = argDeps->createIterator() ;
       RooAbsArg* dep ;
       while(dep=(RooAbsArg*)iter->Next()) {
-	if (!function.forceAnalyticalInt(*dep))
+	if (!_anaList.find(dep->GetName())) {
 	  numIntDepList.add(*dep) ;
+	}
       }      
       delete iter ;
       delete argDeps ; 

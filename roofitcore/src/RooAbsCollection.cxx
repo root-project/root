@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsCollection.cc,v 1.1 2001/09/17 18:48:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -378,6 +378,24 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
   //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
+  if (opt==OneLine) {
+    os << "(" ;
+    TIterator *iter= createIterator();
+    RooAbsArg *arg ;
+    Bool_t first(kTRUE) ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (!first) {
+	os << "," ;
+      } else {
+	first = kFALSE ;
+      }
+      os << arg->GetName() ;
+    }
+    os << ")" ;
+    delete iter ;
+    return ;
+  }
+
   os << ClassName() << "::" << GetName() << ":" << (_isCopy?" COPY":"") << endl;
   if(opt >= Standard) {
     TIterator *iterator= createIterator();

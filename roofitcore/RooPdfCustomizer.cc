@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.7 2001/09/17 18:48:15 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.8 2001/09/19 00:26:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -132,7 +132,7 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
 
 RooAbsPdf* RooPdfCustomizer::build(Bool_t verbose) 
 {
-  doBuild(_name,verbose) ;
+  return doBuild(_name,verbose) ;
 }
 
 

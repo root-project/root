@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.14 2001/09/06 20:49:16 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.15 2001/09/17 18:48:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -140,7 +140,7 @@ Double_t RooConvolutedPdf::evaluate() const
 
 
 Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars, 
-					      RooArgSet& analVars) const 
+					      RooArgSet& analVars, const RooArgSet* normSet) const 
 {
   // Make subset of allVars that excludes dependents of any convolution integral
   TIterator* varIter  = allVars.createIterator() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.8 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.9 2001/09/17 18:48:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,8 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
 
+typedef Int_t* pInt_t ;
+
 class RooAddPdf : public RooAbsPdf {
 public:
 
@@ -38,11 +40,16 @@ public:
   Double_t evaluate() const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet=0) const ;
   Double_t analyticalIntegral(Int_t code) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
 protected:
+
+  Int_t registerAICodeList(Int_t* codeList) const ;
+  const Int_t* retrieveAICodeList(Int_t masterCode) const ;
+  mutable pInt_t* _clArr ; //! do not persist
 
   RooListProxy _pdfList ;
   RooListProxy _coefList ;
