@@ -21,7 +21,7 @@ same session. It provides the following functionalities :\n\n\
   - possibility of interrupting the current command or the event loop (not yet);\n\
   - possibility of selecting the tree entries to be processed (not yet);\n\
   - take advantage of TTree class features via context menu;\n\n\
-";
+ ";
 
 
 const char gTVHelpStart[]		= "\
@@ -35,8 +35,8 @@ or, to load the tree Mytree from the file Myfile :\n\
    root [1] TFile file(\"Myfile\");\n\
    root [2] new TTreeView(\"Mytree\");\n\n\
 This will work if uou have the path to the library TTreeView defined in your\n\
-.rootrc file.\n\n
-";
+.rootrc file.\n\n 
+ ";
 
 
 const char gTVHelpLayout[]		= "\
@@ -61,7 +61,7 @@ const char gTVHelpLayout[]		= "\
   of the tree (branch). Expressions and leaf-type items can be dragged or\n\
   deleted. A right click on the list-box or item activates a general context\n\
   menu.\n\n\
-";
+ ";
 
 
 const char gTVHelpBrowse[]		= "\
@@ -75,7 +75,7 @@ be loaded, double-click on them and they will be mapped in a new item called\n\
 Left-clicking on trees from the TreeList will expand their content on the list\n\
 from the right side. Double-clicking them will also open their content on the\n\
 left, where you can click on branches to expand them on the right.\n\n\ 
-";
+ ";
 
 
 const char gTVHelpDraggingItems[]	= "\
@@ -84,7 +84,7 @@ leaves. Dragging an item and dropping to another will copy the content of first\
 to the last (leaf->expression, expression->expression). Items far to the right\n\
 side of the list can be easily dragged to the left (where expressions are\n\
 placed) by dragging them to the left at least 10 pixels.\n\n\ 
-";
+ ";
 
 
 const char gTVHelpEditExpressions[]	= "\
@@ -101,7 +101,7 @@ The editor usage is the following :\n\
   any item from the right panel by clicking on it (recommandable);\n\
   - you should write the item alias by hand since it not ony make the expression\n\
   meaningfull, but it also highly improve the layout for big expressions\n\n\ 
-";
+ ";
 
 
 const char gTVHelpUserCommands[]	= "\
@@ -112,7 +112,7 @@ All commands can be interrupted at any time by pressing the STOP button\n\
 from the bottom-left (not yet)\n\n\
 You can toggle recording of the current command in the history file by\n\
 checking the Rec button from the top-right\n\n\ 
-";
+ ";
 
 
 const char gTVHelpContext[]		= "\
@@ -132,7 +132,7 @@ right-clicks the right panel. Commands are :\n\
   - MakeSelector    : equivalent of TTree::MakeSelector();\n\
   - Process         : equivalent of TTree::Process();\n\
   - RemoveExpression: removes clicked item from the list;\n\n\ 
-";
+ ";
 
 
 const char gTVHelpDrawing[]		= "\
@@ -148,13 +148,13 @@ current histogram dimension will be available. You can check multiple options\n\
 and reset them by checking the Default entries.\n\n\
   After completing the previous operations you can issue the draw command by\n\
 pressing the DRAW button.\n\n\ 
-";
+ ";
 
 
 const char gTVHelpMacros[]		= "\
    Macros can be loaded and executed in this version only by issuing\n\
 the corresponding user commands (see help on user commands)\n\n\
-";
+ ";
 #else
 const char gTVHelpAbout[] 		= "empty";
 const char gTVHelpStart[]		= "empty";
