@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMinuit.cc,v 1.2 2002/08/27 00:53:23 verkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.3 2002/08/27 06:14:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -66,6 +66,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
+  _handleLocalErrors = kFALSE ;
 
   // Examine parameter list
   RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
