@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.8 2001/04/10 15:25:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.9 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -57,6 +57,18 @@ class ostream;
 
 class TRegexp;
 class TString;
+
+TString operator+(const TString& s1, const TString& s2);
+TString operator+(const TString& s,  const char *cs);
+TString operator+(const char *cs, const TString& s);
+TString operator+(const TString& s, char c);
+TString operator+(const TString& s, Long_t i);
+TString operator+(const TString& s, ULong_t i);
+TString operator+(char c, const TString& s);
+TString operator+(Long_t i, const TString& s);
+TString operator+(ULong_t i, const TString& s);
+Bool_t  operator==(const TString& s1, const TString& s2);
+Bool_t  operator==(const TString& s1, const char *s2);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

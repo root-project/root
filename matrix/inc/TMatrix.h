@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.5 2001/04/11 14:24:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.6 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -53,6 +53,18 @@ class TMatrixRow;
 class TMatrixColumn;
 class TMatrixDiag;
 class TMatrixPivoting;
+
+class TMatrix;
+TMatrix &operator+=(TMatrix &target, const TMatrix &source);
+TMatrix &operator-=(TMatrix &target, const TMatrix &source);
+TMatrix &Add(TMatrix &target, Double_t scalar, const TMatrix &source);
+TMatrix &ElementMult(TMatrix &target, const TMatrix &source);
+TMatrix &ElementDiv(TMatrix &target, const TMatrix &source);
+
+Bool_t operator==(const TMatrix &im1, const TMatrix &im2);
+void Compare(const TMatrix &im1, const TMatrix &im2);
+Bool_t AreCompatible(const TMatrix &im1, const TMatrix &im2);
+Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
 
 class TMatrix : public TObject {

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.5 2001/04/11 11:10:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.6 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -49,6 +49,20 @@
 #endif
 
 class TLazyMatrixD;
+
+class TMatrixDDiag;
+class TMatrixD;
+
+TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
+TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
+TMatrixD &Add(TMatrixD &target, Double_t scalar, const TMatrixD &source);
+TMatrixD &ElementMult(TMatrixD &target, const TMatrixD &source);
+TMatrixD &ElementDiv(TMatrixD &target, const TMatrixD &source);
+Bool_t operator==(const TMatrixD &im1, const TMatrixD &im2);
+void Compare(const TMatrixD &im1, const TMatrixD &im2);
+Bool_t AreCompatible(const TMatrixD &im1, const TMatrixD &im2);
+Double_t E2Norm(const TMatrixD &m1, const TMatrixD &m2);
+
 
 class TMatrixD : public TObject {
 
