@@ -122,7 +122,7 @@ char *exprwithspace;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1802
-  char *exprnospace=(char*)malloc(strlen(exprwithspace)+1);
+  char *exprnospace=(char*)malloc(strlen(exprwithspace)+2);
 #else
   char exprnospace[G__ONELINE];
 #endif
@@ -1041,7 +1041,7 @@ char *expression;
 
 #ifndef G__OLDIMPLEMENTATION1802
   if(strlen(expression)>G__BUFLEN-2) 
-    ebuf=(char*)malloc(strlen(expression)+1);
+    ebuf=(char*)malloc(strlen(expression)+2);
   if(!ebuf) {
     G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
     return(G__null);
