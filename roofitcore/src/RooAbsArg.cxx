@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.16 2001/04/14 00:43:18 davidk Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.17 2001/04/18 20:38:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,7 @@
 
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgProxy.hh"
 
 ClassImp(RooAbsArg)
 
@@ -80,6 +81,7 @@ void RooAbsArg::initCopy(const RooAbsArg& other)
   while (obj=aIter->Next()) {
     _attribList.Add(obj->Clone()) ;
   }
+  delete aIter ;
 
   // Copy server list by hand
   TIterator* sIter = other._serverList.MakeIterator() ;
@@ -90,6 +92,7 @@ void RooAbsArg::initCopy(const RooAbsArg& other)
     shapeProp = (Bool_t)server->_clientListShape.FindObject((TObject*)&other) ;
     addServer(*server,valueProp,shapeProp) ;
   }
+  delete sIter ;
 
   setValueDirty() ;
   setShapeDirty() ;
@@ -146,6 +149,8 @@ RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other)
     addServer(*server) ;
   }
   delete iter ;
+  
+  // proxies?
 
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
@@ -153,7 +158,7 @@ RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other)
 }
 
 
-void RooAbsArg::setAttribute(Text_t* name, Bool_t value) 
+void RooAbsArg::setAttribute(const Text_t* name, Bool_t value) 
 {
   // Set (default) or clear a named boolean attribute of this object.
 
@@ -174,7 +179,7 @@ void RooAbsArg::setAttribute(Text_t* name, Bool_t value)
 }
 
 
-Bool_t RooAbsArg::getAttribute(Text_t* name) const
+Bool_t RooAbsArg::getAttribute(const Text_t* name) const
 {
   // Check if a named attribute is set. By default, all attributes
   // are unset.
@@ -191,8 +196,8 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   if (!_serverList.FindObject(&server)) {
     _serverList.Add(&server) ;
   } else {
-    cout << "RooAbsArg::addServer(" << GetName() << "): Server " 
-	 << server.GetName() << " already registered" << endl ;
+//     cout << "RooAbsArg::addServer(" << GetName() << "): Server " 
+// 	 << server.GetName() << " already registered" << endl ;
     return ;
   }
 
@@ -354,6 +359,7 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
 } 
 
 
+
 Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll) 
 {
   // Replace current servers with new servers with the same name from the given list
@@ -403,11 +409,55 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 
+  // Process the proxies
+  Bool_t allReplaced=kTRUE ;
+  for (int i=0 ; i<numProxies() ; i++) {
+    allReplaced &= getProxy(i).changePointer(newSet) ;    
+  }
+  if (mustReplaceAll && !allReplaced) {
+    cout << "RooAbsArg::redirectServers(" << GetName() 
+	 << "): ERROR, some proxies could not be adjusted" << endl ;
+    ret = kTRUE ;
+  }
+
   // Optional subclass post-processing
   ret |= redirectServersHook(newSet,mustReplaceAll) ;
 
   return ret ;
 }
+
+
+void RooAbsArg::registerProxy(RooArgProxy& proxy) 
+{
+  // Every proxy can be registered only once
+  if (_proxyArray.FindObject(&proxy)) {
+    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+	 << proxy.GetName() << " for arg " << proxy.absArg()->GetName() 
+	 << " already registered" << endl ;
+    return ;
+  }
+
+  // Register proxied object as server
+  addServer(*proxy.absArg()) ;
+
+  // Register proxy itself
+  _proxyArray.Add(&proxy) ;  
+}
+
+
+
+RooArgProxy& RooAbsArg::getProxy(Int_t index) const
+{
+  return *((RooArgProxy*)_proxyArray.At(index)) ;
+}
+
+
+
+Int_t RooAbsArg::numProxies() const
+{
+  return _proxyArray.GetEntries() ;
+}
+
 
 
 void RooAbsArg::attachToTree(TTree& t, Int_t bufSize=32000)
@@ -450,17 +500,19 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     os << indent << "  Attributes: " ;
     printAttribList(os) ;
     os << endl ;
+
     // client list
     os << indent << "  Clients: " << endl;
     TIterator *clientIter= _clientList.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
       os << indent << "    (" << (void*)client  << ","
-	 << (_clientListValue.FindObject(client)?",V":"")
-	 << (_clientListShape.FindObject(client)?",S":"")
+	 << (_clientListValue.FindObject(client)?"V":"-")
+	 << (_clientListShape.FindObject(client)?"S":"-")
 	 << ") " ;
       client->printToStream(os,OneLine);
     }
+
     // server list
     os << indent << "  Servers: " << endl;
     TIterator *serverIter= _serverList.MakeIterator();
@@ -472,6 +524,15 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
 	 << ") " ;
       server->printToStream(os,OneLine);
     }
+
+    // proxy list
+    os << indent << "  Proxies: " << endl ;
+    for (int i=0 ; i<numProxies() ; i++) {
+      RooArgProxy& proxy=getProxy(i) ;
+      os << indent << "    " << proxy.GetName() << " -> " ;
+      proxy.absArg()->printToStream(os,OneLine) ;
+    }
+
   }
 }
 

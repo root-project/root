@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.16 2001/04/11 23:25:26 davidk Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.17 2001/04/18 20:38:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,11 +17,13 @@
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
+#include "TObjArray.h"
 #include "RooFitCore/RooPrintable.hh"
 
 class TTree ;
 class RooArgSet ;
 class RooDataSet ;
+class RooArgProxy ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -51,8 +53,8 @@ public:
   }
 
   // Accessors to attributes
-  void setAttribute(Text_t* name, Bool_t value=kTRUE) ;
-  Bool_t getAttribute(Text_t* name) const ;
+  void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
+  Bool_t getAttribute(const Text_t* name) const ;
   inline TIterator* attribIterator() { return _attribList.MakeIterator() ; }
 
   //Debug hooks
@@ -64,18 +66,26 @@ protected:
   virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
   void initCopy(const RooAbsArg& other) ;
 
-  // Client-Server relatation management 
+  // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
   THashList _clientList      ; //! complete client list
   THashList _clientListShape ; //! clients that requested shape dirty flag propagation
   THashList _clientListValue ; //! clients that requested value dirty flag propagation
   THashList _serverList      ; //! do not persist (or clone)
+  TObjArray _proxyArray      ; //! do not persist (or clone)
+
   Bool_t redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll) {} ;
+
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooArgSet& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server) ;
+
+  friend class RooArgProxy ;
+  void registerProxy(RooArgProxy& proxy) ;
+  RooArgProxy& getProxy(Int_t index) const ;
+  Int_t numProxies() const ;
 	
   // Attribute list
   THashList _attribList ;

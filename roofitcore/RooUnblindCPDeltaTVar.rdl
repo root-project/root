@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.4 2001/04/05 01:49:11 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.5 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,7 +14,8 @@
 
 #include "RooFitCore/RooBlindTools.hh"
 #include "RooFitCore/RooDerivedReal.hh"
-#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooCategoryProxy.hh"
 
 class RooUnblindCPDeltaTVar : public RooDerivedReal {
 public:
@@ -49,12 +50,9 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
-  // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
-
-  RooAbsReal* _deltat ;
-  RooAbsCategory* _tag ;
-  RooAbsCategory* _state ;
+  RooRealProxy     _deltat ;
+  RooCategoryProxy _tag ;
+  RooCategoryProxy _state ;
   RooBlindTools _blindEngine ;
 
   ClassDef(RooUnblindCPDeltaTVar,1) // a real-valued variable and its value

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindCPAsymVar.cc,v 1.3 2001/03/29 22:37:41 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.cc,v 1.4 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,14 +26,19 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("")
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					     const char *blindString, RooAbsReal& cpasym)
-  : RooDerivedReal(name,title), _blindEngine(blindString), _asym(&cpasym) 
+  : RooDerivedReal(name,title), _blindEngine(blindString), _asym("asym",this,cpasym) 
 {  
-  addServer(cpasym) ;
 }
 
 
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char* name, const RooUnblindCPAsymVar& other) : 
-  RooDerivedReal(name, other), _blindEngine(other._blindEngine), _asym(other._asym)
+  RooDerivedReal(name, other), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
+{
+}
+
+
+RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other) : 
+  RooDerivedReal(other), _blindEngine(other._blindEngine), _asym("asym",this,other._asym)
 {
 }
 
@@ -45,7 +50,7 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 
 Double_t RooUnblindCPAsymVar::evaluate() const
 {
-  return _blindEngine.UnHideAsym(_asym->getVal());
+  return _blindEngine.UnHideAsym(_asym);
 }
 
 
@@ -61,28 +66,11 @@ Bool_t RooUnblindCPAsymVar::isValid(Double_t value, Bool_t verbose) const
 }
 
 
-Bool_t RooUnblindCPAsymVar::redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll) 
-{
-  RooAbsReal* newAsym = (RooAbsReal*) newServerList.find(_asym->GetName()) ;
-  if (!newAsym) {
-    if (mustReplaceAll) {
-      cout << "RooUnblindCPDeltaTVar::redirectServersHook(" << GetName() 
-	   << "): cannot find server named " << _asym->GetName() << endl ;
-      return kTRUE ;
-    }
-  } else {
-    _asym = newAsym ;
-  }
-
-  return kFALSE ;
-}
-
-
 void RooUnblindCPAsymVar::printToStream(ostream& os, PrintOption opt) const
 {
   // Print current value and definition of formula
   os << "RooUnblindCPAsymVar: " << GetName() << " : (value hidden) asym=" 
-     << _asym->GetName() ;
+     << _asym.arg().GetName() ;
   if(!_unit.IsNull()) os << ' ' << _unit;
   printAttribList(os) ;
   os << endl ;

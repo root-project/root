@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.rdl,v 1.2 2001/03/22 15:31:25 verkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.1 2001/03/27 01:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,21 +14,25 @@
 #define ROO_REAL_PROXY
 
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooArgProxy.hh"
 
-class RooRealProxy {
+class RooRealProxy : public RooArgProxy {
 public:
 
   // Constructors, assignment etc.
-  RooRealProxy(RooAbsReal& ref) ;
+  RooRealProxy() {} ;
+  RooRealProxy(const char* name, RooAbsArg* owner, RooAbsReal& ref) ;
+  RooRealProxy(const char* name, RooAbsArg* owner, const RooRealProxy& other) ;
+  virtual TObject* Clone() { return new RooRealProxy(*this); }
   virtual ~RooRealProxy();
+  
 
   // Accessors
-  operator Double_t() { return _ref.getVal() ; }
-  const RooAbsReal& arg() { return _ref ; }
+  inline operator Double_t() const { return arg().getVal() ; }
+  inline const RooAbsReal& arg() const { return (RooAbsReal&)*_arg ; }
 
 protected:
 
-  RooAbsReal& _ref ;  
   ClassDef(RooRealProxy,0) // not persistable 
 };
 

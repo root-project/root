@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.13 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooArgSet.cc,v 1.14 2001/04/14 00:43:18 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -203,6 +203,52 @@ Bool_t RooArgSet::add(RooAbsArg& var) {
 }
 
 
+
+
+Bool_t RooArgSet::add(RooArgSet& list)
+{
+  Bool_t result(false) ;
+
+  Int_t n= list.GetSize() ;
+  for(Int_t index= 0; index < n; index++) {
+    result |= add((RooAbsArg&)*list.At(index)) ;
+  }
+
+  return result;  
+}
+
+
+
+Bool_t RooArgSet::replace(RooAbsArg& var1, RooAbsArg& var2) 
+{
+  // check that this isn't a copy of a list
+  if(_isCopy) {
+    cout << "RooArgSet: cannot replace variables in a copied list" << endl;
+    return kFALSE;
+  }
+  // is var1 already in this list?
+  const char *name= var1.GetName();
+  RooAbsArg *other= find(name);
+  if(other != &var1) {
+    cout << "RooArgSet: variable \"" << name << "\" is not in the list"
+	 << " and cannot be replaced" << endl;
+    return kFALSE;
+  }
+  // is var2's name already in this list?
+  other= find(var2.GetName());
+  if(other != 0 && other != &var1) {
+    cout << "RooArgSet: cannot replace \"" << name
+	 << "\" with already existing \"" << var2.GetName() << "\"" << endl;
+    return kFALSE;
+  }
+  // replace var1 with var2
+  Remove(&var1);
+  Add(&var2);
+  return kTRUE;
+}
+
+
+
 Bool_t RooArgSet::remove(RooAbsArg& var) {
   // Remove argument from list
 
@@ -223,6 +269,38 @@ Bool_t RooArgSet::remove(RooAbsArg& var) {
   return kTRUE;
 }
 
+
+
+void RooArgSet::setAttribAll(const Text_t* name, Bool_t value) 
+{
+  TIterator* iter=MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    arg->setAttribute(name,value) ;
+  }
+}
+
+
+RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) 
+{
+  // Create output set
+  RooArgSet *sel = new RooArgSet(TString(GetName()).Append("_selection")) ;
+  
+  // Scan set contents for matching attribute
+  TIterator* iter=MakeIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)iter->Next()) {
+    if (arg->getAttribute(name)==value)
+      sel->add(*arg) ;
+  }
+
+  // Return set if not empty
+  if (sel->GetSize()) return sel ;
+
+  // Destroy empty set and return null
+  delete sel ;
+  return 0 ;
+}
 
 
 

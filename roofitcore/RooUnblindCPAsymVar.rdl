@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.4 2001/04/05 01:49:11 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.5 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,6 +15,7 @@
 #include "RooFitCore/RooBlindTools.hh"
 #include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooRealProxy.hh"
 
 class RooUnblindCPAsymVar : public RooDerivedReal {
 public:
@@ -23,6 +24,7 @@ public:
   RooUnblindCPAsymVar(const char *name, const char *title, 
 			const char *blindString, RooAbsReal& cpasym);
   RooUnblindCPAsymVar(const char* name, const RooUnblindCPAsymVar& other);
+  RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other);
   virtual TObject* Clone() { return new RooUnblindCPAsymVar(*this); }  
   virtual ~RooUnblindCPAsymVar();
 
@@ -46,10 +48,7 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
-  // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
-
-  RooAbsReal* _asym ;
+  RooRealProxy _asym ;
   RooBlindTools _blindEngine ;
 
   ClassDef(RooUnblindCPAsymVar,1) // a real-valued variable and its value
