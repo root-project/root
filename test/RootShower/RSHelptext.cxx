@@ -116,13 +116,11 @@ const char gSimulationHelpText[] =
 "tree view at the left, then by clicking the 'Show Selection' button. This\n"
 "will show the selected particle track into the tab 'Selected Track'.\n";
 
-const char gRSHelpMsgBox[] = 
+const char gRSHelpMsgBox[] =
 "\nIt appears that you have changed some parameters. These include :\n"
 "   - Primary Particle\n"
 "   - Initial Energy\n"
 "   - Magnetic Field\n"
-"   - Target Material\n"
-"   - Target Dimension\n"
 " \"Yes\" button - save resources into file ${HOME}/.rootshowerrc, and quit\n"
 " \"No\"  button - quit without saving\n";
 
@@ -174,7 +172,7 @@ const char gHelpLicense[] =
 "all copies. Users of the software are asked to feed back problems, benefits,\n"
 "and/or suggestions about the software to the author (bellbert@pcsalo.cern.ch).\n"
 "Support for this software - fixing of bugs, incorporation of new features - \n"
-"is done on a best effort basis. All bug fixes and enhancements will be made\n" 
+"is done on a best effort basis. All bug fixes and enhancements will be made\n"
 "available under the same terms and conditions as the original software,\n"
 "\n"
 "\n"
