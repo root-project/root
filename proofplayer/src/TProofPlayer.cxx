@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.45 2005/02/08 11:07:13 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.46 2005/02/08 11:58:11 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -789,7 +789,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    if ( e != 0 ) {
       PDB(kPacketizer,2)
          Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %lld %lld",
-              slave->GetOrdinal().Data(), slave->GetName(), e->GetFileName(),
+              slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    } else {
       PDB(kPacketizer,2) Info("GetNextPacket","Done");
@@ -1049,7 +1049,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                PDB(kGlobal,1) Info("Process",
                                    "Sending TDSet with %d elements to submaster %s",
                                    set.GetListOfElements()->GetSize(),
-                                   sl->GetOrdinal().Data());
+                                   sl->GetOrdinal());
                sl->GetSocket()->Send(mesg);
                usedmasters.Add(sl);
 

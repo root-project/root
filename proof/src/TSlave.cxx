@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.33 2004/10/15 17:10:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.34 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -243,8 +243,8 @@ Int_t TSlave::Compare(const TObject *obj) const
 
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
-   const Char_t *myord = GetOrdinal();
-   const Char_t *otherord = sl->GetOrdinal();
+   const char *myord = GetOrdinal();
+   const char *otherord = sl->GetOrdinal();
    while (myord && otherord) {
       Int_t myval = atoi(myord);
       Int_t otherval = atoi(otherord);

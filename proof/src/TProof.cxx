@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.74 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.75 2005/02/08 11:02:24 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -103,8 +103,8 @@ Int_t TSlaveInfo::Compare(const TObject *obj) const
 
    const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
 
-   const Char_t *myord = GetOrdinal();
-   const Char_t *otherord = si->GetOrdinal();
+   const char *myord = GetOrdinal();
+   const char *otherord = si->GetOrdinal();
    while (myord && otherord) {
       Int_t myval = atoi(myord);
       Int_t otherval = atoi(otherord);
@@ -422,7 +422,7 @@ Bool_t TProof::StartSlaves()
                }
 
                // create slave server
-               TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+               TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
                ord++;
                TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx, image, workdir);
 
@@ -747,7 +747,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 
          // Send one byte out-of-band message to server
          if (s->SendRaw(&oobc, 1, kOob) <= 0) {
-            Error("Interrupt", "error sending oobc to slave %s", sl->GetOrdinal().Data());
+            Error("Interrupt", "error sending oobc to slave %s", sl->GetOrdinal());
             continue;
          }
 
@@ -778,7 +778,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                   n = s->RecvRaw(waste, nch);
                   if (n <= 0) {
                      Error("Interrupt", "error receiving waste from slave %s",
-                           sl->GetOrdinal().Data());
+                           sl->GetOrdinal());
                      break;
                   }
                   nbytes += n;
@@ -788,12 +788,12 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                   //
                   gSystem->Sleep(100);
                   if (++nloop > 100) {  // 10 seconds time-out
-                     Error("Interrupt", "server %s does not respond", sl->GetOrdinal().Data());
+                     Error("Interrupt", "server %s does not respond", sl->GetOrdinal());
                      break;
                   }
                } else {
                   Error("Interrupt", "error receiving OOB from server %s",
-                        sl->GetOrdinal().Data());
+                        sl->GetOrdinal());
                   break;
                }
             }
@@ -821,7 +821,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                n = s->RecvRaw(waste, nch);
                if (n <= 0) {
                   Error("Interrupt", "error receiving waste (2) from slave %s",
-                        sl->GetOrdinal().Data());
+                        sl->GetOrdinal());
                   break;
                }
                nbytes += n;
@@ -829,7 +829,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
             if (nbytes > 0) {
                if (IsMaster())
                   Printf("*** Slave %s:%s synchronized: %d bytes discarded",
-                         sl->GetName(), sl->GetOrdinal().Data(), nbytes);
+                         sl->GetName(), sl->GetOrdinal(), nbytes);
                else
                   Printf("*** PROOF synchronized: %d bytes discarded", nbytes);
             }
@@ -903,7 +903,7 @@ TList *TProof::GetSlaveInfo()
          TIter nextactive(GetListOfActiveSlaves());
          TSlave *activeslave;
          while ((activeslave = (TSlave *) nextactive())) {
-            if (slaveinfo->GetOrdinal() == activeslave->GetOrdinal()) {
+            if (TString(slaveinfo->GetOrdinal()) == activeslave->GetOrdinal()) {
                slaveinfo->SetStatus(TSlaveInfo::kActive);
                break;
             }
@@ -912,7 +912,7 @@ TList *TProof::GetSlaveInfo()
          TIter nextbad(GetListOfBadSlaves());
          TSlave *badslave;
          while ((badslave = (TSlave *) nextbad())) {
-            if (slaveinfo->GetOrdinal() == badslave->GetOrdinal()) {
+            if (TString(slaveinfo->GetOrdinal()) == badslave->GetOrdinal()) {
                slaveinfo->SetStatus(TSlaveInfo::kBad);
                break;
             }
@@ -1498,10 +1498,10 @@ void TProof::Print(Option_t *option) const
       const_cast<TProof*>(this)->AskStatistics();
       if (IsParallel())
          Printf("*** Master server %s (parallel mode, %d slaves):",
-                gProofServ->GetOrdinal().Data(), GetParallel());
+                gProofServ->GetOrdinal(), GetParallel());
       else
          Printf("*** Master server %s (sequential mode):",
-                gProofServ->GetOrdinal().Data());
+                gProofServ->GetOrdinal());
 
       Printf("Master host name:         %s", gSystem->HostName());
       Printf("Port number:              %d", GetPort());
@@ -1946,7 +1946,7 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
          if (size > 0) {
             if (!nsl)
                Info("SendFile", "sending file %s to:", file);
-            printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal().Data());
+            printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal());
          }
 
       sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
@@ -1974,7 +1974,7 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
 
          if (sl->GetSocket()->SendRaw(buf, len) == -1) {
             SysError("SendFile", "error writing to slave %s:%s (now offline)",
-                     sl->GetName(), sl->GetOrdinal().Data());
+                     sl->GetName(), sl->GetOrdinal());
             MarkBad(sl);
             break;
          }
@@ -2603,7 +2603,7 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
       if (reply->What() != kPROOF_CHECKFILE) {
          // error -> package should have been found
          Error("UploadPackage", "package %s did not exist on submaster %s",
-            par.Data(), ma->GetOrdinal().Data());
+               par.Data(), ma->GetOrdinal());
          delete reply;
          return -1;
       }
@@ -2756,7 +2756,7 @@ void TProof::ValidateDSet(TDSet *dset)
                                 "Sending TDSet with %d elements to slave %s"
                                 " to be validated",
                                 set.GetListOfElements()->GetSize(),
-                                sl->GetOrdinal().Data());
+                                sl->GetOrdinal());
             sl->GetSocket()->Send(mesg);
             usedslaves.Add(sl);
          }
@@ -2956,7 +2956,7 @@ Bool_t TProofCondor::StartSlaves()
       TCondorSlave* c = 0;
       if (trial == 1) {
          c = dynamic_cast<TCondorSlave*>(claims.At(idx));
-         c->fOrdinal = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+         c->fOrdinal = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          ord++;
       } else {
          TPair *p = dynamic_cast<TPair*>(claims.At(idx));
@@ -3196,7 +3196,7 @@ Bool_t TProofSuperMaster::StartSlaves()
                SlaveFqdn = SlaveAddr.GetHostAddress();
             }
 
-            TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+            TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
             ord++;
             // create submaster server
             TSlave *slave = CreateSubmaster(word[1], sport, fullord, image, conffile, msd);
@@ -3342,7 +3342,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
                                 "Sending TDSet with %d elements to slave %s"
                                 " to be validated",
                                 set.GetListOfElements()->GetSize(),
-                                sl->GetOrdinal().Data());
+                                sl->GetOrdinal());
             sl->GetSocket()->Send(mesg);
             usedsms.Add(sl);
          }

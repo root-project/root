@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.12 2004/10/15 17:10:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.13 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -84,13 +84,13 @@ public:
    Int_t          Compare(const TObject *obj) const;
    Bool_t         IsSortable() const { return kTRUE; }
 
-   const char    *GetName() const { return fName.Data(); }
-   const char    *GetImage() const { return fImage.Data(); }
-   const char    *GetProofWorkDir() const { return fProofWorkDir.Data(); }
-   const char    *GetWorkDir() const { return fWorkDir.Data(); }
-   const char    *GetUser() const { return fUser.Data(); }
+   const char    *GetName() const { return fName; }
+   const char    *GetImage() const { return fImage; }
+   const char    *GetProofWorkDir() const { return fProofWorkDir; }
+   const char    *GetWorkDir() const { return fWorkDir; }
+   const char    *GetUser() const { return fUser; }
    Int_t          GetPort() const { return fPort; }
-   const TString &GetOrdinal() const { return fOrdinal; }
+   const char    *GetOrdinal() const { return fOrdinal; }
    Int_t          GetPerfIdx() const { return fPerfIdx; }
    Int_t          GetSecurity() const { return fSecContext->GetMethod(); }
    Int_t          GetProtocol() const { return fProtocol; }

@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TProofPEAC.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -110,7 +110,7 @@ Bool_t TProofPEAC::StartSlaves()
          // create slave server
 
          if (sp->fType == "inetd") {
-            TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+            TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
             ord++;
             TSlave *slave = CreateSlave(sp->fNode, fPort, fullord, sp->fPerfidx, sp->fImg, kPROOF_WorkDir);
             fSlaves->Add(slave);
@@ -167,7 +167,7 @@ Bool_t TProofPEAC::StartSlaves()
          }
 
          // who do we believe for perf & img, Condor for the moment
-         TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+         TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          ord++;
          TSlave *slave = CreateSlave(cs->fHostname, cs->fPort, fullord,
                                      cs->fPerfIdx, cs->fImage, kPROOF_WorkDir);
