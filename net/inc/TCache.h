@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.1 2001/01/15 01:20:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.h,v 1.2 2001/01/15 23:49:11 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -91,6 +91,7 @@ private:
    ULong_t      fHighWater;     // high water mark (i.e. maximum cache size in bytes)
    ULong_t      fLowWater;      // low water mark (free pages till low water mark is reached)
    Int_t        fPageSize;      // size of cached pages
+   Int_t        fLowLevel;      // low water mark is at low level percent of high
    Int_t        fDiv;           // page size divider
    Bool_t       fRecursive;     // true to prevent recusively calling ReadBuffer()
 
@@ -104,11 +105,18 @@ private:
 public:
    enum {
       kDfltPageSize = 0x80000,    // 512KB
-      kDfltLowWater = 70          // 70% of fHighWater
+      kDfltLowLevel = 70          // 70% of fHighWater
    };
 
    TCache(Int_t maxCacheSize, TFile *file, Int_t pageSize = kDfltPageSize);
    virtual ~TCache();
+
+   Int_t GetMaxCacheSize() const { return Int_t(fHighWater / 1024 / 1024); }
+   Int_t GetActiveCacheSize() const;
+   Int_t GetPageSize() const { return fPageSize; }
+   Int_t GetLowLevel() const { return fLowLevel; }
+   Int_t Resize(Int_t maxCacheSize);
+   void  SetLowLevel(Int_t percentOfHigh);
 
    Int_t ReadBuffer(Seek_t offset, char *buf, Int_t len);
    Int_t WriteBuffer(Seek_t offset, const char *buf, Int_t len);

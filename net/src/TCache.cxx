@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.1 2001/01/15 01:20:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.2 2001/01/15 23:49:11 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -62,7 +62,8 @@ TCache::TCache(Int_t maxCacheSize, TFile *file, Int_t pageSize)
    fFile      = file;
    fEOF       = fFile->GetEND();
    fHighWater = maxCacheSize * 1024 * 1024;
-   fLowWater  = ULong_t(fHighWater * kDfltLowWater / 100);
+   fLowWater  = fHighWater * kDfltLowLevel / 100;
+   fLowLevel  = kDfltLowLevel;
    fRecursive = kFALSE;
    SetPageSize(pageSize);
 
@@ -86,7 +87,9 @@ TCache::~TCache()
 //______________________________________________________________________________
 void TCache::SetPageSize(Int_t size)
 {
-   // Make sure the page size is a power of two.
+   // Make sure the page size is a power of two, with a minimum of 4096.
+
+   if (size < 4096) size = 4096;
 
    for (int i = 0; i < int(sizeof(size)*8); i++)
       if ((size >> i) == 1) {
@@ -241,7 +244,8 @@ Int_t TCache::WriteBuffer(Seek_t offset, const char *buf, Int_t len)
          memcpy(p->Data()+begin, buf+boff, blen);
          if (p->fSize < begin+blen) {
             p->fSize = begin+blen;
-            fNew->Add(p);
+            if (!fNew->Contains(p))
+               fNew->Add(p);
          }
          p->SetBit(TPage::kDirty);
          fCache->PageUsed(p);
@@ -252,7 +256,8 @@ Int_t TCache::WriteBuffer(Seek_t offset, const char *buf, Int_t len)
             memcpy(p->Data()+begin, buf+boff, blen);
             if (p->fSize < begin+blen) {
                p->fSize = begin+blen;
-               fNew->Add(p);
+               if (!fNew->Contains(p))
+                  fNew->Add(p);
             }
             p->SetBit(TPage::kDirty);
          } else
@@ -340,4 +345,65 @@ Int_t TCache::FlushNew()
    fNew->Clear();
 
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TCache::Resize(Int_t maxCacheSize)
+{
+   // Resize the cache (either increase or decrease the size). Returns the
+   // previous cache size or -1 in case of error. Input and output is in MB's.
+   // Minimum cache size is 1 MB.
+
+   if (maxCacheSize < 1) maxCacheSize = 1;
+
+   ULong_t newSize = maxCacheSize * 1024 * 1024;
+   Int_t   oldSize = Int_t(fHighWater / 1024 / 1024);
+
+   if (newSize == fHighWater)
+      return maxCacheSize;
+
+   else if (newSize < fHighWater) {
+      ULong_t inUse = (fCache->GetSize() + fFree->GetSize()) * fPageSize;
+      if (inUse > newSize) {
+         // first free active cache to not contain more than newSize,
+         // then delete free pages up to desired new limit
+         if (ULong_t(fCache->GetSize() * fPageSize) > newSize) {
+            if (Free(newSize) < 0) {
+               Error("Resize", "error freeing pages");
+               return -1;
+            }
+            fFree->Delete();
+         } else {
+            while (inUse > newSize) {
+               TPage *p = (TPage*) fFree->First();
+               if (!p) break;
+               fFree->Remove(p);
+               delete p;
+               inUse -= fPageSize;
+            }
+         }
+      }
+   }
+   fHighWater = newSize;
+   fLowWater  = fHighWater * fLowLevel / 100;
+   return oldSize;
+}
+
+//______________________________________________________________________________
+Int_t TCache::GetActiveCacheSize() const
+{
+   // Get size of all allocated cache pages (in use and free pages).
+
+   return Int_t(((fCache->GetSize()+fFree->GetSize())*fPageSize)/1024/1024);
+}
+
+//______________________________________________________________________________
+void TCache::SetLowLevel(Int_t percentOfHigh)
+{
+   // Set the low water level. This is in percent of the maxCacheSize.
+   // When the cache is full it will be freed up to percentOfHigh. The
+   // default is kDfltLowLevel=70%.
+
+   fLowLevel = percentOfHigh;
+   fLowWater = fHighWater * fLowLevel / 100;
 }
