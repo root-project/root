@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.24 2002/02/21 01:40:28 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.25 2002/03/07 06:22:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -464,8 +464,15 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   RooBinning bin[3] ;
   Int_t ndim = vars.getSize() ;
   bin[0].addUniform(nBins[0],xlo[0],xhi[0]) ;
-  if (ndim>1) bin[1].addUniform(nBins[1],xlo[1],xhi[1]) ;
-  if (ndim>2) bin[2].addUniform(nBins[2],xlo[2],xhi[2]) ;
+  bin[0].setRange(xlo[0],xhi[0]) ;
+  if (ndim>1) {
+    bin[1].addUniform(nBins[1],xlo[1],xhi[1]) ;
+    bin[1].setRange(xlo[1],xhi[1]) ;
+  }
+  if (ndim>2) {
+    bin[2].addUniform(nBins[2],xlo[2],xhi[2]) ;
+    bin[2].setRange(xlo[2],xhi[2]) ;
+  }
 
   return createHistogram(name,vars,tAxisLabel,bin) ;
 }
