@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.80 2002/06/21 06:11:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.81 2002/06/22 04:56:54 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1587,13 +1587,13 @@ Bool_t  TClass::IsForeign() const
 Long_t TClass::Property() const
 {
    if (fProperty!=(-1)) return fProperty;
-   if (!fClassInfo)     return 0;
    Long_t dummy;
    TClass *kl = (TClass *)this; 
-   kl->fProperty = fClassInfo->Property();
    if (InheritsFrom(TObject::Class())) {
       kl->SetBit(kIsTObject);
    }
+   if (!fClassInfo)     return 0;
+   kl->fProperty = fClassInfo->Property();
    if (!fClassInfo->HasMethod("Streamer") || 
        !fClassInfo->GetMethod("Streamer","TBuffer&",&dummy).IsValid() ) {
 
@@ -1938,7 +1938,7 @@ void TClass::Streamer(void *object, TBuffer &b)
    if (IsTObject()) {           // TObject, regular case
 
       if (!fInterStreamer) {
-         fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         if (fClassInfo) fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
          fOffsetStreamer = GetBaseClassOffset(TObject::Class());
       }
       TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
