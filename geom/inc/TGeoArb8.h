@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.12 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.13 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -78,11 +78,15 @@ public:
    Double_t              GetDz() const {return fDz;}
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   static void           GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t *norm);
    virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t             *GetVertices() {return &fXY[0][0];}
+   Double_t              GetTwist(Int_t iseg) const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
+   static Bool_t         IsSamePoint(Double_t *p1, Double_t *p2) {return ((p1[0]==p2[0]) && (p1[1]==p2[1]))?kTRUE:kFALSE;}
    virtual void          InspectShape() const;
    Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
+   Double_t              SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);

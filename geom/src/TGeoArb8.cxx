@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.32 2004/01/19 13:45:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.33 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -196,25 +196,26 @@ void TGeoArb8::ComputeTwist()
 // of corresponding -dz +dz edges). Called after last point [7] was set.
    Double_t twist[4];
    Bool_t twisted = kFALSE;
-   Double_t al1, al2, dx1, dy1, dx2, dy2;
+   Double_t dx1, dy1, dx2, dy2;
    for (Int_t i=0; i<4; i++) {
       dx1 = fXY[(i+1)%4][0]-fXY[i][0];
       dy1 = fXY[(i+1)%4][1]-fXY[i][1];
+      if (dx1==0 && dy1==0) {
+         twist[i] = 0;
+         continue;
+      }   
       dx2 = fXY[4+(i+1)%4][0]-fXY[4+i][0];
       dy2 = fXY[4+(i+1)%4][1]-fXY[4+i][1];
-      if (((dx1==0)&&(dy1==0)) || ((dx2==0)&&(dy2==0))) {
+      if (dx2==0 && dy2==0) {
          twist[i] = 0;
          continue;
       }
-      al1 = TMath::ATan2(dy1,dx1);
-      if (al1<0) al1+=2*TMath::Pi();
-      al2 = TMath::ATan2(dy2,dx2);
-      if (al2<0) al2+=2*TMath::Pi();
-      twist[i] = TMath::Tan(al2-al1);
-      if (twist[i]<1E-3) {
+      twist[i] = dy1*dx2 - dx1*dy2;
+      if (TMath::Abs(twist[i])<1E-3) {
          twist[i] = 0;
          continue;
       }
+      twist[i] = TMath::Sign(1.,twist[i]);
       twisted = kTRUE;
    }
    if (!twisted) return;
@@ -222,6 +223,15 @@ void TGeoArb8::ComputeTwist()
    fTwist = new Double_t[4];
    memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
 }
+
+//_____________________________________________________________________________
+Double_t TGeoArb8::GetTwist(Int_t iseg) const
+{
+// Get twist for segment I in range [0,3]
+   if (!fTwist) return 0.;
+   if (iseg<0 || iseg>3) return 0.;
+   return fTwist[iseg];
+}   
 
 //_____________________________________________________________________________
 void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
@@ -597,10 +607,33 @@ Int_t TGeoArb8::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 }   
 
 //_____________________________________________________________________________
+void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t *norm)
+{
+// Compute normal to plane defined by P1, P2 and P3
+   Double_t cross = 0.;
+   Double_t v1[3], v2[3];
+   Int_t i;
+   for (i=0; i<3; i++) {
+      v1[i] = p2[i] - p1[i];
+      v2[i] = p3[i] - p1[i];
+   }
+   norm[0] = v1[1]*v2[2]-v1[2]*v2[1];
+   cross += norm[0]*norm[0];
+   norm[1] = v1[2]*v2[0]-v1[0]*v2[2];
+   cross += norm[1]*norm[1];
+   norm[2] = v1[0]*v2[1]-v1[1]*v2[0];
+   cross += norm[2]*norm[2];
+   if (cross == 0.) return;
+   cross = 1./TMath::Sqrt(cross);
+   for (i=0; i<3; i++) norm[i] *= cross;
+}   
+
+//_____________________________________________________________________________
 void TGeoArb8::InspectShape() const
 {
 // print shape parameters
    printf("*** Shape %s: TGeoArb8 ***\n", GetName());
+   if (IsTwisted()) printf("  = TWISTED\n");
    for (Int_t ip=0; ip<8; ip++) {
       printf("    point #%i : x=%11.5f y=%11.5f z=%11.5f\n", 
              ip, fXY[ip][0], fXY[ip][1], fDz*((ip<4)?-1:1));
@@ -610,13 +643,134 @@ void TGeoArb8::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return TGeoShape::Big();
+   Double_t safz = fDz-TMath::Abs(point[2]);
+   if (!in) safz = -safz;
+   Int_t iseg;
+   Double_t safmin = TGeoShape::Big();
+   Double_t safe = TGeoShape::Big();
+   Double_t lsq, ssq, dx, dy, dpx, dpy, u;
+   if (IsTwisted()) {
+      if (!in) {
+         if (!TGeoBBox::Contains(point)) return TGeoBBox::Safety(point,kFALSE);
+      }
+      // Point is also in the bounding box ;-(  
+      // Compute closest distance to any segment
+      Double_t vert[8];
+      Double_t *p1, *p2;
+      Int_t isegmin=0;
+      Double_t umin = 0.;
+      SetPlaneVertices (point[2], vert);
+      for (iseg=0; iseg<4; iseg++) {
+         if (safe==0.) return 0.;
+         p1 = &vert[2*iseg];
+         p2 = &vert[2*((iseg+1)%4)];
+         dx = p2[0] - p1[0];
+         dy = p2[1] - p1[1];
+         dpx = point[0] - p1[0];
+         dpy = point[1] - p1[1];
+      
+         lsq = dx*dx + dy*dy;
+         u = (dpx*dx + dpy*dy)/lsq;
+         if (u>1) {
+            dpx = point[0]-p2[0];
+            dpy = point[1]-p2[1];
+         } else {
+            if (u>=0) {
+               dpx -= u*dx;
+               dpy -= u*dy;
+            }
+         }
+         ssq = dpx*dpx + dpy*dpy;      
+         if (ssq < safe) {
+            isegmin = iseg;
+            umin = u;
+            safe = ssq;
+         }   
+      }
+      if (umin<0) umin = 0.;
+      if (umin>1) {
+         isegmin = (isegmin+1)%4;
+         umin = 0.;
+      }
+      Int_t i1 = isegmin;
+      Int_t i2 = (isegmin+1)%4;
+      Double_t dx1 = fXY[i2][0]-fXY[i1][0];   
+      Double_t dx2 = fXY[i2+4][0]-fXY[i1+4][0];   
+      Double_t dy1 = fXY[i2][1]-fXY[i1][1];   
+      Double_t dy2 = fXY[i2+4][1]-fXY[i1+4][1];
+      dx = dx1 + umin*(dx2-dx1);
+      dy = dy1 + umin*(dy2-dy1);
+      safe *= 1.- 4.*fDz*fDz/(dx*dx+dy*dy+4.*fDz*fDz);
+      safe = TMath::Sqrt(safe);      
+      return safe;   
+   }  
+      
+      
+   for (iseg=0; iseg<4; iseg++) {
+      safe = SafetyToFace(point,iseg,in);
+      if (safe>0) {
+         if (in && safe<safmin) {
+            safmin = safe;
+            continue;
+         }
+         if (!in && safe<1E10) {
+            if (safmin<1E10) safe = TMath::Max(safe,safmin);
+            else safmin=safe;
+         }
+      }           
+   }
+   if (in) return TMath::Min(safmin, safz);
+   return TMath::Max(safmin, safz);   
 }
 
+//_____________________________________________________________________________
+Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
+{
+// Estimate safety to lateral plane defined by segment iseg in range [0,3]
+// might be negative: plane seen only from inside
+   Double_t vertices[12];
+   Int_t ipln = (iseg+1)%4;
+   // point 1
+   vertices[0] = fXY[iseg][0];
+   vertices[1] = fXY[iseg][1];
+   vertices[2] = -fDz;
+   // point 2
+   vertices[3] = fXY[ipln][0];
+   vertices[4] = fXY[ipln][1];
+   vertices[5] = -fDz;
+   // point 3
+   vertices[6] = fXY[ipln+4][0];
+   vertices[7] = fXY[ipln+4][1];
+   vertices[8] = fDz;
+   // point 4
+   vertices[9] = fXY[iseg+4][0];
+   vertices[10] = fXY[iseg+4][1];
+   vertices[11] = fDz;
+   Double_t twist = GetTwist(iseg);
+   Double_t safe;
+   Double_t norm[3];
+   Double_t *p1, *p2, *p3;
+   if (twist ==0) {
+      p1 = &vertices[0];
+      p2 = &vertices[9];
+      p3 = &vertices[6];
+      if (IsSamePoint(p2,p3)) {
+         p3 = &vertices[3];
+         if (IsSamePoint(p1,p3)) return TGeoShape::Big(); // skip single segment
+      }
+      GetPlaneNormal(p1,p2,p3,norm);
+      safe = (point[0]-p1[0])*norm[0]+(point[1]-p1[1])*norm[1]+(point[2]-p1[2])*norm[2];
+      if (in) return (-safe);
+      return safe;
+   }
+   // The face is twisted
+   return TGeoShape::Big();
+}
+   
 //_____________________________________________________________________________
 void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 {

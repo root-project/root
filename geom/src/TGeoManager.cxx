@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.79 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.80 2004/04/13 07:50:45 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3529,6 +3529,15 @@ TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
    fPhysicalNodes->Add(node);
    return node;
 }         
+
+//_____________________________________________________________________________
+void TGeoManager::ClearPhysicalNodes(Bool_t mustdelete)
+{
+// Clear the current list of physical nodes, so that we can start over with a new list.
+// If MUSTDELETE is true, delete previous nodes.
+   if (mustdelete) fPhysicalNodes->Delete();
+   else fPhysicalNodes->Clear();
+}   
 
 //_____________________________________________________________________________
 TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
