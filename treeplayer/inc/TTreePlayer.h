@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.32 2004/07/29 10:54:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.33 2004/08/13 09:44:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -100,6 +100,7 @@ public:
                        ,Long64_t nentries, Long64_t firstentry);
     virtual Long64_t  Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry);
     virtual Long64_t  Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry);
+    virtual void      RecursiveRemove(TObject *obj);
     virtual Long64_t  Scan(const char *varexp, const char *selection, Option_t *option
                        ,Long64_t nentries, Long64_t firstentry);
     Bool_t            ScanRedirected() {return fScanRedirect;}

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.179 2005/01/13 20:07:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.180 2005/01/27 20:43:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -291,6 +291,7 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -304,6 +305,7 @@ TTreePlayer::~TTreePlayer()
    DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
+   gROOT->GetListOfCleanups()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -2333,6 +2335,14 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    if (cursav) cursav->cd();
    return selector->GetStatus();
 
+}
+
+//______________________________________________________________________________
+void TTreePlayer::RecursiveRemove(TObject *obj)
+{
+// cleanup pointers in the player pointing to obj
+
+   if (fHistogram == obj) fHistogram = 0;
 }
 
 //______________________________________________________________________________
