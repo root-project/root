@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.22 2001/05/30 06:06:24 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.23 2001/05/31 08:53:10 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -443,17 +443,16 @@ void TCint::SetClassInfo(TClass *cl)
    // Set pointer to CINT's G__ClassInfo in TClass.
 
    if (!cl->fClassInfo) {
-      if (strstr(cl->GetName(),"::")) return;
       cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
       //In case a class contains an external enum, the enum will be seen as a class
       //We must detect this special case and make the class a Zombie
       //Here we assume that a class has at least one method
-      if (cl->fClassInfo->NMethods() == 0) {
+      if (cl->Property() & (kIsClass|kIsStruct) == 0) {
          cl->MakeZombie();
       }
       
-      if (!cl->fClassInfo->IsValid()) {
+      if (!cl->fClassInfo->IsLoaded()) {
          // this happens when no CINT dictionary is available
          delete cl->fClassInfo;
          cl->fClassInfo = 0;
