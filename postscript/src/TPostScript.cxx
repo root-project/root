@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.47 2004/03/17 17:35:32 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.48 2004/04/14 13:14:45 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -710,7 +710,7 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    //  If nn>0 the line is clipped as a line.
    //  If nn<0 the line is clipped as a fill area.
 
-   Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
+   Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    if (nn > 0) {
@@ -738,7 +738,7 @@ void TPostScript::DrawPolyLine(Int_t nn, TPoints *xy)
    PrintFast(2," m");
    idx = 0;
    idy = 0;
-   for (Int_t i=1;i<n;i++) {
+   for (i=1;i<n;i++) {
       ixdi = XtoPS(xy[i].GetX());
       iydi = YtoPS(xy[i].GetY());
       ix   = ixdi - ixd0;
