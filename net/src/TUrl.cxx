@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.12 2003/09/21 21:38:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.13 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -65,7 +65,10 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "file:"
    if (!strncmp(url, "file:", 5)) {
       fProtocol = "file";
-      fFile = url+5;
+      if (!strncmp(url+5, "//", 2))
+         fFile = url+7;
+      else
+         fFile = url+5;
       fPort = 0;
       return;
    }
@@ -73,7 +76,10 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "rfio:"
    if (!strncmp(url, "rfio:", 5)) {
       fProtocol = "rfio";
-      fFile = url+5;
+      if (!strncmp(url+5, "//", 2))
+         fFile = url+7;
+      else
+         fFile = url+5;
       fPort = 0;
       return;
    }
@@ -81,7 +87,10 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "hpss:"
    if (!strncmp(url, "hpss:", 5)) {
       fProtocol = "hpss";
-      fFile = url+5;
+      if (!strncmp(url+5, "//", 2))
+         fFile = url+7;
+      else
+         fFile = url+5;
       fPort = 0;
       return;
    }
@@ -89,7 +98,10 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Special case for "castor:"
    if (!strncmp(url, "castor:", 7)) {
       fProtocol = "castor";
-      fFile = url+7;
+      if (!strncmp(url+7, "//", 2))
+         fFile = url+9;
+      else
+         fFile = url+7;
       fPort = 0;
       return;
    }
