@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.10 2002/09/14 16:20:14 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 // ***********************************************************************
@@ -124,7 +124,7 @@ TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 }
 
 //______________________________________________________________________________
-void TAxis3D::Copy(TObject &obj)
+void TAxis3D::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*Copy this histogram structure to newth1*-*-*-*-*-*-*-*-*-*-*-*
 //*-*          =======================================

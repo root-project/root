@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.8 2002/06/05 10:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.9 2002/08/07 11:55:56 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -222,7 +222,7 @@ const char *TTimeStamp::AsString(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TTimeStamp::Copy(TTimeStamp &ts)
+void TTimeStamp::Copy(TTimeStamp &ts) const
 {
    // Copy this to ts.
 

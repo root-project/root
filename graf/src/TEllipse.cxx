@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.11 2002/02/15 11:47:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -86,7 +86,7 @@ TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse
 }
 
 //______________________________________________________________________________
-void TEllipse::Copy(TObject &obj)
+void TEllipse::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this ellipse to ellipse*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.8 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TLine::TLine(const TLine &line) : TObject(line), TAttLine(line)
 }
 
 //______________________________________________________________________________
-void TLine::Copy(TObject &obj)
+void TLine::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this line to line*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.6 2002/02/23 15:45:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.7 2002/04/18 23:17:43 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -148,7 +148,7 @@ public:
    Int_t        GetNanoSec() const { return fNanoSec; }
 
    const char  *AsString(const Option_t *option="") const;
-   void         Copy(TTimeStamp &ts);
+   void         Copy(TTimeStamp &ts) const;
    UInt_t       GetDate(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
                         UInt_t *year = 0, UInt_t *month = 0,
                         UInt_t *day = 0) const;

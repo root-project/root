@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.2 2000/12/13 15:13:53 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
         TPointsArray3D(const TPointsArray3D &points);
         virtual ~TPointsArray3D();
 
-        virtual void      Copy(TObject &points);
+        virtual void      Copy(TObject &points) const;
         virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t     GetLastPosition() const;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.4 2002/03/20 09:01:30 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -42,7 +42,7 @@ class TLegend : public TPave , public TAttText {
   TLegendEntry   *AddEntry(TObject* obj, const char* label = "", Option_t* option = "lpf" );
   TLegendEntry   *AddEntry(const char *name, const char* label = "", Option_t* option = "lpf" );
   virtual void    Clear( Option_t* option = "" ); // *MENU*
-  virtual void    Copy( TObject &obj );
+  virtual void    Copy( TObject &obj ) const;
   virtual void    DeleteEntry(); // *MENU*
   virtual void    Draw( Option_t* option = "" );
   virtual void    EditEntryAttFill(); // *MENU*

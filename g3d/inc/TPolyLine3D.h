@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.4 2001/12/27 17:20:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.5 2002/01/20 10:02:40 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
    TPolyLine3D(const TPolyLine3D &polylin);
    virtual ~TPolyLine3D();
 
-   virtual void      Copy(TObject &polyline);
+   virtual void      Copy(TObject &polyline) const;
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
    virtual void      Draw(Option_t *option="");
    virtual void      DrawPolyLine(Int_t n, Float_t *p, Option_t *option="");

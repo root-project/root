@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.5 2002/08/17 16:34:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.6 2002/09/13 01:33:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    TColor(const TColor &color);
    virtual ~TColor();
    const char   *AsHexString() const;
-   void          Copy(TObject &color);
+   void          Copy(TObject &color) const;
    virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const {r = fRed; g = fGreen; b = fBlue;}
    virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const {h = fHue; l = fLight; s = fSaturation;}
    Int_t         GetNumber() const {return fNumber;}

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.12 2002/06/19 12:40:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.13 2002/08/05 17:35:35 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TPave::ConvertNDCtoPad()
 }
 
 //______________________________________________________________________________
-void TPave::Copy(TObject &obj)
+void TPave::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this pave to pave*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================

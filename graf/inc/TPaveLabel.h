@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.2 2000/06/13 11:10:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
         TPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, Option_t *option="br");
         TPaveLabel(const TPaveLabel &pavelabel);
         virtual ~TPaveLabel();
-                void  Copy(TObject &pavelabel);
+                void  Copy(TObject &pavelabel) const;
         virtual void  Draw(Option_t *option="");
         virtual void  DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       const char *label, Option_t *option="");

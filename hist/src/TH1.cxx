@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.110 2002/09/27 12:15:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.111 2002/10/18 09:45:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -946,7 +946,7 @@ Double_t TH1::ComputeIntegral()
 }
 
 //______________________________________________________________________________
-void TH1::Copy(TObject &obj)
+void TH1::Copy(TObject &obj) const
 {
 //   -*-*-*-*-*Copy this histogram structure to newth1*-*-*-*-*-*-*-*-*-*-*-*
 //             =======================================
@@ -5229,7 +5229,7 @@ void TH1C::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH1C::Copy(TObject &newth1)
+void TH1C::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
    TArrayC::Copy((TH1C&)newth1);
@@ -5434,7 +5434,7 @@ void TH1S::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH1S::Copy(TObject &newth1)
+void TH1S::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
    TArrayS::Copy((TH1S&)newth1);
@@ -5632,7 +5632,7 @@ TH1F::~TH1F()
 }
 
 //______________________________________________________________________________
-void TH1F::Copy(TObject &newth1)
+void TH1F::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
    TArrayF::Copy((TH1F&)newth1);
@@ -5831,7 +5831,7 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 }
 
 //______________________________________________________________________________
-void TH1D::Copy(TObject &newth1)
+void TH1D::Copy(TObject &newth1) const
 {
    TH1::Copy(newth1);
    TArrayD::Copy((TH1D&)newth1);

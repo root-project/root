@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.31 2002/06/16 10:06:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.32 2002/08/05 18:13:15 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1555,7 +1555,7 @@ Int_t TFormula::Compile(const char *expression)
 }
 
 //______________________________________________________________________________
-void TFormula::Copy(TObject &obj)
+void TFormula::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.10 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.11 2002/05/18 08:22:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TPolyMarker::TPolyMarker(const TPolyMarker &polymarker) : TObject(polymarker), T
 }
 
 //______________________________________________________________________________
-void TPolyMarker::Copy(TObject &obj)
+void TPolyMarker::Copy(TObject &obj) const
 {
 
    TObject::Copy(obj);

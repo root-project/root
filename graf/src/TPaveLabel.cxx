@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.12 2002/08/05 17:36:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.13 2002/10/28 15:38:32 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText
 }
 
 //______________________________________________________________________________
-void TPaveLabel::Copy(TObject &obj)
+void TPaveLabel::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this pavelabel to pavelabel*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================

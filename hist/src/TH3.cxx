@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.25 2002/07/11 09:05:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.26 2002/09/17 08:31:47 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -105,7 +105,7 @@ TH3::~TH3()
 }
 
 //______________________________________________________________________________
-void TH3::Copy(TObject &obj)
+void TH3::Copy(TObject &obj) const
 {
    TH1::Copy(obj);
 }
@@ -1546,7 +1546,7 @@ void TH3C::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH3C::Copy(TObject &newth3)
+void TH3C::Copy(TObject &newth3) const
 {
 //*-*-*-*-*-*-*Copy this 3-D histogram structure to newth3*-*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -1759,7 +1759,7 @@ void TH3S::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH3S::Copy(TObject &newth3)
+void TH3S::Copy(TObject &newth3) const
 {
 //*-*-*-*-*-*-*Copy this 3-D histogram structure to newth3*-*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -1951,7 +1951,7 @@ TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 }
 
 //______________________________________________________________________________
-void TH3F::Copy(TObject &newth3)
+void TH3F::Copy(TObject &newth3) const
 {
 //*-*-*-*-*-*-*Copy this 3-D histogram structure to newth3*-*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -2143,7 +2143,7 @@ TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
 }
 
 //______________________________________________________________________________
-void TH3D::Copy(TObject &newth3)
+void TH3D::Copy(TObject &newth3) const
 {
 //*-*-*-*-*-*-*Copy this 3-D histogram structure to newth3*-*-*-*-*-*-*-*-*-*
 //*-*          ===========================================

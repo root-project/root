@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.h,v 1.2 2000/06/13 10:56:12 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -34,7 +34,7 @@ public:
         TFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
         TFrame(const TFrame &frame);
         virtual ~TFrame();
-                void  Copy(TObject &frame);
+                void  Copy(TObject &frame) const;
         virtual void  Draw(Option_t *option="");
         virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual void  Paint(Option_t *option="");

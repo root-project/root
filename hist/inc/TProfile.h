@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.18 2002/02/18 23:09:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.19 2002/04/09 07:15:26 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ public:
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
-    virtual void    Copy(TObject &hnew);
+    virtual void    Copy(TObject &hnew) const;
     virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(const TH1 *h1);
     virtual void    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

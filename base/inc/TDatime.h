@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.4 2001/12/10 14:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.5 2002/08/02 11:06:21 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
    const char  *AsString() const;
    const char  *AsSQLString() const;
    UInt_t       Convert(Bool_t toGMT = kFALSE) const;
-   void         Copy(TDatime &datime);
+   void         Copy(TDatime &datime) const;
    UInt_t       Get() const { return fDatime; }
    Int_t        GetDate() const;
    Int_t        GetTime() const;

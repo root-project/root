@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.5 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -60,7 +60,7 @@ TPaveClass::TPaveClass(const TPaveClass &PaveClass) : TPaveLabel(PaveClass)
 }
 
 //______________________________________________________________________________
-void TPaveClass::Copy(TObject &obj)
+void TPaveClass::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this PaveClass to PaveClass*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================

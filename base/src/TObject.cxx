@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.46 2002/10/10 09:01:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.47 2002/10/25 00:50:49 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -214,7 +214,7 @@ TObject& TObject::operator=(const TObject &rhs)
 }
 
 //______________________________________________________________________________
-void TObject::Copy(TObject &obj)
+void TObject::Copy(TObject &obj) const
 {
    // Copy this to obj.
 

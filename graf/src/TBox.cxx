@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.11 2002/04/04 07:07:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
 }
 
 //______________________________________________________________________________
-void TBox::Copy(TObject &obj)
+void TBox::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy a Box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==========

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.33 2002/09/17 08:31:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.34 2002/10/29 08:25:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -170,7 +170,7 @@ Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH2::Copy(TObject &obj)
+void TH2::Copy(TObject &obj) const
 {
    TH1::Copy(obj);
    ((TH2&)obj).fScalefactor = fScalefactor;
@@ -1522,7 +1522,7 @@ void TH2C::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH2C::Copy(TObject &newth2)
+void TH2C::Copy(TObject &newth2) const
 {
    TH2::Copy((TH2C&)newth2);
    TArrayC::Copy((TH2C&)newth2);
@@ -1741,7 +1741,7 @@ void TH2S::AddBinContent(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH2S::Copy(TObject &newth2)
+void TH2S::Copy(TObject &newth2) const
 {
    TH2::Copy((TH2S&)newth2);
    TArrayS::Copy((TH2S&)newth2);
@@ -1956,7 +1956,7 @@ TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 }
 
 //______________________________________________________________________________
-void TH2F::Copy(TObject &newth2)
+void TH2F::Copy(TObject &newth2) const
 {
    TH2::Copy((TH2F&)newth2);
    TArrayF::Copy((TH2F&)newth2);
@@ -2179,7 +2179,7 @@ TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 }
 
 //______________________________________________________________________________
-void TH2D::Copy(TObject &newth2)
+void TH2D::Copy(TObject &newth2) const
 {
    TH2::Copy((TH2D&)newth2);
    TArrayD::Copy((TH2D&)newth2);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.26 2002/05/23 15:27:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.27 2002/08/09 19:26:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -38,6 +38,7 @@ protected:
    Int_t         fArrayDim;        //number of array dimensions
    Int_t         fMaxIndex[5];     //Maximum array index for array dimension "dim"
    Int_t         fOffset;          //!element offset in class
+   Int_t         fTObjectOffset;   //!base offset for TObject if the element inherits from it
    Int_t         fNewType;         //!new element type when reading
    TString       fTypeName;        //Data type name of data member
    TClass       *fClassObject;     //!pointer to class of object
@@ -66,6 +67,7 @@ public:
    Int_t            GetNewType() const {return fNewType;}
    Int_t            GetType() const {return fType;}
    Int_t            GetOffset() const {return fOffset;}
+   Int_t            GetTObjectOffset() const { return fTObjectOffset; }
    const char      *GetTypeName() const {return fTypeName.Data();}
    const char      *GetTypeNameBasic() const;
    virtual void     Init(TObject *obj=0);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.3 2001/01/12 08:27:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.4 2001/02/13 07:54:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    virtual ~TNamed() { }
    virtual TObject *Clone(const char *newname="") const;
    virtual Int_t    Compare(const TObject *obj) const;
-   virtual void     Copy(TObject &named);
+   virtual void     Copy(TObject &named) const;
    virtual void     FillBuffer(char *&buffer);
    virtual const char  *GetName() const {return fName.Data();}
    virtual const char  *GetTitle() const {return fTitle.Data();}

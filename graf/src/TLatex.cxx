@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.31 2002/10/01 20:59:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.32 2002/10/03 17:46:11 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -284,7 +284,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 }
 
 //______________________________________________________________________________
-void TLatex::Copy(TObject &obj)
+void TLatex::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this TLatex object to another TLatex*-*-*-*-*-*-*
 //*-*                  =========================================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.20 2002/02/04 23:27:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.21 2002/02/18 23:08:29 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
         virtual ~TAxis();
         virtual void     CenterTitle(Bool_t center=kTRUE);  // *MENU*
         const char      *ChooseTimeFormat(Double_t axislength=0);
-        virtual void     Copy(TObject &axis);
+        virtual void     Copy(TObject &axis) const;
         virtual void     Delete(Option_t * /*option*/ ="") { }
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual TObject *DrawClone(Option_t * /*option*/ ="") const {return 0;}

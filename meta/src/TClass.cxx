@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.85 2002/09/15 19:43:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.86 2002/10/18 16:31:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -815,7 +815,9 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    while ((inh = (TBaseClass *) next())) {
       //use option load=kFALSE to avoid a warning like:
       //"Warning in <TClass::TClass>: no dictionary for class TRefCnt is available"
-      c = inh->GetClassPointer(kFALSE);
+      //We can not afford to not have the class if it exist, so we 
+      //use kTRUE.
+      c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) return inh->GetDelta();
          off = c->GetBaseClassOffset(cl);

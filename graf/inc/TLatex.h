@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.7 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.8 2002/05/03 09:34:20 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
       TLatex(Double_t x, Double_t y, const char *text);
       TLatex(const TLatex &text);
       virtual ~TLatex();
-      void             Copy(TObject &text);
+      void             Copy(TObject &text) const;
 
       TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
       Double_t         GetHeight() const;

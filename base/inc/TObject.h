@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.21 2002/07/08 14:38:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.22 2002/07/09 21:02:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    virtual void        Clear(Option_t * /*option*/ ="") { }
    virtual TObject    *Clone(const char *newname="") const;
    virtual Int_t       Compare(const TObject *obj) const;
-   virtual void        Copy(TObject &object);
+   virtual void        Copy(TObject &object) const;
    virtual void        Delete(Option_t *option=""); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option="");

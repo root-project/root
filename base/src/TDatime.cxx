@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.5 2002/05/30 10:50:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.6 2002/08/02 11:06:21 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -156,7 +156,7 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
 }
 
 //______________________________________________________________________________
-void TDatime::Copy(TDatime &datime)
+void TDatime::Copy(TDatime &datime) const
 {
    // Copy this to datime.
 

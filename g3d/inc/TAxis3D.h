@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.4 2000/11/21 20:11:23 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.4 2000/11/21 20:11:23 brun Exp $
+// $Id: TAxis3D.h,v 1.5 2000/12/13 15:13:46 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -61,7 +61,7 @@ protected:
     TAxis          *fSelected;            //!  The selected axis to play with
             Bool_t  fZoomMode;            // Zoom mode for the entire parent TPad
 
-    virtual void    Copy(TObject &hnew);
+    virtual void    Copy(TObject &hnew) const;
             void    InitSet();
             Bool_t  SwitchZoom();
 

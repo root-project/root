@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.27 2002/08/05 16:45:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.28 2002/09/18 13:33:03 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -393,7 +393,7 @@ Int_t TProfile::BufferFill(Axis_t x, Axis_t y, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile::Copy(TObject &obj)
+void TProfile::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*Copy a Profile histogram to a new profile histogram*-*-*-*-*
 //*-*            ===================================================

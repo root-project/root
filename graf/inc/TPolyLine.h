@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.h,v 1.4 2002/01/20 10:06:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
         TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         TPolyLine(const TPolyLine &polyline);
         virtual ~TPolyLine();
-        virtual void    Copy(TObject &polyline);
+        virtual void    Copy(TObject &polyline) const;
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
         virtual void    Draw(Option_t *option="");
         virtual void    DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");

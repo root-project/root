@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.10 2002/01/24 11:39:27 rdm Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.11 2002/05/17 20:33:15 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -202,7 +202,7 @@ TXTRU& TXTRU::operator=(const TXTRU &rhs)
 }
 
 //______________________________________________________________________________
-void TXTRU::Copy(TObject &obj)
+void TXTRU::Copy(TObject &obj) const
 {
    // TXTRU Copy method
 

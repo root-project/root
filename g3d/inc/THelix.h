@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.2 2000/11/21 20:12:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    THelix(const THelix &helix);
    virtual ~THelix();
 
-   virtual void    Copy(TObject &helix);
+   virtual void    Copy(TObject &helix) const;
 // virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
    virtual void    Draw(Option_t *option="");
 // virtual void    DrawHelix(Int_t n, Float_t *p, Option_t *option="");

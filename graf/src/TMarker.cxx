@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.8 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker)
 }
 
 //______________________________________________________________________________
-void TMarker::Copy(TObject &obj)
+void TMarker::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this marker to marker*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==========================

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.11 2002/05/18 08:21:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.cxx,v 1.12 2002/06/16 08:44:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -77,7 +77,7 @@ Int_t TNamed::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TNamed::Copy(TObject &obj)
+void TNamed::Copy(TObject &obj) const
 {
    // Copy this to obj.
 

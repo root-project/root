@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.6 2002/01/20 10:02:41 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.7 2002/01/20 11:47:48 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    TPolyMarker3D(const TPolyMarker3D &polymarker);
    virtual ~TPolyMarker3D();
 
-   virtual void      Copy(TObject &polymarker);
+   virtual void      Copy(TObject &polymarker) const;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py);
    virtual void      Draw(Option_t *option="");
    virtual void      DrawPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");

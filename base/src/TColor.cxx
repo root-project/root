@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.13 2002/08/17 16:34:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.14 2002/09/13 01:33:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -131,7 +131,7 @@ const char *TColor::AsHexString() const
 }
 
 //______________________________________________________________________________
-void TColor::Copy(TObject &obj)
+void TColor::Copy(TObject &obj) const
 {
    // Copy this color to obj.
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.11 2002/01/04 10:20:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.12 2002/01/23 15:48:05 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    TFolder            *AddFolder(const char *name, const char *title, TCollection *collection=0);
    virtual void        Browse(TBrowser *b);
    virtual void        Clear(Option_t *option="");
-   virtual void        Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
+   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual const char *FindFullPathName(const char *name) const;
    virtual const char *FindFullPathName(const TObject *obj) const;
    virtual TObject    *FindObject(const char *name) const;

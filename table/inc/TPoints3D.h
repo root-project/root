@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.3 2001/02/07 08:18:15 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TPoints3D
 #define ROOT_TPoints3D
-// $Id: TPoints3D.h,v 1.3 2001/02/07 08:18:15 brun Exp $
+// $Id: TPoints3D.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -63,7 +63,7 @@ public:
         TPoints3D(const TPoints3D &points);
         virtual ~TPoints3D();
 
-        virtual void      Copy(TObject &points);
+        virtual void      Copy(TObject &points) const;
         virtual void      Delete(Option_t *);
         virtual void      Delete();
         virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);

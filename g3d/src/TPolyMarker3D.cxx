@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.13 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.14 2002/05/18 08:21:59 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -155,7 +155,7 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &polymarker) : TObject(polymark
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::Copy(TObject &obj)
+void TPolyMarker3D::Copy(TObject &obj) const
 {
    // Copy polymarker to polymarker obj.
 

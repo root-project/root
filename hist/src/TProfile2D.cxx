@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.11 2002/05/18 08:48:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.12 2002/08/05 16:45:00 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -363,7 +363,7 @@ Int_t TProfile2D::BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Copy(TObject &obj)
+void TProfile2D::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*Copy a Profile2D histogram to a new profile2D histogram*-*-*-*
 //*-*            =======================================================

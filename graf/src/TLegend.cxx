@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.13 2002/03/28 16:42:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.14 2002/05/18 08:21:59 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -155,7 +155,7 @@ void TLegend::Clear( Option_t *)
 }
 
 //____________________________________________________________________________
-void TLegend::Copy( TObject &obj )
+void TLegend::Copy( TObject &obj ) const
 {
   // copy this legend into obj
   TPave::Copy(obj);

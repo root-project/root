@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.4 2001/10/04 16:52:47 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.3 2000/12/13 15:13:47 brun Exp $
+// $Id: TXTRU.h,v 1.4 2001/10/04 16:52:47 rdm Exp $
 //
 // TXTRU
 //
@@ -31,7 +31,7 @@ class TXTRU : public TShape {
    virtual ~TXTRU();
    TXTRU& operator=(const TXTRU& rhs);
 
-   virtual void     Copy(TObject &xtru);
+   virtual void     Copy(TObject &xtru) const;
    virtual void     DefineSection(Int_t secNum, Float_t z, Float_t scale=1.,
                                   Float_t x0=0., Float_t y0=0.);
    virtual void     DefineVertex(Int_t pointNum, Float_t x, Float_t y);

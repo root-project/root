@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.2 2000/06/13 11:07:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
         TMarker(Double_t x, Double_t y, Int_t marker);
         TMarker(const TMarker &marker);
         virtual ~TMarker();
-                void     Copy(TObject &marker);
+                void     Copy(TObject &marker) const;
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *option="");
         virtual void     DrawMarker(Double_t x, Double_t y);

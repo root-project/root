@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.6 2002/05/29 18:39:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.7 2002/07/16 08:06:57 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
 
    TF3(const TF3 &f3);
    virtual   ~TF3();
-   virtual void     Copy(TObject &f3);
+   virtual void     Copy(TObject &f3) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual void     DrawDerivative(Option_t *option="al") {;}

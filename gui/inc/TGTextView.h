@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.8 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -59,7 +59,7 @@ protected:
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
-   virtual void Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
+   virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
 
 public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,

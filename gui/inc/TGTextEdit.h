@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.10 2001/08/21 17:34:27 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -75,7 +75,7 @@ protected:
    virtual void ScreenDown();
    virtual void Home();
    virtual void End();
-   virtual void Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
+   virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
 
 public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,

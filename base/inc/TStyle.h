@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.12 2002/03/14 17:32:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.13 2002/09/07 20:55:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -151,7 +151,7 @@ public:
         Int_t            AxisChoice(Option_t *axis) const;
         virtual void     Browse(TBrowser *b);
         static  void     BuildStyles();
-        virtual void     Copy(TObject &style);
+        virtual void     Copy(TObject &style) const;
         virtual void     cd();
 
         static Int_t     CreateGradientColorTable(UInt_t Number, Double_t* Length,

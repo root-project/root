@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.5 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPoints3D.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
-// $Id: TPoints3D.cxx,v 1.5 2002/01/24 11:39:30 rdm Exp $
+// $Id: TPoints3D.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // ***********************************************************************
 // *  C++ class to define the abstract array of 3D points
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -125,7 +125,7 @@ TPoints3D::TPoints3D(const TPoints3D &point)
    ((TPoints3D&)point).Copy(*this);
 }
 //______________________________________________________________________________
-void TPoints3D::Copy(TObject &obj)
+void TPoints3D::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Copy this TPoints3D to another *-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============================

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.h,v 1.3 2001/02/15 21:14:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.h,v 1.1 2002/08/09 20:47:16 brun Exp $
 // Author: Rene Brun   08/08/2002
 
 /*************************************************************************
@@ -35,7 +35,7 @@ public:
            , Double_t phimin=0,Double_t phimax=360);
         TCrown(const TCrown &crown);
         virtual ~TCrown();
-                void   Copy(TObject &crown);
+                void   Copy(TObject &crown) const;
         virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
         virtual void   DrawCrown(Double_t x1, Double_t y1, Double_t radin, Double_t radout
                             ,Double_t  phimin=0, Double_t  phimax=360, Option_t *option="");

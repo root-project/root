@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.11 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.12 2002/05/18 08:21:59 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -219,7 +219,7 @@ TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttL
 }
 
 //______________________________________________________________________________
-void TPolyLine3D::Copy(TObject &obj)
+void TPolyLine3D::Copy(TObject &obj) const
 {
    // Copy polyline to polyline obj.
 

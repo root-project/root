@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.5 2002/01/24 11:39:30 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TPointsArray3D.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 #include "Riostream.h"
@@ -146,7 +146,7 @@ TPointsArray3D::TPointsArray3D(const TPointsArray3D &point)
 
 
 //______________________________________________________________________________
-void TPointsArray3D::Copy(TObject &obj)
+void TPointsArray3D::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Copy this TPointsArray3D to another *-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============================

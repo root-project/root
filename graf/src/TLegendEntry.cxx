@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.7 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.8 2002/05/18 08:21:59 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TLegendEntry::~TLegendEntry()
 }
 
 //____________________________________________________________________________
-void TLegendEntry::Copy( TObject &obj )
+void TLegendEntry::Copy( TObject &obj ) const
 {
   // copy this TLegendEntry into obj
   TObject::Copy(obj);

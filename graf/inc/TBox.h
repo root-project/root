@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.2 2000/06/13 10:45:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    TBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TBox(const TBox &box);
    virtual ~TBox();
-           void  Copy(TObject &box);
+           void  Copy(TObject &box) const;
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  Draw(Option_t *option="");
    virtual void  DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);

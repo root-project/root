@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.1 2002/08/09 20:47:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.2 2002/08/10 09:34:51 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -90,7 +90,7 @@ TCrown::~TCrown()
 }
 
 //______________________________________________________________________________
-void TCrown::Copy(TObject &crown)
+void TCrown::Copy(TObject &crown) const
 {
 // Copy this crown to crown
 

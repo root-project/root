@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.11 2002/07/09 21:05:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.12 2002/08/02 18:54:36 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
            void        Build();
    virtual void        Clear(Option_t *option="");
    virtual void        Close(Option_t *option="");
-   virtual void        Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
+   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);
    virtual void        DeleteAll(Option_t *option="");
    virtual void        Delete(const char *namecycle="");

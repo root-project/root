@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.5 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TFrame::~TFrame()
 }
 
 //______________________________________________________________________________
-void TFrame::Copy(TObject &frame)
+void TFrame::Copy(TObject &frame) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Copy this frame to frame*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
                                ,Float_t arrowsize=0.05 ,Option_t *option=">");
         TArrow(const TArrow &arrow);
         virtual ~TArrow();
-                void   Copy(TObject &arrow);
+                void   Copy(TObject &arrow) const;
         virtual void   Draw(Option_t *option="");
         virtual void   DrawArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                                ,Float_t arrowsize=0.05 ,Option_t *option=">");

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.2 2000/06/13 11:20:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -45,7 +45,7 @@ public:
         TText(Double_t x, Double_t y, const char *text);
         TText(const TText &text);
         virtual ~TText();
-                void     Copy(TObject &text);
+                void     Copy(TObject &text) const;
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual TText   *DrawText(Double_t x, Double_t y, const char *text);
         virtual TText   *DrawTextNDC(Double_t x, Double_t y, const char *text);

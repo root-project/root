@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.h,v 1.4 2001/02/15 21:14:56 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
         TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2=0,Double_t phimin=0, Double_t phimax=360,Double_t theta=0);
         TEllipse(const TEllipse &ellipse);
         virtual ~TEllipse();
-                void   Copy(TObject &ellipse);
+                void   Copy(TObject &ellipse) const;
         virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
         virtual void   Draw(Option_t *option="");
         virtual void   DrawEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");

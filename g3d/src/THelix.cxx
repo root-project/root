@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.7 2002/05/18 08:21:59 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -222,7 +222,7 @@ THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 
 
 //______________________________________________________________________________
-void THelix::Copy(TObject &obj)
+void THelix::Copy(TObject &obj) const
 {
    // Copy this helix to obj.
 

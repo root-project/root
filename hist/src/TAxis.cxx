@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.33 2002/05/08 17:36:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.34 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -177,7 +177,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 }
 
 //______________________________________________________________________________
-void TAxis::Copy(TObject &obj)
+void TAxis::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*-*-*-*Copy axis structure to another axis-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ===================================

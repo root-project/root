@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.12 2002/02/12 17:40:15 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.13 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TPolyLine::TPolyLine(const TPolyLine &polyline) : TObject(polyline), TAttLine(po
 }
 
 //______________________________________________________________________________
-void TPolyLine::Copy(TObject &obj)
+void TPolyLine::Copy(TObject &obj) const
 {
 //*-*-*-*-*-*-*Copy this polyline to polyline*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*          ==============================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.5 2002/01/20 10:11:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.6 2002/10/07 16:16:32 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
         TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         TPolyMarker(const TPolyMarker &polymarker);
         virtual ~TPolyMarker();
-        virtual void     Copy(TObject &polymarker);
+        virtual void     Copy(TObject &polymarker) const;
         virtual void     Draw(Option_t *option="");
         virtual void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);

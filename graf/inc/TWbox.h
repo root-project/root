@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.2 2000/06/13 11:21:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.h,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
               Color_t color=18, Short_t bordersize=5 ,Short_t bordermode=1);
         TWbox(const TWbox &wbox);
         virtual ~TWbox();
-                void  Copy(TObject &wbox);
+                void  Copy(TObject &wbox) const;
         virtual void  Draw(Option_t *option="");
         virtual void  DrawWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       Color_t color=33 ,Short_t bordersize=5 ,Short_t bordermode=-1);
