@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.92 2005/01/20 01:28:42 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.93 2005/02/07 18:02:36 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -407,7 +407,7 @@ Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TVirtualProof:  ^condor: TProofCondor Proof        "TProofCondor(const char*,const char*,const char*,Int_t)"
-+Plugin.TVirtualProof: ^sm:    TProofSMaster Proof        "TProofSMaster(const char*,const char*,const char*,Int_t)"
++Plugin.TVirtualProof: ^sm:    TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof: ^peac:  TPProof       peac         "TPProof(const char*,const char*,const char*,Int_t)"
 +Plugin.TVirtualProof:       * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
