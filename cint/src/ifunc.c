@@ -1813,6 +1813,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	    ifunc->para_def[iexist][iin]=(char*)NULL;
 	  }
 	}
+#ifndef G__OLDIMPLEMENTATION1715 
+	if(G__p_ifunc->isvirtual[func_now]!=ifunc->isvirtual[iexist])
+	  G__p_ifunc->isvirtual[func_now] = ifunc->isvirtual[iexist];
+#endif
+#ifndef G__OLDIMPLEMENTATION1716 
+	G__p_ifunc->access[func_now] = ifunc->access[iexist];
+	G__p_ifunc->staticalloc[func_now] = ifunc->staticalloc[iexist];
+#endif
 	if(1==ifunc->ispurevirtual[iexist]) {
 	  G__p_ifunc->ispurevirtual[func_now]=ifunc->ispurevirtual[iexist];
 	  if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
@@ -2010,6 +2018,10 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__exec_statement();
     G__def_struct_member = store_def_struct_member;
 #ifdef G__ASM_FUNC
+#ifndef G__OLDIMPLEMENTATION1706
+    G__p_ifunc->pentry[func_now]->size = 
+      G__ifile.line_number-G__p_ifunc->pentry[func_now]->line_number+1;
+#else /* 1706 */
     if(ifunc) {
       ifunc->pentry[iexist]->size = 
 	G__ifile.line_number-ifunc->pentry[iexist]->line_number+1;
@@ -2018,6 +2030,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
       G__p_ifunc->pentry[func_now]->size = 
 	G__ifile.line_number-G__p_ifunc->pentry[func_now]->line_number+1;
     }
+#endif /* 1706 */
 #endif
 #ifdef G__ASM_WHOLEFUNC
     /***************************************************************
@@ -2053,8 +2066,15 @@ char *funcheader;   /* funcheader = 'funcname(' */
 		   strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0) ) ) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
     } else {
+#ifndef G__OLDIMPLEMENTATION1706
+      G__fsetcomment(&G__p_ifunc->comment[func_now]);
+      if(ifunc && -1==G__p_ifunc->comment[func_now].filenum) {
+	G__p_ifunc->comment[func_now] = ifunc->comment[iexist];
+      }
+#else
       if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
       else      G__fsetcomment(&G__p_ifunc->comment[func_now]);
+#endif
     }
 #else
     if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
@@ -7687,6 +7707,9 @@ int *piexist;
   while(ifunc) {
     for(i=0;i<ifunc->allifunc;i++) {
       if('~'==ifunc_now->funcname[allifunc][0] &&
+#ifndef G__OLDIMPLEMENTATION1706
+	 ifunc->hash[i] &&
+#endif
 	 '~'==ifunc->funcname[i][0]) { /* destructor matches with ~ */
 #ifdef G__OLDIMPLEMENTATION1706_YET 
 	/* This change causes problem with virtual func definition */
@@ -7764,6 +7787,9 @@ int derivedtagnum;
   while(ifunc) {
     for(i=0;i<ifunc->allifunc;i++) {
       if('~'==ifunc_now->funcname[allifunc][0] &&
+#ifndef G__OLDIMPLEMENTATION1706
+	 ifunc->hash[i] &&
+#endif
 	 '~'==ifunc->funcname[i][0]) { /* destructor matches with ~ */
 	*piexist = i;
 	return(ifunc);
@@ -7783,8 +7809,9 @@ int derivedtagnum;
 	   ==ifunc->para_p_tagtable[i][j]) continue; /* match */
 #ifdef G__VIRTUALBASE
 	if(-1==G__ispublicbase(ifunc_now->para_p_tagtable[allifunc][j]
-			       ,derivedtagnum,0) ||
-	   -1==G__ispublicbase(ifunc->para_p_tagtable[i][j],derivedtagnum,0))
+			       ,derivedtagnum,G__STATICRESOLUTION2) ||
+	   -1==G__ispublicbase(ifunc->para_p_tagtable[i][j],derivedtagnum
+			       ,G__STATICRESOLUTION2))
 #else
 	if(-1==G__ispublicbase(ifunc_now->para_p_tagtable[allifunc][j]
 			       ,derivedtagnum) ||

@@ -21,10 +21,9 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015058
-#define G__CINTVERSIONSTR  "5.15.58, Sep 16 2002"
+#define G__CINTVERSION      5015059
+#define G__CINTVERSIONSTR  "5.15.59, Sep 23 2002"
 
-#define G__OLDIMPLEMENTATION1695
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -36,7 +35,7 @@
 #define G__OLDIMPLEMENTATION1706
 
 /* Rootcint's default link status has been changed from 5.15.57. 
- * Define folloing macro if new scheme has problem. */
+ * Define following macro if new scheme has problems. */
 /* #define G__OLDIMPLEMENTATION1700 */
 
 /* For a machine which has unaddressable bool */
@@ -62,7 +61,7 @@
 /* #define G__OLDIMPLEMENTATION1649 */
 
 /* Define following macro in order to disable iostream I/O redirection */
-#define G__OLDIMPLEMENTATION1635
+/* #define G__OLDIMPLEMENTATION1635 */
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */

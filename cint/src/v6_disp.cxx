@@ -223,7 +223,7 @@ struct G__ifunc_table *ifunc;
       if(fname && strcmp(fname,ifunc->funcname[i])!=0) continue;
       
       if(
-#ifndef G__OLDIMPLEMENTATION1706
+#ifdef G__OLDIMPLEMENTATION1706_DEBUG
 	 ifunc->hash[i] &&
 #endif
 	 ifunc->access[i]&access) {

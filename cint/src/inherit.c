@@ -953,6 +953,9 @@ struct G__inheritance *baseclass;
 int basen;
 {
   long (*f) G__P((long));
+#ifndef G__OLDIMPLEMENTATION1719
+  if(pobject==G__STATICRESOLUTION) return(0);
+#endif
 #ifndef G__OLDIMPLEMENTATION652
   if(!pobject || G__no_exec_compile
 #ifndef G__OLDIMPLEMENTATION1140

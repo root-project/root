@@ -8203,13 +8203,8 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-#ifdef G__ROOT
-      if(G__dispmsg>=G__DISPERR) {
-	G__fprinterr(G__serr,"Error: link requested for unknown global variable %s",buf);
-#else
       if(G__dispmsg>=G__DISPNOTE) {
 	G__fprinterr(G__serr,"Note: link requested for unknown global variable %s",buf);
-#endif
 	G__printlinenum();
       }
     }

@@ -1154,6 +1154,9 @@ int var_type;
 #endif
 	  && !G__asm_wholefunction) {
     G__redecl(var,ig15);
+#ifndef G__OLDIMPLEMENTATION1720
+    if(G__no_exec_compile) G__abortbytecode();
+#endif
   }
 #endif
   else {
@@ -2067,6 +2070,9 @@ int ig15;
 
 #if 1
   G__redecl(var,ig15);
+#ifndef G__OLDIMPLEMENTATION1720
+  if(store_no_exec_compile) G__abortbytecode();
+#endif
 #else
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
@@ -2588,7 +2594,12 @@ struct G__var_array *varglobal,*varlocal;
 	else if('u'==G__var_type) {
 	  G__ASSERT(0==G__decl || 1==G__decl);
 	  if(G__decl) {
-	    if(G__reftype) G__redecl(var,ig15);
+	    if(G__reftype) {
+	      G__redecl(var,ig15);
+#ifndef G__OLDIMPLEMENTATION1720
+	      if(G__no_exec_compile) G__abortbytecode();
+#endif
+	    }
 	    else G__class_2nd_decl_i(var,ig15);
 	  }
 	  else if(G__cppconstruct) {
@@ -2865,7 +2876,8 @@ struct G__var_array *varglobal,*varlocal;
 	if(var->type[ig15]!=result.type ||
 	   ('U'==result.type && G__security&G__SECURE_CAST2P &&
 #ifdef G__VIRTUALBASE
-	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum,0))) {
+	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum
+				,G__STATICRESOLUTION2))) {
 #else
 	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum))) {
 #endif
@@ -2878,7 +2890,8 @@ struct G__var_array *varglobal,*varlocal;
 	if(var->type[ig15]!=result.type ||
 	   ('U'==result.type &&
 #ifdef G__VIRTUALBASE
-	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum,0))) {
+	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum
+				,G__STATICRESOLUTION2))) {
 #else
 	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum))) {
 #endif
@@ -6021,10 +6034,10 @@ int parameter00;
 #endif
   }
   if('U'==G__var_type&&'U'==result.type&&
-     -1==G__ispublicbase(G__tagnum,result.tagnum,0)
+     -1==G__ispublicbase(G__tagnum,result.tagnum,G__STATICRESOLUTION2)
 #define G__OLDIMPLEMENTATION1213
 #ifdef G__OLDIMPLEMENTATION1213
-     && -1==G__ispublicbase(result.tagnum,G__tagnum,0)
+     && -1==G__ispublicbase(result.tagnum,G__tagnum,G__STATICRESOLUTION2)
 #endif
      ) {
     G__fprinterr(G__serr,"Error: Illegal initialization of pointer, wrong type %s"
@@ -6750,7 +6763,12 @@ int parameter00;
     else if('u'==G__var_type) {
       G__ASSERT(0==G__decl || 1==G__decl);
       if(G__decl) {
-	if(G__reftype) G__redecl(var,ig15);
+	if(G__reftype) {
+	  G__redecl(var,ig15);
+#ifndef G__OLDIMPLEMENTATION1720
+	  if(G__no_exec_compile) G__abortbytecode();
+#endif
+	}
 	else G__class_2nd_decl_i(var,ig15);
       }
       else if(G__cppconstruct) {

@@ -285,7 +285,8 @@ int env_tagnum;
 #endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
-    if (-1 != G__isanybase (enclosingtagnum, tagnum, 0)) return 1;
+    if (-1 != G__isanybase (enclosingtagnum, tagnum, G__STATICRESOLUTION)) 
+      return 1;
     if(tagnum==enclosingtagnum) return(1);
     tagnum = G__struct.parent_tagnum[tagnum];
   }
@@ -514,7 +515,8 @@ int noerror;
 #endif
 	env_tagnum==G__struct.parent_tagnum[i]||
 #ifdef G__VIRTUALBASE
-	-1!=G__isanybase(G__struct.parent_tagnum[i],env_tagnum,0)||
+	-1!=G__isanybase(G__struct.parent_tagnum[i],env_tagnum
+			 ,G__STATICRESOLUTION)||
 #else
 	-1!=G__isanybase(G__struct.parent_tagnum[i],env_tagnum)||
 #endif
@@ -528,7 +530,8 @@ int noerror;
 	||G__tmplt_def_tagnum==G__struct.parent_tagnum[i]
 #endif
 #ifdef G__VIRTUALBASE
-	||-1!=G__isanybase(G__struct.parent_tagnum[i],G__tmplt_def_tagnum,0)
+	||-1!=G__isanybase(G__struct.parent_tagnum[i],G__tmplt_def_tagnum
+			   ,G__STATICRESOLUTION)
 #else
 	||-1!=G__isanybase(G__struct.parent_tagnum[i],G__tmplt_def_tagnum)
 #endif
@@ -1518,7 +1521,8 @@ char type;
                 continue;
 
               basetag = baseclass->basetagnum[b2];
-              if (G__isanybase (baseclass->basetagnum[ivb], basetag, 0) < 0)
+              if (G__isanybase (baseclass->basetagnum[ivb], basetag
+				, G__STATICRESOLUTION) < 0)
                 continue;
 
               found_tab = G__ifunc_exist (itab, ifunc,

@@ -2256,8 +2256,11 @@ char *statement;
 int *piout;
 int *pspaceflag;
 int *pmparen;
-int breakcontinue;
+int breakcontinue; /* 0: continue, 1:break */
 {
+#ifndef G__OLDIMPLEMENTATION1717
+  int store_no_exec_compile = G__no_exec_compile;
+#endif
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
@@ -2303,8 +2306,13 @@ int breakcontinue;
 #ifndef G__OLDIMPLEMENTATION1710
   *piout=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1717
+  if(store_no_exec_compile) return(0);
+  else return(1);
+#else
   if(G__no_exec_compile) return(0);
   else return(1);
+#endif
 #else
   return(1);
 #endif
@@ -4358,6 +4366,10 @@ G__value G__exec_statement()
 	if(iout>1 && isalpha(statement[0])&&(char*)NULL==strchr(statement,'[')
 #ifndef G__OLDIMPLEMENTATION701
 	   && strncmp(statement,"cout<<",6)!=0
+#endif
+#ifndef G__OLDIMPLEMENTATION1718
+	   && (0==strstr(statement,"<<")||0==strcmp(statement,"operator<<("))
+	   && (0==strstr(statement,">>")||0==strcmp(statement,"operator>>("))
 #endif
 	   && single_quote==0 && double_quote==0) {
 	  /***********************************

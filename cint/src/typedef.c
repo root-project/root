@@ -1181,10 +1181,12 @@ char *typename;
       if(G__isenclosingclass(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum))
 	thisflag=0x4;
       /* baseclass tag scope */
-      if(-1!=G__isanybase(G__newtype.parent_tagnum[i],env_tagnum,0))
+      if(-1!=G__isanybase(G__newtype.parent_tagnum[i],env_tagnum
+			  ,G__STATICRESOLUTION))
 	thisflag=0x8;
       /* template definition base class scope */
-      if(-1!=G__isanybase(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum,0))
+      if(-1!=G__isanybase(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum
+			  ,G__STATICRESOLUTION))
 	thisflag=0x10;
 #ifndef G__OLDIMPLEMENTATION949
       if(thisflag == 0 &&
@@ -1218,10 +1220,12 @@ char *typename;
     if(len==G__newtype.hash[i] && strcmp(G__newtype.name[i],temp)==0 &&
        (-1==G__newtype.parent_tagnum[i]||
 	env_tagnum==G__newtype.parent_tagnum[i]||
-	-1!=G__isanybase(G__newtype.parent_tagnum[i],env_tagnum,0)||
+	-1!=G__isanybase(G__newtype.parent_tagnum[i],env_tagnum
+			 ,G__STATICRESOLUTION)||
 	G__isenclosingclass(G__newtype.parent_tagnum[i],env_tagnum)
 	||G__tmplt_def_tagnum==G__newtype.parent_tagnum[i]
-	||-1!=G__isanybase(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum,0)
+	||-1!=G__isanybase(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum
+			   ,G__STATICRESOLUTION)
 	||G__isenclosingclass(G__newtype.parent_tagnum[i],G__tmplt_def_tagnum)
 	)) {
       flag=1;

@@ -20,7 +20,6 @@
 
 #include "common.h"
 
-#define G__OLDIMPLEMENTATION1712
 #ifndef G__OLDIMPLEMENTATION1712
 int G__templatearg_enclosedscope=0;
 #endif
@@ -1642,7 +1641,7 @@ char *string;
       char type = G__newtype.type[tagnum];
       int ref = G__newtype.reftype[tagnum];
 #ifndef G__OLDIMPLEMENTATION1712
-      if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
+      if(0==strstr(string,"::") && -1!=G__newtype.parent_tagnum[tagnum]) {
 	++G__templatearg_enclosedscope;
       }
 #endif
@@ -1968,6 +1967,9 @@ char *tagnamein;
 #ifndef G__OLDIMPLEMENTATION1503
   int defarg=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1712
+  int store_templatearg_enclosedscope;
+#endif
 #ifndef G__OLDIMPLEMENTATION770
 #define G__OLDIMPLEMENTATION778
 #ifndef G__OLDIMPLEMENTATION778
@@ -2094,6 +2096,7 @@ char *tagnamein;
 
   /* separate and evaluate template argument */
 #ifndef G__OLDIMPLEMENTATION1712
+  store_templatearg_enclosedscope = G__templatearg_enclosedscope;
   G__templatearg_enclosedscope = 0;
 #endif
 #ifndef G__OLDIMPLEMENTATION1503
@@ -2108,8 +2111,8 @@ char *tagnamein;
 #ifndef G__OLDIMPLEMENTATION1044
     int typenum = -1;
 #ifndef G__OLDIMPLEMENTATION1712
-    int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
-    G__templatearg_enclosedscope=0;
+    int templatearg_enclosedscope=G__templatearg_enclosedscope;
+    G__templatearg_enclosedscope=store_templatearg_enclosedscope;
 #endif
     if(-1==G__defined_typename(tagname)) {
       typenum=G__newtype.alltype++;
@@ -2130,7 +2133,7 @@ char *tagnamein;
     if(-1!=typenum) {
       G__newtype.tagnum[typenum] = tagnum;
 #ifndef G__OLDIMPLEMENTATION1712
-      if(store_templatearg_enclosedscope) {
+      if(templatearg_enclosedscope) {
 	G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
       }
       else {

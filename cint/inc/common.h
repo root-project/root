@@ -931,6 +931,17 @@ struct G__AppPragma {
 #endif
 
 /*********************************************************************
+* G__isanybase, G__ispublicbase static resolution
+*********************************************************************/
+#ifndef G__OLDIMPLEMENTATION1719
+#define G__STATICRESOLUTION   2  /* for G__isanybase */
+#define G__STATICRESOLUTION2  2  /* for G__ispublicbase */
+#else
+#define G__STATICRESOLUTION   0
+#define G__STATICRESOLUTION2  0
+#endif
+
+/*********************************************************************
 * x
 *********************************************************************/
 #define G__NAMEDMACROEXT  "_NM"

@@ -30,6 +30,7 @@ CINTS1       := $(filter-out $(MODDIRS)/macos.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
 CINTS1       := $(filter-out $(MODDIRS)/newsos.%,$(CINTS1))
 
+CINTS2       := $(filter-out $(MODDIRS)/allstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
@@ -101,7 +102,7 @@ CINTS1       += $(MODDIRS)/macos.c
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),macosx)
-CINTS2       += $(MODDIRS)/gcc3strm.cxx
+CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),lynxos)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
