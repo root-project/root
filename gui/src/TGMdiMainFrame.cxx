@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.9 2004/09/15 10:26:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.10 2004/09/20 14:28:12 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -211,6 +211,8 @@ void TGMdiMainFrame::AddMdiFrame(TGMdiFrame *frame)
 Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
 {
    TGMdiFrameList *travel = fChildren;
+
+   if (frame && frame->IsEditable()) frame->SetEditable(kFALSE);
 
    while (travel && (travel->GetFrameId() != frame->GetId()))
       travel = travel->GetNext();

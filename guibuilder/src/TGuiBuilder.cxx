@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.9 2004/09/21 11:29:17 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.10 2004/09/21 14:19:01 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -141,8 +141,6 @@ public:
    }
    virtual ~TGuiBuilderContainer() {}
    void SetEditable(Bool_t) {}
-   //Bool_t HandleDoubleClick(Event_t *) { printf("qq 1\n"); return kFALSE; }
-   //Bool_t HandleEvent(Event_t *) { return kFALSE; }
 }; 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,7 +345,6 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    fMain->Connect("FrameClosed(Int_t)", "TGuiBuilder", this, "HandleWindowClosed(Int_t)");
 
    BindKeys();
-
    MapRaised();
 }
 
@@ -921,8 +918,9 @@ void TGuiBuilder::HandleWindowClosed(Int_t id)
    fEditable = FindEditableMdiFrame(root);
  
    if (id == (Int_t)fEditable->GetId()) {
-      fManager->SetEditable(kFALSE);
+      fEditable->SetEditable(kFALSE);
       root->SetEditable(kFALSE);
+      fEditable = 0;
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.7 2004/09/21 10:09:18 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.8 2004/09/21 13:31:34 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -573,12 +573,19 @@ void TGuiBldDragManager::SetCursorType(Int_t cur)
 {
    // sets cursor
 
-   if (fPimpl->fGrab) {
+   static UInt_t gid = 0;
+   static UInt_t rid = 0;
+
+   if (fPimpl->fGrab && (gid != fPimpl->fGrab->GetId())) {
       gVirtualX->SetCursor(fPimpl->fGrab->GetId(),
                            gVirtualX->CreateCursor((ECursor)cur));
+      gid = fPimpl->fGrab->GetId();
    }
-   gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
-                        gVirtualX->CreateCursor((ECursor)cur));
+   if (fClient->IsEditable() && (rid != fClient->GetRoot()->GetId())) {
+      gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
+                           gVirtualX->CreateCursor((ECursor)cur));
+      rid = fClient->GetRoot()->GetId();
+   }
 }
 
 //______________________________________________________________________________
@@ -1280,6 +1287,8 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    TGFileInfo fi;
    static TString dir(".");
    const char *fname;
+
+   if (event->fType != kGKeyPress) return kFALSE;
 
    CloseMenus();
 
@@ -2523,10 +2532,6 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
    if ((gon == on) && (fClient->GetRoot() == gw)) return;
    gon = on;  gw = fClient->GetRoot();
 
-   if (on) gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
-                                gVirtualX->CreateCursor(kWatch));
-
-
    Snap2Grid();
 
    if (on) {
@@ -2548,8 +2553,10 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
       UngrabFrame();
       gVirtualX->SelectInput(fClient->GetRoot()->GetId(), fEventMask);
    }
-   if (on) gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
-                                gVirtualX->CreateCursor(kPointer));
+   if (on && fClient->IsEditable()) {
+      gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
+                           gVirtualX->CreateCursor(kPointer));
+   }
 }
 
 //______________________________________________________________________________
