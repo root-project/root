@@ -1047,8 +1047,14 @@ void gdk_window_raise(GdkWindow * window)
       GDK_NOTE(MISC, g_print("gdk_window_raise: %#x\n",
                              GDK_DRAWABLE_XID(window)));
 
-      if (!BringWindowToTop(GDK_DRAWABLE_XID(window)))
-         WIN32_API_FAILED("BringWindowToTop");
+      if (GDK_DRAWABLE_TYPE(window) == GDK_WINDOW_TEMP) {
+         if(!SetWindowPos((HWND)GDK_DRAWABLE_XID(window), HWND_TOPMOST, 
+                      0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE))
+            WIN32_API_FAILED("SetWindowPos");
+      } else {
+         if (!BringWindowToTop(GDK_DRAWABLE_XID(window)))
+            WIN32_API_FAILED("BringWindowToTop");
+      }
    }
 }
 
