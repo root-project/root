@@ -266,7 +266,7 @@ clean::
 
 ifeq ($(CXX),KCC)
 clean::
-	@find . -name "ti_files" -exec rm -rf {} \;
+	@find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1
 endif
 
 distclean:: clean
