@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.2 2000/06/16 17:08:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -442,12 +442,24 @@ TEnv::TEnv(const char *name)
 #ifdef ROOTETCDIR
       char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
 #else
-      char *s = gSystem->ConcatFileName(gRootDir, sname);
+      char etc[1024];
+#ifdef WIN32
+      sprintf(etc, "%s\\etc", gRootDir);
+#else
+      sprintf(etc, "%s/etc", gRootDir);
+#endif
+      char *s = gSystem->ConcatFileName(etc, sname);
       if (gSystem->AccessPathName(s)) {
-         // for backward compatibility check also <name> if "system<name>
-         // does not exist
+         // for backward compatibility check also $ROOTSYS/system<name> if
+         // $ROOTSYS/etc/system<name> does not exist
          delete [] s;
-         s = gSystem->ConcatFileName(gRootDir, name);
+         s = gSystem->ConcatFileName(gRootDir, sname);
+         if (gSystem->AccessPathName(s)) {
+            // for backward compatibility check also $ROOTSYS/<name> if
+            // $ROOTSYS/system<name> does not exist
+            delete [] s;
+            s = gSystem->ConcatFileName(gRootDir, name);
+         }
       }
 #endif
       ReadFile(s, kEnvGlobal);
@@ -533,7 +545,7 @@ Double_t TEnv::GetValue(const char *name, Double_t dflt)
 {
    // Returns the dobule value for a resource. If the resource is not found
    // return the dflt value.
-   
+
    const char *cp = TEnv::Getvalue(name);
    if (cp) {
       char *endptr;
