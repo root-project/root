@@ -41,7 +41,7 @@ endif
 
 MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
                 hist tree freetype graf g3d gpad gui minuit histpainter proof \
-                treeplayer treeviewer physics postscript rint html eg mc \
+                treeplayer treeviewer physics postscript rint html eg vmc \
                 geom geompainter fumili
 
 ifeq ($(ARCH),win32)
