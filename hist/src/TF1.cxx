@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.72 2003/09/30 21:20:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.73 2003/11/04 14:34:37 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TVirtualPad.h"
+#include "TGraph.h"
 #include "TStyle.h"
 #include "TRandom.h"
 #include "Api.h"
@@ -1658,6 +1659,37 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 }
 
 //______________________________________________________________________________
+Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
+{
+    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
+    if (!g) return 0;
+    return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
+}
+
+//______________________________________________________________________________
+Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
+{
+    // Gauss-Legendre integral, see CalcIntegralSamplingPoints
+    if (num<=0 || x == 0 || w == 0)
+        return 0;
+
+    const Double_t a0 = (b + a)/2;
+    const Double_t b0 = (b - a)/2;
+
+    Double_t xx[1];
+    InitArgs(xx, params);
+
+    Double_t result = 0.0;
+    for (int i=0; i<num; i++)
+    {
+        xx[0] = a0 + b0*x[i];
+        result += w[i] * EvalPar(xx, params);
+    }
+
+    return result*b0;
+}
+
+//______________________________________________________________________________
 Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
 {
 //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
@@ -2474,3 +2506,96 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    return fnc.Integral(a,b,params,epsilon)/norm;
 }
 
+//--------------------------------------------------------------------
+// some useful static utility functions to compute sampling points for IntegralFast
+//--------------------------------------------------------------------
+//______________________________________________________________________________
+void TF1::CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps)
+{
+    //type safe interface (static method)
+    // The number of sampling points are taken from the TGraph
+    if (!g) return;
+    CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
+}
+
+//______________________________________________________________________________
+TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
+{
+    //type safe interface (static method)
+    // A TGraph is created with new with num points and the pointer to the
+    // graph is returned by the function. It is the responsibility of the
+    // user to delete the object.
+    // if num is invalid (<=0) NULL is returned
+
+    if (num<=0)
+        return 0;
+
+    TGraph *g = new TGraph(num);
+    CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
+    return g;
+}
+
+//______________________________________________________________________________
+void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps)
+{
+    // Type: unsafe but fast interface filling the arrays x and w (static method)
+    //
+    // Given the number of sampling points this routine fills the arrays x and w
+    // of length num, containing the abscissa and weight of the Gauss-Legendre
+    // n-point quadrature formula.
+    //
+    // Gauss-Legendre: W(x)=1  -1<x<1
+    //                 (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
+    //
+    // num is the number of sampling points (>0)
+    // x and w are arrays of size num
+    // eps is the relative precision
+    //
+    // If num<=0 or eps<=0 no action is done.
+    //
+    // Reference: Numerical Recipes in C, Second Edition
+    //
+    if (num<=0 || eps<=0)
+        return;
+
+    // The roots of symmetric is the interval, so we only have to find half of them
+    const UInt_t m = (num+1)/2;
+
+    Double_t z, pp, p1,p2, p3;
+
+    // Loop over the disired roots
+    for (UInt_t i=0; i<m; i++) {
+        z = TMath::Cos(TMath::Pi()*(i+0.75)/(num+0.5));
+
+        // Starting with the above approximation to the i-th root, we enter
+        // the main loop of refinement by Newton's method
+        do {
+            p1=1.0;
+            p2=0.0;
+
+            // Loop up the recurrence relation to get the Legendre
+            // polynomial evaluated at z
+            for (int j=0; j<num; j++)
+            {
+                p3 = p2;
+                p2 = p1;
+                p1 = ((2.0*j+1.0)*z*p2-j*p3)/(j+1.0);
+            }
+            // p1 is now the desired Legendre polynomial. We next compute pp, its
+            // derivative, by a standard relation involving also p2, the polynomial
+            // of one lower order
+            pp = num*(z*p1-p2)/(z*z-1.0);
+            // Newton's method
+            z -= p1/pp;
+
+        } while (TMath::Abs(p1/pp) > eps);
+
+        // Put root and its symmetric counterpart
+        x[i]       = -z;
+        x[num-i-1] =  z;
+
+        // Compute the weight and put its symmetric counterpart
+        w[i]       = 2.0/((1.0-z*z)*pp*pp);
+        w[num-i-1] = w[i];
+    }
+}
