@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.4 2000/07/11 09:29:10 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.5 2000/09/07 00:36:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -55,6 +55,7 @@
 #pragma link C++ class TGListTree;
 #pragma link C++ class TGSplitter;
 #pragma link C++ class TGVSplitter;
+#pragma link C++ class TGHSplitter;
 #pragma link C++ class TGHorizontal3DLine;
 #pragma link C++ class TGVertical3DLine;
 #pragma link C++ class TGText;
