@@ -1,0 +1,30 @@
+# This is a template for all makefile.
+
+#Set the list of files to be delete by clean:
+CLEAN_TARGETS += $(ALL_LIBRARIES)
+
+#Set the list of target to make while testing
+TEST_TARGETS += testTable
+
+# adjust the location of Rules.mk as needed.
+include ../../root/Rules.mk
+
+mytest:
+	$(CMDECHO) echo mytest > /dev/null
+
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
+
+# Remember that sometest.log can be made automatically from
+# from runsometest.C
+
+testTable: testTable.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+	@echo the problem exist when BYTECODE is \#defined in TTable.cxx
+else
+ 	$(TestDiff)
+endif
+
