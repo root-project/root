@@ -103,9 +103,11 @@ Linux packages.
       sh family:
         export PATH=$ROOTSYS/bin:$PATH
         export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+        export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH (MacOS X only)
       csh family:
         setenv PATH ${ROOTSYS}/bin:${PATH}
         setenv LD_LIBRARY_PATH ${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+        setenv DYLD_LIBRARY_PATH ${ROOTSYS}/lib:${DYLD_LIBRARY_PATH} (MacOS X)
         rehash
    5) try running root:
       all shells:
