@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.64 2004/04/29 23:43:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.65 2004/05/03 10:45:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1379,9 +1379,9 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
    // check for macro file and make sure the file is available on all slaves
    if (s.BeginsWith(".L") || s.BeginsWith(".x") || s.BeginsWith(".X")) {
       TString file = s(2, s.Length());
-      file = file.Strip(TString::kLeading);
-      file = file.Strip(TString::kTrailing, '+');
-      char *fn = gSystem->Which(TROOT::GetMacroPath(), file, kReadPermission);
+      TString acm, arg, io;
+      TString filename = gSystem->SplitAclicMode(file, acm, arg, io);
+      char *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
             if (SendFile(fn, kFALSE) < 0) {
