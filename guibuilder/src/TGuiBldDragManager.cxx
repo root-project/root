@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.6 2004/09/20 21:00:40 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.7 2004/09/21 10:09:18 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -863,10 +863,14 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    // reset everything
    if (!fClient || !fClient->IsEditable()) {
       if (fPimpl->fRepeatTimer) fPimpl->fRepeatTimer->Remove();
-      DeletePropertyEditor();
+
       Init();
       if (fPimpl) fPimpl->ResetParams();
-      if (fBuilder) fBuilder->SetAction(0);
+      if (fBuilder) {
+         fBuilder->SetAction(0);
+      } else {
+         DeletePropertyEditor();
+      }
       return kFALSE;
    }
 
@@ -2538,10 +2542,11 @@ void TGuiBldDragManager::SetEditable(Bool_t on)
          fPimpl->fRepeatTimer = new TGuiBldDragManagerRepeatTimer(this, 100);
       }
       gSystem->AddTimer(fPimpl->fRepeatTimer);
+
    } else if (fClient->GetRoot()->IsEditable()) {
       if (fPimpl->fRepeatTimer) fPimpl->fRepeatTimer->Remove();
       UngrabFrame();
-      //gVirtualX->SelectInput(fClient->GetRoot()->GetId(), fEventMask);
+      gVirtualX->SelectInput(fClient->GetRoot()->GetId(), fEventMask);
    }
    if (on) gVirtualX->SetCursor(fClient->GetRoot()->GetId(),
                                 gVirtualX->CreateCursor(kPointer));
@@ -3005,7 +3010,7 @@ void TGuiBldDragManager::DeletePropertyEditor()
 
    if (!fEditor) return;
 
-   Disconnect(0, fEditor, 0);
+   TQObject::Disconnect(fEditor);
 
    delete fEditor;
    fEditor = 0;
