@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.63 2002/04/02 07:59:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.64 2002/04/02 10:39:53 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -711,19 +711,19 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
+Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
 //  interface to TF1::Fit(TF1 *f1...
 
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Printf("Unknown function: %s",fname); return; }
-   Fit(f1,option,"",xmin,xmax);
+   if (!f1) { Printf("Unknown function: %s",fname); return -1; }
+   return Fit(f1,option,"",xmin,xmax);
 }
 
 //______________________________________________________________________________
-void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxmax)
+Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fit this graph with function f1*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
@@ -808,6 +808,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxm
 //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 
+   Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
@@ -864,13 +865,13 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxm
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grF1 = f1;
-   if (!grF1) { Printf("Function is a null pointer"); return; }
+   if (!grF1) { Printf("Function is a null pointer"); return 0; }
    npar = grF1->GetNpar();
-   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return; }
+   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
 
 //*-*- Check that function has same dimension as histogram
    if (grF1->GetNdim() > 1) {
-      Printf("Error function %s is not 1-D",f1->GetName()); return; }
+      Printf("Error function %s is not 1-D",f1->GetName()); return 0; }
 
 //*-*- Is a Fit range specified?
    Int_t gxfirst, gxlast;
@@ -898,7 +899,15 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxm
 //*-*- Set error criterion for chisquare
    arglist[0] = 1;
    if (!fitOption.User) grFitter->SetFCN(GraphFitChisquare);
-   grFitter->ExecuteCommand("SET ERR",arglist,1);
+   fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
+   if (fitResult != 0) {
+     //   Abnormal termination, MIGRAD might not have converged on a
+     //   minimum.
+     if (!fitOption.Quiet) {
+        Warning("Fit","Abnormal termination of minimization.");
+     }
+     return fitResult;
+   }
 
 //*-*- Some initialisations
    if (!fitOption.Verbose) {
@@ -988,9 +997,10 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rxm
       if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
       fnew1->SetBit(TFormula::kNotGlobal);
 
-      if (TestBit(kCanDelete)) return;
+      if (TestBit(kCanDelete)) return fitResult;
       if (gPad) gPad->Modified();
    }
+   return fitResult;
 }
 
 //______________________________________________________________________________
