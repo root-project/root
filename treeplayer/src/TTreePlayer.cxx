@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.77 2002/01/09 16:39:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.78 2002/01/09 16:44:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2197,6 +2197,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
+      if ( branch->GetNleaves() <= 1 ) {
+         if (branch->IsA() != TBranchObject::Class()) {
+            if (!leafcount) strcpy(branchname,leaf->GetTitle());
+         }
+      }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"["); if (twodim) *twodim = 0;
       while (*bname) {if (*bname == '.') *bname='_'; bname++;}
