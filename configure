@@ -913,7 +913,7 @@ if test ! "x$enable_cern" = "xno"; then
     kernlib=$found_lib
     kernlibdir=$found_dir
 
-    if test "x$enable_rfio" = "xno" ; then
+    if test ! "x$packlib" = "x" && test "x$enable_rfio" = "xno" ; then
         # check if libpacklib contains rfio code (case of < 2002 version)
         rfio_in_pack=`nm $packlib | grep rfio_connect > /dev/null 2>&1`
         if [ $? -ne 0 ]; then
