@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.23 2000/10/01 20:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.24 2000/10/27 06:26:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2693,7 +2693,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 //*-*-*-*-*-*Estimate limits for 1-D, 2-D or 3-D objects*-*-*-*-*-*-*-*-*-*
 //*-*        ===========================================
 
-  Int_t i;
+  Int_t i; 
   Double_t rmin[3],rmax[3];
   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
@@ -2709,7 +2709,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 
      // When a PROOF client ask master for limits
      if (gProofServ) {
-        if (gProofServ->GetLogLevel() > 2)
+        if (gProofServ->GetLogLevel() > 2) 
            printf("have limits: (nfill=%d) %d, %f, %f\n", nfill, fNbins[0], fVmin[0], fVmax[0]);
         gProofServ->GetLimits(1, nfill, fNbins, fVmin, fVmax);
         if (gProofServ->GetLogLevel() > 2)
