@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.1 2004/02/09 14:03:34 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -216,21 +216,159 @@ Int_t TGeoXtru::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = fNvert*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistToOut(Double_t * /*point*/, Double_t * /*dir*/, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax) const
 {
-// compute distance from inside point to surface of the polycone
-   Warning("DistToOut", "not implemented");
-   return TGeoShape::Big();  
+// Compute distance to a Xtru lateral surface.
+   Double_t snext;
+   Double_t vert[12];
+   Double_t norm[3];
+   Double_t znew;
+   Double_t pt[3];
+   GetPlaneVertices(iz, ivert, vert);
+   GetPlaneNormal(vert, norm);
+   Double_t ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
+   if (ndotd<=0) return TGeoShape::Big();
+   Double_t safe = (vert[0]-point[0])*norm[0]+(vert[1]-point[1])*norm[1]+
+                   (vert[2]-point[2])*norm[2];
+   if (safe<0) return TGeoShape::Big(); // direction outwards plane
+   snext = safe/ndotd;
+   if (snext>stepmax) return TGeoShape::Big();
+   if (fZ[iz]>fZ[iz+1]) {
+      znew = point[2] + snext*dir[2];
+      if (znew<fZ[iz]) return TGeoShape::Big();
+      if (znew>fZ[iz+1]) return TGeoShape::Big();
+   }
+   pt[0] = point[0]+snext*dir[0];
+   pt[1] = point[1]+snext*dir[1];
+   pt[2] = point[2]+snext*dir[2];
+   if (IsPointInsidePlane(pt, vert, norm)) return snext;
+   return TGeoShape::Big();         
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistToIn(Double_t * /*point*/, Double_t * /*dir*/, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoXtru::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+{
+// compute distance from inside point to surface of the polycone
+   // locate Z segment
+   if (iact<3 && safe) {
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
+   }   
+   Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (iz==fNz-1) {
+      if (dir[2]>=0) return 0.;
+      iz--;
+   } else {   
+      if (iz>0) {
+         if (fZ[iz]==fZ[iz-1]) iz--;
+      }
+   }   
+   TGeoXtru *xtru = (TGeoXtru*)this;
+   Bool_t convex = fPoly->IsConvex();
+   Double_t stepmax = step;
+   Double_t snext = TGeoShape::Big();
+   Double_t dist, sz;
+   Double_t pt[3];
+   Bool_t lookZ = kTRUE;
+   Int_t iv, ipl, inext;
+   Int_t incseg = (dir[2]>0)?1:-1;   
+   // we treat the special case when dir[2]=0
+   if (dir[2]==0) {
+      for (iv=0; iv<fNvert; iv++) {
+         dist = DistToPlane(point,dir,iz,iv,stepmax);
+         if (dist<stepmax) {
+            stepmax = dist;
+            snext = dist;
+            if (convex) return snext;
+         }   
+      }
+      return snext;
+   }      
+   
+   // normal case   
+   while (lookZ && (iz>=0) && (iz<fNz-1)) {
+      // find the distance  to current segment end Z surface
+      ipl = iz+((incseg+1)>>1);
+      inext = ipl+incseg;
+      sz = (fZ[ipl]-point[2])/dir[2];
+      if (sz<stepmax) {
+         // we cross the next Z section before stepmax
+         pt[0] = point[0]+sz*dir[0];
+         pt[1] = point[1]+sz*dir[1];
+         xtru->SetCurrentVertices(fX0[ipl],fY0[ipl],fScale[ipl]);
+         if (!fPoly->Contains(pt)) {
+            // no polygon crossing, so we do cross the lateral surfaces
+            snext = TGeoShape::Big();
+            stepmax = sz;
+            lookZ = kFALSE;
+         } else {  
+            // we cross also the polygon, so there is no lateral crossing
+            // except the case when we have 2 planes at same Z
+            if (inext>0 && inext<fNz-1) {
+               if (fZ[ipl]==fZ[inext]) {
+                  // we have to check lateral crossing with min(ipl,inext)
+                  Int_t imin = TMath::Min(ipl,inext);
+                  for (iv=0; iv<fNvert; iv++) {
+                     dist = DistToPlane(point,dir,imin,iv,stepmax);
+                     if (dist<stepmax) return dist;
+                  }
+               }
+            }            
+            iz += incseg;
+            snext = sz; // crossing but might be virtual
+            continue;
+         }   
+      } else {
+        // next Z section further than stepmax
+        lookZ = kFALSE;
+      }
+      // check lateral faces of current segment up to stepmax
+      for (iv=0; iv<fNvert; iv++) {
+         dist = DistToPlane(point,dir,iz,iv,stepmax); 
+         if (dist<stepmax) {
+            stepmax = dist;
+            snext = dist;
+            if (convex) return snext;
+         }   
+      }   
+   }
+   return snext;  
+}
+
+//_____________________________________________________________________________
+Double_t TGeoXtru::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
-   Warning("DistToIn", "not implemented");
-   return TGeoShape::Big();  
+//   Warning("DistToIn", "not implemented");
+   if (iact<3 && safe) {
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
+   }   
+   Double_t stepmax = step;
+   Double_t snext = TGeoShape::Big();
+   // We might get out easy with Z checks
+   Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (iz<0) {
+      if (dir[2]<0) return TGeoShape::Big();
+      iz=0; // valid starting value
+   } else {
+      if (iz==fNz-1) {
+         if (dir[2]>=0) return TGeoShape::Big();
+         iz = fNz-2; // valid value = last segment
+      }
+   }      
+   // Check if the bounding box is missed by the track
+   if (!TGeoBBox::Contains(point)) {
+      snext = TGeoBBox::DistToIn(point,dir,3);
+      if (snext>stepmax) return TGeoShape::Big();
+   }   
+   // not the case - we have to do some work...
+//   TGeoXtru *xtru = (TGeoXtru*)this;
+   
+   return snext;  
 }
 
 //_____________________________________________________________________________
@@ -293,11 +431,87 @@ Double_t TGeoXtru::GetZ(Int_t ipl) const
    }
    return fZ[ipl];
 }      
+//_____________________________________________________________________________
+void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
+{
+// Returns normal vector to the planar quadrilateral defined by vector VERT.
+   Double_t cross = 0.;
+   Double_t v1[3], v2[3];
+   v1[0] = vert[9]-vert[0];
+   v1[1] = vert[10]-vert[1];
+   v1[2] = vert[11]-vert[2];
+   v2[0] = vert[3]-vert[0];
+   v2[1] = vert[4]-vert[1];
+   v2[2] = vert[5]-vert[2];
+   norm[0] = v1[1]*v2[2]-v1[2]*v2[1];
+   cross += norm[0]*norm[0];
+   norm[1] = v1[2]*v2[0]-v1[0]*v2[2];
+   cross += norm[1]*norm[1];
+   norm[2] = v1[0]*v2[1]-v1[1]*v2[0];
+   cross += norm[2]*norm[2];
+   cross = 1./TMath::Sqrt(cross);
+   for (Int_t i=0; i<3; i++) norm[i] *= cross;
+}   
+
+//_____________________________________________________________________________
+void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
+{
+// Returns (x,y,z) of 3 vertices of the surface defined by Z sections (iz, iz+1)
+// and polygon vertices (ivert, ivert+1). No range check.
+   Double_t x,y,z1,z2;
+   Int_t iv1 = (ivert+1)%fNvert;
+   Int_t icrt = 0;
+   z1 = fZ[iz];
+   z2 = fZ[iz+1];
+   x = fX[ivert]*fScale[iz]+fX0[iz];
+   y = fY[ivert]*fScale[iz]+fY0[iz];
+   vert[icrt++] = x;
+   vert[icrt++] = y;
+   vert[icrt++] = z1;
+   x = fX[iv1]*fScale[iz]+fX0[iz];
+   y = fY[iv1]*fScale[iz]+fY0[iz];
+   vert[icrt++] = x;
+   vert[icrt++] = y;
+   vert[icrt++] = z1;
+   x = fX[iv1]*fScale[iz+1]+fX0[iz+1];
+   y = fY[iv1]*fScale[iz+1]+fY0[iz+1];
+   vert[icrt++] = x;
+   vert[icrt++] = y;
+   vert[icrt++] = z2;
+   x = fX[ivert]*fScale[iz+1]+fX0[iz+1];
+   y = fY[ivert]*fScale[iz+1]+fY0[iz+1];
+   vert[icrt++] = x;
+   vert[icrt++] = y;
+   vert[icrt++] = z2;
+}
+//_____________________________________________________________________________
+Bool_t TGeoXtru::IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const
+{
+// Check if the quadrilateral defined by VERT contains a coplanar POINT.
+   Double_t v1[3], v2[3];
+   Double_t cross;
+   Int_t j,k;
+   for (Int_t i=0; i<4; i++) { // loop vertices
+      j = 3*i;
+      k = 3*((i+1)%4);
+      v1[0] = point[0]-vert[j];
+      v1[1] = point[1]-vert[j+1];
+      v1[2] = point[2]-vert[j+2];
+      v2[0] = vert[k]-vert[j];
+      v2[1] = vert[k+1]-vert[j+1];
+      v2[2] = vert[k+2]-vert[j+2];
+      cross = (v1[1]*v2[2]-v1[2]*v2[1])*norm[0]+
+              (v1[2]*v2[0]-v1[0]*v2[2])*norm[1]+
+              (v1[0]*v2[1]-v1[1]*v2[0])*norm[2];
+      if (cross<0) return kFALSE;
+   }
+   return kTRUE;   
+}
 
 //_____________________________________________________________________________
 void TGeoXtru::InspectShape() const
 {
-// print shape parameters
+// Print actual Xtru parameters.
    printf("*** TGeoXtru parameters ***\n");
    printf("    Nz    = %i\n", fNz);
    printf("    List of (x,y) of polygon vertices:\n");

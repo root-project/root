@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.76 2004/02/19 12:58:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.77 2004/03/05 11:53:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3863,12 +3863,17 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //Note that this function deletes the current gGeoManager (if one)
    //before importing the new object.
 
+   TFile *old = gFile;
    TFile f(filename);
-   if (f.IsZombie()) return 0;
+   if (f.IsZombie()) {
+      if (old) old->cd();
+      return 0;
+   }   
    if (gGeoManager) delete gGeoManager;
    gGeoManager = 0;
    if (name && strlen(name) > 0) {
       gGeoManager = (TGeoManager*)f.Get(name);
+      if (old) old->cd();
       return gGeoManager;
    } else {
       TIter next(f.GetListOfKeys());
@@ -3876,9 +3881,11 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       while ((key = (TKey*)next())) {
          if (strcmp(key->GetClassName(),"TGeoManager") != 0) continue;
          gGeoManager = (TGeoManager*)key->ReadObj();
+         if (old) old->cd();
          return gGeoManager;
       }
    }
+   if (old) old->cd();
    return 0;
 }
 //______________________________________________________________________________

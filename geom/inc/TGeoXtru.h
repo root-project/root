@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.1 2004/02/09 14:03:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.2 2004/02/09 14:29:30 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -43,6 +43,11 @@ protected:
    Double_t             *fScale; //[fNz] array of scale factors (for each Z)
    Double_t             *fX0;    //[fNz] array of X offsets (for each Z)
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
+
+   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax) const;
+   void                  GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const;
+   void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
+   Bool_t                IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const;
 public:
    // constructors
    TGeoXtru();
