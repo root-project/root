@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.17 2001/10/30 07:29:15 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.18 2001/10/31 07:19:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -173,7 +173,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
     delete bsIter ;
   }
 
-  _basisCode = basis?basisCode(basis->GetName()):0 ;
+  _basisCode = basis?basisCode(basis->GetTitle()):0 ;
 }
 
 

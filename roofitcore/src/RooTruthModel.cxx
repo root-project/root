@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.10 2001/10/31 07:19:31 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.11 2001/11/05 18:50:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -83,7 +83,7 @@ void RooTruthModel::changeBasis(RooFormulaVar* basis)
     addServer(*_basis,kTRUE,kFALSE) ;
   }
 
-  _basisCode = basis?basisCode(basis->GetName()):0 ;
+  _basisCode = basis?basisCode(basis->GetTitle()):0 ;
 }
 
 
