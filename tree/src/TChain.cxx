@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.76 2003/07/22 16:12:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.77 2003/07/25 17:41:37 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -199,8 +199,10 @@ Int_t TChain::Add(const char *name, Int_t nentries)
    Int_t dotslashpos = basename.Index(".root/");
    TString behind_dot_root;
    if (dotslashpos>=0) {
-      behind_dot_root = basename(dotslashpos+6); // Copy the tree name specification
-      basename.Remove(dotslashpos+5);  // and remove it from basename
+      // Copy the tree name specification
+      behind_dot_root = basename(dotslashpos+6,basename.Length()-dotslashpos+6); 
+      // and remove it from basename
+      basename.Remove(dotslashpos+5);  
    }
 
    Int_t slashpos = basename.Last('/');
