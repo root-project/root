@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.4 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.5 2002/10/25 23:49:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -195,13 +195,15 @@ Bool_t RooAbsGoodnessOfFit::initialize()
 
 
 
-Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     Int_t i ;
     for (i=0 ; i<_nGof ; i++) {
-      if (_gofArray[i]) _gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+      if (_gofArray[i]) {
+	_gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+      }
     }
   } else if (_gofOpMode==MPMaster) {
     // WVE implement this

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.76 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.77 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1384,7 +1384,7 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
 
 
 Bool_t RooAbsPdf::redirectServersHook(const RooAbsCollection& newServerList, 
-				      Bool_t mustReplaceAll, Bool_t nameChange) 
+				      Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
   Bool_t ret(kFALSE) ;  
 

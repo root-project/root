@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAddPdf.rdl,v 1.33 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -76,7 +76,7 @@ protected:
 
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
-				     Bool_t mustReplaceAll, Bool_t nameChange) ;
+				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.33 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.34 2002/11/27 07:27:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,7 +64,7 @@ protected:
 
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
-				     Bool_t mustReplaceAll, Bool_t nameChange) ;
+				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.3 2002/09/05 04:33:07 verkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.4 2002/10/25 23:49:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,7 +49,7 @@ protected:
   void findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   RooArgSet*  _normSet ;
   RooArgSet*  _pdfCloneSet ;

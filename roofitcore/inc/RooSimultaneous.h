@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.29 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.30 2002/10/26 01:18:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,7 +81,7 @@ protected:
   mutable RooSetProxy _plotCoefNormSet ;
 
   mutable RooNormListManager _normListMgr ; // Component normalization list manager
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   friend class RooSimGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 

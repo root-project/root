@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooResolutionModel.rdl,v 1.16 2002/09/05 04:33:56 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,7 +56,7 @@ protected:
 
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return (_basisCode!=0) ; } ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual void changeBasis(RooFormulaVar* basis) ;
   Bool_t traceEvalHook(Double_t value) const ;
 

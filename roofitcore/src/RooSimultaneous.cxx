@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.47 2002/10/26 01:18:41 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.48 2002/11/27 07:27:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -269,7 +269,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
-Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
   Bool_t ret(kFALSE) ;  
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.66 2002/11/04 22:35:34 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.67 2002/11/27 07:27:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -722,7 +722,7 @@ Double_t RooRealIntegral::integrate() const
 
 
 Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList, 
-					    Bool_t mustReplaceAll, Bool_t nameChange) 
+					    Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
   _funcBranchList.removeAll() ;
 

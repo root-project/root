@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.75 2002/09/06 22:41:29 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.76 2002/09/30 00:57:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -670,7 +670,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 
 
 
-Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
+Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep) 
 {
   // Substitute our servers with those listed in newSet. If nameChange is false, servers and
   // and substitutes are matched by name. If nameChange is true, servers are matched to args
@@ -749,7 +749,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   }
   
   // Optional subclass post-processing
-  ret |= redirectServersHook(newSet,mustReplaceAll,nameChange) ;
+  ret |= redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
 
   return ret ;
 }
@@ -809,8 +809,8 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
   Bool_t ret(kFALSE) ;
   
-  // Do redirect on self
-  ret |= redirectServers(newSet,mustReplaceAll,nameChange) ;
+  // Do redirect on self (identify operation as recursion step)
+  ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
 
   // Do redirect on servers
   TIterator* sIter = serverIterator() ;

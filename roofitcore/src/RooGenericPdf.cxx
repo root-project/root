@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.17 2002/09/05 04:33:29 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.18 2002/11/12 21:44:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -101,7 +101,7 @@ Bool_t RooGenericPdf::isValidReal(Double_t value, Bool_t printError) const {
 
 
 
-Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange)
+Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
 {
   // Propagate server changes to embedded formula objecy
   return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;

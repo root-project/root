@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooFormulaVar.cc,v 1.26 2002/09/05 04:33:27 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -104,7 +104,7 @@ Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
 
 
 
-Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange)
+Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
 {
   // Propagate server change information to embedded RooFormula object
   return _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : kFALSE ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.26 2002/09/05 04:33:55 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.27 2002/10/23 00:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -229,7 +229,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 
 
 
-Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
   // Forward redirectServers call to our basis function, which is not connected to either resolution
   // model or the physics model.
