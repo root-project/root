@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.9 2001/10/13 21:53:20 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.10 2001/11/14 18:42:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -166,14 +166,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	if (zvar) {
 	  for (iz=0 ; iz < zvar->getFitBins() ; iz++) {
 	    zvar->setFitBin(iz) ;
-	    add(set,histo->GetBinContent(ix,iy,iz)) ;
+	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)) ;
 	  }
 	} else {
-	  add(set,histo->GetBinContent(ix,iy)) ;	    
+	  add(set,histo->GetBinContent(ix+1,iy+1)) ;	    
 	}
       }
     } else {
-      add(set,histo->GetBinContent(ix)) ;	    
+      add(set,histo->GetBinContent(ix+1)) ;	    
     }
   }  
 }
