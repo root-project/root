@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.25 2001/09/26 11:18:39 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.26 2001/10/01 14:15:18 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -197,15 +197,15 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_dell_30   = 34.01;  //Pentium III 600 Mhz times with the native compiler
-   Float_t cp_dell_30   = 31.09;
-   Float_t rt_dell_1000 = 149.68;
-   Float_t cp_dell_1000 = 142.45;
+   Float_t rt_dell_30   = 34.15;  //Pentium III 600 Mhz times with the native compiler
+   Float_t cp_dell_30   = 31.30;
+   Float_t rt_dell_1000 = 153.96;
+   Float_t cp_dell_1000 = 146.36;
 #else
-   Float_t rt_dell_30   = 94.03;  //Pentium III 600 Mhz times with CINT
-   Float_t cp_dell_30   = 91.57;  //The difference is essentially coming from stress16
-   Float_t rt_dell_1000 = 229.94;
-   Float_t cp_dell_1000 = 223.00;
+   Float_t rt_dell_30   = 93.40;  //Pentium III 600 Mhz times with CINT
+   Float_t cp_dell_30   = 90.92;  //The difference is essentially coming from stress16
+   Float_t rt_dell_1000 = 230.26;
+   Float_t cp_dell_1000 = 222.98;
 #endif
    Float_t cp_dell = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt_dell = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
