@@ -20,6 +20,15 @@ SUBDIRS = $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test) 
 TEST_TARGETS += $(TEST_TARGETS_DIR)
 
+# allow tests to be disabled by putting their names into a file called !DISABLE
+ifneq ($(MAKECMDGOALS),clean)
+TEST_TARGETS_DISABLED = $(if $(wildcard !DISABLE),$(shell cat !DISABLE))
+endif
+TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
+                     $(filter-out $(TEST_TARGETS_DISABLED),$(TEST_TARGETS))\
+                     $(warning Test(s) $(TEST_TARGETS_DISABLED) disabled!),\
+                  $(TEST_TARGETS))
+
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
