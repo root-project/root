@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.6 2001/07/31 05:54:22 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.7 2001/08/15 23:38:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -86,7 +86,15 @@ TString RooStreamParser::readToken()
   Int_t bufptr(0) ;
 
   //Ignore leading newline
-  if (_is.peek()=='\n') _is.get(c) ;
+  if (_is.peek()=='\n') {
+    _is.get(c) ;
+
+    // If new line starts with #, zap it    
+    while (_is.peek()=='#') {
+      zapToEnd() ;
+      _is.get(c) ; // absorb newline
+    }
+  }
 
   while(1) {
     // Buffer overflow protection
