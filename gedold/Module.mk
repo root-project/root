@@ -1,7 +1,7 @@
 # Module.mk for gedold module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
-# Author: Rene Brun, 25/11/2003
+# Author: Ilka Antcheva, 18/2/2004
 
 MODDIR       := gedold
 MODDIRS      := $(MODDIR)/src

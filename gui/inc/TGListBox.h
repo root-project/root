@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.13 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.14 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -121,7 +121,7 @@ public:
    void SetText(TGString *new_text);
    virtual void Update(TGLBEntry *e)
        { SetText(new TGString(((TGTextLBEntry *)e)->GetText())); }
-   virtual void SavePrimitive(ofstream &out, Option_t *); 
+   virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
 };
@@ -157,12 +157,12 @@ public:
                       Pixel_t back = GetWhitePixel());
    virtual ~TGLineStyleLBEntry();
 
-   virtual TGDimension GetDefaultSize() const 
+   virtual TGDimension GetDefaultSize() const
                           { return TGDimension(fTWidth, fTHeight+1); }
-   const   Style_t     GetStyle() const { return fLineStyle; }
+   Style_t             GetStyle() const { return fLineStyle; }
    virtual void        SetStyle(Style_t style);
    virtual void        Update(TGLBEntry *e)
-                          {  SetStyle(((TGLineStyleLBEntry *)e)->GetStyle()); } 
+                          {  SetStyle(((TGLineStyleLBEntry *)e)->GetStyle()); }
 
    ClassDef(TGLineStyleLBEntry,0)  // Line style listbox entry
 };
@@ -170,7 +170,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGLineWidthLBEntry                                                     //
+// TGLineWidthLBEntry                                                   //
 //                                                                      //
 // Line width listbox entry.                                            //
 // Line example and width number                                        //
@@ -195,12 +195,12 @@ public:
                       Pixel_t back = GetWhitePixel());
    virtual ~TGLineWidthLBEntry();
 
-   virtual TGDimension GetDefaultSize() const 
+   virtual TGDimension GetDefaultSize() const
       { return TGDimension(fTWidth, fTHeight+1); }
-   virtual const Int_t GetWidth() const { return fLineWidth; }
-   virtual void SetWidth(Int_t width);
-   virtual void Update(TGLBEntry *e)
-      {  SetWidth(((TGLineWidthLBEntry *)e)->GetWidth()); } 
+   virtual Int_t GetWidth() const { return fLineWidth; }
+   virtual void  SetWidth(Int_t width);
+   virtual void  Update(TGLBEntry *e)
+      {  SetWidth(((TGLineWidthLBEntry *)e)->GetWidth()); }
 
    ClassDef(TGLineWidthLBEntry,0)  // Line width listbox entry
 };
@@ -322,7 +322,7 @@ public:
    virtual Bool_t GetSelection(Int_t id) { return fLbc->GetSelection(id); }
    virtual TGLBEntry *GetSelectedEntry() const { return fLbc->GetSelectedEntry(); }
    virtual void GetSelectedEntries(TList *selected);
-   virtual void SavePrimitive(ofstream &out, Option_t *option);   
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*

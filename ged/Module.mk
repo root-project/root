@@ -1,7 +1,7 @@
 # Module.mk for ged module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
-# Author: Rene Brun, 25/11/2003
+# Author: Ilka Antcheva, 18/2/2004
 
 MODDIR    := ged
 MODDIRS   := $(MODDIR)/src
@@ -36,19 +36,19 @@ INCLUDEFILES += $(GEDDEP)
 include/%.h:    $(GEDDIRI)/%.h
 		cp $< $@
 
-$(GEDLIB):   $(GEDO) $(GEDDO) $(MAINLIBS) $(GEDLIBDEP)
+$(GEDLIB):      $(GEDO) $(GEDDO) $(MAINLIBS) $(GEDLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGed.$(SOEXT) $@ "$(GEDO) $(GEDDO)" \
 		   "$(GEDLIBEXTRA)"
 
-$(GEDDS):    $(GEDH) $(GEDL) $(ROOTCINTTMP)
+$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEDH) $(GEDL)
 
-$(GEDDO):    $(GEDDS)
+$(GEDDO):       $(GEDDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-ged:     $(GEDLIB)
+all-ged:        $(GEDLIB)
 
 clean-ged:
 		@rm -f $(GEDO) $(GEDDO)
