@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.19 2003/01/20 14:35:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.20 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -288,7 +288,7 @@ public:
    TList                 *GetListOfShapes() const       {return fShapes;}
 
    //--- modeler state getters/setters
-   TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->At(level);}
+   TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->UncheckedAt(level);}
    Int_t                  GetNodeId() const {return fCache->GetNodeId();}
    TGeoNode              *GetNextNode() const         {return fNextNode;}
    TGeoNode              *GetMother(Int_t up=1) const {return fCache->GetMother(up);}

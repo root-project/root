@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.34 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.35 2003/01/26 14:46:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1885,7 +1885,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // we are looking upwards until inside current node or exit
       if (fStartSafe) GotoSafeLevel();
       vol=fCurrentNode->GetVolume();
-      MasterToLocal(fPoint, &point[0]);
+      fCache->MasterToLocal(fPoint, &point[0]);
       inside_current = vol->Contains(&point[0]);
       if (!inside_current) {
          TGeoNode *skip = fCurrentNode;
@@ -1901,7 +1901,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    if (!inside_current) {
    // we are looking downwards
       vol = fCurrentNode->GetVolume();
-      MasterToLocal(fPoint, &point[0]);
+      fCache->MasterToLocal(fPoint, &point[0]);
       if (fCurrentNode==skipnode) {
       // in case searching down and skipping this
          inside_current = kTRUE;
@@ -2005,8 +2005,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       }
       TGeoNode *target=fCurrentNode;
       TGeoVolume *tvol=fCurrentNode->GetVolume();
-      MasterToLocal(fPoint, &point[0]);
-      MasterToLocalVect(fDirection, &dir[0]);
+      fCache->MasterToLocal(fPoint, &point[0]);
+      fCache->MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0])) {
          fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
          fIsStepEntering=kFALSE;
@@ -2019,8 +2019,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
       PopPath();
       return target;
    }
-   MasterToLocal(fPoint, &point[0]);
-   MasterToLocalVect(fDirection, &dir[0]);
+   fCache->MasterToLocal(fPoint, &point[0]);
+   fCache->MasterToLocalVect(fDirection, &dir[0]);
    // compute distance to exit point from current node and the distance to its
    // closest boundary
    TGeoVolume *vol = fCurrentNode->GetVolume();
@@ -2054,8 +2054,8 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
          CdUp();
          mother = fCurrentNode->GetVolume();
 //         printf("-> up in %s\n", fCurrentNode->GetName());
-         MasterToLocal(fPoint, &mothpt[0]);
-         MasterToLocalVect(fDirection, &vecpt[0]);
+         fCache->MasterToLocal(fPoint, &mothpt[0]);
+         fCache->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
          snext = mother->GetShape()->DistToOut(&mothpt[0], &vecpt[0], 2, TGeoShape::kBig, &fSafety);
 //         printf("-> to out : %g\n", snext);
