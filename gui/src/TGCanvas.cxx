@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.17 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.18 2003/08/11 15:55:49 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -333,6 +333,34 @@ void TGContainer::CurrentChanged(TGFrame* f)
    // Emit signal when current selected frame changed.
 
    Emit("CurrentChanged(TGFrame*)", (Long_t)f);
+}
+
+//______________________________________________________________________________
+void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
+{
+   // Signal emitted when keyboard key pressed
+   //
+   // frame - activated frame 
+   // keysym - defined in "KeySymbols.h"
+   // mask - modifier key mask, defined in "GuiTypes.h"
+   //
+   // const Mask_t kKeyShiftMask   = BIT(0);
+   // const Mask_t kKeyLockMask    = BIT(1);
+   // const Mask_t kKeyControlMask = BIT(2);
+   // const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
+   // const Mask_t kButton1Mask    = BIT(8);
+   // const Mask_t kButton2Mask    = BIT(9);
+   // const Mask_t kButton3Mask    = BIT(10);
+   // const Mask_t kButton4Mask    = BIT(11);
+   // const Mask_t kButton5Mask    = BIT(12);
+   // const Mask_t kAnyModifier    = BIT(15);
+  
+   Long_t args[3];
+   args[0] = (Long_t)frame;
+   args[1] = (Long_t)keysym;
+   args[2] = (Long_t)mask;
+   Emit("KeyPressed(TGFame*,ULong_t,ULong_t)", args);
+   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_KEY), keysym, mask);
 }
 
 //______________________________________________________________________________
@@ -968,6 +996,8 @@ Bool_t TGContainer::HandleKey(Event_t *event)
    if (event->fType == kGKeyPress) {
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
       n = strlen(input);
+
+      KeyPressed(fLastActiveEl?fLastActiveEl->fFrame:0, keysym, event->fState);
 
       switch ((EKeySym)keysym) {
          case kKey_Enter:

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.26 2003/08/06 09:42:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.27 2003/08/07 21:27:30 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -419,6 +419,8 @@ Bool_t TGListTree::HandleKey(Event_t *event)
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
       n = strlen(input);
 
+      KeyPressed(fSelected, keysym, event->fState);
+
       switch ((EKeySym)keysym) {
          case kKey_Enter:
          case kKey_Return:
@@ -537,6 +539,34 @@ void TGListTree::OnMouseOver(TGListTreeItem *entry)
 
    if (!fOnMouseOver) Emit("OnMouseOver(TGListTreeItem*)", (Long_t)entry);
    fOnMouseOver = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
+{
+   // Signal emitted when keyboard key pressed
+   //
+   // item - selected item
+   // keysym - defined in "KeySymbols.h"
+   // mask - modifier key mask, defined in "GuiTypes.h"
+   //
+   // const Mask_t kKeyShiftMask   = BIT(0);
+   // const Mask_t kKeyLockMask    = BIT(1);
+   // const Mask_t kKeyControlMask = BIT(2);
+   // const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
+   // const Mask_t kButton1Mask    = BIT(8);
+   // const Mask_t kButton2Mask    = BIT(9);
+   // const Mask_t kButton3Mask    = BIT(10);
+   // const Mask_t kButton4Mask    = BIT(11);
+   // const Mask_t kButton5Mask    = BIT(12);
+   // const Mask_t kAnyModifier    = BIT(15);
+  
+   Long_t args[3];
+   args[0] = (Long_t)entry;
+   args[1] = (Long_t)keysym;
+   args[2] = (Long_t)mask;
+   Emit("KeyPressed(TGFame*,ULong_t,ULong_t)", args);
+   SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.7 2003/10/08 09:50:47 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -28,9 +28,11 @@
 class TGStatusBarPart;
 
 
-class TGStatusBar : public TGFrame {
+class TGStatusBar : public TGHorizontalFrame {
 
 friend class TGStatusBarPart;
+private:
+   static TGLayoutHints *fgHints; // hints to add parts (kLHintsTop|kLHintsLeft,0,0,0,0)
 
 protected:
    TGStatusBarPart **fStatusPart; // frames containing statusbar text
@@ -50,7 +52,7 @@ protected:
 
 public:
    TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
-               UInt_t options = kSunkenFrame,
+               UInt_t options = kSunkenFrame | kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGStatusBar();
 
@@ -60,8 +62,8 @@ public:
    virtual void SetParts(Int_t *parts, Int_t npart);
    virtual void SetParts(Int_t npart);
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
-   
    TGCompositeFrame *GetBarPart(Int_t npart) const;
+   TGDimension GetDefaultSize() const;
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };

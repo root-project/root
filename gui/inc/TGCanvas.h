@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.17 2003/07/14 12:22:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.18 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -138,6 +138,7 @@ public:
    virtual void InvertSelection();              //*SIGNAL*
    virtual void ReturnPressed(TGFrame*);        //*SIGNAL*
    virtual void SpacePressed(TGFrame*);         //*SIGNAL*
+   virtual void KeyPressed(TGFrame*, UInt_t keysym, UInt_t mask); //*SIGNAL*
    virtual void OnMouseOver(TGFrame*);          //*SIGNAL*
    virtual void CurrentChanged(Int_t x,Int_t y);//*SIGNAL*
    virtual void CurrentChanged(TGFrame* f);     //*SIGNAL*
