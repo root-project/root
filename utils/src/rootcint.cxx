@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.174 2004/07/15 23:08:23 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.175 2004/07/17 23:16:17 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-v[0-4]] [-f] dict.C [-c] TAxis.h[{+,-}][!]..[LinkDef.h]  //
+//  rootcint [-v[0-4]][-l][-f] dict.C [-c]                              //
+//           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
 // Streamer() and ShowMembers() methods are generated while in the      //
@@ -40,7 +41,12 @@
 // By default the output file will not be overwritten if it exists.     //
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
-// .cc, .cp.                                                            //
+// .cc, .cp.  Use the -l (long) option to prepend the pathname of the   //
+// dictionary source file to the include of the dictionary header.      //
+// This might be needed in case the dictionary file needs to be         //
+// compiled with the -I- option that inhibits the use of the directory  //
+// of the source file as the first search directory for                 //
+// "#include "file"".                                                   //
 // The verbose flags have the following meaning:                        //
 //      -v   Display all messages                                       //
 //      -v0  Display no messages at all.                                //
@@ -151,7 +157,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcint [-v[0-4]] [-f] dict.C [-c] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
+"  rootcint [-v[0-4]] [-l] [-f] dict.C [-c] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -167,7 +173,12 @@ const char *help =
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
 ".cc, .cp.\n"
-"\n"
+".cc, .cp.  Use the -l (long) option to prepend the pathname of the\n"
+"dictionary source file to the include of the dictionary header.\n"
+"This might be needed in case the dictionary file needs to be\n"
+"compiled with the -I- option that inhibits the use of the directory\n"
+"of the source file as the first search directory for\n"
+"\"#include \"file\"\".\n"
 "The verbose flags have the following meaning:\n"
 "      -v   Display all messages\n"
 "      -v0  Display no messages at all.\n"
@@ -2332,16 +2343,16 @@ void WriteStreamer(G__ClassInfo &cl)
                         fprintf(fp, "      %s = new %s[%s]; \n",
                                 GetNonConstMemberName(m).c_str(),ShortTypeName(m.Type()->Name()),indexvar);
                         if (isDouble32) {
-	                       fprintf(fp, "      R__b.ReadFastArrayDouble32(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+                               fprintf(fp, "      R__b.ReadFastArrayDouble32(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
                         } else {
-	                       fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
-						}
+                               fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",GetNonConstMemberName(m).c_str(),indexvar);
+                        }
                      } else {
                         if (isDouble32) {
                            fprintf(fp, "      R__b.WriteFastArrayDouble32(%s,%s); \n", m.Name(),indexvar);
                         } else {
                            fprintf(fp, "      R__b.WriteFastArray(%s,%s); \n", m.Name(),indexvar);
-						}
+                        }
                      }
                   }
                } else if (m.Property() & G__BIT_ISARRAY) {
@@ -3709,7 +3720,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-      "Usage: %s [-v][-v0-4] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      "Usage: %s [-v][-v0-4] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -3719,6 +3730,8 @@ int main(int argc, char **argv)
    int i, j, ic, ifl, force;
    int icc = 0;
    int use_preprocessor = 0;
+   int longheadername = 0;
+   string dictpathname;
 
    sprintf(autold, autoldtmpl, getpid());
 
@@ -3743,6 +3756,11 @@ int main(int argc, char **argv)
       ic++;
    }
 
+   if (!strcmp(argv[ic], "-l")) {
+      longheadername = 1;
+      ic++;
+   }
+
    if (!strcmp(argv[ic], "-f")) {
       force = 1;
       ic++;
@@ -3750,10 +3768,10 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s\n", help);
       return 1;
    } else if (!strncmp(argv[ic], "-",1)) {
-      fprintf(stderr,"Usage: %s [-v][-v0-4] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      fprintf(stderr,"Usage: %s [-v][-v0-4] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
-		     "and must be bofore the -f flags\n");
+                     "and must be bofore the -f flags\n");
       fprintf(stderr,"For more extensive help type: %s -h\n", argv[0]);
       return 1;
    } else {
@@ -3779,10 +3797,16 @@ int main(int argc, char **argv)
       strcpy(dictname, argv[ifl]);
       char *p = 0;
       // find the right part of then name.
-      for(p = dictname + strlen(dictname)-1;p!=dictname;--p) {
-        if ( *p =='/' ||  *p =='\\') {
-          break;
-        }
+      for (p = dictname + strlen(dictname)-1;p!=dictname;--p) {
+         if (*p =='/' ||  *p =='\\') {
+            *p = 0;
+            if (p == dictname) {
+               dictpathname = "/";
+            } else {
+               dictpathname = dictname;
+            }
+            break;
+         }
       }
       if (!p)
          p = dictname;
@@ -3859,12 +3883,12 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-I/usr/include/X11R5";
 #endif
          switch (gErrorIgnoreLevel) {
-	    case kInfo:     argvv[argcc++] = "-J4"; break;
-	    case kNote:     argvv[argcc++] = "-J3"; break;
-	    case kWarning:  argvv[argcc++] = "-J2"; break;
-	    case kError:    argvv[argcc++] = "-J1"; break;
-	    case kSysError:
-	    case kFatal:    argvv[argcc++] = "-J0"; break;
+            case kInfo:     argvv[argcc++] = "-J4"; break;
+            case kNote:     argvv[argcc++] = "-J3"; break;
+            case kWarning:  argvv[argcc++] = "-J2"; break;
+            case kError:    argvv[argcc++] = "-J1"; break;
+            case kSysError:
+            case kFatal:    argvv[argcc++] = "-J0"; break;
             default:        argvv[argcc++] = "-J1"; break;
          }
 
@@ -4373,8 +4397,13 @@ int main(int argc, char **argv)
                continue;
             fprintf(fpd, "%s", line);
             // 'linesToSkip' is because we want to put it after #defined private/protected
-            if (++nl == linesToSkip && icc)
-               fprintf(fpd, "#include \"%s\"\n", inclf);
+            if (++nl == linesToSkip && icc) {
+               if (longheadername && dictpathname.length() ) {
+                  fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
+               } else {
+                  fprintf(fpd, "#include \"%s\"\n", inclf);
+               }
+            }
          }
       }
 
