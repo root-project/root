@@ -810,8 +810,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if(fIsRunning) break;
                         fCA->cd();
                         fCA->GetViewer3D("ogl");
-                        fCA->Paint();
-			break;
+                        break;
 
                     case M_SHOW_TRACK:
                         if(fIsRunning) break;

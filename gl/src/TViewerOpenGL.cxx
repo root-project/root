@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.50 2005/01/31 14:23:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.51 2005/03/09 18:19:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -924,11 +924,11 @@ Int_t TViewerOpenGL::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 //______________________________________________________________________________
 Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   if (!fBuildingScene || !buffer.SectionsValid(TBuffer3D::kCore)) {
-      assert(kFALSE);
-      return TBuffer3D::kNone;
+   // Currently we protect against add objects being added outside a scene build 
+   // as there are problems with mutliple 3D viewers on pad
+   if (!fBuildingScene) {
+       return TBuffer3D::kNone;
    }
-
    // Check buffer sections for valid state and request extra filling if required.
 
    // kCore: Should always be filled

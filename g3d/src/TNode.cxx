@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.22 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.23 2005/03/11 17:22:21 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -308,15 +308,8 @@ void TNode::Draw(Option_t *option)
 
    AppendPad(option);
 
-   // TODO: Not ideal - but Draw() can be called directly - various entry points
-   TVirtualViewer3D * viewer = gPad->GetViewer3D(option);
-   if (viewer) {
-      viewer->BeginScene();
-   }
-   Paint(option);
-   if (viewer) {
-      viewer->EndScene();
-   }
+	// Create a 3D viewer to draw us
+   gPad->GetViewer3D(option);
 }
 
 //______________________________________________________________________________

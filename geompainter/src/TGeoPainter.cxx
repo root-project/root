@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.56 2005/03/11 17:22:21 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.57 2005/03/14 17:40:00 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -531,9 +531,8 @@ void TGeoPainter::Draw(Option_t *option)
    fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
  
-   // Create / recycle 3D viewer and paint pad into it
+ 	// Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
-	gPad->Paint();  
 }
 
 //______________________________________________________________________________
@@ -1012,12 +1011,12 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 //______________________________________________________________________________
 Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t * /* option */ ) const
 {
+	// Paint the supplied shape into the current 3D viewer
    Bool_t addDaughters = kTRUE;
 
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
 
    if (!viewer) {
-      assert(kFALSE);
       return addDaughters;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.72 2005/03/09 18:19:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.73 2005/03/11 15:02:43 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -914,11 +914,9 @@ again:
                      break;
                   case kViewX3D:
                      gPad->GetViewer3D("x3d");
-                     gPad->Paint();
                      break;
                   case kViewOpenGL:
                      gPad->GetViewer3D("ogl");
-                     gPad->Paint();
                      break;
 
                   // Handle Option menu items...

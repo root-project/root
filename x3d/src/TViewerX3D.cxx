@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.12 2005/03/10 08:47:10 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.13 2005/03/11 17:22:21 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TViewerX3D.h"
-#include "TAtt3D.h"
 #include "X3DBuffer.h"
 #include "TVirtualPad.h"
 #include "TView.h"
@@ -340,6 +339,7 @@ void TViewerX3D::InitX3DWindow()
 //______________________________________________________________________________
 void TViewerX3D::BeginScene()
 {
+	// The x3d viewer cannot rebuild a scene once created
    if (fgCreated) {
       return;
    }
@@ -357,6 +357,11 @@ void TViewerX3D::BeginScene()
 //______________________________________________________________________________
 void  TViewerX3D::EndScene()
 {
+	// The x3d viewer cannot rebuild a scene once created
+   if (fgCreated) {
+		return;
+	}
+	
    fBuildingScene = kFALSE;   
    
    // Size pass done - and some points actually added
@@ -388,6 +393,7 @@ void  TViewerX3D::EndScene()
 //______________________________________________________________________________
 Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
+	// The x3d viewer cannot rebuild a scene once created
    if (fgCreated) {
       if (addChildren) {
          *addChildren = kFALSE;

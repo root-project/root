@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.166 2005/03/10 09:51:46 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.167 2005/03/11 15:02:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5453,6 +5453,8 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // Ensure we can create the new viewer before removing any exisiting one
    TVirtualViewer3D *newViewer = 0;
    
+	Bool_t createdExternal = kFALSE;
+	
   // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad"))
    {
@@ -5463,6 +5465,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          // Return the existing viewer
          return fViewer3D;
       }
+		createdExternal = kTRUE;
    }
    else {
       newViewer = new TViewer3DPad(*this);
@@ -5475,6 +5478,15 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    // Set and return new viewer
    fViewer3D = newViewer;
+   
+   // Ensure any new external viewer is painted
+	// For internal TViewer3DPad type we assume this is being
+	// create on demand due to a paint - so this is not required
+	if (createdExternal) {
+   	Modified();
+   	Update();
+   }
+   
    return fViewer3D;
 }
 
@@ -5485,7 +5497,12 @@ void TPad::ReleaseViewer3D(Option_t * /*type*/ )
    // TODO: By type
    fViewer3D = 0;
 
-   // Ensure the pad is repainted
-   Paint();
+   // We would like to ensure the pad is repainted
+   // when external viewer is closed down. However
+	// a modify/paint call here will repaint the pad 
+	// before the external viewer window actually closes.
+	// So the pad would have to be redraw twice over.
+	// Currenltly we just have to live with the pad staying blank
+	// any click in pad will refresh.
 }
 
