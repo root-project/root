@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.69 2004/06/03 10:20:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.70 2004/06/18 15:48:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1402,9 +1402,6 @@ void TCanvas::SavePrimitive(ofstream &out, Option_t *option)
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
    }
-   if (GetShowEditor()) {
-      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
-   }
    if (GetHighLightColor() != 5) {
       out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
    }
@@ -1509,9 +1506,6 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<endl;
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
-   }
-   if (GetShowEditor()) {
-      out<<"   "<<GetName()<<"->ToggleEditor();"<<endl;
    }
    if (invalid) SetName(" ");
 
