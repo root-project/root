@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.10 2003/12/10 15:52:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.11 2003/12/19 16:36:16 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -529,7 +529,7 @@ void TGMatrixLayout::Layout()
             rowcount = fRows;
             y = fSep + bw; x += maxsize.fWidth + fSep;
          }
-      } else if (rowcount == 0) {
+      } else if (fRows == 0) {
          x += maxsize.fWidth + fSep;
          colcount--;
          if (colcount <= 0) {
@@ -538,11 +538,14 @@ void TGMatrixLayout::Layout()
          }
       } else {
          x += maxsize.fWidth + fSep;
-         rowcount--;
-         if (rowcount <= 0) {
-            rowcount = fRows; colcount--;
-            x = fSep; y += maxsize.fHeight + fSep;
-            if (colcount <= 0) return;
+         colcount--;
+         if (colcount <= 0) {
+            rowcount--;
+            if (rowcount <= 0) return;
+            else {
+               colcount = fColumns;
+               x = fSep; y += maxsize.fHeight + fSep;
+            }
          }
       }
    }
