@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.3 2002/04/26 08:46:10 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.4 2002/05/18 08:22:00 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -20,8 +20,6 @@
 
 class TLorentzVector;
 class TArrayI;
-
-enum TMCGeomType { kGeant3, kGeant4 }; 
 
 class TVirtualMC : public TNamed {
 
@@ -193,12 +191,6 @@ class TVirtualMC : public TNamed {
                         TLorentzVector& position, TLorentzVector& momentum) =0;
     virtual TMCProcess ProdProcess(Int_t isec) const =0; 
     virtual Int_t    StepProcesses(TArrayI &proc) const = 0;
-
-    //
-    // other (then geometry/step/run management) methods
-    // ----------------------------------------------
-    //
-    virtual TMCGeomType GetMCGeomType() const = 0;
     
     //
     // Geant3 specific methods
