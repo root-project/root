@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.11 2002/06/11 15:47:35 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.12 2002/12/02 18:50:06 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TTree;
 
 class TSelector : public TObject {
 protected:
+   Int_t     fStatus;  //Selector status
    TString   fOption;  //option given to TTree::Process
    TObject  *fObject;  //current object if processing object (vs. TTree)
    TList    *fInput;   //list of objects available during processing (on PROOF)
@@ -47,12 +48,14 @@ public:
    virtual void        Begin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
    virtual const char *GetOption() const { return fOption.Data();}
+   virtual Int_t       GetStatus() const {return fStatus;}
    virtual Bool_t      ProcessCut(int /*entry*/) { return kTRUE; }
    virtual void        ProcessFill(int /*entry*/) { }
    virtual Bool_t      Process(int /*entry*/) { return kFALSE; }
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }
+   virtual void        SetStatus(Int_t status) {fStatus = status;}
    virtual TList      *GetOutputList() const { return fOutput; }
    virtual void        Terminate() { }
 
