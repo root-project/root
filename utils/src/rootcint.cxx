@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.73 2002/06/04 14:04:02 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.74 2002/06/06 15:18:05 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -560,10 +560,10 @@ void ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl
      switch (kase) {
 
        case G__BIT_ISFUNDAMENTAL:;
-          fprintf(fp, "            R__b >> %s;\n",R__t);
+          fprintf(fp, "            R__b >> %s;\n",R__t);
           break;
        case G__BIT_ISPOINTER|G___BIT_ISTOBJECT|G___BIT_ISTREAMER:;
-         fprintf(fp, "            %s = (%s)R__b.ReadObject(%s);\n",R__t,tiName,tcl);
+         fprintf(fp, "            %s = (%s)R__b.ReadObject(%s);\n",R__t,tiName,tcl);
          break;
 
        case G__BIT_ISENUM:;
