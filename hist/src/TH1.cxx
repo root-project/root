@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.97 2002/05/18 16:29:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.98 2002/05/23 20:55:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -615,6 +615,7 @@ void TH1::Add(TF1 *f1, Double_t c1)
 // Performs the operation: this = this + c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
@@ -648,8 +649,11 @@ void TH1::Add(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             cu  = c1*f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             Double_t error1 = GetBinError(bin);
             AddBinContent(bin,cu);
             if (fSumw2.fN) {
@@ -1004,6 +1008,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
 // Performs the operation: this = this/(c1*f1)
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Divide
@@ -1037,9 +1042,12 @@ void TH1::Divide(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             Double_t error1 = GetBinError(bin);
             cu  = c1*f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             if (cu) w = GetBinContent(bin)/cu;
             else    w = 0;
             SetBinContent(bin,w);
@@ -3130,6 +3138,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
 // Performs the operation: this = this*c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
+// Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Multiply
@@ -3163,9 +3172,12 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
          xx[1] = fYaxis.GetBinCenter(biny);
          for (binx=0;binx<=nbinsx+1;binx++) {
             xx[0] = fXaxis.GetBinCenter(binx);
+            if (!f1->IsInside(xx)) continue;
+            TF1::RejectPoint(kFALSE);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             Double_t error1 = GetBinError(bin);
             cu  = f1->EvalPar(xx);
+            if (TF1::RejectedPoint()) continue;
             w = GetBinContent(bin)*c1*cu;
             SetBinContent(bin,w);
             if (fSumw2.fN) {
