@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.60 2004/04/22 16:28:28 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.61 2004/05/04 14:41:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1438,8 +1438,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 //   Write macro header and date/time stamp
    TDatime t;
    Float_t cx = gStyle->GetScreenFactor();
-   Int_t w = Int_t((fWindowWidth)/cx);
-   Int_t h = Int_t((fWindowHeight)/cx);
+   Int_t topx,topy;
+   UInt_t w, h;
+   UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
+   w = UInt_t((fWindowWidth - editorWidth)/cx);
+   h = UInt_t((fWindowHeight)/cx);
 
    out <<"{"<<endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<endl;

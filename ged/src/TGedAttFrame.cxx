@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.13 2004/04/27 09:13:22 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.14 2004/04/29 14:46:37 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -330,7 +330,7 @@ Bool_t TGedAttFillFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    }
    if (b)
    {
-      fPad->Modified();
+      if (fPad) fPad->Modified();
       gPad->Modified();
       gPad->Update();
    }
