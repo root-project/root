@@ -997,7 +997,11 @@ int *piout;
 	    G__ifile.filenum = null_entry;
 	  }
 	  else {
+#ifndef G__OLDIMPLEMENTATION1601
+	    if(G__nfile==G__gettempfilenum()+1) {
+#else
 	    if(G__nfile==G__MAXFILE) {
+#endif
 	      G__fprinterr(G__serr,
 		  "Limitation: Sorry, can not create any more file entry\n");
 	    }

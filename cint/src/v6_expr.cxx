@@ -34,6 +34,22 @@ extern int G__dynconst;
 #endif
 
 /******************************************************************
+* G__get_last_error
+******************************************************************/
+int G__lasterror() 
+{
+  return(G__last_error);
+}
+
+/******************************************************************
+* G__reset_last_error
+******************************************************************/
+void G__reset_lasterror()
+{
+  G__last_error = G__NOERROR;
+}
+
+/******************************************************************
 * G__value G__calc_internal(exprwithspace)
 *
 * Grand entry for C/C++ expression evaluator. This function is
@@ -148,6 +164,9 @@ char *exprwithspace;
 #endif
 
   result=G__getexpr(exprnospace);
+#ifndef G__OLDIMPLEMENTATION1600
+  G__last_error = G__security_error;
+#endif
 
 #ifdef G__EH_SIGNAL
   signal(SIGFPE,fpe);

@@ -1117,7 +1117,11 @@ void G__declare_template()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1412
+#ifndef G__OLDIMPLEMENTATION1601
+  if(G__ifile.filenum>G__gettempfilenum()) {
+#else
   if(G__MAXFILE-1==G__ifile.filenum) {
+#endif
     G__fprinterr(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
     G__genericerror("You need to write it in a source file");
     return;

@@ -303,7 +303,8 @@ char *item;
 	}
 	else {
 	  G__fprinterr(G__serr,
-		       "Error: Function %s is not defined in current scope ",item[0]=='$'?item+1:item);
+		       "Error: Function %s is not defined in current scope "
+		       ,item[0]=='$'?item+1:item);
 	}
       }
       else {

@@ -656,7 +656,11 @@ void G__rewinddictionary()
 #ifndef G__OLDIMPLEMENTATION1448
   /* If the file info saved was related to a temporary file
    * there is no use to reput it */
+#ifndef G__OLDIMPLEMENTATION1601
+  if(errorifile.filenum>G__gettempfilenum()) G__ifile = errorifile;
+#else
   if(errorifile.filenum!=G__MAXFILE-1) G__ifile = errorifile;
+#endif
 #else
   G__ifile = errorifile;
 #endif
@@ -806,7 +810,11 @@ char *filename;
       while(-1!=G__srcfile[j].included_from
 #ifndef G__PHILIPPE18
             /* do not take the tempfile in consideration! */
+#ifndef G__OLDIMPLEMENTATION1601
+            && (G__srcfile[j].included_from>G__gettempfilenum())
+#else
             && ((G__MAXFILE-1)!=G__srcfile[j].included_from)
+#endif
 #endif
 	    ) {
 	j=G__srcfile[j].included_from;

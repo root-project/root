@@ -4594,7 +4594,11 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
 #ifndef G__ROOT
+#ifndef G__OLDIMPLEMENTATION1601
+      if(G__ifile.filenum<=G__gettempfilenum()) {
+#else
       if(G__MAXFILE-1!=G__ifile.filenum) {
+#endif
 	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	G__printlinenum();
       }
@@ -4603,7 +4607,11 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
 #ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
+#ifndef G__OLDIMPLEMENTATION1601
+    if(G__ifile.filenum<=G__gettempfilenum()) {
+#else
     if(G__MAXFILE-1!=G__ifile.filenum) {
+#endif
       G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
       G__printlinenum();
     }
@@ -4611,7 +4619,11 @@ int objptr;  /* 1 : object , 2 : pointer */
 #endif /* G__ROOT */
 #else /* 1265 */
 #ifndef G__ROOT
+#ifndef G__OLDIMPLEMENTATION1601
+  if(G__ifile.filenum<=G__gettempfilenum() &&
+#else
   if(G__MAXFILE-1!=G__ifile.filenum &&
+#endif
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
     G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
     G__printlinenum();
@@ -4940,7 +4952,11 @@ int objptr;  /* 1 : object , 2 : pointer */
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
 #ifndef G__ROOT
+#ifndef G__OLDIMPLEMENTATION1601
+      if(G__ifile.filenum<=G__gettempfilenum()) {
+#else
       if(G__MAXFILE-1!=G__ifile.filenum) {
+#endif
 	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	G__printlinenum();
       }
@@ -4949,7 +4965,11 @@ int objptr;  /* 1 : object , 2 : pointer */
   }
 #ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
+#ifndef G__OLDIMPLEMENTATION1601
+    if(G__ifile.filenum<=G__gettempfilenum()) {
+#else
     if(G__MAXFILE-1!=G__ifile.filenum) {
+#endif
       G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
       G__printlinenum();
     }
@@ -4957,7 +4977,11 @@ int objptr;  /* 1 : object , 2 : pointer */
 #endif
 #else
 #ifndef G__ROOT
+#ifndef G__OLDIMPLEMENTATION1601
+>   if(G__ifile.filenum<=G__gettempfilenum() &&
+#else
   if(G__MAXFILE-1!=G__ifile.filenum &&
+#endif
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
     G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
     G__printlinenum();

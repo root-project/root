@@ -1671,6 +1671,13 @@ extern G__EXPORT int G__setmasksignal G__P((int));
 extern void G__settemplevel G__P((int val));
 extern void G__clearstack G__P(());
 #endif
+#ifndef G__OLDIMPLEMENTATION1600
+extern G__EXPORT int G__lasterror G__P(()) ;
+extern G__EXPORT void G__reset_lasterror G__P(());
+#endif
+#ifndef G__OLDIMPLEMENTATION1601
+extern G__EXPORT int G__gettempfilenum G__P(());
+#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 

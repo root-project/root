@@ -202,7 +202,9 @@ void G__check_setup_version(version, func)
 int version;
 char *func;
 {
+#ifndef G__OLDIMPLEMENTATION1599
    G__init_globals();
+#endif
 #ifndef G__OLDIMPLEMENTATION1169
    if (version > G__ACCEPTDLLREV_UPTO || version < G__ACCEPTDLLREV_FROM) {
 #else

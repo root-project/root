@@ -257,6 +257,9 @@ void G__scratch_all()
   /*************************************************************
    * Initialize cint body global variables
    *************************************************************/
+#ifndef G__OLDIMPLEMENTATION1599
+  G__init = 0;
+#endif
   G__init_globals();
 
   G__reset_setup_funcs();
