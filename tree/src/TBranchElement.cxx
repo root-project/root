@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.42 2001/05/23 16:12:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.43 2001/05/24 16:37:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -510,6 +510,7 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
    if (fAddress == 0) {
       TBranchElement *mother = GetMother();
       TClass *cl = gROOT->GetClass(mother->GetClassName());
+      if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
       if (!mother || !cl) return 0;
       if (!mother->GetAddress()) mother->SetAddress(0);
    }
