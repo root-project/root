@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.5 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.6 2003/05/11 14:59:10 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
 
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }
+   TGStatusBar   *GetStatusBar() const { return fStatusBar; }
 
    // overridden from TGMainFrame
    void     CloseWindow();

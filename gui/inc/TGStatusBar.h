@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -60,6 +60,8 @@ public:
    virtual void SetParts(Int_t *parts, Int_t npart);
    virtual void SetParts(Int_t npart);
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
+   
+   TGCompositeFrame *GetBarPart(Int_t npart) const;
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };

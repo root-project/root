@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.3 2001/03/09 10:58:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.4 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -36,7 +36,7 @@ const TGFont *TGStatusBar::fgDefaultFont = 0;
 TGGC         *TGStatusBar::fgDefaultGC = 0;
 
 
-class TGStatusBarPart : public TGFrame {
+class TGStatusBarPart : public TGCompositeFrame {
 friend class TGStatusBar;
 private:
    TGString  *fStatusInfo;    // status text to be displayed in this part
@@ -50,7 +50,7 @@ public:
 
 //______________________________________________________________________________
 TGStatusBarPart::TGStatusBarPart(const TGWindow *p, Int_t y, ULong_t back)
-   : TGFrame(p, 5, 5, kChildFrame, back)
+   : TGCompositeFrame(p, 5, 5, kChildFrame, back)
 {
    // Create statusbar part frame. This frame will contain the text for this
    // statusbar part.
@@ -307,4 +307,13 @@ const TGGC &TGStatusBar::GetDefaultGC()
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
    }
    return *fgDefaultGC;
+}
+
+//______________________________________________________________________________
+TGCompositeFrame *TGStatusBar::GetBarPart(Int_t npart) const
+{
+   // Returns bar part. That allows to put in the bar part
+   // something more interesting than text ;-)
+
+   return  ((npart<fNpart) && (npart>=0)) ? (TGCompositeFrame*)fStatusPart[npart] : 0;
 }

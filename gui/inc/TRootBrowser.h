@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.7 2003/04/16 11:15:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.8 2003/10/07 19:02:26 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -121,6 +121,7 @@ public:
    virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
    TGListTree      *GetListTree() const { return fLt; }
    TGFileContainer *GetIconBox() const;
+   TGStatusBar     *GetStatusBar() const { return fStatusBar; }
 
    // overridden from TGMainFrame
    void     CloseWindow();
