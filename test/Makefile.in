@@ -630,7 +630,7 @@ $(STRESS):      $(STRESSO) $(EVENT)
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
 ifeq ($(ARCH),macosx)
-		$(LD) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
+		$(LD) -flat_namespace $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
 else
 		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
 endif
