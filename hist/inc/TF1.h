@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.7 2001/01/21 08:09:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.8 2001/02/28 11:04:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
        Double_t     GetParError(Int_t ipar) const {return fParErrors[ipar];}
+       Double_t    *GetParErrors() {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
    virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
    virtual Double_t GetRandom();

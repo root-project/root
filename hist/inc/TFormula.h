@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.8 2001/02/14 07:37:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.9 2001/02/28 11:04:06 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
          Int_t      GetNumber() const {return fNumber;}
  Double_t           GetParameter(Int_t ipar) const {return fParams[ipar];}
  Double_t           GetParameter(const char *name) const;
+ virtual Double_t  *GetParameters() {return fParams;}
  virtual void       GetParameters(Double_t *params){for(Int_t i=0;i<fNpar;i++) params[i] = fParams[i];}
  virtual const char *GetParName(Int_t ipar) const;
          Int_t      GetParNumber(const char *name) const;
