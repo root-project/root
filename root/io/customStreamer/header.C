@@ -12,6 +12,6 @@ RootClassVersion(Hard2Stream,2);
 #include <iostream>
 
 void Hard2Stream::print() {
-   std::cout << "Hard2Stream: " << (void*)this << std::endl;
+   std::cout << "Hard2Stream: " /* << (void*)this */ << std::endl;
    std::cout << "val : " << getVal() << std::endl;
 }
