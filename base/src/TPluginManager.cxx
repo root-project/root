@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.19 2003/05/15 20:01:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.20 2003/05/16 13:49:34 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -239,6 +239,8 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       return 0;
    }
 
+   R__LOCKGUARD(gCINTMutex);
+
    Long_t *args = 0;
 
    if (nargs > 0) {
@@ -273,9 +275,10 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
             args[i] = (Long_t) va_arg(ap, int);
          else if (type == "long" || type == "unsigned long")
             args[i] = (Long_t) va_arg(ap, long);
-         else if (type == "long long" || type == "unsigned long long")
-            args[i] = (Long_t) (&va_arg(ap, Long64_t));
-         else if (type == "float") {
+         else if (type == "long long" || type == "unsigned long long") {
+            static Long64_t ll = va_arg(ap, Long64_t);
+            args[i] = (Long_t) (&ll);
+         } else if (type == "float") {
             u.f = (Float_t) va_arg(ap, double);  // float is promoted to double
             args[i] = (Long_t) u.l;
          } else if (type == "double") {
@@ -289,7 +292,6 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       fCallEnv->SetParamPtrs(args, nargs);
    }
 
-   R__LOCKGUARD(gCINTMutex);
    Long_t ret;
    fCallEnv->Execute(ret);
 
