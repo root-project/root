@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += *.o
+CLEAN_TARGETS += *.o lotsRef.root $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
 TEST_TARGETS += lotsRef referencesTest
@@ -33,10 +33,11 @@ MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTSYS)/bin/rootcint
 libmaster.$(DllSuf): MasterDict.o MyClass.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
-lotsRef.root: lotsRef_C.$(DllSuf)
-	$(CMDECHO) (root -q -b -l 'lotsRef.C+(300)' && root -q -b -l 'lotsRef.C+(2)' && root -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 
+lotsRef.root: lotsRef_C.$(DllSuf) $(ROOTCORELIBS)
+	$(CMDECHO) (root -q -b -l 'lotsRef.C+(300)' && root -q -b -l 'lotsRef.C+(2)' && root -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 && \
+	diff -bw logRef_root.ref logRef_root.log
 
-lotsRef.log: lotsRef.root lotsRef_C.$(DllSuf)
+lotsRef.log: lotsRef.root lotsRef_C.$(DllSuf) A_C.$(DllSuf)
 
 lotsRef: lotsRef.log
-	$(TestDiff)
+	$(TestDiff) && diff -bw logRef_root.ref logRef_root.log
