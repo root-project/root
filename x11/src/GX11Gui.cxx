@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.14 2001/04/03 10:34:28 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.15 2001/04/04 13:33:30 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -823,7 +823,7 @@ void TGX11::DeleteFont(FontStruct_t fs)
 {
    // Explicitely delete font structure obtained with LoadQueryFont().
 
-   XFreeFont(fDisplay, (XFontStruct *) fs);
+   if (fDisplay) XFreeFont(fDisplay, (XFontStruct *) fs);
 }
 
 //______________________________________________________________________________
@@ -943,7 +943,7 @@ void TGX11::DeletePixmap(Pixmap_t pmap)
 {
    // Explicitely delete pixmap resource.
 
-   XFreePixmap(fDisplay, (Pixmap) pmap);
+   if (fDisplay) XFreePixmap(fDisplay, (Pixmap) pmap);
 }
 
 //______________________________________________________________________________
