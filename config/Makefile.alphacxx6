@@ -17,8 +17,7 @@ endif
 # Compiler:
 CXX           = cxx
 CC            = cc
-CXXFLAGS      = -tlocal -D__osf__ -D__alpha $(EXTRA_CXXFLAGS) \
-                -w0 -msg_disable undpreid,unrfunprm,extrasemi,intconlosbit,nonfundec,partovrd,stoclsnotfirst,boolexprconst
+CXXFLAGS      = -tlocal -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
 CFLAGS        = -D__osf__ -D__alpha $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -tlocal $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
