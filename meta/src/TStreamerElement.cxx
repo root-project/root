@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.41 2002/01/24 10:49:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.42 2002/02/08 17:54:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -423,7 +423,7 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
    fMethod->Execute((void*)(pointer+fOffset));
-   fBaseClass->GetStreamerInfo()->ForceWriteInfo();
+   fBaseClass->GetStreamerInfo()->ForceWriteInfo((TFile *)b.GetParent());
    return 0;
 }
 
