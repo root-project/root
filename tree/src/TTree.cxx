@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.36 2000/12/19 10:42:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.37 2000/12/21 14:03:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1709,7 +1709,12 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  ((TTree*)this)->GetListOfBranches()->Print(option);
+  TIter next(((TTree*)this)->GetListOfBranches());
+  TBranch *br;
+  TBranch::ResetCount();
+  while ((br= (TBranch*)next())) {
+     br->Print(option);
+  }
 }
 
 //______________________________________________________________________________
