@@ -27,7 +27,7 @@ MODULES      += unix x11 x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += winnt win32
+MODULES      += winnt win32 gl
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 endif
@@ -332,6 +332,9 @@ install:
 		echo "Installing tests in $(TESTDIR)"; \
 		$(INSTALLDIR) $(TESTDIR); \
 		$(INSTALLDATA) test/* $(TESTDIR); \
+		echo "Installing macros in $(MACRODIR)"; \
+		$(INSTALLDIR) $(MACRODIR); \
+		$(INSTALLDATA) macros/* $(MACRODIR); \
 		echo "Installing system.rootrc in $(ETCDIR)"; \
 		$(INSTALLDIR) $(ETCDIR); \
 		$(INSTALLDATA) system.rootrc $(ETCDIR); \
