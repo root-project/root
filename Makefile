@@ -437,7 +437,7 @@ install:
 	   rm -rf $(DESTDIR)$(MACRODIR)/CVS; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
-	   $(INSTALLDATA) man/*                 $(DESTDIR)$(MANDIR); \
+	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
 	   rm -rf $(DESTDIR)$(MANDIR)/CVS; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
@@ -500,7 +500,7 @@ uninstall:
 	   rm -rf $(DESTDIR)$(TESTDIR); \
 	   rm -rf $(DESTDIR)$(DOCDIR); \
 	   rm -rf $(DESTDIR)$(MACRODIR); \
-	   for i in man/* ; do \
+	   for i in man/man1/* ; do \
 	      rm -fr $(DESTDIR)$(MANDIR)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(MANDIR) && \

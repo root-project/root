@@ -1224,7 +1224,7 @@ else
     incdir=\$\(ROOTSYS\)/include
     etcdir=\$\(ROOTSYS\)/etc
     datadir=\$\(ROOTSYS\)
-    mandir=\$\(ROOTSYS\)/man
+    mandir=\$\(ROOTSYS\)/man/man1
     proofdir=\$\(ROOTSYS\)/proof
     macrodir=\$\(ROOTSYS\)/macros
     cintincdir=\$\(ROOTSYS\)/cint
