@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.5 2001/02/28 07:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.1 2001/08/12 09:00:10 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
                         Double_t x14=0);
    virtual Int_t   GetNvar() const { return fNvar; }
          Double_t *GetArgs() const { return fArgs; }
+   virtual Int_t   ReadFile(const char *filename);
             void   ResetBranchAddresses();
 
    ClassDef(TNtupleD,1)  //A simple tree with branches of floats.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.3 2000/11/21 20:50:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.4 2001/02/28 07:13:54 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TBrowser.h"
+#include <fstream>
 
 ClassImp(TNtuple)
 
@@ -169,6 +170,26 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
 
    return TTree::Fill();
 }
+
+//_______________________________________________________________________
+Int_t TNtuple::ReadFile(const char *filename)
+{
+//  read from filename as many columns as variables in the ntuple
+// the function returns the number of rows found in the file
+      
+   Int_t nlines = 0;
+   ifstream in;
+   in.open(filename);
+   while (1) {
+      for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
+      if (!in.good()) break;
+      TTree::Fill();
+      nlines++;
+   }
+   in.close();
+   return nlines;
+}
+
 
 //_______________________________________________________________________
 void TNtuple::Streamer(TBuffer &b)
