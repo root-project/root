@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.8 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.9 2003/11/13 15:36:29 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -165,6 +165,9 @@ public:
    void         Add(const TTimeStamp &offset);
 
    void         Print(const Option_t *option="") const;
+
+                operator double() const
+                   { return fSec + 1e-9 * fNanoSec; }
 
    // Utility functions
    static Int_t   GetZoneOffset();

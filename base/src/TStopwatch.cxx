@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.6 2002/10/07 10:41:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.7 2004/02/17 17:11:07 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TStopwatch.h"
+#include "TTimeStamp.h"
 #include "TString.h"
 
 #if defined(R__MAC)
@@ -70,14 +71,8 @@ void TStopwatch::Start(Bool_t reset)
       fCounter       = 0;
    }
    if (fState != kRunning) {
-#ifndef R__UNIX
       fStartRealTime = GetRealTime();
       fStartCpuTime  = GetCPUTime();
-#else
-      struct tms cpt;
-      fStartRealTime = (Double_t)times(&cpt) / gTicks;
-      fStartCpuTime  = (Double_t)(cpt.tms_utime+cpt.tms_stime) / gTicks;
-#endif
    }
    fState = kRunning;
    fCounter++;
@@ -88,14 +83,9 @@ void TStopwatch::Stop()
 {
    // Stop the stopwatch.
 
-#ifndef R__UNIX
    fStopRealTime = GetRealTime();
    fStopCpuTime  = GetCPUTime();
-#else
-   struct tms cpt;
-   fStopRealTime = (Double_t)times(&cpt) / gTicks;
-   fStopCpuTime  = (Double_t)(cpt.tms_utime+cpt.tms_stime) / gTicks;
-#endif
+
    if (fState == kRunning) {
       fTotalCpuTime  += fStopCpuTime  - fStartCpuTime;
       fTotalRealTime += fStopRealTime - fStartRealTime;
@@ -158,9 +148,7 @@ Double_t TStopwatch::GetRealTime()
 #if defined(R__MAC)
    return (Double_t)clock() / gTicks;
 #elif defined(R__UNIX)
-   struct tms cpt;
-   Double_t trt = (Double_t)times(&cpt);
-   return trt / (Double_t) gTicks;
+   return TTimeStamp();
 #elif defined(R__VMS)
    return (Double_t)clock() / gTicks;
 #elif defined(WIN32)
@@ -242,8 +230,8 @@ void TStopwatch::Print(Option_t *opt) const
 {
    // Print the real and cpu time passed between the start and stop events.
    // and the number of times (slices) this TStopwatch was called
-   // (if this number > 1). If opt="m" printout realtime in milli second
-   // precision.
+   // (if this number > 1). If opt="m" print out realtime in milli second
+   // precision. If opt="u" print out realtime in micro second precision.
 
    Double_t  realt = const_cast<TStopwatch*>(this)->RealTime();
    Double_t  cput  = const_cast<TStopwatch*>(this)->CpuTime();
@@ -262,6 +250,12 @@ void TStopwatch::Print(Option_t *opt) const
          Printf("Real time %d:%02d:%06.3f, CP time %.3f, %d slices", hours, min, realt, cput, Counter());
       } else {
          Printf("Real time %d:%02d:%06.3f, CP time %.3f", hours, min, realt, cput);
+      }
+   } else if (opt && *opt == 'u') {
+      if (Counter() > 1) {
+         Printf("Real time %d:%02d:%09.6f, CP time %.3f, %d slices", hours, min, realt, cput, Counter());
+      } else {
+         Printf("Real time %d:%02d:%09.6f, CP time %.3f", hours, min, realt, cput);
       }
    } else {
       if (Counter() > 1) {
