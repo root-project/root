@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.6 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.7 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
    void              InspectNode() const; // *MENU*
    virtual Bool_t    IsFolder() const {return kTRUE;}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
-   Bool_t            IsOnScreen() const; //*MENU*
+   Bool_t            IsOnScreen() const; // *MENU*
    Bool_t            IsOverlapping() const {return (fNovlp>0)?kTRUE:kFALSE;}
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
    Bool_t            IsVisible() const {return fVolume->IsVisible();}

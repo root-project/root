@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.6 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.7 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TGeoNode::TGeoNode(TGeoVolume *vol)
 TGeoNode::~TGeoNode()
 {
 // Destructor
-   if (fOverlaps) delete fOverlaps;
+   if (fOverlaps) delete [] fOverlaps;
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::Browse(TBrowser *b)
@@ -346,7 +346,7 @@ void TGeoNode::PrintOverlaps() const
 void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
 {
 // set the list of overlaps for this node (ovlp must be created with operator new)
-   if (fOverlaps) delete fOverlaps;
+   if (fOverlaps) delete [] fOverlaps;
    fOverlaps = ovlp;
    fNovlp = novlp;
 }

@@ -1341,6 +1341,11 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
 void TGeoPainter::SetExplodedView(UInt_t ibomb)    
 {
    // set type of exploding view
+   if ((ibomb<0) || (ibomb>3)) {
+      Warning("SetExplodedView", "exploded view can be 0-3");
+      return;
+   }
+   if ((Int_t)ibomb==fExplodedView) return;   
    Bool_t change = (gPad==0)?kFALSE:kTRUE;
 
    if (ibomb==kGeoNoBomb) {
@@ -1362,8 +1367,29 @@ void TGeoPainter::SetExplodedView(UInt_t ibomb)
    }   
 }
 //______________________________________________________________________________
+void TGeoPainter::SetNsegments(Int_t nseg)    
+{
+// Set number of segments to approximate circles
+   if (nseg<3) {
+      Warning("SetNsegments", "number of segments should be > 2");
+      return;
+   }
+   if (fNsegments==nseg) return;
+   fNsegments = nseg;
+   if (!gPad) return;
+   if (gPad->GetView()) {    
+      gPad->Modified();
+      gPad->Update();
+   }
+}
+//______________________________________________________________________________
 void TGeoPainter::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
+   if (level<=0) {
+      Warning("SetVisLevel", "visualization level should be >0");
+      return;
+   }   
+   if (level==fVisLevel) return;
    fVisLevel=level;
    if (fVisLock) {
       fVisVolumes->Clear();
@@ -1381,6 +1407,11 @@ void TGeoPainter::SetVisOption(Int_t option) {
 // option=0 (default) all nodes drawn down to vislevel
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
+   if ((fVisOption<0) || (fVisOption>3)) {
+      Warning("SetVisOption", "wrong visualization option");
+      return;
+   }
+   if (fVisOption==option) return;   
    fVisOption=option;
    if (fVisLock) {
       fVisVolumes->Clear();

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.4 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.5 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -62,6 +62,10 @@ private :
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
    Double_t             *fDirection;        //![3] current direction
+   UInt_t                fExplodedView;     // exploded view mode
+   Int_t                 fVisOption;        // global visualization option
+   Int_t                 fVisLevel;         // maximum visualization depth
+   Int_t                 fNsegments;        // number of segments to approximate circles
    Bool_t                fSearchOverlaps;   //! flag set when an overlapping cluster is searched
    Bool_t                fCurrentOverlapping; //! flags the type of the current node
    Bool_t                fLoopVolumes;      //! flag volume lists loop
@@ -128,14 +132,14 @@ public:
    void                   DefaultColors();   // *MENU*
    Int_t                  GetNsegments() const;
    TVirtualGeoPainter    *GetGeomPainter();
-   Int_t                  GetBombMode() const  {return (fPainter)?(fPainter->GetBombMode()):0;}
+   Int_t                  GetBombMode() const  {return fExplodedView;}
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
    void                   SetExplodedView(UInt_t iopt=0); // *MENU*
-   void                   SetNsegments(Int_t nseg);
+   void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0); // *MENU*
@@ -238,12 +242,17 @@ public:
    void                   RemoveMaterial(Int_t index);
 
 
-   //--- utilities
+   //--- utilities 
    Int_t                  CountNodes(TGeoVolume *vol=0, Int_t nlevels=1000);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
-
+   
+   
+   //--- I/O
+   virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="");
+   static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
+   
    //--- list getters
    TList                 *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}

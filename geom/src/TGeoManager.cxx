@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.12 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.13 2002/09/28 07:27:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -406,6 +406,8 @@
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+#include "TFile.h"
+#include "TKey.h"
 
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
@@ -493,6 +495,10 @@ void TGeoManager::Init()
    fIsOutside = kFALSE;
    fIsOnBoundary = kFALSE;
    fIsNullStep = kFALSE;
+   fVisLevel = 3;
+   fVisOption = 0;
+   fExplodedView = 0;
+   fNsegments = 20;
 
    gROOT->GetListOfGeometries()->Add(this);
 }
@@ -835,15 +841,13 @@ TGeoHMatrix *TGeoManager::GetHMatrix()
 Int_t TGeoManager::GetVisLevel() const
 {
 // Returns current depth to which geometry is drawn.
-   if (fPainter) return fPainter->GetVisLevel();
-   return TVirtualGeoPainter::kGeoVisLevel;
+   return fVisLevel;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::GetVisOption() const
 {
 // Returns current depth to which geometry is drawn.
-   if (fPainter) return fPainter->GetVisOption();
-   return TVirtualGeoPainter::kGeoVisDefault;
+   return fVisOption;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::GetVirtualLevel()
@@ -1017,12 +1021,14 @@ void TGeoManager::SetVisOption(Int_t option) {
 // option=1           leaves and nodes at vislevel drawn
 // option=2           path is drawn
    GetGeomPainter();
+   if ((option>=0) && (option<3)) fVisOption=option;
    fPainter->SetVisOption(option);
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::SetVisLevel(Int_t level) {
 // set default level down to which visualization is performed
    GetGeomPainter();
+   if (level>0) fVisLevel = level;
    fPainter->SetVisLevel(level);
 }
 //-----------------------------------------------------------------------------
@@ -1563,7 +1569,17 @@ Int_t TGeoManager::GetByteCount(Option_t *option)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
 // Make a default painter if none present. Returns pointer to it.
-    if (!fPainter) fPainter=TVirtualGeoPainter::GeoPainter();
+    if (!fPainter) {
+       fPainter=TVirtualGeoPainter::GeoPainter();
+       if (!fPainter) {
+          Error("GetGeomPainter", "could not create painter");
+          return 0;
+       }
+       fPainter->SetVisOption(fVisOption);
+       fPainter->SetVisLevel(fVisLevel);
+       fPainter->SetExplodedView(fExplodedView);
+       fPainter->SetNsegments(fNsegments);
+    }      
     return fPainter;
 }
 //-----------------------------------------------------------------------------
@@ -1969,25 +1985,24 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
 {
 // Set type of exploding view (see TGeoPainter::SetExplodedView())
    GetGeomPainter();
-   fPainter->SetExplodedView(ibomb);
+   if ((ibomb>=0) && (ibomb<4)) fExplodedView = ibomb;
+   if (fPainter) fPainter->SetExplodedView(ibomb);
 }
 
 //-----------------------------------------------------------------------------
 void TGeoManager::SetNsegments(Int_t nseg)
 {
 // Set number of segments for approximating circles in drawing.
-   if (nseg < 3) return;
-   TVirtualGeoPainter *painter = GetGeomPainter();
-   if (painter) painter->SetNsegments(nseg);
+   GetGeomPainter();
+   if (nseg>2) fNsegments = nseg;
+   if (fPainter) fPainter->SetNsegments(nseg);
 }
 
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::GetNsegments() const
 {
 // Get number of segments approximating circles
-   TVirtualGeoPainter *painter = ((TGeoManager*)this)->GetGeomPainter();
-   if (painter) return painter->GetNsegments();
-   return 0;
+   return fNsegments;
 }
 
 //-----------------------------------------------------------------------------
@@ -2141,4 +2156,49 @@ void TGeoManager::Streamer(TBuffer &R__b)
    } else {
       TGeoManager::Class()->WriteBuffer(R__b, this);
    }
+}
+
+//______________________________________________________________________________
+Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *option)
+{
+   // Export this geometry on filename with a key=name
+   // By default the geometry is saved without the voxelisation info.
+   // Use option 'v" to save the voxelisation info.
+   
+   TFile f(filename,"recreate");
+   if (f.IsZombie()) return 0;
+   char keyname[256];
+   if (name) strcpy(keyname,name);
+   if (strlen(keyname) == 0) strcpy(keyname,GetName());
+   
+   Int_t nbytes = Write(keyname);
+   return nbytes;
+}
+
+
+//______________________________________________________________________________
+TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t *option)
+{
+   //static function
+   //Import in memory from filename the geometry with key=name.
+   //if name="" (default), the first TGeoManager object in the file is returned.
+   //Note that this function deletes the current gGeoManager (if one)
+   //before importing the new object.
+   
+   TFile f(filename);
+   if (f.IsZombie()) return 0;
+   delete gGeoManager;
+   if (name && strlen(name) > 0) {
+      gGeoManager = (TGeoManager*)f.Get(name);
+      return gGeoManager;
+   } else {
+      TIter next(f.GetListOfKeys());
+      TKey *key;
+      while ((key = (TKey*)next())) {
+         if (strcmp(key->GetClassName(),"TGeoManager") != 0) continue;
+         gGeoManager = (TGeoManager*)key->ReadObj();
+         return gGeoManager;
+      }
+   }
+   return 0;
 }
