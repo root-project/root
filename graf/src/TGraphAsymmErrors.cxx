@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.7 2000/12/15 12:05:24 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -100,7 +100,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n)
 
 
 //______________________________________________________________________________
-TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Float_t *x, Float_t *y, Float_t *exl, Float_t *exh, Float_t *eyl, Float_t *eyh)
+TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl, const Float_t *exh, const Float_t *eyl, const Float_t *eyh)
        : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -131,7 +131,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Float_t *x, Float_t *y, Float_t *e
 }
 
 //______________________________________________________________________________
-TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, Double_t *x, Double_t *y, Double_t *exl, Double_t *exh, Double_t *eyl, Double_t *eyh)
+TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl, const Double_t *exh, const Double_t *eyl, const Double_t *eyh)
        : TGraph(n,x,y)
 {
 //*-*-*-*-*-*-*-*-*-*-*TGraphAsymmErrors normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
