@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -151,6 +151,15 @@ void TMonitor::Remove(TSocket *sock)
          return;
       }
    }
+}
+
+//______________________________________________________________________________
+void TMonitor::RemoveAll()
+{
+   // Remove all sockets from the monitor.
+
+   fActive->Delete();
+   fDeActive->Delete();
 }
 
 //______________________________________________________________________________

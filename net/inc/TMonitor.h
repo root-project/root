@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
 
    void Add(TSocket *sock);
    void Remove(TSocket *sock);
+   void RemoveAll();
 
    void Activate(TSocket *sock);
    void ActivateAll();
