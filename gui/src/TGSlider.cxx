@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -57,8 +57,9 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
 
-   fType  = type;
-   fScale = 10;
+   fType     = type;
+   fScale    = 10;
+   fDragging = kFALSE;
 }
 
 //______________________________________________________________________________
