@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.182 2004/07/28 09:41:13 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.183 2004/08/19 06:47:05 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -186,6 +186,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
       Double_t binval = factor*fH->GetBinContent(bin);
       Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
+      if (binval == 0 && pybin < puymin) pybin = 10000;
       // special case if more than one bin for the pixel
       if (binsup-bin>1) {
          Double_t binvalmin, binvalmax;
@@ -208,6 +209,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoY(y1));
       Double_t binval = factor*fH->GetBinContent(bin);
       Int_t pxbin    = gPad->XtoAbsPixel(gPad->XtoPad(binval));
+      if (binval == 0 && pxbin > puxmin) pxbin = 10000;
       // special case if more than one bin for the pixel
       if (binsup-bin>1) {
          Double_t binvalmin, binvalmax;
@@ -229,7 +231,7 @@ FUNCTIONS:
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
-      Int_t dist = f->DistancetoPrimitive(px,py);
+      Int_t dist = f->DistancetoPrimitive(-px,py);
       if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
    }
    return curdist;
