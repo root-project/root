@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.196 2004/11/03 17:32:14 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.197 2004/11/07 09:16:27 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1946,7 +1946,6 @@ void THistPainter::PaintBoxes(Option_t *)
          break;
       }
    }
-
    Double_t dz  = zmax - zmin;
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
@@ -2032,6 +2031,17 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    Double_t dz = zmax - zmin;
    if (dz <= 0) return;
+   if (fH->GetMinimumStored() == -1111) {
+       Double_t YMARGIN = 0.05;
+       if (gStyle->GetHistMinimumZero()) {
+         if (zmin >= 0) zmin = 0;
+         else           zmin -= YMARGIN*(zmax-zmin);
+      } else {
+         Double_t dzmin = YMARGIN*(zmax-zmin);
+         if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
+         else                                zmin -= dzmin;
+      }
+   }
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
@@ -3437,9 +3447,14 @@ Int_t THistPainter::PaintInit()
 //         or to ymin - margin if <0.
 //    ----
    if (!minimum) {
-      Double_t dymin = YMARGIN*(ymax-ymin);
-      if (ymin >= 0 && (ymin-dymin <= 0)) ymin  = 0;
-      else                                ymin -= dymin;
+      if (gStyle->GetHistMinimumZero()) {
+         if (ymin >= 0) ymin = 0;
+         else           ymin -= YMARGIN*(ymax-ymin);
+      } else {
+         Double_t dymin = YMARGIN*(ymax-ymin);
+         if (ymin >= 0 && (ymin-dymin <= 0)) ymin  = 0;
+         else                                ymin -= dymin;
+      }
    }
 //    ----
 //         final adjustment of YMAXI for linear scale (if not option "Same"):
@@ -4258,6 +4273,18 @@ void THistPainter::PaintScatterPlot(Option_t *option)
          ltest = kTRUE;
       }
    }
+   if (fH->GetMinimumStored() == -1111) {
+       Double_t YMARGIN = 0.05;
+       if (gStyle->GetHistMinimumZero()) {
+         if (zmin >= 0) zmin = 0;
+         else           zmin -= YMARGIN*(zmax-zmin);
+      } else {
+         Double_t dzmin = YMARGIN*(zmax-zmin);
+         if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
+         else                                zmin -= dzmin;
+      }
+   }
+   
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("scat=")) {
@@ -5698,8 +5725,14 @@ Int_t THistPainter::TableInit()
 //         or to ymin - YMARGIN if <0.
 //    ----
    if (!minimum) {
-      if (zmin >= 0) zmin = 0;
-      else           zmin -= YMARGIN*(zmax-zmin);
+      if (gStyle->GetHistMinimumZero()) {
+         if (zmin >= 0) zmin = 0;
+         else           zmin -= YMARGIN*(zmax-zmin);
+      } else {
+         Double_t dzmin = YMARGIN*(zmax-zmin);
+         if (zmin >= 0 && (zmin-dzmin <= 0)) zmin  = 0;
+         else                                zmin -= dzmin;
+      }
    }
 
 LZMIN:
