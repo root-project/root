@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.100 2003/08/06 20:25:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.101 2003/08/29 10:41:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1538,7 +1538,7 @@ void TROOT::RefreshBrowsers()
 //______________________________________________________________________________
 void TROOT::RemoveClass(TClass *oldcl)
 {
-   // Add a class to the list and map of classes
+   // Remove a class from the list and map of classes
 
    if (!oldcl) return;
    GetListOfClasses()->Remove(oldcl);
