@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -73,6 +73,9 @@ private:
         Color_t       fFuncColor;         //function color
         Style_t       fFuncStyle;         //function style
         Width_t       fFuncWidth;         //function line width
+        Color_t       fGridColor;         //grid line color (if 0 use axis line color)
+        Style_t       fGridStyle;         //grid line style
+        Width_t       fGridWidth;         //grid line width
         Color_t       fFrameFillColor;    //pad frame fill color
         Color_t       fFrameLineColor;    //pad frame line color
         Style_t       fFrameFillStyle;    //pad frame fill style
@@ -189,6 +192,9 @@ public:
         Color_t          GetFuncColor() const       {return fFuncColor;}
         Style_t          GetFuncStyle() const       {return fFuncStyle;}
         Width_t          GetFuncWidth() const       {return fFuncWidth;}
+        Color_t          GetGridColor() const       {return fGridColor;}
+        Style_t          GetGridStyle() const       {return fGridStyle;}
+        Width_t          GetGridWidth() const       {return fGridWidth;}
         Color_t          GetFrameFillColor() const {return fFrameFillColor;}
         Color_t          GetFrameLineColor() const {return fFrameLineColor;}
         Style_t          GetFrameFillStyle() const {return fFrameFillStyle;}
@@ -294,6 +300,9 @@ public:
         void             SetFuncStyle(Style_t style=1) {fFuncStyle = style;}
         void             SetFuncColor(Color_t color=1) {fFuncColor = color;}
         void             SetFuncWidth(Width_t width=4) {fFuncWidth = width;}
+        void             SetGridStyle(Style_t style=3) {fGridStyle = style;}
+        void             SetGridColor(Color_t color=0) {fGridColor = color;}
+        void             SetGridWidth(Width_t width=1) {fGridWidth = width;}
         void             SetFrameFillColor(Color_t color=1) {fFrameFillColor = color;}
         void             SetFrameLineColor(Color_t color=1) {fFrameLineColor = color;}
         void             SetFrameFillStyle(Style_t styl=0)  {fFrameFillStyle = styl;}
@@ -335,7 +344,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,3)  //A collection of all graphics attributes
+        ClassDef(TStyle,4)  //A collection of all graphics attributes
 };
 
 
