@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.14 2001/06/27 16:13:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.15 2002/06/09 23:39:19 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -785,7 +785,8 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
 
    TGCompositeFrame::HandleClientMessage(event);
 
-   if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW)) {
+   if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
+       (event->fHandle != gROOT_MESSAGE)) {
       Emit("CloseWindow()");
       if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
          CloseWindow();
