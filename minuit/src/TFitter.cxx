@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.25 2004/10/22 13:03:39 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.26 2004/10/22 21:18:23 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -604,10 +604,9 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    Double_t fymin = f2->GetYmin();
    Double_t fymax = f2->GetYmax();
    npar           = f2->GetNpar();
-
-   f2->InitArgs(x,u);
    f      = 0;
    for (bin=0;bin<n;bin++) {
+      f2->InitArgs(x,u);
       x[0] = gx[bin];
       x[1] = gy[bin];
       if (!f2->IsInside(x)) continue;
