@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.56 2003/07/14 17:14:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.57 2003/07/14 17:29:42 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -27,6 +27,8 @@
 #include "TStorage.h"
 #include "TMath.h"
 #include "TError.h"
+#include "TObjArray.h"
+#include "TStreamerInfo.h"
 
 #if defined(__linux) && defined(__i386__)
 //#define USE_BSWAPCPY
@@ -1975,7 +1977,7 @@ void TBuffer::WriteClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
+Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, TClass *cl)
 {
    // Read class version from I/O buffer.
 
@@ -2020,6 +2022,21 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
          *this >> version;
       }
    }
+   if (version <= 0 && cl && cl->IsForeign()) {
+	   UInt_t checksum = 0;
+	   *this << checksum;
+	   //find the version number in the StreamerInfos corresponding to checksum
+	   Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
+	   for (Int_t i=1;i<ninfos;i++) {
+		   TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->UncheckedAt(i);
+		   if (!info) continue;
+		   if (info->GetCheckSum() == checksum) {
+			   version = i;
+			   //printf("ReadVersion, setting version=%d\n",version);
+			   break;
+           }
+	   }
+   }
 
    return version;
 }
@@ -2043,7 +2060,12 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
       version = kMaxVersion;
    }
 
-   *this << version;
+   if (cl->IsForeign()) {
+	   *this << Version_t(0);
+	   *this << cl->GetCheckSum();
+   } else {
+		*this <<version;
+   }
 
    // return position where to store possible byte count
    return cntpos;

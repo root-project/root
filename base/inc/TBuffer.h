@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.28 2003/03/11 14:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.29 2003/04/11 11:48:10 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
    char    *ReadString(char *s, Int_t max);
    void     WriteString(const char *s);
 
-   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0);
+   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
    UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
