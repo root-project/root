@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.193 2004/01/30 08:12:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.194 2004/01/31 08:59:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -583,9 +583,9 @@ void TStreamerInfo::BuildOld()
                while ((bc=(TBaseClass*)nextBC())) {
 
                   if (strchr(bc->GetName(),'<')!=0) {
-                     TString bcName(  TClassEdit::ShortType(bc->GetName(),TClassEdit::kDropStlDefault).c_str() );
-
-                     if (bcName==element->GetTypeName()) break;
+                     TString bcName( TClassEdit::ShortType(bc->GetName()         ,TClassEdit::kDropStlDefault).c_str() );
+		     TString elName( TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropStlDefault).c_str() );
+                     if (bcName==elName) break;
 
                   }
                }
@@ -636,7 +636,8 @@ void TStreamerInfo::BuildOld()
 
          // in case, element is an array check array dimension(s)
          // check if data type has been changed
-         TString ts(TClassEdit::ResolveTypedef(TClassEdit::ShortType(dm->GetFullTypeName(),TClassEdit::kDropAlloc).c_str()).c_str());
+         TString ts(TClassEdit::ResolveTypedef(TClassEdit::ShortType(dm->GetFullTypeName(),TClassEdit::kDropAlloc).c_str(),
+					       kTRUE).c_str());
          
          Bool_t need_conversion = false;
          if (strcmp(element->GetTypeName(),ts.Data())) need_conversion = true;
@@ -644,8 +645,9 @@ void TStreamerInfo::BuildOld()
          if (need_conversion && TClassEdit::IsSTLCont(ts.Data())) {
             // Check if the names are the same, just with different allocators
             // or different comparator.
-            TString shortElement ( TClassEdit::ShortType(element->GetTypeName(),
-                                                         TClassEdit::kDropAlloc | TClassEdit::kDropComparator).c_str() );
+            TString shortElement (TClassEdit::ResolveTypedef(TClassEdit::ShortType(element->GetTypeName(),
+                                                                                   TClassEdit::kDropAlloc | TClassEdit::kDropComparator).c_str(),
+                                                             kTRUE) );
             TString shortDataMember ( TClassEdit::ShortType(ts.Data(),
                                                             TClassEdit::kDropComparator).c_str() );
 

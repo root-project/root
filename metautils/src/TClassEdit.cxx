@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.6 2004/01/30 08:12:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.7 2004/01/31 08:59:09 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -504,7 +504,7 @@ namespace {
       const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
                                     "Int_t","Double_t","Double32_t",
                                     "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
-                                    "Long64_t","ULong64_t"};
+                                    "Long64_t","ULong64_t","Bool_t"};
 
       for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
          if (strcmp(name,excludelist[i])==0) return false;
