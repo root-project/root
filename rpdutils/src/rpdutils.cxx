@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.55 2004/07/09 06:15:06 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.57 2004/09/13 22:49:10 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1093,11 +1093,11 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
 
    // and parse its content according to auth method
    int lsec, act, remid, shmid;
-   char host[kMAXPATHLEN], user[kMAXPATHLEN], subj[kMAXPATHLEN],
+   char host[kMAXPATHLEN], usr[kMAXPATHLEN], subj[kMAXPATHLEN],
        dumm[kMAXPATHLEN], tkn[20];
    int nw =
        sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act, &gRSAKey,
-              &remid, host, user, tkn, dumm);
+              &remid, host, usr, tkn, dumm);
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
@@ -1105,14 +1105,14 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       if ((lsec == Sec)) {
          if (lsec == 3) {
             sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec, &act,
-                   &gRSAKey, &remid, host, user, &shmid, subj, tkn,
+                   &gRSAKey, &remid, host, usr, &shmid, subj, tkn,
                    dumm);
             if ((remid == RemId)
                 && !strcmp(host, Host) && !strcmp(subj, User))
                GoodOfs = 1;
          } else {
             if ((remid == RemId) &&
-                !strcmp(host, Host) && !strcmp(user, User))
+                !strcmp(host, Host) && !strcmp(usr, User))
                GoodOfs = 1;
          }
       }
@@ -1124,7 +1124,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       while (reads(itab, line, sizeof(line))) {
 
          nw = sscanf(line, "%d %d %d %d %s %s %s %s", &lsec, &act,
-                     &gRSAKey, &remid, host, user, tkn, dumm);
+                     &gRSAKey, &remid, host, usr, tkn, dumm);
          if (gDebug > 2)
             ErrorInfo("RpdCheckOffSet: found line: %s", line);
 
@@ -1132,7 +1132,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
             if (lsec == Sec) {
                if (lsec == 3) {
                   sscanf(line, "%d %d %d %d %s %s %d %s %s %s", &lsec,
-                         &act, &gRSAKey, &remid, host, user,
+                         &act, &gRSAKey, &remid, host, usr,
                          &shmid, subj, tkn, dumm);
                   if ((remid == RemId)
                       && !strcmp(host, Host) && !strcmp(subj, User)) {
@@ -1141,7 +1141,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
                   }
                } else {
                   if ((remid == RemId) &&
-                      !strcmp(host, Host) && !strcmp(user, User)) {
+                      !strcmp(host, Host) && !strcmp(usr, User)) {
                      GoodOfs = 1;
                      goto found;
                   }
@@ -1168,7 +1168,7 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       ErrorInfo("RpdCheckOffSet: RSAKey ofs file: %d %d '%s' ",
                 gRSAKey, ofs, pukfile.c_str());
 
-   struct passwd *pw = getpwnam(User);
+   struct passwd *pw = getpwnam(usr);
    if (pw) {
       Int_t fromUid = getuid();
       Int_t fromEUid = geteuid();
@@ -1188,9 +1188,14 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
          if (!getuid())
             setresuid(fromUid,fromEUid,pw->pw_uid);
       }
-   } else
-      ErrorInfo("RpdCheckOffSet: error in getpwname(%s) (errno: %d)",
-                User,GetErrno());
+   } else {
+      // Since we could not set the user IDs, we will
+      // not trust the client
+      GoodOfs = 0;
+      if (gDebug > 0)
+         ErrorInfo("RpdCheckOffSet: error in getpwname(%s) (errno: %d)",
+                   usr,GetErrno());
+   }
 
    if (gDebug > 2)
       ErrorInfo("RpdCheckOffSet: GoodOfs: %d (active: %d)",
@@ -1216,8 +1221,8 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       }
       if (Sec == 3) {
          if (GlbsUser) {
-            *GlbsUser = new char[strlen(user)+1];
-            strcpy(*GlbsUser,user);
+            *GlbsUser = new char[strlen(usr)+1];
+            strcpy(*GlbsUser,usr);
          }
          if (ShmId)
             *ShmId = shmid;
