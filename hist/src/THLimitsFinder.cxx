@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.3 2002/09/11 08:50:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.4 2002/12/02 21:39:09 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -45,7 +45,10 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 // compute the best axis limits for the X axis.
 // If the bit kIsInteger is set, the number of channels is also recomputed.
 // The axis parameters are replaced by the optimized parameters
-      
+// example:
+//  With the input parameters xmin=-1.467 and xmax=2.344, the function
+//  will compute better limits -1.8 and 2.7 and store them in the axis.
+         
    Int_t newbins;
    TAxis *xaxis = h->GetXaxis();
    
