@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.75 2004/03/26 17:28:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.76 2004/04/06 16:34:13 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -98,7 +98,7 @@ ClassImp(TFormula)
 //*-*   is now a private data member), needs to be updated to take this
 //*-*   in consideration.  The member functions recommended to set and
 //*-*   access fOper are:  SetAction, GetAction, GetActionParam
-//*-*   For more performant access to the information, see the implementation 
+//*-*   For more performant access to the information, see the implementation
 //*-*   TFormula::EvalPar
 //*-*
 //*-*     WHY TFormula CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
@@ -125,7 +125,7 @@ TFormula::TFormula(): TNamed()
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0; 
+   fOper   = 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -146,7 +146,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0; 
+   fOper   = 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -195,7 +195,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNconst = 0;
    fNumber = 0;
    fExpr   = 0;
-   fOper   = 0; 
+   fOper   = 0;
    fConst  = 0;
    fParams = 0;
    fNstring= 0;
@@ -206,7 +206,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 }
 
 //______________________________________________________________________________
-TFormula& TFormula::operator=(const TFormula &rhs) 
+TFormula& TFormula::operator=(const TFormula &rhs)
 {
    if (this != &rhs) {
       rhs.Copy(*this);
@@ -447,34 +447,34 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     !=(string)  77                  |            79
 //*-*     <<(shift)   80                  >>(shift)    81
 //*-*
-//*-*   * constants (kConstants) : 
+//*-*   * constants (kConstants) :
 //*-*
 //*-*    c0  141 1      c1  141 2  etc..
 //*-*
 //*-*   * strings (kStringConst):
 //*-*
-//*-*    sX  143 x      
+//*-*    sX  143 x
 //*-*
 //*-*   * variables (kFormulaVar) :
 //*-*
-//*-*     x    144 0      y    144 1      z    144 2      t    144 3 
+//*-*     x    144 0      y    144 1      z    144 2      t    144 3
 //*-*
 //*-*   * parameters :
 //*-*
 //*-*     [1]        140 1
 //*-*     [2]        140 2
 //*-*     etc.
-//*-*  
+//*-*
 //*-*   * boolean optimization (kBoolOptmize) :
 //*-*
 //*-*     Those pseudo operation are used to implement lazy evaluation of
-//*-*     && and ||.  When the left hand of the expression if false 
+//*-*     && and ||.  When the left hand of the expression if false
 //*-*     (respectively true), the evaluation of the right is entirely skipped
 //*-*     (since it would not change the value of the expreession).
 //*-*
 //*-*     &&   142 11 (one operation on right) 142 21 (2 operations on right)
 //*-*     ||   142 12 (one operation on right) 142 22 (2 operations on right)
-//*-*  
+//*-*
 //*-*   * functions calls (kFunctionCall) :
 //*-*
 //*-*    f0 145  0  f1 145  1  etc..
@@ -515,7 +515,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*
 //*-*  Special functions
 //*-*  -----------------
-//*-*  By default, the formula is assigned fNumber=0. However, the following 
+//*-*  By default, the formula is assigned fNumber=0. However, the following
 //*-*  formula built with simple functions are assigned  fNumber:
 //*-*    "gaus"    100
 //*-*    "expo"    200
@@ -595,7 +595,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
   if (lchain==0) err=4; // empty string
   modulo=plus=moins=multi=divi=puiss=et=ou=petit=grand=egal=diff=peteg=grdeg=etx=oux=rshift=lshift=0;
-  
+
 //*-*- Look for simple operators
 //*-*  =========================
 
@@ -671,7 +671,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
              puiss10=0; divi=j;
           }
        if (chaine(j-1,1)=="^" && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
-      
+
        j--;
     }
 
@@ -864,7 +864,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         SetAction(fNoper,actionCode,actionParam);
         fNoper++;
       }
-      
+
     } else {
       if (moins != 0) {
         if (moins == 1) {
@@ -1012,8 +1012,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         else {
                            if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
                            else {
-                              // The previous implementation was allowing ANYTHING after the '.' and thus 
-                              // made legal code like '2.3 and fpx' and was just silently ignoring the 
+                              // The previous implementation was allowing ANYTHING after the '.' and thus
+                              // made legal code like '2.3 and fpx' and was just silently ignoring the
                               // 'and fpx'.
                               if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
                                  err = 30;
@@ -1079,7 +1079,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                    chaine_error = ctemp;
                 } else if ( k >= 0 ) {
                   fExpr[fNoper] = ctemp;
-                  actionCode = action; 
+                  actionCode = action;
                   actionParam = k;
                   SetAction(fNoper,actionCode,actionParam);
                   if (action==kDefinedString) fNstring++;
@@ -1728,7 +1728,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             fNoper++;
           }
           else {
-//*-*- None of the above. 
+//*-*- None of the above.
 //*-*  ==================
              err = 30;
           }
@@ -1739,7 +1739,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         }
       }
     }
-    
+
 //   Test  * si y existe :  que x existe
 //         * si z existe :  que x et y existent
 
@@ -1792,7 +1792,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
      }
      err=1;
   }
-  
+
 }
 
 //______________________________________________________________________________
@@ -1945,7 +1945,7 @@ Int_t TFormula::Compile(const char *expression)
 	  delete [] fParams; fParams = 0;
 	  delete [] fNames;  fNames = 0;
   }
-	
+
 //*-*- if no errors, copy local parameters to formula objects
   if (!err) {
      if (fNdim <= 0) fNdim = 1;
@@ -1983,7 +1983,15 @@ Int_t TFormula::Compile(const char *expression)
                       last_string = is_it_string) {
      is_it_string = IsString(i);
      if (is_it_string) continue;
-     if (last_string) {
+     if (GetAction(i) == kstrstr) {
+
+        if (! (before_last_string && last_string) ) {
+           Error("Compile", "strstr requires 2 string arguments");
+           return -1;
+        }
+        SetBit(kIsCharacter);
+
+     } else if (last_string) {
         if (GetAction(i) == kEqual) {
            if (!before_last_string) {
               Error("Compile", "Both operands of the operator == have to be either numbers or strings");
@@ -1998,13 +2006,6 @@ Int_t TFormula::Compile(const char *expression)
            }
            SetAction(i, kStringNotEqual, GetActionParam(i) );
            SetBit(kIsCharacter);
-        }
-        else if (GetAction(i) == kstrstr) {
-           if (! (before_last_string && last_string) ) {
-              Error("Compile", "strstr requires 2 string arguments");
-              return -1;
-           }
-           SetBit(kIsCharacter);
         } else if (before_last_string) {
            // the i-2 element is a string not used in a string operation, let's down grade it
            // to a char array:
@@ -2014,7 +2015,7 @@ Int_t TFormula::Compile(const char *expression)
               fNstring--;
            }
         }
-        
+
      } else if (before_last_string) {
         // the i-2 element is a string not used in a string operation, let's down grade it
         // to a char array:
@@ -2179,7 +2180,7 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
   action = kVariable;
   if (chaine == "x") {
      if (fNdim < 1) fNdim = 1;
-     return 0; 
+     return 0;
   } else if (chaine == "y") {
      if (fNdim < 2) fNdim = 2;
      return 1;
@@ -2296,7 +2297,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
         case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
-        case kstrstr : pos2 -= 2; pos-=2; pos++; 
+        case kstrstr : pos2 -= 2; pos-=2; pos++;
                        if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
                        else tab[pos-1]=0; continue;
 
@@ -2343,10 +2344,10 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                                   else tab[pos-1]=0; continue;
         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
 
-        case kStringEqual : pos2 -= 2; pos -=2 ; pos++; 
+        case kStringEqual : pos2 -= 2; pos -=2 ; pos++;
                             if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
                             else tab[pos-1]=0; continue;
-        case kStringNotEqual: pos2 -= 2; pos -= 2; pos++; 
+        case kStringNotEqual: pos2 -= 2; pos -= 2; pos++;
                               if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
                               else tab[pos-1]=0; continue;
 
@@ -2361,26 +2362,26 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
            int param = (oper & kTFOperMask);
            Bool_t skip = kFALSE;
            int op = param % 10; // 1 is && , 2 is ||
-       
-           if (op == 1 && (!tab[pos-1]) ) { 
+
+           if (op == 1 && (!tab[pos-1]) ) {
               // &&: skip the right part if the left part is already false
-          
+
               skip = kTRUE;
-          
+
               // Preserve the existing behavior (i.e. the result of a&&b is
               // either 0 or 1)
               tab[pos-1] = 0;
-              
-           } else if (op == 2 && tab[pos-1] ) {  
+
+           } else if (op == 2 && tab[pos-1] ) {
               // ||: skip the right part if the left part is already true
-              
+
               skip = kTRUE;
-              
+
               // Preserve the existing behavior (i.e. the result of a||b is
               // either 0 or 1)
               tab[pos-1] = 1;
            }
-           
+
            if (skip) {
               int toskip = param / 10;
               i += toskip;
@@ -2398,7 +2399,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
            tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[var]);  \
            continue;                                                         \
         }
-        // case kexpo: 
+        // case kexpo:
         case kxexpo: R__EXPO(0);
         case kyexpo: R__EXPO(1);
         case kzexpo: R__EXPO(2);
@@ -2429,7 +2430,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                         } else {
                            intermede1=Double_t((x[0]-fParams[param+1])/fParams[param+2]);
                         }
-                        Double_t intermede2;           
+                        Double_t intermede2;
                         if (fParams[param+4] == 0) {
                            intermede2=1e10;
                         } else {
@@ -2444,7 +2445,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
            tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2]); \
            continue;                                                                            \
         }
-        // case klandau:  
+        // case klandau:
         case kxlandau: R__LANDAU(0);
         case kylandau: R__LANDAU(1);
         case kzlandau: R__LANDAU(2);
@@ -2467,7 +2468,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
            }                                                                  \
            continue;                                                          \
         }
-        // case kpol:    
+        // case kpol:
         case kxpol: R__POLY(0);
         case kypol: R__POLY(1);
         case kzpol: R__POLY(2);
@@ -2501,7 +2502,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 
            // Retrieve the function
            TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
-           
+
            // Set the arguments
            TString args;
            if (nargs) {
@@ -2522,12 +2523,12 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
            Double_t ret;
            method->Execute(args,ret);
            tab[pos-1] = ret; // check for the correct conversion!
-           
+
            continue;
         };
      }
      Assert(0);
-  }  
+  }
   Double_t result0 = tab[0];
   return result0;
 
@@ -2551,7 +2552,7 @@ TString TFormula::GetExpFormula() const
       TString* tab=new TString[fNoper];
       Bool_t* ismulti=new Bool_t[fNoper];
       Int_t spos=0;
-      
+
       ismulti[0]=kFALSE;
       Int_t optype;
       Int_t j;
@@ -2686,7 +2687,7 @@ Int_t TFormula::GetParNumber(const char *parName) const
 //______________________________________________________________________________
 Bool_t TFormula::IsString(Int_t oper) const
 {
-   // return true if the expression at the index 'oper' is to be treated as 
+   // return true if the expression at the index 'oper' is to be treated as
    // as string
 
    return GetAction(oper) == kStringConst;
@@ -2808,7 +2809,7 @@ void TFormula::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
-         
+
          if (v==6) {
             Error("Streamer","version 6 is not supported");
             return;
@@ -2855,7 +2856,7 @@ void TFormula::Streamer(TBuffer &b)
    }
 }
 
-void TFormula::Convert(UInt_t /* fromVersion */) 
+void TFormula::Convert(UInt_t /* fromVersion */)
 {
    // Convert the fOper of a TFormula version fromVersion to the current in memory version
 
@@ -2869,7 +2870,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
       kOldVariable     = 100000,
       kOldTreeString   = 105000,
       kOldFormulaVar   = 110000,
-      kOldBoolOptimize = 120000, 
+      kOldBoolOptimize = 120000,
       kOldFunctionCall = 200000
    };
    int i,j;
@@ -2906,7 +2907,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 
          newActionCode = kBoolOptimize;
          newActionParam = action-kOldBoolOptimize;
-            
+
       } else if (action >= kOldFormulaVar) {
          // a variable
 
@@ -2944,7 +2945,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          newActionParam = action - var*10000;
 
       } else if (action >= 4600) {
-         
+
          Error("Convert","Unsupported value %d",action);
 
       } else if (action > kOldxylandau) {
@@ -2955,7 +2956,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 
       } else if (action > kOldlandau) {
          // landau, xlandau, ylandau or zlandau
-         
+
          newActionCode = klandau;
          int var = action/100-40;
          if (var) newActionCode += var;
@@ -2963,7 +2964,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 
       } else if (action > 2500 && action < 2600) {
          // xygaus
-        
+
          newActionCode = kxygaus;
          newActionParam = action-2501;
 
@@ -2977,11 +2978,11 @@ void TFormula::Convert(UInt_t /* fromVersion */)
 
       } else if (action > 1500 && action < 1600) {
          // xyexpo
-         
+
          newActionCode = kxyexpo;
          newActionParam = action-1501;
 
-      } else if (action > 1000 && action < 1500) { 
+      } else if (action > 1000 && action < 1500) {
          // expo or xexpo or yexpo or zexpo
 
          newActionCode = kexpo;

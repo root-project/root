@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.142 2004/02/27 20:18:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.143 2004/03/26 12:50:43 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -221,6 +221,8 @@ public:
          case kUInt_t:
          case kLong_t:
          case kULong_t:
+         case kLong64_t:
+         case kULong64_t:
          case kFloat_t:
          case kDouble_t:
          case kDouble32_t:
@@ -234,6 +236,8 @@ public:
          case TStreamerInfo::kOffsetL + kUInt_t:
          case TStreamerInfo::kOffsetL + kLong_t:
          case TStreamerInfo::kOffsetL + kULong_t:
+         case TStreamerInfo::kOffsetL + kLong64_t:
+         case TStreamerInfo::kOffsetL + kULong64_t:
          case TStreamerInfo::kOffsetL + kFloat_t:
          case TStreamerInfo::kOffsetL + kDouble_t:
          case TStreamerInfo::kOffsetL + kDouble32_t:
@@ -310,6 +314,8 @@ public:
       case kUInt_t:
       case kLong_t:
       case kULong_t:
+      case kLong64_t:
+      case kULong64_t:
          return kTRUE;
       case kFloat_t:
       case kDouble_t:
@@ -494,6 +500,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case kUInt_t:
       case kLong_t:
       case kULong_t:
+      case kLong64_t:
+      case kULong64_t:
       case kFloat_t:
       case kDouble_t:
       case kDouble32_t:
@@ -503,51 +511,59 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + kChar_t :
-         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return &(val[instance]);}
+         {Char_t *val   = (Char_t*)(thisobj+fOffset);      return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kShort_t:
-         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return &(val[instance]);}
+         {Short_t *val   = (Short_t*)(thisobj+fOffset);    return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kInt_t:
-         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return &(val[instance]);}
+         {Int_t *val     = (Int_t*)(thisobj+fOffset);      return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kLong_t:
-         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return &(val[instance]);}
+         {Long_t *val    = (Long_t*)(thisobj+fOffset);     return &(val[instance]);} 
+      case TStreamerInfo::kOffsetL + kLong64_t:
+         {Long64_t *val  = (Long64_t*)(thisobj+fOffset);   return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kFloat_t:
-         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return &(val[instance]);}
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);    return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kDouble_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);   return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kDouble32_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);   return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kUChar_t:
-         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return &(val[instance]);}
+         {UChar_t *val   = (UChar_t*)(thisobj+fOffset);    return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kUShort_t:
-         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return &(val[instance]);}
+         {UShort_t *val  = (UShort_t*)(thisobj+fOffset);   return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kUInt_t:
-         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return &(val[instance]);}
+         {UInt_t *val    = (UInt_t*)(thisobj+fOffset);     return &(val[instance]);} 
       case TStreamerInfo::kOffsetL + kULong_t:
-         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return &(val[instance]);}
+         {ULong_t *val   = (ULong_t*)(thisobj+fOffset);    return &(val[instance]);} 
+      case TStreamerInfo::kOffsetL + kULong64_t:
+         {ULong64_t *val  = (ULong64_t*)(thisobj+fOffset); return &(val[instance]);}
 
          // pointer to an array of basic types  array[n]
       case TStreamerInfo::kOffsetP + kChar_t:
-         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+         {Char_t **val   = (Char_t**)(thisobj+fOffset);      return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kShort_t:
-         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+         {Short_t **val  = (Short_t**)(thisobj+fOffset);     return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kInt_t:
-         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return &((*val)[instance]);}
+         {Int_t **val    = (Int_t**)(thisobj+fOffset);       return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kLong_t:
-         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+         {Long_t **val   = (Long_t**)(thisobj+fOffset);      return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kLong64_t:
+         {Long64_t **val   = (Long64_t**)(thisobj+fOffset);  return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kFloat_t:
-         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+         {Float_t **val  = (Float_t**)(thisobj+fOffset);     return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
+         {Double_t **val = (Double_t**)(thisobj+fOffset);    return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble32_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
+         {Double_t **val = (Double_t**)(thisobj+fOffset);    return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUChar_t:
-         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);     return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUShort_t:
-         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return &((*val)[instance]);}
+         {UShort_t **val = (UShort_t**)(thisobj+fOffset);    return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUInt_t:
-         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return &((*val)[instance]);}
+         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);      return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kULong_t:
-         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return &((*val)[instance]);}
+         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);     return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kULong64_t:
+         {ULong64_t **val  = (ULong64_t**)(thisobj+fOffset); return &((*val)[instance]);}
 
       case TStreamerInfo::kCharStar:
          {char **stringp = (char**)(thisobj+fOffset); return *stringp;}
@@ -646,68 +662,78 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
    //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetNewType(),instance,1);
    switch (fElement->GetNewType()) {
          // basic types
-      case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+fOffset));
-      case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+fOffset));
-      case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+fOffset));
-      case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+fOffset));
-      case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+fOffset));
-      case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+fOffset));
-      case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+fOffset));
-      case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+fOffset));
-      case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+fOffset));
-      case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
+      case kChar_t:     return (Double_t)(*(Char_t*)(thisobj+fOffset));
+      case kUChar_t:    return (Double_t)(*(UChar_t*)(thisobj+fOffset));
+      case kShort_t:    return (Double_t)(*(Short_t*)(thisobj+fOffset));
+      case kUShort_t:   return (Double_t)(*(UShort_t*)(thisobj+fOffset));
+      case kInt_t:      return (Double_t)(*(Int_t*)(thisobj+fOffset));
+      case kUInt_t:     return (Double_t)(*(UInt_t*)(thisobj+fOffset));
+      case kLong_t:     return (Double_t)(*(Long_t*)(thisobj+fOffset));
+      case kULong_t:    return (Double_t)(*(ULong_t*)(thisobj+fOffset));
+      case kLong64_t:   return (Double_t)(*(Long64_t*)(thisobj+fOffset));
+      case kULong64_t:  return (Double_t)(*(ULong64_t*)(thisobj+fOffset));
+      case kFloat_t:    return (Double_t)(*(Float_t*)(thisobj+fOffset));
+      case kDouble_t:   return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kDouble32_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
-      case kchar:     return (Double_t)(*(char*)(thisobj+fOffset));
+      case kchar:       return (Double_t)(*(char*)(thisobj+fOffset));
       case TStreamerInfo::kCounter:
                       return (Double_t)(*(Int_t*)(thisobj+fOffset));
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + kChar_t :
-         {Char_t *val   = (Char_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Char_t *val    = (Char_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kShort_t:
-         {Short_t *val  = (Short_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Short_t *val   = (Short_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kInt_t:
-         {Int_t *val    = (Int_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+         {Int_t *val     = (Int_t*)(thisobj+fOffset);     return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kLong_t:
-         {Long_t *val   = (Long_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Long_t *val    = (Long_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kLong64_t:
+         {Long64_t *val  = (Long64_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kFloat_t:
-         {Float_t *val  = (Float_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble32_t:
-         {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kUChar_t:
-         {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {UChar_t *val   = (UChar_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kUShort_t:
-         {UShort_t *val = (UShort_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+         {UShort_t *val  = (UShort_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kUInt_t:
-         {UInt_t *val   = (UInt_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {UInt_t *val    = (UInt_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kULong_t:
-         {ULong_t *val  = (ULong_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {ULong_t *val   = (ULong_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kULong64_t:
+         {ULong64_t *val = (ULong64_t*)(thisobj+fOffset); return Double_t(val[instance]);}
 
          // pointer to an array of basic types  array[n]
       case TStreamerInfo::kOffsetP + kChar_t:
-         {Char_t **val   = (Char_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+         {Char_t **val    = (Char_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kShort_t:
-         {Short_t **val  = (Short_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+         {Short_t **val   = (Short_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kInt_t:
-         {Int_t **val    = (Int_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
+         {Int_t **val     = (Int_t**)(thisobj+fOffset);     return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kLong_t:
-         {Long_t **val   = (Long_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+         {Long_t **val    = (Long_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kLong64_t:
+         {Long64_t **val  = (Long64_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kFloat_t:
-         {Float_t **val  = (Float_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+         {Float_t **val   = (Float_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+         {Double_t **val  = (Double_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble32_t:
-         {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+         {Double_t **val  = (Double_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUChar_t:
-         {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+         {UChar_t **val   = (UChar_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUShort_t:
-         {UShort_t **val = (UShort_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+         {UShort_t **val  = (UShort_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUInt_t:
-         {UInt_t **val   = (UInt_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+         {UInt_t **val    = (UInt_t**)(thisobj+fOffset);    return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kULong_t:
-         {ULong_t **val  = (ULong_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+         {ULong_t **val   = (ULong_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kULong64_t:
+         {ULong64_t **val = (ULong64_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
 
       case kOther_t:
       default:        return 0;
