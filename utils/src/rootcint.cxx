@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.103 2002/10/21 16:15:06 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.104 2002/10/21 17:32:58 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -439,7 +439,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m)
 {
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       G__TypeInfo* type = m.Type();
-      const char *typeName = type->TrueName();
+      const char *typeName = type->Name();
       static const char *constwd = "const";
       const char *s; int lev=0;
       string ret;
@@ -457,7 +457,7 @@ string GetNonConstTypeName(G__DataMemberInfo &m)
       }
       return ret;
    } else {
-      return m.Type()->TrueName();
+      return m.Type()->Name();
    }
 }
 
