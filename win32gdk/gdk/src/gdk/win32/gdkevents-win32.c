@@ -5283,9 +5283,9 @@ gdk_event_translate(GdkEvent * event,
 	  }
 
       if (p_grab_window != NULL
+          && p_grab_automatic
           && (xevent->wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) == 0) {
-         event->button.window = p_grab_window;
-         if (p_grab_automatic) gdk_pointer_ungrab (0);
+         gdk_pointer_ungrab (0);
       }
       break;
 
