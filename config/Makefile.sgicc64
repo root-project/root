@@ -17,12 +17,16 @@ endif
 # Compiler:
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -64 -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) -I/usr/include/CC.sgi
+CXXFLAGS      = -64 -LANG:std -signed -DIRIX64 -DSGI_REL=62 $(EXTRA_CXXFLAGS) \
+                -I/usr/include/CC.sgi
 CFLAGS        = -64 -signed -DIRIX64 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -64 -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL -I/usr/include/CC.sgi \
-                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) -DG__64BIT
+CINTCXXFLAGS  = -64 -LANG:std -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX \
+                -DG__OSFDLL -I/usr/include/CC.sgi -DG__SHAREDLIB \
+                -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS) \
+                -DG__64BIT
 CINTCFLAGS    = -64 -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
-                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS) -DG__64BIT
+                -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CFLAGS) -DG__64BIT
 
 # Linker:
 LD            = $(CXX)

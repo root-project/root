@@ -13,7 +13,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o
 
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
@@ -137,7 +137,7 @@ endif
 ifeq ($(ARCH),solariskcc)
 # Solaris kcc
 CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = -O4 -KPIC 
+CXXFLAGS      = -O4 -KPIC
 LD            = KCC
 LDFLAGS       = -O4
 SOFLAGS       =
@@ -154,9 +154,18 @@ endif
 
 ifeq ($(ARCH),sgicc)
 # SGI
-CXX           = CC -n32  -I/usr/include/CC.sgi
+CXX           = CC -n32 -I/usr/include/CC.sgi
 CXXFLAGS      = -O
-LD            = CC -n32  -I/usr/include/CC.sgi
+LD            = CC -n32 -I/usr/include/CC.sgi
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),sgicc64)
+# SGI
+CXX           = CC -64 -I/usr/include/CC.sgi
+CXXFLAGS      = -O
+LD            = CC -64 -I/usr/include/CC.sgi
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
@@ -219,7 +228,7 @@ ifeq ($(ARCH),alphakcc)
 # Alpha/OSF with kai compiler (not yet valid)
 CXX           = KCC --one_instantiation_per_object
 CXXFLAGS      = -O -fPIC
-LD            = KCC 
+LD            = KCC
 LDFLAGS       = -O
 SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
@@ -277,7 +286,7 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
-  
+
 ifeq ($(ARCH),linuxdeb2ppc)
 # Debian/Linux on the PowerPC
 CXX           = g++
@@ -286,7 +295,7 @@ LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
- 
+
 
 ifeq ($(ARCH),linuxsuse6)
 # Linux with gcc 2.7.2.x
@@ -461,7 +470,7 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib ws2_32.lib mswsock.lib \
 ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 endif
- 
+
 ifeq ($(ARCH),win32gcc)
 # Windows with gcc
 DllSuf        = dll
@@ -469,8 +478,8 @@ ExeSuf        = .exe
 CXX           = g++
 CXXFLAGS      = -O -Wall -Woverloaded-virtual -I/usr/X11R6/include
 LD            = g++
-LDFLAGS       = -O -Wl,--enable-auto-import 
-SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols 
+LDFLAGS       = -O -Wl,--enable-auto-import
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
