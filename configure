@@ -1638,6 +1638,11 @@ if test "x$enable_thread" = "xyes"; then
             enable_xrootd="yes"
         fi
         ;;
+    macos*)
+        if test "x$enable_xrootd" = "x"; then
+            enable_xrootd="yes"
+        fi
+        ;;
     solaris*)
            if test "x$enable_xrootd" = "x"; then
               enable_xrootd="yes"
