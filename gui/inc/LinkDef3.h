@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.6 2004/09/08 16:03:57 brun Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.7 2004/09/11 19:29:47 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,8 @@
 #pragma link off all functions;
 
 #pragma link C++ enum EDragType;
+#pragma link C++ enum EGuiBldAction;
+
 #pragma link C++ global gDragManager;
 #pragma link C++ global gGuiBuilder;
 
