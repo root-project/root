@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.217 2005/01/12 07:50:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.218 2005/01/19 18:30:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -567,9 +567,10 @@ namespace {
  
       Int_t oldv = oldClass->GetStreamerInfo()->GetClassVersion();
 
-      if (   oldv < newClass->GetStreamerInfos()->GetSize() 
+      if (   newClass->GetStreamerInfos()
+          && oldv < newClass->GetStreamerInfos()->GetSize() 
           && newClass->GetStreamerInfos()->At(oldv)
-          && strcmp( newClass->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+          && strcmp( newClass->GetStreamerInfos()->At(oldv)->GetName(),
                      oldClass->GetName() ) != 0 ) {
          // The new class has already a TStreamerInfo for the the same version as
          // the old class and this was not the result of an import.  So we do not 
@@ -592,14 +593,14 @@ namespace {
          info->SetClass(newClass);
          Int_t oldv = info->GetClassVersion();
          if (   oldv > newClass->GetStreamerInfos()->GetSize() 
-             || newClass->GetStreamerInfos()->UncheckedAt(oldv)==0 ) {
+             || newClass->GetStreamerInfos()->At(oldv)==0 ) {
             // All is good.
             newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
          } else {
             // We verify that we are consitent and that 
             //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
             // is already the same as info.
-            if ( strcmp( newClass->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+            if ( strcmp( newClass->GetStreamerInfos()->At(oldv)->GetName(),
                          oldClass->GetName() ) != 0 ) {
                // The existing StreamerInfo does not already come from OldClass.
                // This is a real problem!
