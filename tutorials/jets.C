@@ -2,7 +2,7 @@
 // The JetEvent class has several collections (TClonesArray)
 // and other collections (TRefArray) referencing objects
 // in the TClonesArrays.
-// The JetEvent class is in $ROOTSYS/test/JetEvent.h,cxx
+// The JetEvent class is in $ROOTSYS/tutorials/JetEvent.h,cxx
 // to execute the script, do
 // .x jets.C
    
@@ -64,7 +64,7 @@ void pileup(Int_t nev=200) {
 
 void jets(Int_t nev=100, Int_t npileup=200) {
    gSystem->Load("libPhysics");
-   gROOT->ProcessLine(".L $ROOTSYS/test/JetEvent.cxx+");
+   gROOT->ProcessLine(".L JetEvent.cxx+");
    write(nev);
    read();
    pileup(npileup);
