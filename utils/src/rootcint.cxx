@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.46 2001/07/03 16:15:59 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.47 2001/07/04 09:13:36 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -217,10 +217,13 @@ const char *help =
 
 #include <time.h>
 
-const char *autold = "G__autoLinkDef.h";
+const char *autoldtmpl = "G__auto%dLinkDef.h";
+char autold[64];
+
 enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
 FILE *fp;
+
 
 //______________________________________________________________________________
 int GetClassVersion(G__ClassInfo &cl)
@@ -1647,6 +1650,8 @@ int main(int argc, char **argv)
    int icc = 0;
    int use_preprocessor = 0;
 
+   sprintf(autold, autoldtmpl, getpid());
+
    if (!strcmp(argv[1], "-f")) {
       force = 1;
       ic    = 2;
@@ -1823,7 +1828,7 @@ int main(int argc, char **argv)
 
    if (!il) {
       GenerateLinkdef(&argc, argv, iv);
-      argvv[argcc++] = (char *)autold;
+      argvv[argcc++] = autold;
    }
 
    G__setothermain(2);
