@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.12 2004/09/22 09:28:47 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.13 2004/09/22 10:13:36 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1296,6 +1296,11 @@ Bool_t TGuiBldDragManager::HandleButtonPress(Event_t *event)
    // handle button press event
 
    fPimpl->fButtonPressed = kTRUE;
+
+   if (fPimpl->fPlane) {
+      fPimpl->fPlane->ChangeOptions(fPimpl->fPlane->GetOptions() & ~kRaisedFrame);
+      fClient->NeedRedraw(fPimpl->fPlane, kTRUE);
+   }
 
    if ( ((event->fCode != kButton1) && (event->fCode != kButton3)) ||
         (event->fType != kButtonPress) || IgnoreEvent(event) ) return kFALSE;
