@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.5 2002/08/02 11:06:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.6 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected:
 public:
    TDatime();
    TDatime(const TDatime &d) { fDatime = d.fDatime; }
-   TDatime(UInt_t time) { fDatime = time; }
+   TDatime(UInt_t tloc) { Set(tloc); }
    TDatime(Int_t date, Int_t time);
    TDatime(Int_t year, Int_t month, Int_t day,
            Int_t hour, Int_t min, Int_t sec);
