@@ -57,7 +57,7 @@ LIBFRTBEGIN  := $(shell gcc -print-file-name=libfrtbegin.a | \
 ifeq ($(ICC_MAJOR),8)
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lF90 -lifcore
+                -lifcore
 else
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifc | sed -e 's|bin/ifc|lib|') \
