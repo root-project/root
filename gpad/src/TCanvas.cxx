@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.28 2001/10/20 11:46:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.29 2001/10/22 16:26:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -182,7 +182,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fContextMenu  = 0;
    fEditorBar    = 0;
 
-   SetName((char *)name);
+   SetName(name);
    Build();
 }
 
