@@ -25,6 +25,8 @@ CUSTOMSHARED=$9
 shift
 CUSTOMEXE=$9
 shift
+ARCH=$9
+shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
@@ -43,6 +45,7 @@ rm -f __compiledata
 
 echo "Running $COMPILEDATA"
 echo "/* This is file is automatically generated */" > __compiledata
+echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then

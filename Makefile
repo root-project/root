@@ -253,7 +253,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
 	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
-	   "$(MAKEEXE)"
+	   "$(MAKEEXE)" "$(ARCH)"
 
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"

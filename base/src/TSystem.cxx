@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.21 2001/07/09 13:47:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.22 2001/10/19 18:05:24 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -152,6 +152,8 @@ Bool_t TSystem::Init()
    fFileHandler   = new TOrdCollection;
    fTimers        = new TOrdCollection;
 
+   fBuildArch     = BUILD_ARCH;
+   fBuildNode     = BUILD_NODE;
    fIncludePath   = INCLUDEPATH;
    fLinkedLibs    = LINKEDLIBS;
    fSoExt         = SOEXT;
@@ -1582,6 +1584,18 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   }
 
   return result;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetBuildArch() const
+{
+   return fBuildArch;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetBuildNode() const
+{
+   return fBuildNode;
 }
 
 //______________________________________________________________________________
