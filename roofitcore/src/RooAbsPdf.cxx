@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.67 2002/06/08 00:45:00 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.68 2002/06/11 16:49:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1036,8 +1036,7 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
 
 
 
-
-RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, 
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
 			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) 
 {
   // Plot the negative log likelihood of ourself when applied on the given data set,
@@ -1066,7 +1065,7 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
   RooAbsRealLValue* cloneVar = (RooAbsRealLValue*) cloneList->find(plotVar->GetName()) ;
 
   // Create NLL binding object
-  RooNLLBinding nllVar(*clone,*data,*cloneVar,extended) ;
+  RooNLLBinding nllVar(*clone,*data,*cloneVar,extended,projDeps) ;
 
   // Construct name and title of curve
   TString name("curve_NLL[") ;
@@ -1184,9 +1183,9 @@ void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet)
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf) {
       if (addNormSet.getSize()>0) {
-	pdf->selectNormalization(&addNormSet) ;
+	pdf->selectNormalization(&addNormSet,kTRUE) ;
       } else {
-	pdf->selectNormalization(0) ;
+	pdf->selectNormalization(0,kTRUE) ;
       }
     } 
   }

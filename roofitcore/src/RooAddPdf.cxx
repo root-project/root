@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.39 2002/05/14 22:48:38 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.40 2002/06/03 22:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -281,25 +281,39 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
   // Update the list of supplemental normalization objects
   if ((nset && (nset != _lastCoefProjSet)) ||
       (iset && (iset != _lastCoefProjIntSet))){
-    
-    _lastCoefProjSet = (RooArgSet*)nset ;
-    _lastCoefProjIntSet = (RooArgSet*)iset ;
-
-    // Get list of dependent observables from nset
-    RooArgSet* nset2 = getDependents(*nset) ;
 
     // Check if null-transformation is requested
+    RooArgSet* nset2 = nset ? getDependents(*nset) : new RooArgSet ;
     _doProjectCoefs = !nset2->equals(_refCoefNorm) ;
-
     if (!_doProjectCoefs) {
       delete nset2 ;
       return ;
+    }
+
+    // Second screening: compare contents of iset/nset with reference names sets
+    RooArgSet* iset2 = iset ? getDependents(*iset) : new RooArgSet ;
+    if (_lastCoefProjSet) {
+      RooNameSet nnset,niset ;
+      nnset.refill(*nset2) ;
+      niset.refill(*iset2) ;
+
+      if (nnset==_lastCoefProjNameSet&&niset==_lastCoefProjIntNameSet) {
+	delete iset2 ;
+	delete nset2 ;
+	return ;	
+      }
     }
 
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") updating PDF projection integrals" << endl ;
     cout << "  current normalization  : "  ; nset2->Print("1") ;
     cout << "  reference normalization: "  ; _refCoefNorm.Print("1") ; 
 
+    // Store the iset/nset pointer for quick screening of repeat calls
+    _lastCoefProjSet = (RooArgSet*)nset ;
+    _lastCoefProjIntSet = (RooArgSet*)iset ;
+    _lastCoefProjNameSet.refill(*nset2) ;
+    _lastCoefProjIntNameSet.refill(*iset2) ;
+    
     // Recalculate projection integrals of PDFs 
     _pdfProjList.removeAll() ;
     _pdfIter->Reset() ;
@@ -310,6 +324,7 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
       _pdfProjList.addOwned(*pdfProj) ;
     }
     delete nset2 ;
+    delete iset2 ;
   }
 }
 
@@ -674,10 +689,10 @@ Double_t RooAddPdf::expectedEvents() const
 }
 
 
-void RooAddPdf::selectNormalization(const RooArgSet* depSet) 
+void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force) 
 {
   // Ignore automatic adjustments if an explicit reference normalization has been selected
-  if (_refCoefNorm.getSize()!=0) return ;
+  if (!force && _refCoefNorm.getSize()!=0) return ;
 
   if (!depSet) {
     fixCoefNormalization(RooArgSet()) ;

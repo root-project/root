@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.48 2002/03/07 06:22:19 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.49 2002/03/22 22:43:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,7 +32,6 @@ class TH3F;
 
 class RooAbsReal : public RooAbsArg {
 public:
-
   // Constructors, assignment etc
   inline RooAbsReal() { }
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
@@ -105,7 +104,7 @@ public:
 protected:
 
   // Hook for objects with normalization-dependent parameters interperetation
-  virtual void selectNormalization(const RooArgSet* depSet=0) {} ;
+  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) {} ;
 
   // Helper functions for plotting
   Bool_t plotSanityChecks(RooPlot* frame) const ;
@@ -141,6 +140,7 @@ protected:
   virtual Double_t evaluate() const = 0 ;
 
   // Hooks for RooDataSet interface
+  friend class RooRealIntegral ;
   virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;

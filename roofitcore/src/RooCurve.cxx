@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.30 2002/01/31 19:30:34 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.31 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.30 2002/01/31 19:30:34 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.31 2002/04/03 23:37:24 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -100,6 +100,14 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   delete funcPtr;
   if(rawPtr) delete rawPtr;
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
+
+  // Adjust limits
+  Int_t i ;
+  for (i=0 ; i<GetN() ; i++) {    
+    Double_t x,y ;
+    GetPoint(i,x,y) ;
+    updateYAxisLimits(y);
+  }
 }
 
 
@@ -113,6 +121,14 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
   addPoints(func,xlo,xhi,minPoints+1,prec,resolution);  
   initialize();
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
+
+  // Adjust limits
+  Int_t i ;
+  for (i=0 ; i<GetN() ; i++) {    
+    Double_t x,y ;
+    GetPoint(i,x,y) ;
+    updateYAxisLimits(y);
+  }
 }
 
 
@@ -190,12 +206,15 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t x,dx= (xhi-xlo)/(minPoints-1.);
 
   Int_t step;
+  Double_t ymax(-1e30), ymin(1e30) ;
   for(step= 0; step < minPoints; step++) {
     x= xlo + step*dx;
     if (step==minPoints-1) x-=1e-15 ;
     yval[step]= func(&x);
-    updateYAxisLimits(yval[step]);
+    if (yval[step]>ymax) ymax=yval[step] ;
+    if (yval[step]<ymin) ymin=yval[step] ;
   }
+  Double_t yrangeEst=(ymax-ymin) ;
 
   // store points of the coarse scan and calculate any refinements necessary
   Double_t minDx= resolution*(xhi-xlo);
@@ -208,7 +227,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   for(step= 1; step < minPoints; step++) {
     x1= x2;
     x2= xlo + step*dx;
-    addRange(func,x1,x2,yval[step-1],yval[step],prec,minDx);
+    addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx);
   }
   addPoint(xhi,yval[minPoints-1]) ;
 
@@ -220,7 +239,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 }
 
 void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
-			Double_t y1, Double_t y2, Double_t prec, Double_t minDx) {
+			Double_t y1, Double_t y2, Double_t minDy, Double_t minDx) {
   // Fill the range (x1,x2) with points calculated using func(&x). No point will
   // be added at x1, and a point will always be added at x2. The density of points
   // will be calculated so that the maximum deviation from a straight line
@@ -231,11 +250,10 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
   Double_t ymid= func(&xmid);
   // test if the midpoint is sufficiently close to a straight line across this interval
   Double_t dy= ymid - 0.5*(y1+y2);
-  if((xmid - x1 >= minDx) && fabs(dy)>0 && fabs(dy) >= prec*(getYAxisMax()-getYAxisMin())) {
+  if((xmid - x1 >= minDx) && fabs(dy)>0 && fabs(dy) >= minDy) {
     // fill in each subrange
-    updateYAxisLimits(ymid);
-    addRange(func,x1,xmid,y1,ymid,prec,minDx);
-    addRange(func,xmid,x2,ymid,y2,prec,minDx);
+    addRange(func,x1,xmid,y1,ymid,minDy,minDx);
+    addRange(func,xmid,x2,ymid,y2,minDy,minDx);
   }
   else {
     // add the endpoint

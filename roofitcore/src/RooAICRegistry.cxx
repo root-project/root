@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAICRegistry.cc,v 1.7 2001/11/21 19:36:36 verkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.8 2002/05/15 01:40:16 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -46,10 +46,10 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
     i=0 ;
     while(other._clArr[i] && i<_regSize) {
       _clSize[i] = other._clSize[i] ;
-      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->Clone()) : 0 ; 
-      _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->Clone()) : 0 ;
-      _asArr3[i] = other._asArr3[i] ? ((RooArgSet*)other._asArr3[i]->Clone()) : 0 ;
-      _asArr4[i] = other._asArr4[i] ? ((RooArgSet*)other._asArr4[i]->Clone()) : 0 ;
+      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->snapshot(kFALSE)) : 0 ; 
+      _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->snapshot(kFALSE)) : 0 ;
+      _asArr3[i] = other._asArr3[i] ? ((RooArgSet*)other._asArr3[i]->snapshot(kFALSE)) : 0 ;
+      _asArr4[i] = other._asArr4[i] ? ((RooArgSet*)other._asArr4[i]->snapshot(kFALSE)) : 0 ;
       _clArr[i] = new Int_t[_clSize[i]] ;
       for (j=0 ; j<_clSize[i] ; j++) {
 	_clArr[i][j] = other._clArr[i][j] ;
@@ -113,10 +113,10 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
       // Empty slot, store code list and return index
       _clArr[i] = new Int_t[size] ;
       _clSize[i] = size ;
-      _asArr1[i] = set1 ;
-      _asArr2[i] = set2 ;
-      _asArr3[i] = set3 ;
-      _asArr4[i] = set4 ;
+      _asArr1[i] = set1 ? (RooArgSet*)set1->snapshot(kFALSE) : 0;
+      _asArr2[i] = set2 ? (RooArgSet*)set2->snapshot(kFALSE) : 0;
+      _asArr3[i] = set3 ? (RooArgSet*)set3->snapshot(kFALSE) : 0;
+      _asArr4[i] = set4 ? (RooArgSet*)set4->snapshot(kFALSE) : 0;
       for (j=0 ; j<size ; j++) _clArr[i][j] = codeList[j] ;
       return i ;
     } else {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNLLBinding.rdl,v 1.2 2002/01/25 00:23:06 verkerke Exp $
+ *    File: $Id: RooNLLBinding.rdl,v 1.3 2002/06/08 00:45:01 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,7 +17,8 @@
 
 class RooNLLBinding : public RooRealBinding {
 public:
-  RooNLLBinding(const RooAbsPdf &pdf, const RooAbsData& data, const RooArgSet &vars, Bool_t extended=kFALSE) ;
+  RooNLLBinding(const RooAbsPdf &pdf, const RooAbsData& data, const RooArgSet &vars, 
+		Bool_t extended=kFALSE, const RooArgSet& projDeps=RooArgSet()) ;
   virtual ~RooNLLBinding() ;
 
   virtual Double_t operator()(const Double_t xvector[]) const;

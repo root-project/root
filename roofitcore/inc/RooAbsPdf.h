@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.56 2002/05/31 01:05:35 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.57 2002/06/08 00:45:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -70,11 +70,17 @@ public:
   inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
 			    Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
     // Backward compatibility wrapper
-    return plotNLLOn(frame,data,kFALSE,drawOptions,prec,fixMinToZero) ;
+    return plotNLLOn(frame,data,kFALSE,RooArgSet(),drawOptions,prec,fixMinToZero) ;
   }
 
   virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, Option_t* drawOptions="L", 
-			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
+			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
+    // Backward compatibility wrapper
+    return plotNLLOn(frame,data,extended,RooArgSet(),drawOptions,prec,fixMinToZero) ;
+  }
+
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
+			     Option_t* drawOptions="L", Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
 
   virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, 
 				Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;

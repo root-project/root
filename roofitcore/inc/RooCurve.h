@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.rdl,v 1.11 2001/11/09 03:12:08 verkerke Exp $
+ *    File: $Id: RooCurve.rdl,v 1.12 2001/11/19 18:03:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -50,7 +50,7 @@ protected:
   void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 		 Int_t minPoints, Double_t prec, Double_t resolution);
   void addRange(const RooAbsFunc& func, Double_t x1, Double_t x2, Double_t y1,
-		Double_t y2, Double_t prec, Double_t minDx);
+		Double_t y2, Double_t minDy, Double_t minDx);
 
   void shiftCurveToZero(Double_t prevYMax) ;
   Int_t findPoint(Double_t value) const ;
