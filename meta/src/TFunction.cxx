@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.3 2002/01/16 21:13:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.4 2002/01/17 12:14:09 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -70,7 +70,10 @@ void TFunction::CreateSignature()
       }
       if (arg.DefaultValue() && strlen(arg.DefaultValue())) {
          fSignature += " = ";
+         char *charstar = strstr(arg.Type()->TrueName(),"char*");
+         if (charstar) fSignature += "\"";
          fSignature += arg.DefaultValue();
+         if (charstar) fSignature += "\"";
       }
       ifirst++;
    }
