@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.9 2001/02/21 07:31:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.10 2001/04/11 15:19:11 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -102,6 +102,7 @@ protected:
            Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
    void Destructor();
    //-- used by friend TThread class
+   void Init();
 
 public:
    TCanvas(Bool_t build=kTRUE);
@@ -194,4 +195,3 @@ public:
 };
 
 #endif
-

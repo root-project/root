@@ -167,7 +167,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // TRootEmbeddedCanvas class.
 
    fSelected     = 0;
-   fSelectedPad  = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -220,13 +219,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
       if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
-
-   // Make sure the application environment exists.
-   if (!gApplication)
-      TApplication::CreateApplication();
-
-   fSelected     = 0;
-   fSelectedPad  = 0;
+   Init();
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -294,13 +287,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
-
-   // Make sure the application environment exists.
-   if (!gApplication)
-      TApplication::CreateApplication();
-
-   fSelected     = 0;
-   fSelectedPad  = 0;
+   Init();
    fMenuBar = kTRUE;
    if (ww < 0) {
       ww       = -ww;
@@ -363,12 +350,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
 
-   // Make sure the application environment exists.
-   if (!gApplication)
-      TApplication::CreateApplication();
-
-   fSelected     = 0;
-   fSelectedPad  = 0;
+   Init();
    fMenuBar = kTRUE;
    if (wtopx < 0) {
       wtopx    = -wtopx;
@@ -400,9 +382,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 }
 
 //_____________________________________________________________________________
-void TCanvas::Build()
+void TCanvas::Init()
 {
-   // Build a canvas. Called by all constructors.
+   // Initialize the TCanvas members. Called by all constructors.
 
    // Make sure the application environment exists. It is need for graphics
    // (colors are initialized in the TApplication ctor).
@@ -415,16 +397,6 @@ void TCanvas::Build()
    fHighLightColor  = gEnv->GetValue("Canvas.HighLightColor", kRed);
    fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
    fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
-
-   // Get window identifier
-   if (fCanvasID == -1)
-      fCanvasID = fCanvasImp->InitWindow();
-#ifndef WIN32
-   if (fCanvasID < 0) return;
-#else
-   // fCanvasID is in fact a pointer to the TGWin32 class
-   if (fCanvasID  == -1) return;
-#endif
 
    fContextMenu = 0;
    // Fill canvas ROOT data structure
@@ -441,12 +413,6 @@ void TCanvas::Build()
 
    fDISPLAY         = "$DISPLAY";
    fRetained        = 1;
-
-   // transient canvases have typically no menubar and should not get
-   // by default the event status bar (if set by default)
-   if (fShowEventStatus && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowStatusBar(fShowEventStatus);
-
    fSelected        = 0;
    fSelectedPad     = 0;
    fPadSave         = 0;
@@ -454,6 +420,30 @@ void TCanvas::Build()
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
+
+   SetBit(kMustCleanup);
+}
+
+//_____________________________________________________________________________
+void TCanvas::Build()
+{
+   // Build a canvas. Called by all constructors.
+
+   // Get window identifier
+   if (fCanvasID == -1)
+      fCanvasID = fCanvasImp->InitWindow();
+#ifndef WIN32
+   if (fCanvasID < 0) return;
+#else
+   // fCanvasID is in fact a pointer to the TGWin32 class
+   if (fCanvasID  == -1) return;
+#endif
+
+   // transient canvases have typically no menubar and should not get
+   // by default the event status bar (if set by default)
+   if (fShowEventStatus && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowStatusBar(fShowEventStatus);
+
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
       gVirtualX->SelectWindow(fCanvasID);
@@ -504,7 +494,7 @@ void TCanvas::Build()
       Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
       PaintBorder(GetFillColor(), kTRUE);    //Paint background
    }
-   SetBit(kMustCleanup);
+
 #ifdef WIN32
    gVirtualX->UpdateWindow(1);
 #endif
