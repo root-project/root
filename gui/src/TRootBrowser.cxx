@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.45 2003/10/07 19:02:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.46 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1454,7 +1454,6 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
    // Open tree item and list in iconbox its contents.
 
    if (item) {
-      DisplayDirectory();
       TObject *obj = (TObject *) item->GetUserData();
 
       if (obj) {
@@ -1484,6 +1483,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
             fLt->HighlightItem(fListLevel);
          }
       }
+      DisplayDirectory();
    }
 }
 
