@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.34 2000/12/14 11:22:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.35 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1915,6 +1915,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
 
+   
    TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
 
@@ -1935,7 +1936,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
       else        branch->SetBit(kDoNotProcess);
       leafcount = leaf->GetLeafCount();
       if (leafcount) {
-         bcount = GetBranch(leafcount->GetName());
+         bcount = leafcount->GetBranch();
          if (status) bcount->ResetBit(kDoNotProcess);
          else        bcount->SetBit(kDoNotProcess);
       }
@@ -1954,7 +1955,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
       if (!branch->TestBit(kDoNotProcess)) {
          leafcount = leaf->GetLeafCount();
          if (leafcount) {
-            bcount = GetBranch(leafcount->GetName());
+            bcount = leafcount->GetBranch();
             bcount->ResetBit(kDoNotProcess);
          }
       } else {
