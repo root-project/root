@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.15 2003/09/18 15:53:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.16 2003/10/23 09:36:25 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -518,12 +518,20 @@ void TEllipse::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
+Bool_t TEllipse::GetNoEdges() const
+{
+   // Return kTRUE if kNoEdges bit is set, kFALSE otherwise.
+
+   return TestBit(kNoEdges) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
 void TEllipse::SetNoEdges(Bool_t noEdges)
 {
 //   if  noEdges = kTRUE the lines connecting the center to the edges
 //   will not be drawn.
 //   default is to draw the edges.
-   
+
    if (noEdges) SetBit(kNoEdges);
    else         ResetBit(kNoEdges);
 }
