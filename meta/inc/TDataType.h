@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.9 2004/07/30 19:09:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.10 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -35,7 +35,8 @@ enum EDataType {
    kInt_t    = 3,  kUInt_t   = 13, kLong_t     = 4,  kULong_t  = 14,
    kFloat_t  = 5,  kDouble_t =  8, kDouble32_t = 9,  kchar     = 10,
    kBool_t   = 11, kLong64_t = 16, kULong64_t  = 17, kOther_t  = -1,
-   kNoType_t = 0
+   kNoType_t = 0,
+   kCounter =  6,  kCharStar = 7,  kBits     = 15 /* for compatibility with TStreamerInfo */
 };
 
 class G__TypedefInfo;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.15 2004/11/11 20:42:26 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.16 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -86,6 +86,9 @@ const char *TDataType::GetTypeName(EDataType type)
       case 15: return "UInt_t"; 
       case 16: return "Long64_t";
       case 17: return "ULong64_t";
+      case kOther_t:  return "";
+      case kNoType_t: return "";
+      case kchar:     return "Char_t";
    }
    return "";  
 }
