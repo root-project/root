@@ -1585,7 +1585,7 @@ if test ! "x$enable_python" = "xno" ; then
     else
         pythonlibflags=
         case $platform in
-            win32) pythonlibflags="-nodefaultlib:$pythonlib" ;;
+            win32) pythonlibflags="-nodefaultlib:python23" ;;
         esac
     fi
 fi
