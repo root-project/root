@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.109 2001/12/07 09:27:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.110 2001/12/17 15:29:04 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -917,7 +917,6 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    // Compute data member offset
    // return pointer to the Streamer function if one exists
 
-//printf("GetDataMemberOffset, class:%s, dm=%s\n",fClass->GetName(),dm->GetName());
    TIter nextr(fClass->GetListOfRealData());
    char dmbracket[256];
    sprintf(dmbracket,"%s[",dm->GetName());
@@ -926,8 +925,11 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
-//printf("rdmc=%s\n",rdmc);
+      //next statement reuired in case a class and one of its parent class
+      //have data members with the same name
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
+      
+      if (rdm->GetDataMember() != dm) continue;
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
          streamer = rdm->GetStreamer();
