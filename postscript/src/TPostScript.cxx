@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.19 2001/12/05 14:59:52 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.20 2001/12/06 17:20:14 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -400,13 +400,16 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
 //*-*
 {
    Int_t ix1 = XtoPS(x1);
-   Int_t ix2 = XtoPS(x2);
    Int_t iy1 = YtoPS(y1);
-   Int_t iy2 = YtoPS(y2);
 
-   fLastCellRed = 300;
-   fLastCellGreen = 300;
-   fLastCellBlue = 300;
+   Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
+              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));  
+   Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
+              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));  
+   
+   fLastCellRed     = 300;
+   fLastCellGreen   = 300;
+   fLastCellBlue    = 300;
    fNBSameColorCell = 0;
 
    fNbinCT = 0;
@@ -414,8 +417,8 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    fNbCellLine = 0;
    fMaxLines = 40000/(3*fNbCellW);
 //*-*- Define some paremeters
-   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
-   PrintStr(" /HT"); WriteInteger(iy2-iy1)  ; PrintStr(" def"); // Cells height
+   PrintStr("@/WT"); WriteInteger(WT)       ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteInteger(HT)       ; PrintStr(" def"); // Cells height   PrintStr("@/WT"); WriteInteger(ix2-ix1)  ; PrintStr(" def"); // Cells width
    PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
    PrintStr(" /Y") ; WriteInteger(iy1)      ; PrintStr(" def"); // Y start
    PrintStr(" /NX"); WriteInteger(W)        ; PrintStr(" def"); // Number of columns
@@ -1225,13 +1228,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.19 2001/12/05 14:59:52 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.20 2001/12/06 17:20:14 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.19 2001/12/05 14:59:52 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.20 2001/12/06 17:20:14 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1939,7 +1942,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.19 2001/12/05 14:59:52 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.20 2001/12/06 17:20:14 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
