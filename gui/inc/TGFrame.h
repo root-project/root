@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.16 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.17 2002/09/13 01:39:45 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -167,6 +167,8 @@ public:
            UInt_t options = 0, ULong_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame() { }
+   virtual void DeleteWindow();
+   virtual void ReallyDelete() { delete this; }
 
    UInt_t GetEventMask() const { return fEventMask; }
    void   AddInput(UInt_t emask);

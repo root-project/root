@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.16 2002/08/08 02:12:15 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.17 2002/09/13 01:39:45 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include "TGPicture.h"
 #include "TList.h"
 #include "TApplication.h"
+#include "TTimer.h"
 
 
 Time_t   TGFrame::fgLastClick = 0;
@@ -137,6 +138,17 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fEventMask   = (UInt_t) attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
+}
+
+//______________________________________________________________________________
+void TGFrame::DeleteWindow()
+{
+   // Delete window. Use single shot timer to call final delete method.
+   // We use this inderect way since deleting the window in its own
+   // execution "thread" can cause side effects because frame methods
+   // can still be called while the window object has already been deleted.
+
+   TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
 }
 
 //______________________________________________________________________________
