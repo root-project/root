@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.148 2004/10/26 07:06:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.149 2004/10/26 08:07:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1193,6 +1193,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 //  The current canvas is divided in nx by ny equal divisions(pads).
 //  xmargin is the space along x between pads in percent of canvas.
 //  ymargin is the space along y between pads in percent of canvas.
+//    (see Note3 below for the special case xmargin <=0 and ymargin <=0)
 //  color is the color of the new pads. If 0, color is the canvas color.
 //  Pads are automatically named canvasname_n where n is the division number
 //  starting from top left pad.
@@ -1235,7 +1236,9 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 //  Note2:  after a statement like c1.cd(6), the global variable gPad
 //          points to the current pad. One can use gPad to set attributes
 //          of the current pad.
-//
+//  Note3:  in case xmargin <=0 and ymargin <= 0, there is no space 
+//          between pads. The current pad margins are recomputed to
+//          optimize the layout.
 
    if (!IsEditable()) return;
 
@@ -1253,29 +1256,77 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    if (ny <= 0) ny = 1;
    Int_t ix,iy;
    Double_t x1,y1,x2,y2;
-   Double_t dy = 1/Double_t(ny);
-   Double_t dx = 1/Double_t(nx);
+   Double_t dx,dy;
    TPad *pad;
-   char *name = new char [strlen(GetName())+6];
+   char *name  = new char [strlen(GetName())+6];
+   char *title = new char [strlen(GetTitle())+6];
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
-   for (iy=0;iy<ny;iy++) {
-      y2 = 1 - iy*dy - ymargin;
-      y1 = y2 - dy + 2*ymargin;
-      if (y1 < 0) y1 = 0;
-      if (y1 > y2) continue;
-      for (ix=0;ix<nx;ix++) {
-         x1 = ix*dx + xmargin;
-         x2 = x1 +dx -2*xmargin;
-         if (x1 > x2) continue;
-         n++;
-         sprintf(name,"%s_%d",GetName(),n);
-         pad = new TPad(name,name,x1,y1,x2,y2,color);
-         pad->SetNumber(n);
-         pad->Draw();
+   if (xmargin > 0 && ymargin > 0) {
+      //general case
+      dy = 1/Double_t(ny);
+      dx = 1/Double_t(nx);
+      for (iy=0;iy<ny;iy++) {
+         y2 = 1 - iy*dy - ymargin;
+         y1 = y2 - dy + 2*ymargin;
+         if (y1 < 0) y1 = 0;
+         if (y1 > y2) continue;
+         for (ix=0;ix<nx;ix++) {
+            x1 = ix*dx + xmargin;
+            x2 = x1 +dx -2*xmargin;
+            if (x1 > x2) continue;
+            n++;
+            sprintf(name,"%s_%d",GetName(),n);
+            pad = new TPad(name,name,x1,y1,x2,y2,color);
+            pad->SetNumber(n);
+            pad->Draw();
+         }
+      }
+   } else {
+      // special case when xmargin <= 0 && ymargin <= 0
+      Double_t xl = GetLeftMargin();
+      Double_t xr = GetRightMargin();
+      Double_t yb = GetBottomMargin();
+      Double_t yt = GetTopMargin();
+      xl /= (1-xl+xr)*nx;
+      xr /= (1-xl+xr)*nx;
+      yb /= (1-xl+xr)*ny;
+      yt /= (1-xl+xr)*ny;
+      SetLeftMargin(xl);
+      SetRightMargin(xr);
+      SetBottomMargin(yb);
+      SetTopMargin(yt);
+      dx = (1-xl-xr)/nx;
+      dy = (1-yb-yt)/ny;
+      Int_t number = 0;
+      for (Int_t i=0;i<nx;i++) {
+         x1 = i*dx+xl; 
+         x2 = x1 + dx;
+         if (i == 0) x1 = 0;
+         if (i == nx-1) x2 = 1-xr;
+         for (Int_t j=0;j<ny;j++) {
+            number = j*nx + i +1;
+            y2 = 1 -j*dy -yt;
+            y1 = y2 - dy;
+            if (j == 0)    y2 = 1-yt;
+            if (j == ny-1) y1 = 0;
+            sprintf(name,"%s_%d",GetName(),number);
+            sprintf(title,"%s_%d",GetTitle(),number);
+            pad = new TPad(name,title,x1,y1,x2,y2);
+            pad->SetNumber(number);
+            pad->SetBorderMode(0);
+            if (i == 0)    pad->SetLeftMargin(xl*nx);
+            else           pad->SetLeftMargin(0);
+                           pad->SetRightMargin(0);
+                           pad->SetTopMargin(0);
+            if (j == ny-1) pad->SetBottomMargin(yb*ny);
+            else           pad->SetBottomMargin(0);
+            pad->Draw();
+         }
       }
    }
    delete [] name;
+   delete [] title;
    Modified();
    if (padsav) padsav->cd();
 }
