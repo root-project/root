@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.64 2003/07/03 13:00:15 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.65 2003/07/18 22:19:27 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -518,7 +518,11 @@ Int_t TUnixSystem::GetFPEMask()
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
+ #ifndef __ia64__
    Int_t oldmask = ~oldenv.__control_word;
+ #else
+    Int_t oldmask = ~oldenv;
+ #endif
 
    if (oldmask & FE_INVALID  )   mask |= kInvalid;
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
@@ -561,7 +565,11 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
    fenv_t cur;
    fegetenv(&cur);
+ #ifndef __ia64__
    cur.__control_word &= ~newm;
+ #else
+   cur &= ~newm;
+ #endif
    fesetenv(&cur);
 #endif
 #endif
