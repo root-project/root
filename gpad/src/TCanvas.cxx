@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.32 2001/10/26 20:43:55 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.33 2001/10/30 17:22:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -175,6 +175,8 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fWindowHeight = wh;
    fCw           = ww;
    fCh           = wh;
+   fMenuBar      = kFALSE;
+   fBatch        = kFALSE;
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
 
    SetName(name);
@@ -348,7 +350,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
 
-
    Init();
    fMenuBar = kTRUE;
    if (wtopx < 0) {
@@ -397,7 +398,6 @@ void TCanvas::Init()
    fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
    fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
 
-   fContextMenu = 0;
    // Fill canvas ROOT data structure
    fXsizeUser = 0;
    fYsizeUser = 0;
@@ -405,7 +405,7 @@ void TCanvas::Init()
    fYsizeReal = kDefaultCanvasSize;
 
    fDISPLAY         = "$DISPLAY";
-   fRetained        = 1;
+   fRetained        = kTRUE;
    fSelected        = 0;
    fSelectedPad     = 0;
    fPadSave         = 0;
@@ -413,6 +413,7 @@ void TCanvas::Init()
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
+   fContextMenu     = 0;
    SetBit(kMustCleanup);
 }
 
@@ -430,8 +431,9 @@ void TCanvas::Build()
    // fCanvasID is in fact a pointer to the TGWin32 class
    if (fCanvasID  == -1) return;
 #endif
-   if ( fCw < fCh ) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
-   else             fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+
+   if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+   else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
 
    // transient canvases have typically no menubar and should not get
    // by default the event status bar (if set by default)
