@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.1 2001/02/21 15:23:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.2 2001/02/22 08:47:27 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -40,6 +40,7 @@ public:
 
     virtual Int_t   Fill(Axis_t x);
     virtual Int_t   Fill(Axis_t x,Stat_t w){return TH1::Fill(x,w);}
+    virtual Int_t   Fill(const char *name,Stat_t w){return TH1::Fill(name,w);}
     virtual Stat_t  GetBinContent(Int_t bin) const;
     virtual Stat_t  GetBinContent(Int_t bin,Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin,Int_t,Int_t) const {return GetBinContent(bin);}
