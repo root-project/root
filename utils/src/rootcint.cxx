@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.5 2000/09/01 06:23:14 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.6 2000/09/04 17:49:17 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -925,7 +925,6 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
          fprintf(fl, "#pragma link C++ class %s;\n", cls);
       if (s) *s = '.';
    }
-   argv[(*argc)++] = autold;
 
    fprintf(fl, "\n#endif\n");
    fclose(fl);
@@ -1145,7 +1144,7 @@ int main(int argc, char **argv)
             argvv[argcc++] = path2;
             argvv[argcc++] = "+V";
          }
-         iv = argcc;
+         iv = i;
       }
       if ((strstr(argv[i],"LinkDef") || strstr(argv[i],"Linkdef") ||
            strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
@@ -1160,7 +1159,7 @@ int main(int argc, char **argv)
          fprintf(stderr, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && (il==0))
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il)
          fprintf(bundle,"#include \"%s\"\n", argv[i]);
       else
          argvv[argcc++] = argv[i];
@@ -1172,8 +1171,10 @@ int main(int argc, char **argv)
       fclose(bundle);
    }
 
-   if (!il)
-      GenerateLinkdef(&argcc, argvv, iv);
+   if (!il) {
+      GenerateLinkdef(&argc, argv, iv);
+      argvv[argcc++] = autold;
+   }
 
    G__setothermain(2);
    if (G__main(argcc, argvv) < 0) {
