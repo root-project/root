@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooCustomizer.rdl,v 1.1 2001/10/09 01:41:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,14 +15,16 @@
 
 #include "Rtypes.h"
 #include "TList.h"
+#include "TNamed.h"
 #include "TString.h"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooPrintable.hh"
 class RooAbsCategoryLValue ; 
 class RooAbsCategory ;
 class RooAbsArg ;
 class RooAbsPdf ;
 
-class RooCustomizer {
+class RooCustomizer : public TNamed, public RooPrintable {
 
 public:
 
@@ -41,6 +43,12 @@ public:
   const RooArgSet& cloneLeafList() const { return *_cloneLeafList ; }
 
   RooArgSet* fullParamList(const RooArgSet* depList) const ;
+
+  // Printing interface 
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
 protected:
   

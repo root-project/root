@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.28 2001/10/03 16:16:29 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.29 2001/10/08 05:20:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -384,6 +384,28 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
+void RooAbsCategory::fillTreeBranch(TTree& t) 
+{
+  // Attach object to a branch of given TTree
+
+  TString idxName(GetName()) ;
+  TString lblName(GetName()) ;  
+  idxName.Append("_idx") ;
+  lblName.Append("_lbl") ;
+
+  // First determine if branch is taken
+  TBranch* idxBranch = t.GetBranch(idxName) ;
+  TBranch* lblBranch = t.GetBranch(lblName) ;
+  if (!idxBranch||!lblBranch) { 
+    cout << "RooAbsCategory::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    assert(0) ;
+  }
+
+  idxBranch->Fill() ;
+  lblBranch->Fill() ;  
+}
+
+
 void RooAbsCategory::copyCache(const RooAbsArg* source) 
 {
   // Copy the cached value from given source and raise dirty flag.
@@ -421,12 +443,12 @@ const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const
   return (const RooCatType*)_types.At(n);
 }
 
-RooAbsArg *RooAbsCategory::createFundamental() const 
+RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const 
 {
   // Create a RooCategory fundamental object with our properties.
 
   // Add and precalculate new category column 
-  RooCategory *fund= new RooCategory(GetName(),GetTitle()) ; 
+  RooCategory *fund= new RooCategory(newname?newname:GetName(),GetTitle()) ; 
 
   // Copy states
   TIterator* tIter = typeIterator() ;

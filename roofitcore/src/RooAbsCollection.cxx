@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.10 2001/10/13 21:53:19 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.11 2001/10/17 05:03:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -109,7 +109,7 @@ void RooAbsCollection::safeDeleteList()
 	remove(*arg) ;
 	delete arg ;
 	working = kTRUE ;
-      }
+      } 
     }
     if (_list.GetSize()<2) break ;
   }
@@ -347,19 +347,31 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   // is var1 already in this list?
   const char *name= var1.GetName();
-  RooAbsArg *other= find(name);
-  if(other != &var1) {
+
+  Bool_t foundVar1(kFALSE) ;
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (arg==&var1) foundVar1=kTRUE ;
+  }
+  delete iter ;
+  if (!foundVar1) {
     cout << "RooAbsCollection: variable \"" << name << "\" is not in the list"
 	 << " and cannot be replaced" << endl;
     return kFALSE;
   }
+
+  RooAbsArg *other= find(name);
   // is var2's name already in this list?
-  other= find(var2.GetName());
-  if(other != 0 && other != &var1) {
-    cout << "RooAbsCollection: cannot replace \"" << name
-	 << "\" with already existing \"" << var2.GetName() << "\"" << endl;
-    return kFALSE;
+  if (dynamic_cast<RooArgSet*>(this)) {
+    other= find(var2.GetName());
+    if(other != 0 && other != &var1) {
+      cout << "RooAbsCollection: cannot replace \"" << name
+	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
+      return kFALSE;
+    }
   }
+
   // replace var1 with var2
   _list.Replace(&var1,&var2) ;
 //   _list.AddBefore((RooAbsArg*)&var1,(RooAbsArg*)&var2);
@@ -523,6 +535,7 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
     return ;
   }
 
+
   os << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
   if(opt >= Standard) {
     TIterator *iterator= createIterator();
@@ -531,10 +544,26 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
     opt= lessVerbose(opt);
     TString deeper(indent);
     deeper.Append("     ");
+
+    // Adjust the with of the name field to fit the largest name, if requesed
+    Int_t maxNameLen(1) ;
+    Int_t nameFieldLength = RooAbsArg::_nameLength ;
+    if (nameFieldLength==0) {
+      while(next=(RooAbsArg*)iterator->Next()) {
+	Int_t len = strlen(next->GetName()) ;
+	if (len>maxNameLen) maxNameLen = len ;
+      }
+      iterator->Reset() ;
+      RooAbsArg::nameFieldLength(maxNameLen+1) ;
+    }
+
     while(0 != (next= (RooAbsArg*)iterator->Next())) {
       os << indent << setw(3) << ++index << ") ";
       next->printToStream(os,opt,deeper);
     }
     delete iterator;
+
+    // Reset name field length, if modified
+    if (nameFieldLength==0) RooAbsArg::nameFieldLength(0) ;
   }
 }

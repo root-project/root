@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.rdl,v 1.10 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.11 2001/10/13 21:53:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,7 +31,7 @@ public:
   virtual operator TString() ;
   virtual TString getVal() const { return TString(_value) ; } // overrides RooAbsReal::getVal()
   virtual void setVal(TString value);
-  virtual RooStringVar& operator=(TString newValue);
+  virtual RooStringVar& operator=(const char* newValue);
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { return kTRUE; }

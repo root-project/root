@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.53 2001/10/11 01:28:48 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.54 2001/10/13 00:38:52 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,7 +75,7 @@ public:
   // Create a fundamental-type object that stores our type of value. The
   // created object will have a valid value, but not necessarily the same
   // as our value. The caller is responsible for deleting the returned object.
-  virtual RooAbsArg *createFundamental() const = 0;
+  virtual RooAbsArg *createFundamental(const char* newname=0) const = 0;
 
   // Is this argument an l-value, ie, can it appear on the left-hand side
   // of an assignment expression? LValues are also special since they can
@@ -117,7 +117,14 @@ public:
   static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
 
+  // Universal assignment operators to fundamentals
+  virtual RooAbsArg& operator=(Int_t ival) ;
+  virtual RooAbsArg& operator=(Double_t fval) ;
+  virtual RooAbsArg& operator=(const char* cval) ;
 
+  // Formatting control
+  static void nameFieldLength(Int_t newLen) { _nameLength = newLen>0 ? newLen : 0 ; }
+  
 protected:
 
   friend class RooCutNorm ;
@@ -210,6 +217,7 @@ protected:
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
+  virtual void fillTreeBranch(TTree& t) = 0 ;
 
   // Global   
   friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
@@ -217,6 +225,8 @@ protected:
   
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
+
+  static Int_t _nameLength ;
 
 private:
 

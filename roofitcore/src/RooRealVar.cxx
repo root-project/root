@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.29 2001/10/11 01:28:51 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.30 2001/10/12 01:48:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <iomanip.h>
 #include "TObjString.h"
 #include "TTree.h"
 #include "RooFitCore/RooRealVar.hh"
@@ -28,6 +29,11 @@
 #include "RooFitCore/RooErrorVar.hh"
 
 ClassImp(RooRealVar)
+;
+
+Bool_t RooRealVar::_printScientific(kFALSE) ;
+Int_t  RooRealVar::_printSigDigits(5) ;
+
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
@@ -255,15 +261,25 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
   if (compact) {
     // Write value only
     os << getVal() ;
-  } else {
-    // Write value
-    os << getVal() << " " ;
-  
-    // Append error if non-zero 
-    Double_t err = getError() ;
-    if (err!=0) {
-      os << "+/- " << err << " " ;
+  } else {    
+
+    // Write value with error (if not zero)    
+    if (_printScientific) {
+      char fmtVal[16], fmtErr[16] ;
+      sprintf(fmtVal,"%%.%de",_printSigDigits) ;
+      sprintf(fmtErr,"%%.%de",(_printSigDigits+1)/2) ;
+      if (_value>=0) os << " " ;
+      os << Form(fmtVal,_value) ;
+      if (_error!=0 || !isConstant()) {
+	os << " +/- " << Form(fmtErr,_error) ;
+      } else {
+	os << setw(_printSigDigits+9) << " " ;
+      }
+      os << " " ;
+    } else {
+      os << format(_printSigDigits,"EF")->Data() << " " ;
     }
+
     // Append limits if not constants
     if (isConstant()) {
       os << "C " ;
@@ -313,7 +329,7 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
 
 
 
-TString *RooRealVar::format(Int_t sigDigits, const char *options) {
+TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   // Format numeric value in a variety of ways
 
   // parse the options string
@@ -325,15 +341,18 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) {
   Bool_t showUnit= opts.Contains("u");
   Bool_t tlatexMode= opts.Contains("l");
   Bool_t latexMode= opts.Contains("x");
-  Bool_t useErrorForPrecision=
-    (showError && !isConstant()) || opts.Contains("p");
+  Bool_t useErrorForPrecision= ((showError && !isConstant()) || opts.Contains("p")) && !opts.Contains("f") ;
   // calculate the precision to use
   if(sigDigits < 1) sigDigits= 1;
-  Double_t what= (useErrorForPrecision) ? _error : _value;
-  Int_t leadingDigit= (Int_t)floor(log10(fabs(what)));
-  Int_t where= leadingDigit - sigDigits + 1;
-  char fmt[16];
-  sprintf(fmt,"%%.%df", where < 0 ? -where : 0);
+  Int_t leadingDigitVal= (Int_t)floor(log10(fabs(useErrorForPrecision?_error:_value)));
+  Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error)));
+  Int_t whereVal= leadingDigitVal - sigDigits + 1;
+  Int_t whereErr= leadingDigitErr - (sigDigits+1)/2 + 1;
+  char fmtVal[16], fmtErr[16];
+
+  if (_value<0) whereVal -= 1 ;
+  sprintf(fmtVal,"%%.%df", whereVal < 0 ? -whereVal : 0);
+  sprintf(fmtErr,"%%.%df", whereErr < 0 ? -whereErr : 0);
   TString *text= new TString();
   if(latexMode) text->Append("$");
   // begin the string with "<name> = " if requested
@@ -341,11 +360,15 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) {
     text->Append(getPlotLabel());
     text->Append(" = ");
   }
+
+  // Add leading space if value is positive
+  if (_value>=0) text->Append(" ") ;
+
   // append our value if requested
   char buffer[256];
   if(!hideValue) {
-    Double_t chopped= chopAt(_value, where);
-    sprintf(buffer, fmt, _value);
+    Double_t chopped= chopAt(_value, whereVal);
+    sprintf(buffer, fmtVal, _value);
     text->Append(buffer);
   }
   // append our error if requested and this variable is not constant
@@ -359,7 +382,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) {
     else {
       text->Append(" +/- ");
     }
-    sprintf(buffer, fmt, _error);
+    sprintf(buffer, fmtErr, _error);
     text->Append(buffer);
   }
   // append our units if requested
@@ -371,7 +394,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) {
   return text;
 }
 
-Double_t RooRealVar::chopAt(Double_t what, Int_t where) {
+Double_t RooRealVar::chopAt(Double_t what, Int_t where) const {
   // What does this do?
   Double_t scale= pow(10.0,where);
   Int_t trunc= (Int_t)floor(what/scale + 0.5);
@@ -396,6 +419,27 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     format.Append("/D");
     t.Branch(errName, &_error, (const Text_t*)format, bufSize);
   }
+}
+
+
+void RooRealVar::fillTreeBranch(TTree& t) 
+{
+  // Attach object to a branch of given TTree
+
+  // First determine if branch is taken
+  TString cleanName(cleanBranchName()) ;
+  TBranch* valBranch = t.GetBranch(cleanName) ;
+  if (!valBranch) { 
+    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    assert(0) ;
+  }
+  valBranch->Fill() ;
+
+  TString errName(GetName()) ;
+  errName.Append("_err") ;
+  TBranch* errBranch = t.GetBranch(errName) ;
+  if (errBranch) errBranch->Fill() ;
+  
 }
 
 

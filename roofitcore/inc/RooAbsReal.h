@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.35 2001/09/28 21:59:27 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.36 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,7 +52,7 @@ public:
   RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0) const;
 
   // Create a fundamental-type object that can hold our value.
-  RooAbsArg *createFundamental() const;
+  RooAbsArg *createFundamental(const char* newname=0) const;
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
@@ -146,6 +146,8 @@ protected:
   virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void fillTreeBranch(TTree& t) ;
+  TString cleanBranchName() const ;
 
   friend class RooRealFixedBinIter ;
 

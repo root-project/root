@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.11 2001/10/08 05:20:22 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.12 2001/10/13 21:53:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,7 +73,7 @@ void RooStringVar::setVal(TString value) {
 
 
 
-RooStringVar& RooStringVar::operator=(TString newValue) 
+RooStringVar& RooStringVar::operator=(const char* newValue) 
 {
   // Set value to given TString
   if (!isValidString(newValue)) {
@@ -104,7 +104,14 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   RooStreamParser parser(is,errorPrefix) ;
 
   TString newValue ;
-  Bool_t ret = parser.readString(newValue,kTRUE) ;
+  Bool_t ret(kFALSE) ;
+
+  if (compact) {
+    parser.readString(newValue,kTRUE) ;
+  } else {
+    newValue = parser.readLine() ;
+  }
+  
   if (!isValidString(newValue)) {
     if (verbose) 
       cout << "RooStringVar::readFromStreeam(" << GetName() 
@@ -112,9 +119,9 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   } else {
     strcpy(_value,newValue) ;
   }
+
   return ret ;
 }
-
 
 void RooStringVar::writeToStream(ostream& os, Bool_t compact) const
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.1 2001/10/09 01:41:19 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.2 2001/10/13 21:53:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -113,6 +113,7 @@ ClassImp(RooCustomizer)
 
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
+  TNamed(pdf.GetName(),pdf.GetTitle()),
   _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
@@ -124,6 +125,7 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
+  TNamed(pdf.GetName(),pdf.GetTitle()),
   _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneLeafList(0),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
@@ -404,4 +406,29 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 
   return cloneTopPdf ;
+}
+
+
+
+void RooCustomizer::printToStream(ostream& os, PrintOption opt, TString indent) const
+{
+  os << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
+
+  Int_t i, nsplit = _splitArgList.GetSize() ;
+  if (nsplit>0) {
+    os << "  Splitting rules:" << endl ;
+    for (i=0 ; i<nsplit ; i++) {
+      os << "   " << _splitArgList.At(i)->GetName() << " is split by " << _splitCatList.At(i)->GetName() << endl ;
+    }
+  }
+
+  Int_t nrepl = _replaceArgList.GetSize() ;
+  if (nrepl>0) {
+    os << "  Replacement rules:" << endl ;
+    for (i=0 ; i<nrepl ; i++) {
+      os << "   " << _replaceSubList.At(i)->GetName() << " replaces " << _replaceArgList.At(i)->GetName() << endl ;
+    }
+  }
+  
+  return ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.52 2001/10/11 01:28:49 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.53 2001/10/12 01:48:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "TROOT.h"
 
 ClassImp(RooDataSet)
 ;
@@ -44,6 +45,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 {
   // Constructor of an empty data set from a RooArgSet defining the dimensions
   // of the data space.
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -62,6 +65,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -79,6 +84,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -98,6 +105,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
   // For subsets without selection on the data points, or involving cuts
   // operating exclusively and directly on the data set dimensions, the equivalent
   // constructor with a string based cut expression is recommended.
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -119,6 +128,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *ntuple,
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -140,6 +151,8 @@ RooDataSet::RooDataSet(const char *name, const char *filename, const char *treen
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -147,6 +160,8 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooTreeData(other,newname)
 {
   // Copy constructor
+
+  gDirectory->Append(this) ;
 }
 
 
@@ -155,6 +170,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
   RooTreeData(name,title,ntuple,vars,cutVar, copyCache)
 {
   // Protected constructor for internal use only
+
+  gDirectory->Append(this) ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.10 2001/08/17 00:35:57 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.11 2001/08/17 01:18:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,7 +44,7 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
-  RooAbsArg *createFundamental() const;
+  RooAbsArg *createFundamental(const char* newname=0) const;
 
 protected:
 
@@ -60,6 +60,7 @@ protected:
   virtual void syncCache(const RooArgSet* nset=0) { getVal() ; }
   void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void fillTreeBranch(TTree& t) ;
 
   mutable char _value[1024] ;
 

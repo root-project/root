@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.cc,v 1.3 2001/10/03 21:53:59 verkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.4 2001/10/08 05:20:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -206,6 +206,24 @@ RooArgList::~RooArgList()
   // Destructor
 }
 
+
+
+RooAbsArg& RooArgList::operator[](Int_t idx) const 
+{     
+  // Array operator. Element in slot 'idx' must already exist, otherwise
+  // code will abort. 
+  //
+  // When used as lvalue in assignment operations, the element contained in
+  // the list will not be changed, only the value of the existing element!
+
+  RooAbsArg* arg = at(idx) ;
+  if (!arg) {
+    cout << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
+	 << idx << " out of range (0," << getSize() << ")" << endl ;
+    RooErrorHandler::softAbort() ;
+  }
+  return *arg ; 
+}
 
 
 void RooArgList::writeToStream(ostream& os, Bool_t compact) 

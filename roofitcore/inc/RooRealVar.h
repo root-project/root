@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.28 2001/10/08 05:20:21 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.29 2001/10/11 01:28:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -68,16 +68,22 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
-  TString* format(Int_t sigDigits, const char *options) ;
-  
+  TString* format(Int_t sigDigits, const char *options) const ;
+
+  static void printScientific(Bool_t flag=kFALSE) { _printScientific = flag ; }
+  static void printSigDigits(Int_t ndig=5) { _printSigDigits = ndig>1?ndig:1 ; }
 
 protected:
+
+  static Bool_t _printScientific ;
+  static Int_t  _printSigDigits ;
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void fillTreeBranch(TTree& t) ;
 
-  Double_t chopAt(Double_t what, Int_t where) ;
+  Double_t chopAt(Double_t what, Int_t where) const ;
 
   Double_t _fitMin ;  // Minimum of fit range
   Double_t _fitMax ;  // Maximum of fit range

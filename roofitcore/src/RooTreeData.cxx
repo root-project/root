@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.13 2001/10/12 01:48:47 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.14 2001/10/13 21:53:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,6 +37,7 @@
 #include "RooFitCore/RooTreeData.hh"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
@@ -245,8 +246,10 @@ void RooTreeData::createTree(const char* name, const char* title)
   TString memDir(gROOT->GetName()) ;
   memDir.Append(":/") ;
   gDirectory->cd(memDir) ;
- _tree = new TTree(name, title) ;
+  _tree = new TTree(name, title) ;
+  gDirectory->RecursiveRemove(_tree) ;
   gDirectory->cd(pwd) ;
+  
 }
 
 
@@ -314,7 +317,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   // structure when retrieving information from it.
 
   // Clone source tree
-  TTree* tClone = ((TTree*)t)->CloneTree() ;
+  TTree* tClone = (TTree*) t->Clone() ; //((TTree*)t)->CloneTree() ;
   
   // Clone list of variables  
   RooArgSet *sourceArgSet = (RooArgSet*) _vars.snapshot(kFALSE) ;
@@ -408,68 +411,43 @@ void RooTreeData::dump() {
 }
 
 
-void RooTreeData::cacheArg(RooAbsArg& newVar) 
+
+
+void RooTreeData::cacheArgs(RooArgSet& newVarSet) 
 {
-  // Cache given RooAbsArg with this tree: The tree is
+  // Cache given RooAbsArgs with this tree: The tree is
   // given direct write access of the args internal cache
   // the args values is pre-calculated for all data points
   // in this data collection. Upon a get() call, the
   // internal cache of 'newVar' will be loaded with the
   // precalculated value and it's dirty flag will be cleared.
 
-  newVar.attachToTree(*_tree) ;
-  _cachedVars.add(newVar) ;
-
-  fillCacheArgs() ;
-}
-
-
-void RooTreeData::cacheArgs(RooArgSet& newVarSet) 
-{
-  // Call cacheArg for each argument in given list
-
   TIterator *iter = newVarSet.createIterator() ;
-  RooAbsArg* arg ;
-
+  RooAbsArg *arg ;
+    
   while (arg=(RooAbsArg*)iter->Next()) {
-    // Attach newVar to this tree
+    // Attach original newVar to this tree
     arg->attachToTree(*_tree) ;
     _cachedVars.add(*arg) ;
   }
-  delete iter ;
-  
-  // Recalculate the cached variables
-  fillCacheArgs() ;
-}
 
 
-void RooTreeData::fillCacheArgs()
-{
-  // Recalculate contents of cached variables for each data point in the collection
-
-  // Clone current tree
-  RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;
-  
   // Refill regular and cached variables of current tree from clone
-  Reset() ;
-  for (int i=0 ; i<cloneData->GetEntries() ; i++) {
-    cloneData->get(i) ;
+  for (int i=0 ; i<GetEntries() ; i++) {
+    get(i) ;
 
-    // Copy the regular variables
-    _vars = cloneData->_vars ;
-
-    // Recalculate the cached variables
-    RooAbsArg* cacheVar ;
-    _cacheIter->Reset() ;
-    while (cacheVar=(RooAbsArg*)_cacheIter->Next()) {
-      cacheVar->syncCache(&_vars) ;
+    // Evaluate the cached variables and store the results
+    iter->Reset() ;
+    while (arg=(RooAbsArg*)iter->Next()) {
+      arg->syncCache(&_vars) ;
+      arg->fillTreeBranch(*_tree) ;
     }
-
-    Fill() ;
   }
 
-  delete cloneData ;
+  delete iter ;
 }
+
+
 
 
 const RooArgSet* RooTreeData::get(Int_t index) const 
@@ -532,36 +510,91 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
     return 0;
   }
 
-  // Clone current tree
-  RooTreeData* cloneData = (RooTreeData*) Clone() ; 
-
   // Clone variable and attach to cloned tree 
   RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
-  newVarClone->recursiveRedirectServers(cloneData->_vars,kFALSE) ;
+  newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;
   _vars.addOwned(*valHolder) ;
 
   // Fill values of of placeholder
-  Reset() ;
-  for (int i=0 ; i<cloneData->GetEntries() ; i++) {
-    cloneData->get(i) ;
-
-    _vars = cloneData->_vars ;
+  for (int i=0 ; i<GetEntries() ; i++) {
+    get(i) ;
 
     newVarClone->syncCache(&_vars) ;
     valHolder->copyCache(newVarClone) ;
-
-    Fill() ;
+    valHolder->fillTreeBranch(*_tree) ;
   }
   
-  delete newVarCloneList;
-//   delete newVarClone;
-  delete cloneData ;
-  
+  delete newVarCloneList;  
   return valHolder ;
+}
+
+
+
+
+RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
+{
+  TIterator* vIter = varList.createIterator() ;
+  RooAbsArg* var ;
+
+  TList cloneSetList ;
+  RooArgSet cloneSet ;
+  RooArgSet* holderSet = new RooArgSet ;
+
+  while(var=(RooAbsArg*)vIter->Next()) {
+    // Create a fundamental object of the right type to hold newVar values
+    RooAbsArg* valHolder= var->createFundamental();
+    holderSet->add(*valHolder) ;
+
+    // Sanity check that the holder really is fundamental
+    if(!valHolder->isFundamental()) {
+      cout << GetName() << "::addColumn: holder argument is not fundamental: \""
+	   << valHolder->GetName() << "\"" << endl;
+      return 0;
+    }
+    
+    // Clone variable and attach to cloned tree 
+    RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;  
+    RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
+    newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
+    newVarClone->recursiveRedirectServers(*holderSet,kFALSE) ;
+
+    cloneSetList.Add(newVarCloneList) ;
+    cloneSet.add(*newVarClone) ;
+
+    // Attach value place holder to this tree
+    ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;
+    _vars.addOwned(*valHolder) ;
+  }
+  delete vIter ;
+
+
+  TIterator* cIter = cloneSet.createIterator() ;
+  TIterator* hIter = holderSet->createIterator() ;
+  RooAbsArg *clone, *holder ;
+  // Fill values of of placeholder
+  for (int i=0 ; i<GetEntries() ; i++) {
+    get(i) ;
+
+    cIter->Reset() ;
+    hIter->Reset() ;
+    while(clone=(RooAbsArg*)cIter->Next()) {
+      holder = (RooAbsArg*)hIter->Next() ;
+
+      clone->syncCache(&_vars) ;
+      holder->copyCache(clone) ;
+      holder->fillTreeBranch(*_tree) ;
+    }
+  }
+  
+  delete cIter ;
+  delete hIter ;
+
+  cloneSetList.Delete() ;
+  return holderSet ;
 }
 
 

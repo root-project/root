@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.9 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.10 2001/10/08 05:20:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,6 +25,8 @@ ClassImp(RooAbsData)
 RooAbsData::RooAbsData() 
 {
   // Default constructor
+  _iterator = _vars.createIterator() ;
+  _cacheIter = _cachedVars.createIterator() ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.56 2001/10/11 01:28:48 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.57 2001/10/13 21:53:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -37,6 +37,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooTrace.hh"
+#include "RooFitCore/RooStringVar.hh" 
 
 #include <string.h>
 #include <iomanip.h>
@@ -45,6 +46,7 @@ ClassImp(RooAbsArg)
 ;
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
+Int_t  RooAbsArg::_nameLength(0) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
   _operMode(Auto)
@@ -925,7 +927,10 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
   // options.
 
   if(opt == Standard) {
-    os << ClassName() << "::" << GetName() << ": " ;
+    os << ClassName() << "::" << GetName() ;
+    Int_t nfill = _nameLength-strlen(GetName()) ;
+    while(nfill-- > 0) os << " " ;
+    os << ": " ;
     if (isDerived()) {
       os << "(" ;
       writeToStream(os,kFALSE);
@@ -1068,4 +1073,26 @@ void RooAbsArg::printDirty(Bool_t depth) const
     }
     cout << endl ;
   }  
+}
+
+
+
+RooAbsArg& RooAbsArg::operator=(Int_t ival) 
+{
+  cout << "RooAbsArg::operator=(" << GetName() << ",Int_t) not an lvalue of the appropriate type" << endl ;
+  return *this ;
+}
+
+
+RooAbsArg& RooAbsArg::operator=(Double_t fval) 
+{
+  cout << "RooAbsArg::operator=(" << GetName() << ",Double_t) not an lvalue of the appropriate type" << endl ;
+  return *this ;
+}
+
+
+RooAbsArg& RooAbsArg::operator=(const char* cval) 
+{
+  cout << "RooAbsArg::operator=(" << GetName() << ",const char*) not an lvalue of the appropriate type" << endl ;
+  return *this ;
 }

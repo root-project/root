@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.11 2001/09/28 21:59:29 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.12 2001/10/08 05:20:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -228,11 +228,20 @@ TString RooStreamParser::readLine()
   // Read an entire line
 
   char c,buffer[1024] ;
+  Int_t nfree(1023) ; 
   
   if (_is.peek()=='\n') _is.get(c) ;
 
   // Read till end of line
-  _is.getline(buffer,1023,'\n') ;
+  _is.getline(buffer,nfree,'\n') ;
+
+  // Look for eventual continuation line sequence  
+  char *pcontseq = strstr(buffer,"\\\\") ;
+  while(pcontseq) {
+    nfree -= (pcontseq-buffer) ;
+    _is.getline(pcontseq,nfree,'\n') ;
+    pcontseq = strstr(pcontseq,"\\\\") ;
+  }    
 
   // Chop eventual comments
   char *pcomment = strstr(buffer,"//") ;

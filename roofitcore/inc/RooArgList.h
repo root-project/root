@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.rdl,v 1.3 2001/10/03 21:53:59 verkerke Exp $
+ *    File: $Id: RooArgList.rdl,v 1.4 2001/10/13 21:53:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,7 @@
 #include "TString.h"
 #include "TClass.h"
 #include "RooFitCore/RooAbsCollection.hh"
+#include "RooFitCore/RooErrorHandler.hh"
 
 class RooArgList : public RooAbsCollection {
 public:
@@ -76,6 +77,8 @@ public:
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) ;  
+
+  RooAbsArg& operator[](Int_t idx) const ; 
 
 protected:
 

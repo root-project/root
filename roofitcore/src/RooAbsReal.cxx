@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.52 2001/10/11 18:07:18 chcheng Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.53 2001/10/17 05:03:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1012,17 +1012,9 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
 void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
-  TString cleanName(GetName()) ;
-  cleanName.ReplaceAll("/","D") ;
-  cleanName.ReplaceAll("-","M") ;
-  cleanName.ReplaceAll("+","P") ;
-  cleanName.ReplaceAll("*","X") ;
-  cleanName.ReplaceAll("[","L") ;
-  cleanName.ReplaceAll("]","R") ;
-  cleanName.ReplaceAll("(","L") ;
-  cleanName.ReplaceAll(")","R") ;
 
   // First determine if branch is taken
+  TString cleanName(cleanBranchName()) ;
   TBranch* branch = t.GetBranch(cleanName) ;
   if (branch) { 
     
@@ -1046,11 +1038,46 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
   }
 }
 
-RooAbsArg *RooAbsReal::createFundamental() const {
+
+void RooAbsReal::fillTreeBranch(TTree& t) 
+{
+  // Attach object to a branch of given TTree
+
+  // First determine if branch is taken
+  TBranch* branch = t.GetBranch(cleanBranchName()) ;
+  if (!branch) { 
+    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    assert(0) ;
+  }
+  branch->Fill() ;
+  
+}
+
+
+TString RooAbsReal::cleanBranchName() const
+{
+  // Construct a mangled name from the actual name that
+  // is free of any math symbols that might be interpreted by TTree
+
+  TString cleanName(GetName()) ;
+  cleanName.ReplaceAll("/","D") ;
+  cleanName.ReplaceAll("-","M") ;
+  cleanName.ReplaceAll("+","P") ;
+  cleanName.ReplaceAll("*","X") ;
+  cleanName.ReplaceAll("[","L") ;
+  cleanName.ReplaceAll("]","R") ;
+  cleanName.ReplaceAll("(","L") ;
+  cleanName.ReplaceAll(")","R") ;
+
+  return cleanName ;
+}
+
+
+RooAbsArg *RooAbsReal::createFundamental(const char* newname) const {
   // Create a RooRealVar fundamental object with our properties. The new
   // object will be created without any fit limits.
 
-  RooRealVar *fund= new RooRealVar(GetName(),GetTitle(),_value,getUnit());
+  RooRealVar *fund= new RooRealVar(newname?newname:GetName(),GetTitle(),_value,getUnit());
   fund->removeFitRange();
   fund->setPlotRange(getPlotMin(),getPlotMax());
   fund->setPlotLabel(getPlotLabel());

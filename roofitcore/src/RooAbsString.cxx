@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.12 2001/08/17 00:35:57 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.13 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -169,10 +169,25 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
   }
 }
  
-RooAbsArg *RooAbsString::createFundamental() const {
+
+
+void RooAbsString::fillTreeBranch(TTree& t) 
+{
+  // First determine if branch is taken
+  TBranch* branch = t.GetBranch(GetName()) ;
+  if (!branch) { 
+    cout << "RooAbsString::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    assert(0) ;
+  }
+  branch->Fill() ;  
+}
+
+
+
+RooAbsArg *RooAbsString::createFundamental(const char* newname) const {
   // Create a RooStringVar fundamental object with our properties.
 
-  RooStringVar *fund= new RooStringVar(GetName(),GetTitle(),"") ; 
+  RooStringVar *fund= new RooStringVar(newname?newname:GetName(),GetTitle(),"") ; 
   return fund;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.41 2001/10/08 05:20:13 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.42 2001/10/12 01:48:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -242,6 +242,23 @@ RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent)
   // the set is not specified to own its elements. Eventual error messages
   // can be suppressed with the silent flag
   return checkForDup(var,silent)? 0 : RooAbsCollection::addClone(var,silent) ;
+}
+
+
+
+RooAbsArg& RooArgSet::operator[](const char* name) const 
+{     
+  // Array operator. Named element must exist in set, otherwise
+  // code will abort. 
+  //
+  // When used as lvalue in assignment operations, the element contained in
+  // the list will not be changed, only the value of the existing element!
+  RooAbsArg* arg = find(name) ;
+  if (!arg) {
+    cout << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
+    RooErrorHandler::softAbort() ;
+  }
+  return *arg ; 
 }
 
 
