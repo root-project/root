@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.5 2004/10/19 15:50:50 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.6 2004/10/19 16:17:24 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -276,13 +276,10 @@ void TRobustEstimator::Evaluate()
 	delete [] deti;
 	return;
       } else {
-	Int_t maxind;
-	Int_t ind=fN+1;
 
-	maxind=TMath::LocMax(nbest, deti);
+	Int_t maxind=TMath::LocMax(nbest, deti);
 	if(det<deti[maxind]) {
 	  deti[maxind]=det;
-	  ind=maxind;
 	  for(ii=0; ii<fNvar; ii++) {
 	    mstock(maxind, ii)=fMean(ii);
 	    for(jj=0; jj<fNvar; jj++)
