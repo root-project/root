@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.1 2000/09/07 00:32:14 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -15,10 +15,12 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGSplitter, TGVSplitter, TGHorizontal3DLine and TGVertical3DLine     //
+// TGSplitter, TGVSplitter, TGHSplitter, TGHorizontal3DLine and         //
+// TGVertical3DLine                                                     //
 //                                                                      //
 // A splitter allows the frames left and right or above and below of    //
-// it to be resized.                                                    //
+// it to be resized. The frame to be resized must have the kFixedWidth  //
+// or kFixedHeight property set.                                        //
 // A horizontal 3D line is a line that typically separates a toolbar    //
 // from the menubar.                                                    //
 // A vertical 3D line is a line that can be used to separate groups of  //
@@ -55,10 +57,12 @@ class TGVSplitter : public TGSplitter {
 
 protected:
    Int_t       fStartX;         // x position when dragging starts
-   Int_t       fDelta;          // pixels with which to resize selected frame
    UInt_t      fWidth;          // width of frame to be resized
    UInt_t      fHeight;         // height of frame to be resized
+   Int_t       fMin;            // min x position frame can be resized to
+   Int_t       fMax;            // max x position frame can be resized to
    TGFrame    *fFrame;          // frame that should be resized
+   Bool_t      fLeft;           // true if frame is on the left of splitter
 
 public:
    TGVSplitter(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
@@ -67,13 +71,41 @@ public:
    virtual ~TGVSplitter() { }
 
    virtual void DrawBorder();
-   virtual void SetFrame(TGFrame *frame);
+   virtual void SetFrame(TGFrame *frame, Bool_t left);
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
 
    ClassDef(TGVSplitter,0)  //A vertical frame splitter
+};
+
+
+class TGHSplitter : public TGSplitter {
+
+protected:
+   Int_t       fStartY;         // y position when dragging starts
+   UInt_t      fWidth;          // width of frame to be resized
+   UInt_t      fHeight;         // height of frame to be resized
+   Int_t       fMin;            // min y position frame can be resized to
+   Int_t       fMax;            // max y position frame can be resized to
+   TGFrame    *fFrame;          // frame that should be resized
+   Bool_t      fAbove;          // true if frame is above the splitter
+
+public:
+   TGHSplitter(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
+               UInt_t options = kChildFrame,
+               ULong_t back = fgDefaultFrameBackground);
+   virtual ~TGHSplitter() { }
+
+   virtual void DrawBorder();
+   virtual void SetFrame(TGFrame *frame, Bool_t above);
+
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
+   virtual Bool_t HandleCrossing(Event_t *event);
+
+   ClassDef(TGHSplitter,0)  //A horizontal frame splitter
 };
 
 
