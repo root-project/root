@@ -610,7 +610,7 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 #endif
 			      );
 
-  if(ifunc && -1==ifunc->pentry[index]->filenum) {
+  if(ifunc && -1==ifunc->pentry[index]->line_number) {
     return((G__InterfaceMethod)ifunc->pentry[index]->p);
   }
   else {
