@@ -10,9 +10,6 @@
  *
  * Copyright (C) 2000 Coloraro State University
  *****************************************************************************/
-// -- CLASS DESCRIPTION [PDF] --
-
-//#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 
@@ -67,8 +64,6 @@ Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   return 0 ;
 }
 
-
-
 Double_t RooBifurGauss::analyticalIntegral(Int_t code) const 
 {
   switch(code) {
@@ -89,12 +84,25 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code) const
       Double_t xscaleL = root2*sigmaL;
       Double_t xscaleR = root2*sigmaR;
 
-      return rootPiBy2*(sigmaR*erf((x.max() - mean)/xscaleR) - 
-			sigmaL*erf((x.min() - mean)/xscaleL));
+      Double_t integral = 0.0;
+      if(x.max() < mean)
+      {
+	integral = sigmaL * ( erf((x.max() - mean)/xscaleL) - erf((x.min() - mean)/xscaleL) );
+      }
+      else if (x.min() > mean)
+      {
+	integral = sigmaR * ( erf((x.max() - mean)/xscaleR) - erf((x.min() - mean)/xscaleR) );
+      }
+      else
+      {
+	integral = sigmaR*erf((x.max() - mean)/xscaleR) - sigmaL*erf((x.min() - mean)/xscaleL);
+      }
+      //      return rootPiBy2*(sigmaR*erf((x.max() - mean)/xscaleR) - 
+      //			sigmaL*erf((x.min() - mean)/xscaleL));
+      return integral*rootPiBy2;
     }
   }  
 
   assert(0) ; 
   return 0 ; // to prevent compiler warnings
 }
-
