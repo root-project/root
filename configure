@@ -69,6 +69,7 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_python=no
+enable_ruby=no
 enable_thread=           # must be set explicitely via --enable-thread
 
 #
@@ -1567,6 +1568,9 @@ if test ! "x$enable_ruby" = "xno" ; then
 
     if test "x$rubyincdir" = "x" || test "x$rubylib" = "x"; then
         enable_ruby="no"
+    else
+        # Ruby support requires the explicitlink option
+        enable_explicitlink="yes"
     fi
 fi
 
