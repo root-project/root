@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.130 2003/07/17 14:30:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.131 2003/08/04 20:04:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -283,6 +283,8 @@ TTreePlayer::TTreePlayer()
    fSelectedRows   = 0;
    fDimension      = 0;
    fHistogram      = 0;
+   fFormulaList    = new TList(); 
+   fFormulaList->SetOwner(kTRUE);
    fSelector       = new TSelectorDraw();
    fInput          = new TList();
    fInput->Add(new TNamed("varexp",""));
@@ -296,6 +298,7 @@ TTreePlayer::~TTreePlayer()
 //*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================
 
+   delete fFormulaList;
    delete fSelector;
    fInput->Delete();
    delete fInput;
@@ -353,6 +356,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select || !select->GetNdim()) { delete select; }
+      fFormulaList->Add(select);
    }
 
    //loop on the specified entries
@@ -377,7 +381,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
       fTree->GetEntry(entryNumber);
       tree->Fill();
    }
-   delete select;
+   fFormulaList->Clear();
    return tree;
 }
 
@@ -1835,6 +1839,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return principal;
       if (!select->GetNdim()) { delete select; return principal; }
+      fFormulaList->Add(select);
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -1862,6 +1867,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //*-*- Create the TreeFormula objects corresponding to each column
    for (i=0;i<ncols;i++) {
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
+      fFormulaList->Add(var[i]);
    }
 
    //*-* Build the TPrincipal object
@@ -1900,10 +1906,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    }
 
 //*-*- delete temporary objects
-   delete select;
-   for (i=0;i<ncols;i++) {
-      delete var[i];
-   }
+   fFormulaList->Clear();
    delete [] var;
    delete [] cnames;
    delete [] index;
@@ -2092,6 +2095,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return -1;
       if (!select->GetNdim()) { delete select; return -1; }
+      fFormulaList->Add(select);
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -2123,6 +2127,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
 //*-*- Create the TreeFormula objects corresponding to each column
    for (i=0;i<ncols;i++) {
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
+      fFormulaList->Add(var[i]);
    }
 //*-*- Print header
    onerow = "***********";
@@ -2199,11 +2204,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    if (fScanRedirect) printf("File <%s> created\n", fname);
 
 //*-*- delete temporary objects
-   if (!lenfile) delete [] fname;
-   delete select;
-   for (i=0;i<ncols;i++) {
-      delete var[i];
-   }
+   fFormulaList->Clear();
    delete [] var;
    delete [] cnames;
    delete [] index;
@@ -2242,6 +2243,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return 0;
       if (!select->GetNdim()) { delete select; return 0; }
+      fFormulaList->Add(select);
    }
 
    // if varexp is empty, take first 8 columns by default
@@ -2269,6 +2271,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    // create the TreeFormula objects corresponding to each column
    for (i=0;i<ncols;i++) {
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
+      fFormulaList->Add(var[i]);
    }
 
    // fill header info into result object
@@ -2314,10 +2317,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    }
 
    // delete temporary objects
-   delete select;
-   for (i=0;i<ncols;i++) {
-      delete var[i];
-   }
+   fFormulaList->Clear();
    delete [] fields;
    delete [] arow;
    delete [] var;
@@ -2583,4 +2583,11 @@ void TTreePlayer::UpdateFormulaLeaves()
    // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
 
    if (fSelector) fSelector->Notify();
+   if (fFormulaList->GetSize()) {
+      TObjLink *lnk = fFormulaList->FirstLink();
+      while (lnk) {
+         lnk->GetObject()->Notify();
+         lnk = lnk->Next();
+      }
+   }
 }

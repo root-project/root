@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.23 2003/01/15 18:43:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.24 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -51,6 +51,7 @@ protected:
     TH1           *fHistogram;      //! Pointer to histogram used for the projection
     TSelectorDraw *fSelector;       //! Pointer to current selector
     TList         *fInput;          //! input list to the selector
+    TList         *fFormulaList;    //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
     
 protected:
     const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);

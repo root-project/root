@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.80 2003/08/14 04:44:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.81 2003/08/20 06:53:16 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -764,7 +764,13 @@ Int_t TChain::LoadTree(Int_t entry)
                   fTree->RemoveFriend(old);
                   fTree->AddFriend(t->GetTree(),fe->GetName());
                }
-            } // else we assume it is a simple tree so we have nothing to do.
+            } else {
+               // else we assume it is a simple tree
+               // If the tree is a direct friend of the chain, it should be scanned 
+               // used the chain entry number and NOT the tree entry number (fReadEntry)
+               // hence we redo:
+               t->LoadTree(entry);
+            }
          }
 
          if (needUpdate) {
@@ -840,6 +846,11 @@ Int_t TChain::LoadTree(Int_t entry)
       }
    }
 
+   // Since some of the friend of this chain might a simple tree (i.e. not a chain),
+   // we need to execute this before the calling LoadTree(entry) on the friend (so
+   // that those tree use the correct read entry number!
+   fTree->LoadTree(fReadEntry);
+
    if (fFriends) {
       //An Alternative would move this code to each of the function calling LoadTree
       //(and to overload a few more).
@@ -893,7 +904,6 @@ Int_t TChain::LoadTree(Int_t entry)
    //Notify user if requested
    if (fNotify) fNotify->Notify();
 
-   fTree->LoadTree(fReadEntry);
    return fReadEntry;
 }
 

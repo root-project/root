@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.4 2003/01/31 08:23:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.5 2003/01/31 16:47:19 rdm Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -78,6 +78,7 @@ public:
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual Int_t      GetNdata();
+   virtual Bool_t     Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual void       Remove(TTreeFormula*);
    virtual Bool_t     Sync();
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.29 2003/06/30 15:45:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.30 2003/07/07 19:34:04 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -141,6 +141,7 @@ public:
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
    virtual Bool_t      IsInteger() const;
    virtual Bool_t      IsString() const;
+   virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
    virtual char       *PrintValue(Int_t mode=0) const;
    virtual void        SetAxis(TAxis *axis=0);
    virtual void        SetTree(TTree *tree) {fTree = tree;}
