@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.48 2003/08/20 14:14:22 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.49 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1128,7 +1128,7 @@ FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 
    base = tmpName;
 
-   FILE *fp = fopen(tmpName, "w");
+   FILE *fp = fopen(tmpName, "w+");
 
    if (!fp) SysError("TempFileName", "error opening %s", tmpName);
 

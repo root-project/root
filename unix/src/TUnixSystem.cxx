@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.71 2003/09/09 01:11:12 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.72 2003/09/23 22:06:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -950,7 +950,7 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
       SysError("TempFileName", "%s", base.Data() );
       return 0;
    } else {
-      FILE *fp = fdopen(fd, "w");
+      FILE *fp = fdopen(fd, "w+");
       if (fp == 0) SysError("TempFileName", "converting filedescriptor (%d)", fd);
       return fp;
    }
