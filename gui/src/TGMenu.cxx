@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.22 2003/12/09 09:06:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.23 2003/12/09 17:33:29 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1242,10 +1242,12 @@ void TGPopupMenu::RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast)
 
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id)
-         ptr->fStatus |= kMenuRadioMask;
+         ptr->fStatus |= kMenuRadioMask | kMenuRadioEntryMask;
       else
-         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast)
+         if (ptr->fEntryId >= IDfirst && ptr->fEntryId <= IDlast) {
             ptr->fStatus &= ~kMenuRadioMask;
+            ptr->fStatus |=  kMenuRadioEntryMask;
+         }
 }
 
 //______________________________________________________________________________
@@ -1507,7 +1509,11 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
    out << "   TGPopupMenu *";
    out << GetName() << " = new TGPopupMenu(gClient->GetRoot()"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() << ");" << endl;
-
+   
+   Bool_t hasradio = kFALSE;
+   Int_t r_first, r_last, r_active;
+   r_active = r_first = r_last = -1;
+   
    TGMenuEntry *mentry;
    TIter next(GetListOfEntries());
 
@@ -1624,10 +1630,25 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
           out << "   "<< GetName() << "->DefaultEntry(" << mentry->GetEntryId()
               << ");" << endl;
       }
-      if (mentry->GetStatus() & kMenuRadioMask) {
-         out << "   " << GetName() << "->GetStatus() =| kMenuRadioMask;" << endl; 
+      if (mentry->GetStatus() & kMenuRadioEntryMask) {
+         switch (hasradio) {
+            case kFALSE:
+               r_first = mentry->GetEntryId();
+               hasradio = kTRUE;
+               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
+               break;
+            case kTRUE:
+               r_last = mentry->GetEntryId();
+               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
+            break;
+         }
+      } else if (hasradio) {
+         out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first
+             << "," << r_last << ");" << endl;
+         hasradio = kFALSE; 
+         r_active = r_first = r_last = -1;
       }	      
-   }
+   }  
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.18 2003/07/09 12:34:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.19 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -41,12 +41,13 @@
 //--- Menu entry status mask
 
 enum EMenuEntryState {
-   kMenuActiveMask  = BIT(0),
-   kMenuEnableMask  = BIT(1),
-   kMenuDefaultMask = BIT(2),
-   kMenuCheckedMask = BIT(3),
-   kMenuRadioMask   = BIT(4),
-   kMenuHideMask    = BIT(5)
+   kMenuActiveMask     = BIT(0),
+   kMenuEnableMask     = BIT(1),
+   kMenuDefaultMask    = BIT(2),
+   kMenuCheckedMask    = BIT(3),
+   kMenuRadioMask      = BIT(4),
+   kMenuHideMask       = BIT(5),
+   kMenuRadioEntryMask = BIT(6)
 };
 
 //--- Menu entry types

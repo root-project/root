@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.8 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.9 2003/11/11 14:39:59 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -487,16 +487,17 @@ void TGDoubleHSlider::SavePrimitive(ofstream &out, Option_t *option)
    if (fMarkEnds) {
       switch (fReversedScale) {
          case kTRUE:
-            out << ",kTRUE,kTRUE);";
+            out << ",kTRUE,kTRUE);" << endl;
             break;
          case kFALSE:
-            out << ",kFALSE,kTRUE);";
+            out << ",kFALSE,kTRUE);" << endl;
             break;
       }
    } else if (fReversedScale) {
-      out << ",kTRUE);";
+      out << ",kTRUE);" << endl;
+   } else {
+      out << ");" << endl;
    }
-   out <<");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
       out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
@@ -526,16 +527,17 @@ void TGDoubleVSlider::SavePrimitive(ofstream &out, Option_t *option)
    if (fMarkEnds) {
       switch (fReversedScale) {
          case kTRUE:
-            out << ",kTRUE,kTRUE);";
+            out << ",kTRUE,kTRUE);" << endl;
             break;
          case kFALSE:
-            out << ",kFALSE,kTRUE);";
+            out << ",kFALSE,kTRUE);" << endl;
             break;
       }
    } else if (fReversedScale) {
-      out << ",kTRUE);";
+      out << ",kTRUE);" << endl;
+   } else {
+      out << ");" << endl;
    }
-   out <<");" << endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
