@@ -897,7 +897,19 @@ int isforwarddecl;
 
 #ifndef G__OLDIMPLEMENTATION682
   /* store parent_tagnum */
+#if !defined(G__OLDIMPLEMENTATION1487) && !defined(G__OLDIMPLEMENTATION1446)
+  {
+      int env_tagnum;
+      if(-1!=G__def_tagnum) {
+	if(G__tagdefining!=G__def_tagnum) env_tagnum=G__tagdefining;
+	else                              env_tagnum=G__def_tagnum;
+      }
+      else env_tagnum = -1;
+      deftmpclass->parent_tagnum = env_tagnum;
+  }
+#else
   deftmpclass->parent_tagnum = env_tagnum;
+#endif
 #endif
 
   /* store template argument list */
