@@ -12,7 +12,8 @@
    //
    // How to generate HTML files for a single class
    // (in this example class name is TBRIK), ...
-   gHtml.MakeClass("TBRIK");
+   THtml htmlex;
+   htmlex.MakeClass("TBRIK");
 
    //
    // and how to generate html code for all classes, including an index.
@@ -30,7 +31,7 @@
 
 
    // Convert this macro into html
-   gHtml.Convert("htmlex.C","Automatic HTML document generation");
+   htmlex.Convert("htmlex.C","Automatic HTML document generation");
 
    // The following line is an example of comment showing how
    // to include HTML instructions in a comment line.
