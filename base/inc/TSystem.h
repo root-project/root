@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.4 2000/12/13 17:46:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.5 2001/01/22 09:43:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -283,8 +283,8 @@ public:
    virtual TInetAddress    GetSockName(int sock);
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port, int recvbuf = -1);
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int recvbuf = -1);
+   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1);
+   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AcceptConnection(int sock);
    virtual void            CloseConnection(int sock, Bool_t force = kFALSE);

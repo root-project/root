@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.2 2000/06/28 15:30:44 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.3 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1133,27 +1133,28 @@ char *TVmsSystem::GetServiceByPort(int port)
 }
 
 //______________________________________________________________________________
-int TVmsSystem::ConnectService(const char *servername, int port, int recvbuf)
+int TVmsSystem::ConnectService(const char *servername, int port,
+                               int tcpwindowsize)
 {
    // Connect to service servicename on server servername.
 
    if (!strcmp(servername, "vms"))
       return VmsVmsConnect(port);
-   return VmsTcpConnect(servername, port, recvbuf);
+   return VmsTcpConnect(servername, port, tcpwindowsize);
 }
 
 //______________________________________________________________________________
-int TVmsSystem::OpenConnection(const char *server, int port, int recvbuf)
+int TVmsSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
    // Open a connection to a service on a server. Try 3 times with an
    // interval of 1 second.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
    for (int i = 0; i < 3; i++) {
-      int fd = ConnectService(server, port, recvbuf);
+      int fd = ConnectService(server, port, tcpwindowsize);
       if (fd >= 0)
          return fd;
       sleep(1);
@@ -1163,19 +1164,19 @@ int TVmsSystem::OpenConnection(const char *server, int port, int recvbuf)
 
 //______________________________________________________________________________
 int TVmsSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
-                                   int recvbuf)
+                                   int tcpwindowsize)
 {
    // Announce TCP/IP service.
    // Open a socket, bind to it and start listening for TCP/IP connections
    // on the port. If reuse is true reuse the address, backlog specifies
    // how many sockets can be waiting to be accepted.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns socket fd or -1 if socket() failed, -2 if bind() failed
    // or -3 if listen() failed.
 
-   return VmsTcpService(port, reuse, backlog, recvbuf);
+   return VmsTcpService(port, reuse, backlog, tcpwindowsize);
 }
 
 //______________________________________________________________________________
@@ -1294,6 +1295,9 @@ int TVmsSystem::RecvRaw(int sock, void *buf, int length, int opt)
    case kPeek:
       flag = MSG_PEEK;
       break;
+   case kDontBlock:
+      flag = -1;
+      break;
    default:
       flag = 0;
       break;
@@ -1305,7 +1309,7 @@ int TVmsSystem::RecvRaw(int sock, void *buf, int length, int opt)
          Error("RecvRaw", "cannot receive buffer");
       return n;
    }
-   return length;
+   return n;
 }
 
 //______________________________________________________________________________
@@ -1324,17 +1328,21 @@ int TVmsSystem::SendRaw(int sock, const void *buf, int length, int opt)
    case kOob:
       flag = MSG_OOB;
       break;
+   case kDontBlock:
+      flag = -1;
+      break;
    case kPeek:            // receive only option (see RecvRaw)
    default:
       flag = 0;
       break;
    }
 
-   if (VmsSend(sock, buf, length, flag) < 0) {
+   int n;
+   if ((n = VmsSend(sock, buf, length, flag) < 0)) {
       Error("SendRaw", "cannot send buffer");
       return -1;
    }
-   return length;
+   return n;
 }
 
 //______________________________________________________________________________
@@ -1857,12 +1865,12 @@ int TVmsSystem::VmsWaitchild()
 //---- RPC -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int recvbuf)
+int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int tcpwindowsize)
 {
    // Open a TCP/IP connection to server and connect to a service (i.e. port).
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
    short  sport;
@@ -1890,8 +1898,10 @@ int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int recvbuf)
       return -1;
    }
 
-   if (recvbuf > 0)
-      gSystem->SetSockOpt(sock, kRecvBuffer, recvbuf);
+   if (tcpwindowsize > 0) {
+      gSystem->SetSockOpt(sock, kRecvBuffer, tcpwindowsize);
+      gSystem->SetSockOpt(sock, kSendBuffer, tcpwindowsize);
+   }
 
    if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
       //::SysError("TVmsSystem::VmsConnectTcp", "connect");
@@ -1937,19 +1947,28 @@ int TVmsSystem::VmsVmsConnect(int port)
 }
 
 //______________________________________________________________________________
-int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog, int recvbuf)
+int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
+                              int tcpwindowsize)
 {
    // Open a socket, bind to it and start listening for TCP/IP connections
    // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // how many sockets can be waiting to be accepted. If port is 0 a port
+   // scan will be done to find a free port. This option is mutual exlusive
+   // with the reuse option.
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns socket fd or -1 if socket() failed, -2 if bind() failed
    // or -3 if listen() failed.
 
-   short  sport;
+   const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
+   short  sport, tryport = kSOCKET_MINPORT;
    struct servent *sp;
+
+   if (port == 0 && reuse) {
+      ::Error("TVmsSystem::VmsTcpService", "cannot do a port scan while reuse is true");
+      return -1;
+   }
 
    if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
@@ -1966,8 +1985,10 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog, int recvbuf)
    if (reuse)
       gSystem->SetSockOpt(sock, kReuseAddr, 1);
 
-   if (recvbuf > 0)
-      gSystem->SetSockOpt(sock, kRecvBuffer, recvbuf);
+   if (tcpwindowsize > 0) {
+      gSystem->SetSockOpt(sock, kRecvBuffer, tcpwindowsize);
+      gSystem->SetSockOpt(sock, kSendBuffer, tcpwindowsize);
+   }
 
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
@@ -1976,12 +1997,24 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog, int recvbuf)
    inserver.sin_port = sport;
 
    // Bind socket
-   for (int retry = 20; bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)); retry--) {
-      if (retry <= 0) {
-         ::SysError("TVmsSystem::VmsTcpService", "bind");
-         return -1;
+   if (port > 0) {
+      for (int retry = 20; bind(sock, (struct sockaddr*) &inserver, sizeof(inserver)); retry--) {
+         if (retry <= 0) {
+            ::SysError("TVmsSystem::VmsTcpService", "bind");
+            return -2;
+         }
+         sleep(10);
       }
-      sleep(10);
+   } else {
+      int bret;
+      do {
+         inserver.sin_port = htons(tryport++);
+         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+      } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
+      if (bret < 0) {
+         ::SysError("TVmsSystem::VmsTcpService", "bind (port scan)");
+         return -2;
+      }
    }
 
    // Start accepting connections
@@ -2048,6 +2081,12 @@ int TVmsSystem::VmsRecv(int sock, void *buffer, int length, int flag)
 
    if (sock < 0) return -1;
 
+   int once = 0;
+   if (flag == -1) {
+      flag = 0;
+      once = 1;
+   }
+
    int n, nrecv = 0;
    char *buf = (char *)buffer;
 
@@ -2069,6 +2108,8 @@ int TVmsSystem::VmsRecv(int sock, void *buffer, int length, int flag)
             return -1;
          }
       }
+      if (once)
+         return nrecv;
    }
    return n;
 }
@@ -2081,6 +2122,12 @@ int TVmsSystem::VmsSend(int sock, const void *buffer, int length, int flag)
 
    if (sock < 0) return -1;
 
+   int once = 0;
+   if (flag == -1) {
+      flag = 0;
+      once = 1;
+   }
+
    int n, nsent = 0;
    const char *buf = (const char *)buffer;
 
@@ -2089,6 +2136,8 @@ int TVmsSystem::VmsSend(int sock, const void *buffer, int length, int flag)
          ::SysError("TVmsSystem::VmsSend", "send");
          return nsent;
       }
+      if (once)
+         return nsent;
    }
    return n;
 }

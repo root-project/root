@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.2 2000/06/28 15:30:44 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.3 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,10 +52,10 @@ protected:
    static void         UnixResetSignals();
    static int          UnixFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          UnixTcpConnect(const char *hostname, int port, int recvbuf);
+   static int          UnixTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          UnixUnixConnect(int port);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
-                                      int recvbuf);
+                                      int tcpwindowsize);
    static int          UnixUnixService(int port, int backlog);
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
@@ -158,9 +158,9 @@ public:
    TInetAddress      GetSockName(int sock);
    int               GetServiceByName(const char *service);
    char             *GetServiceByPort(int port);
-   int               ConnectService(const char *server, int port, int recvbuf);
-   int               OpenConnection(const char *server, int port, int recvbuf = -1);
-   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int recvbuf = -1);
+   int               ConnectService(const char *server, int port, int tcpwindowsize);
+   int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    int               AnnounceUnixService(int port, int backlog);
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);

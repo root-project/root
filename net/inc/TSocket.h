@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.2 2000/11/27 10:48:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.3 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -50,7 +50,8 @@ enum ESockOptions {
 enum ESendRecvOptions {
    kDefault,           // default option (= 0)
    kOob,               // send or receive out-of-band data
-   kPeek               // peek at incoming message (receive only)
+   kPeek,              // peek at incoming message (receive only)
+   kDontBlock          // send/recv as much data as possible without blocking
 };
 
 
@@ -81,10 +82,10 @@ private:
    Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
-   TSocket(TInetAddress address, const char *service, Int_t recvbuf = -1);
-   TSocket(TInetAddress address, Int_t port, Int_t recvbuf = -1);
-   TSocket(const char *host, const char *service, Int_t recvbuf = -1);
-   TSocket(const char *host, Int_t port, Int_t recvbuf = -1);
+   TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);
+   TSocket(TInetAddress address, Int_t port, Int_t tcpwindowsize = -1);
+   TSocket(const char *host, const char *service, Int_t tcpwindowsize = -1);
+   TSocket(const char *host, Int_t port, Int_t tcpwindowsize = -1);
    TSocket(Int_t descriptor);
    TSocket(const TSocket &s);
    virtual ~TSocket() { Close(); }

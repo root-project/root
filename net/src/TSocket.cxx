@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.5 2000/11/27 10:48:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.6 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -33,13 +33,13 @@ UInt_t TSocket::fgBytesRecv = 0;
 ClassImp(TSocket)
 
 //______________________________________________________________________________
-TSocket::TSocket(TInetAddress addr, const char *service, Int_t recvbuf)
+TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
          : TNamed(addr.GetHostName(), service)
 {
    // Create a socket. Connect to the named service at address addr.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -56,20 +56,20 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t recvbuf)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
-                                        recvbuf);
+                                        tcpwindowsize);
       if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(TInetAddress addr, Int_t port, Int_t recvbuf)
+TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
          : TNamed(addr.GetHostName(), "")
 {
    // Create a socket. Connect to the specified port # at address addr.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -86,7 +86,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t recvbuf)
    fBytesRecv = 0;
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
-                                     recvbuf);
+                                     tcpwindowsize);
    if (fSocket == -1)
       fAddress.fPort = -1;
    else
@@ -94,13 +94,13 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t recvbuf)
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const char *host, const char *service, Int_t recvbuf)
+TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
          : TNamed(host, service)
 {
    // Create a socket. Connect to named service on the remote host.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -117,20 +117,20 @@ TSocket::TSocket(const char *host, const char *service, Int_t recvbuf)
    fBytesRecv = 0;
 
    if (fAddress.GetPort() != -1) {
-      fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), recvbuf);
+      fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
       if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const char *host, Int_t port, Int_t recvbuf)
+TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
          : TNamed(host, "")
 {
    // Create a socket. Connect to specified port # on the remote host.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -147,7 +147,7 @@ TSocket::TSocket(const char *host, Int_t port, Int_t recvbuf)
    fBytesSent = 0;
    fBytesRecv = 0;
 
-   fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), recvbuf);
+   fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
    if (fSocket == -1)
       fAddress.fPort = -1;
    else

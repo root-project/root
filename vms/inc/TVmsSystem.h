@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.2 2000/06/28 15:30:44 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.3 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -51,9 +51,9 @@ protected:
    static const char  *VmsSigname(ESignals sig);
    static int          VmsFilestat(const char *path, unsigned short *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          VmsTcpConnect(const char *hostname, int port, int recvbuf);
+   static int          VmsTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          VmsVmsConnect(int port);
-   static int          VmsTcpService(int port, Bool_t reuse, int backlog, int recvbuf);
+   static int          VmsTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize);
    static int          VmsVmsService(int port, int backlog);
    static int          VmsRecv(int sock, void *buf, int len, int flag);
    static int          VmsSend(int sock, const void *buf, int len, int flag);
@@ -156,9 +156,9 @@ public:
    TInetAddress      GetSockName(int sock);
    int               GetServiceByName(const char *service);
    char             *GetServiceByPort(int port);
-   int               ConnectService(const char *server, int port, int recvbuf);
-   int               OpenConnection(const char *server, int port, int recvbuf = -1);
-   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int recvbuf = -1);
+   int               ConnectService(const char *server, int port, int tcpwindowsize);
+   int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    int               AnnounceVmsService(int port, int backlog);
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);

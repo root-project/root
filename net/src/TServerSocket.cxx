@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.2 2001/01/22 09:43:05 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -31,15 +31,15 @@ ClassImp(TServerSocket)
 
 //______________________________________________________________________________
 TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
-                             Int_t recvbuf)
+                             Int_t tcpwindowsize)
 {
    // Create a server socket object for a named service. Set reuse to true
    // to force reuse of the server socket (i.e. do not wait for the time
    // out to pass). Using backlog one can set the desirable queue length
    // for pending connections.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Use IsValid() to check the validity of the
    // server socket. In case server socket is not valid use GetErrorCode()
    // to obtain the specific error value. These values are:
@@ -60,7 +60,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    fService = service;
 
    if (port != -1) {
-      fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, recvbuf);
+      fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
       if (fSocket >= 0) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -68,15 +68,16 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
 //______________________________________________________________________________
 TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
-                             Int_t recvbuf)
+                             Int_t tcpwindowsize)
 {
    // Create a server socket object on a specified port. Set reuse to true
    // to force reuse of the server socket (i.e. do not wait for the time
    // out to pass). Using backlog one can set the desirable queue length
-   // for pending connections.
-   // Use recvbuf to specify the size of the receive buffer, it has to be
-   // specified here to make sure the window scale option is set (for
-   // recvbuf > 65KB and for platforms supporting window scaling).
+   // for pending connections. If port is 0 a port scan will be done to
+   // find a free port. This option is mutual exlusive with the reuse option.
+   // Use tcpwindowsize to specify the size of the receive buffer, it has
+   // to be specified here to make sure the window scale option is set (for
+   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Use IsValid() to check the validity of the
    // server socket. In case server socket is not valid use GetErrorCode()
    // to obtain the specific error value. These values are:
@@ -96,7 +97,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
 
-   fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, recvbuf);
+   fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
    if (fSocket >= 0) gROOT->GetListOfSockets()->Add(this);
 }
 
