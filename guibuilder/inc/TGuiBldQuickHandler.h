@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    TGuiBldQuickHandler();
    virtual ~TGuiBldQuickHandler();
 
-   virtual Bool_t HandleEvent(Event_t *ev);
+   virtual Bool_t HandleEvent(TGWindow *win);
 
    ClassDef(TGuiBldQuickHandler,0)  // frame property editor
 };

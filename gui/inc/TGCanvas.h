@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.21 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.22 2004/10/22 07:31:58 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -168,7 +168,6 @@ public:
 
    virtual void DrawBorder() { };
    virtual void Layout() { }
-   virtual void Cleanup() { }
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual void SetHPos(Int_t xpos);

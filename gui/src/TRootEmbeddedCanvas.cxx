@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.11 2004/10/13 12:24:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.12 2004/10/14 07:23:06 brun Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -118,8 +118,10 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 {
    // Delete embedded ROOT canvas.
 
-   delete fCanvas;
-   delete fCanvasContainer;
+   if (!MustCleanup()) {
+      delete fCanvas;
+      delete fCanvasContainer;
+   }
 }
 
 //______________________________________________________________________________

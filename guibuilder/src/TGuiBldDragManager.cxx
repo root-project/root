@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.25 2004/10/19 15:10:49 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.26 2004/10/21 10:04:01 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -377,7 +377,7 @@ private:
    TGFrameElement    *fGrabListPosition;
    Bool_t             fButtonPressed;
    Bool_t             fCompacted;
-   TGFrame           *fPlane;
+   TGFrame           *fPlane;          //
 
 public:
    TGuiBldDragManagerPimpl(TGuiBldDragManager *m) {
@@ -410,12 +410,8 @@ public:
       fGrabListPosition = 0;
       fButtonPressed = kFALSE;
       fCompacted = kFALSE;
-
-      if (fPlane) {
-         fPlane->ChangeOptions(fPlane->GetOptions() & ~kRaisedFrame);
-         gClient->NeedRedraw(fPlane, kTRUE);
-      }
    }
+
    ~TGuiBldDragManagerPimpl() {
       int i;
       for (i = 0; i <8; i++) {
@@ -2661,6 +2657,7 @@ void TGuiBldDragManager::Compact(Bool_t global)
    if (global) {
       while ((fe = (TGFrameElement*)next())) {
          fe->fFrame->SetLayoutBroken(kFALSE);
+         fe->fFrame->Resize();
       }
       root->SetLayoutBroken(kFALSE);
       fPimpl->fCompacted = kTRUE;
@@ -3239,9 +3236,14 @@ void TGuiBldDragManager::ExecuteQuickAction(Event_t *event)
 {
    //
 
+   TGWindow *win = gClient->GetWindowById(event->fWindow);
+   if (!win) return;
+
    if (!fQuickHandler) fQuickHandler = new TGuiBldQuickHandler();
 
-   fQuickHandler->HandleEvent(event);
+   if (!fQuickHandler || !fQuickHandler->HandleEvent(win)) {
+      if (win->IsEditable()) Compact(kTRUE);
+   }
 }
 
 //______________________________________________________________________________

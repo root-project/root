@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.6 2004/09/14 08:55:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.7 2004/09/14 09:22:58 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -128,6 +128,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
       Error("TGFontDialog", "fontProp argument may not be 0");
       return;
    }
+   SetCleanup(kDeepCleanup);
 
    TGLayoutHints *lh1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    TGLayoutHints *lh2 = new TGLayoutHints(kLHintsLeft | kLHintsTop, 2, 0, 2, 2);
@@ -369,7 +370,6 @@ TGFontDialog::~TGFontDialog()
 {
    // Delete all widgets.
 
-   Cleanup();
    fClient->FreeFont(fLabelFont);
    fClient->FreeGC(fSampleTextGC);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.30 2003/12/12 18:21:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.31 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -59,7 +59,7 @@ TGGC          *TGListTree::fgHighlightGC = 0;
 
 
 ClassImp(TGListTreeItem)
-ClassImpQ(TGListTree)
+ClassImp(TGListTree)
 
 
 //--- Some utility functions ---------------------------------------------------

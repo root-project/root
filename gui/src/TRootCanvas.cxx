@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.58 2004/10/20 13:48:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.59 2004/10/20 14:25:56 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -570,25 +570,33 @@ TRootCanvas::~TRootCanvas()
    // Delete ROOT basic canvas. Order is significant. Delete in reverse
    // order of creation.
 
-   delete fStatusBar;
-   delete fStatusBarLayout;
-   delete fCanvasContainer;
-   delete fCanvasWindow;
+   if (!MustCleanup()) {
+      delete fStatusBar;
+      delete fStatusBarLayout;
+      delete fCanvasContainer;
+      delete fCanvasWindow;
 
-   delete fEditor;
-   delete fEditorFrame;
-   delete fEditorLayout;
-   delete fMainFrame;
-   delete fMainFrameLayout;
-   delete fToolBarSep;
-   delete fToolBar;
-   delete fToolBarLayout;
-   delete fVertical1;
-   delete fVertical2;
-   delete fHorizontal1;
-   delete fVertical1Layout;
-   delete fVertical2Layout;
-   delete fHorizontal1Layout;
+      delete fEditor;
+      delete fEditorFrame;
+      delete fEditorLayout;
+      delete fMainFrame;
+      delete fMainFrameLayout;
+      delete fToolBarSep;
+      delete fToolBar;
+      delete fToolBarLayout;
+      delete fVertical1;
+      delete fVertical2;
+      delete fHorizontal1;
+      delete fVertical1Layout;
+      delete fVertical2Layout;
+      delete fHorizontal1Layout;
+
+      delete fMenuBar;
+      delete fMenuBarLayout;
+      delete fMenuBarItemLayout;
+      delete fMenuBarHelpLayout;
+      delete fCanvasLayout;
+   }
 
    delete fFileMenu;
    delete fFileSaveMenu;
@@ -600,11 +608,6 @@ TRootCanvas::~TRootCanvas()
    delete fInspectMenu;
    delete fClassesMenu;
    delete fHelpMenu;
-   delete fMenuBar;
-   delete fMenuBarLayout;
-   delete fMenuBarItemLayout;
-   delete fMenuBarHelpLayout;
-   delete fCanvasLayout;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.3 2004/10/06 14:38:19 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.4 2004/10/07 09:56:53 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -94,6 +94,7 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
 
    MapSubwindows();
    Resize();
+   CenterOnParent();
    MapRaised();
 
    fEntry->Connect("TextChanged(char*)", fSelected->ClassName(), fSelected, setter);
@@ -148,16 +149,15 @@ TGuiBldQuickHandler::~TGuiBldQuickHandler()
 }
 
 //______________________________________________________________________________
-Bool_t  TGuiBldQuickHandler::HandleEvent(Event_t *ev)
+Bool_t TGuiBldQuickHandler::HandleEvent(TGWindow *win)
 {
    //
-
-   TGWindow *win  = gClient->GetWindowById(ev->fWindow);
 
    if (!win) return kFALSE;
 
    fSelected = win;
    char action[512];
+   Bool_t ret = kFALSE;
 
    if (gClient->GetMimeTypeList()->GetAction(fSelected->ClassName(), action)) {
       TString act = action;
@@ -169,6 +169,7 @@ Bool_t  TGuiBldQuickHandler::HandleEvent(Event_t *ev)
       } else {
          gApplication->ProcessLine(act.Data());
       }
+      ret = kTRUE;
    }
-   return kTRUE;
+   return ret;
 }

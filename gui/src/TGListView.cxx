@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.23 2003/12/03 00:25:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.24 2004/10/15 17:06:10 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TGGC         *TGListView::fgDefaultGC = 0;
 
 ClassImp(TGLVEntry)
 ClassImp(TGLVContainer)
-ClassImpQ(TGListView)
+ClassImp(TGListView)
 
 //______________________________________________________________________________
 TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
@@ -452,8 +452,10 @@ TGLVContainer::~TGLVContainer()
 {
    // Delete list view container.
 
-   RemoveAll();
-   delete fItemLayout;
+   if (!MustCleanup()) {
+      RemoveAll();
+      delete fItemLayout;
+   }
 }
 
 //______________________________________________________________________________

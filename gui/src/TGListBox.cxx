@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.25 2004/10/21 12:07:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.26 2004/10/22 07:31:58 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -715,8 +715,8 @@ TGListBox::~TGListBox()
    if (!MustCleanup()) {
       delete fVScrollbar;
       delete fVport;
+      delete fLbc;
    }
-   delete fLbc;
 }
 
 //______________________________________________________________________________
