@@ -118,8 +118,10 @@ ifeq ($(VC_MINOR),10)
 CINTS2       += $(MODDIRS)/vc7strm.cxx
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/longif3.cxx
+else
+CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
-endif
+else
 CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
 ifeq ($(PLATFORM),vms)
