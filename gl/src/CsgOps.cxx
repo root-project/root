@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.53 2005/03/18 08:03:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.1 2005/04/01 13:53:18 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -71,7 +71,7 @@
 */
 
 #include <algorithm>
-#include <cassert>
+//#include <cassert>
 #include <vector>
 
 #include "TBuffer3D.h"
@@ -1260,7 +1260,7 @@ namespace RootCsg {
 	template <typename TGBinder>
 	Plane3 compute_plane(const TGBinder &poly)
 	{
-	 assert(poly.Size() >= 3);
+	 //assert(poly.Size() >= 3);
 	 Point3 plast(poly[poly.Size()-1]);	
 	 Point3 pivot;
 	 Vector3 edge;
