@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.51 2003/04/28 16:18:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.52 2003/05/08 17:20:41 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1663,6 +1663,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          Error("ReadObject", "got object of wrong class");
          // exception
          baseOffset = 0;
+         return 0; //we better return at this point
       }
    }
 
