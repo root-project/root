@@ -1387,9 +1387,9 @@ fi
 # Warning about recommended build options
 #
 echo ""
-if test "x$enable_$ttf" = "xno" || test "x$enable_opengl" = "xno" || \
+if test "x$enable_ttf" = "xno" || test "x$enable_opengl" = "xno" || \
    test "x$ttffontdir" = "x" ; then
-    if test "x$enable_$ttf" = "xno" && test ! "x$platform" = "xwin32" ; then
+    if test "x$enable_ttf" = "xno" && test ! "x$platform" = "xwin32" ; then
 	echo "To build the ROOT TrueType font add-on library see README/INSTALL."
     fi
     if test "x$ttffontdir" = "x" ; then
