@@ -1,6 +1,6 @@
 //____________________________________________________________________
-//Begin_Html
-/*
+//Begin_Html <!--
+/* -->
    </pre>
 <H1><A NAME="SECTION00010000000000000000"></A>
 <A NAME="sec:lintra"></A>
@@ -653,13 +653,12 @@ in the transformed space.
    Christian Holm<br>
    August 2000, CERN
    </DIV>
-   <pre>
- */
-//End_Html
+<!--*/
+// -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.22 2002/04/26 10:14:59 brun Exp $
-// $Date: 2002/04/26 10:14:59 $
-// $Author: brun $
+// $Id: TPrincipal.cxx,v 1.23 2002/12/02 18:50:04 rdm Exp $
+// $Date: 2002/12/02 18:50:04 $
+// $Author: rdm $
 
 #include "TPrincipal.h"
 

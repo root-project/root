@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.4 2003/08/27 16:11:47 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.5 2003/08/27 16:21:10 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -22,8 +22,8 @@
 // J.Schwindling et al.
 //
 ///////////////////////////////////////////////////////////////////////////
-//BEGIN_HTML
-/*
+//BEGIN_HTML <!--
+/* -->
 <UL>
 	<LI><P><A NAME="intro"></A><FONT COLOR="#5c8526">
 	<FONT SIZE=4 STYLE="font-size: 15pt">Introduction</FONT></FONT></P>
@@ -183,8 +183,8 @@ net.Train(100,”text, graph, update=10”).</SPAN></FONT></P>
 <P><FONT SIZE=3>When the neural net is trained, it can be used
 directly ( TMultiLayerPerceptron::Evaluate() ) or exported to a
 standalone C++ code ( TMultiLayerPerceptron::Export() ).</FONT></P>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 
 #include "TMultiLayerPerceptron.h"
 #include "TSynapse.h"

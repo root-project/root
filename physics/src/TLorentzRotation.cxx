@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzRotation.cxx,v 1.2 2002/05/18 08:22:00 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -14,9 +14,8 @@
 //*-* and a ROOT package written by Pasha Murat.                          *
 //*-* for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/             *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <H2>
 TLorentzRotation</H2>
 The TLorentzRotation class describes Lorentz transformations including
@@ -151,9 +150,8 @@ operator of the <TT>TLorentzVector</TT> class.:
 
 <P><TT>&nbsp; v.Transform(l);</TT>
 <BR><TT>&nbsp; v *= l;&nbsp; // Attention v = l*v</TT>
-<pre>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 //
 
 #include "TError.h"

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.6 2002/01/21 16:29:20 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.7 2002/05/18 08:22:00 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -19,9 +19,8 @@
 //*-* for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/             *
 //*-* Adaption to ROOT by Peter Malzacher                                 *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <H2>TLorentzVector</H2>
 <TT>TLorentzVector</TT> is a general four-vector class, which can be used
 either for the description of position and time (x,y,z,t) or momentum and
@@ -233,9 +232,8 @@ be used by the <TT>Transform()</TT> member function, the <TT>*=</TT> or
 v *= l;&nbsp; // Attention v = l*v</TT>
 
 <P>
-<pre>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 
 #include "TClass.h"
 #include "TError.h"

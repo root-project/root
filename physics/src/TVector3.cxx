@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.5 2002/04/22 06:26:27 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.6 2002/05/18 08:22:00 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -19,9 +19,8 @@
 //*-* and a ROOT package written by Pasha Murat.                          *
 //*-* for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/             *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <H2>
 TVector3</H2>
 <TT>TVector3</TT> is a general three vector class, which can be used for
@@ -155,10 +154,9 @@ unit length</TT>
 <P>transforms v1 from the rotated frame (z' parallel to direction, x' in
 the theta plane and y' in the xy plane as well as perpendicular to the
 theta plane) to the (x,y,z) frame.
-<pre>
 
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 //
 
 #include "TVector3.h"

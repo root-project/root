@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.5 2003/04/11 06:44:40 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.6 2003/04/11 12:36:10 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -14,9 +14,8 @@
 //*-* and a ROOT package written by Pasha Murat.                          *
 //*-* for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/             *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <H2>
 TRotation</H2>
 The TRotation class describes a rotation of objects of the TVector3 class.
@@ -174,9 +173,8 @@ a rotation of a <TT>TVector3</TT> analog to the mathematical notation
 <BR><TT>&nbsp; TRotation r;</TT>
 <BR><TT>&nbsp; v.Transform(r);</TT>
 <BR><TT>&nbsp; v *= r;&nbsp; //Attention v = r * v</TT>
-<pre>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 //
 
 #include "TRotation.h"

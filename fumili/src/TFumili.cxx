@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.11 2003/08/08 09:18:35 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.12 2003/08/08 17:28:29 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -9,8 +9,8 @@
 //     Sergey Yaschenko <s.yaschenko@fz-juelich.de>
 //
 //______________________________________________________________________________
-//BEGIN_HTML
-/*
+//BEGIN_HTML <!--
+/* -->
 <H2>FUMILI minimization package</H2>
 <p>FUMILI is used to minimize Chi-square function or to search maximum of
 likelihood function.
@@ -92,8 +92,8 @@ Very similar step formulae are used in FUMILI for negative logarithm
 of the likelihood function with the same idea - linearization of
 functional argument.
 
- */
-//END_HTML
+<!--*/
+// -->END_HTML
 //______________________________________________________________________________
 
 

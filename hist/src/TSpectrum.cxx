@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.13 2003/07/11 09:42:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.16 2003/08/23 00:08:12 rdm Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -240,8 +240,8 @@ const char *TSpectrum::Background1(float *spectrum, int size,
 /*									   */ 
 /////////////////////////////////////////////////////////////////////////////
        
-//BEGIN_HTML
-/*
+//BEGIN_HTML <!--
+/* -->
 <html xmlns:v="urn:schemas-microsoft-com:vml"
 xmlns:o="urn:schemas-microsoft-com:office:office"
 xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -1187,8 +1187,8 @@ spectra in geoscience applications. NIM, B34 (1988), 396-402.<o:p></o:p></span><
 <img src=*gif/spectrum/Background1.jpg>
 
                         Fig1. 1D Spectrum with estimated background
-*/ 
-//END_HTML
+<!--*/ 
+// -->END_HTML
    int i, j;
    float a, b;
    if (size <= 0)

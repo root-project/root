@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.5 2001/01/07 15:13:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.6 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -16,9 +16,8 @@
 // B-tree class. TBtree inherits from the TSeqCollection ABC.           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <h2>B-tree Implementation notes</h2>
 
 This implements B-trees with several refinements. Most of them can be found
@@ -171,9 +170,8 @@ item's own key).
 [ [ &lt; 0 1 2 3 &gt; 4 &lt; 5 6 7 &gt; 8 &lt; 9 10 11 12 &gt; ] 13 [ &lt; 14 15 16 &gt; 17 &lt; 18 19 20 &gt; ] ]
    4  1 1 1 1   4   1 1 1   5   1  1  1  1      7  3   1  1  1    4    1  1  1
 </pre><p>
-<pre>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 
 #include <stdlib.h>
 #include "TBtree.h"
