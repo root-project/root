@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.10 2002/07/19 08:26:50 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.11 2002/08/07 15:34:21 rdm Exp $ */
 /* Author: */
 
 /*
@@ -1697,6 +1697,26 @@ static void gl_back_1_word( void )
      gl_fixup(gl_prompt, -1, i);
 }
 
+/* kills from current position to begin of word */
+static void gl_kill_back_1_word( void )
+{
+     int i = gl_pos;
+
+     /* first find a word */
+     while( i>0 && is_whitespace(gl_buf[i-1]) ) {
+          i--;
+     }
+
+     /* next, find the begin of this word. */
+     while( i>0 && !is_whitespace(gl_buf[i-1]) ) {
+          i--;
+     }
+
+     /* kill */
+     gl_mark = i;
+     gl_wipe();
+}
+
 /* kills from current position to end of word */
 static void gl_kill_1_word( void )
 {
@@ -1815,25 +1835,3 @@ static void gl_exch( void )
      gl_fixup( gl_prompt, -1, gl_mark );
      gl_mark = tmp;
 }
-
-/* kills from current position to begin of word */
-static void gl_kill_back_1_word( void )
-{
-     int i = gl_pos;
-
-     /* first find a word */
-     while( i>0 && is_whitespace(gl_buf[i-1]) ) {
-          i--;
-     }
-
-     /* next, find the begin of this word. */
-     while( i>0 && !is_whitespace(gl_buf[i-1]) ) {
-          i--;
-     }
-
-     /* kill */
-     gl_mark = i;
-     gl_wipe();
-
-}
-
