@@ -19,8 +19,15 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib 
 
+CURDIR=$(shell basename $(PWD))
+ifeq ($(CALLDIR),)
+	CALLDIR:=$(CURDIR)
+else
+	CALLDIR:=$(CALLDIR)/$(CURDIR)
+endif
+
 tests: $(TEST_TARGETS)
-	@echo "All test succeeded in `pwd`"
+	@echo "All test succeeded in $(CURDIR)"
 
 $(TEST_TARGETS_DIR): %.test:
 	@(cd $*; gmake test)
