@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.39 2001/12/07 09:27:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.40 2002/01/10 08:25:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -378,7 +378,7 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
       //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      fBaseClass->ReadBuffer(b,pointer);
+      if (!fBaseClass->GetClassInfo()) fBaseClass->ReadBuffer(b,pointer);
    }
    return 0;
 }
@@ -417,6 +417,7 @@ void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
 //______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
+   if (!fMethod) return 0;
    ULong_t args[1];
    args[0] = (ULong_t)&b;
    fMethod->SetParamPtrs(args);
