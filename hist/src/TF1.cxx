@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.78 2003/12/11 13:27:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.79 2004/03/06 21:31:49 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1120,9 +1120,8 @@ Double_t TF1::GetProb() const
 {
 // return the fit probability
    
-   Int_t ndf = fNpfits - fNpar;
-   if (ndf <= 0) return 0;
-   return TMath::Prob(fChisquare,ndf);
+   if (fNDF <= 0) return 0;
+   return TMath::Prob(fChisquare,fNDF);
 }
    
 //______________________________________________________________________________
