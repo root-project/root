@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.7 2002/05/10 07:18:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.8 2002/05/10 08:25:01 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -399,12 +399,6 @@ inline const Real_t &TMatrixDiag::operator()(Int_t i) const
 
    if (!fMatrix->IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
-   }
-
-   if (i > fNdiag || i < 1) {
-      Error("TMatrixDiag", "TMatrixDiag index %d is out of diag boundaries [1,%d]",
-            i, fNdiag);
       return err;
    }
 
