@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.147 2003/12/16 09:00:37 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.148 2003/12/16 18:55:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2188,10 +2188,9 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // *        x *        6 * arr1[3][0]*           *
    // *        x *        7 * arr1[3][1]*           *
    //
-   // This would also affect using a selection and the result of
-   //   tree->Scan("arr1:arr2","arr1>arr2");
-   // will given strange results (because the 3 formulas are not correlated).   
-   //
+   // However, if there is a selection criterium which is an array, then
+   // all the formulas will be synchronized with the selection criterium
+   // (see TTreePlayer::DrawSelect for more information).
    //
    // If option contains 
    //    lenmax=dd
@@ -2297,12 +2296,16 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    Bool_t forceDim = kFALSE;
    if (fFormulaList->LastIndex()>=0) {
       if (select) {
-         manager = new TTreeFormulaManager;
-//          manager->Add((TTreeFormula*)fFormulaList->At(i));
-//       }
-         manager->Add(select);
-         manager->Sync();
-         if (manager->GetMultiplicity() > 0) hasArray = kTRUE;
+         if (select->GetManager()->GetMultiplicity() > 0 ) {
+            manager = new TTreeFormulaManager;
+            for(i=0;i<=fFormulaList->LastIndex();i++) {
+               manager->Add((TTreeFormula*)fFormulaList->At(i));
+            }
+            manager->Sync();
+            if (manager->GetMultiplicity() > 0) {
+               hasArray = kTRUE;
+            }
+         }
       }
       for(i=0;i<=fFormulaList->LastIndex();i++) {
          TTreeFormula *form = ((TTreeFormula*)fFormulaList->At(i));
