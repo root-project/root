@@ -10,6 +10,9 @@ TEST_TARGETS += forwardDeclAndFake
 include ../../Rules.mk
 
 forwardDeclAndFake: t01.out
+		  $(CMDECHO)diff t01.out t01.good
+
+t01.out: t01.C
 		  $(CMDECHO)root.exe -q -b -l t01.C >|t01.out 2>&1 
 
 testWithFailure:
