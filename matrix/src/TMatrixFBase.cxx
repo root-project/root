@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.9 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.10 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -807,7 +807,7 @@ void TMatrixFBase::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TMatrixFBase::Print(Option_t *) const
+void TMatrixFBase::Print(Option_t *name) const
 {
   // Print the matrix as a table of elements .
 
@@ -816,7 +816,7 @@ void TMatrixFBase::Print(Option_t *) const
      return;
   }
 
-  printf("\nMatrix %dx%d is as follows",fNrows,fNcols);
+  printf("\n%dx%d matrix %s is as follows",fNrows,fNcols,name);
 
   const Int_t cols_per_sheet = 5;
 

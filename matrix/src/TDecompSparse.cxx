@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.4 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.5 2004/05/27 20:20:48 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -90,13 +90,54 @@ TDecompSparse::TDecompSparse(const TDecompSparse &another) : TDecompBase(another
 }
 
 //______________________________________________________________________________
+Int_t TDecompSparse::NonZerosUpperTriang(const TMatrixDSparse &a)
+{
+  const Int_t  rowLwb   = a.GetRowLwb();
+  const Int_t  colLwb   = a.GetColLwb();
+  const Int_t  nrows    = a.GetNrows();;
+  const Int_t *pRowIndex = a.GetRowIndexArray();
+  const Int_t *pColIndex = a.GetColIndexArray();
+
+  Int_t nr_nonzeros = 0;
+  for (Int_t irow = 0; irow < nrows; irow++ ) {
+    const Int_t rown = irow+rowLwb;
+    for (Int_t index = pRowIndex[irow]; index < pRowIndex[irow+1]; index++ ) {
+      const Int_t coln = pColIndex[index]+colLwb;
+      if (coln >= rown) nr_nonzeros++;
+    }
+  }
+
+  return nr_nonzeros;
+}
+
+//______________________________________________________________________________
+void TDecompSparse::CopyUpperTriang(const TMatrixDSparse &a,Double_t *b)
+{
+  const Int_t     rowLwb   = a.GetRowLwb();
+  const Int_t     colLwb   = a.GetColLwb();
+  const Int_t     nrows    = a.GetNrows();;
+  const Int_t    *pRowIndex = a.GetRowIndexArray();
+  const Int_t    *pColIndex = a.GetColIndexArray();
+  const Double_t *pData     = a.GetMatrixArray();
+
+  Int_t nr = 0;
+  for (Int_t irow = 0; irow < nrows; irow++ ) {
+    const Int_t rown = irow+rowLwb;
+    for (Int_t index = pRowIndex[irow]; index < pRowIndex[irow+1]; index++ ) {
+      const Int_t coln = pColIndex[index]+colLwb;
+      if (coln >= rown) b[nr++] = pData[index];
+    }
+  }
+}
+
+//______________________________________________________________________________
 void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
 {
   fA.Use(*const_cast<TMatrixDSparse *>(&a));
   fRowLwb    = fA.GetRowLwb();
   fColLwb    = fA.GetColLwb();
   fNrows     = fA.GetNrows();
-  fNnonZeros = fA.GetNoElements();
+  fNnonZeros = NonZerosUpperTriang(a);
 
   fRowFact.Set(fNnonZeros+1);
   fColFact.Set(fNnonZeros+1);
@@ -104,12 +145,18 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
   const Int_t *rowIndex = a.GetRowIndexArray();
   const Int_t *colIndex = a.GetColIndexArray();
 
+  Int_t nr = 0;
   for (Int_t irow = 0; irow < fNrows; irow++ ) {
-    for (Int_t k = rowIndex[irow]; k < rowIndex[irow+1]; k++ )
-      fRowFact[k+1] = irow+1;
+    const Int_t rown = irow+fRowLwb;
+    for (Int_t index = rowIndex[irow]; index < rowIndex[irow+1]; index++ ) {
+      const Int_t coln = colIndex[index]+fColLwb;
+      if (coln >= rown) {
+        fRowFact[nr+1] = irow+1;
+        fColFact[nr+1] = colIndex[index]+1;
+        nr++;
+      }
+    }
   }
-  for (Int_t icol = 0; icol < fNnonZeros; icol++ )
-    fColFact[icol+1] = colIndex[icol]+1;
 
   fW    .Set(fNrows+1);
   fIkeep.Set(3*(fNrows+1));
@@ -161,7 +208,7 @@ Bool_t TDecompSparse::Decompose()
   Int_t done = 0; Int_t tries = 0;
   do {
     fFact[0] = 0.;
-    memcpy(fFact.GetArray()+1,fA.GetMatrixArray(),fNnonZeros*sizeof(Double_t));
+    CopyUpperTriang(fA,fFact.GetArray()+1);
 
     Factor(fNrows,fNnonZeros,fRowFact,fColFact,fFact,fIw,fIkeep,
            fNsteps,fMaxfrt,fIw1,fIcntl,fCntl,fInfo);
@@ -197,7 +244,7 @@ Bool_t TDecompSparse::Decompose()
           const Int_t nFact = (this->IError() > fRPessimism*nFact_old) ? this->IError() :
                                                                          (Int_t) (fRPessimism*nFact_old);
           fFact.Set(nFact); fFact.Reset(0.0);
-          memcpy(fFact.GetArray(),fA.GetMatrixArray(),fNnonZeros*sizeof(Double_t));
+          CopyUpperTriang(fA,fFact.GetArray()+1);
           if (fVerbose)
             Info("Decompose()","reseting to: %d",nFact);
           fRPessimism *= 1.1;
@@ -274,6 +321,8 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
   }
   b.Shift(-fRowLwb); // make sure rowlwb = 0
 
+  b.Shift(fColLwb);
+
   // save bs and store residuals
   TVectorD resid = b;
   TVectorD bSave = b;
@@ -308,7 +357,7 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
       if (tp > kThresholdPivotingMax) tp = kThresholdPivotingMax;
       this->SetThresholdPivoting(tp);
       if (fVerbose)
-        Info("Solve","Setting ThresholdPivoting parameter to %d for future factorizations",
+        Info("Solve","Setting ThresholdPivoting parameter to %.4e for future factorizations",
               this->GetThresholdPivoting());
 
       SetMatrix(fA);
@@ -329,23 +378,9 @@ void TDecompSparse::InitParam()
   fIPessimism = 1.2;
   fRPessimism = 1.2;
 
-  // set initial value of "Treat As Zero" parameter
-  this->SetTreatAsZero(kInitTreatAsZero);
-
-  // set initial value of Threshold parameter
-  this->SetThresholdPivoting(kInitThresholdPivoting);
-
   const Int_t ifrlvl = 5;
 
-  if (fVerbose) {
-    fIcntl[1] = 1;
-    fIcntl[2] = 1;
-    fIcntl[3] = 2;
-  } else {
-    fIcntl[1] = 0;
-    fIcntl[2] = 0;
-    fIcntl[3] = 0;
-  }
+  SetVerbose(fVerbose);
   fIcntl[4] = 2139062143;
   fIcntl[5] = 1;
   fIcntl[ifrlvl+1]  = 32639;
@@ -379,6 +414,12 @@ void TDecompSparse::InitParam()
   fCntl[4] = 0.0;
   fCntl[5] = 0.0;
 
+  // set initial value of "Treat As Zero" parameter
+  this->SetTreatAsZero(kInitTreatAsZero);
+
+  // set initial value of Threshold parameter
+  this->SetThresholdPivoting(kInitThresholdPivoting);
+
   fNsteps    = 0;
   fMaxfrt    = 0;
   fNrows     = 0;
@@ -404,7 +445,7 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
     info[i] = 0;
 
   if (icntl[3] > 0 && icntl[2] > 0) {
-    ::Info("InitPivot","Start with n = %d  nz = %d  liw = %d  iflag = %d",n,nz,liw,iflag);
+    printf("Start with n = %d  nz = %d  liw = %d  iflag = %d\n",n,nz,liw,iflag);
     nsteps = 0;
     k = TMath::Min(8,nz);
     if (icntl[3] > 1) k = nz;
@@ -471,8 +512,8 @@ void TDecompSparse::InitPivot(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI
 
   if (icntl[3] <= 0 || icntl[2] <= 0) return;
 
-  ::Info("InitPivot","Leaving with nsteps =%d info(1)=%d ops=%14.5e ierror=%d",nsteps,info[1],ops,info[2]);
-  ::Info("InitPivot","nrltot=%d nirtot=%d nrlnec=%d nirnec=%d nrladu=%d niradu=%d ncmpa=%d",
+  printf("Leaving with nsteps =%d info(1)=%d ops=%14.5e ierror=%d\n",nsteps,info[1],ops,info[2]);
+  printf("nrltot=%d nirtot=%d nrlnec=%d nirnec=%d nrladu=%d niradu=%d ncmpa=%d\n",
           info[3],info[4],info[5],info[6],info[7],info[8],info[11]);
 
   k = TMath::Min(9,n);
@@ -513,7 +554,7 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
 
   info[1] = 0;
   if (icntl[3] > 0 && icntl[2] > 0) {
-    ::Info("Factor","entering with n=%d nz=%d la=%d liw=%d nsteps=%d u=%10.2e\n",
+    printf("entering Factor with n=%d nz=%d la=%d liw=%d nsteps=%d u=%10.2e\n",
              n,nz,la,liw,nsteps,cntl[1]);
     kz = TMath::Min(6,nz);
     if (icntl[3] > 1) kz = nz;
@@ -604,7 +645,7 @@ void TDecompSparse::Factor(const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &A
   if (icntl[3] <= 0 || icntl[2] <= 0 || info[1] < 0)
     return;
 
-  ::Info("Factor","leaving with maxfrt=%d info[1]=%d nrlbdu=%d nirbdu=%d ncmpbr=%d ncmpbi=%d ntwo=%d ierror=%d",
+  printf("leaving Factor with maxfrt=%d info[1]=%d nrlbdu=%d nirbdu=%d ncmpbr=%d ncmpbi=%d ntwo=%d ierror=%d\n",
              maxfrt,info[1],info[9],info[10],info[12],info[13],info[14],info[2]);
 
   if (info[1] < 0) return;
@@ -669,7 +710,7 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
   info[1] = 0;
   k = 0;
   if (icntl[3] > 0 && icntl[2] > 0) {
-    ::Info("Solve","nentering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d",n,la,liw,maxfrt,nsteps);
+    printf("nentering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d",n,la,liw,maxfrt,nsteps);
 
     kblk = TMath::Abs(iw[1]+0);
     if (kblk != 0) {
@@ -720,21 +761,18 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
   }
 
   nblk = 0;
-  if (iw[1] >= 0) {
-    nblk = iw[1];
-    if (nblk <= 0) {
-      for (i = 1; i < n+1; i++) 
-        rhs[i] = 0.0;
-    }
+  if (iw[1] == 0) {
+    nblk = 0;
+    for (i = 1; i < n+1; i++) 
+      rhs[i] = 0.0;
   } else {
-    if (nblk <= 0)
-      nblk = -iw[1];
+    nblk = (iw[1] <= 0) ? -iw[1] : iw[1];
     Solve_sub1(n,a,iw+1,w,rhs,iw1,nblk,latop,icntl);
     Solve_sub2(n,a,iw+1,w,rhs,iw1,nblk,latop,icntl);
   }
 
   if (icntl[3] > 0 && icntl[2] > 0) {
-    ::Info("Solve","leaving with");
+    printf("leaving Solve with:\n");
     if (n > 0) {
       printf("rhs =\n");
       for (i = 1; i < k+1; i++) {

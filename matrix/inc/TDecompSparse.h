@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.8 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.h,v 1.1 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Apr 2004
 
 /*************************************************************************
@@ -34,14 +34,14 @@
 // globals
 const Double_t kInitTreatAsZero         = 1.0e-12;
 const Double_t kInitThresholdPivoting   = 1.0e-8;
-const Double_t kInitPrecision           = 1e-7;
+const Double_t kInitPrecision           = 1.0e-7;
 
 // the Threshold Pivoting parameter may need to be increased during
 // the algorithm if poor precision is obtained from the linear
 // solves.  kThresholdPivoting indicates the largest value we are
 // willing to tolerate.
 
-const Double_t kThresholdPivotingMax    = 1.e-2;
+const Double_t kThresholdPivotingMax    = 1.0e-2;
 
 // the factor in the range (1,inf) by which kThresholdPivoting is
 // increased when it is found to be inadequate.
@@ -82,46 +82,49 @@ protected :
   TArrayI        fRowFact;
   TArrayI        fColFact;
 
-  void  InitParam();
-  static void InitPivot (const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,
-                         TArrayI &Aiw,TArrayI &Aikeep,TArrayI &Aiw1,Int_t &nsteps,
-                         const Int_t iflag,Int_t *icntl,Double_t *cntl,Int_t *info,Double_t &ops);
-  static void  Factor   (const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,TArrayD &Aa,
-                         TArrayI &Aiw,TArrayI &Aikeep,const Int_t nsteps,Int_t &maxfrt,
-                         TArrayI &Aiw1,Int_t *icntl,Double_t *cntl,Int_t *info);
-  static void  Solve    (const Int_t n,TArrayD &Aa,TArrayI &Aiw,TArrayD &Aw,const Int_t maxfrt,
-                         TVectorD &b,TArrayI &Aiw1,const Int_t nsteps,Int_t *icntl,Int_t *info);
+  static Int_t NonZerosUpperTriang(const TMatrixDSparse &a);
+  static void  CopyUpperTriang    (const TMatrixDSparse &a,Double_t *b);
 
-  static void  InitPivot_sub1 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *iw,Int_t *ipe,
-                               Int_t *iq,Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info);
-  static void  InitPivot_sub2 (const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t *nv,
-                               Int_t *nxt,Int_t *lst,Int_t *ipd,Int_t *flag,const Int_t iovflo,Int_t &ncmpa,
-                               const Double_t fratio);
-  static void  InitPivot_sub2a(const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t &ncmpa);
-  static void  InitPivot_sub3 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *perm,Int_t *iw,
-                               Int_t *ipe,Int_t *iq,Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info);
-  static void  InitPivot_sub4 (const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t *ips,
-                               Int_t *ipv,Int_t *nv,Int_t *flag,Int_t &ncmpa);
-  static void  InitPivot_sub5 (const Int_t n,Int_t *ipe,Int_t *nv,Int_t *ips,Int_t *ne,Int_t *na,Int_t *nd,
-                               Int_t &nsteps,const Int_t nemin);
-  static void  InitPivot_sub6 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *perm,Int_t *na,
-                               Int_t *ne,Int_t *nd,const Int_t nsteps,Int_t *lstki,Int_t *lstkr,Int_t *iw,
-                               Int_t *info,Double_t &ops);
+         void  InitParam();
+  static void  InitPivot (const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,
+                          TArrayI &Aiw,TArrayI &Aikeep,TArrayI &Aiw1,Int_t &nsteps,
+                          const Int_t iflag,Int_t *icntl,Double_t *cntl,Int_t *info,Double_t &ops);
+  static void   Factor   (const Int_t n,const Int_t nz,TArrayI &Airn,TArrayI &Aicn,TArrayD &Aa,
+                          TArrayI &Aiw,TArrayI &Aikeep,const Int_t nsteps,Int_t &maxfrt,
+                          TArrayI &Aiw1,Int_t *icntl,Double_t *cntl,Int_t *info);
+  static void   Solve    (const Int_t n,TArrayD &Aa,TArrayI &Aiw,TArrayD &Aw,const Int_t maxfrt,
+                          TVectorD &b,TArrayI &Aiw1,const Int_t nsteps,Int_t *icntl,Int_t *info);
+ 
+  static void   InitPivot_sub1 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *iw,Int_t *ipe,
+                                Int_t *iq,Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info);
+  static void   InitPivot_sub2 (const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t *nv,
+                                Int_t *nxt,Int_t *lst,Int_t *ipd,Int_t *flag,const Int_t iovflo,Int_t &ncmpa,
+                                const Double_t fratio);
+  static void   InitPivot_sub2a(const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t &ncmpa);
+  static void   InitPivot_sub3 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *perm,Int_t *iw,
+                                Int_t *ipe,Int_t *iq,Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info);
+  static void   InitPivot_sub4 (const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t *ips,
+                                Int_t *ipv,Int_t *nv,Int_t *flag,Int_t &ncmpa);
+  static void   InitPivot_sub5 (const Int_t n,Int_t *ipe,Int_t *nv,Int_t *ips,Int_t *ne,Int_t *na,Int_t *nd,
+                                Int_t &nsteps,const Int_t nemin);
+  static void   InitPivot_sub6 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *perm,Int_t *na,
+                                Int_t *ne,Int_t *nd,const Int_t nsteps,Int_t *lstki,Int_t *lstkr,Int_t *iw,
+                                Int_t *info,Double_t &ops);
 
-  static void  Factor_sub1    (const Int_t n,const Int_t nz,Int_t &nz1,Double_t *a,const Int_t la,
-                               Int_t *irn,Int_t *icn,Int_t *iw,const Int_t liw,Int_t *perm,Int_t *iw2,
-                               Int_t *icntl,Int_t *info);
-  static void  Factor_sub2    (const Int_t n,const Int_t nz,Double_t *a,const Int_t la,Int_t *iw,
-                               const Int_t liw,Int_t *perm,Int_t *nstk,const Int_t nsteps,Int_t &maxfrt,
-                               Int_t *nelim,Int_t *iw2,Int_t *icntl,Double_t *cntl,Int_t *info);
-  static void  Factor_sub3    (Double_t *a,Int_t *iw,Int_t &j1,Int_t &j2,const Int_t itop,const Int_t ireal,
-                               Int_t &ncmpbr,Int_t &ncmpbi);
+  static void   Factor_sub1    (const Int_t n,const Int_t nz,Int_t &nz1,Double_t *a,const Int_t la,
+                                Int_t *irn,Int_t *icn,Int_t *iw,const Int_t liw,Int_t *perm,Int_t *iw2,
+                                Int_t *icntl,Int_t *info);
+  static void   Factor_sub2    (const Int_t n,const Int_t nz,Double_t *a,const Int_t la,Int_t *iw,
+                                const Int_t liw,Int_t *perm,Int_t *nstk,const Int_t nsteps,Int_t &maxfrt,
+                                Int_t *nelim,Int_t *iw2,Int_t *icntl,Double_t *cntl,Int_t *info);
+  static void   Factor_sub3    (Double_t *a,Int_t *iw,Int_t &j1,Int_t &j2,const Int_t itop,const Int_t ireal,
+                                Int_t &ncmpbr,Int_t &ncmpbi);
 
-  static void  Solve_sub1     (const Int_t n,Double_t *a,Int_t *iw,Double_t *w,Double_t *rhs,Int_t *iw2,
-                               const Int_t nblk,Int_t &latop,Int_t *icntl);
-  static void  Solve_sub2     (const Int_t n,Double_t *a,Int_t *iw,Double_t *w,Double_t *rhs,Int_t *iw2,
-                               const Int_t nblk,const Int_t latop,Int_t *icntl);
-  static Int_t IDiag          (Int_t ix,Int_t iy) { return ((iy-1)*(2*ix-iy+2))/2; }
+  static void   Solve_sub1     (const Int_t n,Double_t *a,Int_t *iw,Double_t *w,Double_t *rhs,Int_t *iw2,
+                                const Int_t nblk,Int_t &latop,Int_t *icntl);
+  static void   Solve_sub2     (const Int_t n,Double_t *a,Int_t *iw,Double_t *w,Double_t *rhs,Int_t *iw2,
+                                const Int_t nblk,const Int_t latop,Int_t *icntl);
+  static Int_t  IDiag          (Int_t ix,Int_t iy) { return ((iy-1)*(2*ix-iy+2))/2; }
 
   inline Int_t IError          () { return fInfo[2]; }
   inline Int_t MinRealWorkspace() { return fInfo[5]; }
@@ -154,6 +157,10 @@ public :
 
   const   TMatrixDSparse GetMatrix  () { MayNotUse("GetMatrix"); return TMatrixDSparse(); }
 
+  inline  void     SetVerbose (Int_t v) { fVerbose = (v) ? 1 : 0;
+                                          if (fVerbose) { fIcntl[1] = fIcntl[2] = 1; fIcntl[3] = 2; }
+                                          else          { fIcntl[1] = fIcntl[2] = fIcntl[3] = 0; }
+                                        }
   virtual Int_t    GetNrows   () const { return fA.GetNrows(); }
   virtual Int_t    GetNcols   () const { return fA.GetNcols(); }
 

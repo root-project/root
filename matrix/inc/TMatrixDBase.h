@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.12 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.13 2004/05/27 13:17:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -157,7 +157,7 @@ public:
   virtual Double_t Max        () const;
 
   void Draw (Option_t *option="");       // *MENU*
-  void Print(Option_t *option="") const; // *MENU*
+  void Print(Option_t *name  ="") const; // *MENU*
 
   virtual Double_t  operator()(Int_t rown,Int_t coln) const = 0;
   virtual Double_t &operator()(Int_t rown,Int_t coln)       = 0;

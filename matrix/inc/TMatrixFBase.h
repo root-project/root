@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.11 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.12 2004/05/27 13:17:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -151,7 +151,7 @@ public:
   virtual Float_t  Max        () const;
 
   void Draw (Option_t *option="");       // *MENU*
-  void Print(Option_t *option="") const; // *MENU*
+  void Print(Option_t *name  ="") const; // *MENU*
 
   virtual Float_t  operator()(Int_t rown,Int_t coln) const = 0;
   virtual Float_t &operator()(Int_t rown,Int_t coln)       = 0;
