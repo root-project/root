@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.5 2001/01/15 07:36:37 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.6 2001/01/16 16:17:39 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -398,6 +398,9 @@ void TClonesArray::Streamer(TBuffer &b)
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
+            else
+               fClass->New(fKeep->fCont[i]);
+
             fCont[i] = fKeep->fCont[i];
             fLast = i;
          }
@@ -409,6 +412,8 @@ void TClonesArray::Streamer(TBuffer &b)
             if (nch) {
                if (!fKeep->fCont[i])
                   fKeep->fCont[i] = (TObject*)fClass->New();
+               else
+                  fClass->New(fKeep->fCont[i]);
 
                fCont[i] = fKeep->fCont[i];
                fKeep->fCont[i]->Streamer(b);
