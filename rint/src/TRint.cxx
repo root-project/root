@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.19 2003/07/15 06:36:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.20 2003/09/26 13:15:04 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -165,8 +165,9 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
    ih->Add();
    SetSignalHandler(ih);
 
-   TTermInputHandler *th = new TTermInputHandler(0);
-   th->Add();
+   // Handle stdin events
+   fInputHandler = new TTermInputHandler(0);
+   fInputHandler->Add();
 
    // Goto into raw terminal input mode
    char defhist[128];
@@ -348,23 +349,33 @@ Bool_t TRint::HandleTermInput()
       if (line[0] == 0 && Gl_eof())
          Terminate(0);
 
-      if (gROOT->Timer()) timer.Start();
-
       Gl_histadd(line);
 
-      char *s = line;
-      while (s && *s == ' ') s++;     // strip-off leading blanks
-      s[strlen(s)-1] = '\0';          // strip also '\n' off
+      TString sline = line;
+      line[0] = 0;
+
+      // strip off '\n' and leading and trailing blanks
+      sline = sline.Chop();
+      sline = sline.Strip(TString::kBoth);
+
       fInterrupt = kFALSE;
 
-      if (!gInterpreter->GetMore() && strlen(s) != 0) fNcmd++;
+      if (!gInterpreter->GetMore() && !sline.IsNull()) fNcmd++;
 
-      ProcessLine(s);
+      // prevent recursive calling of this routine
+      fInputHandler->Remove();
 
-      if (strstr(s,".reset") != s)
-          gInterpreter->EndOfLineAction();
+      if (gROOT->Timer()) timer.Start();
+
+      ProcessLine(sline);
 
       if (gROOT->Timer()) timer.Print();
+
+      // enable again intput handler
+      fInputHandler->Add();
+
+      if (!sline.BeginsWith(".reset"))
+         gInterpreter->EndOfLineAction();
 
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());
