@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.25 2004/01/30 02:28:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.26 2004/01/30 08:12:56 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -455,15 +455,9 @@ void TRootCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
    gVirtualX->GetWindowSize(fId, x, y, w, h);
 
-   // Get position of window on the screen. For this we need to get the parent
-   // of the ROOT canvas, i.e. the window managed by the window manager and get
-   // its position
-   UInt_t wdum, hdum;
-   Window_t id = fId;
-   do {
-      gVirtualX->GetWindowSize(id, x, y, wdum, hdum);
-      id = gVirtualX->GetParent(id);
-   } while (id != gClient->GetRoot()->GetId());
+   Window_t childdum;
+   gVirtualX->TranslateCoordinates(fId, gClient->GetRoot()->GetId(),
+                                   0, 0, x, y, childdum);
 }
 
 //______________________________________________________________________________
