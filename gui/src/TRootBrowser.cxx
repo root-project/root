@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.15 2002/06/20 15:07:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.16 2002/07/31 21:59:16 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -178,7 +178,7 @@ private:
 
 public:
    TRootIconList(TRootIconBox* box = 0);
-   ~TRootIconList();
+   virtual ~TRootIconList();
    const char       *GetName() const { return fName.Data(); }
    void              UpdateName();
    const char       *GetTitle() const { return "ListView Container"; }
@@ -242,11 +242,12 @@ private:
    Bool_t           fWasGrouped;
    TObject         *fActiveObject;    //
 
-protected:
    TGFrameElement *FindFrame(const TString& name,
                              Bool_t direction = kTRUE,
                              Bool_t caseSensitive = kTRUE,
                              Bool_t beginWith = kFALSE);
+   void RemoveGarbage();
+
 public:
    TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
                 UInt_t options = kSunkenFrame,
@@ -297,7 +298,8 @@ TRootIconBox::~TRootIconBox()
 {
    // dtor
 
-   fGarbage->Delete();
+   RemoveAll();
+   RemoveGarbage();
    delete fGarbage;
 }
 
@@ -334,6 +336,20 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    }
    fSmallCachedPic = *spic;
    fCachedPicName = name;
+}
+
+//______________________________________________________________________________
+void TRootIconBox::RemoveGarbage()
+{
+   // delete all TRootIconLists from garbage
+
+   TIter next(fGarbage);
+   TList *li;
+
+   while ((li=(TList *)next())) {
+      li->Clear("nodelete");
+   }
+   fGarbage->Delete();
 }
 
 //______________________________________________________________________________
@@ -407,7 +423,17 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if ((fCurrentList->GetSize()==fGroupSize) && !fGrouped) {
       browser->SetViewMode(kLVLargeIcons,kTRUE);
       fGrouped = kTRUE;
-      fList->Delete();
+   
+      // clear fList
+      TGFrameElement *el;
+      TIter nextl(fList);
+
+      while ((el = (TGFrameElement *) nextl())) {
+         el->fFrame->DestroyWindow();
+         delete el->fFrame;
+      }
+      fList->Clear();
+
       fCurrentName = new TGString(fCurrentList->GetName());
       fi = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
                             fCurrentName, fCurrentList, TList::Class(), fViewMode);
@@ -442,21 +468,36 @@ void TRootIconList::Browse(TBrowser *b)
    const TGPicture *pic = 0;
    const TGPicture *spic = 0;
    TClass *cl;
-   const char *name;
-
+   TString name;
+   TKey *key = 0;
+   
    fIconBox->RemoveAll();
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
       obj = lnk->GetObject();
       lnk = lnk->Next();
-      cl = obj->IsA();
+ 
+      if (obj->IsA() == TKey::Class()) {
+         cl = gROOT->GetClass(((TKey *)obj)->GetClassName());
+         key = (TKey *)obj;
+      } else if (obj->IsA() == TKeyMapFile::Class()) {
+         cl = gROOT->GetClass(((TKeyMapFile *)obj)->GetTitle());
+      } else {
+         cl = obj->IsA();
+      }
+
       name = obj->GetName();
+
+      if (obj->IsA() == TKey::Class()) {
+         name += ";";      
+         name +=  key->GetCycle();
+      }
 
       fIconBox->GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
                                obj->GetIconName() : cl->GetName());
 
-      fi = new TRootObjItem((const TGWindow*)fIconBox, pic, spic, new TGString(name),
+      fi = new TRootObjItem((const TGWindow*)fIconBox, pic, spic, new TGString(name.Data()),
                              obj, cl, (EListViewMode)fIconBox->GetViewMode());
       fi->SetUserData(obj);
       fIconBox->AddItem(fi);
@@ -466,10 +507,11 @@ void TRootIconList::Browse(TBrowser *b)
          fIconBox->ActivateItem((TGFrameElement*)fIconBox->fList->Last());
       }
    }
-
+   
    fIconBox->fGarbage->Remove(this);
-   fIconBox->fGarbage->Delete();
-   fIconBox->fGarbage->Add(this);
+   fIconBox->RemoveGarbage();
+   fIconBox->fGarbage->Add(this); // delete this later
+
    fIconBox->Refresh();
    fIconBox->AdjustPosition();
 
@@ -481,7 +523,6 @@ void TRootIconList::Browse(TBrowser *b)
 TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
                                        Bool_t caseSensitive,Bool_t beginWith)
 {
-
    // Find a frame which assosiated object has a name containing a "name" string.
 
    if (!fGrouped) {
@@ -846,7 +887,6 @@ void TRootBrowser::CreateBrowser(const char *name)
       fViewMenu->CheckEntry(kViewGroupLV);
       fIconBox->SetGroupSize(igv);
    }
-
 
    fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fListView->SetContainer(fIconBox);
@@ -1547,8 +1587,8 @@ void TRootBrowser::Refresh(Bool_t force)
 {
    // Refresh the browser contents.
 
-   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force) &&
-         fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
+   if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force) 
+      && !fIconBox->WasGrouped() && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
