@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.23 2003/01/31 22:53:25 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.24 2003/02/05 15:22:42 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -67,7 +67,7 @@ void TVectorD::Allocate(Int_t nrows, Int_t row_lwb)
    fRowLwb = row_lwb;
 
    //fElements = new Double_t[fNrows];  because of use of ReAlloc()
-   fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t));
+   fElements = (Double_t*) TStorage::Alloc(fNrows*sizeof(Double_t));
    if (fElements)
       memset(fElements, 0, fNrows*sizeof(Double_t));
 }
@@ -133,7 +133,7 @@ TVectorD::~TVectorD()
    // TVectorD destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      TStorage::Dealloc(fElements);
 
    Invalidate();
 }
@@ -339,7 +339,7 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
    Assert((fNrows = a.fNrows) > 0);
 
    //Assert((fElements = new Double_t[fNrows]) != 0);
-   Assert((fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t))) != 0);
+   Assert((fElements = (Double_t*) TStorage::Alloc(fNrows*sizeof(Double_t))) != 0);
    fNmem = fNrows;
 
    Double_t *tp = fElements;                     // Target vector ptr
