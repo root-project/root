@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.5 2001/11/08 12:20:50 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.6 2001/11/08 16:13:32 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -1649,9 +1649,10 @@ void  TGWin32::Warp(int ix, int iy){
       ->W32_Warp(ix, iy);
 }
 //______________________________________________________________________________
-void  TGWin32::WriteGIF(char *name){
+Int_t  TGWin32::WriteGIF(char *name){
      SafeCallWin32
       ->W32_WriteGIF(name);
+     return 0;
 }
 //______________________________________________________________________________
 void  TGWin32::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname){

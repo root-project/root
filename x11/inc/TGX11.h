@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.11 2001/05/21 11:20:07 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.12 2001/08/21 17:29:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -224,7 +224,7 @@ public:
    void      Sync(Int_t mode);
    void      UpdateWindow(Int_t mode);
    void      Warp(Int_t ix, Int_t iy);
-   void      WriteGIF(char *name);
+   Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----

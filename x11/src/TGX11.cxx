@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.15 2001/11/16 02:47:36 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.16 2002/01/02 21:48:30 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3010,7 +3010,7 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 }
 
 //______________________________________________________________________________
-void TGX11::WriteGIF(char *name)
+Int_t TGX11::WriteGIF(char *name)
 {
    // Writes the current window into GIF file.
 
@@ -3053,14 +3053,19 @@ void TGX11::WriteGIF(char *name)
 
    out = fopen(name, "w+");
 
-   GIFencode(gCws->width, gCws->height,
+   if (out) {
+      GIFencode(gCws->width, gCws->height,
              ncol, r, g, b, scline, GetPixel, PutByte);
-
-   fclose(out);
-
+      fclose(out);
+      i = 1;
+   } else {
+      Error("WriteGIF","cannot write file: %s",name);
+      i = 0;
+   }
    delete [] R;
    delete [] G;
    delete [] B;
+   return i;
 }
 
 //______________________________________________________________________________

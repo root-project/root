@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.10 2001/06/29 06:40:28 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.11 2001/08/21 17:29:39 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -230,7 +230,7 @@ public:
     void      SetTitle(const char *title);
     void      UpdateWindow(Int_t mode);
     void      Warp(Int_t ix, Int_t iy);
-    void      WriteGIF(char *name);
+    Int_t     WriteGIF(char *name);
     void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
     UInt_t    ExecCommand(TGWin32Command *command);
