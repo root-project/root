@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.23 2002/04/17 20:08:40 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.24 2002/05/28 23:43:08 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -401,6 +401,13 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   return RooTreeData::plotOn(frame,cuts,drawOptions,&dataVar->getBinning()) ;
 }
 
+
+
+RooPlot *RooDataHist::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins) const 
+{
+  // Implementation pending...
+  return 0 ;
+}
 
 
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize) 

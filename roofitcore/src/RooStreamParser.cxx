@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.15 2002/01/08 02:18:04 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.16 2002/04/03 23:37:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@
 #include <iostream.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <strings.h>
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooNumber.hh"
 

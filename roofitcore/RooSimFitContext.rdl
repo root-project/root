@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.rdl,v 1.7 2002/03/07 06:22:23 verkerke Exp $
+ *    File: $Id: RooSimFitContext.rdl,v 1.8 2002/06/08 00:45:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,6 +49,10 @@ public:
 protected:
 
   virtual Double_t nLogLikelihood(Bool_t extended, Int_t nObserved) const ;  
+  virtual Double_t nLogLikelihood(Bool_t extended) const {
+    return RooFitContext::nLogLikelihood(extended) ;
+  }
+
   virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
   virtual void syncParams() const ;
 
