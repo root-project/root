@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.8 2001/03/01 07:21:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.9 2001/03/05 15:27:26 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -469,16 +469,18 @@ Seek_t TFTP::GetFile(const char *file, const char *localName)
    }
 
    // check file system space
-   Long_t id, bsize, blocks, bfree;
-   if (gSystem->GetFsInfo(localName, &id, &bsize, &blocks, &bfree) == 0) {
-      Double_t space = (Double_t)bsize * (Double_t)bfree;
-      if (space < size - restartat) {
-         Error("GetFile", "not enough space to store file %s", localName);
-         // send urgent message to rootd to stop tranfer
-         return -1;
-      }
-   } else
-      Warning("GetFile", "could not determine if there is enough free space to store file");
+   if (strcmp(localName, "/dev/null")) {
+      Long_t id, bsize, blocks, bfree;
+      if (gSystem->GetFsInfo(localName, &id, &bsize, &blocks, &bfree) == 0) {
+         Double_t space = (Double_t)bsize * (Double_t)bfree;
+         if (space < size - restartat) {
+            Error("GetFile", "not enough space to store file %s", localName);
+            // send urgent message to rootd to stop tranfer
+            return -1;
+         }
+      } else
+         Warning("GetFile", "could not determine if there is enough free space to store file");
+   }
 
    // seek to restartat position
    if (restartat) {

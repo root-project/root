@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.36 2002/01/22 10:53:29 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.37 2002/01/27 17:44:18 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1409,20 +1409,21 @@ void RootdPutFile(const char *msg)
       }
    }
 
-
    // check file system space
-   struct statfs statfsbuf;
+   if (strcmp(gFile, "/dev/null")) {
+      struct statfs statfsbuf;
 #if defined(__sgi) || (defined(__sun) && !defined(linux))
-   if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
-      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
+      if (fstatfs(fd, &statfsbuf, sizeof(struct statfs), 0) == 0) {
+         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bfree;
 #else
-   if (fstatfs(fd, &statfsbuf) == 0) {
-      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
+      if (fstatfs(fd, &statfsbuf) == 0) {
+         double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
-      if (space < size - restartat) {
-         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
-         close(fd);
-         return;
+         if (space < size - restartat) {
+            Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
+            close(fd);
+            return;
+         }
       }
    }
 
