@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtThread.cxx,v 1.10 2004/01/11 01:22:53 fine Exp $
+** $Id: TQtThread.cxx,v 1.11 2004/07/22 15:27:18 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 **
@@ -18,7 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <qthread.h>
+#include <qapplication.h>
 
 #include "TQtThread.h"
 #include "TQtApplication.h"

@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TGQt.h,v 1.26 2004/07/08 14:33:37 fine Exp $
+** $Id: TGQt.h,v 1.27 2004/07/21 21:55:42 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 **
@@ -40,10 +40,11 @@
 #include <qptrvector.h> 
 #include "TQtClientGuard.h"
 
-
+#else
+  class QObject;
+  class QEvent;
 #endif
 
-class  TQtBrush;
 class  QPen;
 class  QMarker;
 class  QFont;
@@ -52,8 +53,6 @@ class  QTextCodec;
 
 #include "TVirtualX.h"
 #include "TVirtualGL.h"
-
-#include "TQtRConfig.h"
 
 #include "TQtRConfig.h"
 
@@ -215,6 +214,7 @@ public:
    TQtEmitter *Emitter(){ return &fEmitter;}
 #endif
    virtual Int_t LoadQt(const char *shareLibFileName);
+   static void PostQtEvent(QObject *receiver, QEvent *event);
    virtual Int_t processQtEvents();
    // temporary thuis should be moved to the QTGL interface
    private:

@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: GQtGUIThread.cxx,v 1.14 2004/05/05 18:06:08 fine Exp $
+** $Id: GQtGUIThread.cxx,v 1.15 2004/07/22 15:27:18 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 **
@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <qthread.h>
+#include <qapplication.h>
 
 #include "TQtThread.h"
 #include "TQtApplication.h"

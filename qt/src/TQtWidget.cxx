@@ -1,6 +1,6 @@
 // Author: Valery Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtThread.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
+** $Id: TQtWidget.cxx,v 1.38 2004/07/20 02:22:46 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -67,7 +67,11 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
+    Bool_t batch = gROOT->IsBatch();
+    if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     fCanvas = new TCanvas(name, 4, 4, TGQt::iwid(this));
+    // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable()); 
+    gROOT->SetBatch(batch);
     connect(this, SIGNAL(destroyed()),SLOT(Disconnect()));
   }
   fSizeHint = QWidget::sizeHint();

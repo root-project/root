@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TGQt.cxx,v 1.59 2004/07/12 16:55:04 fine Exp $
+** $Id: TGQt.cxx,v 1.62 2004/07/21 21:55:42 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -31,6 +31,9 @@
 //  Qt include files
   
 #include <qapplication.h> 
+#if (QT_VERSION < 0x030200)
+# include <qthread.h> 
+#endif
 #include <qwidget.h>
 #include <qpixmap.h>
 #include <qcursor.h>
@@ -369,11 +372,26 @@ TQtApplication *TGQt::CreateQtApplicationImp()
    static TQtApplication *app = 0;
    if (!app) {
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
-      static char *argv[] = {"QtRoot"};
+      static TString argvString ("$ROOTSYS/bin/root.exe");
+      gSystem->ExpandPathName(argvString);
+      char *argv[] = {(char *)argvString.Data()};
+
+//     static char *argv[] = {"QtRoot"};
       int nArg = 1;
       app = new TQtApplication("Qt",nArg,argv);
    }
    return app;
+}
+//______________________________________________________________________________
+void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
+{
+   // Qt annnouced that QThread;;postEvent to become obsolete and 
+   // we have to switch to the QAppication instead.
+#if (QT_VERSION < 0x030200)
+  QThread::postEvent(receiver,event);
+#else
+  QApplication::postEvent(receiver,event);
+#endif
 }
 
 //______________________________________________________________________________
@@ -422,7 +440,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.59 2004/07/12 16:55:04 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.62 2004/07/21 21:55:42 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1044,7 +1062,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       if (TMath::Abs(angle) > 0.1 )  fQPainter->rotate(-angle);
 
       fQPainter->drawText (0, 0, GetTextDecoder()->toUnicode (text));
-
+      
       fQPainter->restore();
       qApp->unlock();
    }

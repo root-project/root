@@ -1,5 +1,5 @@
 /****************************************************************************
-** $Id: TQtThreadStub.h,v 1.5 2004/04/12 14:41:41 fine Exp $
+** $Id: TQtThreadStub.h,v 1.7 2004/07/21 21:55:42 fine Exp $
 **
 ** Copyright (C) 2003 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -59,7 +59,7 @@ type _NAME1_(THREADCLASS)::method()        \
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -83,7 +83,7 @@ void _NAME1_(THREADCLASS)::method()        \
     ev *e = new ev(_NAME1_(PROXYPOINTER));                  \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method();          \
@@ -104,7 +104,7 @@ void _NAME1_(THREADCLASS)::method()        \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER));                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method();          \
   }                                        \
@@ -128,7 +128,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1)\
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -150,7 +150,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1) \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1); \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1);    \
   }                                        \
@@ -174,7 +174,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1) \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1);  \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1);     \
@@ -200,7 +200,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2) \
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -227,7 +227,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2) \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2);        \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2); \
@@ -250,7 +250,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2) \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2); \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2);    \
   }                                        \
@@ -276,7 +276,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3) \
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -304,7 +304,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3) \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3); \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return;                                \
   } else {                                 \
@@ -329,7 +329,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3) \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3); \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3);    \
   }                                        \
@@ -356,7 +356,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4) \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4); \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4);    \
@@ -384,7 +384,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4) \
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -411,7 +411,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4) \
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4); \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4);    \
   }                                        \
@@ -438,7 +438,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5); \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5);    \
   }                                        \
@@ -468,7 +468,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5); \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5);    \
@@ -497,7 +497,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6);        \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6); \
   }                                        \
@@ -528,7 +528,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6); \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6);    \
@@ -558,7 +558,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7);        \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6,par7); \
   }                                        \
@@ -590,7 +590,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7);        \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6,par7); \
@@ -622,7 +622,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
@@ -656,7 +656,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7,par8);        \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6,par7,par8); \
@@ -690,7 +690,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7,par8,par9);        \
     TWaitCondition w;                      \
     e->SetWait(w);                         \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6,par7,par8,par9); \
@@ -722,7 +722,7 @@ void _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
       }                                    \
     };                                     \
     ev *e = new ev(_NAME1_(PROXYPOINTER),par1,par2,par3,par4,par5,par6,par7,par8,par9);        \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method(par1,par2,par3,par4,par5,par6,par7,par8,par9); \
   }                                        \
@@ -757,7 +757,7 @@ type _NAME1_(THREADCLASS)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
     TWaitCondition w;                      \
     void *result=0;                        \
     e->SetWait(w,result);                  \
-    QThread::postEvent(this,e);            \
+    TGQt::PostQtEvent(this,e);            \
     w.wait();                              \
     return (type)result;                   \
   } else {                                 \
