@@ -22,7 +22,7 @@
 #include <_functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3) || defined(G__INTEL_COMPILER)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key, T> > >
 #elif defined(G__GNUC) && !defined(G__KCC)
