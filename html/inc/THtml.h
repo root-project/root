@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.7 2003/01/30 11:59:39 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.8 2003/01/30 13:34:48 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -263,46 +263,7 @@ public:
          while (typeinfo.Next())
             fTypedefs.Add(new TNamed(typeinfo.Name(), typeinfo.TrueName()));
       };
-      inline virtual ~TParseStack(){
-         if (fStack.GetSize()>1) {
-            TString strStack;
-            TIter psi(&fStack);
-            TParseElement* pe;
-            while ((pe=(TParseElement*) psi())) {
-               strStack+=" - ";
-               switch (pe->Context()){
-                  case kComment: strStack+="Comment"; break; 
-                  case kBlock: strStack+="Block ("; 
-                     switch (pe->BlockSpec()){
-                        case kClassDecl: 
-                           strStack+="ClassDecl ";
-                           strStack+=pe->GetName(); break;
-                        case kNamespace: 
-                           strStack+="Namespace)"; 
-                           strStack+=pe->GetName(); break;
-                        case kBlkUndefined: strStack+="BlkUndefined: "; 
-                           strStack+=pe->GetName(); strStack+="***";
-                           strStack+=pe->GetTitle(); strStack+="***";
-                           break;
-		     default: break;
-                     }
-                     strStack+=")";
-                     break; 
-                  case kParameter: strStack+="Parameter"; break; 
-                  case kTemplate: strStack+="Template"; break; 
-                  case kArray: strStack+="Array"; break; 
-                  case kString: strStack+="String"; break; 
-	       default: break;
-               }
-               strStack+="\n";
-               fStack.Remove(pe);
-            }
-            strStack.Remove(strStack.Length()-3);
-
-//printf("Warning in <TParseStack::~TParseStack>: Stack not empty! Elements:\n %s\n", strStack.Data());
-         }
-         fStack.Remove(fStack.LastLink());
-      };
+      virtual ~TParseStack();
       inline TParseElement& Push(EContext ctx, EBlockSpec bsp=kBlkUndefined, 
          const char* name="", const char* title="") {
          return Push(new TParseElement(ctx, bsp, name, title));
