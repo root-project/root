@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.149 2003/12/16 21:58:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.150 2003/12/16 22:42:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2754,14 +2754,17 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   Double_t min, max;
   for(i = 0; i < npar; i++) {
     fitfunc->GetParLimits(i, min, max);
+    Double_t we = 0.1*TMath::Abs(max-min);
+    if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
+    if (we == 0) we = 1;
     if(min < max) {
       tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
-                               fitfunc->GetParameter(i)/100.0, min, max);
+                               we, min, max);
     } else {
       tFitter->SetParameter(i, fitfunc->GetParName(i),
                                fitfunc->GetParameter(i),
-                               fitfunc->GetParameter(i)/100.0, 0, 0);
+                               we, 0, 0);
     }
 
 
