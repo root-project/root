@@ -84,7 +84,7 @@ void FittingDemo() {
    TLegend *legend=new TLegend(0.6,0.65,0.88,0.85);
    legend->SetTextFont(72);
    legend->SetTextSize(0.04);
-   legend->AddEntry(histo,"Data","lp");
+   legend->AddEntry(histo,"Data","lpe");
    legend->AddEntry(backFcn,"Background fit","l");
    legend->AddEntry(signalFcn,"Signal fit","l");
    legend->AddEntry(fitFcn,"Global Fit","l");
