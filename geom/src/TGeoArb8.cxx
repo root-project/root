@@ -293,15 +293,15 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl)
          Double_t zi=point[2]+s*dir[2];
          if (TMath::Abs(zi)<fDz) {
             return s;
-            x1=xs1+tx1*dir[2]*s;
-            x2=xs2+tx2*dir[2]*s;
-            xp=point[0]+s*dir[0];
-            if ((xp-x1)*(x2-xp)>=0) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               if ((yp-y1)*(y2-yp)>=0) return s;
-            }
+            //x1=xs1+tx1*dir[2]*s;
+            //x2=xs2+tx2*dir[2]*s;
+            //xp=point[0]+s*dir[0];
+            //if ((xp-x1)*(x2-xp)>=0) {
+            //   y1=ys1+ty1*dir[2]*s;
+            //   y2=ys2+ty2*dir[2]*s;
+            //   yp=point[1]+s*dir[1];
+            //   if ((yp-y1)*(y2-yp)>=0) return s;
+            //}
          }      
       }
       return kBig;
@@ -315,38 +315,38 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl)
       printf("smin=%f\n", s);
       if (s>0) {
          zi=point[2]+s*dir[2];
-         if ((TMath::Abs(zi)<fDz) || 1) {
+         if ((TMath::Abs(zi)<fDz)) {
             return s;
-            x1=xs1+tx1*dir[2]*s;
-            x2=xs2+tx2*dir[2]*s;
-            xp=point[0]+s*dir[0];
-            printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
-            if ((xp-x1)*(x2-xp)>=0) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
-               if ((yp-y1)*(y2-yp)>=0) return s;
-            }
+            //x1=xs1+tx1*dir[2]*s;
+            //x2=xs2+tx2*dir[2]*s;
+            //xp=point[0]+s*dir[0];
+            //printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
+            //if ((xp-x1)*(x2-xp)>=0) {
+            //   y1=ys1+ty1*dir[2]*s;
+            //   y2=ys2+ty2*dir[2]*s;
+            //   yp=point[1]+s*dir[1];
+            //   printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
+            //   if ((yp-y1)*(y2-yp)>=0) return s;
+            //}
          }
       }
       s=-b+TMath::Sqrt(d);
       printf("smax=%f\n", s);
       if (s>0) {
          zi=point[2]+s*dir[2];
-         if ((TMath::Abs(zi)<fDz) || 1) {
+         if ((TMath::Abs(zi)<fDz)) {
             return s;
-            x1=xs1+tx1*dir[2]*s;
-            x2=xs2+tx2*dir[2]*s;
-            xp=point[0]+s*dir[0];
-            printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
-            if ((xp-x1)*(x2-xp)>=0) {
-               y1=ys1+ty1*dir[2]*s;
-               y2=ys2+ty2*dir[2]*s;
-               yp=point[1]+s*dir[1];
-               printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
-               if ((yp-y1)*(y2-yp)>=0) return s;
-            }
+            //x1=xs1+tx1*dir[2]*s;
+            //x2=xs2+tx2*dir[2]*s;
+            //xp=point[0]+s*dir[0];
+            //printf("x1=%f x2=%f xp=%f\n", x1, x2, xp);
+            //if ((xp-x1)*(x2-xp)>=0) {
+            //   y1=ys1+ty1*dir[2]*s;
+            //   y2=ys2+ty2*dir[2]*s;
+            //   yp=point[1]+s*dir[1];
+            //   printf("y1=%f y2=%f yp=%f\n", y1, y2, yp);
+            //   if ((yp-y1)*(y2-yp)>=0) return s;
+            //}
          }
       }
    }

@@ -361,7 +361,7 @@ void TGeoPainter::PaintTube(TGeoVolume *vol, Option_t *option)
         for (i = 2; i < 4; i++) {
             for (j = 0; j < n; j++) {
                 indx = 6*(i*n+j);
-                buff->polys[indx  ] = c+(i-2)*2+1;
+                buff->polys[indx  ] = c+i;
                 buff->polys[indx+1] = 4;
                 buff->polys[indx+2] = (i-2)*2*n+j;
                 buff->polys[indx+3] = (4+i)*n+j;
@@ -471,7 +471,7 @@ void TGeoPainter::PaintTubs(TGeoVolume *vol, Option_t *option)
         }
         for (i = 2; i < 4; i++) {
             for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c+(i-2)*2+1;
+                buff->polys[indx++] = c+i;
                 buff->polys[indx++] = 4;
                 buff->polys[indx++] = (i-2)*2*n+j;
                 buff->polys[indx++] = (4+i)*n+j;

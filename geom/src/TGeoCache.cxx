@@ -160,7 +160,7 @@ Int_t TGeoNodeCache::AddNode(TGeoNode *node)
    Int_t ic = node->GetNdaughters();
    if (ic > kGeoCacheMaxDaughters) ic = kGeoCacheObjArrayInd;
    return fCache[ic]->AddNode(node);
-   fNused++;
+   //fNused++;
 }
 //-----------------------------------------------------------------------------
 //Int_t TGeoNodeCache::CacheId(Int_t nindex) 
@@ -600,7 +600,7 @@ Int_t TGeoNodeArray::AddNode(TGeoNode *node)
    cd(index);
    // store the pointer of the node
    memset(fOffset, 0, fNodeSize*sizeof(Int_t));
-   fOffset[0] = (UInt_t)node - (UInt_t)gSystem;
+   fOffset[0] = (ULong_t)node - (ULong_t)gSystem;
    // mark the location as used and compute first free
    fBits->SetBitNumber(fFirstFree);
    fFirstFree = fBits->FirstNullBit(fFirstFree);

@@ -398,7 +398,7 @@ public:
 //                                 {gGeoMatrixCache->GetMatrix(fOffset[1], matrix);}
    virtual Int_t        GetMatrixInd()   {return fOffset[1];}
    virtual Int_t        GetNdaughters()  {return fNdaughters;}
-   virtual TGeoNode    *GetNode()        {return (TGeoNode*)(fOffset[0]+(Int_t)gSystem);}
+   virtual TGeoNode    *GetNode()        {return (TGeoNode*)(fOffset[0]+(Long_t)gSystem);}
    Int_t                GetNused()       {return fNused;}
    Int_t                GetSize()        {return fSize;}
    virtual Int_t        GetUsageCount()  {return (fOffset[2]&0x3FFFFFFF);}
