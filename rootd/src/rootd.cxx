@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.95 2004/10/15 17:44:01 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.96 2004/12/16 19:39:11 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -334,7 +334,6 @@ int gDebug  = 0;
 
 enum { kBinary, kAscii };
 
-static std::string gDaemonrc;
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
@@ -2151,7 +2150,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal,"-D requires a file path name"
                                     "  for the file defining access rules");
                }
-               gDaemonrc = std::string(*++argv);
+               daemonrc = std::string(*++argv);
                break;
 
             case 'E':
