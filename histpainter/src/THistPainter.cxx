@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.21 2000/11/21 20:36:46 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.22 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1990,6 +1990,7 @@ void THistPainter::PaintErrors()
       ey1 = factor*fH->GetBinError(k);
       ex2 = ex1;
       ey2 = ey1;
+      if (ey1 <= 0 && yp <= 0) goto L30;
       if (Hoption.Logy && yp <= 0) goto L30;
 
       xi4 = xp;
@@ -2481,9 +2482,11 @@ Int_t THistPainter::PaintInit()
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
       ymax = TMath::Max(ymax,c1);
+      ymin = TMath::Min(ymin,c1);
       if (Hoption.Error) {
          e1 = fH->GetBinError(i);
          ymax = TMath::Max(ymax,c1+e1);
+         ymin = TMath::Min(ymin,c1-e1);
       }
       if (Hoption.Func) {
          xv[0] = fXaxis->GetBinCenter(i);
@@ -2500,7 +2503,6 @@ Int_t THistPainter::PaintInit()
          }
          next.Reset();
       }
-      ymin = TMath::Min(ymin,c1);
       allchan += c1;
    }
 
