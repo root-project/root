@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.107 2002/11/15 16:05:52 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.108 2002/11/22 10:07:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -834,7 +834,8 @@ void THistPainter::Paint(Option_t *option)
 // defined in the current style (see TStyle::SeTPaletteAxis)
 //
 // The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
-// levels, you can change the number of levels with TH1::SetContour.
+// levels, you can change the number of levels with TH1::SetContour or
+// TStyle::SetNumberContours.
 //
 // You can also set the default drawing option with TH1::SetOption. To see the current
 // option use TH1::GetOption.
@@ -1084,7 +1085,7 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
 //
 //  The default number of contour levels is 20 equidistant levels and can
-//  be changed with TH1::SetContour.
+//  be changed with TH1::SetContour or TStyle::SetNumberContours.
 //
 //  When option "LIST" is specified together with option "CONT",
 //  the points used to draw the contours are saved in the TGraph object
@@ -1843,7 +1844,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    Int_t ncolors  = gStyle->GetNumberOfColors();
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
-      ndiv = 20;
+      ndiv = gStyle->GetNumberContours();
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
@@ -1964,7 +1965,7 @@ void THistPainter::PaintContour(Option_t *option)
 
    ncontour  = fH->GetContour();
    if (!ncontour) {
-      ncontour = 20;
+      ncontour = gStyle->GetNumberContours();
    }
    if (ncontour > kMAXCONTOUR) {
       Warning("PaintContour", "maximum number of contours is %d, asked for %d",
@@ -3486,7 +3487,7 @@ void THistPainter::PaintLego(Option_t *)
 //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
-      ndiv = 20;
+      ndiv = gStyle->GetNumberContours();
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
@@ -4390,7 +4391,7 @@ void THistPainter::PaintSurface(Option_t *)
 //                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
-      ndiv = 20;
+      ndiv = gStyle->GetNumberContours();
       fH->SetContour(ndiv);
    }
    Int_t ndivz  = TMath::Abs(ndiv);
