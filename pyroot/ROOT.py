@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.2 2004/04/27 09:20:34 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.3 2004/04/28 22:04:06 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/02/04
+# Last: 04/29/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -106,6 +106,15 @@ if __builtins__.has_key( '__IPYTHON__' ):
    __IPYTHON__.showtraceback = _showtraceback
 else:
    sys.excepthook = _excepthook
+
+
+### call EndOfLineAction after each interactive command
+def _displayhook( v ):
+   gInterpreter.EndOfLineAction()
+   return _orig_dhook( v )
+
+_orig_dhook = sys.displayhook
+sys.displayhook = _displayhook
 
 
 ### root thread -----------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.3 2004/04/28 22:04:06 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -21,6 +21,7 @@
 #include "TGeometry.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TInterpreter.h"
 
 // Standard
 #include <cassert>
@@ -155,6 +156,7 @@ void PyROOT::initRoot() {
    addToScope( "gROOT", gROOT, gROOT->IsA() );
    addToScope( "gSystem", gSystem, gSystem->IsA() );
    addToScope( "gRandom", gRandom, gRandom->IsA() );
+   addToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
 // the following are safer, done this way
    addToScope( "gBenchmark", gBenchmark, TBenchmark::Class() );
