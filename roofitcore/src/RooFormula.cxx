@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.33 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.34 2001/10/27 22:28:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -147,7 +147,7 @@ void RooFormula::dump() {
 }
 
 
-Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll) 
+Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Change used variables to those with the same name in given list
 
@@ -156,7 +156,8 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   int i ;
 
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    RooAbsReal* replace = (RooAbsReal*) newDeps.find(_useList[i]->GetName()) ;
+
+    RooAbsReal* replace = (RooAbsReal*) ((RooAbsArg*)_useList[i])->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _useList[i] = replace ;
     } else if (mustReplaceAll) {
@@ -169,7 +170,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   TIterator* iter = _origList.MakeIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
-    RooAbsReal* replace = (RooAbsReal*) newDeps.find(arg->GetName()) ;
+    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.AddBefore(arg,replace) ;
       _origList.Remove(arg) ;

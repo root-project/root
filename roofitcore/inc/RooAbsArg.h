@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.57 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.58 2001/10/27 22:28:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -184,9 +184,10 @@ protected:
   friend class RooSimultaneous ;
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) { return kFALSE ; } ;
   virtual void serverNameChangeHook(const RooAbsArg* oldServer, const RooAbsArg* newServer) { } ;
 
+  friend class RooFormula ;
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;

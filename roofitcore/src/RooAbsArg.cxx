@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.61 2001/10/27 22:28:17 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.62 2001/10/30 07:29:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -670,7 +670,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
     if (!newServer) {
       if (mustReplaceAll) {
 	cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
-	     << " (" << (void*)oldServer << ") not redirected" << endl ;
+	     << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
 	ret = kTRUE ;
       }
       continue ;
@@ -701,7 +701,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   }
 
   // Optional subclass post-processing
-  ret |= redirectServersHook(newSet,mustReplaceAll) ;
+  ret |= redirectServersHook(newSet,mustReplaceAll,nameChange) ;
 
   return ret ;
 }

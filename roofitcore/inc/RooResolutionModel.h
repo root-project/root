@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.rdl,v 1.10 2001/10/17 05:04:00 verkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.11 2001/10/30 07:29:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,6 +40,8 @@ public:
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*_identity ; }
   Double_t getNorm(const RooArgSet* nset) const ;
 
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+
 protected:
 
   static RooFormulaVar* _identity ;  // Identity basis function pointer
@@ -50,7 +52,7 @@ protected:
 
   virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return kTRUE ; } ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
   virtual void changeBasis(RooFormulaVar* basis) ;
   Bool_t traceEvalHook(Double_t value) const ;
 

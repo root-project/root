@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.11 2001/10/08 05:20:16 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.12 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,10 +97,10 @@ Bool_t RooGenericPdf::isValidReal(Double_t value, Bool_t printError) const {
 
 
 
-Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll)
+Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange)
 {
   // Propagate server changes to embedded formula objecy
-  return _formula.changeDependents(newServerList,mustReplaceAll) ;
+  return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;
 }
 
 

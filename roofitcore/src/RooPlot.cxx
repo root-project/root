@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.21 2001/10/12 20:31:10 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.22 2001/10/30 07:29:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.21 2001/10/12 20:31:10 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.22 2001/10/30 07:29:15 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
@@ -371,16 +371,24 @@ Bool_t RooPlot::drawAfter(const char *after, const char *target) {
 TObject *RooPlot::findObject(const char *name) const {
   // Find the named object in our list of items and return a pointer
   // to it. Return zero and print a warning message if the named
-  // object cannot be found. Note that the returned pointer is to a
+  // object cannot be found. If no name is supplied the last object
+  // added is returned.
+  //
+  // Note that the returned pointer is to a
   // TObject and so will generally need casting. Use the getAtt...()
   // methods to change the drawing style attributes of a contained
   // object directly.
 
-  TObject *obj= _items.FindObject(name);
-  if(0 == obj) {
-    cout << fName << "::findObject: cannot find object named \"" << name << "\"" << endl;
+  TObject *obj(0) ;
+  if (name) {
+    obj= _items.FindObject(name);
+    if(0 == obj) {
+      cout << fName << "::findObject: cannot find object named \"" << name << "\"" << endl;
+    }
+  } else {
+    obj = _items.Last() ;
   }
-  return obj;
+    return obj;
 }
 
 TString RooPlot::getDrawOptions(const char *name) const {

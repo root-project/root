@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.rdl,v 1.6 2001/10/17 05:04:00 verkerke Exp $
+ *    File: $Id: RooTruthModel.rdl,v 1.7 2001/10/27 22:28:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,10 +17,13 @@
 class RooTruthModel : public RooResolutionModel {
 public:
 
-  enum RooTruthBasis { noBasis=0, genericBasis=1,
-		       expBasisPlus=2, expBasisMinus=3,
-		       sinBasisPlus=4, sinBasisMinus=5,
-		       cosBasisPlus=6, cosBasisMinus=7  } ;
+  enum RooTruthBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
+                                  sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
+                                  cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
+                       genericBasis=100 } ;
+
+  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3 } ;
+  enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
 
   // Constructors, assignment etc
   inline RooTruthModel() { }

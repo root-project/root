@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.47 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.48 2001/10/13 21:53:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -668,12 +668,6 @@ Bool_t RooRealIntegral::isValidReal(Double_t value, Bool_t printError) const
 {
   // Check if current value is valid
   return kTRUE ;
-}
-
-
-Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll)
-{
-  return kFALSE ;
 }
 
 

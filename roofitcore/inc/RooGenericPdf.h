@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.rdl,v 1.9 2001/10/08 05:20:16 verkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.10 2001/10/22 07:12:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,7 +46,7 @@ protected:
   Bool_t setFormula(const char* formula) ;
 
   // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 

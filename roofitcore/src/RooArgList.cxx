@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgList.cc,v 1.4 2001/10/08 05:20:13 verkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.5 2001/10/19 06:56:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -282,8 +282,10 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   
   if (!parser.atEOL()) {
     TString rest = parser.readLine() ;
-    cout << "RooArgSet::readFromStream(" << GetName() 
-	 << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+    if (verbose) {
+      cout << "RooArgSet::readFromStream(" << GetName() 
+	   << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+    }
   }
   
   delete iterator;    

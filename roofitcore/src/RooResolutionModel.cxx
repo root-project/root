@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.16 2001/10/17 05:04:00 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.17 2001/10/30 07:29:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -224,7 +224,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 
 
 
-Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll) 
+Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Forward redirectServers call to our basis function, which is not connected to either resolution
   // model or the physics model.
@@ -237,7 +237,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
     _ownBasis = kFALSE ;
   }
 
-  _basis->redirectServers(newServerList,mustReplaceAll) ;
+  _basis->redirectServers(newServerList,mustReplaceAll,nameChange) ;
     
   return (mustReplaceAll && !newBasis) ;
 }
@@ -305,4 +305,26 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 
   Double_t ret = _norm->getVal() ;
   return ret ;
+}
+
+
+void RooResolutionModel::printToStream(ostream& os, PrintOption opt, TString indent) const
+{
+  // Print info about this object to the specified stream. In addition to the info
+  // from RooAbsArg::printToStream() we add:
+  //
+  //     Shape : value, units, plot range
+  //   Verbose : default binning and print label
+
+  RooAbsPdf::printToStream(os,opt,indent) ;
+
+  if(opt >= Verbose) {
+    os << indent << "--- RooResolutionModel ---" << endl;
+    os << indent << "basis function = " ; 
+    if (_basis) {
+      _basis->printToStream(os,opt,indent) ;
+    } else {
+      os << "<none>" << endl ;
+    }
+  }
 }

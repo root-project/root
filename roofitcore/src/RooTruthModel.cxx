@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.8 2001/10/17 05:04:00 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.9 2001/10/27 22:28:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -48,12 +48,15 @@ RooTruthModel::~RooTruthModel()
 Int_t RooTruthModel::basisCode(const char* name) const 
 {
   // Check for optimized basis functions
-  if (!TString("exp(-abs(@0)/@1)").CompareTo(name)) return expBasisPlus ;
-  if (!TString("exp(-abs(-@0)/@1)").CompareTo(name)) return expBasisMinus ;
-  if (!TString("exp(-abs(@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisPlus ;
-  if (!TString("exp(-abs(-@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisMinus ;
-  if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
-  if (!TString("exp(-abs(-@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
+  if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
+  if (!TString("exp(@0/@1)").CompareTo(name)) return expBasisMinus ;
+  if (!TString("exp(-abs(@0)/@1)").CompareTo(name)) return expBasisSum ;
+  if (!TString("exp(-@0/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisPlus ;
+  if (!TString("exp(@0/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisMinus ;
+  if (!TString("exp(-abs(@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisSum ;
+  if (!TString("exp(-@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
+  if (!TString("exp(@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
+  if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
 
   // Truth model is delta function, i.e. convolution integral
   // is basis function, therefore we can handle any basis function
@@ -91,54 +94,41 @@ Double_t RooTruthModel::evaluate() const
 {
   // Evaluate the truth model: a delta function when used as PDF,
   // The basis function itself, when convoluted with a basis function.
-  
-  switch(_basisCode) {
 
-  case 0:
+  // No basis: delta function
+  if (_basisCode == noBasis) {
     if (x==0) return 1 ;
     return 0 ;
+  }
 
-  case expBasisPlus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      return x>0?exp(-x/tau):0 ;
-    }
-  case expBasisMinus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      return x<0?exp(x/tau):0 ;
-    }
-
-  case cosBasisPlus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      return x>0?exp(-x/tau)*cos(x*dm):0. ;
-    }
-
-  case cosBasisMinus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      return x<0?exp(x/tau)*cos(x*dm):0. ;
-    }
-
-  case sinBasisPlus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      return x>0?exp(-x/tau)*sin(x*dm):0. ;
-    }
-
-  case sinBasisMinus:
-    {
-      Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-      Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      return x<0?exp(x/tau)*sin(x*dm):0. ;
-    }
-
-  default:
+  // Generic basis: evaluate basis function object
+  if (_basisCode == genericBasis) {
     return basis().getVal() ;
+  }
+
+  // Precompiled basis functions
+  BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
+  BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
+
+  // Enforce sign compatibility
+  if ((basisSign==Minus && x>0) || 
+      (basisSign==Plus  && x<0)) return 0 ;
+
+
+  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  // Return desired basis function
+  switch(basisType) {    
+  case expBasis: {
+    return exp(-fabs(x)/tau) ;
+  }
+  case sinBasis: {
+    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    return exp(-fabs(x)/tau)*sin(x*dm) ;
+  }
+  case cosBasis: {
+    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    return exp(-fabs(x)/tau)*cos(x*dm) ;
+  }
   }
 }
 

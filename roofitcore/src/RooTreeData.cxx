@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.18 2001/10/21 22:57:02 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.19 2001/10/27 22:28:23 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -957,7 +957,13 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     tableVar->recursiveRedirectServers(_vars) ;
   }
 
-  Roo1DTable* table = tableVar->createTable("dataset") ;
+  TString tableName(GetName()) ;
+  if (cuts && strlen(cuts)) {
+    tableName.Append("(") ;
+    tableName.Append(cuts) ;
+    tableName.Append(")") ;    
+  }
+  Roo1DTable* table = tableVar->createTable(tableName) ;
 
   // Make cut selector if cut is specified
   RooFormulaVar* cutVar(0) ;

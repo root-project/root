@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.19 2001/10/22 07:12:13 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.20 2001/10/27 22:28:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -111,11 +111,11 @@ Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
 
 
 
-Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll)
+Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange)
 {
   // Propagate server change information to embedded RooFormula object
 
-  return _formula.changeDependents(newServerList,mustReplaceAll) ;
+  return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;
 }
 
 

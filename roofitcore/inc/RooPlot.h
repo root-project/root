@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.15 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.16 2001/10/12 20:31:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -60,10 +60,10 @@ public:
   const RooArgSet *getNormVars() const { return _normVars; }
 
   // get attributes of contained objects
-  TAttLine *getAttLine(const char *name) const;
-  TAttFill *getAttFill(const char *name) const;
-  TAttMarker *getAttMarker(const char *name) const;
-  TAttText *getAttText(const char *name) const;
+  TAttLine *getAttLine(const char *name=0) const;
+  TAttFill *getAttFill(const char *name=0) const;
+  TAttMarker *getAttMarker(const char *name=0) const;
+  TAttText *getAttText(const char *name=0) const;
 
   // rearrange drawing order of contained objects
   Bool_t drawBefore(const char *before, const char *target);
