@@ -61,7 +61,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    fRadiusEntry = new TGNumberEntry(f3, 0.02, 7, kCRLA_RAD, 
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEANonNegative, 
-                                    TGNumberFormat::kNELLimitMinMax, 0.02, 1.0);
+                                    TGNumberFormat::kNELNoLimits);
    fRadiusEntry->GetNumberEntry()->SetToolTipText("Set radius of arc.");
    f3->AddFrame(fRadiusEntry, new TGLayoutHints(kLHintsLeft, 18, 1, 1, 1));
 
@@ -97,7 +97,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    fCenterXEntry = new TGNumberEntry(f6, 0.0, 7, kCRLA_CX,
                                      TGNumberFormat::kNESRealThree,
                                      TGNumberFormat::kNEANonNegative, 
-                                     TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                     TGNumberFormat::kNELNoLimits);
    fCenterXEntry->GetNumberEntry()->SetToolTipText("Set center X coordinate.");
    f6->AddFrame(fCenterXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
 //
@@ -109,7 +109,7 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t id, Int_t width,
    fCenterYEntry = new TGNumberEntry(f7, 0.0, 7, kCRLA_CY,
                                      TGNumberFormat::kNESRealThree,
                                      TGNumberFormat::kNEANonNegative, 
-                                     TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                     TGNumberFormat::kNELNoLimits);
    fCenterYEntry->GetNumberEntry()->SetToolTipText("Set center Y coordinate.");
    f7->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
 

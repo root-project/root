@@ -80,7 +80,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fWaveLengthEntry->GetNumberEntry()->SetToolTipText("Set wavelength in percent of the pad height.");
    f4->AddFrame(fWaveLengthEntry, new TGLayoutHints(kLHintsLeft, 10, 1, 1, 1));
 
-   fIsWavy = new TGCheckButton(this, "Gluon (default Gamma)", kCRLL_ISW);
+   fIsWavy = new TGCheckButton(this, "Gluon (Gamma)", kCRLL_ISW);
    fIsWavy->SetToolTipText("Toggle between wavy line (Gluon) if selected; curly line (Gamma) otherwise."); 
    AddFrame(fIsWavy, new TGLayoutHints(kLHintsLeft, 5, 1, 5, 8));
 
@@ -93,7 +93,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fStartXEntry = new TGNumberEntry(fStartXFrame, 0.0, 7, kCRLL_STRX,
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEANonNegative, 
-                                    TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                    TGNumberFormat::kNELNoLimits);
    fStartXEntry->GetNumberEntry()->SetToolTipText("Set start point X ccordinate of curly line.");
    fStartXFrame->AddFrame(fStartXEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 //
@@ -105,7 +105,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fStartYEntry = new TGNumberEntry(fStartYFrame, 0.0, 7, kCRLL_STRY,
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEANonNegative, 
-                                    TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                    TGNumberFormat::kNELNoLimits);
    fStartYEntry->GetNumberEntry()->SetToolTipText("Set start point Y coordinate of curly line.");
    fStartYFrame->AddFrame(fStartYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 //
@@ -117,7 +117,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndXEntry = new TGNumberEntry(fEndXFrame, 0.0, 7, kCRLL_ENDX,
                                   TGNumberFormat::kNESRealThree,
                                   TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNELNoLimits);
    fEndXEntry->GetNumberEntry()->SetToolTipText("Set end point X coordinate of curly line.");
    fEndXFrame->AddFrame(fEndXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
 //
@@ -129,7 +129,7 @@ TCurlyLineEditor::TCurlyLineEditor(const TGWindow *p, Int_t id, Int_t width,
    fEndYEntry = new TGNumberEntry(fEndYFrame, 0.0, 7, kCRLL_ENDY,
                                   TGNumberFormat::kNESRealThree,
                                   TGNumberFormat::kNEANonNegative, 
-                                  TGNumberFormat::kNELLimitMinMax, 0.0, 1.0);
+                                  TGNumberFormat::kNELNoLimits);
    fEndYEntry->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of curly line.");
    fEndYFrame->AddFrame(fEndYEntry, new TGLayoutHints(kLHintsLeft, 5, 1, 1, 1));
 
