@@ -60,6 +60,9 @@ confhelp() {
     echo "    --with-mysql-libdir  MySQL support, location of libmysqlclient.so"
     echo "    --with-srp           Secure Remote Passwd support, location of SRP distribution"
     echo "    --with-afs           AFS support, location of AFS distribution"
+    echo "    --with-pythia        PYHTIA support, path of libPythia.so"
+    echo "    --with-pythia6       PYHTIA6 support, path of libPythia6.so"
+    echo "    --with-venus         VENUS support, path of libVenus.so"
     echo "    --with-sys-iconpath  Extra icon path"
     echo ""
     cat config/ARCHS
@@ -96,14 +99,16 @@ mysqlincdirs="$MYSQL $MYSQL/include /usr/include /usr/local/include \
               /opt/mysql/include"
 
 mysqlincdir=NO
-for i in $mysqlincdirs; do
-   for j in mysql.h; do
-      if [ -r "$i/$j" ]; then
-         mysqlincdir=$i
-         break 2
-      fi
+if [ "$MYSQL" != "NO" ]; then
+   for i in $mysqlincdirs; do
+      for j in mysql.h; do
+         if [ -r "$i/$j" ]; then
+            mysqlincdir=$i
+            break 2
+         fi
+      done
    done
-done
+fi
 echo $mysqlincdir
 
 echo $ac_n "Checking for libmysqlclient... $ac_c"
@@ -112,14 +117,16 @@ mysqllibdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib /usr/lib/mysql \
               /usr/mysql /usr/local/mysql /opt/mysql /opt/mysql/lib"
 
 mysqllibdir=NO
-for i in $mysqllibdirs; do
-   for j in libmysqlclient.a; do
-      if [ -r "$i/$j" ]; then
-         mysqllibdir=$i
-         break 2
-      fi
+if [ "$MYSQL" != "NO" ]; then
+   for i in $mysqllibdirs; do
+      for j in libmysqlclient.a; do
+         if [ -r "$i/$j" ]; then
+            mysqllibdir=$i
+            break 2
+         fi
+      done
    done
-done
+fi
 echo $mysqllibdir
 
 # check for Xpm library
@@ -138,6 +145,54 @@ for i in $xpmlibdirs; do
    done
 done
 echo $xpmlib
+
+# check for libPythia
+echo $ac_n "Checking for libPythia... $ac_c"
+pythialibdirs="$PYTHIA $PYTHIA/lib /cern/pro/lib"
+pythialibs="libPythia.so libPythia.sl libPythia.a libPythia.lib"
+
+pythialib=NO
+for i in $pythialibdirs; do
+   for j in $pythialibs; do
+      if [ -r "$i/$j" ]; then
+         pythialib=$i/$j
+         break 2
+      fi
+   done
+done
+echo $pythialib
+
+# check for libPythia6
+echo $ac_n "Checking for libPythia6... $ac_c"
+pythia6libdirs="$PYTHIA6 $PYTHIA6/lib /cern/pro/lib"
+pythia6libs="libPythia6.so libPythia6.sl libPythia6.a libPythia6.lib"
+
+pythia6lib=NO
+for i in $pythia6libdirs; do
+   for j in $pythia6libs; do
+      if [ -r "$i/$j" ]; then
+         pythia6lib=$i/$j
+         break 2
+      fi
+   done
+done
+echo $pythia6lib
+
+# check for libVenus
+echo $ac_n "Checking for libVenus... $ac_c"
+venuslibdirs="$VENUS $VENUS/lib /cern/pro/lib"
+venuslibs="libVenus.so libVenus.sl libVenus.a libVenus.lib"
+
+venuslib=NO
+for i in $venuslibdirs; do
+   for j in $venuslibs; do
+      if [ -r "$i/$j" ]; then
+         venuslib=$i/$j
+         break 2
+      fi
+   done
+done
+echo $venuslib
 
 if [ $# -gt 0 ] ; then
    while [ "$1" != "" ] ; do
@@ -161,6 +216,9 @@ if [ $# -gt 0 ] ; then
       --with-mysql-libdir=*)  mysqllibdir=$optarg   ;;
       --with-srp=*)           srpdir=$optarg        ;;
       --with-afs=*)           afsdir=$optarg        ;;
+      --with-pythia=*)        pythialib=$optarg     ;;
+      --with-pythia6=*)       pythia6lib=$optarg    ;;
+      --with-venus=*)         venuslib=$optarg      ;;
       --with-sys-iconpath=*)  extraiconpath=$optarg ;;
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
       --bindir=*)     haveconfig=-DHAVE_CONFIG ; bindir=$optarg      ;;
@@ -235,6 +293,9 @@ if [ -n "$haveconfig" ] ; then
     if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
     if [ -z "$srpdir" ] && [ -n "$SRP" ]; then srpdir="$SRP" ; fi
     if [ -z "$afsdir" ] && [ -n "$AFS" ]; then afsdir="$AFS" ; fi
+    if [ "$pythialib" = "NO" ]; then unset pythialib ; fi
+    if [ "$pythia6lib" = "NO" ]; then unset pythia6lib ; fi
+    if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
 
     sed -e "s|@cflags|-DHAVE_CONFIG|"                  \
         -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
@@ -277,6 +338,9 @@ else
     if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
     if [ -z "$srpdir" ] && [ -n "$SRP" ]; then srpdir="$SRP" ; fi
     if [ -z "$afsdir" ] && [ -n "$AFS" ]; then afsdir="$AFS" ; fi
+    if [ "$pythialib" = "NO" ]; then unset pythialib ; fi
+    if [ "$pythia6lib" = "NO" ]; then unset pythia6lib ; fi
+    if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
 
     sed -e "s|@cflags||" \
         -e "s|@ldflags@||" \
@@ -309,6 +373,9 @@ sed -e "s|@architecture@|$arch|"         \
     -e "s|@mysqllibdir@|$mysqllibdir|"   \
     -e "s|@srpdir@|$srpdir|"             \
     -e "s|@afsdir@|$afsdir|"             \
+    -e "s|@pythialib@|$pythialib|"       \
+    -e "s|@pythia6lib@|$pythia6lib|"     \
+    -e "s|@venuslib@|$venuslib|"         \
     -e "s|@docdir@|$docdir|"             \
     -e "s|@testdir@|$testdir|"           \
     -e "s|@tutdir@|$tutdir|"             \
@@ -354,7 +421,9 @@ chmod 755 $RCONFOUT
 echo "done"
 
 # On win32 convert all files in tutorials and test to \r\n convention
-if [ "$arch" = "win32" ]; then
+# (only if CVS directory does not exist, otherwise cvs will already have
+# made the conversion).
+if [ "$arch" = "win32" ] && [ ! -d CVS ]; then
    echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
    for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
             test/Makefile* test/README system.rootrc
