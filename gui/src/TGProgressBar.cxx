@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.8 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.9 2003/11/12 19:34:59 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -54,6 +54,8 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
    fNormGC     = norm;
    fFontStruct = font;
    fBarColorGC.SetForeground(barcolor);
+   fBarWidth   = kProgressBarStandardWidth;
+   fDrawBar    = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -286,6 +288,7 @@ TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
 
    fBarType  = type;
    fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
+   fDrawBar  = kFALSE;
 }
 
 //______________________________________________________________________________
