@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.7 2000/06/30 13:32:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.8 2000/08/08 16:07:03 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -710,23 +710,11 @@ void TAxis::UnZoom()
    // Reset first & last bin to the full range
 
    SetRange(0,0);
-
-   // loop on all histograms in the same pad
-   if (!gPad) return;
-   TIter next(gPad->GetListOfPrimitives());
-   TObject *obj;
-   while ((obj = next())) {
-      if (obj->InheritsFrom("TH1")) {
-         TH1 *hobj = (TH1*)obj;
-         if (strstr(GetName(),"xaxis")) hobj->GetXaxis()->SetRange(0,0);
-         if (strstr(GetName(),"zaxis")) hobj->GetZaxis()->SetRange(0,0);
-         if (strstr(GetName(),"yaxis")) {
-            hobj->GetYaxis()->SetRange(0,0);
-            if (hobj->GetDimension() == 1) {
-               hobj->SetMinimum();
-               hobj->SetMaximum();
-            }
-         }
+   if (strstr(GetName(),"yaxis")) {
+      TH1 *hobj = (TH1*)GetParent();
+      if (hobj->GetDimension() == 1) {
+         hobj->SetMinimum();
+         hobj->SetMaximum();
       }
    }
 }
