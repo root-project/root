@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.23 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.24 2002/05/03 10:22:32 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -160,6 +160,8 @@
 //End_Html
 //
 
+#include "snprintf.h"
+
 #include "Riostream.h"
 #include "TTreeViewer.h"
 #include "HelpTextTV.h"
@@ -167,6 +169,7 @@
 #include "TTVSession.h"
 
 #include "TROOT.h"
+#include "TError.h"
 #include "TGMsgBox.h"
 #include "TTreePlayer.h"
 #include "TContextMenu.h"
@@ -1071,12 +1074,12 @@ void TTreeViewer::Empty()
    void *p = 0;
    TTVLVEntry *item = 0;
    if ((item = (TTVLVEntry *) fLVContainer->GetNextSelected(&p)) == 0) {
-      Warning("No item selected.");
+      Warning("Empty", "No item selected.");
       return;
    }
    ULong_t *itemType = (ULong_t *) item->GetUserData();
    if (!(*itemType & kLTExpressionType)) {
-      Warning("Not expression type.");
+      Warning("Empty", "Not expression type.");
       return;
    }
    if (*itemType & kLTPackType) {
@@ -1162,7 +1165,7 @@ void TTreeViewer::ExecuteDraw()
       }
    }
    if (!dimension) {
-      Warning("Nothing to draw on X,Y,Z");
+      Warning("ExecuteDraw", "Nothing to draw on X,Y,Z.");
       return;
    }
    // find ListIn
@@ -1320,13 +1323,13 @@ void TTreeViewer::EditExpression()
    // get the selected item
    TTVLVEntry *item = 0;
    if ((item = (TTVLVEntry *) fLVContainer->GetNextSelected(&p)) == 0) {
-      Warning("No item selected.");
+      Warning("EditExpression", "No item selected.");
       return;
    }
    // check if it is an expression
    ULong_t *itemType = (ULong_t *) item->GetUserData();
    if (!(*itemType & kLTExpressionType)) {
-      Warning("Not expression type.");
+      Warning("EditExpression", "Not expression type.");
       return;
    }
    // check if the editor is already active
@@ -1390,13 +1393,13 @@ void TTreeViewer::RemoveItem()
    TTVLVEntry *item = 0;
    // get the selected item
    if ((item = (TTVLVEntry *) fLVContainer->GetNextSelected(&p)) == 0) {
-      Warning("No item selected.");
+      Warning("RemoveItem", "No item selected.");
       return;
    }
    // check if it is removable
    ULong_t *itemType = (ULong_t *) item->GetUserData();
    if (!(*itemType & kLTDragType)) {
-      Warning("Not removable type.");
+      Warning("RemoveItem", "Not removable type.");
       return;
    }
    fLVContainer->RemoveItem(item);
@@ -1597,15 +1600,15 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                if ((parm1>=kOptionsReset) && (parm1<kHelpAbout)) {
                   Dimension();
                   if ((fDimension==0) && (parm1>=kOptions1D)) {
-                     Warning("Edit expressions first");
+                     Warning("ProcessMessage", "Edit expressions first.");
                      break;
                   }
                   if ((fDimension==1) && (parm1>=kOptions2D)) {
-                     Warning("You have only one expression active");
+                     Warning("ProcessMessage", "You have only one expression active.");
                      break;
                   }
                   if ((fDimension==2) && (parm1>=kOptions1D) &&(parm1<kOptions2D)) {
-                     Warning("1D drawing options not apply to 2D histograms");
+                     Warning("ProcessMessage", "1D drawing options not apply to 2D histograms.");
                      break;
                   }
                   // make composed option
@@ -1920,7 +1923,7 @@ void TTreeViewer::ExecuteCommand(const char* command, Bool_t fast)
       char comm[2000];
       comm[0] = 0;
       if (strlen(command) > 1999) {
-         Warning("Command too long : aborting");
+         Warning("ExecuteCommand", "Command too long: aborting.");
          return;
       }
       sprintf(comm, command);
@@ -2232,11 +2235,39 @@ void TTreeViewer::Message(const char* msg)
 }
 
 //______________________________________________________________________________
-void TTreeViewer::Warning(const char* msg)
+void TTreeViewer::DoError(int level, const char *location, const char *fmt, va_list va) const
 {
-   // Pops-up a warning message.
+   // Put error/warning into TMsgBox and also forward to console.
 
-   new TGMsgBox(fClient->GetRoot(), this, "", msg, kMBIconExclamation);
+   TObject::DoError(level, location, fmt, va);
+
+   // in case level will abort we will not come here...
+
+   static const int buf_size = 2048;
+   char buf[buf_size], *bp;
+
+   int n = vsnprintf(buf, buf_size, fmt, va);
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
+   if (n == -1 || n >= buf_size) {
+      TObject::Warning("DoError", "Error message string truncated...");
+   }
+   if (level >= kSysError && level < kFatal)
+      bp = Form("%s (%s)", buf, gSystem->GetError());
+   else
+      bp = buf;
+
+   const char *title = "";
+   if (level == kInfo)
+      title = "Info";
+   if (level == kWarning)
+      title = "Warning";
+   if (level == kError)
+      title = "Error";
+   if (level == kSysError)
+      title = "System Error";
+
+   new TGMsgBox(fClient->GetRoot(), this, title, bp, kMBIconExclamation);
 }
 
 //______________________________________________________________________________
@@ -2368,7 +2399,7 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
 
    TTree *tree = (TTree *) fTreeList->At(index);
    if (!tree) {
-      Warning("SwitchTree() : No tree found");
+      Warning("SwitchTree", "No tree found.");
       return kFALSE;
    }
    if ((tree == fTree) && (tree == fMappedTree)) return kFALSE;     // nothing to switch

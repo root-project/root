@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.7 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.8 2002/06/12 16:46:12 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -458,7 +458,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
                           f->SetTrueName(name.Data());
                        } else {
                           Warning("HandleButton",
-                                  "Name too long. Can not add any more items to scan box");
+                                  "Name too long. Can not add any more items to scan box.");
                        }
                     }
                  }
@@ -796,7 +796,7 @@ Bool_t TGSelectBox::ValidateAlias()
 {
 //--- return true if edited alias is not a leading string of other expression aliases
    if (!strcmp(fTeAlias->GetText(), "-empty-") || !strlen(fTeAlias->GetText())) {
-      fViewer->Warning("You should define the alias first");
+      fViewer->Warning("ValidateAlias", "You should define the alias first.");
       return kFALSE;
    }
    TList *list = fViewer->ExpressionList();
@@ -806,7 +806,7 @@ Bool_t TGSelectBox::ValidateAlias()
       if (item != fEntry) {
          TString itemalias(item->GetAlias());
          if (itemalias.Contains(fTeAlias->GetText())) {
-            fViewer->Warning("Alias can not be the leading string of other alias");
+            fViewer->Warning("ValidAlias", "Alias can not be the leading string of other alias.");
             return kFALSE;
          }
       }
