@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.61 2001/12/14 13:31:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.62 2001/12/17 08:06:17 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4357,6 +4357,14 @@ void TPad::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = CreateToolTip((TBox*)0, text, delayms);
+}
+
+//______________________________________________________________________________
+void TPad::SetVertical(Bool_t vert)
+{
+   // Set pad vertical (default) or horizontal
+   if (vert) ResetBit(kHori);
+   else      SetBit(kHori);
 }
 
 //_______________________________________________________________________
