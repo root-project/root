@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.6 2003/05/28 14:03:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.cxx,v 1.7 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -131,7 +131,7 @@ TGGC &TGGC::operator=(const TGGC &rhs)
 //______________________________________________________________________________
 GContext_t TGGC::operator()() const
 {
-   // Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0)
+   // Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0).
 
    return fContext;
 }

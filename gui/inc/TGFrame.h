@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.36 2004/02/23 23:49:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.37 2004/03/04 11:29:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -206,12 +206,12 @@ public:
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
-   virtual void   Move(Int_t x, Int_t y);
-   virtual void   Resize(UInt_t w = 0, UInt_t h = 0);
-   virtual void   Resize(TGDimension size);
-   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
-   virtual UInt_t GetDefaultWidth() const { return GetDefaultSize().fWidth; }
-   virtual UInt_t GetDefaultHeight() const { return GetDefaultSize().fHeight; }
+   virtual void    Move(Int_t x, Int_t y);
+   virtual void    Resize(UInt_t w = 0, UInt_t h = 0);
+   virtual void    Resize(TGDimension size);
+   virtual void    MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
+   virtual UInt_t  GetDefaultWidth() const { return GetDefaultSize().fWidth; }
+   virtual UInt_t  GetDefaultHeight() const { return GetDefaultSize().fHeight; }
    virtual Pixel_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(Pixel_t back);
    virtual void    SetBackgroundColor(Pixel_t back);
@@ -273,7 +273,7 @@ protected:
 
    Bool_t   fLayoutBroken;            // no layout manager is used
 
-   static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes 
+   static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
 
    virtual Bool_t HandleEditEvent(Event_t *);
