@@ -130,6 +130,7 @@ EXPORTS
 	gdk_gc_get_values
 	gdk_gc_new
 	gdk_gc_new_with_values
+   gdk_gc_set_values
 	gdk_gc_ref
 	gdk_gc_set_background
 	gdk_gc_set_clip_mask

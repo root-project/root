@@ -162,6 +162,9 @@ extern "C" {
    GdkGC *gdk_gc_new_with_values(GdkDrawable * drawable,
                                  GdkGCValues * values,
                                  GdkGCValuesMask values_mask);
+   void gdk_gc_set_values(GdkGC * gc,
+                                 GdkGCValues * values,
+                                 GdkGCValuesMask values_mask);
    void gdk_gc_init(GdkGC * gc, GdkGCClass * klass);
    GdkGC *gdk_gc_ref(GdkGC * gc);
    void gdk_gc_unref(GdkGC * gc);

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.46 2004/02/02 15:32:57 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.47 2004/02/04 17:23:00 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4742,26 +4742,26 @@ void TGWin32::MapGCValues(GCValues_t & gval,
          xgval.background.red = GetRValue(gval.fBackground);
          xgval.background.green = GetGValue(gval.fBackground);
          xgval.background.blue = GetBValue(gval.fBackground);
-      }
-      if ((mask & kGCLineWidth)) {
+      }    
+      if (mask & kGCLineWidth) {
          xmask |= GDK_GC_LINE_WIDTH;
          xgval.line_width = gval.fLineWidth;
       }
-      if ((mask & kGCLineStyle)) {
+      if (mask & kGCLineStyle) {
          xmask |= GDK_GC_LINE_STYLE;
-         xgval.line_style = (GdkLineStyle) gval.fLineStyle;	// ident mapping
+         xgval.line_style = (GdkLineStyle) gval.fLineStyle; // ident mapping
       }
-      if ((mask & kGCCapStyle)) {
+      if (mask & kGCCapStyle) {
          xmask |= GDK_GC_CAP_STYLE;
-         xgval.cap_style = (GdkCapStyle) gval.fCapStyle;	// ident mapping
+         xgval.cap_style = (GdkCapStyle) gval.fCapStyle; // ident mapping
       }
-      if ((mask & kGCJoinStyle)) {
+      if (mask & kGCJoinStyle) {
          xmask |= GDK_GC_JOIN_STYLE;
-         xgval.join_style = (GdkJoinStyle) gval.fJoinStyle;	// ident mapping
+         xgval.join_style = (GdkJoinStyle) gval.fJoinStyle; // ident mapping
       }
       if ((mask & kGCFillStyle)) {
          xmask |= GDK_GC_FILL;
-         xgval.fill = (GdkFill) gval.fFillStyle;	// ident mapping
+         xgval.fill = (GdkFill) gval.fFillStyle;   // ident mapping
       }
       if ((mask & kGCTile)) {
          xmask |= GDK_GC_TILE;
@@ -4799,7 +4799,6 @@ void TGWin32::MapGCValues(GCValues_t & gval,
          xmask |= GDK_GC_CLIP_MASK;
          xgval.clip_mask = (GdkPixmap *) gval.fClipMask;
       }
-
    } else {
       // map XValues to GCValues_t
       Mask_t mask = 0;
@@ -5037,7 +5036,7 @@ void TGWin32::DeleteFont(FontStruct_t fs)
 }
 
 //______________________________________________________________________________
-GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t * gval)
+GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t *gval)
 {
    // Create a graphics context using the values set in gval (but only for
    // those entries that are in the mask).
@@ -5050,7 +5049,7 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t * gval)
    xgval.subwindow_mode = GDK_CLIP_BY_CHILDREN;	// GDK_INCLUDE_INFERIORS;
 
    GdkGC *gc = gdk_gc_new_with_values((GdkDrawable *) id,
-                                      &xgval, (GdkGCValuesMask) xmask);
+                                      &xgval, (GdkGCValuesMask)xmask);
    return (GContext_t) gc;
 }
 
@@ -5102,11 +5101,17 @@ void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
    if (mask & kGCGraphicsExposures) {
       gdk_gc_set_exposures((GdkGC *) gc, xgval.graphics_exposures);
    }
-   if ((mask & kGCLineWidth) || (mask & kGCLineStyle) ||
-       (mask & kGCCapStyle) || (mask & kGCJoinStyle)) {
-      gdk_gc_set_line_attributes((GdkGC *) gc, xgval.line_width,
-                                 xgval.line_style, xgval.cap_style,
-                                 xgval.join_style);
+   if (mask & kGCLineWidth) {
+      gdk_gc_set_values((GdkGC *) gc, &xgval, GDK_GC_LINE_WIDTH);
+   }
+   if (mask & kGCLineStyle) {
+      gdk_gc_set_values((GdkGC *) gc, &xgval, GDK_GC_LINE_STYLE);
+   } 
+   if (mask & kGCCapStyle) {
+      gdk_gc_set_values((GdkGC *) gc, &xgval, GDK_GC_CAP_STYLE);
+   }
+   if (mask & kGCJoinStyle) {
+      gdk_gc_set_values((GdkGC *) gc, &xgval, GDK_GC_JOIN_STYLE);
    }
    if (mask & kGCSubwindowMode) {
       gdk_gc_set_subwindow((GdkGC *) gc, xgval.subwindow_mode);
