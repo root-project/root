@@ -1,5 +1,4 @@
-usr/bin/* 
-usr/share/man/man1/* 
-usr/share/root/icons 
-usr/share/doc/root/tutorials 
-usr/share/root/macros
+@prefix@/bin/* 
+@prefix@/share/man/man1/* 
+@prefix@/share/root/icons 
+@prefix@/share/root/macros

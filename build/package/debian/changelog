@@ -1,3 +1,21 @@
+root (3.02.06) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Wed,  9 Jan 2002 04:08:19 +0100
+
+root (3.02.04) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Tue,  8 Jan 2002 03:16:39 +0100
+
+root (3.02.00) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Thu, 15 Nov 2001 21:34:26 +0100
+
 root (3.00.06) unstable; urgency=low
 
   * Bumped Debian GNU/Linux version with ROOT

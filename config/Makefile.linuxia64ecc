@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+#
 # Makefile of ROOT for Itanium/Linux with Intel ecc compiler
 
 PLATFORM      = linux

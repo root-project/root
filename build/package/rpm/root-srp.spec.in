@@ -1,0 +1,14 @@
+######################################################################
+#
+# zebra Sub package 
+# 
+%package -n root-srp
+Group: ROOT
+Summary: @short@
+%description -n root-srp
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-srp -f @files@
+

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.19 2000/12/19 18:04:37 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.20 2001/01/26 16:44:35 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -304,7 +304,11 @@ void ProofdSRPUser(const char *user)
       return;
    }
 
+#if R__SRP_1_1
+   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
+#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
+#endif
    if (!ts)
       ErrorFatal("ProofdSRPUser: user %s not found SRP password file", gUser);
 

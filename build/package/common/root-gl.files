@@ -1,4 +1,4 @@
-usr/include/root/TGLKernel.h 
-usr/include/root/TRootGL*  
-usr/include/root/TWin32GL* 
-usr/include/root/TRootWGL.h
+@prefix@/include/root/TGLKernel.h 
+@prefix@/include/root/TRootGL*  
+@prefix@/include/root/TWin32GL* 
+@prefix@/include/root/TRootWGL.h

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.33 2001/04/24 14:40:12 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.34 2001/05/08 13:43:55 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -850,7 +850,11 @@ void RootdSRPUser(const char *user)
       return;
    }
 
+#if R__SRP_1_1
+   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
+#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
+#endif
    if (!ts)
       ErrorFatal(kErrNoUser, "RootdSRPUser: user %s not found SRP password file", gUser);
 

@@ -1,39 +1,58 @@
-#!/bin/sh -e 
+#!/bin/sh
 #
-# $Id$
+# $Id: makedebdir.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
 #
 # Make the debian packaging directory 
 #
-. build/package/lib/common.sh debian 
+### echo %%% Various needed variables 
+base=root
+tgtdir="debian"
+cmndir=build/package/common
+libdir=build/package/lib
+debdir=build/package/debian
+vrsfil=build/version_number
+
+### echo %%% Installation directories 
+prefix=usr
+etcdir=etc/root
+docdir=${prefix}/share/doc/root-doc 
+
+### echo %%% Packages ordered by preference
+pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-star root-shift root-cint root-bin libroot-dev libroot"
+pkgs=`./configure linuxdeb --pkglist | sed -n 's,packages: ,,p'`
+### echo %%% Package list is: $pkgs
+lvls="preinst postinst prerm postrm"
+
+### echo %%% ROOT version 
+major=`sed 's|\(.*\)\..*/.*|\1|' < ${vrsfil}`
+minor=`sed 's|.*\.\(.*\)/.*|\1|' < ${vrsfil}`
+revis=`sed 's|.*\..*/\(.*\)|\1|' < ${vrsfil}`
+versi="${major}.${minor}.${revis}"
 
 ### echo %%% Make the directory 
 mkdir -p ${tgtdir} 
 
 ### echo %%% Copy the README file to the directory 
-cp ${cmndir}/README ${tgtdir}/README.Debian 
+sed -e "s,@prefix@,/${prefix},g" \
+    -e "s,@etcdir@,/${etcdir},g" \
+    < ${cmndir}/README > ${tgtdir}/README.Debian 
 
 ### echo %%% Copy task-root readme 
 cp ${debdir}/task-root.README.Debian ${tgtdir}
 
 ### echo %%% Copy root-bin menu file
-cp ${debdir}/root-bin.menu ${tgtdir}
+sed -e "s,@prefix@,/${prefix},g" \
+    -e "s,@etcdir@,/${etcdir},g" \
+    < ${debdir}/root-bin.menu > ${tgtdir}/root-bin.menu
 
 ### echo %%% Copy watch file 
 cp ${debdir}/watch ${tgtdir}
 
 ### echo %%% make the changelog 
-${libdir}/makedebchangelog.sh 
+${libdir}/makedebchangelog.sh $tgtdir $debdir $versi
 
 ### echo %%% make the toplevel copyright file 
-${libdir}/makedebcopyright.sh 
-
-### echo %%% Copy the skeleton rules file to ${mndir}/rules.tmp 
-if [ ! -f ${debdir}/rules.in ] ; then 
-    echo "$0: I cannot find the ESSENTIAL file ${debdir}/rules.in"
-    echo "Giving up. Something is very screwy"
-    exit 10
-fi
-cp ${debdir}/rules.in ${cmndir}/rules.tmp 
+${libdir}/makedebcopyright.sh $tgtdir $debdir $cmndir 
 
 ### echo %%% Copy the header of the control file to debian/control 
 if [ ! -f ${debdir}/head.control.in ] ; then 
@@ -49,10 +68,11 @@ for i in $pkgs; do
     # Since we always have libxpm4-dev first, we can add a comma freely. 
     # That is, we don't have to worry if the entry is the first in the
     # list, because it never is. Thank god for that. 
-    "gl")     bd="${bd}, libgl-dev" ;; 
-    "mysql")  bd="${bd}, libmysqlclient6-dev (>= 3.22.30)" ;;
-    "pythia") bd="${bd}, libpythia-dev" ;; 
-    "ttf")    bd="${bd}, freetype2-dev" ;; 
+    root-gl)     bd="${bd}, libgl-dev" ;; 
+    root-mysql)  bd="${bd}, libmysqlclient6-dev (>= 3.22.30)" ;;
+    root-pgsql)  bd="${bd}, libpostgresql-dev (>= 6.5.3-23)" ;;
+    root-pythia) bd="${bd}, libpythia-dev" ;; 
+    root-ttf)    bd="${bd}, freetype2-dev" ;; 
     *) ;;
     esac
 done
@@ -66,49 +86,48 @@ echo "" >> ${tgtdir}/control
 for i in ${pkgs} ; do 
     echo "Processing for package $i ... "
     ### echo %%% First append to the control file 
-    ${libdir}/makedebcontrol.sh $i
+    ${libdir}/makedebcontrol.sh $tgtdir $debdir $cmndir $i
 
     ### echo %%% Append to the shlibs.local file 
-    ${libdir}/makedebshlocal.sh $i
+    ${libdir}/makedebshlocal.sh $tgtdir $debdir $cmndir $versi $major $minor $i
 
     ### echo %%% Then make the file lists
-    ${libdir}/makedebfiles.sh $i      
-    ${libdir}/makedebconffiles.sh $i  
-    ${libdir}/makedebdocs.sh $i       
-    ${libdir}/makedebexamples.sh $i   
+    ${libdir}/makedebfiles.sh $tgtdir $cmndir $prefix $etcdir $docdir $i      
+    ${libdir}/makedebconffiles.sh $tgtdir $cmndir $etcdir $i      
+    ${libdir}/makedebdocs.sh $tgtdir $cmndir $prefix $etcdir $docdir $i      
+    ${libdir}/makedebexamples.sh $tgtdir $cmndir $prefix $etcdir $docdir $i
 
     ### echo %%% Make copyright file 
-    ${libdir}/makedebcopyright.sh $i 
+    ${libdir}/makedebcopyright.sh $tgtdir $debdir $cmndir $i 
 
     ### echo %%% make the kinds of scripts 
     for j in $lvls ; do 
-	${libdir}/makedebscr.sh $i $j 
+	${libdir}/makedebscr.sh $tgtdir $debdir $cmndir \
+	    $prefix $etcdir $docdir $i $j 
     done 
 
     ### echo %%% Update the rules file 
-    if [ "x$i" != "xtask" ] ; then 
-	${libdir}/makedebrules.sh $i 
-    fi
+    # if [ "x$i" != "xtask" ] ; then 
+    # 	${libdir}/makedebrules.sh $i 
+    # fi
 done 
 
-### echo %%% Insert the configuration command 
-### echo %%% first split file
-csplit -q -f ${cmndir}/tmp. -k  ${cmndir}/rules.tmp "/@configure@/"
-
-### echo %%% Cat the first part 
-sed -e  '/@pkg@/d' \
-    < ${cmndir}/tmp.00 > ${tgtdir}/rules
-
-### echo %%% now the configuration command 
-${libdir}/makeconfigure.sh debian >> ${tgtdir}/rules
-
-### echo %%% and finally the last part 
-sed -e '/@configure@/d' \
-    < ${cmndir}/tmp.01 >> ${tgtdir}/rules
-
-### echo %%% clean up 
-rm -f ${cmndir}/tmp.00 ${cmndir}/tmp.01 ${cmndir}/rules.tmp
+### echo %%% Copy the skeleton rules file to 
+if [ ! -f ${debdir}/rules.in ] ; then 
+    echo "$0: I cannot find the ESSENTIAL file ${debdir}/rules.in"
+    echo "Giving up. Something is very screwy"
+    exit 10
+fi
+### echo %%% Make the rules file 
+sed -e "s,@prefix@,/${prefix},g" \
+    -e "s,@etcdir@,/${etcdir},g" \
+    -e "s,@docdir@,/${docdir},g" \
+    < ${debdir}/rules.in > ${tgtdir}/rules
+chmod 755 ${tgtdir}/rules
 
 #
-# $Log$
+# $Log: makedebdir.sh,v $
+# Revision 1.1  2001/04/23 14:11:47  rdm
+# part of the debian and redhat build system.
+#
 #

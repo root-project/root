@@ -1,5 +1,5 @@
-	if ! grep -qs ^/usr/lib/root\$ /etc/ld.so.conf ; then
-                echo /usr/lib/root >> /etc/ld.so.conf
+	if ! grep -qs ^@prefix@/lib/root\$ /etc/ld.so.conf ; then
+                echo @prefix@/lib/root >> /etc/ld.so.conf
         fi
 	ldconfig
 

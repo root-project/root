@@ -1,10 +1,12 @@
 #!/bin/sh -e 
 #
-# $Id$
+# $Id: makedebcopyright.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
 #
 # Writes a copyright file to debian/root-<pkg>.copyright
 #
-. build/package/lib/common.sh debian
+tgtdir=$1 ; shift
+debdir=$1 ; shift
+cmndir=$1 ; shift 
 
 ### echo %%% if we did not get any argument, write the master copyright
 ### echo %%% file, using the toplevel LICENSE file 
@@ -44,5 +46,8 @@ then
 fi
 
 #
-# $Log$
+# $Log: makedebcopyright.sh,v $
+# Revision 1.1  2001/04/23 14:11:47  rdm
+# part of the debian and redhat build system.
+#
 #

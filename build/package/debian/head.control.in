@@ -1,5 +1,5 @@
 Source: root
-Section: science
+Section: math
 Priority: optional
 Build-Depends: libxpm4-dev @build-depends@ 
 Maintainer: Christian Holm <cholm@nbi.dk>

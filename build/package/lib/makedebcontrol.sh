@@ -1,16 +1,12 @@
 #!/bin/sh -e 
 #
-# $Id$
+# $Id: makedebcontrol.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
 #
 # Writes a control file entry debian/control 
 #
-. build/package/lib/common.sh debian
-
-if [ $# -lt 1 ] ; then 
-    echo "$0: I need a package name - giving up"
-    exit 2
-fi
-
+tgtdir=$1 ; shift 
+debdir=$1 ; shift
+cmndir=$1 ; shift 
 pkg=$1
 
 # Check if skeleton and description file exist 
@@ -93,5 +89,8 @@ echo "" >> ${tgtdir}/control
 rm ${cmndir}/tmp ${cmndir}/control.tmp
 
 #
-# $Log$
+# $Log: makedebcontrol.sh,v $
+# Revision 1.1  2001/04/23 14:11:47  rdm
+# part of the debian and redhat build system.
+#
 #

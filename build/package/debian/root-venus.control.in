@@ -1,0 +1,5 @@
+Package: root-venus
+Architecture: any
+Depends: libroot (= ${Source-Version}), libvenus, libvenus-dev, ${shlibs:Depends}
+Description: @short@ 
+@long@ 

@@ -20,15 +20,27 @@
 #
 #   SPEC file macro       This package      Rpm default
 #   ---------------------------------------------------
-#   %{_prefix}            /usr              /usr
-#   %{_defaultdocdir}     /usr/share/doc    /usr/doc
-#   %{_mandir}            /usr/share/man    /usr/man
-#   %{_datadir}           /usr/share        /usr/share
+#   %{_prefix}            @prefix@              @prefix@
+#   %{_defaultdocdir}     @prefix@/share/doc    @prefix@/doc
+#   %{_mandir}            @prefix@/share/man    @prefix@/man
+#   %{_datadir}           @prefix@/share        @prefix@/share
 #
 # In the future, we might add support for other directories. 
 #
 %build
-@configure@
+./configure linux					\
+	--prefix=%_prefix 				\
+	--etcdir=%_sysconfdir/root  			\
+	--docdir=%_defaultdocdir/root-doc-%ver          \
+        --enable-star 					\
+        --enable-thread 				\
+        --enable-shared 				\
+        --enable-soversion 				\
+	--disable-rpath                                 \
+        --disable-afs 					\
+        --disable-srp 					\
+        --with-sys-iconpath=/usr/share/pixmaps 		\
+        --with-ttf-fontdir=/usr/share/fonts/truetype
 make 
 
 #---------------------------------------------------------------------
@@ -39,8 +51,14 @@ make
 #
 %install
 make install DESTDIR=${RPM_BUILD_ROOT}
+mkdir -p ${RPM_BUILD_ROOT}/%_defaultdocdir/root-daemon-%ver
+mv ${RPM_BUILD_ROOT}/%_defaultdocdir/root-doc-%ver/README.PROOF \
+	${RPM_BUILD_ROOT}/%_defaultdocdir/root-daemon-%ver/README 
 find ${RPM_BUILD_ROOT} -name "CVS" | xargs rm -fr 
-@libdir@/makerpmfiles.sh ${RPM_BUILD_ROOT}
+@libdir@/makerpmfiles.sh ${RPM_BUILD_ROOT} \
+	@cmndir@ @tgtdir@ %_prefix %_sysconfdir/root \
+	%_defaultdocdir/root-doc-%ver @pkglist@ 
+echo "%doc %_defaultdocdir/root-daemon-%ver/README" >> @tgtdir@/root-daemon.files
 
 ######################################################################
 #

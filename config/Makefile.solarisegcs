@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+# 
 # Makefile to build ROOT for SOLARIS with egcs1.1
 
 PLATFORM      = solaris

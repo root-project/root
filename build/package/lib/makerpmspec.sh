@@ -1,16 +1,35 @@
 #!/bin/sh -e 
 #
-# $Id$
+# $Id: makerpmspec.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
-. build/package/lib/common.sh rpm 
+#
+### echo %%% Some general variables 
+base=root
+cmndir=build/package/common
+libdir=build/package/lib
+rpmdir=build/package/rpm 
+vrsfil=build/version_number
+tgtdir=rpm
+curdir=`pwd`
+
+### echo %%% Packages ordered by preference
+pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-star root-shift root-cint root-bin libroot-dev libroot"
+pkgs=`./configure linux --pkglist | sed -n 's,packages: ,,p'`
+lvls="preinst postinst prerm postrm"
+
+# ROOT version 
+major=`sed 's|\(.*\)\..*/.*|\1|' < ${vrsfil}`
+minor=`sed 's|.*\.\(.*\)/.*|\1|' < ${vrsfil}`
+revis=`sed 's|.*\..*/\(.*\)|\1|' < ${vrsfil}`
+versi="${major}.${minor}.${revis}"
 
 ### echo %%% Make the directory 
 # mkdir -p ${tgtdir} 
 
 ### echo %%% Copy the README file to the directory 
-# cp ${cmndir}/README ${tgtdir}/README.Redhat
+cp ${cmndir}/README ${rpmdir}/README.Redhat
 
 ### echo %%% Copy the header of the spec file to rpm/root.spec
 if [ ! -f ${rpmdir}/head.spec.in ] ; then 
@@ -18,46 +37,41 @@ if [ ! -f ${rpmdir}/head.spec.in ] ; then
     echo "Giving up. Something is very screwy"
     exit 10
 fi
+### echo %%% make sure we've got a fresh file 
+rm -f root.spec
+
 ### echo %%% First thing to do, is to write version number. 
-sed "s/@version@/${versi}/" < ${rpmdir}/head.spec.in > ${updir}/root.spec
-echo "" >> ${updir}/root.spec
+sed "s/@version@/${versi}/" < ${rpmdir}/head.spec.in > root.spec
+echo "" >> root.spec
 
 ### echo %%% Make the sub-package stuff
 for i in ${pkgs} ; do 
     echo "Processing for package $i ... "
 
     ### echo %%% first insert the missing peices
-    ${libdir}/makerpmspecs.sh $i 
+    ${libdir}/makerpmspecs.sh $tgtdir $cmndir $rpmdir "$lvls" $i >> root.spec
 done 
 
 ### echo %%% finally cat the footer to the spec file 
-echo "" >> ${updir}/root.spec
+echo "" >> root.spec
 
-### echo %%% Copy the header of the spec file to rpm/root.spec
+### echo %%% Cat the tail of the file to the to rpm/root.spec
 if [ ! -f ${rpmdir}/tail.spec.in ] ; then 
     echo "$0: Couldn't find ${rpmdir}/tail.spec.in - very bad" 
     echo "Giving up. Something is very screwy"
     exit 10
 fi
 
-### echo %%% Insert the configuration command 
-### echo %%% first split file
-csplit -q -f ${cmndir}/tmp. -k  ${rpmdir}/tail.spec.in "/@configure@/"
-
-### echo %%% Cat the first part 
-cat ${cmndir}/tmp.00 >> ${updir}/${base}.spec
-
-### echo %%% now the configuration command 
-${libdir}/makeconfigure.sh rpm >> ${updir}/${base}.spec
-
 ### echo %%% and finally the last part 
-sed -e '/@configure@/d' \
-    -e "s|@libdir@|${libdir}|" \
-    < ${cmndir}/tmp.01 >> ${updir}/${base}.spec
-
-### echo %%% clean up 
-rm -f ${cmndir}/tmp.00 ${cmndir}/tmp.01
+sed -e "s|@libdir@|${libdir}|" \
+    -e "s|@cmndir@|${cmndir}|" \
+    -e "s|@tgtdir@|${tgtdir}|" \
+    -e "s|@pkglist@|${pkgs}|" \
+    < ${rpmdir}/tail.spec.in >> root.spec
 
 #
-# $Log$
+# $Log: makerpmspec.sh,v $
+# Revision 1.1  2001/04/23 14:11:47  rdm
+# part of the debian and redhat build system.
+#
 #

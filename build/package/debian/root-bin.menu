@@ -1,4 +1,4 @@
 ?package(root-bin):needs=X11 section=Apps/Math\
   title="ROOT"\
   longtitle="ROOT'a Object Oriented Technologies"\
-  command="xterm -e /usr/bin/root"
+  command="xterm -e @prefix@/bin/root"

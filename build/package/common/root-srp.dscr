@@ -1,0 +1,5 @@
+short: ROOT utils and library for SRP authenification
+long:
+Provides two utility programs to help with SRP authentification in
+ROOT.  
+

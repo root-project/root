@@ -10,10 +10,10 @@ case "$1" in
 	# Install lines in /etc/inetd.conf for ROOT daemon services
 	# The rootd for remote file acces
 	update-inetd --group OTHER --add \
-	    'rootd\tstream\ttcp\tnowait\troot\t/usr/bin/rootd\trootd -i'
+	    'rootd\tstream\ttcp\tnowait\troot\t@prefix@/bin/rootd\trootd -i'
 	# The PROOF daemon for Parallel computing
 	update-inetd --group OTHER --add \
-	    'proofd\tstream\ttcp\tnowait\troot\t/usr/bin/proofd\tproofd\t/usr/share/root'
+	    'proofd\tstream\ttcp\tnowait\troot\t@prefix@/bin/proofd\tproofd\t@prefix@/share/root'
 	
 	# Install lines in /etc/services - should not be done here, rather
         # the lines should be added by netbase maintainer. Will ask for 

@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+# 
 # Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
 
 PLATFORM      = macosx

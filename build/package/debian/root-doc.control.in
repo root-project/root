@@ -1,0 +1,6 @@
+Package: root-doc
+Section: doc
+Architecture: all
+Depends: root-bin (= ${Source-Version})
+Description: @short@
+@long@

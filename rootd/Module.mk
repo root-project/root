@@ -23,20 +23,18 @@ SHADOWFLAGS  := #-DR__SHADOWPW
 SHADOWLIBS   :=
 
 ##### use AFS for authentication #####
-ifneq ($(AFSDIR),)
+ifneq ($(AFSLIB),)
 AFSFLAGS     := -DR__AFS
-AFSLIBS      := -L$(AFSDIR)/lib -L$(AFSDIR)/lib/afs -lkauth -lprot \
-                -lubik -lauth -lrxkad -lsys -ldes -lrx -llwp \
-                -lcmd -lcom_err -laudit $(AFSDIR)/lib/afs/util.a
+AFSLIBS      := $(AFSLIBDIR) $(AFSLIB) 
 endif
 
 ##### use SRP for authentication #####
-ifneq ($(SRPDIR),)
-SRPFLAGS     := -DR__SRP -I$(SRPDIR)/include
-SRPLIBS      := -L$(SRPDIR)/lib -lsrp -lgmp
+ifneq ($(SRPLIB),)
+SRPFLAGS     := -DR__SRP -I$(SRPINCDIR)
+SRPLIBS      := $(SRPLIBDIR) $(SRPLIB)
 endif
 
-AUTHFLAGS    := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS)
+AUTHFLAGS    := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(EXTRA_AUTHFLAGS)
 AUTHLIBS     := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS)
 
 # used in the main Makefile

@@ -1,0 +1,5 @@
+short: Thin PostGreSQL Client for ROOT 
+long:
+This package provide a thin client (interface) to PostGreSQL
+servers. Using this client, one can obtain information from a PosrGreSQL
+database into the ROOT environment. 

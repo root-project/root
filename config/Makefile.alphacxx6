@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+# 
 # Makefile to build ROOT for DEC unix with cxx 6
 
 PLATFORM      = alpha

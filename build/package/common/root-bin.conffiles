@@ -1,2 +1,2 @@
-etc/root/system.rootrc
-etc/root/root.mimes
+@etcdir@/system.rootrc
+@etcdir@/root.mimes

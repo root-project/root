@@ -91,7 +91,7 @@ endif
 ifneq ($(STAR),)
 MODULES      += star
 endif
-ifneq ($(SRPDIR),)
+ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
 
@@ -319,7 +319,7 @@ redhat:
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
 	  echo "called root-v$$vers.source.tar.gz and put it in you RPM "
 	@echo "source directory (default /usr/src/rpm/SOURCES) and the "
-	@echo "spec-file ../root.spec in your RPM spec directory"
+	@echo "spec-file root.spec in your RPM spec directory"
 	@echo "(default /usr/src/RPM/SPECS). If you want to build outside"
 	@echo "the regular tree, please refer to the RPM documentation."
 	@echo "After that, do"
@@ -456,9 +456,9 @@ install:
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   rm -rf $(DESTDIR)$(ETCDIR)/CVS; \
-	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
-	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
+	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
+	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
 	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
 	fi
 
@@ -587,7 +587,9 @@ showbuild:
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
-	@echo "SRPDIR             = $(SRPDIR)"
+	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
+	@echo "SRPINCDIR          = $(SRPINCDIR)"
+	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo ""
 	@echo "INSTALL            = $(INSTALL)"

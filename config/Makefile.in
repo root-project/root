@@ -1,3 +1,5 @@
+# -*- mode: makefile -*-
+# 
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
@@ -23,6 +25,7 @@ CINTINCDIR     := @cintincdir@
 DOCDIR         := @docdir@
 TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
+ACLOCALDIR     := @aclocaldir@
 
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
@@ -67,8 +70,15 @@ FPYTHIA6LIB    := @pythia6lib@
 FVENUSLIBDIR   := @venuslibdir@
 FVENUSLIB      := @venuslib@
 
-SRPDIR         := @srpdir@
-AFSDIR         := @afsdir@
+SRPLIBDIR      := @srplibdir@
+SRPLIB         := @srplib@
+SRPINCDIR      := @srpincdir@
+SRPUTILLIBDIR  := @srputillibdir@
+SRPUTILLIB     := @srputillib@
+SRPUTILINCDIR  := @srputilincdir@
+
+AFSLIB         := @afslib@
+AFSLIBDIR      := @afslibdir@	
 
 STAR           := @enable_star@
 

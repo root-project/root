@@ -5,7 +5,9 @@
 # Macro definitions
 %define ver    @version@
 %define rel    1
-%define prefix /usr
+%define _prefix        /usr
+%define _sysconfdir    /etc
+%define _defaultdocdir %_prefix/share/doc
 
 ######################################################################
 #
