@@ -46,7 +46,7 @@ protected:
 //      kArb8Trd1 = BIT(25), // trd1 type
 //      kArb8Trd2 = BIT(26), // trd2 type
       kArb8Trap = BIT(27), // planar surface trapezoid
-      kArb8Tra  = BIT(28), // general twisted trapezoid
+      kArb8Tra  = BIT(28)  // general twisted trapezoid
    };
    // data members
    Double_t              fDz;          // half length in Z

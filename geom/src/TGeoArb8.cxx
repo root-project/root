@@ -622,7 +622,8 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
 
    fTwistAngle = twist;
 
-   for (Int_t i=0; i<8; i++) {
+   Int_t i;
+   for (i=0; i<8; i++) {
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
    }   
@@ -635,7 +636,7 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
    fXY[5][0] = -tl2+dx+dx2;         fXY[5][1] = h2+dy;
    fXY[6][0] = tl2+dx+dx2;          fXY[6][1] = h2+dy;
    fXY[7][0] = bl2+dx;              fXY[7][1] = -h2+dy;
-   for (Int_t i=4; i<8; i++) {
+   for (i=4; i<8; i++) {
       x = fXY[i][0];
       y = fXY[i][1];
       fXY[i][0] = x*TMath::Cos(twist*kDegRad) + y*TMath::Sin(twist*kDegRad);
