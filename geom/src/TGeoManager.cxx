@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.67 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.68 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1724,7 +1724,7 @@ TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const
 // Get track with a given ID.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
-      if ((track = (TVirtualGeoTrack *)fTracks->At(i))) {
+      if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
          if (track->GetId() == id) return track;
       }
    }
@@ -1748,7 +1748,7 @@ Int_t TGeoManager::GetTrackIndex(Int_t id) const
 // Get index for track id, -1 if not found.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
-      if ((track = (TVirtualGeoTrack *)fTracks->At(i))) {
+      if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
          if (track->GetId() == id) return i;
       }
    }
@@ -1903,7 +1903,6 @@ Double_t TGeoManager::Safety(Bool_t inside)
       return fSafety;
    }   
    Double_t point[3];
-   Double_t local[3];
    if (!inside) fSafety = TGeoShape::Big();
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
@@ -1927,6 +1926,7 @@ Double_t TGeoManager::Safety(Bool_t inside)
    //---> now check the safety to the last node
 
    //---> if we were just exiting, return this safety
+   TObjArray *nodes = vol->GetNodes();
    Int_t nd = fCurrentNode->GetNdaughters();
    if (!nd && !fCurrentOverlapping) return fSafety;
    TGeoNode *node;
@@ -1938,10 +1938,9 @@ Double_t TGeoManager::Safety(Bool_t inside)
    TGeoPatternFinder *finder = vol->GetFinder();
    if (finder) {
       Int_t ifirst = finder->GetDivIndex();
-      node = vol->GetNode(ifirst);
+      node = (TGeoNode*)nodes->UncheckedAt(ifirst);
       node->cd();
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      safe = node->Safety(point, kFALSE);
       if (safe<0) {
          fSafety=0;
          return fSafety;
@@ -1949,16 +1948,14 @@ Double_t TGeoManager::Safety(Bool_t inside)
       if (safe<fSafety) fSafety=safe;
       Int_t ilast = ifirst+finder->GetNdiv()-1;
       if (ilast==ifirst) return fSafety;
-      node = vol->GetNode(ilast);
+      node = (TGeoNode*)nodes->UncheckedAt(ilast);
       node->cd();
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      safe = node->Safety(point, kFALSE);
       if (safe<0) {
          fSafety=0;
          return fSafety;
       }   
       if (safe<fSafety) fSafety=safe;
-//      if (fSafety<1E-3) return fSafety;
       if (fCurrentOverlapping  && !inside) SafetyOverlaps();
       return fSafety;
    }
@@ -1967,9 +1964,8 @@ Double_t TGeoManager::Safety(Bool_t inside)
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    if (!voxels) {
       for (id=0; id<nd; id++) {
-         node = vol->GetNode(id);
-         node->MasterToLocal(point, local);
-         safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+         node = (TGeoNode*)nodes->UncheckedAt(id);
+         safe = node->Safety(point, kFALSE);
 //         if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE loop in %s safe=%g\n", node->GetVolume()->GetShape()->ClassName(),node->GetVolume()->GetName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
          if (safe<0) {
             fSafety=0;
@@ -1983,11 +1979,18 @@ Double_t TGeoManager::Safety(Bool_t inside)
    }
          
    //---> check fast unsafe voxels
+   Double_t *boxes = voxels->GetBoxes();
    for (id=0; id<nd; id++) {
-      if (voxels->IsSafeVoxel(point, id, fSafety)) continue;
-      node = vol->GetNode(id);
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      Int_t ist = 6*id;
+	  Double_t dxyz0 = TMath::Abs(point[0]-boxes[ist+3])-boxes[ist];
+	  if (dxyz0 > fSafety) continue;
+      Double_t dxyz1 = TMath::Abs(point[1]-boxes[ist+4])-boxes[ist+1];
+	  if (dxyz1 > fSafety) continue;
+      Double_t dxyz2 = TMath::Abs(point[2]-boxes[ist+5])-boxes[ist+2];
+	  if (dxyz2 > fSafety) continue;
+	  if (dxyz0*dxyz0+dxyz1*dxyz1+dxyz2*dxyz2 >= fSafety*fSafety) continue;
+	  node = (TGeoNode*)nodes->UncheckedAt(id);
+      safe = node->Safety(point, kFALSE);
 //      if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE vox of %s safe=%g\n", node->GetVolume()->GetName(),node->GetVolume()->GetShape()->ClassName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
       if (safe<0) {
          fSafety=0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.27 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.28 2003/12/11 10:37:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -393,7 +393,8 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    c=c/a;
    Double_t d=b*b-c;
    if (d>=0) {
-      s=-b-TMath::Sqrt(d);
+      Double_t sqd = TMath::Sqrt(d);
+	  s=-b-sqd;
       if (s>0) {
          if (in) return s;
          zi=point[2]+s*dir[2];
@@ -408,7 +409,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
             if (zi<=0) return s;
          }      
       }
-      s=-b+TMath::Sqrt(d);
+      s=-b+sqd;
       if (s>0) {
          if (in) return s;
          zi=point[2]+s*dir[2];
@@ -462,13 +463,16 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Doub
          }   
       }
    }   
-   return dist[TMath::LocMin(5, &dist[0])];
+   Double_t distmin = dist[0];
+   for (i=1;i<5;i++) if (dist[i] < distmin) distmin = dist[i];
+   return distmin;
 }   
 
 //_____________________________________________________________________________
 Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from inside point to surface of the arb8
+   Int_t i;
    Double_t dist[6];
    dist[0]=dist[1]=TGeoShape::Big();
    if (dir[2]<0) {
@@ -476,11 +480,13 @@ Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Dou
    } else {
       if (dir[2]>0) dist[1]=(fDz-point[2])/dir[2];
    }      
-   for (Int_t i=0; i<4; i++) {
+   for (i=0; i<4; i++) {
       dist[i+2]=DistToPlane(point, dir, i, kTRUE);   
    }   
       
-   return dist[TMath::LocMin(6, &dist[0])];   
+   Double_t distmin = dist[0];
+   for (i=1;i<6;i++) if (dist[i] < distmin) distmin = dist[i];
+   return distmin;
 }   
 
 //_____________________________________________________________________________
@@ -905,28 +911,27 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    Double_t safe = TGeoShape::Big();
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
-   Int_t i;          // current facette index
-   Double_t x0, y0, z0, x1, y1, z1, x2, y2;
-   Double_t ax, ay, az, bx, by;
+   Int_t i,j;       // current facette index
+   Double_t x0, y0, z0=-fDz, x1, y1, z1=fDz, x2, y2;
+   Double_t ax, ay, az=z1-z0, bx, by;
    Double_t fn;
    //---> compute safety for lateral planes
    for (i=0; i<4; i++) {
       x0 = fXY[i][0];
       y0 = fXY[i][1];
-      z0 = -fDz;
       x1 = fXY[i+4][0];
       y1 = fXY[i+4][1];
-      z1 = fDz;
       ax = x1-x0;
       ay = y1-y0;
       az = z1-z0;
-      x2 = fXY[(i+1)%4][0];
-      y2 = fXY[(i+1)%4][1];
+      j  = (i+1)%4;
+	  x2 = fXY[j][0];
+      y2 = fXY[j][1];
       bx = x2-x0;
       by = y2-y0;
       if (bx==0 && by==0) {
-         x2 = fXY[4+((i+1)%4)][0];
-         y2 = fXY[4+((i+1)%4)][1];
+         x2 = fXY[4+j][0];
+         y2 = fXY[4+j][1];
          bx = x2-x1;
          by = y2-y1;
          if (bx==0 && by==0) continue;
@@ -936,22 +941,21 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
       norm[2] = ax*by-ay*bx;
       fn = TMath::Sqrt(norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2]);
       if (fn<1E-10) continue;
-      norm[0] /= fn;
-      norm[1] /= fn;
-      norm[2] /= fn;
       saf[i] = (x0-point[0])*norm[0]+(y0-point[1])*norm[1]+(-fDz-point[2])*norm[2];
       if (in) {
-         saf[i]=TMath::Abs(saf[i]); // they should be all positive anyway
+         saf[i]=TMath::Abs(saf[i])/fn; // they should be all positive anyway
       } else {
-         saf[i] = -saf[i];   // only negative values are interesting
+         saf[i] = -saf[i]/fn;   // only negative values are interesting
       }   
    }
    saf[4] = fDz-TMath::Abs(point[2]);
    if (in) {
-      safe = saf[TMath::LocMin(5, saf)];
+      safe = saf[0];
+	  for (j=1;j<5;j++) if (saf[j] <safe) safe = saf[j];
    } else {
       saf[4]=-saf[4];
-      safe = saf[TMath::LocMax(5, saf)];
+      safe = saf[0];
+	  for (j=1;j<5;j++) if (saf[j] >safe) safe = saf[j];
    }
    return safe;
 }

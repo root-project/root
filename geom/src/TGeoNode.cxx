@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.19 2003/08/29 09:55:29 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.20 2003/10/06 15:15:01 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -394,6 +394,16 @@ void TGeoNode::PrintOverlaps() const
       node = fMother->GetNode(fOverlaps[i]);
       printf("   %s\n", node->GetName());
    }
+}
+
+//_____________________________________________________________________________
+Double_t TGeoNode::Safety(Double_t *point, Bool_t in) const
+{
+// computes the closest distance from given point to this shape
+
+   Double_t local[3];
+   GetMatrix()->MasterToLocal(point,local);
+   return fVolume->GetShape()->Safety(local,in);
 }
 
 //_____________________________________________________________________________

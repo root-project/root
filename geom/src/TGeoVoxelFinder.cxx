@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.19 2003/02/18 15:37:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.20 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -208,16 +208,16 @@ Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsa
 {
 // Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
 // if POINT inside voxel(s).
-   Double_t dxyz[3];
+   Double_t dxyz, minsafe2=minsafe*minsafe;
    Int_t ist = 6*inode;
    Int_t i;
    Double_t rsq = 0;
    for (i=0; i<3; i++) {
-      dxyz[i] = TMath::Abs(point[i]-fBoxes[ist+i+3])-fBoxes[ist+i];
-      if (dxyz[i]>=minsafe) return kTRUE;
-      if (dxyz[i]>-1E-6) rsq+=dxyz[i]*dxyz[i];
+      dxyz = TMath::Abs(point[i]-fBoxes[ist+i+3])-fBoxes[ist+i];
+      if (dxyz>-1E-6) rsq+=dxyz*dxyz;
+      if (rsq >= minsafe2) return kTRUE;
    }
-   return (rsq>=minsafe*minsafe);
+   return kFALSE;
 }      
 
 //-----------------------------------------------------------------------------

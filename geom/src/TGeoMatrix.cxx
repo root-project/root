@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.14 2003/11/10 09:48:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.15 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1187,18 +1187,6 @@ TGeoIdentity::TGeoIdentity(const char *name)
    if (!gGeoIdentity) gGeoIdentity = this;
    RegisterYourself();
 }
-//-----------------------------------------------------------------------------
-void TGeoIdentity::LocalToMaster(const Double_t *local, Double_t *master) const
-{
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
-   memcpy(master, local, 3*sizeof(Double_t));
-}
-//-----------------------------------------------------------------------------
-void TGeoIdentity::MasterToLocal(const Double_t *master, Double_t *local) const
-{
-// convert a point by multiplying its column vector (x, y, z, 1) to matrix
-   memcpy(local, master, 3*sizeof(Double_t));
-}
 
 /*************************************************************************
  * TGeoHMatrix - Matrix class used for computing global transformations  *
@@ -1267,7 +1255,7 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix *matrix)
    }
    if (matrix->IsRotation()) {
       SetBit(kGeoRotation);
-      SetRotation(matrix->GetRotationMatrix());
+      memcpy(fRotationMatrix,matrix->GetRotationMatrix(),9*sizeof(Double_t));
    }
    if (matrix->IsScale()) {
       SetBit(kGeoScale);
@@ -1289,9 +1277,9 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
    }   
    if (matrix.IsRotation()) {
       SetBit(kGeoRotation);
-      SetRotation(matrix.GetRotationMatrix());
+      memcpy(fRotationMatrix,matrix.GetRotationMatrix(),9*sizeof(Double_t));
    } else {
-      SetRotation(&kIdentityMatrix[0]);
+      memcpy(fRotationMatrix,kIdentityMatrix,9*sizeof(Double_t));
    }   
    if (matrix.IsScale()) {
       SetBit(kGeoScale);
@@ -1313,7 +1301,7 @@ void TGeoHMatrix::Clear(Option_t *)
    }
    if (IsRotation()) {
       ResetBit(kGeoRotation);
-      SetRotation(&kIdentityMatrix[0]);
+      memcpy(fRotationMatrix,kIdentityMatrix,9*sizeof(Double_t));
    }
    if (IsScale()) {      
       ResetBit(kGeoScale);
@@ -1332,7 +1320,7 @@ void TGeoHMatrix::Multiply(const TGeoMatrix *right)
    if (IsIdentity()) {
       if (right->IsRotation()) {
          SetBit(kGeoRotation);
-         SetRotation(r_rot);
+         memcpy(fRotationMatrix,r_rot,9*sizeof(Double_t));
       }
       if (right->IsScale()) {
          SetBit(kGeoScale);
@@ -1372,7 +1360,7 @@ void TGeoHMatrix::Multiply(const TGeoMatrix *right)
                                 fRotationMatrix[3*i+2]*r_rot[6+j];
          }
       }
-      SetRotation(&new_rot[0]);
+      memcpy(fRotationMatrix,new_rot,9*sizeof(Double_t));
    }
    // new scale
    if (IsScale()) {
@@ -1393,7 +1381,7 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
    if (IsIdentity()) {
       if (left->IsRotation()) {
          SetBit(kGeoRotation);
-         SetRotation(l_rot);
+         memcpy(fRotationMatrix,l_rot,9*sizeof(Double_t));
       }
       if (left->IsScale()) {
          SetBit(kGeoScale);
@@ -1433,7 +1421,7 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
                                 l_rot[3*i+2]*fRotationMatrix[6+j];
          }
       }
-      SetRotation(&new_rot[0]);
+      memcpy(fRotationMatrix,new_rot,9*sizeof(Double_t));
    }
    // new scale
    if (IsScale()) {

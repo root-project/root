@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.9 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.10 2003/09/25 14:50:40 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -301,12 +301,13 @@ public :
    TGeoIdentity(const char *name);
    virtual ~TGeoIdentity() {}
    
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
+   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const                                              {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
-                           {TGeoIdentity::LocalToMaster(local, master);}
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
+{memcpy(master, local, 3*sizeof(Double_t));}
+   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const
+   {memcpy(local, master, 3*sizeof(Double_t));}
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const
-                           {TGeoIdentity::MasterToLocal(master, local);}
+   {memcpy(local, master, 3*sizeof(Double_t));}
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const
                            {TGeoIdentity::LocalToMaster(local, master);}
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const
