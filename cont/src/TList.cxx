@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.12 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.13 2002/07/29 09:22:29 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -263,11 +263,12 @@ void TList::AddAt(TObject *obj, Int_t idx)
 //______________________________________________________________________________
 TObject *TList::After(TObject *obj) const
 {
-   // Returns the object after object obj. Returns 0 if obj is last in list.
+   // Returns the object after object obj. Obj is found using the
+   // object's IsEqual() method.  Returns 0 if obj is last in list.
 
    TObjLink *t;
 
-   if (fCache && fCache->GetObject() == obj) {
+   if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
       t = fCache;
       ((TList*)this)->fCache = fCache->Next();  //cast const away, fCache should be mutable
    } else {
@@ -295,11 +296,12 @@ TObject *TList::At(Int_t idx) const
 //______________________________________________________________________________
 TObject *TList::Before(TObject *obj) const
 {
-   // Returns the object before object obj. Returns 0 if obj is first in list.
+   // Returns the object before object obj. Obj is found using the
+   // object's IsEqual() method.  Returns 0 if obj is first in list.
 
    TObjLink *t;
 
-   if (fCache && fCache->GetObject() == obj) {
+   if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
       t = fCache;
       ((TList*)this)->fCache = fCache->Prev();  //cast const away, fCache should be mutable
    } else {
