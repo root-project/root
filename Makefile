@@ -336,7 +336,9 @@ endif
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
 
-.NOTPARALLEL:   map Makefile
+ifneq ($(findstring map, $(MAKECMDGOALS)),)
+.NOTPARALLEL:
+endif
 
 all:            rootexecs
 
