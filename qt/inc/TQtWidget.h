@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.4 2004/07/30 01:13:51 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include <qpixmap.h>
 
 class TCanvas;
+class TVirtualPad;
 
 //___________________________________________________________________
 class TQtWidgetBuffer : public QPixmap

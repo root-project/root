@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.4 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.5 2004/07/30 01:13:51 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TQtWidget::erase ()
 TVirtualPad *TQtWidget::cd()
 {
    // [slot] to make this embedded canvas the current one
-   cd(0);
+   return cd(0);
 }
 //______________________________________________________________________________
 TVirtualPad *TQtWidget::cd(int subpadnumber)
