@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.34 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.35 2003/05/11 14:09:10 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -949,6 +949,28 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
       connection->ExecuteMethod(paramArr, clist->GetNargs());
    }
    delete [] signal;
+}
+
+//______________________________________________________________________________
+void  TQObject::Emit(const char *signal, Long64_t param)
+{
+   // Emit a signal with a Long64_t argument.
+
+   Long_t args[1];
+   args[0] = (Long_t) (&param);
+
+   Emit(signal, args);
+}
+
+//______________________________________________________________________________
+void  TQObject::Emit(const char *signal, ULong64_t param)
+{
+   // Emit a signal with a ULong64_t argument.
+
+   Long_t args[1];
+   args[0] = (Long_t) (&param);
+
+   Emit(signal, args);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.6 2001/12/28 12:54:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.7 2002/09/14 00:28:53 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -93,14 +93,6 @@ public: \
    { \
       fQObject.Emit(signal); \
    } \
-   void Emit(const char *signal, Double_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
-   void Emit(const char *signal, Long_t param) \
-   { \
-      fQObject.Emit(signal, param); \
-   } \
    void Emit(const char *signal, const char *params) \
    { \
       fQObject.Emit(signal, params); \
@@ -109,6 +101,24 @@ public: \
    { \
       fQObject.Emit(signal, paramArr); \
    } \
+   void Emit(const char *signal, Double_t param) \
+   { \
+      fQObject.Emit(signal, param); \
+   } \
+   void Emit(const char *signal, Long_t param) \
+   { \
+      fQObject.Emit(signal, param); \
+   } \
+   void Emit(const char *signal, Long64_t param) \
+   { \
+      fQObject.Emit(signal, param); \
+   } \
+   void Emit(const char *signal, ULong64_t param) \
+   { \
+      fQObject.Emit(signal, param); \
+   } \
+   void Emit(const char *signal, Bool_t param) \
+      { Emit(signal,(Long_t)param); } \
    void Emit(const char *signal, Char_t param) \
       { Emit(signal,(Long_t)param); } \
    void Emit(const char *signal, UChar_t param) \

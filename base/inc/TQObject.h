@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.20 2002/12/02 18:50:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.21 2003/04/03 16:55:12 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -84,13 +84,15 @@ public:
    virtual ~TQObject();
 
    void  Emit(const char *signal);
-   void  Emit(const char *signal, Double_t param);
-   void  Emit(const char *signal, Long_t   param);
    void  Emit(const char *signal, const char *params);
-   void  Emit(const char *signal, Long_t  *paramArr);
-   void  Emit(const char *signal, Bool_t   param)
+   void  Emit(const char *signal, Long_t *paramArr);
+   void  Emit(const char *signal, Double_t param);
+   void  Emit(const char *signal, Long_t param);
+   void  Emit(const char *signal, Long64_t param);
+   void  Emit(const char *signal, ULong64_t param);
+   void  Emit(const char *signal, Bool_t param)
          { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, Char_t   param)
+   void  Emit(const char *signal, Char_t param)
          { Emit(signal, (Long_t)param); }
    void  Emit(const char *signal, UChar_t param)
          { Emit(signal, (Long_t)param); }
