@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.2 2000/06/16 12:24:47 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.3 2000/07/12 16:37:21 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -238,9 +238,11 @@ void TThread::Constructor() {
 TThread::~TThread()
 {
  char cbuf[100];
- sprintf(cbuf,"*** Thread %s.%d is DELETED ***",GetName(),fId);
- TThread::Printf("\n %s\n\n",cbuf);
-
+ if (gDebug) {
+    sprintf(cbuf,"*** Thread %s.%d is DELETED ***",GetName(),fId);
+    TThread::Printf("\n %s\n\n",cbuf);
+ }
+ 
 //      Disconnect thread instance
 
  PutComm("Destructor: MainMutex Locking");
@@ -264,8 +266,10 @@ Int_t TThread::Delete(TThread* &th)
 
   if (th->fState == kRunningState) {// Cancel if running
     th->fState = kDeletingState;
-    sprintf(cbuf,"*** Thread %s.%d Deleting ***",th->GetName(),th->fId);
-    TThread::Printf("\n %s\n\n",cbuf);
+    if (gDebug) {
+       sprintf(cbuf,"*** Thread %s.%d Deleting ***",th->GetName(),th->fId);
+       TThread::Printf("\n %s\n\n",cbuf);
+    }
     th->Kill(); return -1;}
 
   th->CleanUp();
@@ -313,7 +317,9 @@ if (arg) fThreadArg = arg;
   int iret = fgThreadImp->Run (this);
 
   fState =  (iret) ? kInvalidState : kRunningState;
-  fprintf(stderr,"\nThread %s ID=%d requested\n\n",GetName(),fId);
+  if (gDebug) {
+     fprintf(stderr,"\nThread %s ID=%d requested\n\n",GetName(),fId);
+  }
   UnLock();
   PutComm();
   return iret;
@@ -321,9 +327,11 @@ if (arg) fThreadArg = arg;
 
 Int_t TThread::Kill()
 {
-  if (fState != kRunningState && fState != kDeletingState)
-  {  fprintf(stderr,"TThread::Kill. thread %d is not running\n",fId);
-     return 13;
+  if (fState != kRunningState && fState != kDeletingState) {
+    if (gDebug) {
+       fprintf(stderr,"TThread::Kill. thread %d is not running\n",fId);
+    }
+    return 13;
   } else {
      if (fState == kRunningState ) fState = kCancelingState;
      return fgThreadImp->Kill(this);
@@ -333,16 +341,24 @@ Int_t TThread::Kill(Int_t id)
 {
   TThread *th = GetThread(id);
   if (th) {return fgThreadImp->Kill(th);
-  } else  {fprintf(stderr,"TThread::Kill thread %d not found ***\n",id);
-           return 13;}
+  } else  {
+     if (gDebug) {
+        fprintf(stderr,"TThread::Kill thread %d not found ***\n",id);
+     }
+     return 13;
+  }
 }
 
 Int_t TThread::Kill(const Text_t *name)
 {
   TThread *th = GetThread(name);
   if (th) {return fgThreadImp->Kill(th);
-  } else  {fprintf(stderr,"TThread::Kill thread %s not found ***\n",name);
-           return 13;}
+  } else  {
+     if (gDebug) {
+        fprintf(stderr,"TThread::Kill thread %s not found ***\n",name);
+     }
+     return 13;
+  }
 }
 
 Int_t     TThread::SetCancelOff(){return fgThreadImp-> SetCancelOff();}
@@ -380,9 +396,11 @@ Int_t TThread::CleanUp()
 void TThread::AfterCancel(TThread *th)
 {
   th->fState = kCanceledState;
-  char cbuf[100];
-  sprintf(cbuf,"*** Thread %s.%d is KILLED ***",th->GetName(),th->fId);
-  TThread::Printf("\n %s\n\n",cbuf);
+  if (gDebug) {
+     char cbuf[100];
+     sprintf(cbuf,"*** Thread %s.%d is KILLED ***",th->GetName(),th->fId);
+     TThread::Printf("\n %s\n\n",cbuf);
+  }
 }
 
 
