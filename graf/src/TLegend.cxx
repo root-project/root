@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.17 2003/07/15 07:56:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.18 2003/07/29 12:54:49 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -448,14 +448,14 @@ void TLegend::PaintPrimitives()
           (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
         if ( boxwidth > margin ) boxwidth = margin;
 
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym + yspace*0.35,
-                             xsym + boxwidth*0.35, ysym + yspace*0.35);
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym - yspace*0.35,
-                             xsym + boxwidth*0.35, ysym - yspace*0.35);
-        entryline.PaintLine( xsym + boxwidth*0.35, ysym - yspace*0.35,
-                             xsym + boxwidth*0.35, ysym + yspace*0.35);
-        entryline.PaintLine( xsym - boxwidth*0.35, ysym - yspace*0.35,
-                             xsym - boxwidth*0.35, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxw, ysym + yspace*0.35,
+                             xsym + boxw, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxw, ysym - yspace*0.35,
+                             xsym + boxw, ysym - yspace*0.35);
+        entryline.PaintLine( xsym + boxw, ysym - yspace*0.35,
+                             xsym + boxw, ysym + yspace*0.35);
+        entryline.PaintLine( xsym - boxw, ysym - yspace*0.35,
+                             xsym - boxw, ysym + yspace*0.35);
       } else {
          entryline.Paint();
       }
