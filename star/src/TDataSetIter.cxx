@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.2 2000/09/05 09:18:42 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.3 2001/01/14 03:43:53 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -284,6 +284,7 @@ TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *o
   //             = "by default" - checks all links
   //
   if (!set) return 0;
+  if (opt) {/* no used */}
 
   TDataSet *startset = 0;
   if (path) startset = Find(path);
@@ -377,18 +378,27 @@ void TDataSetIter::Notify(TDataSet *)
 }
 
 //______________________________________________________________________________
-Int_t TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
+TDataSet *TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
 {
 //
 //  Remove the TDataSet *dataset from the current dataset
+//  If the current dataset is the deleted dataset the its parent
+//  becomes the "current dataset" or 0 if this dataset has no parent.
+//
+//  returns: the "current dataset" pointer
+// 
 //
   TDataSet *set = dataset;
   if (set) {
+    if (set == fWorkingDataSet) {
+        fWorkingDataSet = set->GetParent();
+    }
+    if (set == fRootDataSet) { 
+        fRootDataSet = 0;
+    }
     delete set;
-    if (set == fRootDataSet) fRootDataSet = 0;
-    fWorkingDataSet = fRootDataSet;
   }
-  return (Int_t)dataset;
+  return Cwd();
 }
 
 //______________________________________________________________________________

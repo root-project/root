@@ -1,7 +1,16 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.2 2001/01/14 01:27:02 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.7 1999/05/07 21:35:32 fine Exp $
+// $Id: TObjectSet.cxx,v 1.2 2001/01/14 01:27:02 fine Exp $
 // $Log: TObjectSet.cxx,v $
+// Revision 1.2  2001/01/14 01:27:02  fine
+// New implementation TTable::SavePrimitive and AsString
+//
+// Revision 1.1.1.1  2000/11/27 22:57:14  fisyak
+//
+//
+// Revision 1.1.1.1  2000/05/16 17:00:48  rdm
+// Initial import of ROOT into CVS
+//
 // Revision 1.7  1999/05/07 21:35:32  fine
 // Fix some first implemenation bugs
 //
@@ -46,6 +55,7 @@ TObjectSet::~TObjectSet()
 //_____________________________________________________________________________
 void TObjectSet::Delete(Option_t *opt)
 {
+   if (opt) {/* no used */}
    if (fObj && IsOwner()) delete fObj;
    fObj = 0;
    TDataSet::Delete();

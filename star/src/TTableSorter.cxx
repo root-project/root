@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1.1.5 2001/01/16 01:47:14 fisyak Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
+// $Id: TTableSorter.cxx,v 1.1.1.5 2001/01/16 01:47:14 fisyak Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -71,9 +71,6 @@ typedef Int_t (*CALLQSORT)    (const void *, const void *);
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-static const TTable *dummy= 0;
-static const TTable &dummyTable = *dummy;
-
 ClassImp(TTableSorter)
 
 //_____________________________________________________________________________
@@ -136,6 +133,7 @@ TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
 //_____________________________________________________________________________
 TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search, 
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
+                          :fsimpleArray(0),fParentTable(&table)
 {
   //
   // TTableSorter ctor sorts the input table according the function "search"
@@ -162,6 +160,7 @@ TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
 //_____________________________________________________________________________
 TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search, 
                            COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
+                          :fsimpleArray(0),fParentTable(table)
 {
   //
   // TTableSorter ctor sorts the input table according the function "search"
@@ -708,7 +707,7 @@ Bool_t TTableSorter::FillIndexArray(){
   // Return: kTRUE  - the table has been sorted
   //         kFALSE - otherwise
   //////////////////////////////////////////////////////////////
-  assert(fSortIndex);
+  assert(fSortIndex!=0);
   const char *row = At(fFirstRow) + fColOffset;
   Bool_t isPreSorted = kTRUE;
   const void  *sample = row;

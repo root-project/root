@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.6 2000/12/11 09:52:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.2 2001/01/14 01:26:54 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.6 2000/12/11 09:52:24 brun Exp $
+// $Id: TChair.h,v 1.2 2001/01/14 01:26:54 fine Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -39,7 +39,7 @@ protected:
 public:
 
    TChair(TTable *table){ fTable = table; }
-   TChair(const TChair &chair){assert(0);}
+   TChair(const TChair &){assert(0);}
 //   TChair     &operator=(const TChair &rhs){ assert(0); return rhs;}
    virtual    ~TChair(){;}
 
@@ -115,6 +115,38 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.2  2001/01/14 01:26:54  fine
+// New implementation TTable::SavePrimitive and AsString
+//
+// Revision 1.1.1.2  2000/12/18 21:05:26  fisyak
+// *** empty log message ***
+//
+// Revision 1.7  2000/12/13 15:13:53  brun
+//       W A R N I N G   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//      ==================================================================
+// A very long list of changes in this pre-release of version 3.00.
+// We have modified the signature of many functions (in particular TObject)
+// to introduce more constness in the system.
+// You must change your code if your class derives from TObject and uses
+// one of the modified functions such as ls, Print, Compare, Hash, etc.
+// The modified functions in TObject have the following signature:
+//    virtual TObject    *Clone() const;
+//    virtual Int_t       Compare(const TObject *obj) const;
+//    virtual void        Delete(Option_t *option=""); // *MENU*
+//    virtual void        DrawClass() const; // *MENU*
+//    virtual void        DrawClone(Option_t *option="") const; // *MENU*
+//    virtual void        Dump() const; // *MENU*
+//    virtual TObject    *FindObject(const TObject *obj) const;
+//    virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
+//    virtual ULong_t     Hash() const;
+//    virtual void        Inspect() const; // *MENU*
+//    virtual Bool_t      IsEqual(const TObject *obj) const;
+//    virtual void        ls(Option_t *option="") const;
+//    virtual void        Print(Option_t *option="") const;
+//
+// A similar operation has been done with classes such as TH1, TVirtualPad,
+// TTree, etc.
+//
 // Revision 1.6  2000/12/11 09:52:24  brun
 // Functions ls declared const like in the base class
 //

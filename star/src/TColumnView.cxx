@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.1 2000/06/05 08:11:44 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.2 2001/01/14 01:27:01 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 //////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ TColumnView::~TColumnView(){
 }
 
 //______________________________________________________________________________
-void TColumnView::Browse(TBrowser *b)
+void TColumnView::Browse(TBrowser *)
 {
   Draw(GetName(),"");
   gPad->Modified();

@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2000/08/09 08:41:22 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.2 2001/01/13 03:44:59 fine Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.3 2000/08/09 08:41:22 brun Exp $
+// $Id: Ttypes.h,v 1.2 2001/01/13 03:44:59 fine Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -111,7 +111,7 @@ void className::Streamer(TBuffer &R__b) {                           \
     structName &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             \
     const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); } \
     structName *begin() const  {                      return GetNRows()? GetTable(0):0;}\
-    structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
+    structName *end()   const  {Long_t i = GetNRows(); return          i? GetTable(i):0;}
 
 // -- The member function "begin()" returns a pointer to the first table row
 //   (or just zero if the table is empty).

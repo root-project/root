@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.2 2001/01/10 23:28:32 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.3 2001/01/16 01:46:58 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -90,11 +90,11 @@ public:
    virtual     void       Adopt(Int_t n, void *array);
    virtual     Int_t      AddAt(const void *c);
    virtual     void       AddAt(const void *c, Int_t i);
-   virtual     void       AsString(void *buf, const char *name, Int_t width=0) const;
+   virtual     void       AsString(void *buf, EColumnType type, Int_t width, ostream &out) const;
               const void *At(Int_t i) const;
    virtual     void       Browse(TBrowser *b);
    virtual     void       CopySet(TTable &array);
-               Int_t      CopyRows(const TTable *srcTable, Int_t srcRow=0, Int_t dstRow=0, Int_t nRows=0, Bool_t expand=kFALSE);
+               Int_t      CopyRows(const TTable *srcTable,Long_t srcRow=0, Long_t dstRow=0, Long_t nRows=0, Bool_t expand=kFALSE);
    virtual     void       Draw(Option_t *opt);
    virtual     TH1       *Draw(TCut varexp, TCut selection, Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);

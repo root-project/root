@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1.1.3 2001/01/16 01:47:08 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -114,9 +114,6 @@
 #include "TBrowser.h"
 #include "TString.h"
 #include "Api.h"
-#include "TRealData.h"
-#include "TDataMember.h"
-#include "TDataType.h"
 #include "TDataSetIter.h"
 #include "TTable.h"
 #include "TTableDescriptor.h"
@@ -181,36 +178,51 @@ TTableDescriptor *TTable::GetTableDescriptors() const {
 }
 
 //______________________________________________________________________________
-void TTable::AsString(void *buf, const char *name, Int_t width) const
+void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) const
 {
   //
   // AsString represents the value provided via "void *b" with type defined
   //          by "name"
   //
   //   void *buf  - the pointer to the value to be printed out.
-  //        name  - the name of the type for the value above
+  //        type  - the basic data type for the value above
   //       width  - the number of psotion to be used to print the value out
   //
-   if (!strcmp("unsigned int", name))
-      cout << setw(width) << *(unsigned int *)buf;
-   else if (!strcmp("int", name))
-      cout <<  setw(width) <<  *(int *)buf;
-   else if (!strcmp("unsigned long", name))
-      cout <<  setw(width) <<  *(unsigned long *)buf;
-   else if (!strcmp("long", name))
-      cout <<  setw(width) <<  *(long *)buf;
-   else if (!strcmp("unsigned short", name))
-      cout <<  setw(width) <<  hex << *(unsigned short *)buf;
-   else if (!strcmp("short", name))
-      cout <<  setw(width) << *(short *)buf;
-   else if (!strcmp("unsigned char", name))
-      cout <<  setw(width) <<  hex << *(unsigned char *)buf;
-   else if (!strcmp("char", name))
-      cout <<   setw(width) << *(char *)buf;
-   else if (!strcmp("float", name))
-      cout <<   setw(width) << setprecision(width-3) << *(float *)buf;
-   else if (!strcmp("double", name))
-      cout <<   setw(width) << setprecision(width-3) << *(double *)buf;
+   switch (type) {
+    case kFloat:
+         out << setw(width) << setprecision(width-3) << *(float *)buf;
+         break;
+    case kInt:
+         out << setw(width) << *(int *)buf;
+         break;
+    case kLong:
+         out << setw(width) << *(long *)buf;
+         break;
+    case kShort:
+         out << setw(width) << *(short *)buf;
+         break;
+    case kDouble:
+         out << setw(width) << setprecision(width-3) << *(double *)buf;
+         break;
+    case kUInt:
+         out << setw(width) << *(unsigned int *)buf;
+         break;
+    case kULong:
+         out << setw(width) << *(unsigned long *)buf;
+         break;
+    case kUShort:
+         out << setw(width) << hex << *(unsigned short *)buf;
+         break;
+    case kUChar:
+         out << setw(width) << hex << *(unsigned char *)buf;
+         break;
+    case kChar:
+         out << setw(width) << *(char *)buf;
+         break;
+    default:
+         out << "\"NaN\"";
+         break;
+   };
 }
 
 //______________________________________________________________________________
@@ -225,7 +237,7 @@ const void *TTable::At(Int_t i) const
 }
 
 //______________________________________________________________________________
-Int_t TTable::CopyRows(const TTable *srcTable, Int_t srcRow, Int_t dstRow, Int_t nRows, Bool_t expand)
+Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Long_t nRows, Bool_t expand)
 {
  // CopyRows copies nRows from starting from the srcRow of srcTable
  // to the dstRow in this table upto nRows or by the end of this table.
@@ -255,7 +267,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Int_t srcRow, Int_t dstRow, Int_t
    // check this table current capacity
    if (!nRows) nRows = srcTable->GetNRows();
    Long_t tSize = GetTableSize();
-   Int_t extraRows = (tSize - dstRow) - nRows;
+   Long_t extraRows = (tSize - dstRow) - nRows;
    if (extraRows < 0) {
      if (expand) {
        ReAllocate(tSize - extraRows);
@@ -264,7 +276,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Int_t srcRow, Int_t dstRow, Int_t
      nRows += extraRows;
    }
    if (dstRow+nRows > GetNRows()) SetNRows(dstRow+nRows);
-   ::memcpy((*this)[dstRow],(*srcTable)[srcRow],GetRowSize()*nRows);
+   ::memcpy((*this)[dstRow],(*srcTable)[srcRow],(size_t)GetRowSize()*nRows);
    return nRows;
  } else
      Error("CopyRows",
@@ -381,8 +393,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
    if (GetNRows() == 0 || varexp00 == 0 || varexp00[0]==0) return 0;
    TString  opt;
-   Text_t *hdefault = (char *)"htemp";
-   Text_t *varexp="";
+//   Text_t *hdefault = (char *)"htemp";
+   const char *hdefault = "htemp";
    Int_t i,j,action;
    Int_t hkeep = 0;
    opt = option;
@@ -399,8 +411,6 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       hname += 2;
       hkeep  = 1;
       i = strcspn(varexp0,">>");
-      varexp = new char[i+1];
-      varexp[0] = 0; //necessary if i=0
       Bool_t hnameplus = kFALSE;
       while (*hname == ' ') hname++;
       if (*hname == '+') {
@@ -415,7 +425,6 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          }
       }
       if (i) {
-         strncpy(varexp,varexp0,i); varexp[i]=0;
          oldh1 = (TH1*)gDirectory->Get(hname);
          if (oldh1 && !hnameplus) oldh1->Reset();
       } else {
@@ -426,6 +435,14 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          if (elist && !hnameplus) elist->Reset();
       }
    }
+   if (!hname || *hname==0) {
+      hkeep  = 0;
+      if (gDirectory) {
+         oldh1 = (TH1*)gDirectory->Get(hdefault);
+         if (oldh1 ) { oldh1->Delete(); oldh1 = 0;}
+      }
+   }
+
   // Look for colons
   const Char_t *expressions[] ={varexp0,0,0,0,selection};
   Int_t maxExpressions = sizeof(expressions)/sizeof(Char_t *);
@@ -440,19 +457,14 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
   expressions[colIndex] = selection;
 
-  if (!hname) {
-      hname  = hdefault;
-      hkeep  = 0;
-      varexp = (char*)varexp0;
-      if (gDirectory) {
-         oldh1 = (TH1*)gDirectory->Get(hname);
-         if (oldh1 ) { oldh1->Delete(); oldh1 = 0;}
-      }
-   }
+  
 //--------------------------------------------------
     printf(" Draw %s for <%s>\n", varexp00, selection);
     Char_t *exprFileName = MakeExpression(expressions,colIndex+1);
-    if (!exprFileName) return 0;
+    if (!exprFileName) {
+      delete [] varexp0; 
+      return 0;
+    }
 
 //--------------------------------------------------
 //   if (!fVar1 && !elist) return 0;
@@ -629,8 +641,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       EntryLoop(exprFileName,action,elist,nentries, firstentry, option);
 //      SetEstimate(oldEstimate);
    }
-  if (exprFileName) delete [] exprFileName;
-  if (hkeep) delete [] varexp;
+  delete [] exprFileName;
+  delete [] varexp0;
   return gCurrentTableHist;
 }
 
@@ -1309,7 +1321,7 @@ Int_t TTable::NaN()
   int icol,irow,colsize,wordsize,nwords,iword,nerr,offset;
 
   TTableDescriptor *rowDes = GetRowDescriptors();
-  assert(rowDes);
+  assert(rowDes!=0);
   table = (const char*)GetArray();
 
   int ncols = rowDes->GetNumberOfColumns();
@@ -1521,8 +1533,8 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
      }
      cout << endl
      <<       " ======================================================================================" << endl;
-     TTableDescriptor::iterator member  = dscT->begin();
-     TTableDescriptor::iterator dscE = dscT->end();
+     TTableDescriptor::iterator member = dscT->begin();
+     TTableDescriptor::iterator   dscE = dscT->end();
      TDataSetIter nextComment(dscT->FindByName(".comments"));
             
      for (; member != dscE; member++){ 
@@ -1581,11 +1593,11 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
              cout << "\"";
              breakLoop = kTRUE;
            } else {
-             AsString((void *)pointer,GetTypeName(EColumnType((*member).fType)),width);
+             AsString((void *)pointer,EColumnType((*member).fType),width,cout);
              cout << " :";
            }
          }
-         // Encode  the colument comment
+         // Encode  the column's comment
          if (indexOffset==0) {
            TDataSet *nxc = nextComment();
            cout << " " << nxc ? nxc->GetTitle() : "no comment";
@@ -1654,22 +1666,18 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
   out << "TDataSet *CreateTable() { " << endl;
 
   Int_t rowNumber =  GetNRows();
-  TClass *classPtr = GetRowClass();
+  TTableDescriptor *dscT = GetRowDescriptors();
 
 //                      Is anything Wrong??
-  if (!rowNumber || !classPtr ) {//
+  if (!rowNumber || !dscT ) {//
      out << "// The output table was bad-defined!" << endl
          << " fprintf(stderr, \"Bad table found. Please remove me\\n\");" << endl
          << " return 0; } "    << endl;
      return;
   }
 
-  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
-
-  TIter      next( classPtr->GetListOfDataMembers());
-
   startRow = (const UChar_t *)GetArray();
-  assert(startRow);
+  assert(startRow!=0);
 
   const Char_t *rowId = "row";
   const Char_t *tableId = "tableSet";
@@ -1682,42 +1690,46 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
   out << "// "   << Path()
       << " Allocated rows: "<< rowNumber
       <<"  Used rows: "<<      rowNumber
-      <<"  Row size: " << fSize << " bytes"                    << endl;
-  out << "// "  << " Table: " << classPtr->GetName()<<"[0]--> "
-      << classPtr->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
+      <<"  Row size: " << fSize << " bytes"                 << endl;
+  out << "// "  << " Table: " << dscT->GetName()<<"[0]--> "
+      << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
   out << "// ====================================================================" << endl;
   out << "// ------  Test whether this table share library was loaded ------"      << endl;
   out << "  if (!gROOT->GetClass(\"" << className << "\")) return 0;"    << endl;
-  out <<    classPtr->GetName() << " " << rowId << ";" << endl
+  out <<    dscT->GetName() << " " << rowId << ";" << endl
       <<  className << " *" << tableId << " = new "
       <<  className
       << "(\""<<GetName()<<"\"," << GetNRows() << ");" << endl
       << "//" <<endl ;
 
 //              Row loop
-  for (rowCount=0;rowCount<rowNumber; rowCount++) {     //row loop
+  TDataSetIter nextComment(dscT->FindByName(".comments"));
+  for (rowCount=0;rowCount<rowNumber; rowCount++,startRow += fSize, nextComment.Reset()) {     //row loop
     out << "memset(" << "&" << rowId << ",0," << tableId << "->GetRowSize()" << ");" << endl ;
-    next.Reset();
-    TDataMember *member = 0;
 
 //              Member loop
-    while ((member = (TDataMember*) next())) {  //LOOP over members
-      TDataType *membertype = member->GetDataType();
-      TString memberName(member->GetName());
-      TString memberTitle(member->GetTitle());
-      Int_t offset = member->GetOffset();
+   TTableDescriptor::iterator member  = dscT->begin();
+   TTableDescriptor::iterator   dscE  = dscT->end();
+   for (; member != dscE; member++) {  //LOOP over members
+      TString memberType = GetTypeName(EColumnType((*member).fType));
+      TString memberName((*member).fColumnName);
+ 
+      // Encode  the column's comment
+      TDataSet *nxc = nextComment();
+      TString memberTitle(nxc ? nxc->GetTitle() : "no comment");
+
+      Int_t offset = (*member).fOffset;
       int mayBeName = 0;
       if (memberName.Index("name",0,TString::kIgnoreCase)>=0) mayBeName=1999;
       if (memberName.Index("file",0,TString::kIgnoreCase)>=0) mayBeName=1999;
-      TString memberType(member->GetFullTypeName());
-      int memberSize = membertype->Size();
+      int memberSize = (*member).fSize;
 
 //              Add the dimensions to "array" members
-      Int_t dim = member->GetArrayDim();
+      Int_t dim = (*member).fDimensions;
       if (dim) memset(arrayLayout,0,dim*sizeof(Int_t));
       Int_t arrayLength  = 1;
       for (int indx=0;indx < dim ;indx++){
-         arraySize[indx] = member->GetMaxIndex(indx);
+         arraySize[indx] =  (*member).fIndexArray[indx];;
          arrayLength *= arraySize[indx];
       }
 
@@ -1766,9 +1778,8 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
         out << "\t = ";
 
         pointer = startRow + offset  + indexOffset*memberSize;
-        assert(!member->IsaPointer());
-
-        out << setw(10) << membertype->AsString((void *)pointer) ;
+        
+        AsString((void *)pointer,EColumnType((*member).fType),10,out);
 
 //                      Encode data member title
         if (indexOffset==0)  out << "; // " << (const char*)memberTitle;
@@ -1776,9 +1787,7 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
       }//end array loop
     }//end of member loop
 
-    out << tableId << "->AddAt(&" << rowId << "," << rowCount <<");" << endl;
-
-    startRow  += fSize;
+    out << tableId << "->AddAt(&" << rowId <<");" << endl;
 
   }//end of row loop
   out << "// ----------------- end of code ---------------" << endl

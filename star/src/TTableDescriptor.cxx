@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.2 2001/01/16 01:47:11 fisyak Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $
+// $Id: TTableDescriptor.cxx,v 1.1.1.2 2001/01/16 01:47:11 fisyak Exp $
 #include <stdlib.h>
 
 #include "TTableDescriptor.h"
@@ -233,7 +233,7 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
       printf("Schema evolution: \t%d column of the \"%s\" table has been lost\n",
         colCounter,ColumnName(colCounter));
       printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
-      SetOffset(-1,colCounter);
+      SetOffset(UInt_t(-1),colCounter);
       mismathes++;
     }
   }

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1.1.3 2001/01/16 01:47:01 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.1.1.3 2001/01/16 01:47:01 fisyak Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
@@ -503,8 +503,9 @@ Bool_t TDataSet::IsEmpty() const
 //______________________________________________________________________________
 void TDataSet::PrintContents(Option_t *opt) const {
   // Callback method to complete ls() method recursive loop
-  // This is to allow to separate navigation and the custom information
+  // This is to allow to sepoarate navigation and the custom invormation
   // in the derived classes (see; TTable::PrintContents for example
+  if (opt) { /* no used */ }
   printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());  
 }
 
