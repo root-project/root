@@ -13,7 +13,7 @@ else
 MODDIR       := freetype
 MODDIRS      := $(MODDIR)/src
 
-FREETYPEVERS := freetype-2.1.3
+FREETYPEVERS := freetype-2.1.9
 FREETYPEDIR  := $(MODDIR)
 FREETYPEDIRS := $(MODDIRS)
 FREETYPEDIRI := $(MODDIRS)/$(FREETYPEVERS)/include
@@ -21,7 +21,7 @@ FREETYPEDIRI := $(MODDIRS)/$(FREETYPEVERS)/include
 ##### libfreetype #####
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype213MT.lib
+FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/freetype219MT.lib
 FREETYPELIB  := $(LPATH)/libfreetype.lib
 else
 FREETYPELIBA := $(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a
@@ -71,11 +71,6 @@ else
 			else \
 				gunzip -c $(FREETYPEVERS).tar.gz | tar xf -; \
 			fi; \
-			if [ $(PLATFORM) = "macosx" ]; then \
-				PATCH=$(FREETYPEVERS)/include/freetype/config/ftconfig.h; \
-				sed -e "s/define FT_MACINTOSH 1/undef FT_MACINTOSH/" $$PATCH > ftconfig.hh; \
-				mv ftconfig.hh $$PATCH; \
-			fi; \
 		fi; \
 		cd $(FREETYPEVERS); \
 		FREECC=; \
@@ -114,7 +109,9 @@ endif
 clean::         clean-freetype
 
 distclean-freetype: clean-freetype
-		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/$(FREETYPEVERS)
+		@mv $(FREETYPELIBS) $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz
+		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/freetype-*
+		@mv $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz $(FREETYPELIBS)
 
 distclean::     distclean-freetype
 
