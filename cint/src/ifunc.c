@@ -1313,14 +1313,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__p_ifunc->entry[func_now].line_number = -1;
     G__p_ifunc->ispurevirtual[func_now]=0;
 #ifndef G__PHILIPPE0
-    /* Key the class comment off of Dictionary rather than ClassDef
+    /* Key the class comment off of ImplFileLine rather than ClassDef
      * because ClassDef is removed by a preprocessor */
     if(G__fons_comment && G__def_struct_member &&
-       (strncmp(G__p_ifunc->funcname[func_now],"Dictionary",10)==0 
-	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary(",11)==0
+       (strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
 #ifndef G__OLDIMPLEMENTATION1298
-	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary",10)==0 
-	|| strncmp(G__p_ifunc->funcname[func_now],"Dictionary(",11)==0
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
 #endif
        )) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
