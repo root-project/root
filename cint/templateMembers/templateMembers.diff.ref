@@ -1,12 +1,5 @@
 18a19,21
-> TemplateClass<T>::~TemplateClass() [with T = Derived]
-> Derived::~Derived()
-> Base::~Base()
 21d23
-< TemplateClass<T>::~TemplateClass() [with T = Derived]
 25a28
-> TemplateClass<T>::~TemplateClass() [with T = Derived]
 28a32
-> shared_ptr<T>::~shared_ptr() [with T = Base]
 29a34
-> shared_ptr<T>::~shared_ptr() [with T = Base]

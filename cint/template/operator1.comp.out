@@ -1,11 +1,3 @@
 Info in <TUnixSystem::ACLiC>: creating shared library /home/SCR/pcanal/root_working/roottest/cint/template/./smalltest_C.so
-/home/SCR/pcanal/root_working/roottest/cint/template/smalltest.C: In function `
-   Buffer& operator>>(Buffer&, Tmpl*&) [with Tmpl = int]':
-/home/SCR/pcanal/root_working/roottest/cint/template/smalltest.C:17: warning: unused
-   parameter `int*&obj'
-/home/SCR/pcanal/root_working/roottest/cint/template/smalltest.C: In function `
-   Buffer& operator>>(Buffer&, Array<T>*&) [with T = int]':
-/home/SCR/pcanal/root_working/roottest/cint/template/smalltest.C:22: warning: unused
-   parameter `Array<int>*&obj'
 Generic operator>>
 Array operator>>
