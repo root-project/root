@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.6 2003/06/13 06:25:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.7 2003/06/13 16:21:21 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -38,6 +38,7 @@ friend class TCint;
 
 protected:
    G__MethodInfo  *fInfo;            //pointer to CINT function info
+   TString         fMangledName;     //Mangled name as determined by CINT.
    TString         fSignature;       //string containing function signature
    TList          *fMethodArgs;      //list of function arguments
 

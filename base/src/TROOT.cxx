@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.97 2003/06/25 18:06:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.98 2003/07/26 05:51:55 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1007,42 +1007,14 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
-      Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethod(0, function,
-                                                              params);
-      if (!faddr) return 0;
-
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
-
-#if defined(R__WIN32)
-      // On windows G__exec_bytecode can (seemingly) have several values :(
-      // So we can not easily determine whether something is interpreted or
-      // so the optimization of not looking at the mangled name can not be
-      // used
 
       TString mangled = fInterpreter->GetMangledName(0, function, params);
       while ((f = (TFunction *) next())) {
          if (mangled == f->GetMangledName()) return f;
       }
 
-#else 
-      if (faddr == (Long_t)G__exec_bytecode) {
-         // the method is actually interpreted, its address is
-         // not a discriminant (it always point to the same
-         // function (G__exec_bytecode).
-
-         TString mangled = fInterpreter->GetMangledName(0, function, params);
-         while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod()
-                && mangled == f->GetMangledName()) return f;
-         }
-      } else {
-         while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod())
-               return f;
-         }
-      }
-#endif // 
       return 0;
    }
 }
@@ -1062,19 +1034,8 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       if (!fInterpreter)
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
-      Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethodWithPrototype(0,
-                                                                           function,
-                                                                           proto);
-      if (!faddr) return 0;
-
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
-
-#if defined(R__WIN32)
-      // On windows G__exec_bytecode can (seemingly) have several values :(
-      // So we can not easily determine whether something is interpreted or
-      // so the optimization of not looking at the mangled name can not be
-      // used
 
       TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
                                                                      function,
@@ -1082,27 +1043,6 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       while ((f = (TFunction *) next())) {
          if (mangled == f->GetMangledName()) return f;
       }
-#else 
-      if (faddr == (Long_t)G__exec_bytecode) {
-         // the method is actually interpreted, its address is
-         // not a discriminant (it always point to the same
-         // function (G__exec_bytecode).
-
-         TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
-                                                                     function,
-                                                                     proto);
-         while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod()
-                && mangled == f->GetMangledName()) return f;
-         }
-
-      } else {
-         while ((f = (TFunction *) next())) {
-            if (faddr == (Long_t) f->InterfaceMethod())
-               return f;
-         }
-      }
-#endif
       return 0;
    }
 }

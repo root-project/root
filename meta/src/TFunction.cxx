@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.10 2003/06/13 06:55:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.11 2003/06/13 16:21:21 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TFunction::TFunction(G__MethodInfo *info) : TDictionary()
    if (fInfo) {
       SetName(fInfo->Name());
       SetTitle(fInfo->Title());
+      fMangledName = fInfo->GetMangledName();
    }
 }
 
@@ -47,9 +48,10 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
 {
    // Copy operator.
 
-   if (orig.fInfo)
+   if (orig.fInfo) {
       fInfo = new G__MethodInfo(*orig.fInfo);
-   else
+      fMangledName = fInfo->GetMangledName();
+   } else
       fInfo = 0;
    fMethodArgs = 0;
 }
@@ -67,6 +69,7 @@ TFunction& TFunction::operator=(const TFunction &rhs)
          fInfo = new G__MethodInfo(*rhs.fInfo);
          SetName(fInfo->Name());
          SetTitle(fInfo->Title());
+         fMangledName = fInfo->GetMangledName();
       } else
          fInfo = 0;
       fMethodArgs = 0;
@@ -208,8 +211,14 @@ const char *TFunction::GetMangledName() const
 {
    // Returns the mangled name as defined by CINT, or 0 in case of error.
 
+   // This function is being used by TROOT to determine the full identity of 
+   // of the function.  It has to work even if the function has been 
+   // unloaded by cint (in which case fInfo is actually hold reference to 
+   // memory that is (likely) not valid anymore.  So we cache the information.
+   // Maybe we should also cache the rest of the informations .. but this might
+   // be too much duplication of information.
    if (fInfo)
-      return fInfo->GetMangledName();
+      return fMangledName; 
    else
       return 0;
 }
