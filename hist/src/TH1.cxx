@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.160 2003/11/07 08:59:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.161 2003/11/24 14:12:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5151,6 +5151,8 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
    }
    fXaxis.SetRange(0,0);
    fXaxis.Set(nx,xmin,xmax);
+   fYaxis.Set(1,0,1);
+   fZaxis.Set(1,0,1);
    fNcells = nx+2;
    SetBinsLength(fNcells);
    if (fSumw2.fN) {
@@ -5177,6 +5179,7 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axi
    fYaxis.SetRange(0,0);
    fXaxis.Set(nx,xmin,xmax);
    fYaxis.Set(ny,ymin,ymax);
+   fZaxis.Set(1,0,1);
    fNcells = (nx+2)*(ny+2);
    SetBinsLength(fNcells);
    if (fSumw2.fN) {
