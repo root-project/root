@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.24 2004/12/16 21:20:47 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.25 2004/12/17 22:34:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -18,7 +18,8 @@
 //
 // The input layer is made of inactive neurons (returning the
 // normalized input), hidden layers are made of sigmoids and output
-// neurons are linear.
+// neurons are linear. (One should still try to pass normalized inputs,
+// e.g. between [0.,1])
 //
 // The basic input is a TTree and two (training and test) TEventLists.
 // Input and output neurons are assigned a value computed for each event
@@ -2145,4 +2146,16 @@ void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
    cnt++;
    TText* label = new TText(0.5*xStep,yStep*cnt,brName.Data());
    label->Draw();
+
+   Int_t numOutNodes=fLastLayer.GetEntriesFast();
+   yStep=1./(numOutNodes+1);
+   for (Int_t outnode=0; outnode<numOutNodes; outnode++) {
+      TNeuron* neuron=(TNeuron*)fLastLayer[outnode];
+      if (neuron && neuron->GetName()) {
+         TText* label = new TText(xStep*nLayers, 
+                                  yStep*(outnode+1),
+                                  neuron->GetName());
+         label->Draw();
+      }
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.3 2004/12/16 21:20:47 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.4 2004/12/17 22:34:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -42,6 +42,8 @@ protected:
    Int_t GetLayers();
    Int_t GetNeurons(Int_t layer);
    TString GetNeuronFormula(Int_t idx);
+   const char* GetInputNeuronTitle(Int_t in);
+   const char* GetOutputNeuronTitle(Int_t out);
 
 public:
    TMLPAnalyzer(TMultiLayerPerceptron& net): 
@@ -54,7 +56,7 @@ public:
    void DrawDInputs();
    TProfile* DrawTruthDeviation(Int_t outnode=0, Option_t *option="");
    THStack* DrawTruthDeviations(Option_t *option="");
-   TProfile* DrawTruthDeviationInOut(Int_t innode, Int_t outnode=0, 
+   TProfile* DrawTruthDeviationInOut(Int_t innode, Int_t outnode=0,
                                      Option_t *option="");
    THStack* DrawTruthDeviationInsOut(Int_t outnode=0, Option_t *option="");
 
