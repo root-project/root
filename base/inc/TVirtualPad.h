@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.4 2000/09/29 08:23:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.5 2000/10/26 15:30:32 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -237,7 +237,7 @@ public:
 
    static TVirtualPad *&Pad();
 
-   ClassDef(TVirtualPad,1)  //Abstract base class for Pads and Canvases
+   ClassDef(TVirtualPad,2)  //Abstract base class for Pads and Canvases
 };
 
 #ifndef __CINT__

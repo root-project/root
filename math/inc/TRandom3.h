@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TRandom3.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Peter Malzacher   31/08/99
 
 /*************************************************************************
@@ -38,7 +38,7 @@ public:
    virtual  Float_t  Rndm(Int_t i=0);
    virtual  void     SetSeed(UInt_t seed=0);
 
-   ClassDef(TRandom3,1)  //Random number generator: Mersenne Twistor
+   ClassDef(TRandom3,2)  //Random number generator: Mersenne Twistor
 };
 
 R__EXTERN TRandom *gRandom;

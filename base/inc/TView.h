@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.3 2000/06/22 06:20:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.4 2000/06/27 06:41:42 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -55,6 +55,7 @@ protected:
         TSeqCollection *fOutline;          //Collection of outline's objects
         Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
         Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
+        
         void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
 
 
@@ -132,7 +133,7 @@ Double_t        *GetTnorm() {return fTnorm;}
     virtual void ToggleZoom(TVirtualPad *pad=0);
     virtual void ZoomMove();                      // *MENU*
 
-   ClassDef(TView,1)  //3-D View
+   ClassDef(TView,2)  //3-D View
 };
 
 //      Shortcuts for menus
