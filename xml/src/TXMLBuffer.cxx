@@ -23,7 +23,6 @@
 
 
 #include "TXMLBuffer.h"
-#include "TXMLDtdGenerator.h"
 #include "TXMLFile.h"
 
 #include "TObjArray.h"
@@ -600,7 +599,7 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
 
     if (GetXmlLayout()==kGeneralized) {
       elemnode = fXML->NewChild(StackNode(), 0, xmlNames_Member, 0);
-      fXML->NewAttr(elemnode, 0, xmlNames_Name, elem->GetName());
+      fXML->NewAttr(elemnode, 0, xmlNames_Name, XmlGetElementName(elem));
     } else {
        // take namesapce for element only if it is not a base class or class name  
        xmlNsPointer ns = Stack()->fClassNs; 
@@ -610,7 +609,7 @@ void TXMLBuffer::CreateElemNode(const TStreamerElement* elem, Int_t number)
            || ((elem->GetType()==TStreamerInfo::kTString) && !strcmp(elem->GetName(), TString::Class()->GetName())))
          ns = 0;  
        
-       elemnode = fXML->NewChild(StackNode(), ns, elem->GetName(), 0);
+       elemnode = fXML->NewChild(StackNode(), ns, XmlGetElementName(elem), 0);
     }
 
     TXMLStackObj* curr = PushStack(elemnode);
@@ -625,9 +624,9 @@ Bool_t TXMLBuffer::VerifyElemNode(const TStreamerElement* elem, Int_t number)
     
     if (GetXmlLayout()==kGeneralized) {
        if (!VerifyStackNode(xmlNames_Member)) return kFALSE;
-       if (!VerifyStackAttr(xmlNames_Name, elem->GetName())) return kFALSE;
+       if (!VerifyStackAttr(xmlNames_Name, XmlGetElementName(elem))) return kFALSE;
     } else {
-       if (!VerifyStackNode(elem->GetName())) return kFALSE;
+       if (!VerifyStackNode(XmlGetElementName(elem))) return kFALSE;
     }
     
     PerformPreProcessing(elem, StackNode());
@@ -650,7 +649,7 @@ xmlNodePointer TXMLBuffer::XmlWriteObject(const void* obj, const TClass* cl)
    if (!cl) obj = 0;
    if (ProcessPointer(obj, objnode)) return objnode;
 
-   TString clname = XmlConvertClassName(cl);
+   TString clname = XmlConvertClassName(cl ? cl->GetName() : "");
 
    fXML->NewAttr(objnode, 0, xmlNames_ObjClass, clname);
 
@@ -736,7 +735,7 @@ void  TXMLBuffer::IncrementLevel(TStreamerInfo* info)
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
-   TString clname = XmlConvertClassName(info->GetClass());
+   TString clname = XmlConvertClassName(info->GetClass()->GetName());
 
    if (gDebug>2)
      cout << " IncrementLevel " << clname << endl;

@@ -16,7 +16,9 @@
 // writing and reading XML files is limited to ROOT applications.
 // It is our intention to develop a simple reader independent
 // of the ROOT libraries that could be used as an example for
-// real applications.
+// real applications. One of possible approach with code generation
+// is implemented in TXMLPlayer class.
+// 
 // The XML format should be used only for small data volumes,
 // typically histogram files, pictures, geometries, calibrations.
 // The XML file is built in memory before being dumped to disk.
@@ -85,7 +87,7 @@
 // The "xml" package is currently under development. A more complete
 // documentation will be provided shortly in the classes reference guide.
 // See classes TXMLFile, TXMLKey, TXMLBuffer, TXMLEngine, TXMLSetup
-// and TXMLDtdGenerator.
+// and TXMLPlayer.
 // An example of XML file corresponding to the small example below
 //can be found at http://root.cern.ch/root/Example.xml
 //
@@ -101,7 +103,6 @@
 #include "TXMLBuffer.h"
 #include "TXMLKey.h"
 #include "TObjArray.h"
-#include "TXMLDtdGenerator.h"
 #include "TArrayC.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -117,7 +118,6 @@ TXMLFile::TXMLFile() :
     TFile(),
     TXMLSetup(),
     fDoc(0),
-    fDtdGener(0),
     fStreamerInfoNode(0),
     fXML(0)
 {
@@ -130,7 +130,6 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
     TFile(),
     TXMLSetup(),
     fDoc(0),
-    fDtdGener(0),
     fStreamerInfoNode(0)
 {
    // Open or creates local XML file with name filename. 
@@ -310,9 +309,6 @@ void TXMLFile::InitXmlFile(Bool_t create)
       ReadFromFile();
    } 
    
-   if (IsWritable())
-     fDtdGener = new TXMLDtdGenerator(*this);
-
    gROOT->GetListOfFiles()->Add(this);
    cd();
 
@@ -347,11 +343,6 @@ void TXMLFile::Close(Option_t *option)
      fDoc = 0;
    }
 
-   if (fDtdGener) {
-     delete fDtdGener;
-     fDtdGener = 0;
-   }
-   
    if (fClassIndex) {
       delete fClassIndex;
       fClassIndex = 0;
@@ -627,16 +618,15 @@ void TXMLFile::SaveToFile()
    if (fStreamerInfoNode)
      fXML->AddChild(fRootNode, fStreamerInfoNode);
 
-   if (fDtdGener && IsUseDtd())
-     fXML->AssignDtd(fDoc, dtdname, xmlNames_Root);
+//   if (fDtdGener && IsUseDtd())
+//     fXML->AssignDtd(fDoc, dtdname, xmlNames_Root);
 
    Int_t layout = GetCompressionLevel()>5 ? 0 : 1;
 
    fXML->SaveDoc(fDoc, fname, layout);
 
-   if (fDtdGener && IsUseDtd()) {
-       fDtdGener->Produce(dtdname);
-   }
+//   if (fDtdGener && IsUseDtd()) 
+//       fDtdGener->Produce(dtdname);
 
    iter.Reset();
    while ((key=(TXMLKey*)iter()) !=0)

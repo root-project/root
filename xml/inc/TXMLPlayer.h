@@ -1,3 +1,14 @@
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.h,v 0.0 2004/06/04 16:28:31 brun Exp $
+// Author: Sergey Linev  10.05.2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TXMLPlayer
 #define ROOT_TXMLPlayer
 
@@ -9,8 +20,13 @@
 #include "TList.h"
 #endif
 
+#ifndef ROOT_TXMLSetup
+#include "TXMLSetup.h"
+#endif
+
 class TStreamerInfo;
 class TStreamerElement;
+class TStreamerSTL;
 class TDataMember;
 
 class TXMLPlayer : public TObject {
@@ -18,7 +34,7 @@ class TXMLPlayer : public TObject {
       TXMLPlayer();
       virtual ~TXMLPlayer();
       
-      Int_t ProduceCode(TList* cllist, const char* filename);
+      Bool_t ProduceCode(TList* cllist, const char* filename);
       
    protected:
    
@@ -27,20 +43,20 @@ class TXMLPlayer : public TObject {
       const char* ElementGetter(TClass* cl, const char* membername, int specials = 0);
       const char* ElementSetter(TClass* cl, const char* membername, char* endch);
       
-      TString GetElemName(TStreamerElement* el);
-      
       TString GetMemberTypeName(TDataMember* member);
       TString GetBasicTypeName(TStreamerElement* el);
-      TString GetBasicTypeReaderMethodName(TStreamerElement* el);
+      TString GetBasicTypeReaderMethodName(Int_t type, const char* realname);
       void ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist);
       
-      TString fGetterName;
-      TString fSetterName;
+      void ReadSTLarg(ostream& fs, TString& argname, int argtyp, bool isargptr, TClass* argcl, TString& tname, TString& ifcond);
+      void WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool isargptr, TClass* argcl);
+      bool ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting);
+      
+      TString fGetterName;                   //!  buffer for name of getter method
+      TString fSetterName;                   //!  buffer for name of setter method
+      TXMLSetup fXmlSetup;                   //!  buffer for xml names convertion
 
-   ClassDef(TXMLPlayer,1) // generator of external XML reader/writers
+   ClassDef(TXMLPlayer,1) // Generation of external xml streamers
 };
-
-
-
 
 #endif

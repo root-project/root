@@ -34,7 +34,6 @@ class TStreamerInfo;
 class TStreamerElement;
 class TObjArray;
 class TMemberStreamer;
-class TXMLDtdGenerator;
 class TXMLFile;
 class TXMLStackObj;
 

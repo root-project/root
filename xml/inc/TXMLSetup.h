@@ -90,9 +90,11 @@ class TXMLSetup {
       virtual void   SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
       virtual void   SetUseNamespaces(Bool_t iUseNamespaces = kTRUE) { fUseNamespaces = iUseNamespaces; }
 
-      const char*    XmlConvertClassName(const TClass* cl);
+      const char*    XmlConvertClassName(const char* name);
       const char*    XmlClassNameSpaceRef(const TClass* cl);
+      const char*    XmlGetElementName(const TStreamerElement* el);
 
+      
       Int_t          GetNextRefCounter() { return fRefCounter++; }
       
       static TString DefaultXmlSetup();
@@ -102,8 +104,7 @@ class TXMLSetup {
 
       TClass*        XmlDefineClass(const char* xmlClassName);
       const char*    GetElItemName(TStreamerElement* el);
-      const char*    GetElName(TStreamerElement* el);
-
+      
       Bool_t         IsValidXmlSetup(const char* setupstr);
       Bool_t         ReadSetupFromStr(const char* setupstr);
 

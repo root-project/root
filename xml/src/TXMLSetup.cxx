@@ -182,20 +182,20 @@ void TXMLSetup::PrintSetup()
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::XmlConvertClassName(const TClass* cl)
+const char* TXMLSetup::XmlConvertClassName(const char* clname)
 {
-   if (cl==0) return 0;
-   fStrBuf = cl->GetName();
-   fStrBuf.ReplaceAll('<','_');
-   fStrBuf.ReplaceAll('>','_');
-   fStrBuf.ReplaceAll(',','_');
+   fStrBuf = clname;
+   fStrBuf.ReplaceAll("<","_");
+   fStrBuf.ReplaceAll(">","_");
+   fStrBuf.ReplaceAll(",","_");
+   fStrBuf.ReplaceAll(" ","_");
    return fStrBuf.Data();
 }
 
 //______________________________________________________________________________
 const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 {
-   TString clname = XmlConvertClassName(cl);
+   TString clname = XmlConvertClassName(cl->GetName());
    fStrBuf = fNameSpaceBase;
    fStrBuf += clname;
    if (fNameSpaceBase == "http://root.cern.ch/root/htmldoc/")
@@ -204,10 +204,12 @@ const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 }
 
 //______________________________________________________________________________
-const char* TXMLSetup::GetElName(TStreamerElement* el)
+const char* TXMLSetup::XmlGetElementName(const TStreamerElement* el)
 {
    if (el==0) return 0;
-   return el->GetName();
+   if (!el->InheritsFrom(TStreamerSTL::Class())) return el->GetName();
+   if (strcmp(el->GetName(), el->GetClassPointer()->GetName())!=0) return el->GetName();
+   return XmlConvertClassName(el->GetName());
 }
 
 //______________________________________________________________________________
@@ -227,7 +229,7 @@ TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
    TIter iter(gROOT->GetListOfClasses());
    TClass* cl = 0;
    while ((cl = (TClass*) iter()) != 0) {
-      const char* name = XmlConvertClassName(cl);
+      const char* name = XmlConvertClassName(cl->GetName());
       if (strcmp(xmlClassName,name)==0) return cl;
    }
    return 0;

@@ -1,3 +1,103 @@
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 0.0 2004/05/14 14:30:46 brun Exp $
+// Author: Sergey Linev, Rene Brun  10.05.2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//________________________________________________________________________
+//
+// Class for xml code generation
+// It should be used for generation of xml steramers, which could be used ouside root
+// enviroment. This means, that with help of such streamers user can read and write 
+// objects from/to xml file, which later can be accepted by ROOT. 
+//
+// At the moment supported only classes, which are not inheried from TObject
+// and which not contains any TObject members.
+//
+// To generate xml code:
+//
+// 1. ROOT library with required classes should be created.
+//    In general, without such library non of user objects can be stored and
+//    retrived from any ROOT file
+//
+// 2. Generate xml streamers by root script like: 
+//
+//    void generate() {
+//      gSystem->Load("libRXML.so");   // load ROOT xml library
+//      gSystem->Load("libuser.so");   // load user ROOT library
+//
+//      TList lst;
+//      lst.Add(gROOT->GetClass("TUserClass1"));
+//      lst.Add(gROOT->GetClass("TUserClass2"));
+//      ...
+//      TXMLPlayer player;             
+//      player.ProduceCode(&lst, "streamers");    // create xml streamers
+//    }
+// 
+//  3. Copy "streamers.h", "streamers.cxx", "TXmlFile.h", "TXmlFile.cxx" files
+//     to user project and compile them. Include and library paths should include
+//     paths to libxml2 installation (if there is no standard installation)
+//
+// TXMLPlayer class generates one function per class, which called class streamer.
+// Name of such function for class TExample will be TExample_streamer.
+//
+// Following data members for streamed classes are supported:
+//  - simple data types (int, double, float)
+//  - array of simple types (int[5], double[5][6])
+//  - dynamic array of simple types (int* with comment field // [fSize])
+//  - const char*
+//  - object of any nonROOT class
+//  - pointer on object
+//  - array of objects
+//  - array of pointers on objects
+//  - stl string
+//  - stl vector, list, deque, set, multiset, map, multimap 
+//  - allowed arguments for stl containers are: simple data types, string, object, pointer on object
+//  Any other data member can not be (yet) read from xml file and write to xml file.
+//
+//  If data member of class is private or protected, it can not be accessed via 
+//  member name. Two alternative way is supported. First, if for class member fValue 
+//  exists function GetValue(), it will be used to get value from the class, and if 
+//  exists SetValue(), it will be used to set apropriate data member. Names of setter
+//  and getter methods can be specified in comments filed like:
+//
+//     Int  fValue;   // *OPTION={GetMethod="GetV";SetMethod="SetV"}
+// 
+//  If getter or setter methods does not available, address to data member will be 
+//  calculated as predefined offeset to object start address. In that case generated code 
+//  should be used only on the same platform (OS + compiler), where it was generated.
+//
+//  Generated streamers resolve inheritance tree for given class. This allows to have
+//  array (or vector) of object pointers on some basic class, while objects of derived 
+//  class(es) are used.
+//
+//  To access data from xml files, user should use TXmlFile class, which is different from
+//  ROOT TXMLFile, but provides very similar functionality. For example, to read 
+//  object from xml file:
+//
+//        TXmlFile file("test.xml");             // open xml file 
+//        file.ls();                             // show list of keys in file
+//        TExample* ex1 = (TExample*) file.Get("ex1", TExample_streamer); // get object 
+//        file.Close(); 
+//
+//  To write object to file: 
+// 
+//        TXmlFile outfile("test2.xml", "recreate");    // create xml file
+//        TExample* ex1 = new TExample;
+//        outfile.Write(ex1, "ex1", TExample_streamer);   // write object to file
+//        outfile.Close();
+//  
+//  Any bug reports and requests for additional functionality of generated code 
+//  or TXmlFile class are welcome. 
+//  Please contact Sergey Linev, S.Linev@gsi.de
+//
+//________________________________________________________________________
+
 #include "TXMLPlayer.h"
 
 #include "Riostream.h"
@@ -5,10 +105,13 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 #include "TDataMember.h"
+#include "TMethod.h"
 #include "TDataType.h"
 #include "TMethodCall.h"
 #include "TFunction.h"
+#include "TVirtualCollectionProxy.h"
 
 const char* tab1 = "   ";
 const char* tab2 = "      ";
@@ -16,26 +119,24 @@ const char* tab3 = "         ";
 const char* tab4 = "            ";
 
 const char* names_xmlfileclass = "TXmlFile";
-const char* names_funcseparator  = "//_______________________________________________________";
-
 
 ClassImp(TXMLPlayer);
 
-
 //______________________________________________________________________________
 TXMLPlayer::TXMLPlayer() : TObject() 
+// default constructor
 {
-    
 }
-
 
 //______________________________________________________________________________
 TXMLPlayer::~TXMLPlayer() 
+// destructor of TXMLPlayer object
 {
 }
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetStreamerName(TClass* cl) 
+// returns streamer function name for given class 
 {
   if (cl==0) return "";
   TString res = cl->GetName();
@@ -44,9 +145,15 @@ TString TXMLPlayer::GetStreamerName(TClass* cl)
 }
       
 //______________________________________________________________________________
-Int_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename) 
+Bool_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename) 
+// Produce streamers for provide class list
+// TList should include list of classes, for which code should be generated.
+// filename specify name of file (without extension), where streamers should be
+// created. Function produces two files: header file and source file.
+// For instance, if filename is "streamers", files "streamers.h" and "streamers.cxx"
+// will be created.
 {
-   if ((cllist==0) || (filename==0)) return -1;
+   if ((cllist==0) || (filename==0)) return kFALSE;
    
    ofstream fh(TString(filename)+".h");
    ofstream fs(TString(filename)+".cxx");
@@ -60,14 +167,12 @@ Int_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename)
    fs << "// generated source file" << endl << endl;
    fs << "#include \"" << filename << ".h\"" << endl << endl;
    
-   
-   // produce class forward declaration and appropriate include
+   // produce appropriate include for all classes
    
    TObjArray inclfiles;
    TIter iter(cllist);
    TClass* cl = 0;
    while ((cl = (TClass*) iter()) != 0) {
-//     fh << "class " << cl->GetName() << ";" << endl;
      if (inclfiles.FindObject(cl->GetDeclFileName())==0) {
         fs << "#include \"" << cl->GetDeclFileName() << "\"" << endl;
         inclfiles.Add(new TNamed(cl->GetDeclFileName(),""));
@@ -94,11 +199,12 @@ Int_t TXMLPlayer::ProduceCode(TList* cllist, const char* filename)
    fh << "#endif" << endl << endl;
    fs << endl << endl;
     
-   return 0; 
+   return kTRUE; 
 }
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
+// returns name of simple data type for given data member
 {
    if (member==0) return "int"; 
     
@@ -130,6 +236,7 @@ TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
 
 //______________________________________________________________________________
 TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
+// return simple data types for given TStreamerElement object
 {
    if (el->GetType() == TStreamerInfo::kCounter) return "int"; 
 
@@ -156,11 +263,12 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
 }
 
 //______________________________________________________________________________
-TString TXMLPlayer::GetBasicTypeReaderMethodName(TStreamerElement* el) 
+TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realname) 
+// return functions name to read simple data type from xml file 
 {
-   if (el->GetType() == TStreamerInfo::kCounter) return "ReadInt"; 
+   if (type == TStreamerInfo::kCounter) return "ReadInt"; 
     
-   switch (el->GetType() % 20) {
+   switch (type % 20) {
      case TStreamerInfo::kChar:     return "ReadChar";
      case TStreamerInfo::kShort:    return "ReadShort";
      case TStreamerInfo::kInt:      return "ReadInt";
@@ -170,9 +278,11 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(TStreamerElement* el)
      case TStreamerInfo::kDouble32:
      case TStreamerInfo::kDouble:   return "ReadDouble";
      case TStreamerInfo::kUChar: {
-       char first = el->GetTypeNameBasic()[0];  
-       if ((first=='B') || (first=='b')) return "ReadBool";
-                                    else return "ReadUChar";         
+       bool isbool = false;
+       if (realname!=0) 
+         isbool = (TString(realname).Index("bool",0, TString::kIgnoreCase)>=0);
+       if (isbool) return "ReadBool";
+              else return "ReadUChar";         
      }
      case TStreamerInfo::kUShort:   return "ReadUShort";
      case TStreamerInfo::kUInt:     return "ReadUInt";
@@ -184,14 +294,16 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(TStreamerElement* el)
 
 //______________________________________________________________________________
 const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int specials)
-// specials = 0 - do nothing
-//            1 - cast to data type
-//            2 - produce pointer on given member 
-//            3 - skip casting when produce pointer by buf.P() function
+// produce code to access member of given class. 
+// Parameter specials has following meaning:
+//    0 - nothing special
+//    1 - cast to data type
+//    2 - produce pointer on given member 
+//    3 - skip casting when produce pointer by buf.P() function
 {
    TClass* membercl = cl ? cl->GetBaseDataMember(membername) : 0;
    TDataMember* member = membercl ? membercl->GetDataMember(membername) : 0;
-   TMethodCall* mgetter = member ? member->GetterMethod(cl) : 0;
+   TMethodCall* mgetter = member ? member->GetterMethod(0) : 0;
    
    if ((mgetter!=0) && (mgetter->GetMethod()->Property() & kIsPublic)) {
       fGetterName = "obj->";
@@ -240,6 +352,8 @@ const char* TXMLPlayer::ElementGetter(TClass* cl, const char* membername, int sp
 
 //______________________________________________________________________________
 const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* endch)
+// Produce code to set value to given data member.
+// endch should be output after value is specified.
 {
    strcpy(endch,""); 
    
@@ -272,22 +386,15 @@ const char* TXMLPlayer::ElementSetter(TClass* cl, const char* membername, char* 
 }
 
 //______________________________________________________________________________
-TString TXMLPlayer::GetElemName(TStreamerElement* el)
-{
-  TString res = "obj->";
-  res += el->GetName();
-  return res; 
-}
-
-//______________________________________________________________________________
 void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist) 
+// Produce source code of streamer function for specified class
 {
    if (cl==0) return; 
    TStreamerInfo* info = cl->GetStreamerInfo();
    TObjArray* elements = info->GetElements();
    if (elements==0) return;
 
-   fs << names_funcseparator << endl;
+   fs << "//__________________________________________________________________________" << endl;
    fs << "void* " << GetStreamerName(cl) << "(" 
          << names_xmlfileclass << " &buf, void* ptr, bool checktypes)" << endl; 
    fs << "{" << endl;
@@ -346,7 +453,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TStreamerInfo::kCounter: {
             char endch[5]; 
             fs << tab2 << ElementSetter(cl, el->GetName(), endch);
-            fs << "buf." << GetBasicTypeReaderMethodName(el) 
+            fs << "buf." << GetBasicTypeReaderMethodName(el->GetType(), 0) 
                << "(\"" << el->GetName() << "\")" << endch << ";" << endl;
             continue;
          }
@@ -453,40 +560,17 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             }
             continue;
          }
-         
-         
-/*         
-         // Class*   Class not derived from TObject and no virtual table and no comment   
-         case TStreamerInfo::kAnyPnoVT:     
-         case TStreamerInfo::kAnyPnoVT + TStreamerInfo::kOffsetL: {
-            fs << tab2 << "// read object AnyPnoVT pointer " << el->GetName() << endl;  
-            continue;
-         }
-         
-         // Pointer to container with no virtual table (stl) and no comment   
-         case TStreamerInfo::kSTLp:                
-         // array of pointers to container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL: { 
-            fs << tab2 << "// read STL container object pointer " << el->GetName() << endl;  
-            continue;
-         }
-         
-         // container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTL:             
-         // array of containers with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL: {
-            fs << tab2 << "// read STL container object " << el->GetName() << endl;  
-            continue;
-         } 
-*/         
-         case TStreamerInfo::kAny: {  // Class  NOT derived from TObject
+
+         // Class  NOT derived from TObject
+         case TStreamerInfo::kAny: {  
             fs << tab2 << "buf.ReadObject(" << ElementGetter(cl, el->GetName(), 2);
             fs         << ", \"" << el->GetName() << "\", "
                        << GetStreamerName(el->GetClassPointer()) << ");" << endl;
             continue;
          }
        
-         case TStreamerInfo::kAny + TStreamerInfo::kOffsetL: { // Class  NOT derived from TObject[8]
+         // Class  NOT derived from TObject, array
+         case TStreamerInfo::kAny + TStreamerInfo::kOffsetL: { 
             fs << tab2 << "buf.ReadObjectArr(" << ElementGetter(cl, el->GetName());
             fs         << ", " << el->GetArrayLength() 
                        << ", sizeof(" << el->GetClassPointer()->GetName()
@@ -495,12 +579,24 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
          
-         default:
-           fs << tab2 << "buf.SkipMember(\"" << el->GetName() 
-                      << "\");   // sinfo type " << el->GetType() 
-                      << " not supported" << endl;
-
+         // container with no virtual table (stl) and no comment
+         case TStreamerInfo::kSTLp:                
+         case TStreamerInfo::kSTL:
+         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:                
+         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL: {
+            TStreamerSTL* elstl = dynamic_cast<TStreamerSTL*> (el);
+            if (elstl==0) break; // to make skip
+            
+            if (ProduceSTLstreamer(fs, cl, elstl, false)) continue;
+            
+            fs << tab2 << "// STL type = " << elstl->GetSTLtype() << endl;
+            break;
+         }
       }
+     fs << tab2 << "buf.SkipMember(\"" << el->GetName() 
+                << "\");   // sinfo type " << el->GetType() 
+                << " of class " << el->GetClassPointer()->GetName()
+                << " not supported" << endl;
    }
    
    fs << tab2 << "buf.EndClassNode();" << endl;
@@ -551,8 +647,12 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          case TStreamerInfo::kULong64: 
          case TStreamerInfo::kDouble32: 
          case TStreamerInfo::kCounter: {
-            fs << tab2 << "buf.WriteValue(" << ElementGetter(cl, el->GetName())
-                       << ", \"" << el->GetName() << "\");" << endl; 
+            fs << tab2 << "buf.WriteValue(";
+            if (typ==TStreamerInfo::kUChar) 
+              fs <<"(unsigned char) " << ElementGetter(cl, el->GetName());
+            else  
+              fs << ElementGetter(cl, el->GetName());
+            fs << ", \"" << el->GetName() << "\");" << endl; 
             continue;
          }
          
@@ -645,30 +745,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             }
             continue;
          }
-/*         
-         // Class*   Class not derived from TObject and no virtual table and no comment   
-         case TStreamerInfo::kAnyPnoVT:     
-         case TStreamerInfo::kAnyPnoVT + TStreamerInfo::kOffsetL: {
-            fs << tab2 << "// write object AnyPnoVT pointer " << el->GetName() << endl;  
-            continue;
-         }
-         
-         // Pointer to container with no virtual table (stl) and no comment   
-         case TStreamerInfo::kSTLp:                
-         // array of pointers to container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL: { 
-            fs << tab2 << "// write STL container object pointer " << el->GetName() << endl;  
-            continue;
-         }
-         
-         // container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTL:             
-         // array of containers with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL: {
-            fs << tab2 << "// write STL container object " << el->GetName() << endl;  
-            continue;
-         } 
-*/         
+
          case TStreamerInfo::kAny: {    // Class  NOT derived from TObject
             fs << tab2 << "buf.WriteObject(" << ElementGetter(cl, el->GetName(), 2);
             fs         << ", \"" << el->GetName() << "\", "
@@ -684,12 +761,25 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
                        << GetStreamerName(el->GetClassPointer()) << ");" << endl;
             continue;
          }
+
+         // container with no virtual table (stl) and no comment
+         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
+         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL: 
+         case TStreamerInfo::kSTLp:                
+         case TStreamerInfo::kSTL: {
+            TStreamerSTL* elstl = dynamic_cast<TStreamerSTL*> (el);
+            if (elstl==0) break; // to make skip
+            
+            if (ProduceSTLstreamer(fs, cl, elstl, true)) continue;
+            fs << tab2 << "// STL type = " << elstl->GetSTLtype() << endl;
+            break;
+         }
          
-         default:
-           fs << tab2 << "buf.MakeEmptyMember(\"" << el->GetName() 
-                      << "\");   // sinfo type " << el->GetType() 
-                      << " not supported" << endl;
       }
+      fs << tab2 << "buf.MakeEmptyMember(\"" << el->GetName() 
+                 << "\");   // sinfo type " << el->GetType() 
+                 << " of class " << el->GetClassPointer()->GetName()
+                 << " not supported" << endl;
    }
    
    fs << tab2 << "buf.EndClassNode();" << endl;
@@ -698,4 +788,352 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
    fs << tab1 << "return obj;" << endl;
    fs << "}" << endl << endl;
 }
+
+//______________________________________________________________________________
+void TXMLPlayer::ReadSTLarg(ostream& fs, 
+                            TString& argname, 
+                            int argtyp, 
+                            bool isargptr, 
+                            TClass* argcl, 
+                            TString& tname,
+                            TString& ifcond) 
+// Produce code to read argument of stl container from xml file
+{
+  switch(argtyp) {
+     case TStreamerInfo::kChar:              
+     case TStreamerInfo::kShort:
+     case TStreamerInfo::kInt:  
+     case TStreamerInfo::kLong:  
+     case TStreamerInfo::kLong64:
+     case TStreamerInfo::kFloat: 
+     case TStreamerInfo::kDouble:
+     case TStreamerInfo::kUChar:             
+     case TStreamerInfo::kUShort:
+     case TStreamerInfo::kUInt:  
+     case TStreamerInfo::kULong: 
+     case TStreamerInfo::kULong64: 
+     case TStreamerInfo::kDouble32:
+     case TStreamerInfo::kCounter: {
+        fs << tname << " " << argname << " = buf." 
+           << GetBasicTypeReaderMethodName(argtyp, tname.Data()) << "(0);" << endl;
+        break; 
+     }
+
+     case TStreamerInfo::kObject: {
+        fs << tname << (isargptr ? " ": " *") << argname << " = " 
+           << "(" << argcl->GetName() << "*)"
+           << "buf.ReadObjectPtr(0, " 
+           << GetStreamerName(argcl) << ");" << endl;
+        if (!isargptr) {
+          if (ifcond.Length()>0) ifcond+=" && ";
+          ifcond += argname;
+          TString buf = "*"; 
+          buf += argname;  
+          argname = buf;   
+        }
+        break; 
+     }
+     
+     case TStreamerInfo::kSTLstring: {
+        fs << "string *" << argname << " = " 
+           << "buf.ReadSTLstring();" << endl;
+                if (!isargptr) {
+       if (ifcond.Length()>0) ifcond+=" && ";
+          ifcond += argname;
+          TString buf = "*"; 
+          buf += argname;  
+          argname = buf;   
+        }
+        break;
+     }
+     
+     default:
+       fs << "/* argument " << argname << " not supported */";
+  }
+}
+
+//______________________________________________________________________________
+void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool isargptr, TClass* argcl)
+// Produce code to write argument of stl container to xml file
+{
+  switch(argtyp) {
+     case TStreamerInfo::kChar:
+     case TStreamerInfo::kShort:
+     case TStreamerInfo::kInt:  
+     case TStreamerInfo::kLong:  
+     case TStreamerInfo::kLong64:
+     case TStreamerInfo::kFloat: 
+     case TStreamerInfo::kDouble:
+     case TStreamerInfo::kUChar:             
+     case TStreamerInfo::kUShort:
+     case TStreamerInfo::kUInt:  
+     case TStreamerInfo::kULong: 
+     case TStreamerInfo::kULong64: 
+     case TStreamerInfo::kDouble32:
+     case TStreamerInfo::kCounter: {
+        fs << "buf.WriteValue(" << accname << ", 0);" << endl;
+        break; 
+     }
+     
+     case TStreamerInfo::kObject: {
+        fs << "buf.WriteObjectPtr(";
+        if (isargptr) fs << accname;
+                 else fs << "&(" << accname << ")";
+        fs << ", 0, " <<  GetStreamerName(argcl) << ");" << endl;
+        break; 
+     }
+     
+     case TStreamerInfo::kSTLstring: {
+        fs << "buf.WriteSTLstring(";
+        if (isargptr) fs << accname;
+                 else fs << "&(" << accname << ")";
+        fs << ");" << endl;
+        break;         
+     }
+     
+     default:
+        fs << "/* argument not supported */" << endl;
+  }
+}
+
+//______________________________________________________________________________
+bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting)
+// Produce code of xml streamet for data member of stl type
+{
+   if ((cl==0) || (el==0)) return false;
+   
+   TClass* contcl = el->GetClassPointer();  
+//   fs << tab2 << "// class " << contcl->GetName() << endl;
+   
+   bool isstr = (el->GetSTLtype() == TStreamerElement::kSTLstring);   
+   bool isptr = el->IsaPointer();
+   bool isarr = (el->GetArrayLength()>0);
+   bool isparent = (strcmp(el->GetName(), contcl->GetName())==0);
+   
+   int stltyp = -1;
+   int narg = 0;
+   int argtype[5];
+   bool isargptr[5];
+   TClass* argcl[5];
+   TString argtname[5];
+   
+   if (isstr) stltyp = TStreamerElement::kSTLstring; else {
+     TObjArray* tokens = TString(contcl->GetName()).Tokenize("<,>");  
+     if (tokens==0) return false;
+     
+     TObjString* s0 = (TObjString*) tokens->At(0);
+      
+     if (s0->String()=="vector")   { stltyp = TStreamerElement::kSTLvector; narg=1; } else 
+     if (s0->String()=="list")     { stltyp = TStreamerElement::kSTLlist; narg=1; } else
+     if (s0->String()=="deque")    { stltyp = TStreamerElement::kSTLdeque; narg=1; } else
+     if (s0->String()=="map")      { stltyp = TStreamerElement::kSTLmap; narg=2; } else
+     if (s0->String()=="set")      { stltyp = TStreamerElement::kSTLset; narg=1; } else
+     if (s0->String()=="multimap") { stltyp = TStreamerElement::kSTLmultimap; narg=2; } else
+     if (s0->String()=="multiset") { stltyp = TStreamerElement::kSTLmultiset; narg=1; }
+     
+     for(int n=0;n<narg;n++) {
+       argtype[n] = -1;
+       isargptr[n] = false;
+       argcl[n] = 0;
+       argtname[n] = "";
+       
+       TObjString* arg = n<tokens->GetLast() ? (TObjString*) tokens->At(n+1) : 0;
+       
+       if (arg==0) { stltyp = -1; break; }
+       
+       TString buf = arg->String();
+                   
+       while ((buf.Length()>0) && (buf[0]==' ')) buf.Remove(0,1); 
+       argtname[n] = buf;         
+          
+       int pstar = buf.Index("*");
+          
+       if (pstar>0) {
+         isargptr[n] = true;    
+         buf.Remove(pstar);
+       } else 
+         isargptr[n] = false;
+            
+       while ((buf.Length()>0) && (buf[buf.Length()-1]==' ')) 
+                buf.Remove(buf.Length()-1,1); 
+         
+       if (buf.Index("const ")==0) {
+         buf.Remove(0,6);
+         while ((buf.Length()>0) && (buf[0]==' ')) buf.Remove(0,1); 
+       }
+          
+       TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(buf);
+       if (dt) argtype[n] = dt->GetType(); else 
+       if (buf=="string") argtype[n] = TStreamerInfo::kSTLstring; else {
+          argcl[n] = gROOT->GetClass(buf);
+          if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
+       }
+       
+       if (argtype[n]<0) stltyp = -1;
+       
+//       fs << tab2 << "// arg " << n << "  name = /" << argtname[n] << "/  typ = " << argtype[n]
+//                  << "  isptr = " << isargptr[n] << "   class = " << (argcl[n] ? argcl[n]->GetName() : "null") << endl;
+     }
+     
+     delete tokens;
+
+     if (stltyp<0) return false;
+   }
+
+   char tabs[30], tabs2[30];
+   
+   if (isWriting) {
+       
+     fs << tab2 << "if (buf.StartSTLnode(\"" 
+                << fXmlSetup.XmlGetElementName(el) << "\")) {" << endl;
+     
+     fs << tab3 << contcl->GetName() << " ";
+     
+     TString accname;
+     if (isptr) {
+        if (isarr) { fs << "**cont"; accname = "(*cont)->"; }
+              else { fs << "*cont"; accname = "cont->"; }
+     } else 
+       if (isarr) { fs << "*cont"; accname = "cont->"; }
+             else { fs << "&cont"; accname = "cont."; }
+
+     fs << " = ";
+     
+     if (isparent)
+       fs << "*dynamic_cast<" << contcl->GetName() << "*>(obj);" << endl;
+     else  
+       fs << ElementGetter(cl, el->GetName()) << ";" << endl;
+     
+     if (isarr && el->GetArrayLength()) {
+       strcpy(tabs, tab4);  
+       fs << tab3 << "for(int n=0;n<" << el->GetArrayLength() << ";n++) {" << endl;
+     } else strcpy(tabs, tab3);
     
+     strcpy(tabs2, tabs); 
+       
+     if (isptr) {
+       strcat(tabs2, tab1);   
+       fs << tabs << "if (" << (isarr ? "*cont" : "cont") << "==0) {" << endl;
+       fs << tabs2 << "buf.WriteSTLsize(0" << (isstr ? ",true);" : ");") << endl;
+       fs << tabs << "} else {" << endl;
+     }
+      
+     fs << tabs2 << "buf.WriteSTLsize(" << accname 
+                 << (isstr ? "length(), true);" : "size());") << endl;
+                 
+     if (isstr) {
+        fs << tabs2 << "buf.WriteSTLstringData(" << accname << "c_str());" << endl;
+     } else {            
+        fs << tabs2 << contcl->GetName() << "::const_iterator iter;" << endl;
+        fs << tabs2 << "for (iter = " << accname << "begin(); iter != " 
+                    << accname << "end(); iter++)";
+        if (narg==1) {
+           fs << endl << tabs2 << tab1;
+           WriteSTLarg(fs, "*iter", argtype[0], isargptr[0], argcl[0]);
+        } else
+        if (narg==2) {
+           fs << " {" << endl;
+           fs << tabs2 << tab1;
+           WriteSTLarg(fs, "iter->first", argtype[0], isargptr[0], argcl[0]);
+           fs << tabs2 << tab1;
+           WriteSTLarg(fs, "iter->second", argtype[1], isargptr[1], argcl[1]);
+           fs << tabs2 << "}" << endl;   
+        }
+     } // if (isstr)
+    
+     if (isptr) fs << tabs << "}" << endl;
+     
+     if (isarr && el->GetArrayLength()) {
+       if (isptr) fs << tabs << "cont++;" << endl;
+             else fs << tabs << "(void*) cont = (char*) cont + sizeof(" << contcl->GetName() << ");" << endl;
+       fs << tab3 << "}" << endl;
+     }
+     
+     fs << tab3 << "buf.EndSTLnode();" << endl;
+     fs << tab2 << "}" << endl;
+     
+     
+   } else {
+       
+       
+     fs << tab2 << "if (buf.VerifySTLnode(\"" 
+                << fXmlSetup.XmlGetElementName(el) << "\")) {" << endl;
+     
+     fs << tab3 << contcl->GetName() << " ";
+     TString accname, accptr;
+     if (isptr) {
+        if (isarr) { fs << "**cont"; accname = "(*cont)->"; accptr = "*cont"; }
+              else { fs << "*cont"; accname = "cont->"; accptr = "cont"; }
+     } else 
+       if (isarr) { fs << "*cont"; accname = "cont->"; }
+             else { fs << "&cont"; accname = "cont."; }
+             
+     fs << " = ";
+     
+     if (isparent)
+       fs << "*dynamic_cast<" << contcl->GetName() << "*>(obj);" << endl;
+     else  
+       fs << ElementGetter(cl, el->GetName()) << ";" << endl;
+     
+     if (isarr && el->GetArrayLength()) {
+       strcpy(tabs, tab4);  
+       fs << tab3 << "for(int n=0;n<" << el->GetArrayLength() << ";n++) {" << endl;
+     } else strcpy(tabs, tab3);
+    
+     fs << tabs << "int size = buf.ReadSTLsize(" << (isstr ? "true);" : ");") << endl;
+     
+     if (isptr) {
+        fs << tabs << "delete " << accptr << ";" << endl;
+        fs << tabs << "if (size==0) " << accptr << " = 0;" << endl;
+        fs << tabs << "        else " << accptr << " = new " << contcl->GetName() << ";" << endl;
+        if (!isarr) {
+          char endch[5]; 
+          fs << tabs << ElementSetter(cl, el->GetName(), endch);
+          fs         << "cont" << endch << ";" << endl;
+        }
+     } else {
+        fs << tabs << accname << (isstr ? "erase();" : "clear();") << endl; 
+     }
+     
+     if (isstr) {
+        fs << tabs << "if (size>0) " << accname << "assign(buf.ReadSTLstringData(size));" << endl;  
+     } else {
+        fs << tabs << "for(int k=0;k<size;k++) {" << endl;
+        if (narg==1) {
+          TString arg1("arg"), ifcond;  
+          fs << tabs << tab1;
+          ReadSTLarg(fs, arg1, argtype[0], isargptr[0], argcl[0], argtname[0], ifcond);  
+          fs << tabs << tab1;
+          if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
+          fs << accname;
+          if ((stltyp==TStreamerElement::kSTLset) ||
+              (stltyp==TStreamerElement::kSTLmultiset))
+            fs << "insert"; else fs << "push_back";  
+          fs << "(" << arg1 << ");" << endl;
+        }
+        else 
+        if (narg==2) {
+           TString arg1("arg1"), arg2("arg2"), ifcond;  
+           fs << tabs << tab1;
+           ReadSTLarg(fs, arg1, argtype[0], isargptr[0], argcl[0], argtname[0], ifcond);  
+           fs << tabs << tab1;
+           ReadSTLarg(fs, arg2, argtype[1], isargptr[1], argcl[1], argtname[1], ifcond);
+           fs << tabs << tab1;
+           if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
+           fs << accname << "insert(make_pair(" 
+              << arg1 << ", " << arg2 << "));" << endl;
+        }
+        fs << tabs << "}" << endl;
+     }
+     
+     if (isarr && el->GetArrayLength()) {
+       if (isptr) fs << tabs << "cont++;" << endl;
+             else fs << tabs << "(void*) cont = (char*) cont + sizeof(" << contcl->GetName() << ");" << endl;
+       fs << tab3 << "}" << endl;
+     }
+     
+     fs << tab3 << "buf.EndSTLnode();" << endl;
+     fs << tab2 << "}" << endl;
+   } 
+   return true;
+}
