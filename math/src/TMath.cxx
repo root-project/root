@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.38 2003/06/13 15:57:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.39 2003/07/04 13:05:25 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -703,40 +703,35 @@ Double_t TMath::KolmogorovProb(Double_t z)
    //
    // This function was translated by Rene Brun from PROBKL in CERNLIB.
 
-   // cons[j] = -0.5*(PI*2*j-1)/2(**2
-   const Double_t cons[3] = { -1.233700550136 , -11.10330496 , -30.84251376};
-   // jf2[j] = -2* j**2
-   const Double_t fj2[5]  = {-2. , -8. , -18. , -32. , -50.};
-   const Double_t sqr2pi = 2.50662827463;
-
-   Double_t p = 0;
-   Int_t j;
-   if (z < 0.2) return 1;
-   if (z > 1) {  // use series in exp(z**2)
-      Double_t c;
-      Double_t sig2 = -2;
-      Double_t z2 = z*z;
-      for (j=0;j<5;j++) {
-         sig2 = -sig2;
-         c = fj2[j] *z2;
-         if (c < -100) return p;
-         p += sig2*TMath::Exp(c);
+   Double_t fj[4] = {-2,-8,-18,-32}, r[4];
+   const Double_t w = 2.50662827;
+   // c1 - -pi**2/8, c2 = 9*c1, c3 = 25*c1
+   const Double_t c1 = -1.2337005501361697;
+   const Double_t c2 = -11.103304951225528;
+   const Double_t c3 = -30.842513753404244;
+   
+   Double_t u = TMath::Abs(z);
+   Double_t p;
+   if (u < 0.2) {
+      p = 1;
+   } else if (u < 0.755) {
+      Double_t v = 1./(u*u);
+      p = 1 - w*(TMath::Exp(c1*v) + TMath::Exp(c2*v) + TMath::Exp(c3*v))/u;
+   } else if (u < 6.8116) {
+      r[1] = 0;
+      r[2] = 0;
+      r[3] = 0;
+      Double_t v = u*u;
+      Int_t maxj = TMath::Max(1,TMath::Nint(3./u));
+      for (Int_t j=0; j<maxj;j++) {
+         r[j] = TMath::Exp(fj[j]*v);
       }
-      return p;
+      p = 2*(r[0] - r[1] +r[2] - r[3]);
+   } else {
+      p = 0;
    }
-   // z< 1  use series in exp(1/z**2)
-   Double_t zinv = 1/z;
-   Double_t a = sqr2pi*zinv;
-   Double_t zinv2 = zinv*zinv;
-   Double_t arg;
-   for (j=0;j<3;j++) {
-      arg = cons[j]*zinv2;
-      if (arg < -30) continue;
-      p += TMath::Exp(arg);
+   return p;     
    }
-   p = 1 - a*p;
-   return p;
-}
 
 //______________________________________________________________________________
 Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
