@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.60 2001/04/11 17:31:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.61 2001/04/12 13:39:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1647,7 +1647,9 @@ TBranch *TTree::FindBranch(const char* branchname)
 TLeaf *TTree::FindLeaf(const char* searchname) 
 {
    char leafname[kMaxLen];
+   char leaftitle[kMaxLen];
    char longname[kMaxLen];
+   char longtitle[kMaxLen];
    
    // This will allow the branchname to be preceded by
    // the name of this tree.
@@ -1672,6 +1674,15 @@ TLeaf *TTree::FindLeaf(const char* searchname)
       if (!strcmp(searchname,leafname)) return leaf;
       if (subsearchname && !strcmp(subsearchname,leafname)) return leaf;
             
+      // The TLeafElement contains the branch name in its name,
+      // let's use the title....
+      strcpy(leaftitle,leaf->GetTitle());
+      dim = (char*)strstr(leaftitle,"[");
+      if (dim) dim[0]='\0';
+      
+      if (!strcmp(searchname,leaftitle)) return leaf;
+      if (subsearchname && !strcmp(subsearchname,leaftitle)) return leaf;
+
       TBranch * branch = leaf->GetBranch();
       if (branch) {
          sprintf(longname,"%s.%s",branch->GetName(),leafname);
@@ -1679,6 +1690,12 @@ TLeaf *TTree::FindLeaf(const char* searchname)
          if (dim) dim[0]='\0';
          if (!strcmp(searchname,longname)) return leaf;
          if (subsearchname && !strcmp(subsearchname,longname)) return leaf;
+
+         sprintf(longtitle,"%s.%s",branch->GetName(),leaftitle);
+         dim = (char*)strstr(longtitle,"[");
+         if (dim) dim[0]='\0';
+         if (!strcmp(searchname,longtitle)) return leaf;
+         if (subsearchname && !strcmp(subsearchname,longtitle)) return leaf;
 
          // The following is for the case where the branch is only
          // a sub-branch.  Since we do not see it through
