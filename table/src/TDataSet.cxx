@@ -1,4 +1,4 @@
-// @(#)root/star:$Name: v3-10-01 $:$Id: TDataSet.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.5 2003/10/09 18:53:02 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *Id = {
-    "$Id: TDataSet.cxx,v 1.4 2003/01/27 20:41:36 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.5 2003/10/09 18:53:02 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -436,7 +436,7 @@ TDataSet *TDataSet::Prev() const
    return prev;
 }
 //______________________________________________________________________________
-void TDataSet::SetObject(TObject */*obj*/){printf("***DUMMY PutObject***\n");}
+void TDataSet::SetObject(TObject * /*obj*/){printf("***DUMMY PutObject***\n");}
 
 //______________________________________________________________________________
 void  TDataSet::ls(Option_t *option) const
