@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.150 2004/06/18 15:47:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.151 2004/08/20 21:02:10 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -628,7 +628,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fgClassCount++;
    SetUniqueID(fgClassCount);
 
-   //in case a class with the same name had been created by TStreamerInfo
+   //In case a class with the same name had been created by TStreamerInfo
    //we must delete the old class, importing only the StreamerInfo structure
    //from the old dummy class.
    if (oldcl) {
@@ -890,7 +890,11 @@ void TClass::BuildRealData(void *pointer)
          func.SetFunc(fClassInfo->GetMethod("ShowMembers",
                                             "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
-            Error("BuildRealData","can not find any ShowMembers function for %s!",GetName());
+            if (strcmp(GetName(),"string")!=0) { 
+               // For std::string we know that we do not have a ShowMembers function and 
+               // that it's okay.
+               Error("BuildRealData","can not find any ShowMembers function for %s!",GetName());
+            }
          } else {
             func.SetArg((long)&brd);
             func.SetArg((long)parent);
@@ -1680,7 +1684,11 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
       while ((info = (TStreamerInfo*)nextInfo())) {
 
          info->Update(this, newcl);
-
+      }
+      
+      if (acl->GetCollectionProxy() && acl->GetCollectionProxy()->GetValueClass()==this) {
+         acl->GetCollectionProxy()->SetValueClass(newcl);
+         // We should also inform all the TBranchElement :( but we do not have a master list :(
       }
    }
 

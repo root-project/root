@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.134 2004/08/09 15:35:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.135 2004/10/06 10:31:19 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -825,10 +825,14 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       string long64name = TClassEdit::GetLong64_Name( name );
       if ( long64name != name ) return FindSTLClass( long64name.c_str(), load);
    }
+   if (cl == 0) {
+       TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
+       if (resolvedName != name) cl = GetClass(resolvedName,load);
+   }
    if (cl == 0 && (strncmp(name,"std::",5)==0)) {
       // CINT sometime ignores the std namespace for stl containers,
       // so let's try without it.
-      cl = FindSTLClass(name+5,load);
+      if (strlen(name+5)) cl = GetClass(name+5,load);
    }
 
    if (load && cl==0) {
@@ -930,6 +934,14 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
       return FindSTLClass(name,kTRUE);
 
+   } else if ( strncmp(name,"std::",5)==0 ) {
+
+      return GetClass(name+5,load);
+ 
+   } else if ( strstr(name,"std::") != 0 ) {
+
+      // Let's try without the std::
+      return GetClass( TClassEdit::ResolveTypedef(name,kTRUE).c_str(), load );
    }
 
    if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))

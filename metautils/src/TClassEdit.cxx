@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.12 2004/05/10 17:18:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.13 2004/10/06 10:31:19 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -525,14 +525,15 @@ int TClassEdit::IsSTLCont(const char *type,int testAlloc)
 //______________________________________________________________________________
 bool TClassEdit::IsStdClass(const char *classname)
 {
-  // return true if the class belond to the std namespace
+   // return true if the class belond to the std namespace
 
-  if ( strcmp(classname,"string")==0 ) return true;
-  if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
-  if ( strcmp(classname,"allocator")==0) return true;
-  if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
+   if ( strncmp(classname,"std::",5)==0 ) classname += 5;
+   if ( strcmp(classname,"string")==0 ) return true;
+   if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
+   if ( strcmp(classname,"allocator")==0) return true;
+   if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
 
-  return IsSTLCont(classname) != 0;
+   return IsSTLCont(classname) != 0;
 
 }
 
@@ -591,10 +592,16 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                }
                if (k) {
                   string base(tname, 0, k);
-                  G__ClassInfo info(base.c_str());
-                  if (!info.IsLoaded()) {
-                     // the nesting namespace is not declared
-                     return tname;
+                  if (base=="std") {
+                     // std is not declared but is also ignored by CINT!
+                     tname += 5;
+                     break;
+                  } else {
+                     G__ClassInfo info(base.c_str());
+                     if (!info.IsLoaded()) {
+                        // the nesting namespace is not declared
+                        return tname;
+                     }
                   }
                }
             }
