@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.90 2002/11/13 14:31:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.91 2002/11/20 08:55:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4321,8 +4321,7 @@ void TPad::SetLogx(Int_t value)
 {
 //*-*-*-*-*-*-*-*-*Set Lin/Log scale for X
 //*-*              ========================
-   if (value) fLogx = 1;
-   else       fLogx = 0;
+   fLogx = value;
    delete fView; fView=0;
 }
 
@@ -4331,8 +4330,7 @@ void TPad::SetLogy(Int_t value)
 {
 //*-*-*-*-*-*-*-*-*Set Lin/Log scale for Y
 //*-*              ========================
-   if (value) fLogy = 1;
-   else       fLogy = 0;
+   fLogy = value;
    delete fView; fView=0;
 }
 
@@ -4341,8 +4339,7 @@ void TPad::SetLogz(Int_t value)
 {
 //*-*-*-*-*-*-*-*-*Set Lin/Log scale for Z
 //*-*              ========================
-   if (value) fLogz = 1;
-   else       fLogz = 0;
+   fLogz = value;
    delete fView; fView=0;
 }
 
