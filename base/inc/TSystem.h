@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.26 2003/06/17 15:19:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.27 2003/06/25 05:49:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -331,6 +331,8 @@ public:
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
+   virtual void            AddIncludePath(const char *includePath);
+   virtual void            AddLinkedLibs(const char *linkedLib);
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "");
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildNode() const;

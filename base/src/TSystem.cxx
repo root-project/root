@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.62 2003/06/17 15:19:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.63 2003/06/25 05:49:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1513,7 +1513,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if (build_loc.Length()==0) {
       build_loc = lib_location;
    } else {
-     
+
       // Removes an existing disk specification from the names
       TRegexp disk_finder ("[A-z]:");
       Int_t pos = library.Index( disk_finder );
@@ -2202,7 +2202,29 @@ void TSystem::SetMakeSharedLib(const char *directives)
 }
 
 //______________________________________________________________________________
-void TSystem::SetIncludePath(const char *IncludePath)
+void TSystem::AddIncludePath(const char *includePath)
+{
+   // Add includePath to the already set include path.
+
+   if (includePath) {
+      fIncludePath += " ";
+      fIncludePath += includePath;
+   }
+}
+
+//______________________________________________________________________________
+void TSystem::AddLinkedLibs(const char *linkedLib)
+{
+   // Add linkedLib to already set linked libs.
+
+   if (linkedLib) {
+      fLinkedLibs += " ";
+      fLinkedLibs += linkedLib;
+   }
+}
+
+//______________________________________________________________________________
+void TSystem::SetIncludePath(const char *includePath)
 {
    // IncludePath should contain the list of compiler flags to indicate where
    // to find user defined header files. It is used to expand $IncludePath in
@@ -2213,18 +2235,18 @@ void TSystem::SetIncludePath(const char *IncludePath)
    // and on Windows:
    //    "/I%ROOTSYS%/include "
 
-   fIncludePath = IncludePath;
+   fIncludePath = includePath;
 }
 
 //______________________________________________________________________________
-void  TSystem::SetLinkedLibs(const char *LinkedLibs)
+void  TSystem::SetLinkedLibs(const char *linkedLibs)
 {
    // LinkedLibs should contain the library directory and list of libraries
    // needed to recreate the current executable. It is used to expand $LinkedLibs
    // in the directives given to SetMakeSharedLib() and SetMakeExe()
    // The default value on Unix is: root-config --glibs
 
-   fLinkedLibs = LinkedLibs;
+   fLinkedLibs = linkedLibs;
 }
 
 //______________________________________________________________________________
