@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.171 2003/12/18 13:21:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.172 2003/12/19 13:40:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1091,7 +1091,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"i");
                   else if (code ==  5)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"F");
-                  else if (code ==  8)
+                  else if (code ==  8 || code == 9)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"D");
                   else {
                      printf("Cannot create branch for rdname=%s, code=%d\n",branchname, code);
@@ -1149,6 +1149,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
             else if (code == 13) sprintf(leaflist,"%s/%s",rdname,"i");
             else if (code ==  5) sprintf(leaflist,"%s/%s",rdname,"F");
             else if (code ==  8) sprintf(leaflist,"%s/%s",rdname,"D");
+            else if (code ==  9) sprintf(leaflist,"%s/%s",rdname,"D");
             else {
                printf("Cannot create branch for rdname=%s, code=%d\n",branchname, code);
                leaflist[0] = 0;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.130 2003/12/16 18:55:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.131 2003/12/18 13:21:33 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -214,6 +214,7 @@ public:
          case kULong_t:
          case kFloat_t:
          case kDouble_t:
+         case kDouble32_t:
          case kchar:
          case TStreamerInfo::kCounter:
          case TStreamerInfo::kOffsetL + kChar_t:
@@ -226,6 +227,7 @@ public:
          case TStreamerInfo::kOffsetL + kULong_t:
          case TStreamerInfo::kOffsetL + kFloat_t:
          case TStreamerInfo::kOffsetL + kDouble_t:
+         case TStreamerInfo::kOffsetL + kDouble32_t:
          case TStreamerInfo::kOffsetL + kchar:
             thisobj = (address+offset);
             break;
@@ -301,6 +303,7 @@ public:
          return kTRUE;
       case kFloat_t:
       case kDouble_t:
+      case kDouble32_t:
          return kFALSE;
       default:
 	 return kFALSE;
@@ -480,6 +483,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case kULong_t:
       case kFloat_t:
       case kDouble_t:
+	  case kDouble32_t:
       case kchar:
       case TStreamerInfo::kCounter:
                       return (Int_t*)(thisobj+fOffset);
@@ -496,6 +500,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + kFloat_t:
          {Float_t *val  = (Float_t*)(thisobj+fOffset);  return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble_t:
+         {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
+      case TStreamerInfo::kOffsetL + kDouble32_t:
          {Double_t *val = (Double_t*)(thisobj+fOffset); return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kUChar_t:
          {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return &(val[instance]);}
@@ -518,6 +524,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetP + kFloat_t:
          {Float_t **val  = (Float_t**)(thisobj+fOffset);  return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble_t:
+         {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kDouble32_t:
          {Double_t **val = (Double_t**)(thisobj+fOffset); return &((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUChar_t:
          {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return &((*val)[instance]);}
@@ -630,6 +638,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+fOffset));
       case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+fOffset));
       case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
+      case kDouble32_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kchar:     return (Double_t)(*(char*)(thisobj+fOffset));
       case TStreamerInfo::kCounter:
                       return (Double_t)(*(Int_t*)(thisobj+fOffset));
@@ -646,6 +655,8 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + kFloat_t:
          {Float_t *val  = (Float_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kDouble_t:
+         {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+      case TStreamerInfo::kOffsetL + kDouble32_t:
          {Double_t *val = (Double_t*)(thisobj+fOffset); return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kUChar_t:
          {UChar_t *val  = (UChar_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
@@ -668,6 +679,8 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetP + kFloat_t:
          {Float_t **val  = (Float_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kDouble_t:
+         {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
+      case TStreamerInfo::kOffsetP + kDouble32_t:
          {Double_t **val = (Double_t**)(thisobj+fOffset); return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kUChar_t:
          {UChar_t **val  = (UChar_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.14 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.15 2002/11/26 08:45:15 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -125,6 +125,7 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
       if (type == 3)  itype = "I";
       if (type == 5)  itype = "F";
       if (type == 8)  itype = "D";
+      if (type == 9)  itype = "D";
       if (type == 13) itype = "i";
       if (type == 2)  itype = "S";
       if (type == 12) itype = "s";
