@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.3 2001/07/26 16:10:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.4 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -92,6 +92,7 @@ void TGVerticalLayout::Layout()
    Int_t    exp = 0;
    Int_t    exp_max = 0;
    Int_t    remain;
+   Int_t    tmp;
    Int_t    x = 0, y = 0;
    Int_t    bw = fMain->GetBorderWidth();
    TGDimension size, csize;
@@ -132,12 +133,14 @@ void TGVerticalLayout::Layout()
          pad_right  = layout->GetPadRight();
          pad_bottom = layout->GetPadBottom();
 
-         if (hints & kLHintsRight)
+         if (hints & kLHintsRight) {
             x = msize.fWidth - bw - csize.fWidth - pad_right;
-         else if (hints & kLHintsCenterX)
-            x = (msize.fWidth - (bw << 1) - csize.fWidth) >> 1;
-         else // defaults to kLHintsLeft
+         } else if (hints & kLHintsCenterX) {
+            tmp = msize.fWidth - (bw << 1) - csize.fWidth;
+            x = tmp > 0 ? tmp >> 1 : 0;
+         } else { // defaults to kLHintsLeft
             x = pad_left + bw;
+         }
 
          if (hints & kLHintsExpandX) {
             size.fWidth = msize.fWidth - (bw << 1) - pad_left - pad_right;
@@ -154,10 +157,13 @@ void TGVerticalLayout::Layout()
          } else {
             size.fHeight = csize.fHeight;
             if (hints & kLHintsCenterY) {
-               if ((remain / nb_expand) >= exp_max)
-                  extra_space = ((remain / nb_expand) - pad_top - pad_bottom - size.fHeight) >> 1;
-               else
-                  extra_space = ((remain - exp) / nb_expand) >> 1;
+               if ((remain / nb_expand) >= exp_max) {
+                  tmp = (remain / nb_expand) - pad_top - pad_bottom - size.fHeight;
+                  extra_space = tmp ? tmp >> 1 : 0;
+               } else {
+                  tmp = (remain - exp) / nb_expand;
+                  extra_space = tmp>0 ? tmp >> 1 : 0;
+               }
                y += extra_space;
                top += extra_space;
             }
@@ -230,6 +236,7 @@ void TGHorizontalLayout::Layout()
    TGDimension size, csize;
    TGDimension msize = fMain->GetSize();
    UInt_t pad_left, pad_top, pad_right, pad_bottom;
+   Int_t    tmp = 0;
 
    if (!fList) return;
 
@@ -265,12 +272,14 @@ void TGHorizontalLayout::Layout()
          pad_right  = layout->GetPadRight();
          pad_bottom = layout->GetPadBottom();
 
-         if (hints & kLHintsBottom)
+         if (hints & kLHintsBottom) {
             y = msize.fHeight - bw - csize.fHeight - pad_bottom;
-         else if (hints & kLHintsCenterY)
-            y = (msize.fHeight - (bw << 1) - csize.fHeight) >> 1;
-         else // kLHintsTop by default
+         } else if (hints & kLHintsCenterY) {
+            tmp = msize.fHeight - (bw << 1) - csize.fHeight;
+            y = tmp ? tmp >> 1 : 0;
+         } else { // kLHintsTop by default
             y = pad_top + bw;
+         }
 
          if (hints & kLHintsExpandY) {
             size.fHeight = msize.fHeight - (bw << 1) - pad_top - pad_bottom;
@@ -287,10 +296,13 @@ void TGHorizontalLayout::Layout()
          } else {
             size.fWidth = csize.fWidth;
             if (hints & kLHintsCenterX) {
-               if ((remain / nb_expand) >= exp_max)
-                  extra_space = ((remain / nb_expand) - pad_left - pad_right - size.fWidth) >> 1;
-               else
-                  extra_space = ((remain - exp) / nb_expand) >> 1;
+               if ((remain / nb_expand) >= exp_max) {
+                  tmp = (remain / nb_expand) - pad_left - pad_right - size.fWidth;
+                  extra_space =tmp>0 ? tmp >> 1 : 0;
+               } else {
+                  tmp = (remain - exp) / nb_expand;
+                  extra_space = tmp>0 ? tmp >> 1 : 0;
+               }
                x += extra_space;
                left += extra_space;
             }
