@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.8 2001/01/23 19:04:12 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.9 2001/01/23 19:16:31 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -316,9 +316,9 @@ Int_t TRFIOFile::GetErrno() const
    // Method returning rfio_errno. For RFIO files must use this
    // function since we need to check rfio_errno then serrno and finally errno.
 
-   if (!rfio_errno)
+   if (rfio_errno)
       return rfio_errno;
-   if (!serrno)
+   if (serrno)
       return serrno;
    return TSystem::GetErrno();
 }
