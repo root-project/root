@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// $Id: TTableDescriptor.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -19,18 +19,19 @@ TableClassImp(TTableDescriptor,tableDescriptor_st)
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
   // The custom Streamer for this table
-  TTable::Streamer(R__b);
+   fSecondDescriptor = 0;
+   TTable::Streamer(R__b);
 }
 
 //______________________________________________________________________________
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
  : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
 {
-  if (parentTable) {
-     TClass *classPtr = parentTable->GetRowClass();
-     Init(classPtr);
-  }
-  else MakeZombie();
+   if (parentTable) {
+      TClass *classPtr = parentTable->GetRowClass();
+      Init(classPtr);
+   }
+   else MakeZombie();
 }
 
 //______________________________________________________________________________
@@ -62,16 +63,19 @@ void TTableDescriptor::Init(TClass *classPtr)
 TTableDescriptor::~TTableDescriptor()
 {
 #ifdef NORESTRICTIONS
-  if (!IsZombie()) {
-    for (Int_t i=0;i<GetNRows();i++) {
-      Char_t *name = (Char_t *)ColumnName(i);
-      if (name) delete [] name;
-      UInt_t  *indxArray = (UInt_t *)IndexArray(i);
-      if (indxArray) delete [] indxArray;
-    }
-  }
+   if (!IsZombie()) {
+     for (Int_t i=0;i<GetNRows();i++) {
+        Char_t *name = (Char_t *)ColumnName(i);
+        if (name) delete [] name;
+        UInt_t  *indxArray = (UInt_t *)IndexArray(i);
+        if (indxArray) delete [] indxArray;
+      }
+   }
 #endif
-  delete fSecondDescriptor;
+   if (fSecondDescriptor != this) {
+      delete fSecondDescriptor;
+      fSecondDescriptor = 0;
+   }
 }
 
 //____________________________________________________________________________
