@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.1 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -93,6 +93,7 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
    return entries;
 }
 
+
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed() const
 {
@@ -101,6 +102,7 @@ Long64_t TVirtualPacketizer::GetEntriesProcessed() const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *sl) const
 {
@@ -108,6 +110,7 @@ Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *sl) const
 
    return 0;
 }
+
 
 //______________________________________________________________________________
 TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *sl)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.4 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.5 2002/04/19 18:23:59 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TSlave;
 class TEventList;
 class TProof;
 class TSocket;
-class TPacketizer;
+class TVirtualPacketizer;
 
 
 //------------------------------------------------------------------------
@@ -92,10 +92,9 @@ public:
 class TProofPlayerRemote : public TProofPlayer {
 
 private:
-   TProof        *fProof;        // Link to associated PROOF session
-   TList         *fOutputLists;  // Results returned by slaves
-
-   TPacketizer   *fPacketizer;   // Transform TDSet into packets for slaves
+   TProof             *fProof;       // Link to associated PROOF session
+   TList              *fOutputLists; // Results returned by slaves
+   TVirtualPacketizer *fPacketizer;  // Transform TDSet into packets for slaves
 
 public:
    TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }

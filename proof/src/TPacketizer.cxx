@@ -48,7 +48,7 @@ private:
 
 public:
    TFileStat(TFileNode *node, TDSetElement *elem)
-      : fNode(node), fElement(elem), fNextEntry(0) { }
+      : fNode(node), fElement(elem), fNextEntry(elem->GetFirst()) { }
 };
 
 
@@ -165,7 +165,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
          fValid = kFALSE;
          return;
       }
-      
+
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
 
       if ( node == 0 ) {
@@ -181,24 +181,17 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
    PDB(kGlobal,1) Info("TPacketizer","Processing %ld entries in %d files on %d hosts",
          fTotalEntries, files, fFileNodes->GetSize() );
 
-   // Is there an easier way to do shallow copy ?
-   TIter nodes(fFileNodes);
-
    fUnAllocated = new TList;
-   TObject *o;
-   for( o = nodes(); o != 0 ; o = nodes() ) { fUnAllocated->Add(o); }
+   fUnAllocated->AddAll(fFileNodes);
    fUnAllocated->SetOwner(kFALSE);
    fUnAllocNext = fUnAllocated->First();
 
-   nodes.Reset();
-
    fActive = new TList;
-   for( o = nodes(); o != 0 ; o = nodes() ) { fActive->Add(o); }
+   fActive->AddAll(fFileNodes);
    fActive->SetOwner(kFALSE);
    fActiveNext = fActive->First();
 
-   nodes.Reset();
-
+   TIter nodes(fFileNodes);
    TFileNode *node;
    while ( (node = (TFileNode*) nodes.Next()) != 0 ) {
          node->fFileIter = new TIter(node->fFiles);
@@ -246,7 +239,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
    if ( !fValid ) {
       return 0;
    }
-   
+
    // find slave
 
    TSlaveStat *slave = (TSlaveStat*) fSlaves->FindObject( sl->GetName() );
@@ -341,5 +334,3 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
 
    return slave->fCurElem;
 }
-
-
