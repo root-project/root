@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.8 2002/11/11 11:23:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.9 2002/11/20 08:55:10 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -43,13 +43,13 @@ protected:
 	Double_t        fDproj;            //Distance from COP to projection plane
         Double_t        fUpix;             // pad X size in pixels
         Double_t        fVpix;             // pad Y size in pixels
-        Double_t        fTN[12];           //
-        Double_t        fTB[12];           //
+        Double_t        fTN[16];           //
+        Double_t        fTB[16];           //
         Double_t        fRmax[3];          //Upper limits of object
         Double_t        fRmin[3];          //Lower limits of object
         Double_t        fUVcoord[4];       //Viewing window limits
-        Double_t        fTnorm[12];        //Transformation matrix
-        Double_t        fTback[12];        //Back transformation matrix
+        Double_t        fTnorm[16];        //Transformation matrix
+        Double_t        fTback[16];        //Back transformation matrix
         Double_t        fX1[3];            //First coordinate of X axis
         Double_t        fX2[3];            //Second coordinate of X axis
         Double_t        fY1[3];            //First coordinate of Y axis
