@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.4 2000/08/20 14:49:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.5 2000/09/05 08:50:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -444,7 +444,7 @@ TObject *TObject::FindObject(const char *) const
 // must be redefined in derived classes
 // this function is typycally used with TCollections, but can also be used
 // to find an object by name inside this object
-   
+
    return 0;
 }
 
@@ -454,7 +454,7 @@ TObject *TObject::FindObject(TObject *) const
 // must be redefined in derived classes
 // this function is typycally used with TCollections, but can also be used
 // to find an object inside this object
-   
+
    return 0;
 }
 
@@ -810,9 +810,9 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    // Special case for directories. Directory key already written
    if (IsA() == TDirectory::Class()) {
       TDirectory *dir = (TDirectory*)this;
-      dir->Write();
-      return 0;
+      return dir->Write();
    }
+
    TKey *key;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
