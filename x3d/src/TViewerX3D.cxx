@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.2 2000/10/13 19:04:40 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -30,6 +30,7 @@
 #include "TGCanvas.h"
 #include "TGMenu.h"
 #include "TGWidget.h"
+#include "TGMsgBox.h"
 #include "TVirtualX.h"
 
 #include "HelpText.h"
@@ -83,6 +84,7 @@ enum EX3DViewerCommands {
    kHelpOnViewer
 };
 
+Bool_t TViewerX3D::fgActive = kFALSE;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -145,6 +147,15 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
 {
    // Create ROOT X3D viewer.
 
+   fPad = 0;
+   if (fgActive) {
+      Int_t retval;
+      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
+                   "X3D Viewer Warning", "Can have only one X3D viewer active",
+                   kMBIconExclamation, kMBOk, &retval);
+      return;
+   }
+
    fPad    = pad;
    fOption = option;
    fX3DWin = 0;
@@ -155,6 +166,8 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
    Resize(width, height);
 
    x3d_update();
+
+   fgActive = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -163,6 +176,15 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
    : TGMainFrame(gClient->GetRoot(), width, height)
 {
    // Create ROOT X3D viewer.
+
+   fPad = 0;
+   if (fgActive) {
+      Int_t retval;
+      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
+                   "X3D Viewer", "Can have only one X3D viewer active",
+                   kMBIconExclamation, kMBOk, &retval);
+      return;
+   }
 
    fPad    = pad;
    fOption = option;
@@ -175,12 +197,16 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
    SetWMPosition(x, y);
 
    x3d_update();
+
+   fgActive = kTRUE;
 }
 
 //______________________________________________________________________________
 TViewerX3D::~TViewerX3D()
 {
    // Delete ROOT X3D viewer.
+
+   if (!fPad) return;
 
    DeleteX3DWindow();
 
@@ -193,6 +219,8 @@ TViewerX3D::~TViewerX3D()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
    delete fCanvasLayout;
+
+   fgActive = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -243,8 +271,8 @@ void TViewerX3D::CreateViewer(const char *name)
                           kSunkenFrame | kDoubleBorder);
    InitX3DWindow();
    if (!fX3DWin) {
-      fContainer = 0;
-      fCanvasLayout    = 0;
+      fContainer    = 0;
+      fCanvasLayout = 0;
       return;
    }
    fContainer = new TX3DContainer(this, fX3DWin, fCanvas->GetViewPort());

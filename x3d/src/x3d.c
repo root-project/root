@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.2 2000/10/13 19:04:40 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -965,6 +965,10 @@ XVisualInfo vInfo;
 XSizeHints sizehint;
 int x, y, NUMCOLORS;
 unsigned int width, height, numSegments;
+int useroot = 0;
+
+   if (gDisplay)
+      useroot = 1;
 
 
    numSegments = o->numSegs;
@@ -983,7 +987,7 @@ unsigned int width, height, numSegments;
 
 /* Can we connect with the server? */
 
-   if (!gDisplay)
+   if (!useroot)
       g->dpy = XOpenDisplay(g->DisplayName);
    else
       g->dpy = gDisplay;
@@ -1092,7 +1096,7 @@ unsigned int width, height, numSegments;
 
 /* Any user geometry? */
 
-   if(g->Geometry){
+   if(g->Geometry && !useroot){
 
       x = 0;
       y = 0;
@@ -1140,9 +1144,10 @@ unsigned int width, height, numSegments;
       XFreeGC(g->dpy, temp_gc);
       }
 
+   if (!useroot) {
 /* We want to have the input focus if we can */
 
-   XSetInputFocus(g->dpy, PointerRoot, RevertToNone, CurrentTime);
+      XSetInputFocus(g->dpy, PointerRoot, RevertToNone, CurrentTime);
 
 /*
    Thanks go to Otmar Lendl for the following bit of code that
@@ -1150,9 +1155,10 @@ unsigned int width, height, numSegments;
    that don't handle input focus correctly.
 */
 
-   wmhint.input = True;
-   wmhint.flags = InputHint;
-   XSetWMHints(g->dpy,g->win,&wmhint);
+      wmhint.input = True;
+      wmhint.flags = InputHint;
+      XSetWMHints(g->dpy,g->win,&wmhint);
+   }
 
 /* Please do not do backing store on the contents of our window */
 
@@ -1169,15 +1175,17 @@ unsigned int width, height, numSegments;
       KeyPressMask | Button1MotionMask | Button2MotionMask |
       StructureNotifyMask | ExposureMask | ColormapChangeMask);
 
+   if (!useroot) {
 /* Do not generate expose events */
 
-   XSetGraphicsExposures(g->dpy, g->gc, 0);
+      XSetGraphicsExposures(g->dpy, g->gc, 0);
 
 /* Name our windows */
 
-   XStoreName(g->dpy, g->win, title);
-   XStoreName(g->dpy, g->helpWin, "ROOT://X3D/Help");
+      XStoreName(g->dpy, g->win, title);
+      XStoreName(g->dpy, g->helpWin, "ROOT://X3D/Help");
 
+   }
 /* Some window managers are not friendly, explicitly set the background color */
 
    XSetWindowBackground(g->dpy, g->win, g->black);
@@ -1232,20 +1240,21 @@ unsigned int width, height, numSegments;
    ResetPurpleRectangle(0, 0, g->winX, g->winY, g);
 
 
-  /*
-   *   Set up some window manager properties (see the ICCCM).
-   */
+   if (!useroot) {
+     /*
+      *   Set up some window manager properties (see the ICCCM).
+      */
 
-   wm_protocols[0] = XInternAtom (g->dpy, "WM_DELETE_WINDOW", False);
-   wm_protocols[1] = XInternAtom (g->dpy, "WM_SAVE_YOURSELF", False);
-   XSetWMProtocols (g->dpy, g->win, wm_protocols, 2);
-
+      wm_protocols[0] = XInternAtom (g->dpy, "WM_DELETE_WINDOW", False);
+      wm_protocols[1] = XInternAtom (g->dpy, "WM_SAVE_YOURSELF", False);
+      XSetWMProtocols (g->dpy, g->win, wm_protocols, 2);
+   }
 
 /*
    Make the windows appear.
 */
    XMapWindow(g->dpy, g->win);
-   DisplayMenu(g);
+   if (!useroot) DisplayMenu(g);
 }
 
 

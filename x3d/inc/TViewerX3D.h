@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.2 2000/10/13 19:04:40 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -55,6 +55,8 @@ private:
    void     DeleteX3DWindow();
 
    Bool_t   HandleContainerButton(Event_t *ev);
+
+   static Bool_t fgActive;    // TViewerX3D is a singleton
 
 public:
    TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title="X3D Viewer",
