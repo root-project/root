@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.15 2002/04/09 13:42:15 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.16 2002/05/07 15:30:35 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2188,6 +2188,14 @@ inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
         elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
     }
   }
+}
+
+TMatrix::TMatrix(const TLazyMatrix &lazy_constructor)
+{
+   Allocate(lazy_constructor.fRowUpb-lazy_constructor.fRowLwb+1,
+            lazy_constructor.fColUpb-lazy_constructor.fColLwb+1,
+            lazy_constructor.fRowLwb, lazy_constructor.fColLwb);
+  lazy_constructor.FillIn(*this);
 }
 
 TMatrix &TMatrix::operator=(const TLazyMatrix &lazy_constructor)
