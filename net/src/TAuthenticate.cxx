@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.32 2003/11/25 11:35:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.33 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1257,7 +1257,7 @@ void TAuthenticate::SetGlobusAuthHook(GlobusAuth_t func)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SshAuth(TString & User)
+Int_t TAuthenticate::SshAuth(TString &User)
 {
    // SSH client authentication code.
 
@@ -1630,7 +1630,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
 
 //______________________________________________________________________________
 Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
-                                     Int_t ** nh, Int_t ** am, char ***det)
+                                     Int_t **nh, Int_t **am, char ***det)
 {
    // Try to get info about authetication policies for Host
 
@@ -2149,7 +2149,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::RfioAuth(TString & User)
+Int_t TAuthenticate::RfioAuth(TString &User)
 {
    // UidGid client authentication code.
    // Returns 0 in case authentication failed
@@ -2160,7 +2160,7 @@ Int_t TAuthenticate::RfioAuth(TString & User)
       Info("RfioAuth", "enter ... User %s", User.Data());
 
    // Get user info ... ...
-   UserGroup_t *pw = gSystem->GetUserInfo();
+   UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
    if (pw) {
 
       // These are the details to be saved in case of success ...
@@ -2235,7 +2235,7 @@ Int_t TAuthenticate::RfioAuth(TString & User)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash)
+Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 {
    // UsrPwd client authentication code.
    // Returns 0 in case authentication failed
@@ -2542,7 +2542,6 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          return 0;
       }
 
-
    } else {
 
       // Old Protocol
@@ -2626,8 +2625,8 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
-                               TString & Details, char **Token)
+Int_t TAuthenticate::GetOffSet(TAuthenticate *Auth, Int_t Method,
+                               TString &Details, char **Token)
 {
    // Check if already authenticated for Method with Details
    // Return OffSet in the affirmative case or -1.
@@ -2702,8 +2701,8 @@ Int_t TAuthenticate::GetOffSet(TAuthenticate * Auth, Int_t Method,
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SetOffSet(THostAuth * HostAuth, Int_t Method,
-                              TString & Details, Int_t OffSet)
+void TAuthenticate::SetOffSet(THostAuth *HostAuth, Int_t Method,
+                              TString &Details, Int_t OffSet)
 {
    // Save new offset
 
@@ -2718,7 +2717,7 @@ void TAuthenticate::SetOffSet(THostAuth * HostAuth, Int_t Method,
 }
 
 //______________________________________________________________________________
-char *TAuthenticate::GetRemoteLogin(THostAuth * HostAuth, Int_t Method,
+char *TAuthenticate::GetRemoteLogin(THostAuth *HostAuth, Int_t Method,
                                     const char *Details)
 {
    // Check if already authenticated for Method with Details
@@ -2775,9 +2774,9 @@ char *TAuthenticate::GetRemoteLogin(THostAuth * HostAuth, Int_t Method,
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SaveAuthDetails(TAuthenticate * Auth, Int_t Method,
+void TAuthenticate::SaveAuthDetails(TAuthenticate *Auth, Int_t Method,
                                     Int_t OffSet, Int_t ReUse,
-                                    TString & Details, const char *rlogin,
+                                    TString &Details, const char *rlogin,
                                     Int_t key, const char *token)
 {
    THostAuth *HostAuth = Auth->GetHostAuth();
@@ -2819,8 +2818,7 @@ void TAuthenticate::SaveAuthDetails(TAuthenticate * Auth, Int_t Method,
 }
 
 //______________________________________________________________________________
-void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru,
-                                  char **Us)
+void TAuthenticate::DecodeDetails(char *details, char *Pt, char *Ru, char **Us)
 {
    // Parse details looking for user info
 
@@ -2997,7 +2995,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
+void TAuthenticate::FileExpand(const char *fexp, FILE *ftmp)
 {
    // Expands include directives found in fexp files
    // The expanded, temporary file, is pointed to by 'ftmp'
@@ -3121,7 +3119,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::RemoveHostAuth(THostAuth * ha)
+void TAuthenticate::RemoveHostAuth(THostAuth *ha)
 {
    // Remove THostAuth instance from the list
 
@@ -3747,7 +3745,8 @@ Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n, rsa_NUMBER &RSA_d)
+void TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n,
+                                    rsa_NUMBER &RSA_d)
 {
    // Store RSA public keys from export string RSAPubExport.
 
