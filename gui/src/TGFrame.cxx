@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.76 2004/09/11 19:29:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.77 2004/09/12 10:55:26 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1164,7 +1164,7 @@ Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
 //______________________________________________________________________________
 Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 {
-   //  handle drag enter event
+   // Handle drag enter event.
 
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
@@ -1183,7 +1183,7 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 //______________________________________________________________________________
 Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
 {
-   // handle drag leave event
+   // Handle drag leave event.
 
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
@@ -1197,7 +1197,7 @@ Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
 //______________________________________________________________________________
 Bool_t TGCompositeFrame::HandleDragMotion(TGFrame *)
 {
-   //  handle drag motion event
+   // Handle drag motion event.
 
    return kFALSE;
 }
@@ -1206,7 +1206,7 @@ Bool_t TGCompositeFrame::HandleDragMotion(TGFrame *)
 Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
                                         TGLayoutHints *lo)
 {
-   //  handle drop event
+   // Handle drop event.
 
    if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) &&
        (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
@@ -1561,6 +1561,52 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
    if (fMain) {
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());
    }
+}
+
+//______________________________________________________________________________
+void TGTransientFrame::CenterOnParent(Bool_t croot)
+{
+   // Position transient frame centered relative to the parent frame.
+   // If fMain is 0 (i.e. TGTransientFrame is acting just like a
+   // TGMainFrame) and croot is true, the window will be centered on
+   // the root window, otherwise no action is taken and the default
+   // wm placement will be used.
+
+   Int_t ax, ay;
+   Window_t wdummy;
+
+   UInt_t dw = fClient->GetDisplayWidth();
+   UInt_t dh = fClient->GetDisplayHeight();
+
+   if (fMain) {
+
+      gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
+                       (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1,
+                       (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1,
+                       ax, ay, wdummy);
+      if (ax < 10)
+         ax = 10;
+      else if (ax + fWidth + 10 > dw)
+         ax = dw - fWidth - 10;
+
+      if (ay < 20)
+         ay = 20;
+      else if (ay + fHeight + 50 > dh)
+         ay = dh - fHeight - 50;
+
+   } else if (croot) {
+
+      ax = (dw - fWidth) >> 1;
+      ay = (dh - fHeight) >> 1;
+
+   } else {
+
+      return;
+
+   }
+
+   Move(ax, ay);
+   SetWMPosition(ax, ay);
 }
 
 //______________________________________________________________________________
