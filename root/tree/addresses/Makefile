@@ -4,7 +4,7 @@
 CLEAN_TARGETS += 
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest headerTest clonesATest
+TEST_TARGETS += headerTest clonesATest EmbeddedTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -23,6 +23,18 @@ clonesA.log: clonesA_rw.C clonesA_Event.h clonesA_Event.cxx
 
 clonesATest: clonesA.log
 	$(CMDECHO) test ! `(grep exception clonesA.log > /dev/null) && echo $?`
+
+Embedded_load_C.$(DllSuf) : buildEmbedded.C Embedded_load.C Embedded_objects.cpp Embedded_objects.h
+	$(CMDECHO) root.exe -q -b -l buildEmbedded.C > EmbeddedTest.build.log
+
+Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
+	$(CMDECHO) root.exe -q -b -l embwrite.C > EmbeddedTest.write.log
+
+EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
+	$(CMDECHO) root.exe -q -b -l embread.C > EmbeddedTest.log
+
+EmbeddedTest: EmbeddedTest.log
+	$(CMDECHO) diff EmbeddedTest.log EmbeddedTest.ref
 
 mytest:
 	$(CMDECHO) echo mytest > /dev/null

@@ -8,5 +8,5 @@ branch->SetAddress(&obj);
 Int_t nevent = Int_t(tree->GetEntries());
 Int_t nselected = 0;
 Int_t nb = 0;
-for (Int_t i=0;i<nevent;i++) { printf("%d %d\n", tree->GetEvent(i), obj); obj->dump(); }
+for (Int_t i=0;i<nevent;i++) { printf("%d %d \n", i, tree->GetEvent(i)); obj->dump(); }
 }
