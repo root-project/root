@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.117 2003/11/24 14:29:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.118 2004/01/06 17:39:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -442,7 +442,15 @@ TGraph::~TGraph()
    delete [] fY;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete();
+      //special logic to support the case where the same object is 
+      //added multiple times in fFunctions.
+      //This case happens when the same object is added with different
+      //drawing modes
+      TObject *obj;
+      while ((obj  = fFunctions->First())) {
+         while(fFunctions->Remove(obj));
+         delete obj;
+      }
       delete fFunctions;
    }
    fFunctions = 0;

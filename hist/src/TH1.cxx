@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.163 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.164 2004/01/08 14:54:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -473,7 +473,15 @@ TH1::~TH1()
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete();
+      TObject *obj;
+      //special logic to support the case where the same object is 
+      //added multiple times in fFunctions.
+      //This case happens when the same object is added with different
+      //drawing modes
+      while ((obj  = fFunctions->First())) {
+         while(fFunctions->Remove(obj));
+         delete obj;
+      }
       delete fFunctions;
    }
    if (fDirectory) {
@@ -4323,7 +4331,15 @@ void TH1::Reset(Option_t *option)
 
    TObject *stats = fFunctions->FindObject("stats");
    fFunctions->Remove(stats);
-   fFunctions->Delete();
+   //special logic to support the case where the same object is 
+   //added multiple times in fFunctions.
+   //This case happens when the same object is added with different
+   //drawing modes
+   TObject *obj;
+   while ((obj  = fFunctions->First())) {
+      while(fFunctions->Remove(obj));
+      delete obj;
+   }
    if(stats) fFunctions->Add(stats);
    fContour.Set(0);
 }
