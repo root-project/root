@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.12 2001/04/10 16:36:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.13 2001/04/12 13:27:40 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -192,8 +192,13 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
             sprintf(branchname,"%s[%s_]",fin+1,name);
             bre->SetTitle(branchname);
-            lf->SetTitle(branchname);
             bre->SetBranchCount(this);
+            char *dim = strstr(branchname,"][");
+            if (dim) {
+               char *bracket = strstr(branchname,"[");
+               if (bracket < dim) strcpy(bracket+1,dim+2);
+            }
+            lf->SetTitle(branchname);
          }
          return;
          
@@ -311,8 +316,16 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
 //printf("  before setting title, i=%d, title=%s\n",i,bre->GetTitle());
          const char *fin = strrchr(bre->GetTitle(),'.');
          if (fin == 0) continue;
+         TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
          sprintf(branchname,"%s[%s_]",fin+1,name);
          bre->SetTitle(branchname);
+         bre->SetBranchCount(this);
+         char *dim = strstr(branchname,"][");
+         if (dim) {
+            char *bracket = strstr(branchname,"[");
+            if (bracket < dim) strcpy(bracket+1,dim+2);
+         }
+         lf->SetTitle(branchname);
       }
       return;
    }
