@@ -286,7 +286,6 @@ void TGraphEditor::DoShape(Int_t s)
       }
    }
 
-   fgr->SetButton(s, kTRUE); 
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 // set/reset the Marker CheckBox
