@@ -11,6 +11,11 @@
 //  THit is a class not derived from TObject
 //  TObjHit derives from TObject and THit
 //
+//  run with
+//     bench
+//   or
+//     bench -m   to stream objects memberwise
+//
 // The test prints a summary table comparing performances for all above cases
 // (CPU, file size, compression factors).
 // Reference numbers on a Pentium IV 2.4 Ghz machine are given as reference.
@@ -22,12 +27,19 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
+#include "TStreamerInfo.h"
 
 #include "TBench.h"
 
 
-int main(int, char**)
+int main(int argc, char **argv)
 {
+  // by default stream objects objectwise
+  // if program option "-m" is specified, stream memberwise
+  if (argc > 1) {
+     if (strstr(argv[1],"-m")) TStreamerInfo::SetStreamMemberWise();
+     printf("bench option -m specified. Streaming objects memberwise\n");
+  }
   int nhits       = 1000;
   int nevents     = 400;
   Float_t cx;
