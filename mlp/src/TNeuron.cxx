@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.1 2003/08/27 15:31:14 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -789,7 +789,7 @@ Double_t TNeuron::DSigmoid(Double_t x)
    //Double_t a = Sigmoid(x);
    //return a-a*a;
    if (TMath::Abs(x) > 5)
-      return TMath::Exp(-fabs(x));
+      return TMath::Exp(-TMath::Abs(x));
    Double_t expmx = TMath::Exp(-x);
    return expmx / ((1 + expmx) * (1 + expmx));
 }

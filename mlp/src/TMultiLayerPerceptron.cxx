@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.1 2003/08/27 15:31:13 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.2 2003/08/27 16:02:17 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -568,8 +568,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       }
       // Security: would the learning lead to non real numbers, 
       // the learning should stop now.
-      if (isnan(GetError(TMultiLayerPerceptron::kTraining))
-          || isinf(GetError(TMultiLayerPerceptron::kTraining))) {
+      if (isnan(GetError(TMultiLayerPerceptron::kTraining))) {
+//          || isinf(GetError(TMultiLayerPerceptron::kTraining))) {
          cout << "Training Error. Stop." <<endl;
          iepoch = nEpoch;
       }
