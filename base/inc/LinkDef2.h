@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.9 2001/03/09 17:47:05 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.10 2001/10/01 10:29:55 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,6 +32,12 @@
 #pragma link C++ function operator>(const TTime&,const TTime&);
 #pragma link C++ function operator>=(const TTime&,const TTime&);
 
+#pragma link C++ function operator==(const TMD5&,const TMD5&);
+#pragma link C++ function operator!=(const TMD5&,const TMD5&);
+
+#pragma link C++ function operator==(const TUUID&,const TUUID&);
+#pragma link C++ function operator!=(const TUUID&,const TUUID&);
+
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
 #pragma link C++ class TExec+;
@@ -42,6 +48,7 @@
 #pragma link C++ class TMapFile;
 #pragma link C++ class TMapRec;
 #pragma link C++ class TMath;
+#pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
 #pragma link C++ class TNamed+;
@@ -74,5 +81,6 @@
 #pragma link C++ class TQObjSender;
 #pragma link C++ class TQClass;
 #pragma link C++ class TQConnection;
+#pragma link C++ class TUUID+;
 
 #endif
