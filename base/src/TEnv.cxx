@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.12 2002/08/18 17:43:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.13 2002/10/30 16:12:58 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -272,15 +272,15 @@ void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
       if (fValue != v) {
          if (l == kEnvChange)
             fModified = kTRUE;
-         else {
+         else
             fModified = kFALSE;
-            fLevel = l;
-         }
+         fLevel = l;
          fValue = ExpandValue(v);
       }
    } else {
       if (l == kEnvChange)
          fModified = kTRUE;
+      fLevel = l;
       fValue += " ";
       fValue += ExpandValue(v);
    }
@@ -540,11 +540,11 @@ void TEnv::Print(Option_t *opt) const
 //______________________________________________________________________________
 void TEnv::PrintEnv(EEnvLevel level) const
 {
-   // Print all resources for a certain level (global, user, local).
+   // Print all resources for a certain level (global, user, local, changed).
 
    TIter next(fTable);
    TEnvRec *er;
-   static const char *lc[] = { "Global", "User", "Local" };
+   static const char *lc[] = { "Global", "User", "Local", "Changed" };
 
    while ((er = (TEnvRec*) next()))
       if (er->fLevel == level || level == kEnvAll)
