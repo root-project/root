@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += typedefAndScope
+TEST_TARGETS += ptrptr typedefAndScope
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -28,4 +28,8 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+ptrptr.log: runptrptr.C ptrptr.C vclass_h.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l runptrptr.C | grep ptrptr.C > ptrptr.log 
 
+ptrptr: ptrptr.log
+	$(TestDiff)
