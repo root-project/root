@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.5 2000/12/13 15:13:48 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.6 2001/01/12 08:27:11 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -359,14 +359,15 @@ TNode *TNode::GetNode(const char *name) const
 
    if (!strcmp(name, GetName())) return (TNode*)this;
    TNode *node, *nodefound;
-   TObject *obj;
    if (!fNodes) return 0;
-   TIter  next(fNodes);
-   while ((obj = next())) {
-      node = (TNode*)obj;
-      if (!node->TestBit(kNotDeleted)) continue;
-      nodefound = node->GetNode(name);
-      if (nodefound) return nodefound;
+   TObjLink *lnk = fNodes->FirstLink();
+   while (lnk) {
+      node = (TNode *)lnk->GetObject();
+      if (node->TestBit(kNotDeleted)) {
+         nodefound = node->GetNode(name);
+         if (nodefound) return nodefound;
+      }
+      lnk = lnk->Next(); 
    }
    return 0;
 }
@@ -395,12 +396,14 @@ void TNode::ImportShapeAttributes()
 
    if (!fNodes) return;
    TNode *node;
-   TObject *obj;
-   TIter  next(fNodes);
-   while ((obj = next())) {
-      node = (TNode*)obj;
+   
+   TObjLink *lnk = fNodes->FirstLink();
+   while (lnk) {
+      node = (TNode *)lnk->GetObject();
       node->ImportShapeAttributes();
+      lnk = lnk->Next(); 
    }
+      
 }
 
 //______________________________________________________________________________
@@ -718,24 +721,23 @@ void TNode::SetVisibility(Int_t vis)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    ResetBit(kSonsInvisible);
-   TIter  next(fNodes);
    TNode *node;
    if (vis == -4 ) {         //Node is not drawn. Its immediate sons are drawn
       fVisibility = 0;
       if (!fNodes) { fVisibility = 1; return;}
-      while ((node = (TNode*)next())) { node->SetVisibility(-2); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-2); }
    } else if (vis == -3 ) {  //Only node leaves are drawn
       fVisibility = 0;
       if (!fNodes) { fVisibility = 1; return;}
-      while ((node = (TNode*)next())) { node->SetVisibility(-3); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-3); }
 
    } else if (vis == -2) {  //node is drawn. Its sons are not drawn
       fVisibility = 1; SetBit(kSonsInvisible); if (!fNodes) return;
-      while ((node = (TNode*)next())) { node->SetVisibility(-1); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-1); }
 
    } else if (vis == -1) {  //node is not drawn. Its sons are not drawn
       fVisibility = 0; SetBit(kSonsInvisible); if (!fNodes) return;
-      while ((node = (TNode*)next())) { node->SetVisibility(-1); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(-1); }
 
    } else if (vis ==  0) {  //node is not drawn
       fVisibility = 0;
@@ -745,11 +747,11 @@ void TNode::SetVisibility(Int_t vis)
 
    } else if (vis ==  2) {  //node is not drawn but its sons are drawn
       fVisibility = 0; if (!fNodes) return;
-      while ((node = (TNode*)next())) { node->SetVisibility(3); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(3); }
 
    } else if (vis ==  3) {  //node is drawn and its sons are drawn
       fVisibility = 1; if (!fNodes) return;
-      while ((node = (TNode*)next())) { node->SetVisibility(3); }
+      TIter  next(fNodes); while ((node = (TNode*)next())) { node->SetVisibility(3); }
    }
 }
 
