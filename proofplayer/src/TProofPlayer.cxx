@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.9 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.10 2002/08/09 13:12:24 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TPacketizer2.h"
 #include "TSelector.h"
 #include "TProof.h"
+#include "TSlave.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "MessageTypes.h"
@@ -251,7 +252,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TDSet *set = dset;
    if ( fProof->IsMaster() ) {
 
-      PDB(kPacketizer,1) Info("Process","Create Proxy DSet");
+      PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
                         dset->GetDirectory() );
 
@@ -373,8 +374,10 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave)
    TDSetElement *e = fPacketizer->GetNextPacket( slave );
 
    if ( e != 0 ) {
-      PDB(kPacketizer,2) Info("GetNextPacket","'%s' '%s' '%s' %d %d", e->GetFileName(),
-            e->GetDirectory(), e->GetObjName(),e->GetFirst(),e->GetNum());
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %d %d",
+              slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
+              e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    } else {
       PDB(kPacketizer,2) Info("GetNextPacket","Done");
    }
