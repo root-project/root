@@ -2,10 +2,10 @@
 //  can be run with:
 // root > .x permute.C
 // root > .x permute.C+ with ACLIC
-      
+
 #include <TMath.h>
 
-int permuteSimple () 
+int permuteSimple ()
 {
   printf("\nTMath::Permute simple test\n");
   printf("==========================\n");
@@ -14,15 +14,16 @@ int permuteSimple ()
   Bool_t start=kTRUE;
   Int_t icount=0;
   while(TMath::Permute(a,4,start)) {
-    icount++;
-    for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++]))); printf("\n");
+     if (start) start=kFALSE;
+     icount++;
+     for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++]))); printf("\n");
   }
   printf("Found %d permutations = 4!\n",icount);
   return 0;
 }
 
 
-Int_t permuteFancy() 
+Int_t permuteFancy()
 {
   Int_t a[10];
   Int_t &n=a[0], &i=a[1];
