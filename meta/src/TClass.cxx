@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.24 2001/01/15 07:38:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.25 2001/01/16 16:19:15 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -299,6 +299,8 @@ void TClass::BuildRealData(void *pointer)
 
    fRealData = new TList;
 
+   if (Property() & kIsAbstract) return;
+   
    // Create an instance of this class
    if (!realDataObject) {
       if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
