@@ -1881,7 +1881,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
-   
+
    out << endl << "   // main frame" << endl;
    out << "   TGMainFrame *";
    out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
@@ -2289,7 +2289,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    if ((fWMX != -1) || (fWMY != -1)) {
       out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<endl;
    }
-   
+
    out << "   " <<GetName()<< "->MapSubwindows();" << endl;
    out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
@@ -2314,7 +2314,7 @@ void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
    // Save a transient frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
-   
+
    out << endl << "   // transient frame" << endl;
    out << "   TGTransientFrame *";
    out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
