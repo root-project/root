@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TPavesText::TPavesText(): TPaveText()
 }
 
 //______________________________________________________________________________
-TPavesText::TPavesText(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Int_t npaves,Option_t *option)
+TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
 //*-*-*-*-*-*-*-*-*-*-*pavestext normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -95,21 +95,21 @@ void TPavesText::Paint(Option_t *option)
 //*-* The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();
    const char *opt = GetOption();
-   Float_t signx, signy;
+   Double_t signx, signy;
    if (strstr(opt,"l")) signx = -1;
    else                 signx =  1;
    if (strstr(opt,"b")) signy = -1;
    else                 signy =  1;
-   Float_t dx = 3*signx*(gPad->PixeltoX(bordersize) - gPad->PixeltoX(0));
-   Float_t dy = 3*signy*(gPad->PixeltoY(bordersize) - gPad->PixeltoY(0));
+   Double_t dx = 3*signx*(gPad->PixeltoX(bordersize) - gPad->PixeltoX(0));
+   Double_t dy = 3*signy*(gPad->PixeltoY(bordersize) - gPad->PixeltoY(0));
 
    TPave::ConvertNDCtoPad();
 
    for (Int_t ipave=fNpaves;ipave>1;ipave--) {
-      Float_t x1 = fX1 + dx*Float_t(ipave-1);
-      Float_t y1 = fY1 - dy*Float_t(ipave-1);
-      Float_t x2 = fX2 + dx*Float_t(ipave-1);
-      Float_t y2 = fY2 - dy*Float_t(ipave-1);
+      Double_t x1 = fX1 + dx*Double_t(ipave-1);
+      Double_t y1 = fY1 - dy*Double_t(ipave-1);
+      Double_t x2 = fX2 + dx*Double_t(ipave-1);
+      Double_t y2 = fY2 - dy*Double_t(ipave-1);
       TPave::PaintPave(x1,y1,x2,y2,bordersize,option);
    }
 

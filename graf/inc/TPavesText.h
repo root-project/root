@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPavesText.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -32,7 +32,7 @@ protected:
 
 public:
         TPavesText();
-        TPavesText(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2, Int_t npaves=5, Option_t *option="br");
+        TPavesText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Int_t npaves=5, Option_t *option="br");
         TPavesText(const TPavesText &pavestext);
         virtual ~TPavesText();
                 void  Copy(TObject &pavestext);
