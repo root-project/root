@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.53 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.54 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -624,8 +624,10 @@ TNetSystem::TNetSystem(const char *url) : TSystem("-root", "Net file Helper Syst
    }
    TUrl turl(surl);
 
-   fDir = kFALSE;
+   fDir  = kFALSE;
    fDirp = 0;
+   fFTP  = 0;
+
    // Remote username: local as default
    fUser = turl.GetUser();
    if (!fUser.Length()) {
