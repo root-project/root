@@ -285,11 +285,6 @@ void TStreamerInfo::Build()
             Error("Build","%s, unknow type: %s %s\n",GetName(),dm->GetFullTypeName(),dm->GetName());
             continue;
          }
-         if (clm->GetClassVersion()==0) {
-            // If the class Version is 0 all object of that type are transient
-            // (there is NO working streamer by definition).
-            continue;
-         }
          // a pointer to a class
          if (dm->IsaPointer()) {
             if(refcount) {
@@ -837,7 +832,7 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
       TClass *cl = element->GetClassPointer();
-      if (cl && cl->GetClassVersion() ) {
+      if (cl) {
          const char *name = cl->GetName();
          static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
          if (!strcmp(name, "string")||!strcmp(name,full_string_name)) continue; //reject string
