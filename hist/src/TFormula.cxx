@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.21 2001/06/22 07:11:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.22 2001/06/22 09:48:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1496,29 +1496,29 @@ void TFormula::Copy(TObject &obj)
    ((TFormula&)obj).fConst  = 0;
    ((TFormula&)obj).fParams = 0;
    ((TFormula&)obj).fNames  = 0;
-   if (fExpr) {
-      ((TFormula&)obj).fExpr = new TString[MAXOP];
-      for (i=0; i<MAXOP; i++)
+   if (fExpr && fNoper) {
+      ((TFormula&)obj).fExpr = new TString[fNoper];
+      for (i=0; i<fNoper; i++)
          ((TFormula&)obj).fExpr[i] = "";
    }
-   if (fOper) {
-      ((TFormula&)obj).fOper = new Int_t[MAXOP];
-      for (i=0; i<MAXOP; i++)
+   if (fOper && fNoper) {
+      ((TFormula&)obj).fOper = new Int_t[fNoper];
+      for (i=0; i<fNoper; i++)
          ((TFormula&)obj).fOper[i] = 0;
    }
-   if (fConst) {
-      ((TFormula&)obj).fConst = new Double_t[MAXCONST];
-      for (i=0; i<MAXCONST; i++)
+   if (fConst && fNconst) {
+      ((TFormula&)obj).fConst = new Double_t[fNconst];
+      for (i=0; i<fNconst; i++)
          ((TFormula&)obj).fConst[i] = 0;
    }
-   if (fParams) {
-      ((TFormula&)obj).fParams = new Double_t[MAXPAR];
-      for (i=0; i<MAXPAR; i++)
+   if (fParams && fNpar) {
+      ((TFormula&)obj).fParams = new Double_t[fNpar];
+      for (i=0; i<fNpar; i++)
          ((TFormula&)obj).fParams[i] = 0;
    }
-   if (fNames) {
-      ((TFormula&)obj).fNames = new TString[MAXPAR];
-      for (i=0; i<MAXPAR; i++)
+   if (fNames && fNpar) {
+      ((TFormula&)obj).fNames = new TString[fNpar];
+      for (i=0; i<fNpar; i++)
          ((TFormula&)obj).fNames[i] = "";
    }
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
