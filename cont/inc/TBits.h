@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.1 2001/02/08 16:58:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.2 2001/02/08 17:04:18 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -40,31 +40,31 @@ class TBits : public TObject {
 
 protected:
 
-   Int_t    fNbits;         // Number of bits (around fNbytes*8)
-   Int_t    fNbytes;        // Number of UChars in fAllBits
+   UInt_t   fNbits;         // Number of bits (around fNbytes*8)
+   UInt_t   fNbytes;        // Number of UChars in fAllBits
    UChar_t *fAllBits;       //[fNbytes] array of UChars 
 
 public:
-   TBits(Int_t nbits = 8);
+   TBits(UInt_t nbits = 8);
    TBits(const TBits&);
    TBits& operator=(const TBits&);
    virtual ~TBits();
 
    //----- bit manipulation
    //----- (note the difference with TObject's bit manipulations)
-   void   ResetAllBits(Int_t value=kFALSE);  // if value=1 set all bits to 1
-   void   ResetBitNumber(Int_t bitnumber) { SetBitNumber(bitnumber,kFALSE); }
-   void   SetBitNumber(Int_t bitnumber, Bool_t value = kTRUE);
-   Bool_t TestBitNumber(Int_t bitnumber) const;
+   void   ResetAllBits(Bool_t value=kFALSE);  // if value=1 set all bits to 1
+   void   ResetBitNumber(UInt_t bitnumber) { SetBitNumber(bitnumber,kFALSE); }
+   void   SetBitNumber(UInt_t bitnumber, Bool_t value = kTRUE);
+   Bool_t TestBitNumber(UInt_t bitnumber) const;
 
    //----- Utilities
-   void   Compact();                         // Reduce the space used.
-   Int_t  CountBits() const ;                       // return number of bits set to 1
-   Int_t  GetNbits() { return fNbits; }
-   Int_t  GetNbytes() { return fNbytes; }
+   void    Compact();                         // Reduce the space used.
+   UInt_t  CountBits() const ;                // return number of bits set to 1
+   UInt_t  GetNbits() { return fNbits; }
+   UInt_t  GetNbytes() { return fNbytes; }
 
    void   Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
-   void   Print(Option_t *option="") const;        // to show the list of active bits
+   void   Print(Option_t *option="") const;  // to show the list of active bits
 
 
    ClassDef(TBits,1)        // Bit container

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.6 2000/11/21 20:54:17 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.7 2000/12/13 15:13:57 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -41,6 +41,7 @@ const Int_t kMAXFORMDIM = 5; // Maximum number of array dimensions support in TT
 class TTree;
 class TMethodCall;
 class TLeafObject;
+class TDataMember;
 
 class TTreeFormula : public TFormula {
 
@@ -54,12 +55,19 @@ protected:
    Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
    Int_t       *fIndex;           //[fNindex]array of instances numbers
+   TObjArray   fLeaves;           //  List of leaf used in this formula.
+   TObjArray   fDataMembers;      //  List of leaf data members
    TObjArray   fMethods;          //  List of leaf method calls
    
-   Int_t       fNdimensions[kMAXCODES];            //Number of array dimensions in each leaf
-   Int_t       fCumulSize[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
-   Int_t       fCumulUsedSize[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this formula
-   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];   //Index of array selected by user for each leaf
+   Int_t         fNdimensions[kMAXCODES];             //Number of array dimensions in each leaf
+   Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
+   //mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
+           Int_t fUsedSizes[kMAXFORMDIM+1];           //Actual size of the dimensions as seen for this entry.
+   //mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
+           Int_t fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry.
+   Int_t         fVirtUsedSizes[kMAXFORMDIM+1];       //Virtual size of lower dimensions as seen for this formula
+   Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
+   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
 
    void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
 public:
@@ -68,16 +76,22 @@ public:
    virtual   ~TTreeFormula();
    virtual Int_t      DefinedVariable(TString &variable);
    virtual Double_t   EvalInstance(Int_t i=0) const;
+   TDataMember       *GetDataMember(Int_t code) const;
    TMethodCall       *GetMethodCall(Int_t code) const;
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual TLeaf     *GetLeaf(Int_t n) const;
    virtual Int_t      GetNcodes() const {return fNcodes;}
-   virtual Int_t      GetNdata() const;
+   virtual Int_t      GetNdata();
+   //GetNdata should probably be const.  However it need to cache some information about the actual dimension
+   //of arrays, so if GetNdata is const, the variables fUsedSizes and fCumulUsedSizes need to be declared
+   //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
+   //the mutable keyword. 
+   //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
    virtual Double_t   GetValueLeafObject(Int_t i, TLeafObject *leaf) const;
    virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
 
-   ClassDef(TTreeFormula,1)  //The Tree formula
+   ClassDef(TTreeFormula,2)  //The Tree formula
 };
 
 #endif

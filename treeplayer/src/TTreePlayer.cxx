@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.32 2000/12/19 16:41:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.33 2000/12/21 14:03:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -529,6 +529,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 // last (right most) dimension of specifying then with the two characters '[]'
 // is equivalent.  For variable size arrays (and TClonesArray) the range
 // of the first dimension is recalculated for each entry of the tree.
+// You can also specify the index as an expression of any other variables from the
+// tree. 
 //
 // TTree::Draw also now properly handling operations involving 2 or more arrays.
 //
@@ -548,6 +550,10 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //                                             fResults (at the same time)
 //  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim
 //
+//  "fMatrix[][fResult[][]]"           30      on 1st dim of fMatrix then on both
+//                                             dimensions of fResults.  The value
+//                                             if fResults[j][k] is used as the second
+//                                             index of fMatrix.
 //
 // In summary, TTree::Draw loops through all un-specified dimensions.  To
 // figure out the range of each loop, we match each unspecified dimension
@@ -559,13 +565,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //
 // So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
 //
-//    for (Int_t i0; i < min(3,2); i++) {
+//    for (Int_t i0; i0 < min(3,2); i0++) {
 //       use the value of (fMatrix[i0][2] - fMatrix[3][i0])
 //    }
 //
 // So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
 //
-//    for (Int_t i0; i < min(3,5); i++) {
+//    for (Int_t i0; i0 < min(3,5); i0++) {
 //       for (Int_t i1; i1 < 2; i1++) {
 //          use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
 //       }
@@ -573,9 +579,19 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //
 // So the loop equivalent to "fMatrix[][] - fResults[][]" is:
 //
-//    for (Int_t i0; i < min(3,5); i++) {
+//    for (Int_t i0; i0 < min(3,5); i0++) {
 //       for (Int_t i1; i1 < min(3,2); i1++) {
-//          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
+//          use the value of (fMatrix[i0][i1] - fResults[i0][i1])
+//       }
+//    }
+//
+// So the loop equivalent to "fMatrix[][fResults[][]]" is:
+//
+//    for (Int_t i0; i0 < 3; i0++) {
+//       for (Int_t j2; i1 < 5; j2++) {
+//          for (Int_t j3; i2 < 2; j3++) {
+//             i1 = fResults[j2][j3];
+//             use the value of fMatrix[i0][i1]
 //       }
 //    }
 //
