@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.23 2002/01/20 10:21:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.24 2002/02/01 11:03:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1255,7 +1255,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
-//   if option "E" is specified, the errors are computed.
+//   if option "e" is specified, the errors are computed.
+//   if option "d" is specified, the projection is drawn in the current pad.
 //
 
   TString opt = option;
@@ -1298,6 +1299,15 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      if (computeErrors) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
   if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  
+  if (opt.Contains("d")) {
+     TVirtualPad *padsav = gPad;
+     TVirtualPad *pad = gROOT->GetSelectedPad();
+     if (pad) pad->cd();
+     h1->Draw(option);
+     if (padsav) padsav->cd();
+  }
+  
   return h1;
 }
 
@@ -1315,7 +1325,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
-//   if option "E" is specified, the errors are computed.
+//   if option "e" is specified, the errors are computed.
+//   if option "d" is specified, the projection is drawn in the current pad.
 //
 
   TString opt = option;
@@ -1358,7 +1369,16 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      if (computeErrors) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
   if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
-  return h1;
+  
+  if (opt.Contains("d")) {
+     TVirtualPad *padsav = gPad;
+     TVirtualPad *pad = gROOT->GetSelectedPad();
+     if (pad) pad->cd();
+     h1->Draw(option);
+     if (padsav) padsav->cd();
+  }
+
+    return h1;
 }
 
 //______________________________________________________________________________
