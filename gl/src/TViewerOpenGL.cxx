@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.44 2004/12/14 16:09:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.45 2005/01/04 10:33:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -303,6 +303,8 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fShutItem2;
    delete fShutItem3;
    delete fShutItem4;
+   //temporary, fix ASAP!!!
+   TGLSphere::fSphereList = 0;
 }
 
 //______________________________________________________________________________

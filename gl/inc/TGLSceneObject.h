@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.18 2004/12/09 12:12:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.19 2005/01/04 10:33:15 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -151,7 +151,6 @@ private:
    Double_t fRadius; // Sphere radius
    Int_t    fNdiv;   // Number of divisions
 
-   static UInt_t fSphereList;
    static void BuildList();
 
 public:
@@ -161,6 +160,8 @@ public:
 
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
+
+   static UInt_t fSphereList;
 };
 
 

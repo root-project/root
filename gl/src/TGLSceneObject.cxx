@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.25 2004/12/09 12:12:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.26 2005/01/04 10:33:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -82,7 +82,7 @@ static GLUquadric *GetQuadric()
 //______________________________________________________________________________
 TGLSelection::TGLSelection()
 {
-   fBBox[0] = fBBox[1] = fBBox[2] = 
+   fBBox[0] = fBBox[1] = fBBox[2] =
    fBBox[3] = fBBox[4] = fBBox[5] = 0.;
 }
 
@@ -98,7 +98,7 @@ TGLSelection::TGLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
 {
    fBBox[0] = xmin, fBBox[1] = xmax;
    fBBox[2] = ymin, fBBox[3] = ymax;
-   fBBox[4] = zmin, fBBox[5] = zmax;      
+   fBBox[4] = zmin, fBBox[5] = zmax;
 }
 
 //______________________________________________________________________________
@@ -107,7 +107,7 @@ void TGLSelection::DrawBox()const
    Double_t xmin = fBBox[0], xmax = fBBox[1];
    Double_t ymin = fBBox[2], ymax = fBBox[3];
    Double_t zmin = fBBox[4], zmax = fBBox[5];
-   
+
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHTING);
 
@@ -138,7 +138,7 @@ void TGLSelection::DrawBox()const
    glEnable(GL_DEPTH_TEST);
    glEnable(GL_LIGHTING);
 }
-   
+
 //______________________________________________________________________________
 void TGLSelection::SetBBox(const Double_t *newBBox)
 {
@@ -151,7 +151,7 @@ void TGLSelection::SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
 {
    fBBox[0] = xmin, fBBox[1] = xmax;
    fBBox[2] = ymin, fBBox[3] = ymax;
-   fBBox[4] = zmin, fBBox[5] = zmax;      
+   fBBox[4] = zmin, fBBox[5] = zmax;
 }
 
 //______________________________________________________________________________
@@ -302,7 +302,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
    }
 
    fPolyDesc.resize(descSize);
-
+   {//fix for scope
    for (Int_t numPol = 0, currInd = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
       Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
@@ -346,7 +346,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
       }
       j += segmentCol + 2;
    }
-
+   }
    CalculateNormals();
 
 }
@@ -377,7 +377,7 @@ void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-   
+
    if (fIsSelected) {
       fSelectionBox.DrawBox();
    }
@@ -575,7 +575,7 @@ void TGLPolyMarker::GLDraw(const TGLFrustum *fr)const
       glEnd();
       glPointSize(1.f);
    }
-   
+
    if (fIsSelected) {
       fSelectionBox.DrawBox();
    }
@@ -635,7 +635,7 @@ void TGLPolyLine::GLDraw(const TGLFrustum *fr)const
       glVertex3d(fVertices[i], fVertices[i + 1], fVertices[i + 2]);
 
    glEnd();
-   
+
    if (fIsSelected) {
       fSelectionBox.DrawBox();
    }
@@ -658,29 +658,18 @@ TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
 //______________________________________________________________________________
 void TGLSphere::BuildList()
 {
-   //there is no UD destructor for this static object
-   // - there is a problem under Win32
-   static class DL {
-   public:
-      DL():fList(0)
-      {
-         fList = glGenLists(1);
-         if (!fList) {
-            ::Error("TGLSphere::BuildList", "Could not build display list for sphere\n");
-            return;
-         }
-         fSphereList = fList;
-         if (GLUquadric *quadObj = GetQuadric()) {
-            glNewList(fList, GL_COMPILE);
-            gluSphere(quadObj, 1, 20, 20);
-            glEndList();
-         } else {
-            fSphereList = 0;
-         }
-      }
-   private:
-      UInt_t fList;
-   }initDL;
+   if (!(fSphereList = glGenLists(1))) {
+      ::Error("TGLSphere::BuildList", "Could not build display list for sphere\n");
+      return;
+   }
+
+   if (GLUquadric *quadObj = GetQuadric()) {
+      glNewList(fSphereList, GL_COMPILE);
+      gluSphere(quadObj, 1, 20, 20);
+      glEndList();
+   } else {
+      fSphereList = 0;
+   }
 }
 
 
@@ -723,7 +712,7 @@ void TGLSphere::GLDraw(const TGLFrustum *fr)const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-   
+
    if (fIsSelected) {
       fSelectionBox.DrawBox();
    }
@@ -761,12 +750,12 @@ TGLTube::TGLTube(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
    fVertices[5] = b.fPnts[30];
    //rmax2
    fVertices[6] = b.fPnts[31];
-   //Dz   
+   //Dz
    fVertices[7] = b.fPnts[32];
 
    fNdiv = (Int_t)b.fPnts[27];
    fInv = b.TestBit(TBuffer3D::kIsReflection);
-   
+
    const Double_t *p = b.fPnts;
 
    fVertices[8]  = p[33], fVertices[9]  = p[36], fVertices[10] = p[39], fVertices[11] = 0.;
@@ -781,7 +770,7 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
    if (fr) {
       if (!fr->ClipOnBoundingBox(*this)) return;
    }
-   
+
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -802,7 +791,7 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
       Double_t rMin1 = fVertices[3], rMax1 = fVertices[4];
       Double_t rMin2 = fVertices[5], rMax2 = fVertices[6];
       Double_t dz = fVertices[7];
-      
+
       glTranslated(xC, yC, zC);
       glMultMatrixd(&fVertices[8]);
       glPushMatrix();
@@ -812,9 +801,9 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
       if (fInv) {
          glFrontFace(GL_CW);
       }
-      
+
       gluCylinder(quadObj, rMax1, rMax2, 2 * dz, fNdiv, 1);
-   
+
       //inner surface
       if (rMin1 && rMin2) {
          gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
@@ -845,7 +834,7 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-   
+
    if (fIsSelected) {
       fSelectionBox.DrawBox();
    }
