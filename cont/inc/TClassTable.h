@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.6 2002/05/09 20:22:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.7 2002/05/10 21:32:09 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -44,12 +44,9 @@ namespace ROOT {
 
 class TClassTable : public TObject {
 
+friend  void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
+
 private:
-   TClassTable();
-
-   static ClassRec_t  *FindElement(const char *cname, Bool_t insert=kFALSE);
-   static void         SortTable();
-
    typedef ROOT::TMapTypeToClassRec IdMap_t;
 
    static ClassRec_t **fgTable;
@@ -60,7 +57,10 @@ private:
    static Bool_t       fgSorted;
    static int          fgCursor;
 
-   friend  void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
+   TClassTable();
+
+   static ClassRec_t  *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static void         SortTable();
 
 public:
    // bits that can be set in pragmabits

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.25 2004/01/30 08:12:56 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.26 2004/01/30 18:27:29 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -138,22 +138,24 @@ TClassTable::TClassTable()
 {
    // TClassTable is a singleton (i.e. only one can exist per application).
 
-   if (gClassTable)
-      Error("TClassTable", "only one instance of TClassTable allowed");
+   if (gClassTable) return;
+
    fgSize  = (int)TMath::NextPrime(1000);
    fgTable = new ClassRec_t* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(ClassRec_t*));
+   gClassTable = this;
 }
 
 //______________________________________________________________________________
 TClassTable::~TClassTable()
 {
    // TClassTable singleton is deleted in Terminate().
-   
+
    // Try to avoid spurrious warning from memory leak checkers.
-   
-   for(Int_t i=0; i<fgSize; ++i) {
+   if (gClassTable != this) return;
+
+   for (Int_t i = 0; i < fgSize; i++) {
       ClassRec_t *r = fgTable[i];
       while (r) {
          delete [] r->name;
@@ -162,8 +164,9 @@ TClassTable::~TClassTable()
          r = next;
       }
    }
-   delete [] fgTable;
-   delete fgIdMap;
+   delete [] fgTable; fgTable = 0;
+   delete [] fgSortedTable; fgSortedTable = 0;
+   delete fgIdMap; fgIdMap = 0;
 }
 
 //______________________________________________________________________________
@@ -171,7 +174,7 @@ void TClassTable::Print(Option_t *option) const
 {
    // Print the class table. Before printing the table is sorted
    // alphabetically. Only classes specified in option are listed.
-   // default is to list all classes.
+   // The efault is to list all classes.
    // Standard wilcarding notation supported.
 
    if (fgTally == 0 || !fgTable)
@@ -182,7 +185,8 @@ void TClassTable::Print(Option_t *option) const
    int n = 0, ninit = 0, nl = 0;
 
    int nch = strlen(option);
-   TRegexp re(option,kTRUE);
+   TRegexp re(option, kTRUE);
+
    Printf("");
    Printf("Defined classes");
    Printf("class                              version  bits  initialized");
@@ -221,7 +225,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    // Add a class to the class table (this is a static function).
 
    if (!gClassTable)
-      gClassTable = new TClassTable;
+      new TClassTable;
 
   // check if already in table, if so return
    ClassRec_t *r = FindElement(cname, kTRUE);
@@ -427,7 +431,7 @@ void TClassTable::SortTable()
    // Sort the class table by ascending class ID's.
 
    if (!fgSorted) {
-      if (fgSortedTable) delete [] fgSortedTable;
+      delete [] fgSortedTable;
       fgSortedTable = new ClassRec_t* [fgTally];
 
       int j = 0;
@@ -455,6 +459,9 @@ void TClassTable::Terminate()
             delete t;
          }
       delete [] fgTable; fgTable = 0;
+      delete [] fgSortedTable; fgSortedTable = 0;
+      delete fgIdMap; fgIdMap = 0;
+      fgSize = 0;
       SafeDelete(gClassTable);
    }
 }
