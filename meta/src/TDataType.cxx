@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.3 2002/02/23 09:45:25 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -145,6 +145,8 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("short", name))
       sprintf(line, "%hd", *(short *)buf);
    else if (!strcmp("unsigned char", name))
+      sprintf(line, "%u", *(unsigned char *)buf);
+   else if (!strcmp("bool", name))
       sprintf(line, "%u", *(unsigned char *)buf);
    else if (!strcmp("char", name))
       sprintf(line, "%d", *(char *)buf);
