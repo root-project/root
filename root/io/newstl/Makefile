@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log $(LIBDIR)/*
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
 
 #Set the list of target to make while testing
 TEST_TARGETS += stlIoTest 
