@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.7 2002/08/19 08:54:32 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.8 2002/08/19 16:37:15 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -3380,7 +3380,7 @@ Int_t TGWin32::WriteGIF(char *name)
 
    if (out) {
       GIFencode(gCws->width, gCws->height,
-             ncol, r, g, b, scline, GetPixel, PutByte);
+             ncol, r, g, b, scline, ::GetPixel, PutByte);
       fclose(out);
       i = 1;
     } else {
