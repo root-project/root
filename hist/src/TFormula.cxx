@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.47 2003/07/08 07:26:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.48 2003/07/16 17:18:01 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -464,6 +464,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*    27  : Too many constants in expression
 //*-*    28  : strstr requires two arguments
 //*-*    29  : interpreted or compiled function have to return a numerical type
+//*-*    30  : Bad numerical expression
 //*-*    40  : '(' is expected
 //*-*    41  : ')' is expected
 //*-*    42  : '[' is expected
@@ -506,7 +507,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
 
   Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter,nest;
-  Int_t compt,compt2,compt3,compt4,hexa;
+  Int_t compt,compt2,compt3,compt4;
   Bool_t inString;
   Double_t vafConst;
   ULong_t vafConst2;
@@ -1526,25 +1527,34 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
           }
 //*-*- Maybe it is a string
           else {
-            compt=0;compt2=0;hexa=0;
-            if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) hexa=1;
-            for (j=0; j<chaine.Length(); j++) {
+            Bool_t hasDot = kFALSE;
+            Bool_t isHexa = kFALSE;
+            Bool_t hasExpo= kFALSE;
+            if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
+            for (j=0; j<chaine.Length() && err==0; j++) {
                t=chaine[j];
-               if (hexa==0) {
+               if (!isHexa) {
                   if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
-                     compt2++;
-                     compt = 0;
-                     if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
-                     if (compt2>1) {
+                     if (hasExpo) {
                         err=26;
                         chaine_error=chaine;
                      }
+                     hasExpo = kTRUE;
+                     // The previous implementation allowed a '.' in the exponent.
+                     // That information was ignored (by sscanf), we now make it an error
+                     // hasDot = kFALSE;
+                     hasDot = kTRUE;  // forbid any additional '.'
+                     if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
                   }
                   else {
-                     if (chaine(j,1) == ".") compt++;
+                     if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
                      else {
-                        if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0) && compt!=1) {
-                           err=26;
+                        // The previous implementation was allowing ANYTHING after the '.' and thus 
+                        // made legal code like '2.3 and fpx' and was just silently ignoring the 
+                        // 'and fpx'.
+                        if (!strchr("0123456789",t) && (chaine(j,1)!="+" || j!=0)) {
+                           if (j==0) err=26;
+                           else err = 30;
                            chaine_error=chaine;
                         }
                      }
@@ -1552,14 +1562,15 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
                else {
                   if (!strchr("0123456789abcdefABCDEF",t) && (j>1)) {
-                     err=26;
+                     if (j==0) err=26;
+                     else err = 30;
                      chaine_error=chaine;
                   }
                }
             }
             if (fNconst >= MAXCONST) err = 27;
               if (!err) {
-                 if (hexa==0) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
+                 if (!isHexa) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
                  else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
                  vafConst = (Double_t) vafConst2;}
                  fExpr[fNoper] = chaine;
@@ -1621,6 +1632,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         case 28 : cout<<" strstr requires tow arguments"<<endl; break;
         case 29 : cout<<" TFormula can only call interpreted and compiled functions that return a numerical type: \n"
                       <<chaine_error<<endl; break;
+        case 30 : cout<<" Bad numerical expression : \""<<(const char*)chaine_error<<"\""<<endl; break;
         case 40 : cout<<" '(' is expected"<<endl; break;
         case 41 : cout<<" ')' is expected"<<endl; break;
         case 42 : cout<<" '[' is expected"<<endl; break;
