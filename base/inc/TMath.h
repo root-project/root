@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.56 2004/11/10 20:26:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.57 2004/11/15 22:28:14 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -355,15 +355,18 @@ namespace TMath {
           Double_t Gamma(Double_t a,Double_t x);
           Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
           Double_t KolmogorovProb(Double_t z);
+          Double_t LaplaceDist(Double_t x, Double_t alpha=0, Double_t beta=1);
+          Double_t LaplaceDistI(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LnGamma(Double_t z);
           Double_t LogNormal(Double_t x, Double_t sigma, Double_t theta=0, Double_t m=1);
+          Double_t NormQuantile(Double_t p);
           Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
           Double_t Poisson(Double_t x, Double_t par);
           Double_t PoissonI(Double_t x, Double_t par);
           Double_t Prob(Double_t chi2,Int_t ndf);
           Double_t Student(Double_t T, Double_t ndf);
           Double_t StudentI(Double_t T, Double_t ndf);
-
+          Double_t StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail=kTRUE);
 }
 
 
