@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.65 2004/01/10 10:52:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.66 2004/01/12 14:45:33 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1468,7 +1468,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             }
             if (!err) {
               fExpr[fNoper] = chaine1ST;
-              fActions[fNoper] = kpol+inter2;
+              fActions[fNoper] = kpol+(inter2-1);
               fActionParams[fNoper] = n*100+inter+2;
               if (inter+n+1>=fNpar) fNpar = inter + n + 2;
               if (fNpar>=MAXPAR) err=7; // too many parameters
