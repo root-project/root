@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.19 2000/12/18 07:12:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.20 2000/12/21 15:35:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1146,13 +1146,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
    char *pointer;
    UInt_t start, count;
-
+   Int_t leng,offset;
+   
 //==========CPP macros
 #define ReadCBasicType(name) \
 { \
    for (Int_t k=0;k<nc;k++) { \
-      pointer = (char*)clones->UncheckedAt(k); \
-      name *x=(name*)(pointer+fOffset[i]); \
+      name *x=(name*)((char*)clones->UncheckedAt(k)+offset); \
       b >> *x; \
    } break; \
 }
@@ -1160,9 +1160,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 #define ReadCBasicArray(name) \
 { \
    for (Int_t k=0;k<nc;k++) { \
-      pointer = (char*)clones->UncheckedAt(k); \
-      name *x=(name*)(pointer+fOffset[i]); \
-      b.ReadFastArray(x,fLength[i]); \
+      name *x=(name*)((char*)clones->UncheckedAt(k)+offset); \
+      b.ReadFastArray(x,leng); \
    } break; \
 }
 
@@ -1213,6 +1212,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
    //loop on all active members
    for (Int_t i=0;i<fNdata;i++) {
+      leng   = fLength[i];
+      offset = fOffset[i];
       switch (fType[i]) {
          // write basic types
          case kChar:              ReadCBasicType(Char_t)
@@ -1254,7 +1255,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kObjectp: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               TObject **obj = (TObject**)(pointer+fOffset[i]);
+               TObject **obj = (TObject**)(pointer+offset);
                if (!(*obj)) {
                   TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
                   *obj = (TObject*)el->GetClass()->New();
@@ -1267,7 +1268,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kObjectP: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               TObject **obj = (TObject**)(pointer+fOffset[i]);
+               TObject **obj = (TObject**)(pointer+offset);
                b >> *obj;
             }
             break;}
@@ -1276,7 +1277,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kCounter: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               Int_t *x=(Int_t*)(pointer+fOffset[i]);
+               Int_t *x=(Int_t*)(pointer+offset);
                b >> *x;
                Int_t *counter = (Int_t*)fMethod[i];
                *counter = *x;
@@ -1287,7 +1288,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kObject:  {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               ((TObject*)(pointer+fOffset[i]))->Streamer(b);
+               ((TObject*)(pointer+offset))->Streamer(b);
             }
             break;}
 
@@ -1295,19 +1296,19 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kTString: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               ((TString*)(pointer+fOffset[i]))->Streamer(b);
+               ((TString*)(pointer+offset))->Streamer(b);
             }
             break;}
          case kTObject: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               ((TObject*)(pointer+fOffset[i]))->TObject::Streamer(b);
+               ((TObject*)(pointer+offset))->TObject::Streamer(b);
             }
             break;}
          case kTNamed:  {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               ((TNamed*) (pointer+fOffset[i]))->TNamed::Streamer(b);
+               ((TNamed*) (pointer+offset))->TNamed::Streamer(b);
             }
             break;}
 
@@ -1324,7 +1325,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      }
                      for (Int_t k=0;k<nc;k++) {
                         pointer = (char*)clones->UncheckedAt(k);
-                        (*pstreamer)(b,pointer+fOffset[i],0);
+                        (*pstreamer)(b,pointer+offset,0);
                      }
                      break;
                    }
@@ -1337,7 +1338,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             method->SetParamPtrs(args);
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               method->Execute((void*)(pointer+fOffset[i]));
+               method->Execute((void*)(pointer+offset));
             }
             break;}
 
@@ -1353,7 +1354,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
-                            (*pstreamer)(b,pointer+fOffset[i],0);
+                            (*pstreamer)(b,pointer+offset,0);
                          }
                          b.CheckByteCount(start,count,IsA());
                          break;
@@ -1372,7 +1373,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
-                            (*pstreamer)(b,pointer+fOffset[i],*counter);
+                            (*pstreamer)(b,pointer+offset,*counter);
                          }
                          b.CheckByteCount(start,count,IsA());
                          break;
