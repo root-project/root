@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.156 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.157 2004/06/29 17:39:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -260,6 +260,7 @@
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "TTreeProxyGenerator.h"
+#include "TTreeIndex.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -303,6 +304,12 @@ TTreePlayer::~TTreePlayer()
    DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
+}
+
+//______________________________________________________________________________
+TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
+{
+   return new TTreeIndex(T,majorname,minorname);
 }
 
 //______________________________________________________________________________
@@ -2834,7 +2841,8 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //   1, 2 and 3 Dimensional fits are supported.
 //   See also TTree::Fit
 
-  Int_t i, npar,nvpar,nparx;
+  Int_t npar,nvpar,nparx;
+  Int_t i;
   Double_t par, we, al, bl;
   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
   Double_t arglist[10];
@@ -2985,4 +2993,5 @@ void TTreePlayer::UpdateFormulaLeaves()
          lnk = lnk->Next();
       }
    }
+   if (fTree->GetTreeIndex()) fTree->GetTreeIndex()->SetTree(fTree);
 }

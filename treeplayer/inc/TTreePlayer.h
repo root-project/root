@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.28 2004/03/08 14:54:31 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.29 2004/06/25 18:42:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
+class TVirtualIndex;
+
 class TTreePlayer : public TVirtualTreePlayer {
 
 protected:
@@ -62,6 +64,7 @@ public:
     TTreePlayer();
     virtual ~TTreePlayer();
 
+    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
     virtual TTree    *CopyTree(const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     DrawScript(const char* wrapperPrefix, 
