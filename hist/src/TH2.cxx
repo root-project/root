@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.14 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.15 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -194,7 +194,7 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH2::FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Double_t *w, Int_t stride)
+void TH2::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Double_t *w, Int_t stride)
 {
 //*-*-*-*-*-*-*Fill a 2-D histogram with an array of values and weights*-*-*-*
 //*-*          ========================================================
