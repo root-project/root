@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.6 2002/04/30 16:49:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.7 2002/05/25 21:00:36 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -63,6 +63,8 @@ public:
    Int_t            GetEntriesFast() const {return GetAbsLast()+1;}  //only OK when no gaps
    Int_t            GetLast() const;
    TObject        **GetObjectRef(TObject *obj) const;
+   TProcessID      *GetPID() const {return fPID;}
+   UInt_t           GetUID(Int_t at) const;
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
 

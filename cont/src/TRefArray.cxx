@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.10 2002/05/18 10:45:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.11 2002/05/25 21:00:36 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -413,6 +413,20 @@ TObject **TRefArray::GetObjectRef(TObject *obj) const
 
    //Int_t index = IndexOf(obj);
    //return &fCont[index];
+   return 0;
+}
+
+//______________________________________________________________________________
+UInt_t TRefArray::GetUID(Int_t at) const
+{
+   // Return UID of element at.
+
+   int j = at-fLowerBound;
+   if (j >= 0 && j < fSize) {
+      if (!fPID) return 0;
+      return fUIDs[j];
+   }
+   BoundsOk("At", at);
    return 0;
 }
 
