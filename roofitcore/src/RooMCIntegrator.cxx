@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.12 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.14 2004/08/08 22:50:38 gowdy Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -75,7 +75,7 @@ Double_t RooMCIntegrator::integral(const Double_t* yvec) {
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
   Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
-  ret ;
+  return ret ;
 }
 
 Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) {
