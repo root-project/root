@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.28 2001/01/18 10:50:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.29 2001/01/23 19:16:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1567,7 +1567,8 @@ void TFile::WriteStreamerInfo()
 }
 
 //______________________________________________________________________________
-TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t compress)
+TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
+                   Int_t compress, Int_t netopt)
 {
    // Static member function allowing the creation/opening of either a
    // TFile, TNetFile, TWebFile or a TRFIOFile. The returned type of TFile
@@ -1597,7 +1598,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle, Int_t
           (TClassTable::GetDict("TProof") &&
            gROOT->ProcessLineFast("TProof::IsActive()") &&
            !gROOT->ProcessLineFast("TProof::This()->IsMaster()")))
-         f = new TNetFile(name, option, ftitle, compress);
+         f = new TNetFile(name, option, ftitle, compress, netopt);
       else {
          const char *fname = url.GetFile();
          if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.10 2001/01/17 11:21:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.11 2001/01/23 19:16:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -129,8 +129,9 @@ public:
    virtual void      WriteHeader();
    virtual void      WriteStreamerInfo();
 
-   static TFile     *Open(const char *name, Option_t *option="",
-                          const char *ftitle="", Int_t compress=1);
+   static TFile     *Open(const char *name, Option_t *option = "",
+                          const char *ftitle = "", Int_t compress = 1,
+                          Int_t netopt = 0);
 
    static Double_t   GetFileBytesRead();
    static Double_t   GetFileBytesWritten();
