@@ -90,6 +90,10 @@ N: Pierre-Luc Drouin
 E: pldrouin@physics.carleton.ca
 D: Extensions of TFormula and bug fix
 
+N: Jean-Damien Durand
+E: Jean-Damien.Durand@cern.ch
+D: CASTOR interface code in the TCastorFile class
+
 N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
