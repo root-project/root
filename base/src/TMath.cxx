@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.49 2004/04/23 10:30:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.50 2004/04/23 12:21:56 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2824,12 +2824,12 @@ Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
   
   if(start) {
     // Prime the array
-    for(Int_t i=0; i<n; a[i++]=i);
+    for(i=0; i<n; a[i++]=i);
     start=kFALSE;
     return kTRUE;
   } else {
     // find rightmost upward transition 
-    for(Int_t i=n-2; i>-1; i--) {
+    for(i=n-2; i>-1; i--) {
       if(a[i]<a[i+1]) {
 	i1=i;
 	break;
