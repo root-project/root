@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.94 2004/09/03 17:14:55 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.95 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1275,7 +1275,7 @@ Double_t TF1::GetParError(Int_t ipar) const
 }
 
 //______________________________________________________________________________
-void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax)
+void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const
 {
 //*-*-*-*-*-*Return limits for parameter ipar*-*-*-*
 //*-*        ================================

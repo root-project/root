@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.45 2004/08/16 09:31:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.46 2004/09/07 20:17:44 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -118,7 +118,7 @@ public:
         TObject    *GetParent() const {return fParent;}
    virtual Double_t GetParError(Int_t ipar) const;
    virtual Double_t *GetParErrors() const {return fParErrors;}
-   virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
+   virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const;
    virtual Double_t GetProb() const;
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
    virtual Double_t GetRandom();
