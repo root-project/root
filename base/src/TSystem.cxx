@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.47 2002/12/17 02:03:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.48 2002/12/17 06:59:20 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -622,7 +622,7 @@ const char *TSystem::WorkingDirectory()
 }
 
 //______________________________________________________________________________
-const char *TSystem::HomeDirectory(const Char_t*)
+const char *TSystem::HomeDirectory(const char*)
 {
    // Return the user's home directory.
 
@@ -1537,7 +1537,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if (!canWrite && recompile) {
 
       // ======= Figure out a temporary directory.
-      const Char_t *tempDirs =  gSystem->Getenv("TEMP");
+      const char *tempDirs =  gSystem->Getenv("TEMP");
       if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMPDIR");
       if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMP_DIR");
       if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP");

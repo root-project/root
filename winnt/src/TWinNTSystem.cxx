@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.39 2003/01/19 11:35:38 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.40 2003/01/22 11:23:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -500,7 +500,7 @@ void TWinNTSystem::SetProgname(const char *name)
   // On command prompt the progname can be supplied with no extension (under Windows)
   // if it is case we have to guess that extension ourselves
 
-   const Char_t *extlist[]={"exe","bat","cmd"}; // List of extensions to guess
+   const char *extlist[]={"exe","bat","cmd"}; // List of extensions to guess
    Int_t lextlist = 3;                          // number of the extra extensions to guess
 
    if (name && strlen(name) > 0) {
@@ -510,7 +510,7 @@ void TWinNTSystem::SetProgname(const char *name)
       while (!(dot = strchr(fullname,'.')))
       {
         idot = strlen(fullname);
-        const Char_t *b = Form("%s.exe",name);
+        const char *b = Form("%s.exe",name);
         fullname = b;
       }
 
@@ -1004,7 +1004,7 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
 }
 
 //______________________________________________________________________________
-const char *TWinNTSystem::HomeDirectory(const Char_t *userName)
+const char *TWinNTSystem::HomeDirectory(const char *userName)
 {
    // Return the user's home directory.
 
@@ -1334,7 +1334,7 @@ needshell:
                                  0               // maximum characters in expanded string
                               );
       if (lbuf > 0) {
-          cmd = new Char_t[lbuf+1];
+          cmd = new char[lbuf+1];
           ExpandEnvironmentStrings(
                                  patbuf0.Data(), // pointer to string with environment variables
                                  cmd,            // pointer to string with expanded environment variables
