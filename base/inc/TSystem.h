@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.22 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.23 2002/12/10 19:51:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -173,6 +173,7 @@ protected:
 
    TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
    TString          fBuildNode;        //Detailed information where ROOT was built
+   TString          fBuildDir;         //Location where to build ACLiC shared library and use as scratch area.
    TString          fFlagsDebug;       //Flags for debug compilation
    TString          fFlagsOpt;         //Flags for optimized compilation
    TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
@@ -250,7 +251,7 @@ public:
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
    virtual const char     *HomeDirectory(const char *userName = 0);
-   int                     mkdir(const char *name) { return MakeDirectory(name); }
+   int                     mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
 
@@ -313,9 +314,10 @@ public:
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
-   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "");
+   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "");
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildNode() const;
+   virtual const char     *GetBuildDir() const;
    virtual const char     *GetFlagsDebug() const;
    virtual const char     *GetFlagsOpt() const;
    virtual const char     *GetIncludePath();
@@ -326,6 +328,7 @@ public:
    virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetSoExt() const;
    virtual const char     *GetObjExt() const;
+   virtual void            SetBuildDir(const char*);
    virtual void            SetFlagsDebug(const char *);
    virtual void            SetFlagsOpt(const char *);
    virtual void            SetIncludePath(const char *includePath);

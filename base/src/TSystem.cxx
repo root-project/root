@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.45 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.46 2002/12/10 19:51:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -629,6 +629,28 @@ const char *TSystem::HomeDirectory(const Char_t*)
    return 0;
 }
 
+//______________________________________________________________________________
+int TSystem::mkdir(const char *name, Bool_t recursive)
+{
+   // Make a file system directory. Returns 0 in case of success and
+   // -1 if the directory could not be created.
+   // Returns -1 if the directory exist.
+   // If 'recursive' is true, makes parent directories as needed,
+   // or returns 0 if the directory already exist.
+
+   if (recursive) {
+      TString dirname = DirName(name);
+      if (AccessPathName(dirname, kFileExists)) {
+         int res = mkdir(dirname, true);
+         if (res) return res;
+      }
+      if (!AccessPathName(name, kFileExists)) {
+         return 0;
+      }
+   }
+
+   return MakeDirectory(name);
+}
 
 //---- Paths & Files -----------------------------------------------------------
 
@@ -1274,443 +1296,479 @@ int TSystem::GetSockOpt(int, int, int*)
 
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t * opt,
-                          const char *library_specified)
+                          const char *library_specified,
+                          const char *build_dir)
 {
-  // This method compiles and loads a shared library containing
-  // the code from the file "filename".
-  //
-  // The possible options are:
-  //     k : keep the shared library after the session end.
-  //     f : force recompilation.
-  //     g : compile with debug symbol
-  //     O : optimized the code (ignore if 'd' is specified)
-  //
-  // If library_specified is specified, CompileMacro generates the file
-  // "library_specified".soext where soext is the shared library extension for
-  // the current platform.
-  // If library_specified is not specified, CompileMacro generate a default name
-  // for library by taking the name of the file "filename" but replacing the
-  // dot before the extension by an underscore and by adding the shared
-  // library extension for the current platform.
-  // For example on most platform, hsimple.cxx will generate hsimple_cxx.so
-  //
-  // It uses the directive fMakeSharedLibs to create a shared library.
-  // If loading the shared library fails, it tries to output a list of missing
-  // symbols by creating an executable (on some platforms like OSF, this does
-  // not HAVE to be an executable) containing the script. It uses the
-  // directive fMakeExe to do so.
-  // For both directives, before passing them to TSystem::Exec, it expands the
-  // variables $SourceFiles, $SharedLib, $LibName, $IncludePath, $LinkedLibs,
-  // $ExeName and $ObjectFiles. See SetMakeSharedLib() for more information on
-  // those variables.
-  //
-  // This method is used to implement the following feature:
-  //
-  // Synopsis:
-  //
-  // The purpose of this addition is to allow the user to use an external
-  // compiler to create a shared library from its C++ macro (scripts).
-  // Currently in order to execute a script, a user has to type at the root
-  // prompt
-  //
-  //  .X myfunc.C(arg1,arg2)
-  //
-  // We allow him to type:
-  //
-  //  .X myfunc.C++(arg1,arg2)
-  // or
-  //  .X myfunc.C+(arg1,arg2)
-  //
-  // In which case an external compiler will be called to create a shared
-  // library.  This shared library will then be loaded and the function
-  // myfunc will be called with the two arguments.  With '++' the shared library
-  // is always recompiled.  With '+' the shared library is recompiled only
-  // if it does not exist yet or the macro file is newer than the shared
-  // library.
-  //
-  // HOWEVER, CompileMacro currently does NOT detect if any of the file that
-  // are included by the macro file has been changed!!!
-  //
-  // Of course the + and ++ notation is supported in similar way for .x and .L.
-  //
-  // Through the function TSystem::SetMakeSharedLib(), the user will be able to
-  // indicate, with shell commands, how to build a shared library (a good
-  // default will be provided). The most common change, namely where to find
-  // header files, will be available through the function
-  // TSystem::SetIncludePath().
-  // A good default will be provided so that a typical user session should be at
-  // most:
-  //
-  // root[1] gSystem->SetIncludePath("-I$ROOTSYS/include
-  // -I$HOME/mypackage/include");
-  // root[2] .x myfunc.C++(10,20);
-  //
-  // The user may sometimes try to compile a script before it has loaded all the
-  // needed shared libraries.  In this case we want to be helpfull and output a
-  // list of the unresolved symbols. So if the loading of the created shared
-  // library fails, we will try to build a executable that contains the
-  // script. The linker should then output a list of missing symbols.
-  //
-  // To support this we provide a TSystem::SetMakeExe() function, that sets the
-  // directive telling how to create an executable. The loader will need
-  // to be informed of all the libraries available. The information about
-  // the libraries that has been loaded by .L and TSystem::Load() is accesible
-  // to the script compiler. However, the information about
-  // the libraries that have been selected at link time by the application
-  // builder (like the root libraries for root.exe) are not available and need
-  // to be explictly listed in fLinkedLibs (either by default or by a call to
-  // TSystem::SetLinkedLibs()).
-  //
-  // To simplify customization we could also add to the .rootrc support for the
-  // variables
-  //
-  // Unix.*.Root.IncludePath:     -I$ROOTSYS/include
-  // WinNT.*.Root.IncludePath:    -I%ROOTSYS%/include
-  //
-  // Unix.*.Root.LinkedLibs:      -L$ROOTSYS/lib -lBase ....
-  // WinNT.*.Root.LinkedLibs:     %ROOTSYS%/lib/*.lib msvcrt.lib ....
-  //
-  // And also support for MakeSharedLibs() and MakeExe().
-  //
-  // (the ... have to be replaced by the actual values and are here only to
-  // shorten this comment).
+   // This method compiles and loads a shared library containing
+   // the code from the file "filename".
+   //
+   // The possible options are:
+   //     k : keep the shared library after the session end.
+   //     f : force recompilation.
+   //     g : compile with debug symbol
+   //     O : optimized the code (ignore if 'd' is specified)
+   //
+   // If library_specified is specified, CompileMacro generates the file
+   // "library_specified".soext where soext is the shared library extension for
+   // the current platform.
+   //
+   // If build_dir is specified, it is used as an alternative 'root' for the
+   // generation of the shared library.  The library is stored in a sub-directories
+   // of 'build_dir' including the full pathname of the script.  See also
+   // TSystem::SetBuildDir
+   //
+   // If library_specified is not specified, CompileMacro generate a default name
+   // for library by taking the name of the file "filename" but replacing the
+   // dot before the extension by an underscore and by adding the shared
+   // library extension for the current platform.
+   // For example on most platform, hsimple.cxx will generate hsimple_cxx.so
+   //
+   // It uses the directive fMakeSharedLibs to create a shared library.
+   // If loading the shared library fails, it tries to output a list of missing
+   // symbols by creating an executable (on some platforms like OSF, this does
+   // not HAVE to be an executable) containing the script. It uses the
+   // directive fMakeExe to do so.
+   // For both directives, before passing them to TSystem::Exec, it expands the
+   // variables $SourceFiles, $SharedLib, $LibName, $IncludePath, $LinkedLibs,
+   // $ExeName and $ObjectFiles. See SetMakeSharedLib() for more information on
+   // those variables.
+   //
+   // This method is used to implement the following feature:
+   //
+   // Synopsis:
+   //
+   // The purpose of this addition is to allow the user to use an external
+   // compiler to create a shared library from its C++ macro (scripts).
+   // Currently in order to execute a script, a user has to type at the root
+   // prompt
+   //
+   //  .X myfunc.C(arg1,arg2)
+   //
+   // We allow him to type:
+   //
+   //  .X myfunc.C++(arg1,arg2)
+   // or
+   //  .X myfunc.C+(arg1,arg2)
+   //
+   // In which case an external compiler will be called to create a shared
+   // library.  This shared library will then be loaded and the function
+   // myfunc will be called with the two arguments.  With '++' the shared library
+   // is always recompiled.  With '+' the shared library is recompiled only
+   // if it does not exist yet or the macro file is newer than the shared
+   // library.
+   //
+   // HOWEVER, CompileMacro currently does NOT detect if any of the file that
+   // are included by the macro file has been changed!!!
+   //
+   // Of course the + and ++ notation is supported in similar way for .x and .L.
+   //
+   // Through the function TSystem::SetMakeSharedLib(), the user will be able to
+   // indicate, with shell commands, how to build a shared library (a good
+   // default will be provided). The most common change, namely where to find
+   // header files, will be available through the function
+   // TSystem::SetIncludePath().
+   // A good default will be provided so that a typical user session should be at
+   // most:
+   //
+   // root[1] gSystem->SetIncludePath("-I$ROOTSYS/include
+   // -I$HOME/mypackage/include");
+   // root[2] .x myfunc.C++(10,20);
+   //
+   // The user may sometimes try to compile a script before it has loaded all the
+   // needed shared libraries.  In this case we want to be helpfull and output a
+   // list of the unresolved symbols. So if the loading of the created shared
+   // library fails, we will try to build a executable that contains the
+   // script. The linker should then output a list of missing symbols.
+   //
+   // To support this we provide a TSystem::SetMakeExe() function, that sets the
+   // directive telling how to create an executable. The loader will need
+   // to be informed of all the libraries available. The information about
+   // the libraries that has been loaded by .L and TSystem::Load() is accesible
+   // to the script compiler. However, the information about
+   // the libraries that have been selected at link time by the application
+   // builder (like the root libraries for root.exe) are not available and need
+   // to be explictly listed in fLinkedLibs (either by default or by a call to
+   // TSystem::SetLinkedLibs()).
+   //
+   // To simplify customization we could also add to the .rootrc support for the
+   // variables
+   //
+   // Unix.*.Root.IncludePath:     -I$ROOTSYS/include
+   // WinNT.*.Root.IncludePath:    -I%ROOTSYS%/include
+   //
+   // Unix.*.Root.LinkedLibs:      -L$ROOTSYS/lib -lBase ....
+   // WinNT.*.Root.LinkedLibs:     %ROOTSYS%/lib/*.lib msvcrt.lib ....
+   //
+   // And also support for MakeSharedLibs() and MakeExe().
+   //
+   // (the ... have to be replaced by the actual values and are here only to
+   // shorten this comment).
 
-  // ======= Analyze the options
-  Bool_t keep = kFALSE;
-  Bool_t recompile = kFALSE;
-  EAclicMode mode = fAclicMode;
-  if (opt) {
-     keep = (strchr(opt,'k')!=0);
-     recompile = (strchr(opt,'f')!=0);
-     if (strchr(opt,'O')!=0) {
-       mode = kOpt;
-     }
-     if (strchr(opt,'g')!=0) {
-       mode = kDebug;
-     }
-  }
-  if (mode==kDefault) {
-    TString rootbuild = ROOTBUILD;
-    if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
-      mode=kOpt;
-    } else {
-      mode=kDebug;
-    }
-  }
-  // if non-zero, build_loc indicates where to build the shared library.
-  TString build_loc = "";
-
-  // ======= Get the right file names for the dictionnary and the shared library
-  TString library = filename;
-  ExpandPathName( library );
-  if (! IsAbsoluteFileName(library) ) {
-    library = ConcatFileName( WorkingDirectory(), library );
-  }
-  TString filename_fullpath = library;
-
-  TString file_location( DirName( library ) );
-  // so far we do not distinguish
-  if (build_loc.Length()==0) build_loc = file_location;
-
-  Ssiz_t dot_pos = library.Last('.');
-  TString extension = library;
-  extension.Replace( 0, dot_pos+1, 0 , 0);
-  TString filename_noext = library;
-  if (dot_pos>=0) filename_noext.Remove( dot_pos );
-
-  // Extension of shared library is platform dependent!!
-  library.Replace( dot_pos, library.Length()-dot_pos,
-                   TString("_") + extension + "." + fSoExt );
-
-  TString libname ( BaseName( filename_noext ) );
-  libname.Append("_").Append(extension);
-
-  if (library_specified && strlen(library_specified) ) {
-    // Use the specified name instead of the default
-    libname = BaseName( library_specified );
-    library = library_specified;
-    ExpandPathName( library );
-    if (! IsAbsoluteFileName(library) ) {
-      library = ConcatFileName( WorkingDirectory(), library );
-    }
-    library = TString(library) + "." + fSoExt;
-  }
-
-  // ======= Check if the library need to loaded or compiled
-  if ( gInterpreter->IsLoaded(filename) ) {
-     // the script has already been loaded in interpreted mode
-     // Let's warn the user and unload it.
-
-     ::Warning("ACLiC","script has already been loaded in interpreted mode");
-     ::Warning("ACLiC","unloading %s and compiling it", filename);
-
-     if ( G__unloadfile( (char*) filename ) != 0 ) {
-       // We can not unload it.
-       return(G__LOADFILE_FAILURE);
-     }
-  }
-
-  Bool_t modified = kFALSE;
-  if ( !recompile ) {
-     Long_t lib_time, script_time;
-     if ( GetPathInfo( library, 0, 0, 0, &lib_time ) == 0 ) {
-
-        // If the time library is older than the script we
-        // are going to recompile !
-        GetPathInfo( filename, 0, 0, 0, &script_time );
-        modified = ( lib_time <= script_time );
-        recompile = modified;
-     } else {
-        recompile = kTRUE;
-     }
-  }
-
-  if ( gInterpreter->IsLoaded(library)
-       || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
-     // The library has already been built and loaded.
-
-     ::Warning("ACLiC","%s script has already been compiled and loaded",
-               modified ? "modified" : "unmodified");
-     if ( !recompile ) {
-        return G__LOADFILE_SUCCESS;
-     } else {
-#ifdef R__KCC
-        ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
-        return G__LOADFILE_DUPLICATE;
-#else
-        // the following is not working in KCC because it seems that dlclose
-        // does not properly get rid of the object.  It WILL provoke a
-        // core dump at termination.
-
-        ::Warning("ACLiC","it will be regenerated and reloaded!");
-        if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
-          // The library is being used. We can not unload it.
-          return(G__LOADFILE_FAILURE);
-        }
-        Unlink(library);
-#endif
-     }
-
-  }
-  if (!recompile) {
-    // The library already exist, let's just load it.
-    return !gSystem->Load(library);
-  }
-
-  Info("ACLiC","creating shared library %s",library.Data());
-
-  // ======= Select the dictionary name
-  TString dict =BaseName( tmpnam(0) );
-  // do a basename to remove /var/tmp
-
-  // the file name end up in the file produced
-  // by rootcint as a variable name so all character need to be valid!
-  static const int maxforbidden = 26;
-  static const char *forbidden_chars[maxforbidden] =
-        { "+","-","*","/","&","%","|","^",">","<","=","~",".",
-          "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
-  for( int ic = 0; ic < maxforbidden; ic++ ) {
-     dict.ReplaceAll( forbidden_chars[ic],"_" );
-  }
-  if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-  dict.Prepend( build_loc + "/" );
-  TString dicth = dict;
-  TString dictObj = dict;
-  dict += "cxx"; //no need to keep the extention of the original file, any extension will do
-  dicth += "h";
-  dictObj += fObjExt;
-
-  // ======= Generate a linkdef file
-
-  TString linkdef = tmpnam(0);
-  linkdef += "linkdef.h";
-  ofstream linkdefFile( linkdef, ios::out );
-  linkdefFile << "// File Automatically generated by the ROOT Script Compiler "
-              << endl;
-  linkdefFile << endl;
-  linkdefFile << "#ifdef __CINT__" << endl;
-  linkdefFile << endl;
-  linkdefFile << "#pragma link off all globals;" << endl;
-  linkdefFile << "#pragma link off all classes;" << endl;
-  linkdefFile << "#pragma link off all functions;" << endl;
-  linkdefFile << "#pragma link C++ nestedclasses;" << endl;
-  linkdefFile << "#pragma link C++ nestedtypedefs;" << endl;
-  linkdefFile << endl;
-
-  // We want to look for a header file that has the same name as the macro
-  // First lets get the include directory list in the dir1:dir2:dir3 format
-  TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-  incPath.Append(":").Prepend(" ");
-  incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
-  while ( incPath.Index(" :") != -1 ) {
-    incPath.ReplaceAll(" :",":");
-  }
-  incPath.Prepend(file_location+":.:");
-
-  const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
-
-  int i;
-  for (i = 0; i < 6; i++ ) {
-     char * name;
-     TString extra_linkdef = BaseName( filename_noext );
-     extra_linkdef.Append(GetLinkdefSuffix());
-     extra_linkdef.Append(extensions[i]);
-     name = Which(incPath,extra_linkdef);
-     if (name) {
-        if (gDebug>4) Info("ACLiC","including extra linkdef file: %s",name);
-        linkdefFile << "#include \"" << name << "\"" << endl;
-        delete name;
-     }
-  }
-
-  if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
-  for (i = 0; i < 6; i++ ) {
-     char * name;
-     TString lookup = BaseName( filename_noext );
-     lookup.Append(extensions[i]);
-     name = Which(incPath,lookup);
-     if (name) {
-        linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< endl;
-        delete name;
-     }
-  }
-  linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
-  linkdefFile << endl;
-  linkdefFile << "#endif" << endl;
-  linkdefFile.close();
-
-  // ======= Generate the three command lines
-
-  TString includes = GetIncludePath();
-  {
-    // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-    TRegexp rel_inc("-I[^/\\$%-][^:-]+");
-    Int_t len,pos;
-    pos = rel_inc.Index(includes,&len);
-    while( len != 0 ) {
-      TString sub = includes(pos,len);
-      sub.Remove(0,2);
-      sub = ConcatFileName( WorkingDirectory(), sub );
-      sub.Prepend("-I");
-      sub.Append(" ");
-      includes.Replace(pos,len,sub);
-      pos = rel_inc.Index(includes,&len);
-    }
-  }
-  includes += " -I" + build_loc;
-  includes += " -I";
-  includes += WorkingDirectory();
-
-  TString rcint = "rootcint -f ";
-  rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
-  rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
-
-  TString cmd = fMakeSharedLib;
-  // we do not add filename because it is already included via the dictionary(in dicth) !
-  // dict.Append(" ").Append(filename);
-  cmd.ReplaceAll("$SourceFiles",dict);
-  cmd.ReplaceAll("$ObjectFiles",dictObj);
-  cmd.ReplaceAll("$IncludePath",includes);
-  cmd.ReplaceAll("$SharedLib",library);
-  cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
-  cmd.ReplaceAll("$LibName",libname);
-  cmd.ReplaceAll("$BuildDir",build_loc);
-  if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
-  else cmd.ReplaceAll("$Opt",fFlagsOpt);
-
-  TString testcmd = fMakeExe;
-  TString fakeMain = tmpnam(0);
-  fakeMain += extension;
-  ofstream fakeMainFile( fakeMain, ios::out );
-  fakeMainFile << "// File Automatically generated by the ROOT Script Compiler "
-               << endl;
-  fakeMainFile << "int main(char*argc,char**argvv) {};" << endl;
-  fakeMainFile.close();
-  // We could append this fake main routine to the compilation line.
-  // But in this case compiler may output the name of the dictionary file
-  // and of the fakeMain file while it compiles it. (this would be useless
-  // confusing output).
-  // We could also the fake main routine to the end of the dictionnary file
-  // however compilation would fail if a main is already there
-  // (like stress.cxx)
-  // dict.Append(" ").Append(fakeMain);
-  TString exec = tmpnam(0);
-  testcmd.ReplaceAll("$SourceFiles",dict);
-  testcmd.ReplaceAll("$ObjectFiles",dictObj);
-  testcmd.ReplaceAll("$IncludePath",includes);
-  testcmd.ReplaceAll("$ExeName",exec);
-  testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
-  testcmd.ReplaceAll("$BuildDir",build_loc);
-  // ======= Run the build
-
-  if (gDebug>3) {
-     ::Info("ACLiC","creating the dictionary files");
-     if (gDebug>4)  ::Info("ACLiC",rcint.Data());
-  }
-
-  Int_t dictResult = gSystem->Exec(rcint);
-  if (dictResult) {
-     if (dictResult) {
-        if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
-        else ::Error("ACLiC","Dictionary generation failed!");
-     }
-  }
-  Bool_t result = !dictResult;
-
-  if (result) {
-     if (gDebug>3) {
-        ::Info("ACLiC","compiling the dictionary and script files");
-        if (gDebug>4)  ::Info("ACLiC",cmd.Data());
-     }
-     Int_t compilationResult = gSystem->Exec( cmd );
-     if (compilationResult) {
-        if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
-        else ::Error("ACLiC","Compilation failed!");
-     }
-     result = !compilationResult;
-  }
-
-  if ( result ) {
-
-    if (!keep) fCompiled->Add(new TObjString( library ));
-
-#ifndef NOCINT
-    // This is intended to force a failure if not all symbols needed
-    // by the library are present.
-    G__Set_RTLD_NOW();
-#endif
-    if (gDebug>3)  ::Info("ACLiC","loading the shared library");
-    result = !gSystem->Load(library);
-#ifndef NOCINT
-    G__Set_RTLD_LAZY();
-#endif
-
-    if ( !result ) {
-      if (gDebug>3) {
-         ::Info("ACLiC","testing for missing symbols:");
-         if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
+   // ======= Analyze the options
+   Bool_t keep = kFALSE;
+   Bool_t recompile = kFALSE;
+   EAclicMode mode = fAclicMode;
+   if (opt) {
+      keep = (strchr(opt,'k')!=0);
+      recompile = (strchr(opt,'f')!=0);
+      if (strchr(opt,'O')!=0) {
+         mode = kOpt;
       }
-      gSystem->Exec(testcmd);
+      if (strchr(opt,'g')!=0) {
+         mode = kDebug;
+      }
+   }
+   if (mode==kDefault) {
+      TString rootbuild = ROOTBUILD;
+      if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
+         mode=kOpt;
+      } else {
+         mode=kDebug;
+      }
+   }
+   // if non-zero, build_loc indicates where to build the shared library.
+   TString build_loc = GetBuildDir();
+   if (build_dir && strlen(build_dir)) build_loc = build_dir;
+
+   // ======= Get the right file names for the dictionnary and the shared library
+   TString library = filename;
+   ExpandPathName( library );
+   if (! IsAbsoluteFileName(library) ) {
+      library = ConcatFileName( WorkingDirectory(), library );
+   }
+   TString filename_fullpath = library;
+
+   Ssiz_t dot_pos = library.Last('.');
+   TString extension = library;
+   extension.Replace( 0, dot_pos+1, 0 , 0);
+   TString filename_noext = library;
+   if (dot_pos>=0) filename_noext.Remove( dot_pos );
+
+   // Extension of shared library is platform dependent!!
+   library.Replace( dot_pos, library.Length()-dot_pos,
+                    TString("_") + extension + "." + fSoExt );
+
+   TString libname ( BaseName( filename_noext ) );
+   libname.Append("_").Append(extension);
+
+   if (library_specified && strlen(library_specified) ) {
+      // Use the specified name instead of the default
+      libname = BaseName( library_specified );
+      library = library_specified;
+      ExpandPathName( library );
+      if (! IsAbsoluteFileName(library) ) {
+         library = ConcatFileName( WorkingDirectory(), library );
+      }
+      library = TString(library) + "." + fSoExt;
+   }
+
+   TString file_location( DirName( library ) );
+   // so far we do not distinguish
+   if (build_loc.Length()==0) {
+      build_loc = file_location;
+   } else {
+      library = ConcatFileName( build_loc, library);
+      build_loc = ConcatFileName( build_loc, file_location);
+      if (gSystem->AccessPathName(build_loc,kWritePermission)) mkdir(build_loc, true);
+   }
+
+   // ======= Check if the library need to loaded or compiled
+   if ( gInterpreter->IsLoaded(filename) ) {
+      // the script has already been loaded in interpreted mode
+      // Let's warn the user and unload it.
+
+      ::Warning("ACLiC","script has already been loaded in interpreted mode");
+      ::Warning("ACLiC","unloading %s and compiling it", filename);
+
+      if ( G__unloadfile( (char*) filename ) != 0 ) {
+        // We can not unload it.
+        return(G__LOADFILE_FAILURE);
+      }
+   }
+
+   Bool_t modified = kFALSE;
+   if ( !recompile ) {
+      Long_t lib_time, script_time;
+      if ( GetPathInfo( library, 0, 0, 0, &lib_time ) == 0 ) {
+
+         // If the time library is older than the script we
+         // are going to recompile !
+         GetPathInfo( filename, 0, 0, 0, &script_time );
+         modified = ( lib_time <= script_time );
+         recompile = modified;
+      } else {
+         recompile = kTRUE;
+      }
+   }
+
+   if ( gInterpreter->IsLoaded(library)
+        || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
+      // The library has already been built and loaded.
+
+      ::Warning("ACLiC","%s script has already been compiled and loaded",
+                modified ? "modified" : "unmodified");
+      if ( !recompile ) {
+         return G__LOADFILE_SUCCESS;
+      } else {
+#ifdef R__KCC
+         ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
+         return G__LOADFILE_DUPLICATE;
+#else
+         // the following is not working in KCC because it seems that dlclose
+         // does not properly get rid of the object.  It WILL provoke a
+         // core dump at termination.
+
+         ::Warning("ACLiC","it will be regenerated and reloaded!");
+         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
+            // The library is being used. We can not unload it.
+           return(G__LOADFILE_FAILURE);
+         }
+         Unlink(library);
+#endif
+      }
+
+   }
+   if (!recompile) {
+     // The library already exist, let's just load it.
+     return !gSystem->Load(library);
+   }
+
+   Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
+   if (!canWrite && recompile) {
+
+      // ======= Figure out a temporary directory.
+      const Char_t *tempDirs =  gSystem->Getenv("TEMP");
+      if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMPDIR");
+      if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMP_DIR");
+      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP");
+      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMPDIR");
+      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP_DIR");
+#ifdef R__WIN32
+      if (!tempDirs) tempDirs = "c:\\";
+#else
+      if (!tempDirs) tempDirs = "/tmp";
+#endif
+      TString emergency_loc = tempDirs;
+
+
+      ::Warning("ACLiC","%s is not writeable!",
+                build_loc.Data());
+      ::Warning("ACLiC","Output will be written to %s",
+                emergency_loc.Data());
+      return CompileMacro(filename, opt, library_specified, emergency_loc);
+   }
+
+   Info("ACLiC","creating shared library %s",library.Data());
+
+   // ======= Select the dictionary name
+   TString dict =BaseName( tmpnam(0) );
+   // do a basename to remove /var/tmp
+
+   // the file name end up in the file produced
+   // by rootcint as a variable name so all character need to be valid!
+   static const int maxforbidden = 26;
+   static const char *forbidden_chars[maxforbidden] =
+         { "+","-","*","/","&","%","|","^",">","<","=","~",".",
+           "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
+   for( int ic = 0; ic < maxforbidden; ic++ ) {
+      dict.ReplaceAll( forbidden_chars[ic],"_" );
+   }
+   if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
+   dict.Prepend( build_loc + "/" );
+   TString dicth = dict;
+   TString dictObj = dict;
+   dict += "cxx"; //no need to keep the extention of the original file, any extension will do
+   dicth += "h";
+   dictObj += fObjExt;
+
+   // ======= Generate a linkdef file
+
+   TString linkdef = tmpnam(0);
+   linkdef += "linkdef.h";
+   ofstream linkdefFile( linkdef, ios::out );
+   linkdefFile << "// File Automatically generated by the ROOT Script Compiler "
+               << endl;
+   linkdefFile << endl;
+   linkdefFile << "#ifdef __CINT__" << endl;
+   linkdefFile << endl;
+   linkdefFile << "#pragma link C++ nestedclasses;" << endl;
+   linkdefFile << "#pragma link C++ nestedtypedefs;" << endl;
+   linkdefFile << endl;
+
+   // We want to look for a header file that has the same name as the macro
+   // First lets get the include directory list in the dir1:dir2:dir3 format
+   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
+   incPath.Append(":").Prepend(" ");
+   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   while ( incPath.Index(" :") != -1 ) {
+      incPath.ReplaceAll(" :",":");
+   }
+   incPath.Prepend(file_location+":.:");
+
+   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
+
+   int i;
+   for (i = 0; i < 6; i++ ) {
+      char * name;
+      TString extra_linkdef = BaseName( filename_noext );
+      extra_linkdef.Append(GetLinkdefSuffix());
+      extra_linkdef.Append(extensions[i]);
+      name = Which(incPath,extra_linkdef);
+      if (name) {
+         if (gDebug>4) Info("ACLiC","including extra linkdef file: %s",name);
+         linkdefFile << "#include \"" << name << "\"" << endl;
+         delete name;
+      }
+   }
+
+   if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
+   for (i = 0; i < 6; i++ ) {
+      char * name;
+      TString lookup = BaseName( filename_noext );
+      lookup.Append(extensions[i]);
+      name = Which(incPath,lookup);
+      if (name) {
+         linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< endl;
+         delete name;
+      }
+   }
+   linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
+   linkdefFile << endl;
+   linkdefFile << "#endif" << endl;
+   linkdefFile.close();
+
+   // ======= Generate the three command lines
+
+   TString includes = GetIncludePath();
+   {
+      // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
+     TRegexp rel_inc("-I[^/\\$%-][^:-]+");
+     Int_t len,pos;
+     pos = rel_inc.Index(includes,&len);
+     while( len != 0 ) {
+        TString sub = includes(pos,len);
+        sub.Remove(0,2);
+        sub = ConcatFileName( WorkingDirectory(), sub );
+        sub.Prepend("-I");
+        sub.Append(" ");
+        includes.Replace(pos,len,sub);
+        pos = rel_inc.Index(includes,&len);
+     }
+   }
+   includes += " -I" + build_loc;
+   includes += " -I";
+   includes += WorkingDirectory();
+
+   TString rcint = "rootcint -f ";
+   rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
+   rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
+
+   TString cmd = fMakeSharedLib;
+   // we do not add filename because it is already included via the dictionary(in dicth) !
+   // dict.Append(" ").Append(filename);
+   cmd.ReplaceAll("$SourceFiles",dict);
+   cmd.ReplaceAll("$ObjectFiles",dictObj);
+   cmd.ReplaceAll("$IncludePath",includes);
+   cmd.ReplaceAll("$SharedLib",library);
+   cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
+   cmd.ReplaceAll("$LibName",libname);
+   cmd.ReplaceAll("$BuildDir",build_loc);
+   if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
+   else cmd.ReplaceAll("$Opt",fFlagsOpt);
+
+   TString testcmd = fMakeExe;
+   TString fakeMain = tmpnam(0);
+   fakeMain += extension;
+   ofstream fakeMainFile( fakeMain, ios::out );
+   fakeMainFile << "// File Automatically generated by the ROOT Script Compiler "
+                << endl;
+   fakeMainFile << "int main(char*argc,char**argvv) {};" << endl;
+   fakeMainFile.close();
+   // We could append this fake main routine to the compilation line.
+   // But in this case compiler may output the name of the dictionary file
+   // and of the fakeMain file while it compiles it. (this would be useless
+   // confusing output).
+   // We could also the fake main routine to the end of the dictionnary file
+   // however compilation would fail if a main is already there
+   // (like stress.cxx)
+   // dict.Append(" ").Append(fakeMain);
+   TString exec = tmpnam(0);
+   testcmd.ReplaceAll("$SourceFiles",dict);
+   testcmd.ReplaceAll("$ObjectFiles",dictObj);
+   testcmd.ReplaceAll("$IncludePath",includes);
+   testcmd.ReplaceAll("$ExeName",exec);
+   testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
+   testcmd.ReplaceAll("$BuildDir",build_loc);
+   // ======= Run the build
+
+   if (gDebug>3) {
+      ::Info("ACLiC","creating the dictionary files");
+      if (gDebug>4)  ::Info("ACLiC",rcint.Data());
+   }
+
+   Int_t dictResult = gSystem->Exec(rcint);
+   if (dictResult) {
+      if (dictResult) {
+         if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
+         else ::Error("ACLiC","Dictionary generation failed!");
+      }
+   }
+   Bool_t result = !dictResult;
+
+   if (result) {
+      if (gDebug>3) {
+         ::Info("ACLiC","compiling the dictionary and script files");
+         if (gDebug>4)  ::Info("ACLiC",cmd.Data());
+      }
+      Int_t compilationResult = gSystem->Exec( cmd );
+      if (compilationResult) {
+         if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
+         else ::Error("ACLiC","Compilation failed!");
+      }
+      result = !compilationResult;
+   }
+
+   if ( result ) {
+
+     if (!keep) fCompiled->Add(new TObjString( library ));
+
+#ifndef NOCINT
+     // This is intended to force a failure if not all symbols needed
+     // by the library are present.
+     G__Set_RTLD_NOW();
+#endif
+     if (gDebug>3)  ::Info("ACLiC","loading the shared library");
+     result = !gSystem->Load(library);
+#ifndef NOCINT
+     G__Set_RTLD_LAZY();
+#endif
+
+     if ( !result ) {
+        if (gDebug>3) {
+           ::Info("ACLiC","testing for missing symbols:");
+           if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
+        }
+        gSystem->Exec(testcmd);
+        gSystem->Unlink( exec );
+     }
+
+   };
+
+   if (gDebug<=5) {
+      gSystem->Unlink( dict );
+      gSystem->Unlink( dicth );
+      gSystem->Unlink( dictObj );
+      gSystem->Unlink( linkdef );
+      gSystem->Unlink( fakeMain );
       gSystem->Unlink( exec );
-    }
-
-  };
-
-  if (gDebug<=5) {
-     gSystem->Unlink( dict );
-     gSystem->Unlink( dicth );
-     gSystem->Unlink( dictObj );
-     gSystem->Unlink( linkdef );
-     gSystem->Unlink( fakeMain );
-     gSystem->Unlink( exec );
-  }
-  if (gDebug>6) {
-     rcint.Prepend("echo ");
-     cmd.Prepend("echo \" ").Append(" \" ");
-     testcmd.Prepend("echo \" ").Append(" \" ");
-     gSystem->Exec(rcint);
-     gSystem->Exec( cmd );
-     gSystem->Exec(testcmd);
+   }
+   if (gDebug>6) {
+      rcint.Prepend("echo ");
+      cmd.Prepend("echo \" ").Append(" \" ");
+      testcmd.Prepend("echo \" ").Append(" \" ");
+      gSystem->Exec(rcint);
+      gSystem->Exec( cmd );
+      gSystem->Exec(testcmd);
   }
 
   return result;
@@ -1726,6 +1784,12 @@ const char *TSystem::GetBuildArch() const
 const char *TSystem::GetBuildNode() const
 {
    return fBuildNode;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetBuildDir() const
+{
+   return fBuildDir;
 }
 
 //______________________________________________________________________________
@@ -1798,6 +1862,18 @@ const char *TSystem::GetSoExt() const
 const char *TSystem::GetObjExt() const
 {
    return fObjExt;
+}
+
+//______________________________________________________________________________
+void TSystem::SetBuildDir(const char* build_dir)
+{
+   // Set the location where ACLiC will create libraries and use as
+   // a scratch area.  Note that the libraries are actually stored in
+   // sub-directories of 'build_dir' including the full pathname of the
+   // script.  If the script is location at /full/path/name/macro.C
+   // the library will be located at 'build_dir+/full/path/name/macro_C.so'
+
+   fBuildDir = build_dir;
 }
 
 //______________________________________________________________________________
@@ -1956,7 +2032,7 @@ void TSystem::SetObjExt(const char *ObjExt)
 }
 
 //______________________________________________________________________________
-TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode, 
+TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
                                 TString &arguments, TString &io) const
 {
    // This method split a filename of the form:
@@ -1964,7 +2040,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
    // It stores the ACliC mode [+|++[g|O]] in 'mode',
    // the arguments (including paranthesis) in arg
    // and the I/O indirection in io
-  
+
    char *fname = Strip(filename);
 
    char *arg = strchr(fname, '(');
@@ -1995,7 +2071,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
      s2++;
      io = s2; // ssave = *s2;
      *s2 = 0;
-   } else 
+   } else
      io = "";
 
    // remove the possible ACLiC + or ++ and g or O
