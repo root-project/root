@@ -17,11 +17,18 @@ TEST_TARGETS += ChainFriend
 
 files: Event.root Event2.root
 
+
+ifeq ($(PLATFORM),win32)
+ROOTFILE = $(shell cygpath -u '$(ROOTSYS)/test/Event.root')
+else
+ROOTFILE = $(ROOTSYS)/test/Event.root
+endif
+
 Event.root: $(ROOTSYS)/test/Event.root
-	cp `cygpath -u '$(ROOTSYS)/test/Event.root' ` .
+	cp $(ROOTFILE) .
 
 Event2.root: $(ROOTSYS)/test/Event.root
-	cp `cygpath -u '$(ROOTSYS)/test/Event.root' ` Event2.root
+	cp $(ROOTFILE) Event2.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
 	root.exe -q -b -l Run.C

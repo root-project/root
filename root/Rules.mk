@@ -17,8 +17,8 @@ clean:
 
 # here we guess the platform
 
-ARCH          = win32
-PLATFORM      = win32
+ARCH          = $(shell root-config --arch)
+PLATFORM      = $(ARCH)
 
 CXXFLAGS = $(shell root-config --cflags)
 
@@ -46,5 +46,20 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
 
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
+
+ifeq ($(ARCH),linux)
+# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+CXX           =
+ObjSuf        = o
+SrcSuf        = cxx
+ExeSuf        =
+DllSuf        = so
+OutPutOpt     = -o 
 endif
 
