@@ -1,0 +1,4 @@
+rm -f *.so
+root.exe -q -l -b write.C
+root.exe -q -l -b copy.C
+root.exe -q -l -b read.C
