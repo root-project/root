@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.1 2004/09/03 00:25:47 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -51,7 +51,7 @@ ClassImp(TGMdiFrame)
 
 //______________________________________________________________________________
 TGMdiFrame::TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h, UInt_t options,
-                       ULong_t back) :
+                       Pixel_t back) :
    TGCompositeFrame(main->GetContainer(), w, h,
                     options | kOwnBackground | kMdiFrame, back)
 {

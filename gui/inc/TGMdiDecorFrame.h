@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.h,v 1.1 2004/09/03 00:25:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.h,v 1.2 2004/09/03 13:57:47 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -286,7 +286,7 @@ public:
 
    TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame, Int_t w, Int_t h,
                    const TGGC *boxGC, UInt_t options = 0,
-                   ULong_t back = GetDefaultFrameBackground());
+                   Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGMdiDecorFrame();
 
    virtual Bool_t   HandleButton(Event_t *event);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.3 2004/09/03 08:17:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.4 2004/09/03 13:39:55 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -59,7 +59,7 @@ ClassImp(TGMdiFrameList)
 //______________________________________________________________________________
 TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
                                Int_t w, Int_t h, UInt_t options,
-                               ULong_t back) :
+                               Pixel_t back) :
    TGCanvas(p, w, h, options | kDoubleBorder | kSunkenFrame | kMdiMainFrame, back)
 {
    // Create a MDI main frame.
