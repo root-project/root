@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.20 2004/02/10 08:56:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.21 2004/09/03 12:28:46 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1193,6 +1193,8 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
    // assignment
    if (&matrix == this) return *this;
    Clear();
+   TGeoMatrix::operator=(matrix);
+   
    if (matrix.IsTranslation()) {
       SetBit(kGeoTranslation);
       memcpy(fTranslation,matrix.GetTranslation(),kN3);
