@@ -198,16 +198,16 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
-%_C.$(DllSuf) : %.C $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
+%_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1
 
-%_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
+%_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
-%_h.$(DllSuf) : %.h $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
+%_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
-%.log : run%.C $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
+%.log : run%.C $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 define BuildWithLib
