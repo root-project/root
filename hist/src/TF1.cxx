@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.10 2000/11/28 07:34:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.11 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -589,6 +589,7 @@ void TF1::Draw(Option_t *option)
    TF1 *newf1 = new TF1();
    Copy(*newf1);
    newf1->AppendPad(option);
+   newf1->SetBit(kCanDelete);
    return newf1;
 }
 

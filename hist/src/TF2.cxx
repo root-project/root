@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.4 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.5 2001/02/07 20:59:46 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -198,6 +198,7 @@ TF1 *TF2::DrawCopy(Option_t *option)
    TF2 *newf2 = new TF2();
    Copy(*newf2);
    newf2->AppendPad(option);
+   newf2->SetBit(kCanDelete);
    return newf2;
 }
 
