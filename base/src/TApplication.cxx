@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.58 2004/05/17 12:15:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.59 2004/07/08 11:50:08 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -80,7 +80,6 @@ TApplication::TApplication()
    fNoLogo        = kFALSE;
    fQuit          = kFALSE;
    fFiles         = 0;
-   fIdleCommand   = 0;
    fIdleTimer     = 0;
    fSigHandler    = 0;
 }
@@ -143,7 +142,6 @@ TApplication::TApplication(const char *appClassName,
       gSystem->SetProgname(fArgv[0]);
 
    fIdleTimer     = 0;
-   fIdleCommand   = 0;
    fSigHandler    = 0;
    fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
@@ -382,9 +380,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 void TApplication::HandleIdleTimer()
 {
    // Handle idle timeout. When this timer expires the registered idle command
-   // will be executed by this routine.
+   // will be executed by this routine and a signal will be emitted.
 
-   ProcessLine(GetIdleCommand());
+   if (!fIdleCommand.IsNull())
+      ProcessLine(GetIdleCommand());
+
+   Emit("HandleIdleTimer()");
 }
 
 //______________________________________________________________________________
@@ -814,7 +815,7 @@ void TApplication::SetIdleTimer(UInt_t idleTimeInSec, const char *command)
    // idleTimeInSec seconds. Normally called via TROOT::Idle(...).
 
    if (fIdleTimer) RemoveIdleTimer();
-   fIdleCommand = StrDup(command);
+   fIdleCommand = command;
    fIdleTimer = new TIdleTimer(idleTimeInSec*1000);
    gSystem->AddTimer(fIdleTimer);
 }
@@ -827,7 +828,6 @@ void TApplication::RemoveIdleTimer()
    if (fIdleTimer) {
       // timers are removed from the gSystem timer list by their dtor
       SafeDelete(fIdleTimer);
-      delete [] fIdleCommand;
    }
 }
 
@@ -857,7 +857,7 @@ void TApplication::Terminate(Int_t status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
-   Emit("Terminate(int)", status);
+   Emit("Terminate(Int_t)", status);
 
    if (fReturnFromRun)
       gSystem->ExitLoop();
@@ -868,15 +868,15 @@ void TApplication::Terminate(Int_t status)
 //______________________________________________________________________________
 void TApplication::KeyPressed(Int_t key)
 {
-   // emit signal when console keyboard key was pressed
+   // Emit signal when console keyboard key was pressed.
 
-   Emit("KeyPressed(int)", key);
+   Emit("KeyPressed(Int_t)", key);
 }
 
 //______________________________________________________________________________
 void TApplication::ReturnPressed(char *text )
 {
-   // emit signal when return key was pressed
+   // Emit signal when return key was pressed.
 
    Emit("ReturnPressed(char*)", text);
 }

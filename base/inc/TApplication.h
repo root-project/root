@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.15 2004/05/10 08:14:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.16 2004/07/08 11:50:08 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -54,7 +54,7 @@ private:
    Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
    TObjArray         *fFiles;          //Array of input files (TObjString's)
-   char              *fIdleCommand;    //Command to execute while application is idle
+   TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
 
@@ -75,7 +75,7 @@ public:
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
 
-   virtual void    HandleIdleTimer();
+   virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
    virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
