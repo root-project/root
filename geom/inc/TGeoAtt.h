@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -75,9 +75,9 @@ public:
    virtual void        SetOptimization(Option_t *option);
 
    virtual Bool_t      IsVisible() const {return TestBit(kVisThis);}
-   Bool_t              IsVisDaughters() const {return TestBit(kVisDaughters);}
-   Bool_t              IsVisStreamed() const {return TestBit(kVisStreamed);}
-   Bool_t              IsVisTouched() const {return TestBit(kVisTouched);}
+   virtual Bool_t      IsVisDaughters() const {return TestBit(kVisDaughters);}
+   virtual Bool_t      IsVisStreamed() const {return TestBit(kVisStreamed);}
+   virtual Bool_t      IsVisTouched() const {return TestBit(kVisTouched);}
 //   EGeoVisibilityAtt   GetVisAttributes();
 //   EGeoActivityAtt     GetActivityAtt();
 //   EGeoOptimizationAtt GetOptimizationAtt();

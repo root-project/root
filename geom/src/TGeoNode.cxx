@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.9 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.10 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -216,34 +216,53 @@ Int_t TGeoNode::FindNode(TGeoNode *node, Int_t level)
    return -1;
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::SaveAttributes(ofstream &out) const
+void TGeoNode::SaveAttributes(ofstream &out)
 {
 // save attributes for this node
-   if (fVolume->IsVisStreamed()) return;
-   fVolume->SetVisStreamed(kTRUE);
+   if (IsVisStreamed()) return;
+   SetVisStreamed(kTRUE);
    char quote='"';
-   if ((!fVolume->IsStyleDefault()) && (fVolume->IsVisTouched())) {
+   Bool_t voldef = kFALSE;
+   if ((fVolume->IsVisTouched()) && (!fVolume->IsVisStreamed())) {
+      fVolume->SetVisStreamed(kTRUE);
       out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<endl;
+      voldef = kTRUE;
       if (!fVolume->IsVisDaughters())
          out << "   vol->SetVisDaughters(kFALSE);"<<endl;
       if (fVolume->IsVisible()) {
+/*
          if (fVolume->GetLineColor() != gStyle->GetLineColor())
             out<<"   vol->SetLineColor("<<fVolume->GetLineColor()<<");"<<endl;
          if (fVolume->GetLineStyle() != gStyle->GetLineStyle())
             out<<"   vol->SetLineStyle("<<fVolume->GetLineStyle()<<");"<<endl;
          if (fVolume->GetLineWidth() != gStyle->GetLineWidth())
             out<<"   vol->SetLineWidth("<<fVolume->GetLineWidth()<<");"<<endl;
+*/
       } else {
          out <<"   vol->SetVisibility(kFALSE);"<<endl;
       }
    }
-   if (!fVolume->IsVisDaughters()) return;
+   if (!IsVisDaughters()) return;
    Int_t nd = GetNdaughters();
    if (!nd) return;
    TGeoNode *node;
    for (Int_t i=0; i<nd; i++) {
       node = GetDaughter(i);
+      if (node->IsVisStreamed()) continue;
+      if (node->IsVisTouched()) {
+         if (!voldef)
+            out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<endl;
+         out<<"   node = vol->GetNode("<<i<<");"<<endl;
+         if (!node->IsVisDaughters()) {
+            out<<"   node->VisibleDaughters(kFALSE);"<<endl;
+            node->SetVisStreamed(kTRUE);
+            continue;
+         }
+         if (!node->IsVisible()) 
+            out<<"   node->SetVisibility(kFALSE);"<<endl;
+      }         
       node->SaveAttributes(out);
+      node->SetVisStreamed(kTRUE);
    }
 }
 //-----------------------------------------------------------------------------
@@ -350,13 +369,18 @@ void TGeoNode::SetOverlaps(Int_t *ovlp, Int_t novlp)
    fNovlp = novlp;
 }
 //-----------------------------------------------------------------------------
+void TGeoNode::SetVisibility(Bool_t vis)
+{
+   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   TGeoAtt::SetVisibility(vis);
+   gGeoManager->ModifiedPad();
+}
+//-----------------------------------------------------------------------------
 void TGeoNode::VisibleDaughters(Bool_t vis)
 {
-   fVolume->SetVisibility(vis);
-   if (!GetNdaughters()) return;
-   TIter next(fVolume->GetNodes());
-   TGeoNode *node;
-   while ((node=(TGeoNode*)next())) node->VisibleDaughters(vis);
+   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   SetVisDaughters(vis);
+   gGeoManager->ModifiedPad();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

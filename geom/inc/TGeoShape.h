@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -86,6 +86,7 @@ public:
                                            Double_t *normals, Double_t *cldir);
    virtual void          ComputeBBox()                           = 0;
    virtual Bool_t        Contains(Double_t *point) const         = 0;
+   virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
    static Double_t       DistToCorner(Double_t *point, Double_t *dir, Bool_t in,
                                       Double_t *vertex, Double_t *norm, Int_t &inorm); 

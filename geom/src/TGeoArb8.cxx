@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.8 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.9 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -15,32 +15,33 @@
 #include "TGeoVolume.h"
 #include "TGeoArb8.h"
 
+ClassImp(TGeoArb8)
     
-/*************************************************************************
- * TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on
- *   two paralel planes perpendicular to Z axis. Parameters :
- *            - dz - half length in Z;
- *            - xy[8][2] - vector of (x,y) coordinates of vertices
- *               - first four points (xy[i][j], i<4, j<2) are the (x,y)
- *                 coordinates of the vertices sitting on the -dz plane;
- *               - last four points (xy[i][j], i>=4, j<2) are the (x,y)
- *                 coordinates of the vertices sitting on the +dz plane;
- *   The order of defining the vertices of an arb8 is the following :
- *      - point 0 is connected with points 1,3,4
- *      - point 1 is connected with points 0,2,5
- *      - point 2 is connected with points 1,3,6
- *      - point 3 is connected with points 0,2,7
- *      - point 4 is connected with points 0,5,7
- *      - point 5 is connected with points 1,4,6
- *      - point 6 is connected with points 2,5,7
- *      - point 7 is connected with points 3,4,6
- *   Points can be identical in order to create shapes with less than 
- *   8 vertices.
- *
- *************************************************************************/
+//________________________________________________________________________
+// TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on
+//   two paralel planes perpendicular to Z axis. Parameters :
+//            - dz - half length in Z;
+//            - xy[8][2] - vector of (x,y) coordinates of vertices
+//               - first four points (xy[i][j], i<4, j<2) are the (x,y)
+//                 coordinates of the vertices sitting on the -dz plane;
+//               - last four points (xy[i][j], i>=4, j<2) are the (x,y)
+//                 coordinates of the vertices sitting on the +dz plane;
+//   The order of defining the vertices of an arb8 is the following :
+//      - point 0 is connected with points 1,3,4
+//      - point 1 is connected with points 0,2,5
+//      - point 2 is connected with points 1,3,6
+//      - point 3 is connected with points 0,2,7
+//      - point 4 is connected with points 0,5,7
+//      - point 5 is connected with points 1,4,6
+//      - point 6 is connected with points 2,5,7
+//      - point 7 is connected with points 3,4,6
+//   Points can be identical in order to create shapes with less than 
+//   8 vertices.
+//
+
 //Begin_Html
 /*
-<img src="gif/TGeoTrap.gif">
+<img src="gif/TGeoArb8.jpg">
 */
 //End_Html
 
@@ -84,7 +85,6 @@
 */
 //End_Html
 
-ClassImp(TGeoArb8)
 
 //-----------------------------------------------------------------------------
 TGeoArb8::TGeoArb8()
@@ -362,15 +362,13 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the arb8
    Double_t snxt=kBig;
-   Double_t bpoint[3];
-   Int_t i;
-   for (i=0; i<3; i++) bpoint[i] = point[i]-fOrigin[i];
-   if (!TGeoBBox::Contains(&bpoint[0])) {
-      snxt=TGeoBBox::DistToIn(&bpoint[0],dir,3);
+   if (!TGeoBBox::Contains(point)) {
+      snxt=TGeoBBox::DistToIn(point,dir,3);
       if (snxt>1E20) return snxt;
    }   
    Double_t dist[5];
    // check lateral faces
+   Int_t i;
    for (i=0; i<4; i++) {
       dist[i]=DistToPlane(point, dir, i, kFALSE);  
    }   

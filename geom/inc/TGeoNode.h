@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.8 2002/09/30 20:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.9 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -97,14 +97,18 @@ public:
    Bool_t            IsOnScreen() const; // *MENU*
    Bool_t            IsOverlapping() const {return TObject::TestBit(kGeoNodeOverlap);}
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
-   Bool_t            IsVisible() const {return fVolume->IsVisible();}
+   Bool_t            IsVisible() const {return (TGeoAtt::IsVisible() && fVolume->IsVisible());}
+   Bool_t            IsVisDaughters() const {return (TGeoAtt::IsVisDaughters() && fVolume->IsVisDaughters());}
 
    virtual TGeoNode *MakeCopyNode() const {return 0;}
-   void              SaveAttributes(ofstream &out) const;
+   void              SaveAttributes(ofstream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
    void              SetOverlapping()                    {TObject::SetBit(kGeoNodeOverlap, kTRUE);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
+   void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
+   void              SetInvisible()                      {SetVisibility(kFALSE);} // *MENU*
+   void              SetAllInvisible()                   {VisibleDaughters(kFALSE);} // *MENU*
    void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
 
@@ -117,7 +121,7 @@ public:
    virtual void      Paint(Option_t *option = "");
    void              PrintCandidates() const; // *MENU*
    void              PrintOverlaps() const; // *MENU*
-   void              VisibleDaughters(Bool_t vis);
+   void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
 
   ClassDef(TGeoNode, 1)               // base class for all geometry nodes
 };

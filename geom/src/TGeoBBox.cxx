@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -95,14 +95,17 @@ TGeoBBox::~TGeoBBox()
 Bool_t TGeoBBox::CouldBeCrossed(Double_t *point, Double_t *dir) const
 {
 // decide fast if the bounding box could be crossed by a vector
-   Double_t rmax2 = fDX*fDX+fDY*fDY+fDZ*fDZ;
+   Double_t mind = fDX;
+   if (fDY<mind) mind=fDY;
+   if (fDZ<mind) mind=fDZ;
    Double_t dx = fOrigin[0]-point[0];
    Double_t dy = fOrigin[1]-point[1];
    Double_t dz = fOrigin[2]-point[2];
    Double_t do2 = dx*dx+dy*dy+dz*dz;
-   Double_t f2 = rmax2/do2;
+   if (do2<=(mind*mind)) return kTRUE;
+   Double_t rmax2 = fDX*fDX+fDY*fDY+fDZ*fDZ;
+   if (do2<=rmax2) return kTRUE;
    // inside bounding sphere
-   if (f2>1) return kTRUE;
    Double_t doct = dx*dir[0]+dy*dir[1]+dz*dir[2];
    // leaving ray
    if (doct<=0) return kFALSE;
@@ -228,12 +231,15 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 {
 // compute distance from inside point to surface of the box
    Double_t saf[6];
-   saf[0] = fDX-point[0];
-   saf[1] = fDX+point[0];
-   saf[2] = fDY-point[1];
-   saf[3] = fDY+point[1];
-   saf[4] = fDZ-point[2];
-   saf[5] = fDZ+point[2];
+   Double_t newpt[3];
+   memcpy(&newpt[0], point, 3*sizeof(Double_t));
+   for (Int_t i=0; i<3; i++) newpt[i]-=fOrigin[i];
+   saf[0] = fDX-newpt[0];
+   saf[1] = fDX+newpt[0];
+   saf[2] = fDY-newpt[1];
+   saf[3] = fDY+newpt[1];
+   saf[4] = fDZ-newpt[2];
+   saf[5] = fDZ+newpt[2];
    if (iact<3 && safe) {
    // compute safe distance
       *safe = saf[TMath::LocMin(6, &saf[0])];
@@ -257,44 +263,54 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 // compute distance from outside point to surface of the box
    Double_t saf[3];
    Double_t par[3]; 
+   Double_t newpt[3];
+   memcpy(&newpt[0], point, 3*sizeof(Double_t));
+   for (Int_t i=0; i<3; i++) newpt[i]-=fOrigin[i];
    par[0] = fDX;
    par[1] = fDY;
    par[2] = fDZ;
    Int_t i;
    for (i=0; i<3; i++)
-      saf[i] = TMath::Abs(point[i])-par[i];
+      saf[i] = TMath::Abs(newpt[i])-par[i];
    if (safe) {
    // compute minimum distance from point to box
-      Int_t iv = 0;
-      Double_t safplus[3];
-      *safe = kBig;
-      for (i=0; i<3; i++)
-         if (saf[i]>0) safplus[iv++]=saf[i];
-      if (iv==1) *safe=safplus[0];
-      else {
-         if (iv==2) *safe=TMath::Sqrt(safplus[0]*safplus[0]+safplus[1]*safplus[1]);
-         else *safe=TMath::Sqrt(safplus[0]*safplus[0]+safplus[1]*safplus[1]+safplus[2]*safplus[2]);
+      *safe = 0.; // means : safety not computed
+      Double_t *cldir = gGeoManager->GetCldirChecked();  
+      for (i=0; i<3; i++) {
+         if (saf[i]>(*safe)) {
+            *safe = saf[i];
+            memset(cldir, 0, 3*sizeof(Double_t));
+            cldir[i] = (newpt[i]<0)?1.:-1.;
+         }    
       }
       if (iact==0) return kBig;
    }
    if (iact==1 && step<*safe) return step; 
    // compute distance from point to box
-   for (i=0; i<3; i++) if ((point[i]*dir[i]>0)&&(saf[i]>0)) return kBig;
-   Double_t smin[3], smax[3];
+   Double_t coord, snxt=kBig;
+   Int_t ibreak=0;
+   Double_t *norm = gGeoManager->GetNormalChecked();  
+   memset(norm, 0, 3*sizeof(Double_t));
    for (i=0; i<3; i++) {
-      smin[i] = 0;
-      smax[i] = kBig;
+      if (saf[i]<0) continue;
       if (dir[i]==0) continue;
-      if (saf[i]<0) smax[i]=par[i]/TMath::Abs(dir[i]) - point[i]/dir[i];
-      else {
-         smin[i] = saf[i]/TMath::Abs(dir[i]);
-         smax[i] = (par[i]+TMath::Abs(point[i]))/TMath::Abs(dir[i]);
+      if (newpt[i]*dir[i] > 0) return kBig;
+      snxt = saf[i]/TMath::Abs(dir[i]);
+      ibreak = 0;
+      for (Int_t j=0; j<3; j++) {
+         if (j==i) continue;
+         coord=newpt[j]+snxt*dir[j];
+         if (TMath::Abs(coord)>par[j]) {
+            ibreak=1;
+            break;
+         }
+      }      
+      if (!ibreak) {
+         norm[i] = (newpt<0)?-1:1;
+         return snxt;
       }
-   }
-   Double_t smint = TMath::Max(TMath::Max(smin[0], smin[1]), smin[2]);
-   Double_t smaxt = TMath::Min(TMath::Min(smax[0], smax[1]), smax[2]);
-   if (smaxt<smint) return kBig;
-   return smint;
+   }      
+   return snxt;       
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir) const

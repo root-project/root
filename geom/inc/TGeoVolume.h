@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.8 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.9 2002/10/13 15:45:24 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -171,6 +171,7 @@ public:
    void            SortNodes();
    Bool_t          Valid() const;
    void            VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
+   void            InvisibleAll() {SetInvisible(); VisibleDaughters(kFALSE);} // *MENU*
    void            Voxelize(Option_t *option);
 
   ClassDef(TGeoVolume, 1)              // geometry volume descriptor

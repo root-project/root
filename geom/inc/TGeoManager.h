@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.9 2002/10/09 14:03:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.10 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -53,6 +53,8 @@ class TGeoManager : public TNamed
 private :
    Double_t              fStep;             //! step to be done from current point and direction
    Double_t              fSafety;           //! safety radius from current point
+   Double_t              fPhimin;           // lowest range for phi cut
+   Double_t              fPhimax;           // highest range for phi cut
    Int_t                 fLevel;            //! current geometry level;
    Int_t                 fNNodes;           // total number of physical nodes
    TString               fPath;             //! path to current node
@@ -79,6 +81,7 @@ private :
    Bool_t                fIsNullStep;       //! flag that last geometric step was null
    Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
    Bool_t                fIsGeomReading;    //! flag set when reading geometry
+   Bool_t                fPhiCut;           // flag for phi cuts
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
    TList                *fMatrices;         //-> list of local transformations
@@ -138,9 +141,11 @@ public:
    void                   GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const;
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
+   Bool_t                 IsInPhiRange() const;
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
    void                   SetExplodedView(UInt_t iopt=0); // *MENU*
+   void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetVisLevel(Int_t level=3);   // *MENU*

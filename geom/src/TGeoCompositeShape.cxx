@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.6 2002/10/13 15:45:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -89,6 +89,7 @@ Double_t TGeoCompositeShape::DistToIn(Double_t *point, Double_t *dir, Int_t iact
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to this composite shape.
+   if (!CouldBeCrossed(point, dir)) return kBig;
    if (fNode) return fNode->DistToIn(point, dir, iact, step, safe);
    return kBig;
 }   

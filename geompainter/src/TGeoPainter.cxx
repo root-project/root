@@ -123,7 +123,9 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    
    if (fGeom->GetTopVolume() == vol) fGeom->CdTop();
    Int_t level = fGeom->GetLevel();
-   Bool_t vis=(vol->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   TGeoNode *current = fGeom->GetCurrentNode();
+   if (vol != current->GetVolume()) return 9999;
+   Bool_t vis=(current->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    TGeoNode *node = 0;
    Int_t nd = vol->GetNdaughters();
    Bool_t last = kFALSE;
@@ -138,7 +140,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          }
          // check daughters
          if (level<fVisLevel) {
-            if ((!nd) || (!vol->IsVisDaughters())) return dist;
+            if ((!nd) || (!current->IsVisDaughters())) return dist;
             for (id=0; id<nd; id++) {
                node = vol->GetNode(id);
                fGeom->CdDown(id);
@@ -150,14 +152,14 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          break;
       case kGeoVisLeaves:
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
-         if (vis && last) {
+         if (vis && (last || (!current->IsVisDaughters()))) {
             dist = vol->GetShape()->DistancetoPrimitive(px, py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
                return 0;
             }
          }
-         if (last || (!vol->IsVisDaughters())) return dist;
+         if (last || (!current->IsVisDaughters())) return dist;
          for (id=0; id<nd; id++) {
             node = vol->GetNode(id);
             fGeom->CdDown(id);
@@ -1206,7 +1208,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    Int_t nd = node->GetNdaughters();
    Bool_t last = kFALSE;
    Int_t level = fGeom->GetLevel();
-   Bool_t vis=(node->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   Bool_t vis=(node->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    Int_t id;
    switch (fVisOption) {
       case kGeoVisDefault:
@@ -1216,7 +1218,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          }   
             // draw daughters
          if (level<fVisLevel) {
-            if ((!nd) || (!vol->IsVisDaughters())) return;
+            if ((!nd) || (!node->IsVisDaughters())) return;
             for (id=0; id<nd; id++) {
                daughter = node->GetDaughter(id);
                fGeom->CdDown(id);
@@ -1228,11 +1230,11 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       case kGeoVisLeaves:
          if (level>fVisLevel) return;
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
-         if (vis && last) {
+         if (vis && (last || (!node->IsVisDaughters()))) {
             vol->GetShape()->Paint(option);
             if (!fVisLock) fVisVolumes->Add(vol);
          }            
-         if (last || (!vol->IsVisDaughters())) return;
+         if (last || (!node->IsVisDaughters())) return;
          for (id=0; id<nd; id++) {
             daughter = node->GetDaughter(id);
             fGeom->CdDown(id);
@@ -1303,7 +1305,8 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
    TGeoShape *shape = vol->GetShape();
    Bool_t last = kFALSE;
    Int_t level = fGeom->GetLevel();
-   Bool_t vis=(vol->IsVisible() && fGeom->GetLevel())?kTRUE:kFALSE;
+   TGeoNode *current = fGeom->GetCurrentNode();
+   Bool_t vis=(current->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    Int_t id;
    switch (fVisOption) {
       case kGeoVisDefault:
@@ -1311,7 +1314,7 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
             shape->Sizeof3D();
             // draw daughters
          if (level<fVisLevel) {
-            if ((!nd) || (!vol->IsVisDaughters())) return;
+            if ((!nd) || (!current->IsVisDaughters())) return;
             for (id=0; id<nd; id++) {
                node = vol->GetNode(id);
                fGeom->CdDown(id);
@@ -1322,9 +1325,9 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
          break;
       case kGeoVisLeaves:
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
-         if (vis && last)
+         if (vis && (last || (!current->IsVisDaughters())))
             shape->Sizeof3D();
-         if (last || (!vol->IsVisDaughters())) return;
+         if (last || (!current->IsVisDaughters())) return;
          for (id=0; id<nd; id++) {
             node = vol->GetNode(id);
             fGeom->CdDown(id);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.19 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.20 2002/10/13 15:45:24 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -462,6 +462,9 @@ void TGeoManager::Init()
    }
    
    gGeoManager = this;
+   fPhiCut = kFALSE;
+   fPhimin = 0;
+   fPhimax = 360;
    fStreamVoxels = kFALSE;
    fIsGeomReading = kFALSE;
    fSearchOverlaps = kFALSE;
@@ -515,13 +518,14 @@ TGeoManager::~TGeoManager()
 // Destructor
    Warning("dtor", "deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
 //   gROOT->GetListOfGeometries()->Remove(this);
-   gROOT->GetListOfBrowsables()->Remove(this);
+   gROOT->GetListOfBrowsables()->Remove(gGeoManager);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
    TBrowser *browser = 0;
    while ((browser=(TBrowser*)next())) {
       browser->RecursiveRemove(this);
       browser->Refresh();
+      printf("browser refreshed\n");
    }   
    delete [] fBits;
    if (fCache) delete fCache;
@@ -664,6 +668,14 @@ void TGeoManager::CloseGeometry()
 // with negative parameters (run-time shapes)building the cache manager, 
 // voxelizing all volumes, counting the total number of physical nodes and
 // registring the manager class to the browser.
+   gROOT->GetListOfBrowsables()->Add(this);
+   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+   TIter next(brlist);
+   TBrowser *browser = 0;
+   while ((browser=(TBrowser*)next())) {
+      browser->Refresh();
+      printf("%s added to browser\n", GetName());
+   }   
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
@@ -682,11 +694,6 @@ void TGeoManager::CloseGeometry()
          if (!fCache) BuildCache();
       }   
       printf("### nodes in %s : %i\n", gGeoManager->GetTitle(), fNNodes);
-      gROOT->GetListOfBrowsables()->Add(this);
-      TSeqCollection *brlist = gROOT->GetListOfBrowsers();
-      TIter next(brlist);
-      TBrowser *browser = 0;
-      while ((browser=(TBrowser*)next())) browser->Refresh();
       printf("----------------modeler ready----------------\n");
       return;
    }   
@@ -700,11 +707,6 @@ void TGeoManager::CloseGeometry()
    printf("Building caches for nodes and matrices...\n");
    BuildCache();
    printf("### nodes in %s : %i\n", gGeoManager->GetTitle(), fNNodes);
-   gROOT->GetListOfBrowsables()->Add(this);
-   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
-   TIter next(brlist);
-   TBrowser *browser = 0;
-   while ((browser=(TBrowser*)next())) browser->Refresh();
    printf("----------------modeler ready----------------\n");
 }
 //-----------------------------------------------------------------------------
@@ -1263,6 +1265,7 @@ void TGeoManager::SaveAttributes(const char *filename)
    // save current top volume
    out << "   TGeoVolume *top = gGeoManager->GetVolume("<<quote<<gGeoManager->GetTopVolume()->GetName()<<quote<<");"<<endl;
    out << "   TGeoVolume *vol = 0;"<<endl;
+   out << "   TGeoNode *node = 0;"<<endl;
    out << "   // clear all volume attributes and get painter"<<endl;
    out << "   gGeoManager->ClearAttributes();"<<endl;
    out << "   gGeoManager->GetGeomPainter();"<<endl;
@@ -1284,6 +1287,7 @@ void TGeoManager::SaveAttributes(const char *filename)
    }
    out << "   // draw top volume with new settings"<<endl;
    out << "   top->Draw();"<<endl;
+   out << "   gPad->x3d();"<<endl;
    out << "}" << endl;
    out.close();
    delete [] fname;
@@ -1595,6 +1599,21 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    }
    return clnode;
 }
+//-----------------------------------------------------------------------------
+Bool_t TGeoManager::IsInPhiRange() const
+{
+// True if current node is in phi range
+   if (!fPhiCut) return kTRUE;
+   Double_t *origin;
+   if (!fCurrentNode) return kFALSE;
+   origin = ((TGeoBBox*)fCurrentNode->GetVolume()->GetShape())->GetOrigin();
+   Double_t point[3];
+   LocalToMaster(origin, &point[0]);
+   Double_t phi = TMath::ATan2(point[1], point[0])*TGeoShape::kRadDeg;
+   if (phi<0) phi+=360.;
+   if ((phi>=fPhimin) && (phi<=fPhimax)) return kFALSE;
+   return kTRUE;
+}   
 //-----------------------------------------------------------------------------
 void TGeoManager::InitTrack(Double_t *point, Double_t *dir)
 {
@@ -2067,6 +2086,19 @@ void TGeoManager::SetExplodedView(UInt_t ibomb)
    if (fPainter) fPainter->SetExplodedView(ibomb);
 }
 
+//-----------------------------------------------------------------------------
+void TGeoManager::SetPhiRange(Double_t phimin, Double_t phimax)
+{
+// Set cut phi range
+   if ((phimin==0) && (phimax==360)) {
+      fPhiCut = kFALSE;
+      return;
+   }
+   fPhiCut = kTRUE;
+   fPhimin = phimin;
+   fPhimax = phimax;
+}
+         
 //-----------------------------------------------------------------------------
 void TGeoManager::SetNsegments(Int_t nseg)
 {

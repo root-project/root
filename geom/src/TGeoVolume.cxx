@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.9 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.10 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -705,19 +705,19 @@ void TGeoVolume::SetOption(const char *option)
 void TGeoVolume::SetLineColor(Color_t lcolor) 
 {
    TAttLine::SetLineColor(lcolor);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 //-----------------------------------------------------------------------------
 void TGeoVolume::SetLineStyle(Style_t lstyle) 
 {
    TAttLine::SetLineStyle(lstyle);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 //-----------------------------------------------------------------------------
 void TGeoVolume::SetLineWidth(Style_t lwidth) 
 {
    TAttLine::SetLineWidth(lwidth);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 //-----------------------------------------------------------------------------
 TGeoNode *TGeoVolume::GetNode(const char *name) const
