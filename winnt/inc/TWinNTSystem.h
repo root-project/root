@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.21 2003/12/30 14:58:20 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.22 2004/01/24 23:07:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -80,11 +80,7 @@ protected:
    // static functions providing semi-low level interface to raw WinNT
    static const char  *WinNTHomedirectory(const char *user = 0);
    static int          WinNTWaitchild();
-#ifndef GDK_WIN32
-   static int          WinNTSetitimer(TTimer *ti);
-#else
    static int          WinNTSetitimer(Long_t ms);
-#endif
    static int          WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
    static char        *WinNTSigname(ESignals sig);

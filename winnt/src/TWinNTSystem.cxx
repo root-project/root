@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.63 2004/01/19 18:32:45 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.64 2004/01/24 23:07:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -67,7 +67,6 @@ unsigned thread1ID;
 #endif
 
 
-#ifdef GDK_WIN32
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
 class TWinFdSet : public TFdSet {
@@ -151,7 +150,6 @@ int setitimer(int which, const struct itimerval *value, struct itimerval *oldval
    start_time = ::GetTickCount();
    return 0;
 }
-#endif
 
 //______________________________________________________________________________
 BOOL ConsoleSigHandler(DWORD sig)
