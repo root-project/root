@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.3 2001/11/23 18:00:21 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.4 2001/11/28 14:49:01 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -37,8 +37,6 @@ protected:
    TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
 
    static TObjArray  *fgExecs;  //List of execs
-   static UInt_t      fgNumber; //Referenced objects count
-   static TProcessID *fgPID;    //Pointer to current session ProcessID
    static TObject    *fgObject; //Pointer to object (set in Action on Demand)
       
 public:
@@ -49,17 +47,14 @@ public:
    TRef(TObject *obj);
    TRef(const TRef &ref);
    void operator=(TObject *obj);
+   TRef& operator=(const TRef &ref);
    virtual ~TRef() {;}
    static Int_t       AddExec(const char *name);
-   static UInt_t      AssignID(TObject *obj);
           TObject    *GetObject() const;
-   static  UInt_t     GetObjectCount();
    static TObjArray  *GetListOfExecs();
    virtual void       SetAction(const char *name);
    virtual void       SetAction(TObject *parent);
-   static  void       SetCurrentPID(TProcessID *pid);
    static  void       SetObject(TObject *obj);
-   static  void       SetObjectCount(UInt_t number);
 
    ClassDef(TRef,1)  //Persistent Reference link to a TObject
 };

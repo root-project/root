@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.3 2001/10/05 16:38:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.4 2001/11/28 14:51:43 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -35,7 +35,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRefArray.h"
-#include "TRef.h"
 #include "TError.h"
 #include "TFile.h"
 
@@ -53,7 +52,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    } else if (s == 0)
       s = TCollection::kInitCapacity;
-   fPID  = 0;
+   fPID  = TProcessID::GetProcessID(0);
    fUIDs = 0;
    Init(s, lowerBound);
 }
@@ -63,7 +62,7 @@ TRefArray::TRefArray(const TRefArray &a)
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
-   fPID  = 0;
+   fPID  = TProcessID::GetProcessID(0);
    fUIDs = 0;
    Init(a.fSize, a.fLowerBound);
 
@@ -94,7 +93,7 @@ void TRefArray::AddFirst(TObject *obj)
    // use either a TList or a TOrdCollection.
 
    if (!obj) return;
-   fUIDs[0] = TRef::AssignID(obj);
+   fUIDs[0] = TProcessID::AssignID(obj);
    Changed();
 }
 
@@ -165,7 +164,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
    if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
 
-   fUIDs[idx-fLowerBound] = TRef::AssignID(obj);
+   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
@@ -179,7 +178,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
    if (!obj) return;
    if (!BoundsOk("AddAt", idx)) return;
 
-   fUIDs[idx-fLowerBound] = TRef::AssignID(obj);
+   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
@@ -195,7 +194,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
        Int_t i;
        for (i = 0; i < fSize; i++)
           if (!fUIDs[i]) {         // Add object at position i
-             fUIDs[i] = TRef::AssignID(obj);
+             fUIDs[i] = TProcessID::AssignID(obj);
              fLast = TMath::Max(i, GetAbsLast());
              Changed();
              return i+fLowerBound;
@@ -332,11 +331,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = 0;
-      if (gFile) {
-         pidf = gFile->GetProcessCount();
-         gFile->SetBit(TFile::kHasReferences);
-      }
+      pidf = TProcessID::WriteProcessID(fPID,gFile);
       R__b << pidf;
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];

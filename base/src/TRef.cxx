@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.6 2001/11/28 14:49:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.7 2001/11/30 09:04:15 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -74,17 +74,17 @@
 // When an object is referenced (see TRef assignement operator or TRefArray::Add)
 // a unique identifier is computed and stored in both the fUniqueID of the
 // referenced and referencing object. This uniqueID is computed by incrementing 
-// by one the static global in TRef::fgNumber. fUniqueID is some sort of
+// by one the static global in TProcessID::fgNumber. fUniqueID is some sort of
 // serial object number in the current session. One can retrieve at any time
-// the current value of fgNumber by calling the static function TRef::GetObjectCount
-// or set this number via TRef::SetObjectCount.
+// the current value of fgNumber by calling the static function TProcessID::GetObjectCount
+// or set this number via TProcessID::SetObjectCount.
 // To avoid a growing table of fObjects in TProcessID, in case, for example,
 // one processes many events in a loop, it might be necessary to reset the
 // ObjectNumber at the end of processing of one event. See an example
 // in $ROOTSYS/test/Event.cxx (look at function Build).
-// The value of ObjectNumber (say saveNumber=TRef::GetObjectCount()) may be
+// The value of ObjectNumber (say saveNumber=TProcessID::GetObjectCount()) may be
 // saved at the beginning of one event and reset to this original value
-// at the end of the event via TRef::SetObjectCount(saveNumber). These
+// at the end of the event via TProcessID::SetObjectCount(saveNumber). These
 // actions may be stacked.
 //
 // Action on Demand
@@ -148,7 +148,7 @@
 // script with the function GetWebHistogram. This script connects a file
 // with histograms: pippa.root on the ROOT Web site and returns the object h6
 // to TRef::GetObject.
-// Note that, if the definition of the TRef fWebHistogram had been:
+// Note that if the definition of the TRef fWebHistogram had been:
 //      TRef    fWebHistogram;   //EXEC:GetWebHistogram()
 // then, the compiled or interpreted function GetWebHistogram() would have
 // been called instead of the CINT script GetWebHistogram.C
@@ -180,8 +180,6 @@
 #include "TStreamerElement.h"
 
 TObjArray  *TRef::fgExecs  = 0;
-TProcessID *TRef::fgPID    = 0;
-UInt_t      TRef::fgNumber = 0;
 TObject    *TRef::fgObject = 0;
 
 ClassImp(TRef)
@@ -192,7 +190,7 @@ TRef::TRef(TObject *obj)
    // TRef copy ctor.
 
    *this = obj;
-   fPID = 0;
+   fPID = TProcessID::GetProcessID(0);
 }
 
 //______________________________________________________________________________
@@ -212,9 +210,20 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      uid = TRef::AssignID(obj);
+      uid = TProcessID::AssignID(obj);
    }
    SetUniqueID(uid);
+}
+
+//______________________________________________________________________________
+TRef &TRef::operator=(const TRef &ref)
+{
+   // TRef assignment operator.
+
+   TObject *obj = ref.GetObject();
+   *this = obj;
+   fPID = ref.fPID;
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -233,23 +242,6 @@ Int_t TRef::AddExec(const char *name)
    }
    return fgExecs->IndexOf(exec);
 }
-
-//______________________________________________________________________________
-UInt_t TRef::AssignID(TObject *obj)
-{
-// static function returning the ID assigned to obj
-// If the object is not yet referenced, its kIsReferenced bit is set
-// and its fUniqueID set to the current number of referenced objects so far
-
-   UInt_t uid = obj->GetUniqueID();
-   if (obj == fgPID->GetObjectWithID(uid)) return uid;
-   fgNumber++;
-   obj->SetBit(kIsReferenced);
-   uid = fgNumber;
-   obj->SetUniqueID(uid);
-   fgPID->PutObjectWithID(obj,uid);
-   return uid;
-}
    
 //______________________________________________________________________________
 TObjArray *TRef::GetListOfExecs()
@@ -260,15 +252,6 @@ TObjArray *TRef::GetListOfExecs()
    
    return fgExecs;
 }
-   
-//______________________________________________________________________________
-UInt_t TRef::GetObjectCount()
-{
-// Return the current referenced object count 
-// fgNumber is incremented everytime a new object is referenced
-   
-   return fgNumber;
-}
   
    
 //______________________________________________________________________________
@@ -276,11 +259,10 @@ TObject *TRef::GetObject() const
 {
    // Return a pointer to the referenced object.
 
-   TObject *obj = 0;
+   //TObject *obj = 0;
    UInt_t uid = GetUniqueID();
    //Try to find the object from the table of the corresponding PID
-   if (!fPID) ((TRef*)this)->fPID = fgPID;
-   if (fPID && uid) obj = fPID->GetObjectWithID(uid);
+   TObject *obj = fPID->GetObjectWithID(uid);
    
    //if object not found, then exec action if an action has been defined
    if (!obj) {
@@ -289,12 +271,12 @@ TObject *TRef::GetObject() const
       if (execid > 0) {
          TExec *exec = (TExec*)fgExecs->At(execid-1);
          if (exec) {
-            //we expect the object to be returned via TRef::setObject
+            //we expect the object to be returned via TRef::SetObject
             fgObject = 0;
             exec->Exec();
             obj = fgObject;
             if (obj){
-               uid = TRef::AssignID(obj);
+               uid = TProcessID::AssignID(obj);
                ((TRef*)this)->SetUniqueID(uid);
             } else {
                //well may be the Exec has loaded the object
@@ -349,14 +331,6 @@ void TRef::SetAction(TObject *parent)
 }
    
 //______________________________________________________________________________
-void TRef::SetCurrentPID(TProcessID *pid)
-{
-// static function to set the current session processid.
-   
-   fgPID = pid;
-}
-   
-//______________________________________________________________________________
 void TRef::SetObject(TObject *obj)
 {
 // static function to set the object found on the Action on Demand function. 
@@ -364,16 +338,6 @@ void TRef::SetObject(TObject *obj)
 // when a "EXEC:" keyword is specified in the data member field of the TRef.
    
    fgObject = obj;
-}
-  
-   
-//______________________________________________________________________________
-void TRef::SetObjectCount(UInt_t number)
-{
-// static function to set the current referenced object count 
-// fgNumber is incremented everytime a new object is referenced
-   
-   fgNumber = number;
 }
 
 //______________________________________________________________________________
@@ -394,11 +358,8 @@ void TRef::Streamer(TBuffer &R__b)
       if (execid) SetBit(execid);
    } else {
       TObject::Streamer(R__b);
-      pidf = 0;
-      if (gFile) {
-         pidf = (UShort_t)gFile->GetProcessCount();
-         gFile->SetBit(TFile::kHasReferences);
-      }
+
+      pidf = TProcessID::WriteProcessID(fPID,gFile);
       R__b << pidf;
    }
 }
