@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.14 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.15 2002/04/03 10:41:40 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -601,12 +601,10 @@ Bool_t TGClient::GetColorByName(const char *name, ULong_t &pixel) const
    if (!gVirtualX->ParseColor(attributes.fColormap, name, color)) {
       Error("GetColorByName", "couldn't parse color %s", name);
       status = kFALSE;
-   } else if(!gVirtualX->AllocColor(attributes.fColormap, color)) {
-      Warning("GetColorByName", "couldn't retrieve color %s", name);
-      Printf(" This problem typically appears when running ROOT from ");
-      Printf(" an X terminal with not enough memory and another application");
-      Printf(" like Netscape is already running");
-      Printf(" ====> Kill Netscape and start again ROOT");
+   } else if (!gVirtualX->AllocColor(attributes.fColormap, color)) {
+      Warning("GetColorByName", "couldn't retrieve color %s.\n"
+              "Please close any other application, like netscape, "
+              "that might exhaust\nthe colormap and start ROOT again", name);
       status = kFALSE;
    }
 
@@ -773,7 +771,7 @@ Bool_t TGClient::ProcessOneEvent()
 #ifdef GDK_WIN32
       if (event.fType == kOtherEvent)
          return kFALSE;
-#endif      
+#endif
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
          if (fForceRedraw)
