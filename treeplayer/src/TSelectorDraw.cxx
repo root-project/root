@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.46 2005/03/08 05:33:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.47 2005/03/10 17:57:05 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -522,11 +522,16 @@ void TSelectorDraw::Begin(TTree *tree)
                   fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
                }
             }
-            if (opt.Contains("profs"))
+            if (opt.Contains("profs")) {
                hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"s");
-            else
+            } else if (opt.Contains("profi")) {
+               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"i");
+            } else if (opt.Contains("profg")) {
+               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"g");
+            } else {
                hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"");
-            if (!hkeep) {
+            }
+	    if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(0);
             }
