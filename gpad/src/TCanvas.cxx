@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.44 2003/05/15 12:12:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.45 2003/07/08 15:42:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1147,22 +1147,22 @@ void TCanvas::ls(Option_t *option) const
 //______________________________________________________________________________
 void TCanvas::MakeDefCanvas()
 {
-//*-*-*-*-*-*-*Static function to build a default canvas*-*-*-*-*-*-*-*-*-*-*
-//*-*          =========================================
+   // Static function to build a default canvas.
 
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
 
    TList *lc = (TList*)gROOT->GetListOfCanvases();
-   if (lc->FindObject(defcanvas))
-      cdef = StrDup(Form("%s_n%d",defcanvas,lc->GetSize()+1));
-   else
+   if (lc->FindObject(defcanvas)) {
+      Int_t n = lc->GetSize() + 1;
+      cdef = new char[strlen(defcanvas)+15];
+      do {
+         strcpy(cdef, Form("%s_n%d", defcanvas, n++));
+      } while (lc->FindObject(cdef));
+   } else
       cdef = StrDup(Form("%s",defcanvas));
 
-//   if (gInterpreter)
-//      gROOT->ProcessLine(Form("TCanvas *%s = new TCanvas(\"%s\",\"%s\",1);",cdef,cdef,cdef));
-//   else
-      new TCanvas(cdef, cdef, 1);
+   new TCanvas(cdef, cdef, 1);
 
    Printf("<TCanvas::MakeDefCanvas>: created default TCanvas with name %s",cdef);
    delete [] cdef;
