@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.29 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.30 2002/05/20 21:34:00 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -186,7 +186,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     -           2                   sq           21
 //*-*     *           3                   sqrt         22
 //*-*     /           4                   strstr       23
-//*-*     %           5
+//*-*     %           5                   min          24
+//*-*                                     max          25
 //*-*                                     log          30
 //*-*     cos         10                  exp          31
 //*-*     sin         11                  log10        32
@@ -1151,7 +1152,7 @@ if (err==0) {
               fOper[fNoper] = 20;
               fNoper++;
             }
-		  } else if (chaine(0,7) == "strstr(") {
+	 } else if (chaine(0,7) == "strstr(") {
             compt = 7; nomb = 0; virgule = 0;
             while(compt != lchain) {
               compt++;
@@ -1166,6 +1167,40 @@ if (err==0) {
               Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "";
               fOper[fNoper] = 23;
+              fNoper++;
+            }
+          } else if (chaine(0,4) == "min(") {
+            compt = 4; nomb = 0; virgule = 0;
+            while(compt != lchain) {
+              compt++;
+              if (chaine(compt-1,1) == ",") nomb++;
+              if (nomb == 1 && virgule == 0) virgule = compt;
+            }
+            if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
+            else {
+              ctemp = chaine(4,virgule-5);
+              Analyze(ctemp.Data(),err,offset);
+              ctemp = chaine(virgule,lchain-virgule-1);
+              Analyze(ctemp.Data(),err,offset);
+              fExpr[fNoper] = "";
+              fOper[fNoper] = 24;
+              fNoper++;
+            }
+          } else if (chaine(0,4) == "max(") {
+            compt = 4; nomb = 0; virgule = 0;
+            while(compt != lchain) {
+              compt++;
+              if (chaine(compt-1,1) == ",") nomb++;
+              if (nomb == 1 && virgule == 0) virgule = compt;
+            }
+            if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
+            else {
+              ctemp = chaine(4,virgule-5);
+              Analyze(ctemp.Data(),err,offset);
+              ctemp = chaine(virgule,lchain-virgule-1);
+              Analyze(ctemp.Data(),err,offset);
+              fExpr[fNoper] = "";
+              fOper[fNoper] = 25;
               fNoper++;
             }
 
@@ -1753,6 +1788,8 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           case  22 : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); break;
           case  23 : pos2 -= 2; pos++;if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
+          case  24 : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); break;
+          case  25 : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); break;
           case  30 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
                      else {tab[pos-1] = 0;} //{indetermination }
                      break;
