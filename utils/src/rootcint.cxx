@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.98 2002/09/11 12:58:08 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.99 2002/09/12 16:25:01 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -833,23 +833,39 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
    }
 
-   char stlType[512];
-   strcpy(stlType,ShortTypeName(m.Type()->Name()));
-   char stlName[512];
-   strcpy(stlName,ShortTypeName(m.Name()));
+   string stlType;
+   stlType = ShortTypeName(m.Type()->Name());
+   string stlName;
+   stlName = stlName,ShortTypeName(m.Name());
 
-   char fulName1[512],fulName2[512];
+   string fulName1,fulName2;
    const char *tcl1=0,*tcl2=0;
    G__TypeInfo &ti = TemplateArg(m);
    if (ElementStreamer(ti,0,rwmode)) {
       tcl1="R__tcl1";
-      strcpy(fulName1,ti.Fullname());
+      const char *name = ti.Fullname();
+      if (name) {
+         // the value return by ti.Fullname is a static buffer
+         // so we have to copy it immeditately
+         fulName1 = name;
+      } else {
+         // ti is a simple type name
+         fulName1 = ti.TrueName();
+      }
    }
    if (stltype==kMap || stltype==kMultimap) {
       G__TypeInfo &ti = TemplateArg(m,1);
       if (ElementStreamer(ti,0,rwmode)) {
          tcl2="R__tcl2";
-         strcpy(fulName2,ti.Fullname());
+         const char *name = ti.Fullname();
+         if (name) {
+            // the value return by ti.Fullname is a static buffer
+            // so we have to copy it immeditately
+            fulName2 = name;
+         } else {
+            // ti is a simple type name
+            fulName2 = ti.TrueName();
+         }
       }
    }
 
@@ -864,27 +880,27 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
       switch (pa) {
          case 0:         //No pointer && No array
-            fprintf(fp, "         %s &R__stl =  %s;\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl =  %s;\n",stlType.c_str(),stlName.c_str());
             break;
          case 1:         //No pointer && array
-            fprintf(fp, "         %s &R__stl =  %s[R__l];\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl =  %s[R__l];\n",stlType.c_str(),stlName.c_str());
             break;
          case 2:         //pointer && No array
-            fprintf(fp, "         delete *%s;\n",stlName);
-            fprintf(fp, "         *%s = new %s;\n",stlName , stlType);
-            fprintf(fp, "         %s &R__stl = **%s;\n",stlType,stlName);
+            fprintf(fp, "         delete *%s;\n",stlName.c_str());
+            fprintf(fp, "         *%s = new %s;\n",stlName.c_str() , stlType.c_str());
+            fprintf(fp, "         %s &R__stl = **%s;\n",stlType.c_str(),stlName.c_str());
             break;
          case 3:         //pointer && array
-            fprintf(fp, "         delete %s[R__l];\n",stlName);
-            fprintf(fp, "         %s[R__l] = new %s;\n",stlName , stlType);
-            fprintf(fp, "         %s &R__stl = *%s[R__l];\n",stlType,stlName);
+            fprintf(fp, "         delete %s[R__l];\n",stlName.c_str());
+            fprintf(fp, "         %s[R__l] = new %s;\n",stlName.c_str() , stlType.c_str());
+            fprintf(fp, "         %s &R__stl = *%s[R__l];\n",stlType.c_str(),stlName.c_str());
             break;
       }
 
       fprintf(fp, "         R__stl.clear();\n");
 
-      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1);
-      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2);
+      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
+      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
 
       fprintf(fp, "         int R__i, R__n;\n");
       fprintf(fp, "         R__b >> R__n;\n");
@@ -931,16 +947,16 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       fprintf(fp, "      {\n");
       switch (pa) {
          case 0:         //No pointer && No array
-            fprintf(fp, "         %s &R__stl =  %s;\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl =  %s;\n",stlType.c_str(),stlName.c_str());
             break;
          case 1:         //No pointer && array
-            fprintf(fp, "         %s &R__stl =  %s[R__l];\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl =  %s[R__l];\n",stlType.c_str(),stlName.c_str());
             break;
          case 2:         //pointer && No array
-            fprintf(fp, "         %s &R__stl = **%s;\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl = **%s;\n",stlType.c_str(),stlName.c_str());
             break;
          case 3:         //pointer && array
-            fprintf(fp, "         %s &R__stl = *%s[R__l];\n",stlType,stlName);
+            fprintf(fp, "         %s &R__stl = *%s[R__l];\n",stlType.c_str(),stlName.c_str());
             break;
       }
 
@@ -948,9 +964,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       fprintf(fp, "         R__b << R__n;\n");
       fprintf(fp, "         if(!R__n) return;\n");
 
-      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1);
-      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2);
-      fprintf(fp, "         %s::iterator R__k;\n", stlType);
+      if (tcl1) fprintf(fp, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",fulName1.c_str());
+      if (tcl2) fprintf(fp, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",fulName2.c_str());
+      fprintf(fp, "         %s::iterator R__k;\n", stlType.c_str());
       fprintf(fp, "         for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
       if (stltype == kMap || stltype == kMultimap) {
          ElementStreamer(TemplateArg(m,0),"((*R__k).first )",rwmode,tcl1);
