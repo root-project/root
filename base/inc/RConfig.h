@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.41 2002/05/10 21:32:08 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.42 2002/05/24 15:10:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -81,7 +81,7 @@
 #         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #         define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #      endif
-#      if defined __GNUG__
+#      if defined __GNUC__
 #         define R__NAMESPACE_TEMPLATE_IMP_BUG
 #      else
 #         define R__TEMPLATE_OVERLOAD_BUG
@@ -237,7 +237,7 @@
 #   define ANSICPP
 #endif
 
-#ifdef __GNUG__
+#ifdef __GNUC__
 #   define R__GNU
 #   define ANSICPP
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
