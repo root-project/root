@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.28 2003/04/06 22:03:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.29 2003/06/21 06:07:47 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
             void     PrintValue(Int_t i) const;
     virtual void     ReadLeaves(TBuffer &b);
     virtual void     Reset(Option_t *option="");
+    virtual void     ResetAddress();
     virtual void     SetAddress(void *addobj);
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
     virtual void     SetBasketSize(Int_t buffsize);

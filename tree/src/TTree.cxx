@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.148 2003/06/10 20:52:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.149 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -258,6 +258,7 @@
 
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TError.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TEventList.h"
@@ -336,6 +337,7 @@ TTree::TTree(): TNamed()
    fMakeClass      = 0;
    fNotify         = 0;
    fFileNumber     = 0;
+   fClones         = 0;
 }
 
 //______________________________________________________________________________
@@ -379,6 +381,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fMakeClass      = 0;
    fNotify         = 0;
    fFileNumber     = 0;
+   fClones         = 0;
 
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -424,7 +427,32 @@ TTree::~TTree()
       delete fAliases;
       fAliases = 0;
    }
+   if (fClones) {
+      TObjLink *lnk = fClones->FirstLink();
+      while (lnk) {
+         TTree *clone = (TTree*)lnk->GetObject();
+         clone->ResetBranchAddresses(); // SetAddresses(clone,kTRUE);
+         lnk = lnk->Next();
+      }
+      gROOT->GetListOfCleanups()->Remove(fClones);
+      // delete the array but NOT its content
+      delete fClones;
+   }
    fDirectory  = 0; //must be done after the destruction of friends
+}
+
+//______________________________________________________________________________
+void TTree::AddClone(TTree *clone) 
+{
+// Add a cloned tree to our list of tree to be notify whenever we changes our
+// addresses and are being deleted.
+
+   if (!fClones) {
+      fClones = new TList();
+      fClones->SetOwner(false);
+      gROOT->GetListOfCleanups()->Add(fClones);
+   }
+   fClones->Add(clone);
 }
 
 //______________________________________________________________________________
@@ -1466,28 +1494,30 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 //    with   Event 1000 1 1 1
 
   // we make a full copy of this tree
-   TTree *thistree = GetTree(); //in case this is a TChain
-   if (!thistree) {
-      GetEntry(0);
-      thistree = GetTree();
-   }
-   TTree *tree = (TTree*)thistree->Clone();
-   if (tree == 0) return 0;
+   if (LoadTree(0)<0) return 0; //in case this is a TChain
+   TTree *thistree = GetTree(); 
 
-   tree->Reset();
+   TTree *newtree = (TTree*)thistree->Clone();
+   if (newtree == 0) return 0;
+
+   // Add the new tree to the list of clones so that we can later inform it of
+   // changes in addresses
+   AddClone(newtree);
+
+   newtree->Reset();
 
   // delete non active branches from the clone
    Int_t i,j,k,l,nb1,nb2;
    TObjArray *lb, *lb1;
    TBranch *branch, *b1, *b2;
-   TObjArray *leaves = tree->GetListOfLeaves();
+   TObjArray *leaves = newtree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       if (!leaf) continue;
       branch = leaf->GetBranch();
       if (!branch || !branch->TestBit(kDoNotProcess)) continue;
-      TObjArray *branches = tree->GetListOfBranches();
+      TObjArray *branches = newtree->GetListOfBranches();
       Int_t nb = branches->GetEntriesFast();
       for (i=0;i<nb;i++) {
          TBranch *br = (TBranch*)branches->UncheckedAt(i);
@@ -1511,17 +1541,17 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    leaves->Compress();
 
   // copy branch addresses
-   tree->SetMakeClass(fMakeClass);
-   CopyAddresses(tree);
+   newtree->SetMakeClass(fMakeClass);
+   CopyAddresses(newtree);
 
   // may be copy some entries
    if (nentries < 0) nentries = Int_t(fEntries);
    if (nentries > fEntries) nentries = Int_t(fEntries);
    for (i=0;i<nentries;i++) {
       GetEntry(i);
-      tree->Fill();
+      newtree->Fill();
    }
-   return tree;
+   return newtree;
 }
 
 //______________________________________________________________________________
@@ -1529,7 +1559,7 @@ void TTree::CopyAddresses(TTree *tree)
 {
 // Set branch addresses of tree equal to the ones of this tree
 
-  // copy branch addresses starting from branches
+   // copy branch addresses starting from branches
    Int_t i;
    TObjArray *branches  = GetListOfBranches();
    Int_t nbranches = branches->GetEntriesFast();
@@ -1538,10 +1568,16 @@ void TTree::CopyAddresses(TTree *tree)
       if (branch->TestBit(kDoNotProcess)) continue;
       if (branch->GetAddress()) {
          TBranch *br = tree->GetBranch(branch->GetName());
-         if (br) br->SetAddress(branch->GetAddress());
+         char *add = branch->GetAddress();
+         if (!add) {
+            branch->SetAddress(0);      // Attempts to set a default address
+            add = branch->GetAddress(); 
+         }
+         if (br) br->SetAddress(add);
       }
    }
-  // copy branch addresses
+
+   // copy branch addresses starting from leaves.
    TObjArray *tleaves = tree->GetListOfLeaves();
    Int_t nleaves = tleaves->GetEntriesFast();
    for (i=0;i<nleaves;i++) {
@@ -1552,6 +1588,14 @@ void TTree::CopyAddresses(TTree *tree)
       TLeaf *leaf  = branch->GetLeaf(leaf2->GetName());
       if (!leaf) continue;
       if (branch->TestBit(kDoNotProcess)) continue;
+      if (!branch->GetAddress()&&!leaf->GetValuePointer()) {
+         // We should attempts to set the address of the branch.
+         // something like:
+         //(TBranchElement*)branch->GetMother()->SetAddress(0) 
+         //plus a few more subtilities (see TBranchElement::GetEntry).
+         //but for now we go the simpliest route:
+         branch->GetEntry(0);
+      }
       if (branch->GetAddress()) {
          tree->SetBranchAddress(branch->GetName(),branch->GetAddress());
       } else {
@@ -3201,6 +3245,21 @@ void TTree::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TTree::ResetBranchAddresses()
+{
+//*-*-*-*-*-*-*-*Reset the address of the branches                *-*-*
+//*-*            ======================================================
+
+   Int_t i;
+   TObjArray *branches  = GetListOfBranches();
+   Int_t nbranches = branches->GetEntriesFast();
+   for (i=0;i<nbranches;i++) {
+      TBranch *branch = (TBranch*)branches->UncheckedAt(i);
+      branch->ResetAddress();
+   }
+}
+
+//______________________________________________________________________________
 Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Loop on Tree & print entries following selection*-*-*-*-*-*
@@ -3297,8 +3356,21 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 //      Function overloaded by TChain.
 
    TBranch *branch = GetBranch(bname);
-   if (branch) branch->SetAddress(add);
-   else        Error("SetBranchAddress", "unknown branch -> %s", bname);
+   if (branch) {
+      if (fClones) {
+         void *oldAdd = branch->GetAddress();
+         TObjLink *lnk = fClones->FirstLink();
+         while (lnk) {
+            TTree *clone = (TTree*)lnk->GetObject();
+            TBranch *cloneBr = clone->GetBranch(bname);
+            if (cloneBr && cloneBr->GetAddress() == oldAdd ) {
+               // the clone's branch is still pointing to us
+               cloneBr->SetAddress(add);
+            }
+         }
+      }
+      branch->SetAddress(add);
+   } else        Error("SetBranchAddress", "unknown branch -> %s", bname);
 }
 
 //_______________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.68 2003/06/24 14:00:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.69 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -112,7 +112,7 @@ TChain::~TChain()
 // destructor for a Chain
 
    fDirectory = 0;
-   delete fFile; fFile = 0;
+   delete fFile; fFile = 0; fTree = 0;
    gROOT->GetListOfSpecials()->Remove(this);
    delete [] fTreeOffset;
    fFiles->Delete();
@@ -758,7 +758,7 @@ Int_t TChain::LoadTree(Int_t entry)
          if (cursav && cursav->GetFile()==fFile) {
             cursav = gROOT;
          }
-         delete fFile; fFile = 0;
+         delete fFile; fFile = 0; fTree = 0;
       }
    }
    TChainElement *element = (TChainElement*)fFiles->At(t);
@@ -833,6 +833,16 @@ Int_t TChain::LoadTree(Int_t entry)
    }
 
    if (cursav) cursav->cd();
+
+   //update the address of cloned trees, if any
+   if (fClones) {
+      TObjLink *lnk = fClones->FirstLink();
+      while (lnk) {
+         TTree *clone = (TTree*)lnk->GetObject();
+         CopyAddresses(clone);
+         lnk = lnk->Next();
+      }
+   }
 
    //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
    if (fPlayer) fPlayer->UpdateFormulaLeaves();
@@ -993,28 +1003,28 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
       if (treeNumber != fTreeNumber) {
          treeNumber = fTreeNumber;
          TIter next(fTree->GetListOfBranches());
-	 Bool_t failed = kFALSE;
+         Bool_t failed = kFALSE;
          while ((branch = (TBranch*)next())) {
-	    TBranch *new_branch = hnew->GetBranch( branch->GetName() );
-	    if (!new_branch) continue;
+            TBranch *new_branch = hnew->GetBranch( branch->GetName() );
+            if (!new_branch) continue;
             void *add = branch->GetAddress();
             // in case branch addresses have not been set, give a last chance
             // for simple Trees (h2root converted for example)
             if (!add) {
-	       TLeaf *leaf, *new_leaf;
+               TLeaf *leaf, *new_leaf;
                TIter next_l(branch->GetListOfLeaves());
-	       while ((leaf = (TLeaf*) next_l())) {
-		 add = leaf->GetValuePointer();
-		 if (add) {
-		   new_leaf = new_branch->GetLeaf(leaf->GetName());
-		   if(new_leaf) new_leaf->SetAddress(add);
-		 } else {
-		   failed = kTRUE;
-		 }
-	       }
+               while ((leaf = (TLeaf*) next_l())) {
+                  add = leaf->GetValuePointer();
+                  if (add) {
+                     new_leaf = new_branch->GetLeaf(leaf->GetName());
+                     if(new_leaf) new_leaf->SetAddress(add);
+                  } else {
+                     failed = kTRUE;
+                  }
+               }
             } else {
                new_branch->SetAddress(add);
-	    }
+            }
             if (failed) Warning("Merge","Tree branch addresses not defined");
          }
       }
@@ -1118,8 +1128,23 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 
    // Set also address in current Tree
    if (fTreeNumber >= 0) {
-       TBranch *br = fTree->GetBranch(bname);
-       if (br) br->SetAddress(add);
+       TBranch *branch = fTree->GetBranch(bname);
+       if (branch) {
+          if (fClones) {
+             void *oldAdd = branch->GetAddress();
+             TObjLink *lnk = fClones->FirstLink();
+             while (lnk) {
+                TTree *clone = (TTree*)lnk->GetObject();
+                TBranch *cloneBr = clone->GetBranch(bname);
+                if (cloneBr && cloneBr->GetAddress() == oldAdd ) {
+                   // the clone's branch is still pointing to us
+                   cloneBr->SetAddress(add);
+                } 
+                lnk = lnk->Next();
+             } // while(lnk)
+          } // if (fClones)
+          branch->SetAddress(add);
+       }
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.114 2003/06/23 20:23:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.115 2003/06/25 07:16:22 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1369,6 +1369,17 @@ void TBranchElement::Reset(Option_t *option)
       TBranch *branch = (TBranch*)fBranches[i];
       branch->Reset(option);
    }
+}
+
+//______________________________________________________________________________
+void TBranchElement::ResetAddress()
+{
+//*-*-*-*-*-*-*-*Reset the address of the branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*            ===============================
+//
+
+   fObject = 0;
+   TBranch::ResetAddress();
 }
 
 //______________________________________________________________________________

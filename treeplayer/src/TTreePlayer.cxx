@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.126 2003/06/10 20:52:50 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.127 2003/06/27 11:02:34 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -329,13 +329,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
 
 
   // we make a copy of the tree header
-   TTree *tree;
-   if (fTree->InheritsFrom("TChain")) {
-      fTree->LoadTree(0);
-      tree = (TTree*)fTree->GetTree()->CloneTree(0);
-   } else {
-      tree = (TTree*)fTree->CloneTree(0);
-   }
+   TTree *tree = fTree->CloneTree(0);
    if (tree == 0) return 0;
 
    Int_t entry,entryNumber;
@@ -346,8 +340,9 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    }
 
    // Compile selection expression if there is one
-   //ClearFormula();
-   TTreeFormula *select = 0;
+   TTreeFormula *select = 0; // no need to interfer with fSelect since we
+                             // handle the loop explicitly below and can call
+                             // UpdateFormulaLeaves ourselves.
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select || !select->GetNdim()) { delete select; }
@@ -362,7 +357,6 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
       if (localEntry < 0) break;
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
-         fTree->CopyAddresses(tree);
          if (select) select->UpdateFormulaLeaves();
       }
       if (select) {

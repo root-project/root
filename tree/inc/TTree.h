@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.46 2003/03/19 14:01:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.47 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -117,10 +117,12 @@ protected:
     TArrayI       fIndex;             //  Index of sorted values
     TList        *fFriends;           //  pointer to list of friend elements
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
+    TList        *fClones;            //! List of cloned trees which share our addresses
   static Int_t    fgBranchStyle;      //  Old/New branch style
   static Int_t    fgMaxTreeSize;      //  Maximum size of a file containg a Tree
 
 protected:
+    void             AddClone(TTree*);
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
     virtual void     MakeIndex(TString &varexp, Int_t *index);
     virtual TFile   *ChangeFile(TFile *file);
@@ -252,6 +254,7 @@ public:
                           ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      RemoveFriend(TTree*);
     virtual void      Reset(Option_t *option="");
+    virtual void      ResetBranchAddresses();
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Bool_t    SetAlias(const char *aliasName, const char *aliasFormula);

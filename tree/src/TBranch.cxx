@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.57 2003/04/30 16:29:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.58 2003/05/15 08:43:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1064,6 +1064,26 @@ void TBranch::Reset(Option_t *)
    if (nbaskets) {
       TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
       fBaskets.AddAt(basket,0);
+   }
+}
+
+//______________________________________________________________________________
+void TBranch::ResetAddress()
+{
+//*-*-*-*-*-*-*-*Reset the address of the branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*            ===============================
+//
+
+   fAddress = 0;
+   Int_t i;
+   for (i=0;i<fNleaves;i++) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      leaf->SetAddress(0);
+   }
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i=0;i<nbranches;i++)  {
+      TBranch *abranch = (TBranch*)fBranches[i];
+      abranch->ResetAddress();
    }
 }
 
