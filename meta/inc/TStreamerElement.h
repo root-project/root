@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.28 2002/10/31 07:27:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.29 2002/11/26 10:24:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -274,6 +274,7 @@ public:
    const char    *GetInclude() const;
    Int_t          GetSize() const;
    virtual void   ls(Option_t *option="") const;
+   virtual void   SetStreamer(Streamer_t streamer);
 
    ClassDef(TStreamerSTL,2)  //Streamer element of type STL container
 };

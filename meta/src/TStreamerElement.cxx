@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.55 2003/04/08 17:07:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.56 2003/05/13 06:31:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -253,13 +253,6 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
    //set pointer to Streamer function for this element
 
    fStreamer = streamer;
-   if (streamer) {
-      //if (fArrayLength == 0 && fType != kSTL) return;
-      if (fType != kSTL) return;
-      //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
-      fType = TStreamerInfo::kStreamer;
-      fNewType = fType;
-   }
 }
 
 //______________________________________________________________________________
@@ -1263,6 +1256,18 @@ const char *TStreamerSTL::GetInclude() const
    else if (fSTLtype == kSTLmultimap) sprintf(gIncludeName,"<%s>","multimap");
    else if (fSTLtype == kSTLmultiset) sprintf(gIncludeName,"<%s>","multiset");
    return gIncludeName;
+}
+
+//______________________________________________________________________________
+void TStreamerSTL::SetStreamer(Streamer_t streamer)
+{
+   //set pointer to Streamer function for this element
+
+   fStreamer = streamer;
+   if (streamer) {
+      fType = TStreamerInfo::kStreamer;
+      fNewType = fType;
+   }
 }
 
 //______________________________________________________________________________
