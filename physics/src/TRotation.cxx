@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.2 2001/07/13 09:02:21 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.3 2002/05/18 08:22:00 brun Exp $
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -62,7 +62,7 @@ axes
 
 <P><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 1&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 0&nbsp;&nbsp;&nbsp; |</TT>
-<BR><TT>Rx(a) = | 1 cos(a) -sin(a) |</TT>
+<BR><TT>Rx(a) = | 0 cos(a) -sin(a) |</TT>
 <BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 0 sin(a) cos(a)&nbsp;
 |</TT>
 
