@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.5 2000/08/05 19:01:59 fisyak Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2000/08/09 08:41:22 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.5 2000/08/05 19:01:59 fisyak Exp $
+// $Id: Ttypes.h,v 1.3 2000/08/09 08:41:22 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -32,23 +32,23 @@
 #else
 #   define _QUOTE2_(name1,name2) _QUOTE_(_NAME1_(name1)name2)
 #endif
- 
+
 //___________________________________________________________________
 #define _TableClassInit_(className,structName)                      \
-   extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict); \
+   extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict, Int_t); \
    extern void RemoveClass(const char *cname);                      \
    class _NAME2_(R__Init,className) {                               \
       public:                                                       \
          _NAME2_(R__Init,className)() {                             \
             AddClass(_QUOTE_(className), className::Class_Version(),\
-                     &className::Dictionary);                       \
+                     &className::Dictionary, 0);                       \
          }                                                          \
          ~_NAME2_(R__Init,className)() {                            \
             RemoveClass(_QUOTE_(className));                        \
             RemoveClass(_QUOTE_(structName));                       \
          }                                                          \
    };
- 
+
 //___________________________________________________________________
 #define _TableClassImp_(className,structName)                       \
    TClass *className::Class()                                       \
@@ -57,12 +57,12 @@
    int className::ImplFileLine() { return __LINE__; }               \
    TClass *className::fgIsA = 0;                                    \
    _TableClassInit_(className,structName)
- 
+
 //___________________________________________________________________
 #define TableClassStreamerImp(className)                            \
 void className::Streamer(TBuffer &R__b) {                           \
    TTable::Streamer(R__b); }
- 
+
 //___________________________________________________________________
 #define TableClassImp(className,structName)                         \
    void className::Dictionary()                                     \
@@ -87,15 +87,15 @@ void className::Streamer(TBuffer &R__b) {                           \
   TTableDescriptor *className::fgColDescriptors = 0;                \
   TableClassImp(className,structName)                               \
   TableClassStreamerImp(className)
- 
- 
+
+
 #define TableImpl(name)                                            \
   TTableDescriptor *_NAME2_(St_,name)::fgColDescriptors = 0;       \
   TableClassImp(_NAME2_(St_,name), _NAME2_(name,_st))              \
   TableClassStreamerImp(_NAME2_(St_,name))
- 
+
 #define TableImp(name)  TableClassImp(_NAME2_(St_,name),_QUOTE2_(St_,name))
- 
+
 #define ClassDefTable(className,structName)         \
   protected:                                        \
      static TTableDescriptor *fgColDescriptors;     \
@@ -118,10 +118,10 @@ void className::Streamer(TBuffer &R__b) {                           \
 // -- The member function "end()" returns a pointer to the last+1 table row
 //   (or just zero if the table is empty).
 
-//  protected:                                               
-//    _NAME2_(className,C)() : TChair() {;}  
-//  public:                                               
-//    _NAME2_(className,C)(className *tableClass) : TChair(tableClass) {;}  
+//  protected:
+//    _NAME2_(className,C)() : TChair() {;}
+//  public:
+//    _NAME2_(className,C)(className *tableClass) : TChair(tableClass) {;}
 
 #define ClassDefChair(className,structName)             \
   public:                                               \
