@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.38 2004/04/29 10:08:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.39 2004/04/29 21:10:04 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -302,7 +302,6 @@ static std::string gKeytabFile = "";   // via RpdSetKeytabFile
 // Globus stuff
 #ifdef R__GLBS
 static int gShmIdCred = -1;
-static gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
 #endif
 
 //______________________________________________________________________________
@@ -1653,19 +1652,22 @@ void RpdSendAuthList()
 
    if (gNumLeft > 0) {
       int i = 0;
-      const int ldum = kMAXSEC*4;
-      char sdum[ldum];
+      std::string alist;
+      char cm[5];
       for (i = 0; i < gNumAllow; i++) {
          if (gDebug > 2)
             ErrorInfo("RpdSendAuthList: gTriedMeth[%d]: %d", i,
                       gTriedMeth[i]);
          if (gTriedMeth[i] == 0) {
-            SPrintf(sdum, ldum, "%s %d", sdum, gAllowMeth[i]);
+           sprintf(cm," %d",gAllowMeth[i]);
+           alist.append(cm);
          }
+         ErrorInfo("RpdSendAuthList: tmp list: %s", alist.c_str());
+
       }
-      NetSend(sdum, ldum, kMESS_STRING);
+      NetSend(alist.c_str(), alist.length(), kMESS_STRING);
       if (gDebug > 2)
-         ErrorInfo("RpdSendAuthList: sent list: %s", sdum);
+         ErrorInfo("RpdSendAuthList: sent list: %s", alist.c_str());
    }
 }
 
@@ -3318,16 +3320,17 @@ void RpdDefaultAuthAllow()
 
    if (gDebug > 2) {
       int i;
-      char temp[200];
-      temp[0] = '\0';
+      std::string temp;
+      char cm[5];
       if (gNumAllow == 0)
-         strcpy(temp, "none");
+         temp.append("none");
       for (i = 0; i < gNumAllow; i++) {
-         SPrintf(temp, 200, "%s %d", temp, gAllowMeth[i]);
+         sprintf(cm," %d",gAllowMeth[i]);
+         temp.append(cm);
       }
       ErrorInfo
           ("RpdDefaultAuthAllow: default list of secure methods available: %s",
-           temp);
+           temp.c_str());
    }
 }
 
