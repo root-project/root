@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.16 2002/06/04 08:00:54 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.17 2002/07/16 14:02:05 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -33,6 +33,7 @@
 #include <TGTextEdit.h>
 #include <TGShutter.h>
 #include <TGProgressBar.h>
+#include <TGColorSelect.h>
 #include <RQ_OBJECT.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
@@ -216,6 +217,7 @@ private:
    TileFrame          *fContainer;
    TGTextEntry        *fTestText;
    TGButton           *fTestButton;
+   TGColorSelect      *fColorSel;
 
    TGMenuBar          *fMenuBar;
    TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuHelp;
@@ -645,6 +647,12 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fTestText->Resize(300, fTestText->GetDefaultHeight());
    fStatusFrame->AddFrame(fTestText, new TGLayoutHints(kLHintsTop | kLHintsLeft,
                                                        10, 2, 2, 2));
+   ULong_t yellow;
+   gClient->GetColorByName("yellow", yellow);
+   fColorSel = new TGColorSelect(fStatusFrame, yellow, 0);
+   fStatusFrame->AddFrame(fColorSel, new TGLayoutHints(kLHintsTop |
+                          kLHintsLeft, 2, 0, 2, 2));
+
    fMain->AddFrame(fStatusFrame, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
                    0, 0, 1, 0));
 
