@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.58 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.59 2004/10/29 16:07:32 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1829,7 +1829,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
    // Decode a namecycle "aap;2" into name "aap" and cycle "2".
 
    cycle     = 9999;
-   Int_t nch = strlen(buffer);
+   Int_t nch = buffer ? strlen(buffer) : 0;
    for (Int_t i = 0; i < nch; i++) {
       if (buffer[i] != ';')
          name[i] = buffer[i];
