@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.26 2002/02/15 14:07:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.27 2002/03/20 18:54:56 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -98,6 +98,10 @@ const char *gRootdErrStr[] = {
    "cannot seek to restart position"
 };
 
+// Protocol changes:
+// 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
+Int_t TNetFile::fgClientProtocol = 7;  // increase when client protocol changes
+
 
 ClassImp(TNetFile)
 
@@ -159,15 +163,15 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
       forceRead = kTRUE;
    }
 
-   Bool_t create = kFALSE;
-   if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
-       !fOption.CompareTo("CREATE", TString::kIgnoreCase) ||
-       !fOption.CompareTo("RECREATE", TString::kIgnoreCase))
-       create = kTRUE;
-   Bool_t update = fOption.CompareTo("UPDATE", TString::kIgnoreCase)
-                   ? kFALSE : kTRUE;
-   Bool_t read   = fOption.CompareTo("READ", TString::kIgnoreCase)
-                   ? kFALSE : kTRUE;
+   fOption.ToUpper();
+
+   if (fOption == "NEW")
+      fOption = "CREATE";
+
+   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+          create   = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
    if (!create && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
@@ -211,6 +215,10 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // Get rootd protocol level
    fSocket->Send(kROOTD_PROTOCOL);
    Recv(fProtocol, kind);
+   if (fProtocol > 6) {
+      fSocket->Send(Form("%d", fgClientProtocol), kROOTD_PROTOCOL2);
+      Recv(fProtocol, kind);
+   }
 
    // Check if rootd supports new options
    if (forceRead && fProtocol < 5) {
@@ -279,6 +287,35 @@ TNetFile::~TNetFile()
 }
 
 //______________________________________________________________________________
+Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
+{
+   // Open a remote file. Requires fOption to be set correctly.
+
+   fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
+                 kROOTD_OPEN);
+
+   EMessageTypes kind;
+   int stat;
+   Recv(stat, kind);
+
+   if (kind == kROOTD_ERR) {
+      PrintError("SysOpen", stat);
+      return -1;
+   }
+
+   return -2;
+}
+
+//______________________________________________________________________________
+Int_t TNetFile::SysClose(Int_t /*fd*/)
+{
+   // Close currently open file.
+
+   fSocket->Send(kROOTD_CLOSE);
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime)
 {
    // Return file stat information. The interface and return value is
@@ -308,7 +345,9 @@ void TNetFile::Close(Option_t *opt)
    if (!fSocket) return;
 
    TFile::Close(opt);
-   fSocket->Send(kROOTD_CLOSE);
+
+   if (fProtocol > 6)
+      fSocket->Send(kROOTD_BYE);
 }
 
 //______________________________________________________________________________
@@ -361,6 +400,24 @@ void TNetFile::PrintError(const char *where, Int_t err)
 
    fErrorCode = err;
    Error(where, gRootdErrStr[err]);
+}
+
+//______________________________________________________________________________
+Int_t TNetFile::ReOpen(Option_t *mode)
+{
+   // Reopen a file with a different access mode, like from READ to
+   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+   // mode argument can be either "READ" or "UPDATE". The method returns
+   // 0 in case of success, 1 in case mode did not change and -1 in
+   // case of failure. Not supported by rootd with protocol < 7.
+
+   if (fProtocol < 7) {
+      Error("ReOpen", "operation not supported by remote rootd (protocol = %d)",
+            fProtocol);
+      return -1;
+   }
+
+   return TFile::ReOpen(mode);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.3 2001/01/04 13:24:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.4 2002/03/28 01:45:45 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -90,6 +90,31 @@ Bool_t TWebFile::IsOpen() const
    // A TWebFile that has been correctly constructed is always considered open.
 
    return IsZombie() ? kFALSE : kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TWebFile::ReOpen(Option_t *mode)
+{
+   // Reopen a file with a different access mode, like from READ to
+   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+   // mode argument can be either "READ" or "UPDATE". The method returns
+   // 0 in case of success, 1 in case mode did not change and -1 in
+   // case of failure. A TWebFile cannot be reopened in update mode.
+
+   TString opt = mode;
+   opt.ToUpper();
+
+   if (opt != "READ" && opt != "UPDATE") {
+      Error("ReOpen", "mode must be either READ or UPDATE, not %s", opt.Data());
+      return -1;
+   }
+
+   if (opt == "UPDATE") {
+      Error("ReOpen", "update mode not allowed for a TWebFile");
+      return -1;
+   }
+
+   return 1;
 }
 
 //______________________________________________________________________________

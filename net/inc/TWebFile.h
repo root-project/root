@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.3 2002/03/28 01:45:45 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.4 2002/11/07 18:17:46 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
 
    Seek_t  GetSize() const;
    Bool_t  IsOpen() const;
+   Int_t   ReOpen(Option_t *mode);
    Bool_t  ReadBuffer(char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
 

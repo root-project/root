@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.45 2002/10/28 14:22:51 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.46 2002/12/02 18:50:05 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -158,6 +158,7 @@
 // 3 -> 4: added support for TFTP (i.e. kROOTD_PUTFILE, kROOTD_GETFILE, etc.)
 // 4 -> 5: added support for "+read" to allow readers when file is opened for writing
 // 5 -> 6: added support for kerberos5 authentication
+// 6 -> 7: added support for kROOTD_BYE and kROOTD_PROTOCOL2
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -321,7 +322,8 @@ int     gAnon                    = 0;
 int     gAltSRP                  = 0;
 int     gFd                      = -1;
 int     gWritable                = 0;
-int     gProtocol                = 6;       // increase when protocol changes
+int     gProtocol                = 7;       // increase when protocol changes
+int     gClientProtocol          = 0;
 int     gUploaded                = 0;
 int     gDownloaded              = 0;
 int     gFtp                     = 0;
@@ -593,7 +595,7 @@ again:
          unsigned long ino;
          sscanf(s, "%s %lu %s %s %d", msg, &ino, gmode, user, &pid);
          if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
-            ErrorInfo("Remove Stale Lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
+            ErrorInfo("RootdCheckTab: remove stale lock (%s %u %s %s %d)\n", msg, ino, gmode, user, pid);
             if (n >= flast) {
                siz = int(s - fbuf);
                changed = 1;
@@ -843,9 +845,28 @@ void RootdFstat()
 //______________________________________________________________________________
 void RootdProtocol()
 {
-   // Return rootd protocol version id.
+   // Return rootd protocol.
+
+   // all old client protocols, before intro of kROOTD_PROTOCOL2
+   gClientProtocol = 6;
 
    NetSend(gProtocol, kROOTD_PROTOCOL);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdProtocol: gClientProtocol = %d", gClientProtocol);
+}
+
+//______________________________________________________________________________
+void RootdProtocol2(const char *proto)
+{
+   // Receives client protocol and returns rootd protocol.
+
+   sscanf(proto, "%d", &gClientProtocol);
+
+   NetSend(gProtocol, kROOTD_PROTOCOL);
+
+   if (gDebug > 0)
+      ErrorInfo("RootdProtocol: gClientProtocol = %d", gClientProtocol);
 }
 
 //______________________________________________________________________________
@@ -1255,6 +1276,8 @@ void RootdOpen(const char *msg)
    // opened by another rootd in write mode, do not open the file.
 
    char file[kMAXPATHLEN], option[32];
+
+   gBytesRead = gBytesWritten = gBytesRecv = gBytesSent = 0;
 
    sscanf(msg, "%s %s", file, option);
 
@@ -2078,9 +2101,10 @@ void RootdLoop()
       if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
          ErrorFatal(kErrFatal, "RootdLoop: error receiving message");
 
-      if (kind != kROOTD_USER    && kind != kROOTD_PASS &&
-          kind != kROOTD_SRPUSER && kind != kROOTD_KRB5 &&
-          kind != kROOTD_PROTOCOL && gAuth == 0)
+      if (kind != kROOTD_USER     && kind != kROOTD_PASS      &&
+          kind != kROOTD_SRPUSER  && kind != kROOTD_KRB5      &&
+          kind != kROOTD_PROTOCOL && kind != kROOTD_PROTOCOL2 &&
+          gAuth == 0)
          ErrorFatal(kErrNoUser, "RootdLoop: not authenticated");
 
       if (gDebug > 2 && kind != kROOTD_PASS)
@@ -2113,7 +2137,9 @@ void RootdLoop()
             break;
          case kROOTD_CLOSE:
             RootdClose();
-            return;
+            if (gClientProtocol < 7)
+               return;
+            break;
          case kROOTD_FSTAT:
             RootdFstat();
             break;
@@ -2122,6 +2148,9 @@ void RootdLoop()
             break;
          case kROOTD_PROTOCOL:
             RootdProtocol();
+            break;
+         case kROOTD_PROTOCOL2:
+            RootdProtocol2(recvbuf);
             break;
          case kROOTD_PUTFILE:
             RootdPutFile(recvbuf);
@@ -2153,6 +2182,8 @@ void RootdLoop()
          case kROOTD_CHMOD:
             RootdChmod(recvbuf);
             break;
+         case kROOTD_BYE:
+            return;
          default:
             ErrorFatal(kErrBadOp, "RootdLoop: received bad opcode %d", kind);
       }

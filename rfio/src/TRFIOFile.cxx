@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.19 2002/10/25 00:44:53 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.20 2002/10/25 10:31:08 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -116,23 +116,21 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
-   fOption = option;
    fOffset = 0;
+   fOption = option;
+   fOption.ToUpper();
 
    // tell RFIO to not read large buffers, ROOT does own buffering
    Int_t readopt = 0;
    ::rfiosetopt(RFIO_READOPT, &readopt, 4);
 
-   Bool_t create = kFALSE;
-   if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
-       !fOption.CompareTo("CREATE", TString::kIgnoreCase))
-       create = kTRUE;
-   Bool_t recreate = fOption.CompareTo("RECREATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
-   Bool_t update   = fOption.CompareTo("UPDATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
-   Bool_t read     = fOption.CompareTo("READ", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
+   if (fOption == "NEW")
+      fOption = "CREATE";
+
+   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";

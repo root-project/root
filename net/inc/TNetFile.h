@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.8 2001/02/22 09:44:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.9 2001/06/26 14:24:24 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -45,11 +45,15 @@ private:
    Int_t     fProtocol;   //rootd protocol level
    Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
 
+   static Int_t fgClientProtocol;  //client protocol level
+
    TNetFile() : fUrl("dummy") { fSocket = 0; }
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
    void   PrintError(const char *where, Int_t err);
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
+   Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   Int_t  SysClose(Int_t fd);
    Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
 
 public:
@@ -61,6 +65,7 @@ public:
    void    Flush();
    Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;
+   Int_t   ReOpen(Option_t *mode);
    Bool_t  ReadBuffer(char *buf, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.14 2002/10/25 01:23:38 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.15 2002/11/15 20:02:56 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -75,7 +75,7 @@ enum EMessageTypes {
    kROOTD_STAT,                          //return rootd statistics
    kROOTD_ACK,                           //acknowledgement (all OK)
    kROOTD_ERR,                           //error code and message follow
-   kROOTD_PROTOCOL,                      //return rootd protocol id
+   kROOTD_PROTOCOL,                      //returns rootd protocol
    kROOTD_SRPUSER,                       //user id for SRP authentication follows
    kROOTD_SRPN,                          //SRP n follows
    kROOTD_SRPG,                          //SRP g follows
@@ -93,7 +93,9 @@ enum EMessageTypes {
    kROOTD_MV,                            //rename file
    kROOTD_RM,                            //delete file
    kROOTD_CHMOD,                         //change permission
-   kROOTD_KRB5                           //krb5 authentication follows
+   kROOTD_KRB5,                          //krb5 authentication follows
+   kROOTD_PROTOCOL2,                     //client proto follows, returns rootd proto
+   kROOTD_BYE                            //terminate rootd
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.73 2002/11/29 08:16:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.74 2002/12/02 18:50:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -195,25 +195,24 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fProcessIDs = 0;
    fNProcessIDs= 0;
 
-   if (!fOption.CompareTo("NET", TString::kIgnoreCase))
+   fOption.ToUpper();
+
+   if (fOption == "NET")
       return;
 
-   if (!fOption.CompareTo("WEB", TString::kIgnoreCase)) {
+   if (fOption == "WEB") {
       fOption   = "READ";
       fWritable = kFALSE;
       return;
    }
 
-   Bool_t create = kFALSE;
-   if (!fOption.CompareTo("NEW", TString::kIgnoreCase) ||
-       !fOption.CompareTo("CREATE", TString::kIgnoreCase))
-       create = kTRUE;
-   Bool_t recreate = fOption.CompareTo("RECREATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
-   Bool_t update   = fOption.CompareTo("UPDATE", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
-   Bool_t read     = fOption.CompareTo("READ", TString::kIgnoreCase)
-                    ? kFALSE : kTRUE;
+   if (fOption == "NEW")
+      fOption = "CREATE";
+
+   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
+   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
@@ -323,8 +322,7 @@ TFile::~TFile()
 
    Close();
 
-   delete fProcessIDs; fProcessIDs = 0;
-
+   SafeDelete(fProcessIDs);
    SafeDelete(fFree);
    SafeDelete(fCache);
 
@@ -515,7 +513,7 @@ void TFile::Close(Option_t *)
    TDirectory *cursav = gDirectory;
    cd();
 
-   if (gFile == this) {
+   if (cursav == this) {
       cursav = 0;
    }
 
@@ -762,11 +760,8 @@ Seek_t TFile::GetSize() const
    // be stat'ed.
 
    Long_t id, size, flags, modtime;
-#if defined(R__AIX) || (defined(R__HPUX) && !defined(R__ACC))
-   if (((TFile*)this)->SysStat(fD, &id, &size, &flags, &modtime)) {
-#else
+
    if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
-#endif
       Error("GetSize", "cannot stat the file %s", GetName());
       return -1;
    }
@@ -1121,6 +1116,106 @@ Int_t TFile::Recover()
       if (nrecov) Write();
    }
    return nrecov;
+}
+
+//______________________________________________________________________________
+Int_t TFile::ReOpen(Option_t *mode)
+{
+   // Reopen a file with a different access mode, like from READ to
+   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+   // mode argument can be either "READ" or "UPDATE". The method returns
+   // 0 in case of success, 1 in case mode did not change and -1 in
+   // case of failure.
+
+   TString opt = mode;
+   opt.ToUpper();
+
+   if (opt != "READ" && opt != "UPDATE") {
+      Error("ReOpen", "mode must be either READ or UPDATE, not %s", opt.Data());
+      return -1;
+   }
+
+   if (opt == fOption || (opt == "UPDATE" && fOption == "CREATE"))
+      return 1;
+
+   if (opt == "READ") {
+      // switch to READ mode
+
+      // flush data still in the pipeline and close the file
+      if (IsOpen() && IsWritable()) {
+         WriteStreamerInfo();
+
+         TDirectory *cursav = gDirectory;
+         cd();
+
+         // save directory key list and header
+         Save();
+
+         TFree *f1 = (TFree*)fFree->First();
+         if (f1) {
+            WriteFree();       // write free segments linked list
+            WriteHeader();     // now write file header
+         }
+         if (fCache) fCache->Flush();
+
+         // delete free segments from free list
+         if (fFree) {
+            fFree->Delete();
+            SafeDelete(fFree);
+         }
+
+         SysClose(fD);
+         fD = -1;
+
+         if (cursav)
+            cursav->cd();
+
+         fWritable = kFALSE;
+      }
+
+      // open in READ mode
+      fOption = opt;    // set fOption before SysOpen() for TNetFile
+#ifndef WIN32
+      fD = SysOpen(GetName(), O_RDONLY, 0644);
+#else
+      fD = SysOpen(GetName(), O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+#endif
+      if (fD == -1) {
+         SysError("ReOpen", "file %s can not be opened in read mode", GetName());
+         return -1;
+      }
+      fWritable = kFALSE;
+
+   } else {
+      // switch to UPDATE mode
+
+      // close readonly file
+      if (IsOpen()) {
+         SysClose(fD);
+         fD = -1;
+      }
+
+      // open in UPDATE mode
+      fOption = opt;    // set fOption before SysOpen() for TNetFile
+#ifndef WIN32
+      fD = SysOpen(GetName(), O_RDWR | O_CREAT, 0644);
+#else
+      fD = SysOpen(GetName(), O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+#endif
+      if (fD == -1) {
+         SysError("ReOpen", "file %s can not be opened in update mode", GetName());
+         return -1;
+      }
+      fWritable = kTRUE;
+
+      fFree = new TList;
+      if (fSeekFree > fBEGIN)
+         ReadFree();
+      else
+         Warning("ReOpen","file %s probably not closed, cannot read free segments", GetName());
+   }
+
+   return 0;
 }
 
 //______________________________________________________________________________
