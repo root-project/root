@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.10 2004/09/21 14:17:58 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.11 2004/09/21 17:53:10 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -187,12 +187,15 @@ void TGedEditor::ConnectToCanvas(TCanvas *c)
 
    TQObject::Connect(c, "Selected(TVirtualPad*,TObject*,Int_t)", "TGedEditor",
                      this, "SetModel(TVirtualPad*,TObject*,Int_t)");
-   c->Selected(c->GetSelectedPad(), c->GetSelected(), c->GetEvent());
+   c->Selected(c->GetSelectedPad(), c->GetSelected(), kButton1Down);
 }
 
 //______________________________________________________________________________
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
+
+   if (event != kButton1Down) return;
+
    fModel = obj;
    fPad   = pad;
 
