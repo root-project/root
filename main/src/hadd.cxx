@@ -6,18 +6,13 @@
 
   Syntax:
 
-  hadd targetfile source1 source2 ...
+       hadd targetfile source1 source2 ...
 
-  Author: Sven A. Schmidt, sven.schmidt@cern.ch
-  Date:   13.2.2001
-
-  This code is based on the hadd.C example by Rene Brun and Dirk Geppert,
-  which had a problem with directories more than one level deep.
-  (see macro hadd_old.C for this previous implementation).
-
-  I have tested this macro on rootfiles with one and two dimensional
-  histograms, and two levels of subdirectories. Feel free to send comments
-  or bug reports to me.
+  if the source files contains histograms and Trees, one can skip 
+  the Trees with
+       hadd -T targetfile source1 source2 ...
+  
+  Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
 
  */
 
@@ -30,6 +25,7 @@
 
 TList *FileList;
 TFile *Target;
+Bool_t noTrees;
 
 void MergeRootfile( TDirectory *target, TList *sourcelist );
 
@@ -41,14 +37,21 @@ int main( int argc, char **argv ) {
     cout << "to a target root file. The target file is newly created and must not be" << endl;
     cout << "identical to one of the source files." << endl;
     cout << "Supply at least two source files for this to make sense... ;-)" << endl;
+    cout << "If the first argument is -T, Trees are not merged" <<endl;
     return 1;
   }
    FileList = new TList();
 
-  cout << "Target file: " << argv[1] << endl;
-  Target = TFile::Open( argv[1], "RECREATE" );
+  noTrees = kFALSE;
+  int ffirst = 2;
+  if ("-T" == string(argv[1])) {
+     noTrees = kTRUE;
+     ffirst = 3;
+  }
+  cout << "Target file: " << argv[ffirst-1] << endl;
+  Target = TFile::Open( argv[ffirst-1], "RECREATE" );
 
-  for ( int i = 2; i < argc; i++ ) {
+  for ( int i = ffirst; i < argc; i++ ) {
     cout << "Source file " << i-1 << ": " << argv[i] << endl;
     FileList->Add( TFile::Open( argv[i] ) );
   }
@@ -107,22 +110,23 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
     else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
       
       // loop over all source files create a chain of Trees "globChain"
-      TString obj_name;
-      if (path.Length()) {
-         obj_name = path + "/" + obj->GetName();
-      } else {
-         obj_name = obj->GetName();
-      }
+      if (!noTrees) {
+         TString obj_name;
+         if (path.Length()) {
+            obj_name = path + "/" + obj->GetName();
+         } else {
+            obj_name = obj->GetName();
+         }
 
-      globChain = new TChain(obj_name);
-      globChain->Add(first_source->GetName());
-      TFile *nextsource = (TFile*)sourcelist->After( first_source );
-      //      const char* file_name = nextsource->GetName();
-      // cout << "file name  " << file_name << endl;
-      while ( nextsource ) {
-     	  
-         globChain->Add(nextsource->GetName());
-         nextsource = (TFile*)sourcelist->After( nextsource );
+         globChain = new TChain(obj_name);
+         globChain->Add(first_source->GetName());
+         TFile *nextsource = (TFile*)sourcelist->After( first_source );
+         //      const char* file_name = nextsource->GetName();
+         // cout << "file name  " << file_name << endl;
+         while ( nextsource ) {     	  
+            globChain->Add(nextsource->GetName());
+            nextsource = (TFile*)sourcelist->After( nextsource );
+         }
       }
 
     } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
@@ -154,10 +158,11 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
        target->cd();
        
        //!!if the object is a tree, it is stored in globChain...
-       if(obj->IsA()->InheritsFrom( "TTree" ))
-          globChain->Merge(target->GetFile(),0,"keep");
-       else
+       if(obj->IsA()->InheritsFrom( "TTree" )) {
+          if (!noTrees) globChain->Merge(target->GetFile(),0,"keep");
+       } else {
           obj->Write( key->GetName() );
+       }
     }
     oldkey = key;
 
