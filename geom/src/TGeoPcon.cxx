@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.9 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -320,8 +320,9 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    radmax=fRmax[TMath::LocMax(fNz, fRmax)];
    if (cross) {
       if (r2>(radmax*radmax)) {
-         Double_t rpr=point[0]*dir[0]+point[1]*dir[1];
-         if (rpr>TMath::Sqrt(r2-radmax*radmax)) {
+         Double_t rpr=-point[0]*dir[0]-point[1]*dir[1];
+         Double_t nxy=dir[0]*dir[0]+dir[1]*dir[1];
+         if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) {
             if (iact==3) return kBig;
             cross = kFALSE;
          }

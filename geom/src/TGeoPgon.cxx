@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.12 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.13 2003/01/12 14:49:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -580,38 +580,6 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Dou
    memcpy(&pt[0], point, 3*sizeof(Double_t));
    Int_t ipsec = (Int_t)TMath::Min((phi-fPhi1)/divphi+1., (Double_t)fNedges);
    Double_t dsec = DistToOutSect(pt, dir, ipl, ipsec);
-//   Double_t ph0 = (fPhi1+divphi*(ipsec-0.5))*kDegRad;
-   
-   // find the radius of the outscribed circle
-//   rmin = fRmin[TMath::LocMin(fNz, fRmin)];   
-//   rmax = fRmax[TMath::LocMax(fNz, fRmax)];
-//   rmax = rmax/TMath::Cos(0.5*divphi*kDegRad);
-
-
-//   Double_t saf[4];
-/*
-   Double_t snxt = kBig;
-   Double_t r2 = point[0]*point[0] + point[1]*point[1];
-   Double_t r = TMath::Sqrt(r2);
-   
-   Double_t pdiv = fDphi/fNedges;
-   Double_t delphi = pdiv*kDegRad;
-   Double_t dphi2 = 0.5*delphi;
-   Double_t csdph2 = TMath::Cos(dphi2);
-   Double_t zmin = fZ[0];
-   Double_t zmax = fZ[fNz-1];
-   Double_t safz1 = point[2]-zmin;
-   Double_t safz2 = zmax-point[2];
-   Double_t safz = TMath::Min(safz1, safz2);
-   // find the segment containing the point
-   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if (ipl==(fNz-1)) {
-      // point on end z plane
-      if (safe) *safe=0;
-      return 0;
-   }
-   Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-*/
    return dsec;   
 }   
 //-----------------------------------------------------------------------------
@@ -619,15 +587,9 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the polygone
    // first find in which segment we are
-//   printf("point : %g, %g, %g\n", point[0], point[1], point[2]);
-//   printf("dir   : %g, %g, %g\n", dir[0], dir[1], dir[2]);
    Double_t pt[3];
    Double_t eps = 0;
    memcpy(&pt[0], point, 3*sizeof(Double_t));
-//   if ((pt[0]*pt[1])==0) {
-//      eps = 1E-3;
-//      for (Int_t i=0; i<3; i++) pt[i]+=eps*dir[i];
-//   }      
 
    UChar_t bits=0;
    const UChar_t kUp = 0x01;
@@ -644,7 +606,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    }
    if (cross) {
       if ((pt[2]>fZ[fNz-1]) && (dir[2]>=0)) {
-         if (iact==3) return kBig; 
+         if (iact==3) return kBig;
          cross=kFALSE;
       }
    }   
@@ -655,8 +617,9 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       radmax = fRmax[TMath::LocMax(fNz, fRmax)];
       radmax = radmax/TMath::Cos(0.5*divphi*kDegRad);
       if (r2>(radmax*radmax)) {
-         Double_t rpr=pt[0]*dir[0]+pt[1]*dir[1];
-         if (rpr>TMath::Sqrt(r2-radmax*radmax)) {
+         Double_t rpr=-pt[0]*dir[0]-pt[1]*dir[1];
+         Double_t nxy = dir[0]*dir[0]+dir[1]*dir[1];
+         if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) {
             if (iact==3) return kBig;
             cross = kFALSE;
          }
@@ -678,7 +641,6 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          bits |= kUp;
       } 
    } 
-//   printf("inside Z plane : %i\n", ifirst);     
    if (!(bits & kOut)) {
       saf[0]=pt[2]-fZ[ifirst];
       saf[1]=fZ[ifirst+1]-pt[2];
@@ -691,13 +653,10 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          saf[1]=pt[2]-fZ[ifirst+1];
       }   
    }
-//   printf("safdown=%g\n", saf[0]);    
-//   printf("safup  =%g\n", saf[1]);    
    // find out if point is in the hole of current segment or outside
    Double_t phi = TMath::ATan2(pt[1], pt[0])*kRadDeg;
    Double_t phi1, phi2;
    if (phi<fPhi1) phi+=360.;
-//   printf("phi=%g\n", phi);
    Int_t ipsec = Int_t((phi-fPhi1)/divphi+1.);
    if (ipsec>fNedges) {
    // point in gap mellon slice
@@ -706,54 +665,29 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       phi1=saf[6]=fPhi1;
       phi2=saf[7]=fPhi1+fDphi;
    } else {
-//      printf("inphi : %i\n", ipsec);
       bits |= kInphi;
       Double_t ph0=(fPhi1+divphi*(ipsec-0.5))*kDegRad;
-//      printf("phi seg middle: %g\n", ph0*kRadDeg);
       phi1=saf[6]=fPhi1+(ipsec-1)*divphi;
       phi2=saf[7]=phi1+divphi;
-//      printf("phi1=%g, phi2=%g\n", phi1, phi2);
-      // projected distance
       Double_t rproj=pt[0]*TMath::Cos(ph0)+pt[1]*TMath::Sin(ph0);
-//   Double_t r2=point[0]*point[0]+point[1]*point[1];
       Double_t dzrat=(pt[2]-fZ[ifirst])/(fZ[ifirst+1]-fZ[ifirst]);
       // rmin and rmax at Z coordinate of the point
       Double_t rmin=fRmin[ifirst]+(fRmin[ifirst+1]-fRmin[ifirst])*dzrat;
       Double_t rmax=fRmax[ifirst]+(fRmax[ifirst+1]-fRmax[ifirst])*dzrat;
       if ((rmin>0) && (rproj<rmin)) bits |= kInhole;
       if (rproj>rmax) bits |= kOuthole;
-//      if (bits & kInhole) printf("inhole\n");
-//      else printf("outhole\n");
       Double_t tin=(fRmin[ifirst+1]-fRmin[ifirst])/(fZ[ifirst+1]-fZ[ifirst]);
       Double_t cin=1./TMath::Sqrt(1.0+tin*tin);
       Double_t tou=(fRmax[ifirst+1]-fRmax[ifirst])/(fZ[ifirst+1]-fZ[ifirst]);
       Double_t cou=1./TMath::Sqrt(1.0+tou*tou);
       saf[2] = (bits & kInhole)?((rmin-rproj)*cin):-kBig;
       saf[3] = (bits & kOuthole)?((rproj-rmax)*cou):-kBig;
-//      printf("safinner=%g\n", saf[2]);
-//      printf("safouter=%g\n", saf[3]);
    }
    // find closest distance to phi walls
    Double_t dph1=(bits & kInphi)?(phi-phi1):(phi1-phi);
    Double_t dph2=(bits & kInphi)?(phi2-phi):(phi-phi2);
    saf[4]=r*TMath::Sin(dph1*kDegRad);
    saf[5]=r*TMath::Sin(dph2*kDegRad);
-//   printf("safphi1=%g\n", saf[4]);   
-//   printf("safphi2=%g\n", saf[5]);   
-
-/*
-   if (bits & kUp) printf("UP\n");
-   if (bits & kDown) printf("DOWN\n");
-   if (!(bits & kOut)) printf("IN Z sector %i\n", ifirst);
-   printf("SECTOR: %i\n",ipsec);
-   printf("safz=%f safz=%f\n", saf[0], saf[1]);
-   if (bits & kInhole) printf("INHOLE safin=%f\n", saf[2]);
-   if (bits & kOuthole) printf("OUTHOLE safout=%f\n", saf[3]);
-   if (bits & kInphi) printf("INPHI\n");
-   printf("phi1=%f phi2=%f phi=%f r=%f\n", phi1, phi2, phi, r);
-   printf("safphi1=%f  safphi2=%f\n", saf[4], saf[5]);
-   printf("DIRECTION : nx=%f ny=%f nz=%f\n", dir[0], dir[1], dir[2]);
-*/
    if ((iact<3) && safe) {
       *safe = saf[TMath::LocMax(6, &saf[0])];
       if ((iact==1) && (*safe>step)) return kBig;
@@ -763,9 +697,8 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (!cross) return kBig;
    Double_t snxt=DistToInSect(&pt[0], dir, ifirst, ipsec, bits, &saf[0]);
    return (snxt+eps);
-
-
 }
+
 //-----------------------------------------------------------------------------
 Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t & /*ipsec*/, 
                                 UChar_t &bits, Double_t *saf) const 
