@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.14 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.15 2002/03/13 01:52:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -38,6 +38,9 @@
 #endif
 
 #include <map>
+#if !defined(__HP_aCC) || __HP_aCC >= 53000
+using std::map;
+#endif
 
 
 class TList;
@@ -106,7 +109,8 @@ private:
       TMD5    fMD5;             //file's md5
       ULong_t fModtime;         //file's modification time
    };
-   typedef std::map<TString, MD5Mod_t> FileMap_t;
+   //typedef std::map<TString, MD5Mod_t> FileMap_t;
+   typedef map<TString, MD5Mod_t> FileMap_t;
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 
    enum ESlaves { kAll, kActive, kUnique };
