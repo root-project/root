@@ -13,6 +13,4 @@
 #define ROOTICONPATH  "@iconpath@"
 #define EXTRAICONPATH "@extraiconpath@"
 #define TTFFONTDIR    "@ttffontdir@"
-#define TTFLIBDIR     "@ttflibdir@"
 #define CINTINCDIR    "@cintincdir@"
-

@@ -1311,14 +1311,13 @@ if [ -n "$haveconfig" ]; then
     if [ -z "$cintincdir" ];   then cintincdir=$datadir/cint; fi
     if [ -z "$iconpath" ];     then iconpath=$datadir/icons; fi
     if [ -z "$srcdir" ];       then srcdir=$datadir/src; fi
-    if [ -z "$ttflibdir" ];    then ttflibdir=$libdir; fi
     if [ -z "$ttffontdir" ];   then ttffontdir=$datadir/fonts; fi
     if [ -z "$docdir" ];       then docdir=$prefix/doc/root; fi
     if [ -z "$testdir" ];      then testdir=$docdir/test; fi
     if [ -z "$tutdir" ];       then tutdir=$docdir/tutorials; fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|-DHAVE_CONFIG|"                  \
+        -e "s|@cflags@|-DHAVE_CONFIG|"                 \
                 < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 
@@ -1444,7 +1443,6 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@iconpath@|$iconpath|"           \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$ttffontdir|"       \
-    -e "s|@ttflibdir@|$ttflibdir|"         \
     -e "s|@extraiconpath@|$extraiconpath|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
