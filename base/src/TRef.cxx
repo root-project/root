@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.3 2001/11/20 09:32:54 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.4 2001/11/22 18:10:00 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -70,6 +70,52 @@
 //          part of MyClass must be Streamed. One should not
 //          call MyClass::Class()->IgnoreTObjectStreamer()
 //
+// Action on Demand
+// ----------------
+// The normal behaviour of a TRef has been described above. In addition,
+// TRef supports also "Actions on Demand". It may happen that the object
+// referenced is not yet in memory, on a separate file or not yet computed.
+// In this case TRef is able to automatically execute an action:
+//   - call to a compiled function (static function of member function)
+//   - call to an interpreted function
+//   - execution of a CINT script
+//
+// How to select this option?
+// In the definition of the TRef data member in the original class, do:
+//   TRef  fRef;   //EXEC:execName. points to something
+// When the special keyword "EXEC:" is found in the comment field of the member,
+// the next string is assumed to be the name of a TExec object.
+// When a file is connected, the dictionary of the classes on the file
+// is read in memory (see TFile::ReadStreamerInfo). When the TStreamerElement
+// object is read, a TExec object is automatically created with the name
+// specified after the keywork "EXEC:" in case a TExec with a same name does
+// not already exist.
+// The action to be executed via this TExec can be specified with:
+//    - a call to the TExec constructor, if the constructor is called before
+//      opening the file.
+//    - a call to TExec::SetAction at any time.
+// One can compute a pointer to an existing TExec with a name with:
+//    TObjArray *listExecs = (TObjArray*)gROOT->FindObjectAny("Execs");
+//    TExec *myExec = (TExec*)listExecs->FindObject(execName);
+//    myExec->SetAction(actionCommand); where 
+//      - listExecs points to to the array of TExecs. Up to 256 TExecs
+//        can be specified in a process.
+//      - actionCommand is a string containing a CINT instruction. Examples:
+//          myExec->SetAction("LoadHits()");
+//          myExec->SetAction(".x script.C");
+//
+//  When a TRef is dereferenced via TRef::GetObject, its TExec will be
+// automatically executed. In the function/script being executed, one or more 
+// of the following actions can be executed:
+//  - load a file containing the referenced object. This function typically
+//    looks in the file catalog (GRID).
+//  - compute a pointer to the referenced object and communicate this pointer
+//    back to the calling function TRef::GetObject via:
+//      gROOT->SetSelectedPrimitive(theObject);
+// As soon as an object is returned to GetObject, a bit is set in the TRef
+// and the address of the referenced object stored. At the next call to GetRef,
+// the address of the referenced object will be returned immediatly.
+//
 // Array of TRef
 // -------------
 // The special class TRefArray should be used to store multiple references.
@@ -139,23 +185,32 @@ TObject *TRef::GetObject() const
    if (!TestBit(1)) return (TObject*)(uid + (Long_t)gSystem);
    
    //Try to find the object from the map of the corresponding PID
-   if (!fPID) return 0;
-   obj = fPID->GetObjectWithID(uid);
+   if (fPID) obj = fPID->GetObjectWithID(uid);
    
-   //if object not found, then exec action if an action exists
+   //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid starts at bit 8 on 8 bits
       Int_t execid = TestBits(0xff00) >> 8;
       if (execid > 0) {
-          TObjArray *lexecs = (TObjArray*)gROOT->FindObjectAny("Execs");
-          if (lexecs) {
-             TExec *exec = (TExec*)lexecs->At(execid-1);
-             if (exec) {
-                exec->Exec();
-                //check again in the PID map
-                obj = fPID->GetObjectWithID(uid);
-             }  
-          }  
+         TObjArray *lexecs = (TObjArray*)gROOT->FindObjectAny("Execs");
+         if (lexecs) {
+            TExec *exec = (TExec*)lexecs->At(execid-1);
+            if (exec) {
+               //store this object in gROOT just in case it is needed by the Exec
+               TObject *ref = (TObject*)this;
+               gROOT->SetSelectedPrimitive(ref);
+               exec->Exec();
+               //if the Exec has redefined the selectedPrimitive, we assume
+               //that it contains the pointer to our requested object
+               if (gROOT->GetSelectedPrimitive() != ref) {
+                  obj = gROOT->GetSelectedPrimitive();
+                  if (obj) obj->SetBit(kIsReferenced);
+               } else {
+                  //well may be the Exec has loaded the object
+                  if (fPID) obj = fPID->GetObjectWithID(uid);
+               }  
+            }  
+         }  
       }
    }
    
