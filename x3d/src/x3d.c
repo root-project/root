@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name$:$Id$ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -88,16 +88,13 @@ e) If possible, be careful not to needlessly sacrifice significant readability
 
 #ifdef WIN32
 
-void x3d_main(longitude, latitude, psi, string)
-float   *longitude;
-float   *latitude;
-float   *psi;
-char    *string;
-{
-
-    /* do nothing */
-
-}
+unsigned long x3d_main(float *longitude, float *latitude, float *psi,
+                       const char *string) { return 0L; }
+void x3d_terminate() { }
+void x3d_get_position(float *longitude, float *latitude, float *psi) { }
+int  x3d_dispatch_event(unsigned long event) { return 0; }
+void x3d_set_display(unsigned long display) { }
+void x3d_update() { }
 
 #else
 
@@ -120,9 +117,12 @@ extern polygon *polys;
 
 extern int  currPoint, currSeg, currPoly;
 
-polygon **list;
-point   *bounds;
-int quitApplication = 0;
+static polygon **list;
+static point   *bounds;
+static int quitApplication = 0;
+static Display *gDisplay = NULL;
+static Ginfo *gGInfo = NULL;
+static Oinfo *gOInfo = NULL;
 
 
 
@@ -920,9 +920,10 @@ int numColors;
 char title[80];
 Atom wm_protocols[2];
 
-static void InitDisplay(o, g)
+static void InitDisplay(o, g, parent)
 Oinfo *o;
 Ginfo *g;
+Window parent;
 /******************************************************************************
    Set up an X window and our colormap.  We rely on X's own error handling and
    reporting for most bad X calls because X buffers requests.
@@ -982,10 +983,14 @@ unsigned int width, height, numSegments;
 
 /* Can we connect with the server? */
 
-   if((g->dpy = XOpenDisplay(g->DisplayName)) == NULL){
+   if (!gDisplay)
+      g->dpy = XOpenDisplay(g->DisplayName);
+   else
+      g->dpy = gDisplay;
+   if(g->dpy == NULL){
       fprintf(stderr, "Cannot connect to server\n");
       return;
-      }
+   }
 
    screen = DefaultScreen(g->dpy);
    g->black =  (long)BlackPixel(g->dpy, screen);
@@ -1078,8 +1083,12 @@ unsigned int width, height, numSegments;
    g->helpWin = XCreateSimpleWindow(g->dpy, RootWindow(g->dpy, screen), 0, 0,
       g->helpWinX, g->helpWinY, 0, 0, 0);
 
-   g->win = XCreateSimpleWindow(g->dpy, RootWindow(g->dpy,screen), 0, 0,
-      g->winX, g->winY, 0, 0, 0);
+   if (parent)
+       g->win = XCreateSimpleWindow(g->dpy, parent, 0, 0,
+                                    g->winX, g->winY, 0, 0, 0);
+   else
+       g->win = XCreateSimpleWindow(g->dpy, RootWindow(g->dpy,screen), 0, 0,
+                                    g->winX, g->winY, 0, 0, 0);
 
 /* Any user geometry? */
 
@@ -1265,7 +1274,8 @@ char *arg;
 
 
 
-static void GetInput(pointerX, pointerY, command, same, g)
+static void GetInput(xevent, pointerX, pointerY, command, same, g)
+XEvent *xevent;
 int *pointerX, *pointerY;
 char *command;
 int *same;
@@ -1286,30 +1296,37 @@ char string[TMPSTRLEN];
 
    *command = '\0';
 
-   do{
-       string[0] = '\0';
+   if (!xevent) {
+
+      do{
+          string[0] = '\0';
 
 /* How many events? */
 
-       numEvents = XEventsQueued(g->dpy, QueuedAfterReading);
+          numEvents = XEventsQueued(g->dpy, QueuedAfterReading);
 
 /* Block to obtain an event yet? */
 
-       if((numEvents == 0) && (g->Block)){
+          if((numEvents == 0) && (g->Block)){
 
 /* If the user falls asleep stop using CPU cycles */
 
-          XIfEvent(g->dpy, &event, CheckEvent, NULL);
-          numEvents = 1;
-       }else{
+             XIfEvent(g->dpy, &event, CheckEvent, NULL);
+             numEvents = 1;
+          }else{
 
 /* If we have at least one event , fetch the first event off the queue*/
 
-          if(numEvents)
-             XNextEvent(g->dpy,&event);
-       }
+             if(numEvents)
+                XNextEvent(g->dpy,&event);
+          }
 
-   }while((numEvents == 0) && (g->Block));
+      }while((numEvents == 0) && (g->Block));
+
+   } else {
+      event = *xevent;
+      numEvents = 1;
+   }
 
 /* Process the events we have obtained (if any) */
 
@@ -1428,7 +1445,8 @@ char string[TMPSTRLEN];
 float deltaMove = 0;
 
 static
-int UpdatePosition(o, g)
+int UpdatePosition(event, o, g)
+XEvent *event;
 Oinfo *o;
 Ginfo *g;
 /******************************************************************************
@@ -1466,7 +1484,7 @@ double X, Y, Z;
 
 /* Get the input */
 
-      GetInput(&pointerX, &pointerY, &command, &same, g);
+      GetInput(event, &pointerX, &pointerY, &command, &same, g);
 
 /* Fill in code for your favorite keyboard and pointer controls */
 
@@ -1480,11 +1498,13 @@ double X, Y, Z;
 
          case 'm' :
          case 'M' : same = 0; g->helpMenu    = !g->helpMenu;
-            if(g->helpMenu == False){
+             /*
+             if(g->helpMenu == False){
                XUnmapWindow(g->dpy, g->helpWin);
-            }else{
+             }else{
                XMapWindow(g->dpy, g->helpWin);
-               }
+             }
+             */
              break;
 
          case 's' :
@@ -3065,12 +3085,13 @@ void MakePolygonArray()
 * main procedure                                                             *
 *                                                                            *
 ******************************************************************************/
-void
-x3d_main(longitude, latitude, psi, string)
+unsigned long
+x3d_main(longitude, latitude, psi, string, parent)
 float   *longitude;
 float   *latitude;
 float   *psi;
 char    *string;
+Window   parent;
 {
     Ginfo *g = NULL;
     Oinfo *o = NULL;
@@ -3083,17 +3104,19 @@ char    *string;
     float xCenter, yCenter, zCenter;
     float xRange, yRange, zRange;
 
-   quitApplication = 0;
+    quitApplication = 0;
 
-   if((o = (Oinfo *) calloc(1, sizeof(Oinfo))) == NULL){
-      (void) fprintf(stderr, "Unable to allocate memory for Object\n");
-      return;
-   }
+    if((o = (Oinfo *) calloc(1, sizeof(Oinfo))) == NULL){
+       (void) fprintf(stderr, "Unable to allocate memory for Object\n");
+       return 0L;
+    }
+    gOInfo = o;
 
-   if((g = (Ginfo *) calloc(1, sizeof(Ginfo))) == NULL){
-      (void) fprintf(stderr, "Unable to allocate memory for Ginfo\n");
-      return;
-   }
+    if((g = (Ginfo *) calloc(1, sizeof(Ginfo))) == NULL){
+       (void) fprintf(stderr, "Unable to allocate memory for Ginfo\n");
+       return 0L;
+    }
+    gGInfo = g;
 
     indx = NULL;
     strcpy(title, "ROOT://X3D");
@@ -3113,12 +3136,12 @@ char    *string;
         puts(" ROTATE ABOUT Y      y Y b B     AUTOROTATE ABOUT Y  4 5 6" );
         puts(" ROTATE ABOUT Z      z Z c C     AUTOROTATE ABOUT Z  7 8 9\n");
         puts(" ADJUST FOCUS        [ ] { }     HIDDEN LINE MODE      e E" );
-		puts(" WIREFRAME MODE          w W     HIDDEN SURFACE MODE   r R\n");
+	puts(" WIREFRAME MODE          w W     HIDDEN SURFACE MODE   r R\n");
         puts(" POINTER MOVEMENT WITH LEFT BUTTON :\n");
         puts(" ROTATE OBJECT ABOUT X   Vertical" );
         puts(" ROTATE OBJECT ABOUT Z   Horizontal\n");
 
-        return;
+        return 0L;
 	}
 	else if ((indx = (char *) strstr(string, "hull:")) != NULL) {
 	    strcpy (filename, indx + 5);
@@ -3181,14 +3204,14 @@ char    *string;
 	for (i = 0; i < gSize3D.numPoints; i++) {
 	    xMin = xMin <= points[i].x ? xMin : points[i].x;
 	    xMax = xMax >= points[i].x ? xMax : points[i].x;
-	
+
 	    yMin = yMin <= points[i].y ? yMin : points[i].y;
 	    yMax = yMax >= points[i].y ? yMax : points[i].y;
-	
+
 	    zMin = zMin <= points[i].z ? zMin : points[i].z;
 	    zMax = zMax >= points[i].z ? zMax : points[i].z;
 	}
-	
+
 /*
  *  Compute the range & center of the object
  */
@@ -3200,12 +3223,12 @@ char    *string;
     xCenter = (xMax + xMin) / 2.0;
     yCenter = (yMax + yMin) / 2.0;
     zCenter = (zMax + zMin) / 2.0;
-	
+
 /*
  *  Compute the correctionFactor, rescale & put the object in the center
  */
 	correctionFactor = 6000.0 / (xRange > zRange ? xRange : zRange);
-	
+
 	for (i = 0; i < gSize3D.numPoints; i++) {
 	    points[i].x = (points[i].x - xCenter) * correctionFactor;
 	    points[i].y = (points[i].y - yCenter) * correctionFactor;
@@ -3257,6 +3280,7 @@ char    *string;
     g->stereoBlue  = 1;
     g->colors      = colors;
     g->numColors   = 28;
+    g->win         = 0;
     o->points      = points;
     o->numPoints   = gSize3D.numPoints;
     o->segs        = segs;
@@ -3291,27 +3315,53 @@ char    *string;
     /* Initialize the display */
 
 
-       InitDisplay(o, g);
+       InitDisplay(o, g, parent);
 
-       do {
+       return g->win;
+    }
+    return 0;
+}
 
-/* Draw object according to current position and rendering information */
+void x3d_update()
+{
+   Ginfo *g = gGInfo;
+   Oinfo *o = gOInfo;
 
-          BeginImage(o, g);
-          DrawObject(o, g);
-          EndImage(o, g);
+   BeginImage(o, g);
+   DrawObject(o, g);
+   EndImage(o, g);
+}
 
-/* Get new position information */
+int x3d_dispatch_event(unsigned long evnt)
+{
+   XEvent *event = (XEvent *)evnt;
+   Ginfo *g = gGInfo;
+   Oinfo *o = gOInfo;
 
-          quitApplication = UpdatePosition(o, g);
-       } while (!quitApplication);
+   UpdatePosition(event, o, g);
 
+   x3d_update();
 
-    /* Update longitude and latitude */
-       *latitude  =  (float) (o->X);
-       *psi       =  (float) (o->Y);
-       *longitude =  (float) (o->Z);
+   return 1;
+}
 
+void x3d_get_position(float *longitude, float *latitude, float *psi)
+{
+   Oinfo *o = gOInfo;
+
+   /* Update longitude and latitude */
+   *latitude  =  (float) (o->X);
+   *psi       =  (float) (o->Y);
+   *longitude =  (float) (o->Z);
+}
+
+void x3d_terminate()
+{
+   int i;
+   Ginfo *g = gGInfo;
+   Oinfo *o = gOInfo;
+
+   if (g->win) {
     /* Destroy windows */
        XDestroyWindow(g->dpy, g->win);
        XDestroyWindow(g->dpy, g->helpWin);
@@ -3325,8 +3375,10 @@ char    *string;
 
     /* Close display */
 
-       XSetCloseDownMode(g->dpy, DestroyAll);
-       XCloseDisplay(g->dpy);
+       if (!gDisplay) {
+          XSetCloseDownMode(g->dpy, DestroyAll);
+          XCloseDisplay(g->dpy);
+       }
 
     /* Free allocated memory */
        if (g->redColors)    free (g->redColors);
@@ -3336,7 +3388,6 @@ char    *string;
        if (g)               free (g);
 
     }
-
 
 /*
  *  Free allocated memory & reset counters
@@ -3367,5 +3418,9 @@ char    *string;
     if (bounds) free (bounds);
 }
 
+void x3d_set_display(unsigned long disp)
+{
+   gDisplay = (Display*) disp;
+}
 
 #endif

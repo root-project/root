@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name$:$Id$
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TViewerX3D
 #define ROOT_TViewerX3D
 
@@ -20,20 +21,57 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPad
-#include "TVirtualPad.h"
+#ifndef ROOT_TGFrame
+#include "TGFrame.h"
 #endif
 
+class TVirtualPad;
+class TGCanvas;
+class TGMenuBar;
+class TGPopupMenu;
+class TGLayoutHints;
 
-class TViewerX3D : public TObject {
 
+class TViewerX3D : public TGMainFrame {
+
+friend class TX3DContainer;
+
+private:
+   TVirtualPad    *fPad;                // pad that should be displayed in X3D
+   TString         fOption;             // option string to be passed to X3D
+   Window_t        fX3DWin;             // X3D window
+   TGCanvas       *fCanvas;             // canvas widget
+   TX3DContainer  *fContainer;          // container containing X3D window
+   TGMenuBar      *fMenuBar;            // menubar
+   TGPopupMenu    *fFileMenu;           // file menu
+   TGPopupMenu    *fHelpMenu;           // help menu
+   TGLayoutHints  *fMenuBarLayout;      // menubar layout hints
+   TGLayoutHints  *fMenuBarItemLayout;  // layout hints for menu in menubar
+   TGLayoutHints  *fMenuBarHelpLayout;  // layout hint for help menu in menubar
+   TGLayoutHints  *fCanvasLayout;       // layout for canvas widget
+
+   void     CreateViewer(const char *name);
+   void     InitX3DWindow();
+   void     DeleteX3DWindow();
+
+   Bool_t   HandleContainerButton(Event_t *ev);
 
 public:
-   TViewerX3D();
-   virtual ~TViewerX3D() { }
-   static void View(TVirtualPad *pad, Option_t *option);
+   TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title="X3D Viewer",
+              UInt_t width = 800, UInt_t height = 600);
+   TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
+              Int_t x, Int_t y, UInt_t width, UInt_t height);
+   virtual ~TViewerX3D();
 
-   ClassDef(TViewerX3D,1)  //C++ interface to the X3D viewer
+   void  Iconify() { }
+   void  Show() { MapRaised(); }
+   void  Update();
+
+   // overridden from TGMainFrame
+   void     CloseWindow();
+   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+
+   ClassDef(TViewerX3D,0)  //C++ interface to the X3D viewer
 };
 
 #endif
