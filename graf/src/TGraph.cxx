@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.44 2001/07/19 17:12:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.45 2001/09/20 20:48:51 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -211,18 +211,21 @@ void TGraph::Draw(Option_t *option)
 //
 //   Options to draw a graph are described in TGraph::PaintGraph
 
-  char chopt[8] = "      ";
-  if (strlen(option) < 7) strcpy(chopt,option);
-  else                    strncpy(chopt,option,7);
+   TString opt = option;
+   opt.ToLower();
 
-// in case of option *, set marker style to 3 (star) and replace
-// * option by option P.
-  char *cstar = strchr(chopt,'*');
-  if (cstar) {
-     SetMarkerStyle(3);
-     cstar[0] = 'P';
-  }
-  AppendPad(chopt);
+   if (opt.Contains("same"))
+      Error("Draw", "option \"same\" not supported,\n"
+            "see TGraph::PaintGraph() for options");
+
+   // in case of option *, set marker style to 3 (star) and replace
+   // * option by option P.
+   Ssiz_t pos;
+   if ((pos = opt.Index("*")) != kNPOS) {
+      SetMarkerStyle(3);
+      opt.Replace(pos, 1, "P");
+   }
+   AppendPad(opt);
 }
 
 //______________________________________________________________________________
@@ -519,7 +522,7 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
 //  interface to TF1::Fit(TF1 *f1...
-   
+
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Printf("Unknown function: %s",fname); return; }
    Fit(f1,option);
@@ -597,7 +600,7 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
 //   Access to the fit results
 //   =========================
 //  If the graph is made persistent, the list of
-//  associated functions is also persistent. Given a pointer (see above) 
+//  associated functions is also persistent. Given a pointer (see above)
 //  to an associated function myfunc, one can retrieve the function/fit
 //  parameters with calls such as:
 //    Double_t chi2 = myfunc->GetChisquare();
@@ -939,7 +942,7 @@ void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y)
 }
 
 //______________________________________________________________________________
-TAxis *TGraph::GetXaxis() const 
+TAxis *TGraph::GetXaxis() const
 {
    // Get x axis of the graph.
 
@@ -948,7 +951,7 @@ TAxis *TGraph::GetXaxis() const
 }
 
 //______________________________________________________________________________
-TAxis *TGraph::GetYaxis() const 
+TAxis *TGraph::GetYaxis() const
 {
    // Get y axis of the graph.
 
@@ -1376,7 +1379,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
         }
         uxmin     = gPad->PadtoX(rwxmin);
         uxmax     = gPad->PadtoX(rwxmax);
-     } else { 
+     } else {
         rwxmin = rwxmax = x[0];
         rwymin = rwymax = y[0];
         for (i=1;i<npoints;i++) {
@@ -1441,10 +1444,10 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    }
    fHistogram->Paint();
   }
-  
+
   //*-*  Set Clipping option
   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
-  
+
   TF1 *fit = 0;
   if (fFunctions) fit = (TF1*)fFunctions->First();
   if (fit) {
@@ -2241,7 +2244,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
       Double_t *xc = new Double_t[nrPix];
       Double_t *yc = new Double_t[nrPix];
 
-      Double_t xcadjust = 0.3*(gPad->AbsPixeltoX(ax1Pix+1) - gPad->AbsPixeltoX(ax1Pix));  
+      Double_t xcadjust = 0.3*(gPad->AbsPixeltoX(ax1Pix+1) - gPad->AbsPixeltoX(ax1Pix));
       Double_t ycadjust = 0.3*(gPad->AbsPixeltoY(ay1Pix)   - gPad->AbsPixeltoY(ay1Pix+1));
       Int_t nrLine = 0;
       for (ipix = 0; ipix < nrPix; ipix++) {
@@ -2582,10 +2585,10 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
       hname += frameNumber;
       fHistogram->SetName(hname.Data());
       fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   graph->SetHistogram("<<fHistogram->GetName()<<");"<<endl;      
+      out<<"   graph->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
       out<<"   "<<endl;
    }
-   
+
    out<<"   graph->Draw("
       <<quote<<option<<quote<<");"<<endl;
 }
@@ -3217,9 +3220,9 @@ void TGraph::Streamer(TBuffer &b)
          b >> fMinimum;
          b >> fMaximum;
       }
-      b.CheckByteCount(R__s, R__c, TGraph::IsA()); 
+      b.CheckByteCount(R__s, R__c, TGraph::IsA());
       //====end of old versions
-      
+
    } else {
       TGraph::Class()->WriteBuffer(b,this);
    }
