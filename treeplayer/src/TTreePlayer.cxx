@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.51 2001/07/03 16:48:18 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.52 2001/07/03 20:15:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2568,8 +2568,13 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    if (!strcmp(varexp, "*")) { ncols = nleaves; allvar = 1; }
    if (nch == 0 || allvar) {
       cnames = new TString[ncols];
-      for (i=0;i<ncols;i++) {
-         cnames[i] = ((TLeaf*)leaves->At(i))->GetName();
+      Int_t ncs = ncols;
+      ncols = 0;
+      for (i=0;i<ncs;i++) {
+         TLeaf *lf = (TLeaf*)leaves->At(i);
+         if (lf->GetBranch()->GetListOfBranches()->GetEntries() > 0) continue;
+         cnames[ncols] = lf->GetName();
+         ncols++;
       }
 //*-*- otherwise select only the specified columns
    } else {
