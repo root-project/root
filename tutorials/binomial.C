@@ -18,7 +18,7 @@ void binomialSimple() {
   for(Int_t i=0;i<max;i++) {
     printf("n=%2d",i);
     for(j=0;j<(max-i);j++) printf("  ");
-    for(j=0;j<i+1;j++) printf("%4d",TMath::Binomial(i,j));
+    for(j=0;j<i+1;j++) printf("%4d",TMath::Nint(TMath::Binomial(i,j)));
     printf("\n");
   }
 }
