@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.20 2004/03/11 10:40:10 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.21 2004/07/08 11:52:32 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -156,8 +156,8 @@ void TThread::Constructor()
       fgXActMutex = new TMutex(kTRUE);
       new TThreadTimer;
       fgXActCondi = new TCondition;
-      gThreadTsd  = &(TThread::Tsd);
-      gThreadXAR  = &(TThread::XARequest);
+      gThreadTsd  = TThread::Tsd;
+      gThreadXAR  = TThread::XARequest;
    }
 
    PutComm("Constructor: MainMutex Locking");
