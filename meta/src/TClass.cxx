@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.134 2004/01/27 19:52:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.135 2004/01/29 23:08:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -525,7 +525,7 @@ void TClass::Init(const char *name, Version_t cversion,
       oldcl->ReplaceWith(this);
       delete oldcl;
 
-   } else if (index(name,'<')) {
+   } else if (strchr(name,'<')) {
 
       // Check for existing equivalent.
 
@@ -1415,7 +1415,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    
    TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
 
-   if ( index( corename.Data(), '<' ) == 0 ) {
+   if ( strchr( corename.Data(), '<' ) == 0 ) {
       // not a template, let's skip
       recurse = kFALSE;
    }

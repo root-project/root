@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.74 2004/01/27 19:52:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.75 2004/01/29 23:08:16 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -957,7 +957,7 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
 
       Bool_t load = kFALSE;
 
-      if (index(item,'<')) {
+      if (strchr(item,'<')) {
          // We have a template which may have duplicates.
 
          TIter next( gROOT->GetListOfClasses() );

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.190 2004/01/27 19:52:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.191 2004/01/29 23:08:16 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -582,7 +582,7 @@ void TStreamerInfo::BuildOld()
                TIter nextBC(fClass->GetListOfBases());
                while ((bc=(TBaseClass*)nextBC())) {
 
-                  if (index(bc->GetName(),'<')!=0) {
+                  if (strchr(bc->GetName(),'<')!=0) {
                      TString bcName(  TClassEdit::ShortType(bc->GetName(),TClassEdit::kDropStlDefault).c_str() );
 
                      if (bcName==element->GetTypeName()) break;
