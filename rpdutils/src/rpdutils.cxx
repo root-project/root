@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.46 2004/05/19 07:15:36 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.47 2004/05/19 09:43:11 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1906,10 +1906,37 @@ void RpdSshAuth(const char *sstr)
          }
       }
 
-      // Make sure the permissions are the rigth ones
-      fchmod(iauth,0600);
-
       // Store stat result to check changes
+      if (stat(AuthFile, &st0) == -1)
+         ErrorInfo("RpdSshAuth: cannot stat %s",AuthFile);
+
+      // Make sure the permissions are the rigth ones
+      if (fchmod(iauth,0600)) {
+         if (gDebug > 0) {
+            ErrorInfo("RpdSshAuth: chmod: could not change"
+                      " '%s' permission (errno= %d)",AuthFile, errno);
+            ErrorInfo("RpdSshAuth: path (uid,gid) are: %d %d",
+                      st0.st_uid, st0.st_gid);
+            NetSend(kErrNoChangePermission, kROOTD_ERR);
+            if (AuthFile) delete[] AuthFile;
+            return;
+         }
+      }
+
+      if ((unsigned int)st0.st_uid != pw->pw_uid || 
+          (unsigned int)st0.st_gid != pw->pw_gid) {
+         if (chown(AuthFile, pw->pw_uid, pw->pw_gid)) {
+            if (gDebug > 0) {
+               ErrorInfo("RpdSshAuth: chown: could not change file"
+                         " '%s' ownership (errno= %d)",AuthFile, errno);
+               ErrorInfo("RpdSshAuth: path (uid,gid) are: %d %d",
+                         st0.st_uid, st0.st_gid);
+               ErrorInfo("RpdSshAuth: may follow authentication problems");
+            }
+         }
+      }
+
+      // Reset reference time
       if (stat(AuthFile, &st0) == -1)
          ErrorInfo("RpdSshAuth: cannot stat %s",AuthFile);
 
