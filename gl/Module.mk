@@ -18,7 +18,7 @@ ifeq ($(ARCH),win32)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
 else
 ifeq ($(ARCH),win32gdk)
-GLS          += TRootGLKernel.cxx TRootWin32GLViewer.cxx
+GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
 else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
 ifneq ($(OPENIVLIB),)
