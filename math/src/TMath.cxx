@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.5 2000/06/30 09:02:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.6 2000/09/27 09:19:39 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -131,6 +131,9 @@ Long_t TMath::NextPrime(Long_t x)
 //______________________________________________________________________________
 Int_t TMath::Nint(Float_t x)
 {
+   // Round to nearest integer. Rounds half integers to the nearest
+   // even integer.
+
    int i;
    if (x >= 0) {
       i = int(x + 0.5);
@@ -146,6 +149,9 @@ Int_t TMath::Nint(Float_t x)
 //______________________________________________________________________________
 Int_t TMath::Nint(Double_t x)
 {
+   // Round to nearest integer. Rounds half integers to the nearest
+   // even integer.
+
    int i;
    if (x >= 0) {
       i = int(x + 0.5);
