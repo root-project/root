@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.70 2003/05/12 18:46:04 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.71 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -390,22 +390,35 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     _operMode = PassThrough ;
   }
 
-  // Determine auto-dirty status
-  
+  // Determine auto-dirty status  
+  autoSelectDirtyMode() ;
+}
+
+
+
+void RooRealIntegral::autoSelectDirtyMode() 
+{
   // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
-  //Bool_t adirty(kFALSE) ;
-  TIterator* iter = serverIterator() ;  
-  while(arg=(RooAbsArg*)iter->Next()){
-    if (arg->operMode()==ADirty && arg->isValueServer(*this)) {      
-      setOperMode(ADirty) ;
-      break ;
+  TIterator* siter = serverIterator() ;  
+  RooAbsArg* server ;
+  while(server=(RooAbsArg*)siter->Next()){
+    RooArgSet leafSet ;
+    server->leafNodeServerList(&leafSet) ;
+    TIterator* liter = leafSet.createIterator() ;
+    RooAbsArg* leaf ;
+    while(leaf=(RooAbsArg*)liter->Next()) {
+      if (leaf->operMode()==ADirty && leaf->isValueServer(*this)) {      
+	setOperMode(ADirty) ;
+	break ;
+      }
+      if (leaf->getAttribute("projectedDependent")) {
+	setOperMode(ADirty) ;
+	break ;
+      }
     }
-    if (arg->getAttribute("projectedDependent")) {
-      setOperMode(ADirty) ;
-      break ;
-    }
+    delete liter ;
   }
-  delete iter ;
+  delete siter ;
 }
 
 
@@ -754,6 +767,9 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerLis
   _funcBranchList.removeAll() ;
 
   _restartNumIntEngine = kTRUE ;
+
+  autoSelectDirtyMode() ;
+
   return kFALSE ;
 }
 
