@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.4 2001/05/16 07:41:07 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.5 2001/05/17 00:43:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@
 #include "TTree.h"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooGenContext.hh"
 
 ClassImp(RooAbsRealLValue)
 
@@ -166,3 +167,15 @@ void RooAbsRealLValue::printToStream(ostream& os, PrintOption opt, TString inden
   }
 }
 
+void RooAbsRealLValue::randomize() {
+  // Set a new value sampled from a uniform distribution over the fit range.
+  // Prints a warning and does nothing if the fit range is not finite.
+
+  if(hasFitMin() && hasFitMax()) {
+    Double_t range= getFitMax()-getFitMin();
+    setVal(getFitMin() + RooGenContext::uniform()*range);
+  }
+  else {
+    cout << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
+  }
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.3 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.4 2001/05/17 00:43:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooGenContext.hh"
 
 ClassImp(RooAbsCategoryLValue) 
 ;
@@ -64,13 +65,25 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index)
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) 
+RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char *label) 
 {
   // Assignment operator from string pointer
   setLabel(label) ;
   return *this ;
 }
 
+Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) {
+  // Set our state to our n'th defined type and return kTRUE.
+  // Return kFALSE if n is out of range.
+
+  const RooCatType *newValue= getOrdinal(n);
+  if(newValue) {
+    return setIndex(newValue->getVal());
+  }
+  else {
+    return kFALSE;
+  }
+}
 
 void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
 {
@@ -93,8 +106,7 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
   // Write object contents to given stream
 }
 
-
-
-
-
-
+void RooAbsCategoryLValue::randomize() {
+  UInt_t ordinal= RooGenContext::integer(numTypes());
+  setOrdinal(ordinal);
+}

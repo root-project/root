@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.16 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.17 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,6 +65,7 @@ protected:
   // Type definition management
   const RooCatType* defineType(const char* label) ;
   const RooCatType* defineType(const char* label, Int_t index) ;
+  const RooCatType* getOrdinal(UInt_t n) const;
   void clearTypes() ;
 
   virtual Bool_t isValid() const ;

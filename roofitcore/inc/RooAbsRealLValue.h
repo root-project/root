@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.5 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.6 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,6 +36,7 @@ public:
   // Parameter value and error accessors
   virtual void setVal(Double_t value)=0;
   virtual Double_t operator=(Double_t newValue);
+  void randomize();
 
   // Get fit range limits
   virtual Double_t getFitMin() const = 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.13 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.14 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -342,10 +342,23 @@ Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool
 
 void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  // Print object to stream
+  // Print the state of this object to the specified output stream.
 
   if (opt==Verbose) {
-    RooAbsArg::printToStream(os,Verbose,indent) ;
+    RooAbsReal::printToStream(os,Verbose,indent) ;
+    os << indent << "--- RooRealIntegral ---" << endl;
+    os << indent << "  Integrates ";
+    _function->printToStream(os,Standard);
+    TString deeper(indent);
+    deeper.Append("  ");
+    os << indent << "  Summed discrete args are ";
+    _sumList.printToStream(os,Standard,deeper);
+    os << indent << "  Numerically integrated args are ";
+    _intList.printToStream(os,Standard,deeper);
+    os << indent << "  Analytically integrated args using mode " << _mode << " are ";
+    _anaList.printToStream(os,Standard,deeper);
+    os << indent << "  Arguments included in Jacobean are ";
+    _jacList.printToStream(os,Standard,deeper);
     return ;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.8 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.9 2001/05/18 00:59:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -67,7 +67,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) :
   _pdfClone = (RooAbsPdf*) _pdfCompList->FindObject(pdf->GetName()) ;
   
   // Attach PDF to data set
-  _pdfClone->attachDataSet(_dataClone) ;
+  _pdfClone->attachDataSet(*_dataClone) ;
   _pdfClone->resetErrorCounters() ;
 
   // Cache parameter list

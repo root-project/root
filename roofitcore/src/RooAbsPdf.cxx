@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.10 2001/05/17 00:43:14 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.11 2001/05/18 00:59:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -189,111 +189,94 @@ Int_t RooAbsPdf::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) 
 
 
 
-Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a) const
 {
+  // Wrapper function for matchArgsByName()
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
-  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
   nameList.Delete() ;
   return result ;
 }
 
 
 
-Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b) const
 {
+  // Wrapper function for matchArgsByName()
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;  
-  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
   nameList.Delete() ;
   return result ;
 }
 
 
 
-Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b,
 			      const RooArgProxy& c) const
 {
+  // Wrapper function for matchArgsByName()
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;
   nameList.Add(new TObjString(c.absArg()->GetName())) ;
-  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
   nameList.Delete() ;
   return result ;
 }
 
 
 
-Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b,
 			      const RooArgProxy& c, const RooArgProxy& d) const
 {
+  // Wrapper function for matchArgsByName()
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;
   nameList.Add(new TObjString(c.absArg()->GetName())) ;
   nameList.Add(new TObjString(d.absArg()->GetName())) ;
-  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
   nameList.Delete() ;
   return result ;
 }
 
 
-Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, TList& nameList) const
-{
-  TIterator *nIter = nameList.MakeIterator() ;
-  TIterator *dIter = allDeps.MakeIterator()  ;
-  RooArgSet matchList ;
+Bool_t RooAbsPdf::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs,
+				  const TList &nameList) const {
+  // Check if allArgs contains matching elements for each name in nameList. If it does,
+  // add the corresponding args from allArgs to matchedArgs and return kTRUE. Otherwise
+  // return kFALSE and do not change matchedArgs.
 
-  cout << "tryIntegral: nameList = " ; nameList.Print() ;
-
-  // Loop over all dependent/proxy-name combinations
-  TObjString* name ;
-  RooAbsArg* arg ;
-  while (name=(TObjString*)nIter->Next()){    
-    while (arg=(RooAbsArg*)dIter->Next()){        
-      // If names match, add dependent to list
-      if (!name->String().CompareTo(arg->GetName())) {
-	matchList.add(*arg) ;
-      } 
+  RooArgSet matched;
+  TIterator *iterator= nameList.MakeIterator();
+  TObjString *name(0);
+  Bool_t isMatched(kTRUE);
+  while(isMatched && (name= (TObjString*)iterator->Next())) {
+    RooAbsArg *found= allArgs.find(name->String().Data());
+    if(found) {
+      matched.add(*found);
+    }
+    else {
+      isMatched= kFALSE;
     }
   }
-
-  delete dIter ;
-  delete nIter ;    
-  if (matchList.GetSize() == nameList.GetSize()) {
-    analDeps.add(matchList) ;
-    return kTRUE ;
-  }
-
-  return kFALSE ;
+  delete iterator;
+  if(isMatched) matchedArgs.add(matched);
+  return isMatched;
 }
-
-
-
-
-
 
 Double_t RooAbsPdf::analyticalIntegral(Int_t code) const
 {
   // By default no analytical integrals are implemented
   return getVal() ;
 }
-
-
-
-void RooAbsPdf::attachDataSet(const RooDataSet* set) 
-{
-  // Replace server nodes with names matching the dataset variable names
-  // with those data set variables, making this PDF directly dependent on the dataset
-  if(0 != set) recursiveRedirectServers(*set->get(),kFALSE) ;
-}
-
 
 
 
@@ -492,4 +475,22 @@ Bool_t RooAbsPdf::applyResolution(const RooArgSet &vars) {
   // kTRUE if any smearing has been applied, or otherwise kFALSE.
 
   return kFALSE;
+}
+
+Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars) const {
+  // Load generatedVars with the subset of directVars that we can generate events for,
+  // and return a code that specifies the generator algorithm we will use. A code of
+  // zero indicates that we cannot generate any of the directVars (in this case, nothing
+  // should be added to generatedVars). Any non-zero codes will be passed to our generateEvent()
+  // implementation, but otherwise its value is arbitrary. The default implemetation of
+  // this method returns zero. Subclasses will usually implement this method using the
+  // matchArgs() methods to advertise the algorithms they provide.
+
+  return 0;
+}
+
+void RooAbsPdf::generateEvent(Int_t code) {
+  // Generate an event using the algorithm corresponding to the specified code. The
+  // meaning of each code is defined by the getGenerator() implementation. The default
+  // implementation does nothing.
 }

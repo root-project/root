@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.25 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.26 2001/05/18 00:59:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -57,6 +57,7 @@ public:
   RooArgSet* getDependents(const RooArgSet* depList) const ;
   Bool_t dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooDataSet* set) const ;
+  void attachDataSet(const RooDataSet &set);
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
@@ -96,6 +97,8 @@ protected:
   THashList _serverList      ; //! do not persist (or clone)
   TObjArray _proxyArray      ; //! do not persist (or clone)
 
+  // Server redirection interface
+  friend class RooAcceptReject;
   Bool_t redirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) { return kFALSE ; } ;

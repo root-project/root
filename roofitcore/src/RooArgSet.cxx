@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.21 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.22 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -189,7 +189,9 @@ void RooArgSet::addServerClonesToList(const RooAbsArg& var)
 }
 
 RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
-  // Assignment operator
+  // The assignment operator sets the value of any argument in our set
+  // that also appears in the other set.
+
   RooAbsArg *elem, *theirs ;
   Int_t index(GetSize());
   while(--index >= 0) {
@@ -248,10 +250,34 @@ Bool_t RooArgSet::add(const RooArgSet& list)
   return result;  
 }
 
+Bool_t RooArgSet::replace(const RooArgSet &other) {
+  // Replace any args in our set with args of the same name from the other set
+  // and return kTRUE for success. Fails if this list is a copy of another.
 
+  // check that this isn't a copy of a list
+  if(_isCopy) {
+    cout << "RooArgSet: cannot replace variables in a copied list" << endl;
+    return kFALSE;
+  }
+  // loop over elements in the other list
+  TIterator *otherArgs= other.MakeIterator();
+  const RooAbsArg *arg(0);
+  while(arg= (const RooAbsArg*)otherArgs->Next()) {
+    // do we have an arg of the same name in our set?
+    RooAbsArg *found= find(arg->GetName());
+    if(found) replace(*found,*arg);
+  }
+  delete otherArgs;
+  return kTRUE;
+}
 
 Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
 {
+  // Replace var1 with var2 and return kTRUE for success. Fails if
+  // this list is a copy of another, if var1 is not already in this set,
+  // or if var2 is already in this set. var1 and var2 do not need to have
+  // the same name.
+
   // check that this isn't a copy of a list
   if(_isCopy) {
     cout << "RooArgSet: cannot replace variables in a copied list" << endl;
@@ -281,7 +307,10 @@ Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
 
 Bool_t RooArgSet::remove(const RooAbsArg& var) {
-  // Remove argument from list
+  // Remove the specified argument from our list. Return kFALSE if we
+  // a copy of a list, or if the specified argument is not found in
+  // our list (an exact pointer match is required, not just a match
+  // by name.)
 
   // check that this isn't a copy of a list
   if(_isCopy) {
@@ -300,7 +329,33 @@ Bool_t RooArgSet::remove(const RooAbsArg& var) {
   return kTRUE;
 }
 
+Bool_t RooArgSet::remove(const RooArgSet& list) {
+  // Remove each argument in the input list from our list using remove(const RooAbsArg&).
+  // Return kFALSE in case of problems.
 
+  Bool_t result(false) ;
+
+  Int_t n= list.GetSize() ;
+  for(Int_t index= 0; index < n; index++) {
+    result |= remove((RooAbsArg&)*list.At(index)) ;
+  }
+
+  return result;
+}
+
+void RooArgSet::removeAll() {
+  // Remove all arguments from our set, deleting them if we own them.
+  // This effectively restores our object to the state it would have
+  // just after calling the RooArgSet(const char*) constructor.
+
+  if(_isCopy) {
+    Delete();
+    _isCopy= kFALSE;
+  }
+  else {
+    Clear();
+  }
+}
 
 void RooArgSet::setAttribAll(const Text_t* name, Bool_t value) 
 {
@@ -553,7 +608,7 @@ void RooArgSet::printToStream(ostream& os, PrintOption opt, TString indent) cons
   //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
-  os << indent << ClassName() << "::" << GetName() << ":" << endl;
+  os << ClassName() << "::" << GetName() << ":" << endl;
   if(opt >= Standard) {
     TIterator *iterator= MakeIterator();
     int index= 0;

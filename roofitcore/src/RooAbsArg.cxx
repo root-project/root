@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.29 2001/05/14 22:54:18 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.30 2001/05/18 00:59:18 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -673,7 +673,8 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
       os << indent << "  Attributes: " ;
       printAttribList(os) ;
       os << endl ;
-
+      // our memory address (for x-referencing with client addresses of other args)
+      os << indent << "  Address: " << (void*)this << endl;
       // client list
       os << indent << "  Clients: " << endl;
       TIterator *clientIter= _clientList.MakeIterator();
@@ -739,4 +740,11 @@ void RooAbsArg::printAttribList(ostream& os) const
     first=kFALSE ;
   }
   if (!first) os << "] " ;
+}
+
+void RooAbsArg::attachDataSet(const RooDataSet &set) 
+{
+  // Replace server nodes with names matching the dataset variable names
+  // with those data set variables, making this PDF directly dependent on the dataset
+  recursiveRedirectServers(*set.get(),kFALSE);
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.11 2001/05/16 07:41:07 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.12 2001/05/18 00:59:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,6 +40,10 @@ public:
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype) const;
   virtual void generateEvent(const RooArgSet &whatVars, Int_t maxTrials);
 
+  // Built-in generator support
+  virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars) const;
+  virtual void generateEvent(Int_t code);
+
   // Analytical integration support
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
@@ -60,7 +64,6 @@ public:
   Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
   Double_t nLogLikelihood(const RooDataSet* dset, Bool_t extended=kFALSE) const ;
-  void attachDataSet(const RooDataSet *set) ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -83,8 +86,6 @@ private:
   // This forces definition copy ctor in derived classes 
   RooAbsPdf(const RooAbsPdf& other);
 
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, TList& nameList) const ;
-
   static Bool_t _verboseEval ;
 
 protected:
@@ -95,17 +96,22 @@ protected:
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
 
-  // Analytical integration support
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		     const RooArgProxy& a) const ;
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		     const RooArgProxy& a, const RooArgProxy& b) const ;
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		     const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		     const RooArgProxy& a, const RooArgProxy& b, 
-		     const RooArgProxy& c, const RooArgProxy& d) const ;
+  // Support interface for subclasses to advertise their analytic integration
+  // and generator capabilities in their analticalIntegral() and generateEvent()
+  // implementations.
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgProxy& a, const RooArgProxy& b, 
+		   const RooArgProxy& c, const RooArgProxy& d) const ;
+private:
+  Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 
+protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.10 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.1 2001/05/18 00:59:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -18,6 +18,8 @@
 
 class RooAbsPdf;
 class RooDataSet;
+class RooRealIntegral;
+class RooAcceptReject;
 class TRandom;
 
 class RooGenContext : public TNamed, public RooPrintable {
@@ -32,6 +34,7 @@ public:
   // static random number generator interface
   static TRandom &randomGenerator();
   static Double_t uniform();
+  static UInt_t integer(UInt_t max);
 
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {
@@ -41,8 +44,6 @@ public:
   Bool_t isValid() const { return _isValid; }
 
 protected:
-  RooDataSet *createDataset() const;
-
   const RooArgSet *_origVars;
   const RooDataSet *_prototype;
   RooArgSet *_cloneSet;
@@ -50,6 +51,10 @@ protected:
   RooArgSet _directVars,_otherVars,_protoVars,_datasetVars;
   Int_t _maxTrials;
   Bool_t _isValid;
+  Int_t _code;
+  Double_t _maxProb, _area, _norm;
+  RooRealIntegral *_acceptRejectFunc;
+  RooAcceptReject *_generator;
 
   ClassDef(RooGenContext,0) // Context for generating a dataset from a PDF
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.3 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.4 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) = 0 ;
   RooAbsCategoryLValue& operator=(int index) ; 
   RooAbsCategoryLValue& operator=(const char* label) ; 
+  void randomize();
   
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -36,6 +37,7 @@ public:
 
 protected:
 
+  Bool_t setOrdinal(UInt_t index);
   void copyCache(const RooAbsArg* source) ;
 
   ClassDef(RooAbsCategoryLValue,1) // Abstract modifiable index variable 
