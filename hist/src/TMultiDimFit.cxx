@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.13 2005/01/27 18:55:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.14 2005/02/21 18:00:26 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2554,7 +2554,7 @@ void TMultiDimFit::MakeCoefficientErrors()
   TVectorD jF(fSampleSize);
   fCoefficientsRMS.ResizeTo(fNCoefficients);
 
-  TMatrixD curvatureMatrix(fNCoefficients,fNCoefficients);
+  TMatrixDSym curvatureMatrix(fNCoefficients);
 
   // Build the curvature matrix
   for (i = 0; i < fNCoefficients; i++) {
@@ -2564,7 +2564,6 @@ void TMultiDimFit::MakeCoefficientErrors()
       for (k = 0; k < fSampleSize; k++)
 	curvatureMatrix(i,j) +=
 	  1 / TMath::Max(fSqError(k), 1e-20) * iF(k) * jF(k);
-      curvatureMatrix(j,i) = curvatureMatrix(i,j);
     }
   }
 
@@ -2581,7 +2580,7 @@ void TMultiDimFit::MakeCoefficientErrors()
   // Invert the curvature matrix
   Double_t det = 1;
   curvatureMatrix.Invert(&det);
-  if (det == 0)
+  if (TMath::Abs(det - 0) < DBL_EPSILON)
     Warning("MakeCoefficientErrors", "curvature matrix is singular");
 
   if (fIsVerbose)
@@ -3319,7 +3318,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   outFile << "double " << prefix
           << "MDF(double *x) {" << endl
 	  << "  double returnValue = " << prefix << "gDMean;" << endl
-	  << "  int    i = 0, j = 0, k = 0;" << endl
+	  << "  int    i = 0, j = 0;" << endl
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
@@ -3340,11 +3339,11 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 	  << "      case 2: r = v; break; " << endl
 	  << "      default: " << endl
 	  << "        p2 = v; " << endl
-	  << "        for (k = 3; k <= power; k++) { " << endl
+	  << "        for (i = 3; i <= power; i++) { " << endl
 	  << "          p3 = p2 * v;" << endl;
   if (fPolyType == kLegendre)
-    outFile << "          p3 = ((2 * k - 3) * p2 * v - (k - 2) * p1)"
-	    << " / (k - 1);" << endl;
+    outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
+	    << " / (i - 1);" << endl;
   if (fPolyType == kChebyshev)
     outFile << "          p3 = 2 * v * p2 - p1; " << endl;
   outFile << "          p1 = p2; p2 = p3; " << endl << "        }" << endl
