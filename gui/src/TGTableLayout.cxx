@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.1 2001/05/02 00:52:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.2 2001/05/02 14:18:27 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -496,7 +496,7 @@ void TGTableLayout::CheckSanity()
          ++nerrors;
          Error("CheckSanity", "AttachLeft > AttachRight");
       }
-      if (left < 0 || left > fNcols-1) {
+      if (left > fNcols-1) {
          ++nerrors;
          Error("CheckSanity", "AttachLeft illegal value: %u", left);
       }
@@ -513,7 +513,7 @@ void TGTableLayout::CheckSanity()
          ++nerrors;
          Error("CheckSanity", "AttachTop > AttachBottom");
       }
-      if (top < 0 || top > fNrows-1) {
+      if (top > fNrows-1) {
          ++nerrors;
          Error("CheckSanity", "AttachTop illegal value: %u", top);
       }
