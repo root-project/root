@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.170 2005/03/11 21:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.171 2005/03/21 22:17:12 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3064,6 +3064,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 // Note that the redundance and structure in this code is tailored to improve
 // efficiencies.
 
+   if (TestBit(kMissingLeaf)) return 0;
    if (fNoper == 1 && fNcodes > 0) {
 
       switch (fLookupType[0]) {
@@ -3887,13 +3888,15 @@ void TTreeFormula::UpdateFormulaLeaves()
 
    char names[512];
    Int_t nleaves = fLeafNames.GetEntriesFast();
+   ResetBit( kMissingLeaf );
    for (Int_t i=0;i<nleaves;i++) {
-      if (!fTree) continue;
+      if (!fTree) break;
       if (!fLeafNames[i]) continue;
       sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
-      if (fBranches[i]) fBranches[i]=leaf->GetBranch();
+      if (fBranches[i] && leaf) fBranches[i]=leaf->GetBranch();
+      if (leaf==0) SetBit( kMissingLeaf );
    }
    for (Int_t j=0; j<kMAXCODES; j++) {
       for (Int_t k = 0; k<kMAXFORMDIM; k++) {

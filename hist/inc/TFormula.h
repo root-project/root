@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.26 2004/08/11 07:59:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.27 2005/03/04 09:06:37 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -136,7 +136,6 @@ public:
    // TFormula status bits
    enum {
       kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction
-      kInitialized   = BIT(12),  // set to true once the formula has been 'compiled'
       kNormalized    = BIT(14),   // set to true if the function (ex gausn) is normalized
       kLinear        = BIT(16)    //set to true if the function is for linear fitting
    };
