@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.11 2000/11/21 20:34:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.12 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1080,7 +1080,7 @@ void TH2::Reset(Option_t *option)
 
 //______________________________________________________________________________
 void TH2::Streamer(TBuffer &R__b)
-{
+{ 
    // Stream an object of class TH2.
 
    if (R__b.IsReading()) {

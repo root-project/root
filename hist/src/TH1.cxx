@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.34 2001/01/12 08:27:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.35 2001/01/19 17:28:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2955,7 +2955,7 @@ void TH1::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =====================
-   if (b.IsReading()) {
+   if (b.IsReading()) { 
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
@@ -3121,17 +3121,85 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
+   //Note the following restrictions in the code generated:
+   // - variable bin size not implemented
+   // - Objects in list of functions not saved (fits)
+   // - Contours not saved
+   
    char quote = '"';
    out<<"   "<<endl;
-
+   //out<<"   "<<ClassName()<<" *";
+   out<<"   "<<"TH1"<<" *";
+   
+   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
+                 <<","<<GetXaxis()->GetNbins()
+                 <<","<<GetXaxis()->GetXmin()
+                 <<","<<GetXaxis()->GetXmax();
+   if (fDimension > 1) {
+              out<<","<<GetYaxis()->GetNbins()
+                 <<","<<GetYaxis()->GetXmin()
+                 <<","<<GetYaxis()->GetXmax();
+   }
+   if (fDimension > 2) {
+              out<<","<<GetZaxis()->GetNbins()
+                 <<","<<GetZaxis()->GetXmin()
+                 <<","<<GetZaxis()->GetXmax();
+   }
+              out<<");"<<endl;
+   if (TMath::Abs(GetBarOffset()) > 1e-5) {
+      out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
+   }
+   if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
+      out<<"   "<<GetName()<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
+   }
+    if (fMinimum != -1111) {
+      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+   }
+  if (fMaximum != -1111) {
+      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+   }
+   if (fNormFactor != 0) {
+      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
+   }
+   if (fEntries != 0) {
+      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
+   }
+   if (fDirectory == 0) {
+      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+   }
+   if (TestBit(kNoStats)) {
+      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
+   }
+   if (fOption.Length() != 0) {
+      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+   }
+   Int_t bin;
+   for (bin=0;bin<fNcells;bin++) {
+      Double_t bc = GetBinContent(bin);
+      if (bc) {
+         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+      }
+   }
+   if (fSumw2.fN) {
+      for (bin=0;bin<fNcells;bin++) {
+         Double_t be = GetBinError(bin);
+         if (be) {
+            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+         }
+      }
+   }
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
    fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
    fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
    fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
-   out<<"   "<<GetName()<<"->Draw("
+   TString opt = option;
+   opt.ToLower();
+   if (!opt.Contains("nodraw")) {
+      out<<"   "<<GetName()<<"->Draw("
       <<quote<<option<<quote<<");"<<endl;
+   }
 }
 
 //______________________________________________________________________________
