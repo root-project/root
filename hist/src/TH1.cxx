@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.70 2001/12/03 07:48:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.71 2001/12/04 14:40:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1839,6 +1839,16 @@ char *TH1::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 //______________________________________________________________________________
+TVirtualHistPainter *TH1::GetPainter()
+{
+// return pointer to painter
+// if painter does not exist, it is created
+
+   if (!fPainter) fPainter = TVirtualHistPainter::HistPainter(this);
+   return fPainter;
+}
+
+//______________________________________________________________________________
 Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum) 
 {
 //  Compute Quantiles for this histogram 
@@ -2676,7 +2686,8 @@ void TH1::Paint(Option_t *option)
 //  This function is automatically called by TCanvas::Update.
 //  (see TH1::Draw for the list of options)
 
-   if (!fPainter) fPainter = TVirtualHistPainter::HistPainter(this);
+   GetPainter();
+   
    if (fPainter) {
       if (strlen(option) > 0) fPainter->Paint(option);
       else                    fPainter->Paint(fOption.Data());

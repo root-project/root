@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.21 2001/12/02 16:15:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.22 2001/12/07 21:58:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -190,7 +190,7 @@ public:
     virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
     Option_t        *GetOption() const {return fOption.Data();}
 
-    TVirtualHistPainter *GetPainter() const {return fPainter;}
+    TVirtualHistPainter *GetPainter();
 
     virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0); 
     virtual Axis_t   GetRandom();
