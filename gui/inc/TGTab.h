@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.9 2004/07/21 13:53:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -89,7 +89,6 @@ public:
    virtual void              RemoveTab(Int_t tabIndex);
    virtual Bool_t            SetTab(Int_t tabIndex);
    virtual void              DrawBorder() { }
-   virtual Bool_t            HandleButton(Event_t *event);
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
    Int_t             GetCurrent() const { return fCurrent; }
@@ -133,6 +132,7 @@ public:
    virtual TGDimension GetDefaultSize() const;
    const TGString     *GetText() const { return fText; }
    const char         *GetString() const { return fText->GetString(); }
+   virtual Bool_t      HandleButton(Event_t *event);
    void                SetText(TGString *text);
    virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
    Bool_t              IsEnabled() const { return fEnabled; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.17 2004/09/20 19:11:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.18 2004/10/21 14:25:30 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fTHeight = max_ascent + max_descent;
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
+   gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask, kNone, kNone);
 }
 
 //______________________________________________________________________________
@@ -104,6 +105,35 @@ void TGTabElement::DrawBorder()
          fText->Draw(fId, GetShadowGC()(), 6, max_ascent);
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGTabElement::HandleButton(Event_t *event)
+{
+   // Handle button event in the tab widget. Basically we only handle
+   // button events in the small tabs.
+   
+   if (event->fType == kButtonPress) {
+      TGTab* main = (TGTab*)fParent;
+      if (main) {
+         TGFrameElement *el;
+         TIter next(main->GetList());
+
+         next();   // skip first container
+
+         Int_t i = 0;
+         Int_t c = main->GetCurrent();
+         while ((el = (TGFrameElement *) next())) {
+            if (el->fFrame->GetId() == (Window_t)event->fWindow)
+               c = i;
+            next(); i++;
+         }
+
+   // change tab and generate event
+   main->SetTab(c);
+      }
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -235,8 +265,6 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    fContainer = new TGCompositeFrame(this, fWidth, fHeight - fTabh,
                        kVerticalFrame | kRaisedFrame | kDoubleBorder);
    AddFrame(fContainer, 0);
-
-   AddInput(kButtonPressMask);
 }
 
 //______________________________________________________________________________
@@ -282,8 +310,8 @@ void TGTab::RemoveTab(Int_t tabIndex)
 
    if (tabIndex < 0) return;
 
-   TGFrameElement *elTab, *elCont ;
-   Int_t  count = 0 ;
+   TGFrameElement *elTab, *elCont;
+   Int_t  count = 0;
 
    TIter next(fList) ;
    next() ; // skip first container
@@ -400,32 +428,6 @@ Bool_t TGTab::SetTab(Int_t tabIndex)
 }
 
 //______________________________________________________________________________
-Bool_t TGTab::HandleButton(Event_t *event)
-{
-   // Handle button event in the tab widget. Basically we only handle
-   // button events in the small tabs.
-
-   if (event->fType == kButtonPress) {
-      TGFrameElement *el;
-      TIter next(fList);
-
-      next();   // skip first container
-
-      Int_t i = 0;
-      Int_t c = fCurrent;
-      while ((el = (TGFrameElement *) next())) {
-         if (el->fFrame->GetId() == (Window_t)event->fUser[0])  // fUser[0] is child window
-            c = i;
-         next(); i++;
-      }
-
-      // change tab and generate event
-      ChangeTab(c);
-   }
-   return kTRUE;
-}
-
-//______________________________________________________________________________
 TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 {
    // Return container of tab with index tabIndex.
@@ -510,7 +512,7 @@ const TGGC &TGTab::GetDefaultGC()
 //______________________________________________________________________________
 void TGTab::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save a tab widget as a C++ statement(s) on output stream out
+   // Save a tab widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 

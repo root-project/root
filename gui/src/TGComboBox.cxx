@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.24 2004/10/22 07:31:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.25 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -289,7 +289,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
 
-      if ( child == fDDButton->GetId()) { 
+      if (child == fDDButton->GetId() || (fSelEntry && child == fSelEntry->GetId())) { 
          fDDButton->SetState(kButtonDown);
 
          if (fTextEntry && (child == fTextEntry->GetId())) {
