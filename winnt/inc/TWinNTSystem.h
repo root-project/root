@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.24 2004/01/26 09:49:26 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.25 2004/01/28 02:41:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -45,25 +45,32 @@ class TWin32Timer;
 class TWinNTSystem : public TSystem {
 
 private:
-   HANDLE          fhProcess;         // Handle of the current process
-   HANDLE          fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
-   char           *fDirNameBuffer;    // The string buffer to hold path name
-   WIN32_FIND_DATA fFindFileData;     // Structure to look for files (aka OpenDir under UNIX)
-   TWin32Timer    *fWin32Timer;       // Windows -asynch timer
-   HIMAGELIST      fhSmallIconList;   // List of the small icons
-   HIMAGELIST      fhNormalIconList;  // List of the normal icons
-   const char     *fShellName;        // the name of the "shell" file to pool the icons
-   void            CreateIcons();     // Create a list of the icons for ROOT appl
+   HANDLE            fhProcess;         // Handle of the current process
+   HANDLE            fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
+   char             *fDirNameBuffer;    // The string buffer to hold path name
+   WIN32_FIND_DATA   fFindFileData;     // Structure to look for files (aka OpenDir under UNIX)
+   TWin32Timer      *fWin32Timer;       // Windows -asynch timer
+   HIMAGELIST        fhSmallIconList;   // List of the small icons
+   HIMAGELIST        fhNormalIconList;  // List of the normal icons
+   const char       *fShellName;        // the name of the "shell" file to pool the icons
+   void              CreateIcons();     // Create a list of the icons for ROOT appl
+
+   Bool_t            CheckDescriptors();
+   Bool_t            CheckSignals(Bool_t sync);
 
 public:
    TWinNTSystem();
    ~TWinNTSystem();
 
+   //---- non-TSystem methods ----------------------------------
    HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
    HICON   GetSmallIcon(Int_t IconIdx) { return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
    HICON   GetNormalIcon(Int_t IconIdx){ return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
-   HIMAGELIST GetNormalIconList(){ return fhNormalIconList; }
-   HANDLE     GetProcess();
+   HIMAGELIST        GetNormalIconList(){ return fhNormalIconList; }
+   HANDLE            GetProcess();
+   const char        *GetShellName() {return fShellName;}
+   void              SetShellName(const char *name=0);
+   Bool_t            HandleConsoleEvent();
 
    //---- Misc -------------------------------------------------
    Bool_t            Init();
@@ -71,24 +78,17 @@ public:
    void              SetProgname(const char *name);
    const char       *GetError();
    const char       *HostName();
-   const char       *GetShellName() {return fShellName;}
-   void              SetShellName(const char *name=0);
    //---- EventLoop --------------------------------------------
    Bool_t            ProcessEvents();
    void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
    void              ExitLoop();
    //---- Handling of system events
-   void              CheckChilds();
-   Bool_t            CheckSignals(Bool_t sync);
-   Bool_t            CheckDescriptors();
-   void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
-   Bool_t            HandleConsoleEvent();
    //---- Floating Point Exceptions Control
    Int_t             GetFPEMask();
    Int_t             SetFPEMask(Int_t mask = kDefaultMask);
@@ -153,25 +153,23 @@ public:
    Double_t          GetRealTime();
    Double_t          GetCPUTime();
    //---- RPC --------------------------------------------------
-   virtual int             ConnectService(const char *servername, int port, int tcpwindowsize);
-   virtual TInetAddress    GetHostByName(const char *server);
-   virtual TInetAddress    GetPeerName(int sock);
-   virtual TInetAddress    GetSockName(int sock);
-   virtual int             GetServiceByName(const char *service);
-   virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1);
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
-   virtual int             AnnounceUnixService(int port, int backlog);
-   virtual int             AcceptConnection(int sock);
-   virtual void            CloseConnection(int sock, Bool_t force = kFALSE);
-   virtual int             RecvRaw(int sock, void *buffer, int length, int flag);
-   virtual int             SendRaw(int sock, const void *buffer, int length, int flag);
-   virtual int             RecvBuf(int sock, void *buffer, int length);
-   virtual int             SendBuf(int sock, const void *buffer, int length);
-   virtual int             SetSockOpt(int sock, int opt, int val);
-   virtual int             GetSockOpt(int sock, int opt, int *val);
-   //---- Static utility functions ------------------------------
-   static const char  *GetDynamicPath();
+   int               ConnectService(const char *servername, int port, int tcpwindowsize);
+   TInetAddress      GetHostByName(const char *server);
+   TInetAddress      GetPeerName(int sock);
+   TInetAddress      GetSockName(int sock);
+   int               GetServiceByName(const char *service);
+   char              *GetServiceByPort(int port);
+   int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
+   int               AnnounceUnixService(int port, int backlog);
+   int               AcceptConnection(int sock);
+   void              CloseConnection(int sock, Bool_t force = kFALSE);
+   int               RecvRaw(int sock, void *buffer, int length, int flag);
+   int               SendRaw(int sock, const void *buffer, int length, int flag);
+   int               RecvBuf(int sock, void *buffer, int length);
+   int               SendBuf(int sock, const void *buffer, int length);
+   int               SetSockOpt(int sock, int opt, int val);
+   int               GetSockOpt(int sock, int opt, int *val);
 
    ClassDef(TWinNTSystem, 0)
 };

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.41 2004/01/14 21:02:18 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.42 2004/01/26 09:49:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -669,7 +669,7 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 class TGWin32RefreshTimer : public TTimer {
 
 public:
-   TGWin32RefreshTimer() : TTimer(50, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
+   TGWin32RefreshTimer() : TTimer(100, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
    ~TGWin32RefreshTimer() {}
    Bool_t Notify() 
    {

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.67 2004/01/26 09:49:26 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.68 2004/01/27 13:17:49 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -26,19 +26,18 @@
 #include "TWinNTSystem.h"
 #include "TROOT.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TOrdCollection.h"
 #include "TRegexp.h"
 #include "TException.h"
-#include "Demangle.h"
 #include "TEnv.h"
-#include "TWin32HookViaThread.h"
-#include "TWin32Timer.h"
-#include "TGWin32Command.h"
 #include "TSocket.h"
 #include "TApplication.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
+
+#include "TWin32HookViaThread.h"
+#include "TWin32Timer.h"
+#include "TGWin32Command.h"
 
 #include <sys/utime.h>
 #include <process.h>
@@ -325,6 +324,22 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
 }
 
 //______________________________________________________________________________
+static const char *GetDynamicPath()
+{
+   // Get shared library search path.
+
+   static const char *dynpath = 0;
+
+   if (dynpath == 0) {
+      dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      if (dynpath == 0) {
+         dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
+      }
+   }
+   return dynpath;
+}
+
+//______________________________________________________________________________
 static void sighandler(int sig)
 {
    // Call the signal handler associated with the signal.
@@ -373,7 +388,10 @@ static BOOL ConsoleSigHandler(DWORD sig)
 static void SigHandler(ESignals sig)
 {
    if (gSystem) {
-      ((TWinNTSystem*)gSystem)->DispatchSignals(sig);
+      if (TROOT::Initialized()) {
+         ::Throw(sig);
+      }
+      gSystem->Abort(-1);
    }
 }
 
@@ -1092,18 +1110,6 @@ void TWinNTSystem::ExitLoop()
 }
 
 //---- handling of system events -----------------------------------------------
-
-//______________________________________________________________________________
-void TWinNTSystem::DispatchSignals(ESignals sig)
-{
-   //
-
-   if (TROOT::Initialized()) {
-      Throw(sig);
-   }
-   Abort(-1);
-}
-
 //______________________________________________________________________________
 Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
 {
@@ -1131,12 +1137,6 @@ Bool_t TWinNTSystem::CheckSignals(Bool_t sync)
    if (sigdone != -1) return kTRUE;
 
    return kFALSE;
-}
-
-//______________________________________________________________________________
-void TWinNTSystem::CheckChilds()
-{
-   // Check if childs have finished.
 }
 
 //______________________________________________________________________________
@@ -2058,23 +2058,6 @@ void TWinNTSystem::Abort(int)
 }
 
 //---- dynamic loading and linking ---------------------------------------------
-
-//______________________________________________________________________________
-const char *TWinNTSystem::GetDynamicPath()
-{
-   // Get shared library search path.
-
-   static const char *dynpath = 0;
-
-   if (dynpath == 0) {
-      dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      if (dynpath == 0) {
-         dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
-      }
-   }
-   return dynpath;
-}
-
 //______________________________________________________________________________
 char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
 {
@@ -2134,12 +2117,12 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             s = libs(index, end);
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
                   s.Replace( 0, s.Last('/')+1, 0, 0);
                   s.Replace( 0, s.Last('\\')+1, 0, 0);
                }
             } else if (s.Index(user_lib) != kNPOS) {
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+               if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
                   s.Replace( 0, s.Last('/')+1, 0, 0);
                   s.Replace( 0, s.Last('\\')+1, 0, 0);
                }
