@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.30 2001/01/18 09:40:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.31 2001/01/20 21:29:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -134,6 +134,7 @@ void TStreamerInfo::Build()
    TIter nextd(fClass->GetListOfDataMembers());
 
    while((dm=(TDataMember*)nextd())) {
+      if (fClass->GetClassVersion() < 1) continue;
       if (!dm->IsPersistent()) continue;
       Streamer_t streamer = 0;
       offset = GetDataMemberOffset(dm,streamer);
