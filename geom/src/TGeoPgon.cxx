@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.44 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.45 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -31,6 +31,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -1677,6 +1678,27 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
       iplane--;
    }   
    return safmin;
+}
+
+//_____________________________________________________________________________
+void TGeoPgon::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   phi1    = " << fPhi1 << ";" << endl;
+   out << "   dphi    = " << fDphi << ";" << endl;
+   out << "   dnedges = " << fNedges << ";" << endl;
+   out << "   nz      = " << fNz << ";" << endl;
+   out << "   pPgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << endl;
+   for (Int_t i=0; i<fNz; i++) {
+      out << "      z     = " << fZ[i] << ";" << endl;
+      out << "      rmin  = " << fRmin[i] << ";" << endl;
+      out << "      rmax  = " << fRmax[i] << ";" << endl;
+      out << "   pPgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
+   }
+   out << "   pShape = pPgon;" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

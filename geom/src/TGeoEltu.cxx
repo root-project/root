@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.19 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.20 2004/11/25 12:10:01 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -367,6 +368,19 @@ Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
    }
    safz = TMath::Abs(point[2])-fDz;            
    return TMath::Max(safr, safz);
+}
+
+//_____________________________________________________________________________
+void TGeoEltu::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   a  = " << fRmin << ";" << endl;
+   out << "   b  = " << fRmax << ";" << endl;
+   out << "   dz = " << fDz << ";" << endl;
+   out << "   pShape = new TGeoEltu(\"" << GetName() << "\",a,b,dz);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

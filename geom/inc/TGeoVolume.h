@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.35 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.36 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -79,7 +79,8 @@ public:
       kVolumeMulti   =     BIT(19),
       kVoxelsXYZ     =     BIT(20),
       kVoxelsCyl     =     BIT(21),
-      kVolumeClone   =     BIT(22)
+      kVolumeClone   =     BIT(22),
+      kVolumeSavePrimitive = BIT(23)
    };
    // constructors
    TGeoVolume();
@@ -160,6 +161,7 @@ public:
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
+   virtual void    SavePrimitive(ofstream &out, Option_t *option);
    void            SetAsTopVolume(); // *TOGGLE* *GETTER=IsTopVolume
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}

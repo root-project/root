@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.36 2004/12/07 14:24:57 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.37 2005/01/28 10:01:04 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -71,6 +71,7 @@
 // shape.
 //_____________________________________________________________________________
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -264,10 +265,10 @@ Double_t TGeoBBox::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    for (i=0; i<3; i++) {
       if (dir[i]!=0) {
          s = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
+         if (s < 0) return 0.0;
          if (s < smin) smin = s;
       }
    }
-   if (smin<0) return 0.0;
    return smin;
 }
 
@@ -295,8 +296,8 @@ Double_t TGeoBBox::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          *safe = 0.0;
       } else {   
          *safe = saf[0];
-         if (saf[1] < *safe) *safe = saf[1];
-         if (saf[2] < *safe) *safe = saf[2];
+         if (saf[1] > *safe) *safe = saf[1];
+         if (saf[2] > *safe) *safe = saf[2];
       }   
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
@@ -568,6 +569,26 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
    }
    return safe;
 }
+
+//_____________________________________________________________________________
+void TGeoBBox::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dx = " << fDX << ";" << endl;
+   out << "   dy = " << fDY << ";" << endl;
+   out << "   dz = " << fDZ << ";" << endl;
+   if (fOrigin[0]!=0 || fOrigin[1]!=0 || fOrigin[2]!=0) { 
+      out << "   origin[0] = " << fOrigin[0] << ";" << endl;
+      out << "   origin[1] = " << fOrigin[1] << ";" << endl;
+      out << "   origin[2] = " << fOrigin[2] << ";" << endl;
+      out << "   pShape = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz,origin);" << endl;
+   } else {   
+      out << "   pShape = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz);" << endl;
+   }
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}         
 
 //_____________________________________________________________________________
 void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.3 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.4 2004/12/07 14:24:57 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -73,6 +73,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;

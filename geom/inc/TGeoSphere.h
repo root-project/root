@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.17 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.18 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
    virtual void          SetNumberOfDivisions(Int_t p);

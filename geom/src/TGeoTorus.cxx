@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.19 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.20 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -766,6 +767,21 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
    for (i=0; i<2; i++) saf[i]=-saf[i];
    safe = TMath::Max(saf[0], saf[1]);
    return TMath::Max(safe, safphi);
+}
+
+//_____________________________________________________________________________
+void TGeoTorus::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;  
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   r    = " << fR << ";" << endl;
+   out << "   rmin = " << fRmin << ";" << endl;
+   out << "   rmax = " << fRmax << ";" << endl;
+   out << "   phi1 = " << fPhi1 << ";" << endl;
+   out << "   dphi = " << fDphi << ";" << endl;
+   out << "   pShape = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.3 2004/09/20 16:00:25 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.4 2004/11/08 09:56:24 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 //    points "outside" the half-space
 //_____________________________________________________________________________
 
+#include "Riostream.h"
 #include "TGeoHalfSpace.h"
 
 ClassImp(TGeoHalfSpace)
@@ -167,6 +168,22 @@ Double_t TGeoHalfSpace::Safety(Double_t *point, Bool_t /*in*/) const
    Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];   
    return TMath::Abs(rdotn);
 }
+
+//_____________________________________________________________________________
+void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   point[0] = " << fP[0] << ";" << endl;
+   out << "   point[1] = " << fP[1] << ";" << endl;
+   out << "   point[2] = " << fP[2] << ";" << endl;
+   out << "   norm[0]  = " << fN[0] << ";" << endl;
+   out << "   norm[1]  = " << fN[1] << ";" << endl;
+   out << "   norm[2]  = " << fN[2] << ";" << endl;
+   out << "   pShape = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}         
 
 //_____________________________________________________________________________
 void TGeoHalfSpace::SetDimensions(Double_t *param)

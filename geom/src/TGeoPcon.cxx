@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.39 2005/01/19 13:19:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.40 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -43,6 +43,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -1021,6 +1022,26 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    return safmin;
 }
 
+//_____________________________________________________________________________
+void TGeoPcon::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   phi1  = " << fPhi1 << ";" << endl;
+   out << "   dphi  = " << fDphi << ";" << endl;
+   out << "   nz    = " << fNz << ";" << endl;
+   out << "   pPcon = new TGeoPcon(\"" << GetName() << "\",phi1,dphi,nz);" << endl;
+   for (Int_t i=0; i<fNz; i++) {
+      out << "      z     = " << fZ[i] << ";" << endl;
+      out << "      rmin  = " << fRmin[i] << ";" << endl;
+      out << "      rmax  = " << fRmax[i] << ";" << endl;
+      out << "   pPcon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
+   }
+   out << "   pShape = pPcon;" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}
+         
 //_____________________________________________________________________________
 void TGeoPcon::SetDimensions(Double_t *param)
 {

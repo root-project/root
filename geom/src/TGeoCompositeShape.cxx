@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.23 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.24 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -143,7 +143,7 @@
 // rules (see TGeoVolume). Volumes created based on composite shapes cannot be
 // divided. Visualization of such volumes is currently not implemented.
 
-//#include "TROOT.h"
+#include "Riostream.h"
 
 #include "TGeoManager.h"
 #include "TGeoBoolNode.h"
@@ -323,6 +323,26 @@ Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
 // to option. The matching point on the shape is stored in spoint.
    if (fNode) return fNode->Safety(point,in);
    return 0.;
+}
+
+//_____________________________________________________________________________
+void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   if (!strcmp(option,"s")) {
+      fNode->GetLeftShape()->SavePrimitive(out,option);
+      fNode->GetRightShape()->SavePrimitive(out,option);
+      fNode->GetLeftMatrix()->SavePrimitive(out,option);
+      fNode->GetRightMatrix()->SavePrimitive(out,option);
+      return;
+   } else {
+      out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;   
+   }
+   SavePrimitive(out,"s");
+   out << "   bool_name = \"" << GetTitle() << "\";" << endl;
+   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\", bool_name);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

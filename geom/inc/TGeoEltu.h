@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.10 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.11 2004/11/08 09:56:23 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;

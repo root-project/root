@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.3 2004/12/03 08:20:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.4 2004/12/07 14:24:57 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -766,6 +767,20 @@ Double_t TGeoHype::SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const
    return saf;
 }
 
+//_____________________________________________________________________________
+void TGeoHype::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   rin   = " << fRmin << ";" << endl;
+   out << "   stin  = " << fStIn << ";" << endl;
+   out << "   rout  = " << fRmax << ";" << endl;
+   out << "   stout = " << fStOut << ";" << endl;
+   out << "   dz    = " << fDz << ";" << endl;
+   out << "   pShape = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);  
+}
 
 //_____________________________________________________________________________
 void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)

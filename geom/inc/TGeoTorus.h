@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.8 2004/11/25 12:10:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.9 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;

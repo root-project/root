@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.14 2004/04/26 13:06:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.15 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -84,10 +84,12 @@ public:
    Double_t              GetTwist(Int_t iseg) const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    static Bool_t         IsSamePoint(Double_t *p1, Double_t *p2) {return ((p1[0]==p2[0]) && (p1[1]==p2[1]))?kTRUE:kFALSE;}
+   static Bool_t         InsidePolygon(Double_t x, Double_t y, Double_t *pts);
    virtual void          InspectShape() const;
    Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
    Double_t              SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    virtual void          SetDimensions(Double_t *param);
@@ -159,6 +161,7 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const {return 8;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
 
   ClassDef(TGeoTrap, 1)         // G3 TRAP shape
 };
@@ -195,12 +198,13 @@ public:
    // destructor
    virtual ~TGeoGtra();
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistFromInside(point,dir,iact,step,safe);}
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistFromOutside(point,dir,iact,step,safe);}
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
   ClassDef(TGeoGtra, 1)         // G3 GTRA shape
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.49 2004/10/26 08:15:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.50 2004/11/19 06:39:54 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -332,6 +332,7 @@
 //   The following picture represent how a simple geometry tree is built in
 // memory.
 
+#include "Riostream.h"
 #include "TString.h"
 #include "TBrowser.h"
 #include "TStyle.h"
@@ -984,6 +985,19 @@ void TGeoVolume::Raytrace(Bool_t flag)
    if (!drawn) painter->Draw();
    else painter->ModifiedPad();
 }   
+
+//______________________________________________________________________________
+void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a primitive as a C++ statement(s) on output stream "out".
+   if (TObject::TestBit(TGeoVolume::kVolumeSavePrimitive)) return;
+   // create the shape for this volume (pShape)
+   fShape->SavePrimitive(out,option);
+   // create a medium pMed
+   fMedium->SavePrimitive(out,option);
+   out << "   // Volume: " << GetName() << endl;
+   out << "   pVol = new TGeoVolume(\"" << GetName() << "\", pShape, pMed);" << endl;
+}
 
 //_____________________________________________________________________________
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)

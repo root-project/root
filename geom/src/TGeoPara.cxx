@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.20 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.21 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -41,6 +41,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -207,45 +208,43 @@ Bool_t TGeoPara::Contains(Double_t *point) const
 Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
+// Boundary safe algorithm.
    if (iact<3 && safe) {
    // compute safety
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big(); 
    }
-   Double_t saf[6];
+   Double_t saf[2];
    Double_t snxt = TGeoShape::Big();
-   // distance from point to higher Z face
-   saf[4] = fZ-point[2];
-   // distance from point to lower Z face
-   saf[5] = -fZ-point[2];
-
+   Double_t s;
+   saf[0] = fZ+point[2];
+   saf[1] = fZ-point[2];
+   if (dir[2]!=0) {
+      s = (dir[2]>0)?(saf[1]/dir[2]):(-saf[0]/dir[2]);
+      if (s<0) return 0.0;
+      if (s<snxt) snxt = s;
+   }
    // distance from point to center axis on Y 
    Double_t yt = point[1]-fTyz*point[2];      
-   // distance from point to higher Y face 
-   saf[2] = fY-yt; 
-   // distance from point to lower Y face 
-   saf[3] = -fY-yt; 
+   saf[0] = fY+yt;
+   saf[1] = fY-yt;
+   Double_t dy = dir[1]-fTyz*dir[2];
+   if (dy!=0) {
+      s = (dy>0)?(saf[1]/dy):(-saf[0]/dy);
+      if (s<0) return 0.0;
+      if (s<snxt) snxt = s;
+   }   
    // distance from point to center axis on X 
    Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
-   // distance from point to higher X face 
-   saf[0] = fX-xt; 
-   // distance from point to lower X face 
-   saf[1] = -fX-xt;
-   Double_t sn1, sn2, sn3;
-   sn1 = sn2 = sn3 = TGeoShape::Big();
-   if (dir[2]!=0) sn3=saf[4]/dir[2];
-   if (sn3<0)     sn3=saf[5]/dir[2];
-   
-   Double_t dy = dir[1]-fTyz*dir[2];
-   if (dy!=0)     sn2=saf[2]/dy;
-   if (sn2<0)     sn2=saf[3]/dy;
-   
+   saf[0] = fX+xt;
+   saf[1] = fX-xt;
    Double_t dx = dir[0]-fTxz*dir[2]-fTxy*dy;
-   if (dx!=0)     sn1=saf[0]/dx;
-   if (sn1<0)     sn1=saf[1]/dx;
-   
-   snxt = TMath::Min(sn1, TMath::Min(sn2, sn3));
+   if (dx!=0) {
+      s = (dx>0)?(saf[1]/dx):(-saf[0]/dx);
+      if (s<0) return 0.0;
+      if (s<snxt) snxt = s;
+   }   
    return snxt;
 }
 
@@ -253,88 +252,80 @@ Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 Double_t TGeoPara::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
-//   Warning("DistFromOutside", "PARA TOIN");
-//   Double_t snxt=TGeoShape::Big();
-   Double_t dn31=-fZ-point[2];
-   Double_t dn32=fZ-point[2];
-   Double_t yt=point[1]-fTyz*point[2];
-   Double_t dn21=-fY-yt;
-   Double_t dn22=fY-yt;
-   Double_t cty=1.0/TMath::Sqrt(1.0+fTyz*fTyz);
-   
-   Double_t xt=point[0]-fTxy*yt-fTxz*point[2];
-   Double_t dn11=-fX-xt;
-   Double_t dn12=fX-xt;
-   Double_t ctx=1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
-   
-   Double_t sn3=dn31;
-   if (sn3<0) sn3=-dn32;
-   Double_t sn2=dn21*cty;
-   if (sn2<0) sn2=-dn22*cty;
-   Double_t sn1=dn11*ctx;
-   if (sn1<0) sn1=-dn12*ctx;
+   Double_t snxt=TGeoShape::Big();
    if (iact<3 && safe) {
-   // compute safety
-      *safe = TMath::Max(sn1, sn2);
-      if (sn3>(*safe)) *safe=sn3;
+      // compute safe distance
+      *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big(); 
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-   // compute distance to PARA
-   Double_t swap;
-//   Bool_t upx=kFALSE, upy=kFALSE, upz=kFALSE;
-   // check if dir is paralel to Z planes
-   if (dir[2]==0) {
-      if ((dn32*dn31)>0) return TGeoShape::Big();
-      dn31 = 0;
-      dn32 = TGeoShape::Big();
-   } else {
-      dn31=dn31/dir[2];
-      dn32=dn32/dir[2];
-      if (dir[2]<0) {
-         swap=dn31;
-         dn31=dn32;
-         dn32=swap;
-      }   
-   }
-   if (dn32<0) return TGeoShape::Big();
-   Double_t dy=dir[1]-fTyz*dir[2];
-   if (dy==0) {
-      if ((dn21*dn22)>0) return TGeoShape::Big();
-      dn21=0;
-      dn22=TGeoShape::Big();
-   } else {
-      dn21=dn21/dy;
-      dn22=dn22/dy;
-      if (dy<0) {   
-         swap=dn21;
-         dn21=dn22;
-         dn22=swap;
-      }   
-   }
-   if (dn22<0) return TGeoShape::Big();
+   Bool_t in = kTRUE;
+   Double_t safz;
+   safz = TMath::Abs(point[2])-fZ;
+   if (safz>0) {
+      // outside Z
+      if (point[2]*dir[2]>=0) return TGeoShape::Big();
+      in = kFALSE;
+   }   
+   Double_t yt=point[1]-fTyz*point[2];
+   Double_t safy = TMath::Abs(yt)-fY;
+   Double_t dy=dir[1]-fTyz*dir[2];   
+   if (safy>0) {
+      if (yt*dy>=0) return TGeoShape::Big();
+      in = kFALSE;
+   }   
+   Double_t xt=point[0]-fTxy*yt-fTxz*point[2];
+   Double_t safx = TMath::Abs(xt)-fX;
    Double_t dx=dir[0]-fTxy*dy-fTxz*dir[2];
-   if (dx==0) {
-      if ((dn11*dn12)>0) return TGeoShape::Big();
-      dn11=0;
-      dn12=TGeoShape::Big();
-   } else {
-      dn11=dn11/dx;
-      dn12=dn12/dx;
-      if (dx<0) {   
-         swap=dn11;
-         dn11=dn12;
-         dn12=swap;
-      }   
+   if (safx>0) {
+      if (xt*dx>=0) return TGeoShape::Big();
+      in = kFALSE;
+   }   
+   // protection in case point is actually inside
+   if (in) {
+      if (safz>safx && safz>safy) {
+         if (point[2]*dir[2]>0) return TGeoShape::Big();
+         return 0.0;
+      }
+      if (safx>safy) {
+         if (xt*dx>0) return TGeoShape::Big();
+         return 0.0;
+      }
+      if (yt*dy>0) return TGeoShape::Big();
+      return 0.0;
+   }         
+   Double_t xnew,ynew,znew;
+   if (safz>0) {
+      snxt = safz/TMath::Abs(dir[2]);
+      xnew = point[0]+snxt*dir[0];
+      ynew = point[1]+snxt*dir[1];
+      znew = (point[2]>0)?fZ:(-fZ);
+      Double_t ytn = ynew-fTyz*znew;
+      if (TMath::Abs(ytn)<=fY) {
+         Double_t xtn = xnew-fTxy*ytn-fTxz*znew;
+         if (TMath::Abs(xtn)<=fX) return snxt;
+      }
    }
-   if (dn12<0) return TGeoShape::Big();
-   Double_t smin=TMath::Max(dn11,dn21);
-   if (dn31>smin) smin=dn31;
-   Double_t smax=TMath::Min(dn12,dn22);
-   if (dn32<smax) smax=dn32;
-   if (smax<=smin) return TGeoShape::Big();
-   if (smin<=0) return TGeoShape::Big();
-   return smin;
+   if (safy>0) {
+      snxt = safy/TMath::Abs(dy);
+      znew = point[2]+snxt*dir[2];
+      if (TMath::Abs(znew)<=fZ) {
+         Double_t ytn = (yt>0)?fY:(-fY);
+         xnew = point[0]+snxt*dir[0];
+         Double_t xtn = xnew-fTxy*ytn-fTxz*znew;
+         if (TMath::Abs(xtn)<=fX) return snxt;
+      }
+   }
+   if (safx>0) {
+      snxt = safx/TMath::Abs(dx);
+      znew = point[2]+snxt*dir[2];
+      if (TMath::Abs(znew)<=fZ) { 
+         ynew = point[1]+snxt*dir[1];
+         Double_t ytn = ynew-fTyz*znew;
+         if (TMath::Abs(ytn)<=fY) return snxt;
+      }
+   }          
+   return TGeoShape::Big();                  
 }
 
 //_____________________________________________________________________________
@@ -549,6 +540,22 @@ Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
+}
+
+//_____________________________________________________________________________
+void TGeoPara::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dx    = " << fX << ";" << endl;
+   out << "   dy    = " << fY << ";" << endl;
+   out << "   dz    = " << fZ << ";" << endl;
+   out << "   alpha = " << fAlpha<< ";" << endl;
+   out << "   theta = " << fTheta << ";" << endl;
+   out << "   phi   = " << fPhi << ";" << endl;
+   out << "   pShape = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << endl;  
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

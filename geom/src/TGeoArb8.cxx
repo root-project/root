@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.37 2004/12/05 16:39:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.38 2004/12/05 16:47:22 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -301,53 +302,12 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
 //   memset(&poly[0], 0, 8*sizeof(Double_t));
    //SetPlaneVertices(point[2], &poly[0]);
    Double_t cf = 0.5*(fDz-point[2])/fDz;
-   Int_t i,j;
+   Int_t i;
    for (i=0; i<4; i++) {
       poly[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
       poly[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
    }
-   // find the intersections of Y=Ypoint with this poly.
-   Double_t segx[4];
-   Double_t x1, x2, y1, y2;
-   Int_t npts = 0;
-   for (i=0; i<4; i++) {
-      j  = (i+1)%4;
-      y1 = poly[2*i+1];
-      y2 = poly[2*j+1];
-//      printf("check Yp=%f against y1=%f y2=%f\n", point[1], y1, y2);
-      if ((point[1]-y1)*(y2-point[1])<0) continue;
-      x1 = poly[2*i];
-      x2 = poly[2*j];
-//      printf("    x1=%f  x2=%f\n", x1,x2);
-      // check if point is on the line connecting points 1-2
-      if (y1 == y2) {
-         if ((point[0]<x1) || (point[0]>x2)) return kFALSE;
-         return kTRUE;
-      }
-      cf = (point[1]-y1)/(y2-y1);
-      segx[npts++] = x1+cf*(x2-x1);
-//      printf("   x1+cf*(x2-x1) : %f+%f*(%f-%f)=%f\n",x1, cf, x2, x1, x1+cf*(x2-x1));
-      // sort intersection points by X
-      if (npts>1) {
-         if (segx[npts-2] > segx[npts-1]) {
-            x1 = segx[npts-2];
-            segx[npts-2] = segx[npts-1];
-            segx[npts-1] = x1;
-         }
-      }
-   }
-//   printf("Intersections with Y = %f (Xpoint=%f):\n",point[1], point[0]);
-//   for (i=0;i<npts;i++) printf("%i : X=%f\n", i,segx[i]);
-   if (npts == 0) return kFALSE;
-   if (npts == 2) {
-      if ((point[0]<segx[npts-2]) || (point[0]>segx[npts-1])) return kFALSE;
-      return kTRUE;
-   }
-   if (npts != 4) return kFALSE;
-   // intersection poly is not convex (4 points)
-   if ((point[0]<segx[0]) || (point[0]>segx[3])) return kFALSE;
-   if ((point[0]>segx[1]) && (point[0]<segx[2])) return kFALSE;
-   return kTRUE;
+   return InsidePolygon(point[0],point[1],poly);
 }
 
 //_____________________________________________________________________________
@@ -533,6 +493,7 @@ Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/
       yc=fXY[j][1];
       xd=fXY[4+j][0];
       yd=fXY[4+j][1];
+      
       Double_t tx1 =dz2*(xb-xa);
       Double_t ty1 =dz2*(yb-ya);
       Double_t tx2 =dz2*(xd-xc);
@@ -696,6 +657,25 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
 }   
 
 //_____________________________________________________________________________
+Bool_t TGeoArb8::InsidePolygon(Double_t x, Double_t y, Double_t *pts)
+{
+// Find if a point in XY plane is inside the polygon defines by PTS.
+   Int_t i,j;
+   Double_t x1,y1,x2,y2;
+   Double_t cross;
+   for (i=0; i<4; i++) {
+      j = (i+1)%4;
+      x1 = pts[i<<1];
+      y1 = pts[(i<<1)+1];
+      x2 = pts[j<<1];
+      y2 = pts[(j<<1)+1];
+      cross = (x-x1)*(y2-y1)-(y-y1)*(x2-x1);
+      if (cross<0) return kFALSE;
+   }
+   return kTRUE;   
+}
+
+//_____________________________________________________________________________
 void TGeoArb8::InspectShape() const
 {
 // print shape parameters
@@ -838,6 +818,33 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
    return TGeoShape::Big();
 }
    
+//_____________________________________________________________________________
+void TGeoArb8::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dz       = " << fDz << ";" << endl;
+   out << "   vert[0]  = " << fXY[0][0] << ";" << endl;
+   out << "   vert[1]  = " << fXY[0][1] << ";" << endl;
+   out << "   vert[2]  = " << fXY[1][0] << ";" << endl;
+   out << "   vert[3]  = " << fXY[1][1] << ";" << endl;
+   out << "   vert[4]  = " << fXY[2][0] << ";" << endl;
+   out << "   vert[5]  = " << fXY[2][1] << ";" << endl;
+   out << "   vert[6]  = " << fXY[3][0] << ";" << endl;
+   out << "   vert[7]  = " << fXY[3][1] << ";" << endl;
+   out << "   vert[8]  = " << fXY[4][0] << ";" << endl;
+   out << "   vert[9]  = " << fXY[4][1] << ";" << endl;
+   out << "   vert[10] = " << fXY[5][0] << ";" << endl;
+   out << "   vert[11] = " << fXY[5][1] << ";" << endl;
+   out << "   vert[12] = " << fXY[6][0] << ";" << endl;
+   out << "   vert[13] = " << fXY[6][1] << ";" << endl;
+   out << "   vert[14] = " << fXY[7][0] << ";" << endl;
+   out << "   vert[15] = " << fXY[7][1] << ";" << endl;
+   out << "   pShape = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}
+
 //_____________________________________________________________________________
 void TGeoArb8::SetPlaneVertices(Double_t zpl, Double_t *vertices) const
 {
@@ -1027,7 +1034,45 @@ Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
-   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
+//   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
+
+// compute distance to plane ipl :
+// ipl=0 : points 0,4,1,5
+// ipl=1 : points 1,5,2,6
+// ipl=2 : points 2,6,3,7
+// ipl=3 : points 3,7,0,4
+   Double_t distmin;
+   if (dir[2]<0) {
+      distmin=(-fDz-point[2])/dir[2];
+   } else {
+      if (dir[2]>0) distmin =(fDz-point[2])/dir[2];
+      else          distmin = TGeoShape::Big();
+   }      
+   Double_t xa,xb,xc;
+   Double_t ya,yb,yc;
+   for (Int_t ipl=0;ipl<4;ipl++) {
+      Int_t j = (ipl+1)%4;
+      xa=fXY[ipl][0];
+      ya=fXY[ipl][1];
+      xb=fXY[ipl+4][0];
+      yb=fXY[ipl+4][1];
+      xc=fXY[j][0];
+      yc=fXY[j][1];
+      Double_t ax,ay,az;
+      ax = xb-xa;
+      ay = yb-ya;
+      az = 2.*fDz;
+      Double_t bx,by;
+      bx = xc-xa;
+      by = yc-ya;
+      Double_t ddotn = -dir[0]*az*by + dir[1]*az*bx+dir[2]*(ax*by-ay*bx);
+      if (ddotn<=0) continue; // entering
+      Double_t saf = -(point[0]-xa)*az*by + (point[1]-ya)*az*bx + (point[2]+fDz)*(ax*by-ay*bx);
+      if (saf>=0.0) return 0.0;
+      Double_t s = -saf/ddotn;
+      if (s<distmin) distmin=s;
+   }
+   return distmin;   
 }   
 
 //_____________________________________________________________________________
@@ -1041,7 +1086,101 @@ Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
-   return TGeoArb8::DistFromOutside(point, dir, iact, step, safe);
+   Bool_t in = kTRUE;
+   Double_t pts[8];
+   Double_t snxt;
+   Double_t xnew, ynew, znew;
+   Int_t i,j;
+   if (point[2]<-fDz+TGeoShape::Tolerance()) {
+      if (dir[2]<=0) return TGeoShape::Big();
+      in = kFALSE;
+      snxt = -(fDz+point[2])/dir[2];
+      xnew = point[0] + snxt*dir[0];
+      ynew = point[1] + snxt*dir[1];
+      for (i=0;i<4;i++) {
+         j = i<<1;
+         pts[j] = fXY[i][0];
+         pts[j+1] = fXY[i][1];
+      }
+      if (InsidePolygon(xnew,ynew,pts)) return snxt;   
+   } else if (point[2]>fDz-TGeoShape::Tolerance()) {
+      if (dir[2]>=0) return TGeoShape::Big();
+      in = kFALSE;
+      snxt = (fDz-point[2])/dir[2];
+      xnew = point[0] + snxt*dir[0];
+      ynew = point[1] + snxt*dir[1];
+      for (i=0;i<4;i++) {
+         j = i<<1;
+         pts[j] = fXY[i+4][0];
+         pts[j+1] = fXY[i+4][1];
+      }
+      if (InsidePolygon(xnew,ynew,pts)) return snxt;    
+   }   
+   snxt = TGeoShape::Big();   
+    
+
+   // check lateral faces
+   Double_t dz2 =0.5/fDz;
+   Double_t xa,xb,xc,xd;
+   Double_t ya,yb,yc,yd;
+   Double_t ax,ay,az;
+   Double_t bx,by;
+   Double_t ddotn, saf;
+   Double_t safmin = TGeoShape::Big();
+   Bool_t exiting = kFALSE;
+   for (i=0; i<4; i++) {
+      j = (i+1)%4;
+      xa=fXY[i][0];
+      ya=fXY[i][1];
+      xb=fXY[i+4][0];
+      yb=fXY[i+4][1];
+      xc=fXY[j][0];
+      yc=fXY[j][1];
+      xd=fXY[4+j][0];
+      yd=fXY[4+j][1];
+      ax = xb-xa;
+      ay = yb-ya;
+      az = 2.*fDz;
+      bx = xc-xa;
+      by = yc-ya;
+      ddotn = -dir[0]*az*by + dir[1]*az*bx+dir[2]*(ax*by-ay*bx);
+      saf = (point[0]-xa)*az*by - (point[1]-ya)*az*bx - (point[2]+fDz)*(ax*by-ay*bx);
+      
+      if (saf<=0) {
+         // face visible from point outside
+         in = kFALSE;
+         if (ddotn>=0) return TGeoShape::Big();      
+         snxt = saf/ddotn;
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew)<=fDz) {
+            xnew = point[0]+snxt*dir[0];
+            ynew = point[1]+snxt*dir[1];
+            Double_t tx1 =dz2*(xb-xa);
+            Double_t ty1 =dz2*(yb-ya);
+            Double_t tx2 =dz2*(xd-xc);
+            Double_t ty2 =dz2*(yd-yc);
+            Double_t dzp =fDz+znew;
+            Double_t xs1 =xa+tx1*dzp;
+            Double_t ys1 =ya+ty1*dzp;
+            Double_t xs2 =xc+tx2*dzp;
+            Double_t ys2 =yc+ty2*dzp;
+            if (TMath::Abs(xs1-xs2)>TMath::Abs(ys1-ys2)) {
+               if ((xnew-xs1)*(xs2-xnew)>=0) return snxt;
+            } else {
+               if ((ynew-ys1)*(ys2-ynew)>=0) return snxt;
+            }      
+         }
+      } else {
+         if (saf<safmin) {
+            safmin = saf;
+            if (ddotn>=0) exiting = kTRUE;
+            else exiting = kFALSE;
+         }   
+      }   
+   }   
+   if (!in) return TGeoShape::Big();
+   if (exiting) return TGeoShape::Big();
+   return 0.0;
 }   
 
 //_____________________________________________________________________________
@@ -1191,6 +1330,26 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    return safe;
 }
 
+//_____________________________________________________________________________
+void TGeoTrap::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dz     = " << fDz << ";" << endl;
+   out << "   theta  = " << fTheta << ";" << endl;
+   out << "   phi    = " << fPhi << ";" << endl;
+   out << "   h1     = " << fH1<< ";" << endl;
+   out << "   bl1    = " << fBl1<< ";" << endl;
+   out << "   tl1    = " << fTl1<< ";" << endl;
+   out << "   alpha1 = " << fAlpha1 << ";" << endl;
+   out << "   h2     = " << fH2 << ";" << endl;
+   out << "   bl2    = " << fBl2<< ";" << endl;
+   out << "   tl2    = " << fTl2<< ";" << endl;
+   out << "   alpha2 = " << fAlpha2 << ";" << endl;
+   out << "   pShape = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}
 
 ClassImp(TGeoGtra)
 
@@ -1321,6 +1480,34 @@ TGeoGtra::~TGeoGtra()
 }
 
 //_____________________________________________________________________________
+Double_t TGeoGtra::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+{
+// compute distance from inside point to surface of the arb8
+   if (iact<3 && safe) {
+   // compute safe distance
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
+   }
+   // compute distance to get ouside this shape
+   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
+}   
+
+//_____________________________________________________________________________
+Double_t TGeoGtra::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+{
+// compute distance from inside point to surface of the arb8
+   if (iact<3 && safe) {
+   // compute safe distance
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return TGeoShape::Big();
+      if (iact==1 && step<*safe) return TGeoShape::Big();
+   }
+   // compute distance to get ouside this shape
+   return TGeoArb8::DistFromOutside(point, dir, iact, step, safe);
+}   
+
+//_____________________________________________________________________________
 TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -1360,4 +1547,25 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    return (new TGeoGtra(dz, fTheta, fPhi, fTwistAngle ,h1, bl1, tl1, fAlpha1, h2, bl2, tl2, fAlpha2));
 }
 
+//_____________________________________________________________________________
+void TGeoGtra::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;  
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dz     = " << fDz << ";" << endl;
+   out << "   theta  = " << fTheta << ";" << endl;
+   out << "   phi    = " << fPhi << ";" << endl;
+   out << "   twist  = " << fTwistAngle << ";" << endl;
+   out << "   h1     = " << fH1<< ";" << endl;
+   out << "   bl1    = " << fBl1<< ";" << endl;
+   out << "   tl1    = " << fTl1<< ";" << endl;
+   out << "   alpha1 = " << fAlpha1 << ";" << endl;
+   out << "   h2     = " << fH2 << ";" << endl;
+   out << "   bl2    = " << fBl2<< ";" << endl;
+   out << "   tl2    = " << fTl2<< ";" << endl;
+   out << "   alpha2 = " << fAlpha2 << ";" << endl;
+   out << "   pShape = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}
 

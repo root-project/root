@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.10 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.11 2004/12/07 14:24:57 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 //         | -dz = a*rlo*rlo + b
 //         |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
 
+#include "Riostream.h"
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
@@ -513,6 +514,19 @@ Int_t TGeoParaboloid::GetNmeshVertices() const
    return (n*(n+1)+2);
 }   
    
+//_____________________________________________________________________________
+void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   rlo = " << fRlo << ";" << endl;
+   out << "   rhi = " << fRhi << ";" << endl;
+   out << "   dz  = " << fDZ << ";" << endl;  
+   out << "   pShape = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}         
+
 //_____________________________________________________________________________
 void TGeoParaboloid::SetPoints(Float_t *buff) const
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.35 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.36 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -24,6 +24,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoCone.h"
@@ -1109,6 +1110,22 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
    safe = saf[TMath::LocMax(4, saf)];
    if (TestShapeBit(kGeoPhiSeg)) return TMath::Max(safe, safphi);
    return safe;
+}
+
+//_____________________________________________________________________________
+void TGeoSphere::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   rmin   = " << fRmin << ";" << endl;
+   out << "   rmax   = " << fRmax << ";" << endl;
+   out << "   theta1 = " << fTheta1<< ";" << endl;
+   out << "   theta2 = " << fTheta2 << ";" << endl;
+   out << "   phi1   = " << fPhi1 << ";" << endl;
+   out << "   phi2   = " << fPhi2 << ";" << endl;
+   out << "   pShape = new TGeoSphere(\"" << GetName() << "\",rmin,rmax,theta1, theta2,phi1,phi2);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);   
 }
 
 //_____________________________________________________________________________

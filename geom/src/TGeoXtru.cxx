@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.17 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.18 2005/01/28 10:01:04 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 // Decomposition in concave polygons not implemented - drawing in solid mode
 // within x3d produces incorrect end-faces
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -880,6 +881,32 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
    safe = TMath::Max(safmin, safz);
    return safe;
 }
+
+//_____________________________________________________________________________
+void TGeoXtru::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;   
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   nz       = " << fNz << ";" << endl;
+   out << "   nvert    = " << fNvert << ";" << endl;
+   out << "   xtru = new TGeoXtru(nz);" << endl;
+   out << "   xtru->SetName(\"" << GetName() << "\");" << endl;
+   Int_t i;
+   for (i=0; i<fNvert; i++) {
+      out << "   xv[" << i << "] = " << fX[i] << ";   yv[" << i << "] = " << fY[i] << ";" << endl;
+   }
+   out << "   xtru->DefinePolygon(nvert,xv,yv);" << endl;
+   for (i=0; i<fNz; i++) {
+      out << "   zsect = " << fZ[i] << ";" << endl; 
+      out << "   x0    = " << fX0[i] << ";" << endl; 
+      out << "   y0    = " << fY0[i] << ";" << endl; 
+      out << "   scale = " << fScale[i] << ";" << endl; 
+      out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << endl;
+   }
+   out << "   pShape = xtru;" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}         
 
 //_____________________________________________________________________________
 void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)

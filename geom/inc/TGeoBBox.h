@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.15 2004/11/25 12:10:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.16 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -73,6 +73,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
    virtual void          SetDimensions(Double_t *param);
    void                  SetBoxPoints(Double_t *buff) const;

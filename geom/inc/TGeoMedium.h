@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.2 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.h,v 1.4 2004/07/09 08:10:21 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -23,6 +23,10 @@
 
 class TGeoMedium : public TNamed
 {
+public:
+   enum EGeoMedium {
+      kMedSavePrimitive = BIT(18)
+   };
 
 protected:
    Int_t                    fId;         // unique Id
@@ -43,6 +47,7 @@ public:
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
+   virtual void             SavePrimitive(ofstream &out, Option_t *option);
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}   

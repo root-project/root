@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.h,v 1.10 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.h,v 1.11 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

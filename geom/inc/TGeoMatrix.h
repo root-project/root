@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.17 2004/09/06 16:42:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.18 2005/01/13 12:07:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -29,6 +29,7 @@ enum EGeoTransfTypes {
    kGeoScale        = BIT(19),
    kGeoReflection   = BIT(20),
    kGeoRegistered   = BIT(21),
+   kGeoSavePrimitive = BIT(22),
    kGeoCombiTrans   = kGeoTranslation | kGeoRotation,
    kGeoGenTrans     = kGeoTranslation | kGeoRotation | kGeoScale
 };
@@ -131,6 +132,7 @@ public :
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
    void                 Subtract(const TGeoTranslation *other);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(const TGeoMatrix &other);
@@ -193,6 +195,7 @@ public :
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
    void                 SetAngles(Double_t alpha, Double_t beta, Double_t gamma);
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
@@ -267,6 +270,7 @@ public :
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
    void                 SetTranslation(const TGeoTranslation &tr);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(Double_t *vect);
@@ -346,6 +350,7 @@ public :
    virtual const Double_t    *GetTranslation() const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
+   virtual void         SavePrimitive(ofstream &, Option_t *) {;}
 
   ClassDef(TGeoIdentity, 1)                 // identity transformation class
 };
@@ -386,6 +391,7 @@ public :
    virtual void         RotateX(Double_t angle);
    virtual void         RotateY(Double_t angle);
    virtual void         RotateZ(Double_t angle);
+   virtual void         SavePrimitive(ofstream &out, Option_t *option);
    void                 SetTranslation(const Double_t *vect) 
                              {SetBit(kGeoTranslation); memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
    void                 SetRotation(const Double_t *matrix)

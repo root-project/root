@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.16 2004/10/14 07:38:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.17 2004/11/04 10:38:21 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 <img src="gif/t_material.jpg">
 */
 //End_Html
+#include "Riostream.h"
 #include "TMath.h"
 #include "TObjArray.h"
 #include "TStyle.h"
@@ -169,6 +170,24 @@ void TGeoMaterial::Print(const Option_t * /*option*/) const
    printf("Material %s %s   A=%g Z=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
           fA,fZ,fDensity, fRadLen, fIndex);
 }
+
+//_____________________________________________________________________________
+void TGeoMaterial::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
+   out << "// Material: " << GetName() << endl;
+   out << "   a       = " << fA << ";" << endl;
+   out << "   z       = " << fZ << ";" << endl;
+   out << "   density = " << fDensity << ";" << endl;
+   out << "   radl    = " << fRadLen << ";" << endl;
+   out << "   absl    = " << fIntLen << ";" << endl;
+   
+   out << "   pMat = new TGeoMaterial(\"" << GetName() << "\", a,z,density,radl,absl);" << endl;
+   out << "   pMat->SetIndex(" << GetIndex() << ");" << endl;
+   SetBit(TGeoMaterial::kMatSavePrimitive);
+}
+
 //-----------------------------------------------------------------------------
 Int_t TGeoMaterial::GetDefaultColor() const
 {
@@ -349,6 +368,23 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
    }
 }
 
+//_____________________________________________________________________________
+void TGeoMixture::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
+   out << "// Mixture: " << GetName() << endl;
+   out << "   nel     = " << fNelements << ";" << endl;
+   out << "   density = " << fDensity << ";" << endl;
+   out << "   pMix = new TGeoMixture(\"" << GetName() << "\", nel,density);" << endl;
+   for (Int_t i=0; i<fNelements; i++) {
+      TGeoElement *el = GetElement(i);
+      out << "      a = " << fAmixture[i] << ";   z = "<< fZmixture[i] << ";   w = " << fWeights[i] << ";  // " << el->GetName() << endl;
+      out << "   pMix->DefineElement(" << i << ",a,z,w);" << endl;
+   }         
+   out << "   pMix->SetIndex(" << GetIndex() << ");" << endl;
+   SetBit(TGeoMaterial::kMatSavePrimitive);
+}
 
 //-----------------------------------------------------------------------------
 Double_t TGeoMaterial::ScreenFactor(Double_t z)

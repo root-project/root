@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.25 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.26 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -40,6 +40,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -604,6 +605,20 @@ Double_t TGeoTrd1::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
 }
+
+//_____________________________________________________________________________
+void TGeoTrd1::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dx1 = " << fDx1 << ";" << endl;
+   out << "   dx2 = " << fDx2 << ";" << endl;
+   out << "   dy  = " << fDy  << ";" << endl;
+   out << "   dz  = " << fDZ  << ";" << endl;
+   out << "   pShape = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << endl;  
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);
+}         
 
 //_____________________________________________________________________________
 void TGeoTrd1::SetDimensions(Double_t *param)

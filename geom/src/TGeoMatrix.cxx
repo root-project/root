@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.33 2005/01/14 12:13:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.34 2005/01/14 15:10:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -167,6 +167,7 @@
 //  
 //     
 
+#include "Riostream.h"
 #include "TObjArray.h"
 
 #include "TGeoManager.h"
@@ -680,6 +681,20 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
     for (Int_t i=0; i<3; i++) 
        local[i] =  master[i]-bombtr[i];
 }
+
+//_____________________________________________________________________________
+void TGeoTranslation::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(kGeoSavePrimitive)) return;
+   out << "   // Translation: " << GetName() << endl;
+   out << "   dx = " << fTranslation[0] << ";" << endl;
+   out << "   dy = " << fTranslation[1] << ";" << endl;
+   out << "   dz = " << fTranslation[2] << ";" << endl;
+   out << "   pMatrix = new TGeoTranslation(\"" << GetName() << "\",dx,dy,dz);" << endl;
+   TObject::SetBit(kGeoSavePrimitive);
+}
+
 //=============================================================================
 
 ClassImp(TGeoRotation)
@@ -909,6 +924,21 @@ void TGeoRotation::RotateZ(Double_t angle)
    v[8] = fRotationMatrix[8];
    
    memcpy(&fRotationMatrix[0],v,kN9);
+}
+
+//_____________________________________________________________________________
+void TGeoRotation::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(kGeoSavePrimitive)) return;
+   out << "   // Rotation: " << GetName() << endl;
+   Double_t th1,ph1,th2,ph2,th3,ph3;
+   GetAngles(th1,ph1,th2,ph2,th3,ph3);
+   out << "   thx = " << th1 << ";    phx = " << ph1 << ";" << endl;
+   out << "   thy = " << th2 << ";    phy = " << ph2 << ";" << endl;
+   out << "   thz = " << th3 << ";    phz = " << ph3 << ";" << endl;
+   out << "   pMatrix = new TGeoRotation(\"" << GetName() << "\",thx,phx,thy,phy,thz,phz);" << endl;
+   TObject::SetBit(kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -1395,6 +1425,21 @@ void TGeoCombiTrans::RotateZ(Double_t angle)
    v[2] = fTranslation[2];
    memcpy(fTranslation,v,kN3);
 }   
+
+//_____________________________________________________________________________
+void TGeoCombiTrans::SavePrimitive(ofstream &out, Option_t *option)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(kGeoSavePrimitive)) return;
+   out << "   // Combi transformation: " << GetName() << endl;
+   if (fRotation) fRotation->SavePrimitive(out,option);
+   out << "   pRotation = pMatrix;" << endl;
+   out << "   dx = " << fTranslation[0] << ";" << endl;
+   out << "   dy = " << fTranslation[1] << ";" << endl;
+   out << "   dz = " << fTranslation[2] << ";" << endl;
+   out << "   pMatrix = new TGeoCombiTrans(\"" << GetName() << "\",dx,dy,dz,pRotation);" << endl;
+   TObject::SetBit(kGeoSavePrimitive);
+}
 
 //_____________________________________________________________________________
 void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
@@ -1963,4 +2008,25 @@ void TGeoHMatrix::RotateZ(Double_t angle)
    v[1] = s*fTranslation[0]+c*fTranslation[1];
    v[2] = fTranslation[2];
    memcpy(fTranslation,v,kN3);
+}
+
+//_____________________________________________________________________________
+void TGeoHMatrix::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestBit(kGeoSavePrimitive)) return;
+   const Double_t *tr = fTranslation;
+   const Double_t *rot = fRotationMatrix;
+   out << "   // HMatrix: " << GetName() << endl;
+   out << "   tr[0]  = " << tr[0] << ";    " << "tr[1] = " << tr[1] << ";    " << "tr[2] = " << tr[2] << ";" << endl;
+   out << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << endl; 
+   out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << endl; 
+   out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << endl; 
+   out << "   pMatrix = new TGeoHMatrix(\"" << GetName() << "\"" << endl;
+   out << "   pMatrix->SetTranslation(tr);" << endl;
+   out << "   pMatrix->SetRotation(rot);" << endl;
+   if (IsTranslation()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoTranslation);" << endl;
+   if (IsRotation()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoRotation);" << endl;
+   if (IsReflection()) out << "   pMatrix->SetBit(TGeoMatrix::kGeoReflection);" << endl;
+   TObject::SetBit(kGeoSavePrimitive);
 }

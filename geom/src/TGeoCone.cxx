@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.42 2005/01/19 13:19:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.43 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -60,6 +60,7 @@
 */
 //End_Html
 
+#include "Riostream.h"
 #include "TROOT.h"
 
 #include "TGeoManager.h"
@@ -900,6 +901,21 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
    return saf[TMath::LocMax(3,saf)];
 }
 
+//_____________________________________________________________________________
+void TGeoCone::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dz    = " << fDz << ";" << endl;
+   out << "   rmin1 = " << fRmin1 << ";" << endl;
+   out << "   rmax1 = " << fRmax1 << ";" << endl;
+   out << "   rmin2 = " << fRmin1 << ";" << endl;
+   out << "   rmax2 = " << fRmax2 << ";" << endl;
+   out << "   pShape = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);   
+}
+         
 //_____________________________________________________________________________
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                              Double_t rmin2, Double_t rmax2)
@@ -2155,6 +2171,23 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    safe = saf[TMath::LocMax(3,saf)];
    return TMath::Max(safe,safphi);
+}
+
+//_____________________________________________________________________________
+void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t */*option*/)
+{
+// Save a primitive as a C++ statement(s) on output stream "out".
+   if (TestShapeBit(kGeoSavePrimitive)) return;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   dz    = " << fDz << ";" << endl;
+   out << "   rmin1 = " << fRmin1 << ";" << endl;
+   out << "   rmax1 = " << fRmax1 << ";" << endl;
+   out << "   rmin2 = " << fRmin1 << ";" << endl;
+   out << "   rmax2 = " << fRmax2 << ";" << endl;
+   out << "   phi1  = " << fPhi1 << ";" << endl;
+   out << "   phi2  = " << fPhi2 << ";" << endl;
+   out << "   pShape = new TGeoConeSeg(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);" << endl;
+   SetShapeBit(TGeoShape::kGeoSavePrimitive);  
 }
 
 //_____________________________________________________________________________
