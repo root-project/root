@@ -305,7 +305,7 @@ $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
 	   "$(LIBDIR)" "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
-	   
+
 
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
@@ -395,14 +395,14 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
-	@rm -f build/misc/root-help.el
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   test/Makefile etc/system.rootrc etc/root.mimes
+	   test/Makefile etc/system.rootrc etc/root.mimes \
+	   build/misc/root-help.el
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
