@@ -32,5 +32,5 @@ void seism() {
       c1->Update();
       gSystem->ProcessEvents(); //canvas can be edited during the loop
    }
-   printf("Real Time = %8.3fs, Cput Time = %8.3fs\n",sw.RealTime(),sw.CpuTime());
+   printf("Real Time = %8.3fs, Cpu Time = %8.3fs\n",sw.RealTime(),sw.CpuTime());
 }
