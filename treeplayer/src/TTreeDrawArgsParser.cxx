@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.3 2005/03/21 12:32:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.1 2005/03/21 15:14:39 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -395,12 +395,12 @@ TString TTreeDrawArgsParser::GetVarExp() const
 
 
 //______________________________________________________________________________
-TString TTreeDrawArgsParser::GetObjectTitle() const 
+TString TTreeDrawArgsParser::GetObjectTitle() const
 {
    // Returns the desired plot title.
-   if (fSelection != "") 
+   if (fSelection != "")
       return Form("%s {%s}", GetVarExp().Data(), fSelection.Data());
-   else 
+   else
       return GetVarExp();
 }
 

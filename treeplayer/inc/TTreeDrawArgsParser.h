@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.3 2005/03/21 12:32:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.1 2005/03/21 15:14:39 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 // TTreeDrawArgsParser                                                  //
 //                                                                      //
-// A class that parses all parameters for TTree::Draw().                // 
+// A class that parses all parameters for TTree::Draw().                //
 // See TTree::Draw() for the format description.                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
