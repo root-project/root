@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.3 2001/02/14 15:39:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.4 2001/04/04 13:38:38 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -95,6 +95,7 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    //      [ the MyCanvas is adopted by the embedded canvas and will be
    //        destroyed by it ]
 
+   fCanvas  = 0;
    fButton  = 0;
    fAutoFit = kTRUE;
 
@@ -120,6 +121,8 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 Bool_t TRootEmbeddedCanvas::HandleContainerButton(Event_t *event)
 {
    // Handle mouse button events in the canvas container.
+
+   if (!fCanvas) return kTRUE;
 
    Int_t button = event->fCode;
    Int_t x = event->fX;
@@ -155,6 +158,8 @@ Bool_t TRootEmbeddedCanvas::HandleContainerDoubleClick(Event_t *event)
 {
    // Handle mouse button double click events in the canvas container.
 
+   if (!fCanvas) return kTRUE;
+
    Int_t button = event->fCode;
    Int_t x = event->fX;
    Int_t y = event->fY;
@@ -174,7 +179,7 @@ Bool_t TRootEmbeddedCanvas::HandleContainerConfigure(Event_t *)
 {
    // Handle configure (i.e. resize) event.
 
-   if (fAutoFit) {
+   if (fAutoFit && fCanvas) {
       fCanvas->Resize();
       fCanvas->Update();
    }
@@ -185,6 +190,8 @@ Bool_t TRootEmbeddedCanvas::HandleContainerConfigure(Event_t *)
 Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
 {
    // Handle keyboard events in the canvas container.
+
+   if (!fCanvas) return kTRUE;
 
    if (event->fType == kGKeyPress) {
       fButton = event->fCode;
@@ -205,6 +212,8 @@ Bool_t TRootEmbeddedCanvas::HandleContainerMotion(Event_t *event)
 {
    // Handle mouse motion event in the canvas container.
 
+   if (!fCanvas) return kTRUE;
+
    Int_t x = event->fX;
    Int_t y = event->fY;
 
@@ -221,6 +230,8 @@ Bool_t TRootEmbeddedCanvas::HandleContainerExpose(Event_t *event)
 {
    // Handle expose events.
 
+   if (!fCanvas) return kTRUE;
+
    if (event->fCount == 0)
       fCanvas->Flush();
 
@@ -231,6 +242,8 @@ Bool_t TRootEmbeddedCanvas::HandleContainerExpose(Event_t *event)
 Bool_t TRootEmbeddedCanvas::HandleContainerCrossing(Event_t *event)
 {
    // Handle enter/leave events. Only leave is activated at the moment.
+
+   if (!fCanvas) return kTRUE;
 
    if (event->fType == kLeaveNotify)
       fCanvas->HandleInput(kMouseLeave, 0, 0);
