@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.137 2003/04/04 16:57:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.138 2003/04/16 14:20:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -377,11 +377,13 @@
 //     The titles are part of the persistent histogram.
 //     It is also possible to specify the histogram title and the axis
 //     titles at creation time. These titles can be given in the "title"
-//     paramater. They must be separated by ";":
+//     parameter. They must be separated by ";":
 //        TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
-//     Any title can be omited:
+//     Any title can be omitted:
 //        TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
 //        TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
+//     The method SetTitle has the same syntax:
+//        h->SetTitle("Histogram title;An other X title Axis");
 //
 //     Saving/Reading histograms to/from a ROOT file
 //     =============================================
@@ -500,6 +502,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
 //     Creates the main histogram structure:
 //        name   : name of histogram (avoid blanks)
 //        title  : histogram title
+//                 if title is of the form "stringt;stringx;stringy;stringz"
+//                 the histogram title is set to stringt, 
+//                 the x axis title to stringy, the y axis title to stringy,etc
 //        nbins  : number of bins
 //        xlow   : low edge of first bin
 //        xup    : upper edge of last bin (not included in last bin)
@@ -528,6 +533,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //  Creates the main histogram structure:
 //     name   : name of histogram (avoid blanks)
 //     title  : histogram title
+//              if title is of the form "stringt;stringx;stringy;stringz"
+//              the histogram title is set to stringt, 
+//              the x axis title to stringy, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
@@ -550,6 +558,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //  Creates the main histogram structure:
 //     name   : name of histogram (avoid blanks)
 //     title  : histogram title
+//              if title is of the form "stringt;stringx;stringy;stringz"
+//              the histogram title is set to stringt, 
+//              the x axis title to stringy, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
 //              This is an array of size nbins+1
@@ -602,33 +613,7 @@ void TH1::Build()
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
 
-   // Decode fTitle. It may contain X, Y and Z titles
-   TString str1 = fTitle, str2;
-   Int_t Isc = str1.Index(";");
-   Int_t Lns = str1.Length();
-   if (Isc >=0 ) {
-      fTitle = str1(0,Isc);
-      str1   = str1(Isc+1, Lns);
-      Isc    = str1.Index(";");
-      if (Isc >=0 ) {
-         str2 = str1(0,Isc); 
-         fXaxis.SetTitle(str2.Data());
-         Lns  = str1.Length();
-         str1 = str1(Isc+1, Lns);
-         Isc  = str1.Index(";");
-         if (Isc >=0 ) {
-            str2 = str1(0,Isc); 
-            fYaxis.SetTitle(str2.Data());
-            Lns  = str1.Length();
-            str1 = str1(Isc+1, Lns);
-            fZaxis.SetTitle(str1.Data());
-         } else {
-            fYaxis.SetTitle(str1.Data());
-         }
-      } else {
-         fXaxis.SetTitle(str1.Data());
-      }
-   }
+   SetTitle(fTitle.Data());
 
    fFunctions = new TList;
 
@@ -3884,6 +3869,47 @@ void TH1::SetDefaultBufferSize(Int_t buffersize)
 
    if (buffersize < 0) buffersize = 0;
    fgBufferSize = buffersize;
+}
+
+//______________________________________________________________________________
+void TH1::SetTitle(const char *title)
+{
+   // Change (i.e. set) the title
+   //   if title is of the form "stringt;stringx;stringy;stringz"
+   //   the histogram title is set to stringt, 
+   //   the x axis title to stringy, the y axis title to stringy,etc
+   
+   fTitle = title;
+
+   // Decode fTitle. It may contain X, Y and Z titles
+   TString str1 = fTitle, str2;
+   Int_t Isc = str1.Index(";");
+   Int_t Lns = str1.Length();
+   if (Isc >=0 ) {
+      fTitle = str1(0,Isc);
+      str1   = str1(Isc+1, Lns);
+      Isc    = str1.Index(";");
+      if (Isc >=0 ) {
+         str2 = str1(0,Isc); 
+         fXaxis.SetTitle(str2.Data());
+         Lns  = str1.Length();
+         str1 = str1(Isc+1, Lns);
+         Isc  = str1.Index(";");
+         if (Isc >=0 ) {
+            str2 = str1(0,Isc); 
+            fYaxis.SetTitle(str2.Data());
+            Lns  = str1.Length();
+            str1 = str1(Isc+1, Lns);
+            fZaxis.SetTitle(str1.Data());
+         } else {
+            fYaxis.SetTitle(str1.Data());
+         }
+      } else {
+         fXaxis.SetTitle(str1.Data());
+      }
+   }
+
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 // -------------------------------------------------------------------------

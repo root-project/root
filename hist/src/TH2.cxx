@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.39 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.40 2003/02/25 14:17:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -44,6 +44,8 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH1(name,title,nbinsx,xlow,xup)
 {
+   // see comments in the TH1 base class constructors
+   
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -57,6 +59,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                      ,Int_t nbinsy,Axis_t ylow,Axis_t yup)
      :TH1(name,title,nbinsx,xbins)
 {
+   // see comments in the TH1 base class constructors
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -70,6 +73,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                      ,Int_t nbinsy,const Double_t *ybins)
      :TH1(name,title,nbinsx,xlow,xup)
 {
+   // see comments in the TH1 base class constructors
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -84,6 +88,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
+   // see comments in the TH1 base class constructors
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -98,6 +103,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
+   // see comments in the TH1 base class constructors
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.36 2003/04/03 09:10:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.37 2003/04/16 15:06:09 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -101,6 +101,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 //
 //        See TProfile::BuildOptions for explanation of parameters
 //
+// see also comments in the TH1 base class constructors
 
    BuildOptions(0,0,option);
 }
@@ -114,6 +115,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Float_t 
 //
 //        See TProfile::BuildOptions for more explanations on errors
 //
+// see also comments in the TH1 base class constructors
 
    BuildOptions(0,0,option);
 }
@@ -127,6 +129,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 //
 //        See TProfile::BuildOptions for more explanations on errors
 //
+// see also comments in the TH1 base class constructors
 
    BuildOptions(0,0,option);
 }
@@ -140,6 +143,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t
 //
 //        See TProfile::BuildOptions for more explanations on errors
 //
+// see also comments in the TH1 base class constructors
 
    BuildOptions(ylow,yup,option);
 }
@@ -157,6 +161,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 //
 //        See TProfile::BuildOptions for more explanations on errors
 //
+// see also comments in the TH1 base class constructors
 
    BuildOptions(ylow,yup,option);
 }
