@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.21 2002/10/25 13:35:22 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.22 2002/10/25 15:29:51 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -133,7 +133,7 @@ TVectorD::~TVectorD()
    // TVectorD destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      ::operator delete [] (fElements);
 
    Invalidate();
 }
