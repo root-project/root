@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.48 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.49 2005/04/04 15:00:39 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -172,13 +172,13 @@ void TGeoCone::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       safe = safr;
       norm[0] = cr1*cphi;
       norm[1] = cr1*sphi;
-      norm[2] = tg1*cr1;
+      norm[2] = -tg1*cr1;
    }
    safr = TMath::Abs((rout-r)*cr2);
    if (safr<safe) {
       norm[0] = cr2*cphi;
       norm[1] = cr2*sphi;
-      norm[2] = tg2*cr2;
+      norm[2] = -tg2*cr2;
    }
    if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
       norm[0] = -norm[0];
@@ -210,11 +210,11 @@ void TGeoCone::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
    safe = (ro1>0)?(TMath::Abs((r-rin)*cr1)):TGeoShape::Big();
    norm[0] = cr1*cphi;
    norm[1] = cr1*sphi;
-   norm[2] = tg1*cr1;
+   norm[2] = -tg1*cr1;
    if (TMath::Abs((rout-r)*cr2)<safe) {
       norm[0] = cr2*cphi;
       norm[1] = cr2*sphi;
-      norm[2] = tg2*cr2;
+      norm[2] = -tg2*cr2;
    }
    if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
       norm[0] = -norm[0];
@@ -1178,11 +1178,11 @@ void TGeoConeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    if (i==1) {
       norm[0] = cr1*cphi;
       norm[1] = cr1*sphi;
-      norm[2] = tg1*cr1;
+      norm[2] = -tg1*cr1;
    } else {
       norm[0] = cr2*cphi;
       norm[1] = cr2*sphi;
-      norm[2] = tg2*cr2;
+      norm[2] = -tg2*cr2;
    }
 
    if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
@@ -1224,11 +1224,11 @@ void TGeoConeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
    if (i==0) {
       norm[0] = cr1*cphi;
       norm[1] = cr1*sphi;
-      norm[2] = tg1*cr1;
+      norm[2] = -tg1*cr1;
    } else {
       norm[0] = cr2*cphi;
       norm[1] = cr2*sphi;
-      norm[2] = tg2*cr2;
+      norm[2] = -tg2*cr2;
    }
 
    if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {

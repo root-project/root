@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.17 2005/04/01 13:53:17 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.18 2005/04/04 09:29:30 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -34,6 +34,7 @@ TGeoBoolNode::TGeoBoolNode()
    fRight    = 0;
    fLeftMat  = 0;
    fRightMat = 0;
+   fSelected = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
@@ -43,6 +44,7 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    fRight    = 0;
    fLeftMat  = 0;
    fRightMat = 0;
+   fSelected = 0;
    if (!MakeBranch(expr1, kTRUE)) {
       return;
    }
@@ -54,20 +56,21 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 //-----------------------------------------------------------------------------
 TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
 {
+   fSelected = 0;
    fLeft = left;
-   if (!fLeft) {
-      Error("ctor", "left shape is NULL");
-      return;
-   }   
    fRight = right;
-   if (!fRight) {
-      Error("ctor", "right shape is NULL");
-      return;
-   }   
    fLeftMat = lmat;
    if (!fLeftMat) fLeftMat = gGeoIdentity;
    fRightMat = rmat;
    if (!fRightMat) fRightMat = gGeoIdentity;
+   if (!fLeft) {
+      Error("ctor", "left shape is NULL");
+      return;
+   }   
+   if (!fRight) {
+      Error("ctor", "right shape is NULL");
+      return;
+   }   
 }
 
 //-----------------------------------------------------------------------------
@@ -293,6 +296,20 @@ void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    norm[2] = 1.;
    Double_t local[3];
    Double_t ldir[3], lnorm[3];
+   if (fSelected == 1) {
+      fLeftMat->MasterToLocal(point, local);
+      fLeftMat->MasterToLocalVect(dir, ldir);
+      fLeft->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }
+   if (fSelected == 2) {
+      fRightMat->MasterToLocal(point, local);
+      fRightMat->MasterToLocalVect(dir, ldir);
+      fRight->ComputeNormal(local,ldir,lnorm);
+      fRightMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }            
    fLeftMat->MasterToLocal(point, local);
    if (fLeft->Contains(local)) {
       fLeftMat->MasterToLocalVect(dir, ldir);
@@ -343,24 +360,41 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t d1=0., d2=0., snxt=0., dd=0.;
    Double_t epsil = 1.E-8;
-   fLeftMat->MasterToLocalVect(dir, &ldir[0]);
-   fRightMat->MasterToLocalVect(dir, &rdir[0]);
-   fLeftMat->MasterToLocal(point, &local[0]);
-   Bool_t inside1 = fLeft->Contains(&local[0]);
-   if (inside1) d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
-   fRightMat->MasterToLocal(point, &local[0]);
-   Bool_t inside2 = fRight->Contains(&local[0]);
-   if (inside2) d2 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
-
-   if (inside1 && inside2) snxt = TMath::Min(d1, d2);
-   else if (inside1) snxt = d1;   
-   else if (inside2) snxt = d2;
-   else return 0.;
+   fLeftMat->MasterToLocalVect(dir, ldir);
+   fRightMat->MasterToLocalVect(dir, rdir);
+   fLeftMat->MasterToLocal(point, local);
+   Bool_t inside1 = fLeft->Contains(local);
+   if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+   fRightMat->MasterToLocal(point, local);
+   Bool_t inside2 = fRight->Contains(local);
+   if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
+   if (inside1 && inside2) {
+      if (d1<d2) {
+         snxt = d1;
+         node->SetSelected(1);
+      } else {
+         snxt = d2;
+         node->SetSelected(2);
+      }      
+   } else {
+      if (inside1) {
+         snxt = d1;   
+         node->SetSelected(1);
+      } else {
+         if (inside2) {
+            snxt = d2;
+            node->SetSelected(2);
+         } else {
+            return 0.;
+         }
+      }
+   }         
 
    for (i=0; i<3; i++) master[i] += (snxt+epsil)*dir[i];
-   dd = DistFromInside(&master[0], dir, iact, step-snxt, safe);
+   dd = DistFromInside(&master[0], dir, 3);
    if (dd > 0.) dd += epsil;
    snxt += dd;
    return snxt;
@@ -376,6 +410,7 @@ Double_t TGeoUnion::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt;
    fLeftMat->MasterToLocal(point, &local[0]);
@@ -384,7 +419,13 @@ Double_t TGeoUnion::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
    d1 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
-   snxt = TMath::Min(d1, d2);
+   if (d1<d2) {
+      snxt = d1;
+      node->SetSelected(1);
+   } else {
+      snxt = d2;
+      node->SetSelected(2);
+   }      
    return snxt;
 }
 //-----------------------------------------------------------------------------
@@ -512,6 +553,20 @@ void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *no
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
    Double_t local[3], ldir[3], lnorm[3];
+   if (fSelected == 1) {
+      fLeftMat->MasterToLocal(point, local);
+      fLeftMat->MasterToLocalVect(dir, ldir);
+      fLeft->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }
+   if (fSelected == 2) {
+      fRightMat->MasterToLocal(point, local);
+      fRightMat->MasterToLocalVect(dir, ldir);
+      fRight->ComputeNormal(local,ldir,lnorm);
+      fRightMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }            
    fRightMat->MasterToLocal(point,local);
    if (fRight->Contains(local)) {
       fRightMat->MasterToLocalVect(dir,ldir);
@@ -568,6 +623,7 @@ Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t i
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
@@ -576,7 +632,13 @@ Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t i
    d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
-   snxt = TMath::Min(d1, d2);
+   if (d1<d2) {
+      snxt = d1;
+      node->SetSelected(1);
+   } else {
+      snxt = d2;
+      node->SetSelected(2);
+   }      
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -590,6 +652,7 @@ Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t 
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(&master[0], point, 3*sizeof(Double_t));
    Int_t i;
@@ -609,15 +672,22 @@ Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t 
          epsil = 1.E-8;
          // now master outside '-'; check if inside '+'
          fLeftMat->MasterToLocal(&master[0], &local[0]);
-         if (fLeft->Contains(&local[0])) return snxt;
+         if (fLeft->Contains(&local[0])) {
+            node->SetSelected(2);
+            return snxt;
+         }   
       } 
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
-      if (d2>1E20) return TGeoShape::Big();
+      if (d2>1E20) {
+         node->SetSelected(0);
+         return TGeoShape::Big();
+      }   
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
       if (d2<d1) {
+         node->SetSelected(1);
          snxt += d2+epsil;
          return snxt;
       }   
@@ -824,6 +894,20 @@ void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *n
    Double_t local[3], ldir[3], lnorm[3];
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
+   if (fSelected == 1) {
+      fLeftMat->MasterToLocal(point, local);
+      fLeftMat->MasterToLocalVect(dir, ldir);
+      fLeft->ComputeNormal(local,ldir,lnorm);
+      fLeftMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }
+   if (fSelected == 2) {
+      fRightMat->MasterToLocal(point, local);
+      fRightMat->MasterToLocalVect(dir, ldir);
+      fRight->ComputeNormal(local,ldir,lnorm);
+      fRightMat->LocalToMasterVect(lnorm, norm);
+      return;
+   }            
    fLeftMat->MasterToLocal(point,local);
    if (!fLeft->Contains(local)) {
       fLeftMat->MasterToLocalVect(dir,ldir);
@@ -880,6 +964,7 @@ Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t 
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t local[3], ldir[3], rdir[3];
    Double_t d1, d2, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
@@ -888,7 +973,13 @@ Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t 
    d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
-   snxt = TMath::Min(d1, d2);
+   if (d1<d2) {
+      snxt = d1;
+      node->SetSelected(1);
+   } else {
+      snxt = d2;
+      node->SetSelected(2);
+   }      
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -902,6 +993,7 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
+   TGeoBoolNode *node = (TGeoBoolNode*)this;
    Double_t lpt[3], rpt[3], master[3], ldir[3], rdir[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
@@ -915,16 +1007,26 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
    fRightMat->MasterToLocalVect(dir, rdir);
    Bool_t inleft = fLeft->Contains(lpt);
    Bool_t inright = fRight->Contains(rpt);
+   node->SetSelected(0);
    if (inleft && inright) return 0.;
+
    if (!inleft)  {
       d1 = fLeft->DistFromOutside(lpt,ldir,iact,step,safe);
-      if (d1 > 1E20) return TGeoShape::Big();
-   }   
-   if (!inright) {
+      if (d1>1E20) return TGeoShape::Big();
+   }
+   
+   if (!inright) {  
       d2 = fRight->DistFromOutside(rpt,rdir,iact,step,safe);
       if (d2>1E20) return TGeoShape::Big();
    }
-   Double_t snext = TMath::Max(d1,d2);   
+   Double_t snext;
+   if (d1>d2) {
+      snext = d1;
+      node->SetSelected(1);
+   } else {
+      snext = d2;
+      node->SetSelected(2);
+   }   
    for (i=0; i<3; i++) master[i] += (snext+epsil)*dir[i];
    if (Contains(master)) return snext;
    dd = DistFromOutside(master,dir,iact,step,safe);

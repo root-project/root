@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.9 2005/03/09 18:19:26 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.10 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -39,6 +39,7 @@ enum EGeoBoolType {
 };
 
 protected:
+   Int_t             fSelected;       // ! selected branch
    TGeoShape        *fLeft;           // shape on the left branch
    TGeoShape        *fRight;          // shape on the right branch
    TGeoMatrix       *fLeftMat;        // transformation that applies to the left branch
@@ -72,6 +73,7 @@ public:
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SetPoints(Double_t *points) const = 0;
    virtual void      SetPoints(Float_t *points)  const = 0;
+   void              SetSelected(Int_t sel) {fSelected = sel;}
    virtual void      Sizeof3D() const;
 
   ClassDef(TGeoBoolNode, 1)              // a boolean node
