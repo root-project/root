@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.21 2001/02/26 02:48:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.22 2001/06/26 14:24:24 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -128,6 +128,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    EMessageTypes kind;
    Int_t sec, tcpwindowsize = 65535;
 
+   fSocket    = 0;
    fOffset    = 0;
    fErrorCode = -1;
 
