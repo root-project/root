@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.86 2004/04/20 21:32:02 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.87 2004/04/22 13:10:47 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -636,7 +636,7 @@ again:
             }
             flast = fbuf + siz;
             changed = 1;
-         } else if (dev == device && ino == inode) {
+         } else if ((dev_t)dev == device && (ino_t)ino == inode) {
             if (mode == 1)
                result = 0;
             else if (!strcmp(gmode, "write"))
@@ -749,7 +749,7 @@ again:
                        msg, dev, ino, gmode, user, pid);
          }
          if (stale || (!force && mypid == pid) ||
-            (force && device == dev && inode == ino &&
+            (force && device == (dev_t)dev && inode == (ino_t)ino &&
              !strcmp(gUser.c_str(), user))) {
             if (n >= flast) {
                siz = int(s - fbuf);
