@@ -294,7 +294,7 @@ CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared -Wl,-soname,
+SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),linuxia64gcc)
@@ -348,7 +348,7 @@ CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared -Wl,-soname,
+SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),freebsd)
