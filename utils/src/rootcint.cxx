@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.163 2004/04/15 06:41:49 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.164 2004/05/10 17:18:31 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3745,7 +3745,13 @@ int main(int argc, char **argv)
 
       // remove possible pathname to get the dictionary name
       strcpy(dictname, argv[ifl]);
-      char *p = strrchr(dictname, '/');
+      char *p = 0;
+      // find the right part of then name.
+      for(p = dictname + strlen(dictname)-1;p!=dictname;--p) {
+        if ( *p =='/' ||  *p =='\\') {
+          break;
+        }
+      }
       if (!p)
          p = dictname;
       else
