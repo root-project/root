@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.66 2001/11/18 16:08:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.67 2001/11/20 07:26:48 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2741,6 +2741,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
          break;
       } 
    } else {
+      //if ( !(x < cxmax)) return; //to catch NaN
       while (1) {
          range *= 2;
          if (x >= cxmin+range) continue;
@@ -2760,6 +2761,12 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
          }
          break;
       }
+   }
+   
+   // x may be a NaN (note same trick as in TAxis::FindBin)
+   if ( !(x < xmax)) {
+      ResetBit(kCanRebin);
+      return;
    }
 
    //save a copy of this histogram
