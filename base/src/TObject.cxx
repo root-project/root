@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.13 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.14 2000/12/27 22:47:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -285,13 +285,16 @@ TObject *TObject::Clone() const
    gFile = 0;
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
-   buffer->WriteObject(this);
-
+   //buffer->WriteObject(this);
+   Streamer(*buffer);
+   
    // read new object from buffer
    buffer->SetReadMode();
    buffer->ResetMap();
    buffer->SetBufferOffset(0);
-   TObject *newobj = buffer->ReadObject(IsA());
+   //TObject *newobj = buffer->ReadObject(IsA());
+   TObject *newobj = (TObject *)IsA()->New();
+   newobj->Streamer(*buffer);
    gFile = filsav;
 
    delete buffer;
