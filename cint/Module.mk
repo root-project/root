@@ -210,6 +210,9 @@ $(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
 $(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
 
+$(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm -o $@ -c $<
+
 $(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
 
