@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.26 2001/12/18 15:12:24 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.27 2002/01/27 15:55:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1623,36 +1623,36 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("*.dll", kTRUE);
-      TRegexp user_lib("*.lib", kTRUE);
+      TRegexp user_dll("\.dll$", kFALSE);
+      TRegexp user_lib("\.lib$", kFALSE);
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
 
       while ((start < libs.Length()) && (index != kNPOS)) {
-	index = libs.Index(separator,&end,start);
-	if (index >= 0) {
-	  s = libs(index,end);
-	  if (s.Index(user_dll) != kNPOS) {
-	    s.ReplaceAll(".dll",".lib");
-	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-	      s.Replace( 0, s.Last('/')+1, 0, 0);
-	      s.Replace( 0, s.Last('\\')+1, 0, 0);
-	    }
-	  } else if (s.Index(user_lib) != kNPOS) {
-	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-	      s.Replace( 0, s.Last('/')+1, 0, 0);
-	      s.Replace( 0, s.Last('\\')+1, 0, 0);
-	    }
-	  }
-	  if (!fListLibs.IsNull())
-	    ntlibs.Append(" ");
-	  ntlibs.Append(s);
-	}
-	start += end+1;
+         index = libs.Index(separator,&end,start);
+         if (index >= 0) {
+            s = libs(index,end);
+            if (s.Index(user_dll) != kNPOS) {
+               s.ReplaceAll(".dll",".lib");
+               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+                  s.Replace( 0, s.Last('/')+1, 0, 0);
+                  s.Replace( 0, s.Last('\\')+1, 0, 0);
+               }
+            } else if (s.Index(user_lib) != kNPOS) {
+               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+                  s.Replace( 0, s.Last('/')+1, 0, 0);
+                  s.Replace( 0, s.Last('\\')+1, 0, 0);
+               }
+            }
+            if (!fListLibs.IsNull()) ntlibs.Append(" ");
+            ntlibs.Append(s);
+         }
+         start += end+1;
       }
-   } else
-     ntlibs = libs;
+   } else {
+      ntlibs = libs;
+   }
 
    fListLibs = ntlibs;
    return fListLibs;
