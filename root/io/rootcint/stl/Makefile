@@ -17,13 +17,19 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-RCTEST_H = $(wildcard test?.h)
+RCTEST_H = $(wildcard test?.h) Safr.h
 RCTEST_DICT = $(subst .h,_dict.cxx,$(RCTEST_H))
 RCTEST_DICTO = $(subst .cxx,.$(ObjSuf),$(RCTEST_DICT))
 
 $(RCTEST_DICT) : %_dict.cxx : %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
+MAPTEST_C = map1.C map2.C
+MAPTEST_DICT =  $(subst .C,_dict.cxx,$(MAPTEST_C))
+MAPTEST_DICTO = $(subst .cxx,.$(ObjSuf),$(MAPTEST_DICT))
 
+$(MAPTEST_DICT) : %_dict.cxx : %.C emptyLinkdef.h
+	$(CMDECHO) rootcint -f $@ -c $^
 
-rootcintStlTest : $(RCTEST_DICTO)
+rootcintStlTest : $(RCTEST_DICTO) $(MAPTEST_DICTO)
+
