@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.99 2002/12/02 11:35:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.100 2002/12/02 17:46:54 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -210,6 +210,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
    fShowMembers    = 0;
    fIsA            = 0;
    fTypeInfo       = 0;
+   fInterStreamer  = 0;
 
    ResetInstanceCount();
 
@@ -249,6 +250,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    fIsA            = 0;
    fShowMembers    = 0;
    fStreamerInfo   = 0;
+   fInterStreamer  = 0;
 
    ResetInstanceCount();
 
