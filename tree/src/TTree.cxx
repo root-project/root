@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.235 2005/02/18 09:15:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.236 2005/03/04 20:30:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1014,6 +1014,9 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
   //
   // Use splitlevel < 0 instead of splitlevel=0 when the class
   // has a custom Streamer
+  //
+  // Note: if the split level is set to the default (99),  TTree::Branch will
+  // not issue a warning if the class can not be split.
 
    if (fgBranchStyle == 1) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
@@ -1305,6 +1308,9 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //
 //   Use splitlevel < 0 instead of splitlevel=0 when the class
 //   has a custom Streamer
+//
+//   Note: if the split level is set to the default (99),  TTree::Branch will
+//   not issue a warning if the class can not be split.
 
    gTree = this;
    TClass *cl = gROOT->GetClass(classname);
@@ -1414,7 +1420,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    // Avoid splitting unsplitable classes
    if (splitlevel>0 && !cl->CanSplit()) {
       splitlevel = 0;
-      Warning("Bronch","%s cannot be split, resetting splitlevel to 0",cl->GetName());
+      if (splitlevel!=99) Warning("Bronch","%s cannot be split, resetting splitlevel to 0",cl->GetName());
    }
 
    //build the StreamerInfo if first time for the class
