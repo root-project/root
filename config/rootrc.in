@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.61 2004/01/09 11:37:18 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.62 2004/02/13 20:26:51 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -197,6 +197,11 @@ Globus.ProxyKeyBits:     1024
 
 # Path to alternative 'ssh' (to override $PATH if ever needed)
 # SSH.ExecDir:      /usr/bin
+
+# Special cases for the TUrl parser, where the special cases are parsed
+# in a protocol + file part, like rfio:host:/patch/file.root or
+# castor:/path/file.root. Extend in private .rootrc with a +Url.Special line.
+Url.Special:         file: rfio: hpss: castor: dcache: dcap:
 
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"

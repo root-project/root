@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.2 2000/12/13 15:13:53 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.3 2002/10/25 00:19:59 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -45,7 +45,11 @@ private:
    TString fOptions;     // options (after ?)
    Int_t   fPort;        // port through which to contact remote server
 
+   static TObjArray  *fgSpecialProtocols;  // list of special protocols
+
    TUrl() { fPort = -1; }
+
+   static TObjArray *GetSpecialProtocols();
 
 public:
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);

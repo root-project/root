@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.14 2003/11/13 17:55:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.15 2003/12/05 01:52:05 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -22,6 +22,12 @@
 
 #include <stdlib.h>
 #include "TUrl.h"
+#include "TObjArray.h"
+#include "TObjString.h"
+#include "TEnv.h"
+
+TObjArray *TUrl::fgSpecialProtocols;
+
 
 ClassImp(TUrl)
 
@@ -63,70 +69,20 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Find protocol
    char *s, sav;
 
-   // Special case for "file:"
-   if (!strncmp(url, "file:", 5)) {
-      fProtocol = "file";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
-      fPort = 0;
-      return;
-   }
-
-   // Special case for "rfio:"
-   if (!strncmp(url, "rfio:", 5)) {
-      fProtocol = "rfio";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
-      fPort = 0;
-      return;
-   }
-
-   // Special case for "hpss:"
-   if (!strncmp(url, "hpss:", 5)) {
-      fProtocol = "hpss";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
-      fPort = 0;
-      return;
-   }
-
-   // Special case for "castor:"
-   if (!strncmp(url, "castor:", 7)) {
-      fProtocol = "castor";
-      if (!strncmp(url+7, "//", 2))
-         fFile = url+9;
-      else
-         fFile = url+7;
-      fPort = 0;
-      return;
-   }
-
-     // Special case for "dcache:"
-   if (!strncmp(url, "dcache:", 7)) {
-      fProtocol = "dcache";
-      if (!strncmp(url+7, "//", 2))
-         fFile = url+9;
-      else
-         fFile = url+7;
-      fPort = 0;
-      return;
-   }
-
-   // Special case for "dcap:"
-   if (!strncmp(url, "dcap:", 5)) {
-      fProtocol = "dcap";
-      if (!strncmp(url+5, "//", 2))
-         fFile = url+7;
-      else
-         fFile = url+5;
-      fPort = 0;
-      return;
+   // Handle special protocol cases: file:, rfio:, etc.
+   for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
+      TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
+      TString &s = os->String();
+      int l = s.Length();
+      if (!strncmp(url, s, l)) {
+         fProtocol = s(0, l-1);
+         if (!strncmp(url+5, "//", 2))
+            fFile = url+l+2;
+         else
+            fFile = url+l;
+         fPort = 0;
+         return;
+      }
    }
 
    char *u0, *u = StrDup(url);
@@ -320,10 +276,15 @@ const char *TUrl::GetUrl()
    // Return full URL.
 
    if (IsValid() && fUrl == "") {
-      if (fProtocol == "file" || fProtocol == "rfio" ||
-          fProtocol == "hpss" || fProtocol == "castor") {
-         fUrl = fProtocol + ":" + fFile;
-         return fUrl;
+      // Handle special protocol cases: file:, rfio:, etc.
+      for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
+         TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
+         TString &s = os->String();
+         int l = s.Length();
+         if (fProtocol == s(0, l-1)) {
+            fUrl = fProtocol + ":" + fFile;
+            return fUrl;
+         }
       }
 
       Bool_t deflt = kFALSE;
@@ -378,4 +339,37 @@ void TUrl::Print(Option_t *) const
       Printf("Illegal URL");
 
    Printf("%s", ((TUrl*)this)->GetUrl());
+}
+
+//______________________________________________________________________________
+TObjArray *TUrl::GetSpecialProtocols()
+{
+   // Read the list of special protocols from the rootrc files.
+   // These protocols will be parsed in a protocol and a file part,
+   // no host or other info will be determined. This is typically
+   // used for legacy file descriptions like: rfio:host:/path/file.root.
+
+   if (!fgSpecialProtocols)
+      fgSpecialProtocols = new TObjArray;
+
+   if (fgSpecialProtocols->GetEntries() > 0 || !gEnv)
+      return fgSpecialProtocols;
+
+   const char *protos = gEnv->GetValue("Url.Special", "file: rfio: hpss: castor: dcache: dcap:");
+
+   if (protos) {
+      Int_t cnt = 0;
+      char *p = StrDup(protos);
+      while (1) {
+         TObjString *proto = new TObjString(strtok(!cnt ? p : 0, " "));
+         if (proto->String().IsNull()) {
+            delete proto;
+            break;
+         }
+         fgSpecialProtocols->Add(proto);
+         cnt++;
+      }
+      delete [] p;
+   }
+   return fgSpecialProtocols;
 }
