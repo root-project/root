@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.14 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.15 2004/01/25 11:56:06 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -427,14 +427,15 @@ void TBits::ResetAllBits(Bool_t)
      UInt_t nSafeBytes = nBytes&~3;
 
      UChar_t *cArray=(UChar_t*)array;
-     for (UInt_t i=0; i<nSafeBytes; i+=4) {
+     UInt_t i;
+     for (i=0; i<nSafeBytes; i+=4) {
          cArray[i] = fAllBits[i+3];
          cArray[i+1] = fAllBits[i+2];
          cArray[i+2] = fAllBits[i+1];
          cArray[i+3] = fAllBits[i];
      }
 
-     for (UInt_t i=0; i<nBytes-nSafeBytes; ++i) {
+     for (i=0; i<nBytes-nSafeBytes; ++i) {
          cArray[nSafeBytes + (3 - i)] = fAllBits[nSafeBytes + i];
      }
  }
@@ -445,7 +446,8 @@ void TBits::ResetAllBits(Bool_t)
     UInt_t nSafeBytes = nBytes&~7;
 
     UChar_t *cArray=(UChar_t*)array;
-    for (UInt_t i=0; i<nSafeBytes; i+=8) {
+    UInt_t i;
+    for (i=0; i<nSafeBytes; i+=8) {
         cArray[i] = fAllBits[i+7];
         cArray[i+1] = fAllBits[i+6];
         cArray[i+2] = fAllBits[i+5];
@@ -456,7 +458,7 @@ void TBits::ResetAllBits(Bool_t)
         cArray[i+7] = fAllBits[i];
     }
 
-    for (UInt_t i=0; i<nBytes-nSafeBytes; ++i) {
+    for (i=0; i<nBytes-nSafeBytes; ++i) {
         cArray[nSafeBytes + (7 - i)] = fAllBits[nSafeBytes + i];
     }
  }
