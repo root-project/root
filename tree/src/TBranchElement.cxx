@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.80 2002/02/05 17:04:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.81 2002/02/25 08:53:03 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -770,6 +770,7 @@ void *TBranchElement::GetValuePointer() const
       return 0;
    } else {
       //return fInfo->GetValue(fObject,fID,j,-1);
+      if (!fInfo) return 0;
       char **val = (char**)(fObject+fInfo->GetOffsets()[fID]);
       return *val;
    }

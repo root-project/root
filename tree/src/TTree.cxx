@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.115 2002/03/07 02:03:47 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.116 2002/03/19 17:05:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1380,6 +1380,7 @@ void TTree::CopyAddresses(TTree *tree)
    Int_t nbranches = branches->GetEntriesFast();
    for (i=0;i<nbranches;i++) {
       TBranch *branch = (TBranch*)branches->UncheckedAt(i);
+      if (branch->TestBit(kDoNotProcess)) continue;
       if (branch->GetAddress()) {
          TBranch *br = tree->GetBranch(branch->GetName());
          if (br) br->SetAddress(branch->GetAddress());
@@ -1394,6 +1395,7 @@ void TTree::CopyAddresses(TTree *tree)
       if (!leaf) continue;
       TBranch *branch  = leaf->GetBranch();
       if (!branch) continue;
+      if (branch->TestBit(kDoNotProcess)) continue;
       if (branch->GetAddress()) {
          tree->SetBranchAddress(branch->GetName(),branch->GetAddress());
       } else {
@@ -3012,11 +3014,13 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
             bcount->ResetBit(kDoNotProcess);
          }
       } else {
-         Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
+         //Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
+         Int_t nbranches = branch->GetListOfBranches()->GetEntries();
          for (j=0;j<nbranches;j++) {
             bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
             if (!bson) continue;
             if (!bson->TestBit(kDoNotProcess)) {
+               if (bson->GetNleaves() <= 0) continue;
                branch->ResetBit(kDoNotProcess);
                break;
             }
