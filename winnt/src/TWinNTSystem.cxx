@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.21 2001/09/27 18:18:59 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.22 2001/10/01 17:46:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1686,7 +1686,7 @@ char *TWinNTSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(port, kProtocolName)) == 0) {
+   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -2553,7 +2553,7 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(port, kProtocolName)))
+   if ((sp = getservbyport(htons(port), kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2642,7 +2642,7 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(port, kProtocolName)))
+   if ((sp = getservbyport(htons(port), kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);

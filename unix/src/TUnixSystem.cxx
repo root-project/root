@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.29 2001/07/18 15:47:57 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.30 2001/11/21 07:38:19 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1515,7 +1515,7 @@ char *TUnixSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(port, kProtocolName)) == 0) {
+   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -2012,10 +2012,10 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          sigact.sa_flags = 0;
 #endif
          if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
+            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       } else {
          if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
-            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
+            ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       }
    }
 }
@@ -2335,7 +2335,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(port, kProtocolName)))
+   if ((sp = getservbyport(htons(port), kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2422,7 +2422,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(port, kProtocolName)))
+   if ((sp = getservbyport(htons(port), kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
