@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -52,6 +52,8 @@ public:
                     { MayNotUse("Send(const TMessage &)"); return 0; }
    Int_t         Send(Int_t)
                     { MayNotUse("Send(Int_t)"); return 0; }
+   Int_t         Send(Int_t, Int_t)
+                    { MayNotUse("Send(Int_t, Int_t)"); return 0; }
    Int_t         Send(const char *, Int_t = kMESS_STRING)
                     { MayNotUse("Send(const char *, Int_t)"); return 0; }
    Int_t         SendObject(const TObject *, Int_t = kMESS_OBJECT)
@@ -60,6 +62,8 @@ public:
                     { MayNotUse("SendRaw(const void *, Int_t, ESendRecvOptions)"); return 0; }
    Int_t         Recv(TMessage *&)
                     { MayNotUse("Recv(TMessage *&)"); return 0; }
+   Int_t         Recv(Int_t &, Int_t &)
+                    { MayNotUse("Recv(Int_t &, Int_t &)"); return 0; }
    Int_t         Recv(char *, Int_t)
                     { MayNotUse("Recv(char *, Int_t)"); return 0; }
    Int_t         Recv(char *, Int_t, Int_t &)
