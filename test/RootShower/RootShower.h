@@ -148,7 +148,7 @@ private:
     TBRIK              *sel_detect;
     TNode              *sel_node;
     MyEvent            *fEvent;
-    TPad               *padA,*padB,*padC;
+    TPad               *padC;
     
     TH1F               *fHisto_dEdX;       // histogram of particle's energy loss
 
@@ -157,6 +157,7 @@ protected:
     Int_t               fMaterial;
     Int_t               fFirstParticle;
     Double_t            fDimX,fDimY,fDimZ;
+    Double_t            fMaxV,fMinV;
     Double_t            fE0;
     Double_t            fB;
 

@@ -192,6 +192,10 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fPicDelay      = fRootShowerEnv->GetValue("RootShower.fPicDelay", 100);
     fPicReset      = fRootShowerEnv->GetValue("RootShower.fPicReset", 1);
 
+    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
+    fMaxV /= 2.0;
+    fMinV = -1.0 * fMaxV;
+
     fEventNr = 0;
     fNRun    = 0;
 
@@ -318,6 +322,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
     sel_node->cd();
     fSelection->Draw();
+    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
     cB->GetView()->SideView();
     cB->Update();
@@ -888,6 +893,10 @@ void RootShower::Initialize(Int_t set_angles)
     fEventListTree->DeleteChildren(fCurListItem);
     fClient->NeedRedraw(fEventListTree);
 
+    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
+    fMaxV /= 2.0;
+    fMinV = -1.0 * fMaxV;
+
     cB->cd();
     cB->SetFillColor(1);
     cB->Clear();
@@ -899,6 +908,7 @@ void RootShower::Initialize(Int_t set_angles)
     sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
     sel_node->cd();
     fSelection->Draw();
+    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
     if(set_angles)
         cB->GetView()->SideView();
@@ -909,6 +919,7 @@ void RootShower::Initialize(Int_t set_angles)
     cA->SetFillColor(1);
     cA->Clear();
     fEvent->GetDetector()->GetGeometry()->Draw();
+    cA->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cA->GetView()->SetPerspective();
     if(set_angles)
         cA->GetView()->SideView();
@@ -1083,6 +1094,7 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
     cB->cd();
     // draw geometry
     fSelection->Draw();
+    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
     cB->cd();
     cB->Update();
