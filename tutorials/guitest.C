@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.35 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.36 2003/12/16 09:03:12 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1620,7 +1620,7 @@ void TestSliders::CloseWindow()
    delete this;
 }
 
-void TestSliders::DoText(const char *text)
+void TestSliders::DoText(const char * /*text*/)
 {
    // Handle text entry widgets.
 
