@@ -21,7 +21,7 @@ Packager:     Christian Holm <cholm@nbi.dk>
 Distribution: ROOT
 Vendor:       ROOT Team
 URL:          http://root.cern.ch
-Source:       ftp://root.cern.ch/root/root-v%{ver}.source.tar.gz
+Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:        ROOT
 BuildRoot:    /tmp/rootrpm
 Summary:      Numerical data analysis framework (OO)

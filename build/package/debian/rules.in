@@ -2,16 +2,16 @@
 # 
 # GNU copyright 1997 by Joey Hess.
 #
-# $Id: rules.in,v 1.4 2002/07/31 20:45:10 rdm Exp $
+# $Id: rules.in,v 1.5 2003/02/24 11:32:27 rdm Exp $
 #
 # Rules file for ROOT packages for Debian GNU/Linux 
 #
 
 # Uncomment this to turn on verbose mode. 
-#export DH_VERBOSE=1
+#export DH_VERBOSE=0
 
 # This is the debhelper compatability version to use.
-export DH_COMPAT=3
+export DH_COMPAT=4
 
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
@@ -53,6 +53,7 @@ build-stamp:
 		--prefix=@prefix@				\
 		--etcdir=@etcdir@ 				\
 		--docdir=@docdir@				\
+		--cintincdir=@prefix@/lib/root/cint		\
 		--enable-table					\
 		--enable-thread 				\
 		--enable-shared 				\
@@ -63,7 +64,8 @@ build-stamp:
 		--with-sys-iconpath=/usr/share/pixmaps		\
 		--fontdir=/usr/share/fonts/truetype
 
-	$(MAKE) -j3
+	$(MAKE) -j2
+	$(MAKE) -j2 cintddls
 	#
 	# If you have access to the CVS repository, you may want to 
 	# uncomment the next line to make an upstream changelog
@@ -145,13 +147,13 @@ install: build
 
 	# Remove a bad magic line in CINT code. 
 	sed 's|^#!.*||' \
-	  < $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx > foo
-	mv foo $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx
+	  < $(BUILDPREFIX)@prefix@/lib/root/cint/lib/snstream/length.cxx > foo
+	mv foo $(BUILDPREFIX)@prefix@/lib/root/cint/lib/snstream/length.cxx
 
 	# Fix some errouneous permissions 
 	chmod 644 $(BUILDPREFIX)@prefix@/include/root/TFileIter.h \
 		$(BUILDPREFIX)@prefix@/include/root/TDsKey.h
-	chmod 755 $(BUILDPREFIX)@prefix@/share/root/cint/lib/pthread/setup
+	chmod 755 $(BUILDPREFIX)@prefix@/lib/root/cint/lib/pthread/setup
 
 	for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
 	# First move for the arch-dependent packages, then for the 
@@ -258,6 +260,9 @@ binary: binary-indep binary-arch
 
 #
 # $Log: rules.in,v $
+# Revision 1.5  2003/02/24 11:32:27  rdm
+# change --with-ttf-fontdir to --fontdir.
+#
 # Revision 1.4  2002/07/31 20:45:10  rdm
 # modified files for Debian and RedHat packaging. By Christian Holm.
 #

@@ -4,7 +4,7 @@
 #
 # Prepare sources - make package output dir (e.g. ../i686)
 %prep
-%setup
+%setup -n %{name}
 
 #---------------------------------------------------------------------
 # The actual build

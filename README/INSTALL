@@ -13,20 +13,24 @@ Here's a short summary:
 
 1) Get access to the FTP area (substitute any FTP client and appropriate
    email address below):
+
      prompt% ftp root.cern.ch
      User: anonymous
      Password: <your-email-address>
 
 2) Go to the directory, and prepare for binary transfer of files:
+
      ftp> cd /root
      ftp> bin
 
 3) Get the sources tar-ball (substitute the appropriate version
    number), and exit FTP client:
+
      ftp> get root-<version>.source.tar.gz
      ftp> bye
 
 4) Unpack the distribution:
+
      prompt% gzip -dc root-<version>.source.tar.gz | tar -xf -
 
 An alternative approach is to use our public CVS repository to get
@@ -35,14 +39,17 @@ the latest version. See URL: http://root.cern.ch/root/CVS.html.
 Here's a short summary:
 
 1) Login to server, using anonymous read-only access:
+
      prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs login
      Password: cvs
 
 2a) Get a specific version (>= 2.25/00), e.g.: version 2.25/03:
+
      prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs export \
                 -r v2-25-03 root
 
 2b) Alternatively, checkout the head (development version) of the sources:
+
      prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs co root
 
 In both cases you should have a subdirectory called "root" in the
@@ -90,17 +97,20 @@ Linux packages.
    environment variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
 
    1) get the sources of the latest ROOT (see above)
+
    2) set ROOTSYS to the `root' directory:
       sh family:
         export ROOTSYS=<path>/root
       csh family
         setenv ROOTSYS <path>/root
+
    3) now type the build commands:
       all shells:
         ./configure --help
         ./configure <arch>        [change arch appropriately]
         gmake                     [or, make -j2 for dual CPU machines]
         gmake install             [when run directory is not $ROOTSYS]
+
    4) add $ROOTSYS/bin to PATH and $ROOTSYS/lib to LD_LIBRARY_PATH:
       sh family:
         export PATH=$ROOTSYS/bin:$PATH
@@ -111,8 +121,10 @@ Linux packages.
         setenv LD_LIBRARY_PATH ${ROOTSYS}/lib:${LD_LIBRARY_PATH}
         setenv DYLD_LIBRARY_PATH ${ROOTSYS}/lib:${DYLD_LIBRARY_PATH} (MacOS X)
         rehash
+
    5) try running root:
       all shells:
+
         root
 
 2) You want to install ROOT in a fixed location, not depending on
@@ -135,16 +147,21 @@ Linux packages.
    aware of where you installed the ROOT libraries.
 
    1) get the sources of latest ROOT (see above)
+
    2) now type the build commands:
       all shells:
         ./configure --help
         ./configure <arch> --prefix=/usr/local [change arch appropriately]
         gmake                   [or, make -j2, for dual CPU machines]
         gmake install           [su to root if --prefix points to a system dir]
+
    3) try running root:
+
       sh family:
+
         root
       csh family:
+
         rehash
         root
 
@@ -158,7 +175,7 @@ outlined above and cd into the source directory. Then just do
 This will create a RPM spec file in the source tree. To build the
 packages do:
 
-1) Make a tar-ball of the source tree.
+1) Make a tar-ball of the source tree:
 
         cd ../
         mv root root-<version>
@@ -168,18 +185,18 @@ packages do:
   ROOT (see the file build/version_number).
 
 2)
-  A) If you have system privileges, you can now do
+  A) If you have system privileges, you can now do:
 
         cp root_v<version>.source.tar.gz /usr/src/redhat/SOURCES/
 
      or where ever RPM looks for source archives.
 
   B) However, if you don't have system privileges, you should set up a
-     build area by having the file ~/.rpmrc with a contents like
+     build area by having the file ~/.rpmrc with a contents like:
 
         %macrofiles: /usr/lib/rpm/macros:<your home dir>/.rpmmac
 
-     and a file <your home dir>/.rpmmac with a contents like
+     and a file <your home dir>/.rpmmac with a contents like:
 
         %_topdir <some where you can write>/redhat
 
@@ -192,21 +209,26 @@ packages do:
         mkdir <some where you can write>/redhat/SRPMS
         mkdir <some where you can write>/redhat/SPECS
 
-     and finally copy the source tar-ball
+     and finally copy the source tar-ball:
 
         cp root_v<version>.source.tar.gz \
            <some where you can write>/redhat/SOURCES
 
 3) Wether you have system privileges or not, you can now build the RPM
-   packages by issuing
+   packages by issuing (Red Hat 7.3 or less):
 
        rpm -ba root.spec
 
+   or (Red Hat 8.0 or above):
+
+       rpmbuild -ba root.spec
+
   If you left the spec file in the source tree, you can build directly
   from the tar-ball.  You still need to have a proper build area
-  setup, as outlined above.  All you need to do is
+  setup, as outlined above.  All you need to do is:
 
-       rpm -ta root_v<version>.source.tar.gz
+       rpm -ta root_v<version>.source.tar.gz        (Red Hat 7.3-)
+       rpmbuild -ta root_v<version>.source.tar.gz   (Red Hat 8.0+)
 
 Per default the binaries will be build in /tmp/rootrpm, but one may
 change that at build time by passing the option --buildroot too rpm.

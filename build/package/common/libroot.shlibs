@@ -1,6 +1,7 @@
 @prefix@/lib/root/libCore.so*
 @prefix@/lib/root/libEG.so*
 @prefix@/lib/root/libGX11.so*
+@prefix@/lib/root/libGX11TTF.so*
 @prefix@/lib/root/libGeom.so*
 @prefix@/lib/root/libGeomPainter.so*
 @prefix@/lib/root/libGpad.so*
@@ -11,7 +12,7 @@
 @prefix@/lib/root/libHistPainter.so*
 @prefix@/lib/root/libHtml.so*
 @prefix@/lib/root/libMatrix.so*
-@prefix@/lib/root/libMC.so*
+@prefix@/lib/root/libVMC.so*
 @prefix@/lib/root/libMinuit.so*
 @prefix@/lib/root/libNew.so*
 @prefix@/lib/root/libPhysics.so*
