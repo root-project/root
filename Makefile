@@ -120,6 +120,7 @@ MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
+MAKEDIST      = build/win/makedist.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
