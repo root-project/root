@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.37 2002/10/18 17:14:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.38 2002/10/20 16:08:48 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -194,7 +194,9 @@ TApplication::TApplication(const char *appClassName,
    }
 
    // Make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
    gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
 
    // Save current interpreter context
    gInterpreter->SaveContext();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.30 2002/10/03 18:06:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.31 2002/10/07 10:43:51 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -215,7 +215,9 @@ TProofServ::TProofServ(int *argc, char **argv)
 #endif
 
    // make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
    gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
 
    // abort on kSysError's or higher and set error handler
    gErrorAbortLevel = kSysError;
@@ -279,6 +281,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    if (logon && !NoLogOpt() && !gSystem->AccessPathName(logon, kReadPermission))
       ProcessFile(logon);
 
+   // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 

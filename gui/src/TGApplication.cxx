@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.2 2001/06/22 16:12:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.3 2002/09/14 20:25:04 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -105,8 +105,11 @@ TGApplication::TGApplication(const char *appClassName,
    }
 
    // Make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
    gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
 
+   // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
