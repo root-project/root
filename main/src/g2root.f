@@ -761,6 +761,10 @@ C
       lwidth = qjv(npar+10)
       lcolor = qjv(npar+11)
       lfill  = qjv(npar+12)
+      if (lstyle.le.0) lstyle = 1
+      if (lwidth.le.0) lwidth = 1
+      if (lcolor.lt.0) lcolor = 1
+      if (lfill.lt.0)  lfill  = 0
 *      if(ivo.eq.1)lseen=0
 *      if(nord.lt.0)then
 *         print *,'ordering : ',-nord
