@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.5 2001/05/17 10:57:15 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -153,6 +153,7 @@ public:
   void           SetCalcMass(Double_t mass)    { fCalcMass=mass;}
   void           SetPolarisation(Double_t polx, Double_t poly, Double_t polz);
   void           SetPolarisation(const TVector3& v) {SetPolarisation(v.X(), v.Y(), v.Z());}
+  void           SetStatusCode(int status) {fStatusCode = status;}
   void           SetWeight(Float_t weight = 1) { fWeight = weight; }
 
   void           SetMomentum(Double_t px, Double_t py, Double_t pz, Double_t e)
