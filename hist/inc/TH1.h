@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.61 2004/10/22 14:53:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.62 2004/12/20 10:01:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -226,6 +226,7 @@ public:
     virtual Axis_t   GetRandom() const;
     virtual void     GetStats(Stat_t *stats) const;
     virtual Stat_t   GetSumOfWeights() const;
+    virtual TArrayD *GetSumw2() {return &fSumw2;}
     virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
     virtual Double_t GetRMS(Int_t axis=1) const;
     virtual Double_t GetRMSError(Int_t axis=1) const;
