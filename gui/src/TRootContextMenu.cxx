@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -239,13 +239,7 @@ void TRootContextMenu::Dialog(TObject *object, TMethod *method)
       }
 
       TDataMember *m = argument->GetDataMember();
-      if (m && m->GetterMethod()) {
-
-         // WARNING !!!!!!!!
-         // MUST "reset" getter method!!! otherwise TAxis methods doesn't work!!!
-         Text_t gettername[256] = "";
-         strcpy(gettername, m->GetterMethod()->GetMethodName());
-         m->GetterMethod()->Init(object->IsA(), gettername, "");
+      if (m && m->GetterMethod(object->IsA())) {
 
          // Get the current value and form it as a text:
 

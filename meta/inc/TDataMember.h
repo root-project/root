@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.4 2001/04/27 19:06:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.5 2002/02/18 07:44:14 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
    TList              *fOptions;     //list of possible values 0=no restrictions
 
 public:
-    
+
    // Type of STL container (returned by IsSTLContainer).
    enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
@@ -67,8 +67,8 @@ public:
    const char    *GetArrayIndex() const;
 
    TList         *GetOptions() const;
-   TMethodCall   *SetterMethod();
-   TMethodCall   *GetterMethod();
+   TMethodCall   *SetterMethod(TClass *cl);
+   TMethodCall   *GetterMethod(TClass *cl = 0);
 
    Int_t          Compare(const TObject *obj) const;
    ULong_t        Hash() const;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.7 2002/02/05 08:31:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.8 2002/02/18 07:44:14 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -279,6 +279,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
 
             if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
+                // FIXME: wrong in case called derives via multiple inheritance from this class
                 fValueGetter = new TMethodCall(GetClass(),ptr1,"");
 
             continue; //next item!
@@ -288,6 +289,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(tokens[i],"\"");
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (GetClass()->GetMethod(ptr1,"1"))
+                // FIXME: wrong in case called derives via multiple inheritance from this class
                 fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
          }
       }
@@ -479,10 +481,10 @@ Int_t TDataMember::GetOffset() const
 
    //case of an interpreted or fake class
    if (fClass->GetDeclFileLine() < 0) return fInfo->Offset();
-   
+
    //case of a compiled class
    //Note that the offset cannot be computed in case of an abstract class
-   //for which the list of real data has not yet been computed via 
+   //for which the list of real data has not yet been computed via
    //a real daughter class.
    fClass->BuildRealData();
    TIter next(fClass->GetListOfRealData());
@@ -590,15 +592,21 @@ TList *TDataMember::GetOptions() const
 }
 
 //______________________________________________________________________________
-TMethodCall *TDataMember::GetterMethod()
+TMethodCall *TDataMember::GetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for getting the value of data member
+   // Return a TMethodCall method responsible for getting the value
+   // of data member. The cl argument specifies the class of the object
+   // which will be used to call this method (in case of multiple
+   // inheritance TMethodCall needs to know this to calculate the proper
+   // offset).
 
-   if (!fValueGetter) {
+   if (!fValueGetter || cl) {
+
+      if (!cl) cl = fClass;
 
       // try to guess Getter function:
       // we strip the fist character of name of data field ('f') and then
-      // try to find the name of Getter by applying "Get" and "Is"
+      // try to find the name of Getter by applying "Get", "Is" or "Has"
       // as a prefix
 
       const char *dataname = GetName();
@@ -607,22 +615,26 @@ TMethodCall *TDataMember::GetterMethod()
       sprintf(gettername, "Get%s", dataname+1);
       if (strstr(gettername, "Is")) sprintf(gettername, "Get%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
       sprintf(gettername, "Is%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
       sprintf(gettername, "Has%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
+         return fValueGetter = new TMethodCall(cl, gettername, "");
    }
 
    return fValueGetter;
 }
 
 //______________________________________________________________________________
-TMethodCall *TDataMember::SetterMethod()
+TMethodCall *TDataMember::SetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for setting the value of data member
+   // Return a TMethodCall method responsible for setting the value
+   // of data member. The cl argument specifies the class of the object
+   // which will be used to call this method (in case of multiple
+   // inheritance TMethodCall needs to know this to calculate the proper
+   // offset).
 
    if (!fValueSetter) {
 
@@ -636,7 +648,7 @@ TMethodCall *TDataMember::SetterMethod()
       sprintf(settername, "Set%s", dataname+1);
       if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
       if (GetClass()->GetMethod(settername, "1"))
-         fValueSetter = new TMethodCall(fClass, settername, "1");
+         fValueSetter = new TMethodCall(cl, settername, "1");
    }
 
    return fValueSetter;
