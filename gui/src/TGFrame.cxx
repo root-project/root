@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.20 2002/11/24 22:47:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.21 2002/12/09 14:03:35 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1139,6 +1139,9 @@ void TGGroupFrame::DoRedraw()
 void TGGroupFrame::DrawBorder()
 {
    // Draw border of around the group frame.
+   //
+   // if frame is kRaisedFrame  - a frame border is of "wall style",
+   // otherwise of "groove style".
 
    Int_t x, y, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
 
@@ -1166,19 +1169,41 @@ void TGGroupFrame::DrawBorder()
    }
    gr = gl + tw + (sep << 1);
 
-   gVirtualX->DrawLine(fId, fgShadowGC(),  l,   t,   gl,  t);
-   gVirtualX->DrawLine(fId, fgHilightGC(), l+1, t+1, gl,  t+1);
-   gVirtualX->DrawLine(fId, fgShadowGC(),  gr,  t,   r-1, t);
-   gVirtualX->DrawLine(fId, fgHilightGC(), gr,  t+1, r-2, t+1);
+   switch (fOptions & (kSunkenFrame | kRaisedFrame)) {
+      case kRaisedFrame:
+         gVirtualX->DrawLine(fId, fgHilightGC(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, fgShadowGC(), l+1, t+1, gl,  t+1);
 
-   gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, t,   r-1, b-1);
-   gVirtualX->DrawLine(fId, fgHilightGC(), r,   t,   r,   b);
+         gVirtualX->DrawLine(fId, fgHilightGC(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, fgShadowGC(), gr,  t+1, r-2, t+1);
 
-   gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, b-1, l,   b-1);
-   gVirtualX->DrawLine(fId, fgHilightGC(), r,   b,   l,   b);
+         gVirtualX->DrawLine(fId, fgHilightGC(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, fgShadowGC(), r,   t,   r,   b);
 
-   gVirtualX->DrawLine(fId, fgShadowGC(),  l,   b-1, l,   t);
-   gVirtualX->DrawLine(fId, fgHilightGC(), l+1, b-2, l+1, t+1);
+         gVirtualX->DrawLine(fId, fgHilightGC(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, fgShadowGC(), r,   b,   l,   b);
+
+         gVirtualX->DrawLine(fId, fgHilightGC(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, fgShadowGC(), l+1, b-2, l+1, t+1);
+         break;
+      case kSunkenFrame:
+      default:
+         gVirtualX->DrawLine(fId, fgShadowGC(),  l,   t,   gl,  t);
+         gVirtualX->DrawLine(fId, fgHilightGC(), l+1, t+1, gl,  t+1);
+
+         gVirtualX->DrawLine(fId, fgShadowGC(),  gr,  t,   r-1, t);
+         gVirtualX->DrawLine(fId, fgHilightGC(), gr,  t+1, r-2, t+1);
+
+         gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, t,   r-1, b-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), r,   t,   r,   b);
+
+         gVirtualX->DrawLine(fId, fgShadowGC(),  r-1, b-1, l,   b-1);
+         gVirtualX->DrawLine(fId, fgHilightGC(), r,   b,   l,   b);
+
+         gVirtualX->DrawLine(fId, fgShadowGC(),  l,   b-1, l,   t);
+         gVirtualX->DrawLine(fId, fgHilightGC(), l+1, b-2, l+1, t+1);
+         break;
+   }
 
    x = gl + sep;
    y = 1;

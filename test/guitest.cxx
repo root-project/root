@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.25 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.26 2002/12/09 14:03:36 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1205,8 +1205,8 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
 
    //--------- create check and radio buttons groups
 
-   fG1 = new TGGroupFrame(f3, new TGString("Buttons"));
-   fG2 = new TGGroupFrame(f3, new TGString("Icons"));
+   fG1 = new TGGroupFrame(f3, new TGString("Buttons"),kVerticalFrame|kRaisedFrame);
+   fG2 = new TGGroupFrame(f3, new TGString("Icons"),kVerticalFrame|kRaisedFrame);
 
    fL3 = new TGLayoutHints(kLHintsTop | kLHintsLeft |
                            kLHintsExpandX | kLHintsExpandY,
