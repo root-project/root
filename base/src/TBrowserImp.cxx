@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowserImp.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowserImp.cxx,v 1.2 2004/06/25 10:10:11 brun Exp $
 // Author: Fons Rademakers   15/11/95
 
 /*************************************************************************
@@ -22,4 +22,4 @@
 
 ClassImp(TBrowserImp)
 
-void SetDrawOption(Option_t * /*option*/) {}
+void TBrowserImp::SetDrawOption(Option_t * /*option*/) {}
