@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.15 2001/05/31 15:45:11 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.16 2001/05/31 21:18:49 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -2255,8 +2255,8 @@ void TLatex::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
      65,65,65,62,60,68,46,63,65,65,65,60,64,64,64,59,68,61,65,65,65,62,60,51,50,65,65,65,60,84,87,79};
 
 
-   Double_t     wh = (Double_t)gPad->XtoAbsPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoAbsPixel(gPad->GetY1());
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
    if (wh < hh)  tsize = fTextSize*wh;
    else          tsize = fTextSize*hh;
