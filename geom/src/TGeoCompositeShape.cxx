@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.13 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.14 2003/08/28 12:45:10 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -312,11 +312,12 @@ void TGeoCompositeShape::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   if (fNode) return fNode->Safety(point,in);
+   return 0.;
 }
 
 //_____________________________________________________________________________

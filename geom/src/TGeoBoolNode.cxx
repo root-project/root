@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.4 2003/08/28 12:45:10 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.5 2003/08/28 14:10:20 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -255,48 +255,41 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
 {
 // Compute distance from a given point to outside.
 //   printf("Point is : %g, %g, %g\n", point[0], point[1], point[2]);
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kTRUE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
+
    Double_t local[3], master[3], ldir[3], rdir[3];
-   memcpy(&master[0], point, 3*sizeof(Double_t));
+   memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1=0., d2=0., safety=0., snxt=0.;
+   Double_t d1=0., d2=0., snxt=0.;
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside1 = fLeft->Contains(&local[0]);
-   if (inside1) {
-      d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-//      printf("d1=%g\n", d1);
-      if (safe) safety = *safe;
-   }
+   if (inside1) d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
    Bool_t inside2 = fRight->Contains(&local[0]);
-   if (inside2) {
-      d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
-//      printf("d2=%g\n", d2);
-      if (safe) safety = TMath::Min(safety, *safe);
-   }
+   if (inside2) d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
    if (inside1 && inside2) {
       snxt = TMath::Min(d1, d2);
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      if (safe) *safe = safety;
-//      printf("ToOut from both: %g\n", snxt);
       return snxt;
    }   
    if (inside1) {
       snxt = d1;
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      if (safe) *safe = safety;
-//      printf("ToOut from 1: %g\n", snxt);
       return snxt;
    }   
    if (inside2) {
       snxt = d2;
       for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
       snxt += DistToOut(&master[0], dir, iact, step-snxt, safe)+1E-8;
-      if (safe) *safe = safety;
-//      printf("ToOut from 2: %g\n", snxt);
       return snxt;
    }
    return 0;   
@@ -306,17 +299,21 @@ Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kFALSE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety=0, snxt;
+   Double_t d1, d2, snxt;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }
 //-----------------------------------------------------------------------------
@@ -330,6 +327,24 @@ void TGeoUnion::SetPoints(Double_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
+
+//-----------------------------------------------------------------------------
+Double_t TGeoUnion::Safety(Double_t *point, Bool_t) const
+{
+// Compute safety distance for a union node;
+   Double_t local1[3], local2[3];
+   fLeftMat->MasterToLocal(point,local1);
+   Bool_t in1 = fLeft->Contains(local1);
+   fRightMat->MasterToLocal(point,local2);
+   Bool_t in2 = fRight->Contains(local2);
+   Double_t saf1 = fLeft->Safety(local1, in1);
+   Double_t saf2 = fRight->Safety(local2, in2);
+   if (in1 && in2) return TMath::Min(saf1, saf2);
+   if (in1)        return saf1;
+   if (in2)        return saf2;
+   return TMath::Min(saf1,saf2);
+}   
+
 //-----------------------------------------------------------------------------
 void TGeoUnion::SetPoints(Float_t * /*buff*/) const
 {
@@ -448,17 +463,21 @@ Double_t TGeoSubtraction::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to outside.
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kTRUE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety=0, snxt=0.;
+   Double_t d1, d2, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -466,10 +485,16 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kFALSE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(&master[0], point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1, d2, safety=TGeoShape::kBig, snxt=0.;
+   Double_t d1, d2, snxt=0.;
    fRightMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
@@ -480,7 +505,6 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       if (inside) {
          // propagate to outside of '-'
          d1 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
-	      if (safe) safety = *safe;
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
          // now master outside '-'; check if inside '+'
@@ -491,14 +515,11 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-      if (safe) safety = *safe;
       if (d2>1E20) return TGeoShape::kBig;
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-      if (safe) safety = TMath::Min(*safe, safety);
       if (d2<d1) {
          snxt += d2+epsil;
-	      if (safe) *safe = safety;
          return snxt;
       }   
       // propagate to '-'
@@ -516,6 +537,22 @@ Int_t TGeoSubtraction::GetNpoints() const
 // Returns number of vertices for the composite shape described by this subtraction.
    return 0;
 }
+//-----------------------------------------------------------------------------
+Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t) const
+{
+// Compute safety distance for a union node;
+   Double_t local1[3], local2[3];
+   fLeftMat->MasterToLocal(point,local1);
+   Bool_t in1 = fLeft->Contains(local1);
+   fRightMat->MasterToLocal(point,local2);
+   Bool_t in2 = fRight->Contains(local2);
+   Double_t saf1 = fLeft->Safety(local1, in1);
+   Double_t saf2 = fRight->Safety(local2, in2);
+   if (in1 && in2) return saf2;
+   if (in1)        return TMath::Min(saf1,saf2);
+   if (in2)        return TMath::Max(saf1,saf2);
+   return saf1;
+}   
 //-----------------------------------------------------------------------------
 void TGeoSubtraction::SetPoints(Double_t * /*buff*/) const
 {
@@ -686,17 +723,21 @@ Double_t TGeoIntersection::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to outside.
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kTRUE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
    Double_t local[3], ldir[3], rdir[3];
-   Double_t d1, d2, safety=0, snxt=0.;
+   Double_t d1, d2, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
-   if (safe) safety = *safe;
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
-   if (safe) *safe = TMath::Min(*safe, safety);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
@@ -704,10 +745,16 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
+   if (iact<3 && safe) {
+      // compute safe distance
+      *safe = Safety(point,kFALSE);
+      if (iact==0) return TGeoShape::kBig;
+      if (iact==1 && step<*safe) return TGeoShape::kBig;
+   }
    Double_t local[3], master[3], ldir[3], rdir[3];
    memcpy(&master[0], point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1, d2, safety=0, snxt=0.;
+   Double_t d1, d2, snxt=0.;
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
@@ -722,7 +769,6 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    inside = fRight->Contains(&local[0]);
    fLeftMat->MasterToLocal(point, &local[0]);
    d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-   if (safe) safety = *safe;
    if (inside) {
       for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
       if (Contains(&master[0])) return d1;
@@ -731,7 +777,6 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    // point is neither in left nor right shapes
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-   if (safe) *safe = TMath::Min(safety, *safe);
    snxt += TMath::Max(d1, d2);
    if (snxt>1E20) return snxt;
    for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
@@ -744,6 +789,22 @@ Int_t TGeoIntersection::GetNpoints() const
 // Returns number of vertices for the composite shape described by this intersection.
    return 0;
 }
+//-----------------------------------------------------------------------------
+Double_t TGeoIntersection::Safety(Double_t *point, Bool_t) const
+{
+// Compute safety distance for a union node;
+   Double_t local1[3], local2[3];
+   fLeftMat->MasterToLocal(point,local1);
+   Bool_t in1 = fLeft->Contains(local1);
+   fRightMat->MasterToLocal(point,local2);
+   Bool_t in2 = fRight->Contains(local2);
+   Double_t saf1 = fLeft->Safety(local1, in1);
+   Double_t saf2 = fRight->Safety(local2, in2);
+   if (in1 && in2) return TMath::Min(saf1, saf2);
+   if (in1)        return saf2;
+   if (in2)        return saf1;
+   return TMath::Max(saf1,saf2);
+}   
 //-----------------------------------------------------------------------------
 void TGeoIntersection::SetPoints(Double_t * /*buff*/) const
 {

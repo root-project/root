@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.3 2003/06/17 09:13:55 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.4 2003/08/28 12:45:10 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
    TGeoShape        *GetRightShape() const {return fRight;}
    virtual void      Paint(Option_t * /*option*/) {;}
    virtual void      PaintNext(TGeoHMatrix *glmat, Option_t *option);
+   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SetPoints(Double_t *buff) const = 0;
    virtual void      SetPoints(Float_t *buff)  const = 0;
    virtual void      Sizeof3D() const;
@@ -102,6 +103,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
+   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;
    virtual void      Sizeof3D() const;
@@ -135,6 +137,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
+   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;
    virtual void      Sizeof3D() const;
@@ -168,6 +171,7 @@ public:
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;
+   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SetPoints(Double_t *buff) const;
    virtual void      SetPoints(Float_t *buff)  const;
    virtual void      Sizeof3D() const;

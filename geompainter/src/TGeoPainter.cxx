@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.28 2003/08/29 07:03:25 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.29 2003/08/29 09:55:29 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -454,12 +454,12 @@ void TGeoPainter::Draw(Option_t *option)
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
    //mark visible volumes
-   TIter next(fVisVolumes);
-   TGeoVolume *vol;
-   while ((vol = (TGeoVolume*)next())) {
-      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
-   }
-   printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
+//   TIter next(fVisVolumes);
+//   TGeoVolume *vol;
+//   while ((vol = (TGeoVolume*)next())) {
+//      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+//   }
+   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
@@ -498,12 +498,12 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
    //mark visible volumes
-   TIter next(fVisVolumes);
-   TGeoVolume *vol;
-   while ((vol = (TGeoVolume*)next())) {
-      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
-   }
-   printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
+//   TIter next(fVisVolumes);
+//   TGeoVolume *vol;
+//   while ((vol = (TGeoVolume*)next())) {
+//      vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+//   }
+   printf("--- number of volumes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
 //______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
@@ -2056,7 +2056,10 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       case kGeoVisDefault:
          if (vis && (level<=fVisLevel)) {
             if (!fIsRaytracing) vol->GetShape()->Paint(option);
-            if (!fVisLock) fVisVolumes->Add(vol);
+            if (!fVisLock && !node->IsOnScreen()) {
+               fVisVolumes->Add(vol);
+               vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+            }   
          }   
             // draw daughters
          if (level<fVisLevel) {
@@ -2074,7 +2077,10 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          last = ((nd==0) || (level==fVisLevel))?kTRUE:kFALSE;
          if (vis && (last || (!node->IsVisDaughters()))) {
             if (!fIsRaytracing) vol->GetShape()->Paint(option);
-            if (!fVisLock) fVisVolumes->Add(vol);
+            if (!fVisLock && !node->IsOnScreen()) {
+               fVisVolumes->Add(vol);
+               vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+            }   
          }            
          if (last || (!node->IsVisDaughters())) return;
          for (id=0; id<nd; id++) {
@@ -2086,14 +2092,21 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          break;
       case kGeoVisOnly:
          if (!fIsRaytracing) vol->GetShape()->Paint(option);
-         if (!fVisLock) fVisVolumes->Add(vol);
+         if (!fVisLock && !node->IsOnScreen()) {
+            fVisVolumes->Add(vol);
+            vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+         }   
          break;
       case kGeoVisBranch:
          fGeom->cd(fVisBranch);
+         vol = fGeom->GetCurrentVolume();
          while (fGeom->GetLevel()) {
-            if (fGeom->GetCurrentVolume()->IsVisible()) {
-               if (!fIsRaytracing) fGeom->GetCurrentVolume()->GetShape()->Paint(option);
-               if (!fVisLock) fVisVolumes->Add(fGeom->GetCurrentVolume());
+            if (vol->IsVisible()) {
+               if (!fIsRaytracing) vol->GetShape()->Paint(option);
+               if (!fVisLock && !fGeom->GetCurrentNode()->IsOnScreen()) {
+                  fVisVolumes->Add(fGeom->GetCurrentVolume());
+                  vol->TGeoAtt::SetBit(TGeoAtt::kVisOnScreen);
+               }   
             }   
             fGeom->CdUp();
          }
