@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.14 2004/10/11 22:59:39 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.15 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -339,8 +339,11 @@ void TList::Clear(Option_t *option)
       fSize--;
       // delete only heap objects marked OK to clear
       if (!nodel && tlk->GetObject() && tlk->GetObject()->IsOnHeap()) {
-         if (tlk->GetObject()->TestBit(kCanDelete))
-            TCollection::GarbageCollect(tlk->GetObject());
+         if (tlk->GetObject()->TestBit(kCanDelete)) {
+            if(tlk->GetObject()->TestBit(kNotDeleted)) {
+               TCollection::GarbageCollect(tlk->GetObject());
+            }
+         }
       }
       delete tlk;
    }
