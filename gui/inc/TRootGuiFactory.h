@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootGuiFactory.h,v 1.2 2001/10/02 09:07:43 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -39,20 +39,20 @@ class TRootGuiFactory : public TGuiFactory {
 
 public:
    TRootGuiFactory(const char *name = "Root", const char *title = "ROOT GUI Factory");
-   ~TRootGuiFactory() { }
+   virtual ~TRootGuiFactory() { }
 
-   TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
+   virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 
-   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
-   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
+   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height);
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height);
+   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title);
+   virtual TContextMenuImp *CreateContextMenuImp(TContextMenu *c, const char *name, const char *title);
 
-   TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title);
-   TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y);
+   virtual TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title);
+   virtual TControlBarImp *CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y);
 
    ClassDef(TRootGuiFactory,0)  //Factory for ROOT GUI components
 };

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32GuiFactory.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32GuiFactory.h,v 1.2 2001/10/02 09:07:43 rdm Exp $
 // Author: Rene Brun   11/12/95
 
 /*************************************************************************
@@ -33,20 +33,20 @@ public:
    TWin32GuiFactory(const char *name, const char *title);
    virtual ~TWin32GuiFactory() { }
 
-   TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
+   virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 
-   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
-   TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
+   virtual TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height);
-   TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height);
+   virtual TBrowserImp *CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   TContextMenuImp *CreateContextMenuImp( TContextMenu *c, const char *name, const char *title );
+   virtual TContextMenuImp *CreateContextMenuImp( TContextMenu *c, const char *name, const char *title );
 
-   TControlBarImp *CreateControlBarImp( TControlBar *c, const char *title );
-   TControlBarImp *CreateControlBarImp( TControlBar *c, const char *title, Int_t x, Int_t y );
+   virtual TControlBarImp *CreateControlBarImp( TControlBar *c, const char *title );
+   virtual TControlBarImp *CreateControlBarImp( TControlBar *c, const char *title, Int_t x, Int_t y );
 
-   TInspectorImp *CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height);
+   virtual TInspectorImp *CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height);
 
    ClassDef(TWin32GuiFactory,0)  //Factory for Win32 GUI components
 };
