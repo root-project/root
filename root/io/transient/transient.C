@@ -13,5 +13,6 @@ public:
 
 void transient() {
    TClass *cl = gROOT->GetClass("MyClass");
+   new TFile("
    cl->GetStreamerInfo();
 }

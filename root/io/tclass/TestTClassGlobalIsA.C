@@ -2,11 +2,12 @@
 #include "TClass.h"
 #include <iostream>
 #include "TApplication.h"
+#include "TStopwatch.h"
 
 TClass* globalIsA(const TClass *cl, const void* obj) {
    if (gDebug>0) {
       std::cerr << "running globalIsA for " << (void*)cl << " and " << obj << std::endl;
-   } else {
+   } else if (gDebug==0) {
       std::cout << "running globalIsA for " << cl->GetName() << std::endl;
    }
    if (! cl->InheritsFrom(TObject::Class())) {
@@ -46,8 +47,19 @@ void TestTClassGlobalIsA() {
    // we are in a dictionary so we can do this (well not on windows though :( ).
    cltobj->fIsA = 0;
    cltnam->fIsA = 0;
+
+   if ( cltnam != cltobj->GetActualClass(o) ) {
+      std::cerr << "cltobj->IsA(o) does not return the object class\n";
+      hasError = true;
+   }
+   if ( cltnam != cltnam->GetActualClass(m) ) {
+      std::cerr << "cltnam->IsA(o) does not return the object class\n";
+      hasError = true;
+   }
+
    cltobj->SetGlobalIsA(globalIsA);
    cltnam->SetGlobalIsA(globalIsA);
+
    if ( cltnam != cltobj->GetActualClass(o) ) {
       std::cerr << "cltobj->IsA(o) does not return the object class\n";
       hasError = true;
@@ -57,5 +69,80 @@ void TestTClassGlobalIsA() {
       hasError = true;
    }
    
+   if (hasError) gApplication->Terminate(1);
+}
+
+void TestTClassGlobalIsAPerf(int n=10) {
+   TNamed * m = new TNamed("example","test");
+
+   TClass * cltobj = TObject::Class();
+   TClass * cltnam = TNamed::Class();
+
+   TObject* o = m;
+   
+   bool hasError = kFALSE;
+
+   TStopwatch w;
+
+
+   
+   // First the normal test
+   if ( cltobj == cltobj->GetActualClass(o) ) {
+      std::cerr << "cltobj->IsA(o) returns the pointer class not the object class\n";
+      hasError = true;
+   }
+   
+   int i;
+
+   std::cout << "Running with fIsA\n";
+   w.Start();
+   for(i=0;i<n;++i) {
+      if ( cltnam != cltobj->GetActualClass(o) ) {
+         std::cerr << "cltobj->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+      if ( cltnam != cltnam->GetActualClass(m) ) {
+         std::cerr << "cltnam->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+      if (hasError) gApplication->Terminate(1);
+   }
+   w.Print();
+
+   // we are in a dictionary so we can do this (well not on windows though :( ).
+   cltobj->fIsA = 0;
+   cltnam->fIsA = 0;
+
+   std::cout << "Running without fIsA\n";
+   w.Start();
+   for(i=0;i<n;++i) {
+      if ( cltnam != cltobj->GetActualClass(o) ) {
+         std::cerr << "cltobj->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+      if ( cltnam != cltnam->GetActualClass(m) ) {
+         std::cerr << "cltnam->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+   }
+   w.Print();
+
+   cltobj->SetGlobalIsA(globalIsA);
+   cltnam->SetGlobalIsA(globalIsA);
+   gDebug = -1;
+   std::cout << "Running with  fGlobalIsA\n";
+   w.Start();
+   for(i=0;i<n;++i) {
+   
+      if ( cltnam != cltobj->GetActualClass(o) ) {
+         std::cerr << "cltobj->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+      if ( cltnam != cltnam->GetActualClass(m) ) {
+         std::cerr << "cltnam->IsA(o) does not return the object class\n";
+         hasError = true;
+      }
+   }
+   w.Print();
    if (hasError) gApplication->Terminate(1);
 }

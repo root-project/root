@@ -7,7 +7,7 @@
 
 class RootCaloHit : public TObject { 
 public:
-	RootCaloHit() {
+	RootCaloHit() : index(0) {
       for(int i=0;i<4;i++) myArrFix[i]=0;
       myArrVar=0;
 
@@ -76,7 +76,7 @@ public:
            }
 	virtual ~RootCaloHit() {
            int i = 0;
-           for(i = 0; i<index; i++) delete myArrFix[i];
+           for(i = 0; i<4; i++) delete myArrFix[i];
            for(i = 0; i<index; i++) delete myArrVar[i];
            delete []myArrVar;
            delete myobjp; myobjp = 0;

@@ -17,4 +17,5 @@ TH1 * h = new TH1F("hpxpy","fake hpxpy",10,0,10); // f.Get("hpxpy");
 //h->GetListOfFunctions()->Print();
 	TFile f("hout.root","recreate");
 	h->Write();
+   return 0;
 }

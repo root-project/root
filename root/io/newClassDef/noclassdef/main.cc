@@ -31,11 +31,12 @@ int main(int argc, char **argv)
 
    bool readold = false;
 
+#ifndef SHARED
    if (argc==2) {
       TString arg2(argv[1]);
       readold = (arg2 == "-readold");
    }
-
+#endif
 
    TString outputname("mytest.root");
    TString inputname;

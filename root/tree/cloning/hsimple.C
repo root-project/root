@@ -37,4 +37,6 @@
   gBenchmark->Show("hsimple");
 
   hfile->Write();
+
+  return 0;
 }

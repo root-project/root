@@ -1,9 +1,16 @@
 #include "TFormula.h"
 #include "stdlib.h"
 
-void tform(int iter=10) {
+void tform(int formula, int iter) {
 
-   TFormula *form = new TFormula("form","xylandau");
+   TFormula *form;
+   switch(formula) {
+      case 0: form = new TFormula("form","[0]"); break;
+      case 1: form = new TFormula("form","xylandau"); break;
+      default: return;
+   }
+   form->Print();
+
    Double_t x[2];
    Double_t param[10];
    x[0] = 1.0;
@@ -19,14 +26,15 @@ void tform(int iter=10) {
 #ifndef __CINT__
 int main(int argc,char**argv) {
 
-   if (argc!=2) {
+   if (argc!=3) {
       fprintf(stderr,"tform requires 1 argument:\n");
-      fprintf(stderr,"tform <samplesize>\n");
+      fprintf(stderr,"tform <formula#> <samplesize>\n");
       return 1;
    }
    
-   int size = atoi(argv[1]);
-   tform(size);
+   int formula = atoi(argv[1]);
+   int size = atoi(argv[2]);
+   tform(formula,size);
 }
 #endif
 

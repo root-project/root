@@ -30,8 +30,8 @@ void zmumuSelDraw(TTree* t0){
    */
 
 
-   Float_t neumomcmtot; 
-   zfriendtree->Branch("neumomcmtot",&neumomcmtot,"neumomcmtot/F");
+   Double_t neumomcmtot; 
+   zfriendtree->Branch("neumomcmtot",&neumomcmtot,"neumomcmtot/D");
 
    TTree *zChain=t0;
    Int_t fCurrent=-1;
@@ -64,7 +64,8 @@ void zmumuSelDraw(TTree* t0){
          b_neumomcm = zChain->GetBranch("neumomcm");
       }       
       
-      neumomcmtot= 0.0;
+      double check = 0.0;
+      neumomcmtot = 0.0;
 
       b_nneu->GetEntry(centry);
       b_neumomcm->GetEntry(centry);
@@ -74,10 +75,11 @@ void zmumuSelDraw(TTree* t0){
          break;
       }
       for(int j=0;j<nneu;j++){
-         neumomcmtot += neumomcm[j];
+         check +=  neumomcm[j];
       }
-      zfriendtree->Fill();
+      neumomcmtot = check;
       cout<< jentry << ": neumomcmtot: "<<neumomcmtot<<endl;
+      zfriendtree->Fill();
    }
 
 

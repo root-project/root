@@ -17,11 +17,12 @@ class RootPCellID : public crap {
 public:
 
   RootPCellID(){    
-    for(int j=0;j<4;j++) base[j]=0;
+    for(int j=0;j<5;j++) base[j]=0;
   }
  
   RootPCellID(const std::string & b, unsigned int i):id(i) {
     for(int j=0;j<4;j++) base[j]=b[j];
+    base[4]= 0;
   }   
   virtual ~RootPCellID() {};
 
@@ -48,7 +49,7 @@ public:
 
 private:
   unsigned int    id;
-  char base[4];
+  char base[5];
   // ClassDef(RootPCellID,1)
 };
 

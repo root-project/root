@@ -28,6 +28,6 @@ int def() {
    Wrapper *w = (Wrapper*)cla->At(0);
    cout << "myvar is : " << w->chunk->myvar << "\n";
 
-   return 1;
+   return 0;
 
 };

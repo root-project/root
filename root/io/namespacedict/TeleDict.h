@@ -31,6 +31,10 @@ extern void G__set_cpp_environmentTeleDict();
 #ifndef G__MEMFUNCBODY
 #endif
 
+extern G__linked_taginfo G__TeleDictLN_TClass;
+extern G__linked_taginfo G__TeleDictLN_TBuffer;
+extern G__linked_taginfo G__TeleDictLN_TMemberInspector;
+extern G__linked_taginfo G__TeleDictLN_Sash;
 extern G__linked_taginfo G__TeleDictLN_SashcLcLEnvelopeEntrylESashcLcLTelescopecORecocLcLHillasParametersgR;
 extern G__linked_taginfo G__TeleDictLN_SashcLcLEnvelopeEntrySimplelESashcLcLTelescopecORecocLcLHillasParametersgR;
 

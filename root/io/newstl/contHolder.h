@@ -59,10 +59,13 @@ public:
    std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; 
 #endif
    
-   std::TEST_CONT<float >   fScalar;
-   std::TEST_CONT<short >   fScalarArr[2];
    UInt_t                   fScalarArrVarSize;
    std::TEST_CONT<char >   *fScalarArrVar; //[fScalarArrVarSize]
+
+   std::TEST_CONT<bool >    fBool;
+
+   std::TEST_CONT<float >   fScalar;
+   std::TEST_CONT<short >   fScalarArr[2];
 
    std::TEST_CONT<int >    *fScalarPtr;
    std::TEST_CONT<double > *fScalarPtrArr[4];
@@ -155,6 +158,12 @@ public:
    VERIFY(PairStrDb);
    
 
+   bool SetOrVerifyBool(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
+      Int_t seed = 1 * (entryNumber+1);
+      return utility::SetOrVerify("fBool",fBool,seed,entryNumber,reset,testname);
+   }
+   VERIFY(Bool);
+   
    bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fScalar",fScalar,seed,entryNumber,reset,testname);

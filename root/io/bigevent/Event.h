@@ -90,6 +90,8 @@ private:
    Float_t                  *fClosestDistance; //[fNvertex] pointer to an array of floats of length fNvertex 
    Float_t                   fTemperature;     //event temperature
    char                     *fTracksInVertex;  //[fNvertex]
+   vector<Long64_t>               fVectorLong64;       //STL vector on ints
+   vector<Int_t>             fVectorint2;
    vector<int>               fVectorint;       //STL vector on ints
    vector<short>             fVectorshort;     //STL vector of shorts
    vector<double>            fVectorD[4];      //array of STL vectors of doubles

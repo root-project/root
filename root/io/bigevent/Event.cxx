@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.1.1.1 2002/08/02 22:24:38 pcanal Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.2 2002/10/22 10:08:51 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -435,7 +435,7 @@ Track::Track(Float_t random) : TObject()
    Int_t nch = 15;
    if (trackNumber > 100)   nch += 3;
    if (trackNumber > 10000) nch += 3;
-   if (fTrackName) delete [] fTrackName;
+//    if (fTrackName) delete [] fTrackName;
    fTrackName = new char[nch];
    sprintf(fTrackName,"Track%d",trackNumber);
    //Int_t i;
@@ -450,6 +450,7 @@ Track::~Track()
    delete [] fPoints;
    fPoints = 0;
    if (fTrackName) delete [] fTrackName;
+   fTrackName = 0;
 }
 
 //______________________________________________________________________________

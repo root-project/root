@@ -19,5 +19,5 @@ if (htemp->GetMean()!=1) {
 } else {
    fprintf(stdout,"histogram must have been correctly created\n");
 }
-
+return 0;
 }

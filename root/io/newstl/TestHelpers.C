@@ -24,7 +24,7 @@ void fillListOfDir(TList &l) {
          if ( (basename!=file) && s.Index(re) == kNPOS) continue;
 
          TString vfile = gSystem->ConcatFileName(file,"vector.root");
-         if (gSystem->GetPathInfo(vfile,0,0,0,0)==0) {
+         if (gSystem->GetPathInfo(vfile,(Long_t*)0,(Long_t*)0,(Long_t*)0,0)==0) {
 //             cout << "found vector in " << file << endl;
             l.Add(new TObjString(file));
          } else {

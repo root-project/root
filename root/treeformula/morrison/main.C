@@ -33,7 +33,8 @@ main()
 
   TTree *tree = new TTree("T","An example of a ROOT tree");
   // T->Draw("f[].i"); does not work with a .!
-  TBranch *br = tree->Branch("a/b", "bar", &b);
+  // TBranch *br = 
+  tree->Branch("a/b", "bar", &b);
   
   for (int i = 0; i < 100; i++) {
     tree->Fill();

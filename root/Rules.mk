@@ -27,13 +27,14 @@ else
 endif
 
 tests: $(TEST_TARGETS)
-	@echo "All test succeeded in $(CURDIR)"
+	@echo "All test succeeded in ./$(CURDIR)"
 
 $(TEST_TARGETS_DIR): %.test:
-	@(cd $*; gmake test)
+	@(echo Running test in ./$*)
+	@(cd $*; gmake --no-print-directory test)
 
 $(CLEAN_TARGETS_DIR): %.clean:
-	@(cd $*; gmake clean)
+	@(cd $*; gmake --no-print-directory clean)
 
 ifeq ($(VERBOSE),) 
    CMDECHO=@
@@ -83,7 +84,11 @@ endif
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -Wall -fPIC
+else
 CXXFLAGS      += -O -Wall -fPIC
+endif
 LD            = g++
 LDFLAGS       = -O
 SOFLAGS       = -shared
@@ -133,5 +138,5 @@ endif
 	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cxx.build.log
 
 define WarnFailTest
-	@echo Warning $@ has some known skipped failures "(in `pwd`)"
+	@echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
 endef

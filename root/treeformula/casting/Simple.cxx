@@ -18,7 +18,7 @@ Simple::~Simple() {
   }
 }
 
-void Simple::Print(Option_t *option) const {
+void Simple::Print(Option_t *) const {
   // Print the contents
   cout << "fID= " << fID << endl;
   fShape -> Print();
