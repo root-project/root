@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.h,v 1.1 2001/04/28 16:23:32 rdm Exp $
 // Author: Valery Fine & Fons Rademakers   5/10/2000 and 28/4/2001
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 #ifndef ROOT_TGLViewerImp
 #include "TGLViewerImp.h"
 #endif
-#ifndef GL_RootGLU
+#ifndef ROOT_TRootGLU
 # include "TRootGLU.h"
 #endif
 

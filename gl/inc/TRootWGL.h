@@ -1,4 +1,4 @@
-/* @(#)root/gl:$Name:  $:$Id: TRootWGL.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
+/* @(#)root/gl:$Name:  $:$Id: TRootWGL.h,v 1.2 2001/11/28 16:01:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef GL_RootWGL
-#define GL_RootWGL
+#ifndef ROOT_TRootWGL
+#define ROOT_TRootWGL
 
 #ifndef ROOT_Windows4Root
 #include "Windows4Root.h"
@@ -19,6 +19,6 @@
 #include "gdk/gdk.h"
 #endif
 
-#include        <wingdi.h>
+#include <wingdi.h>
 
-#endif /* GL_RootWGL */
+#endif

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.3 2001/04/11 17:28:08 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.4 2001/11/28 16:01:07 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -28,16 +28,16 @@
 #ifndef ROOT_TGLViewerImp
 #include "TGLViewerImp.h"
 #endif
-#ifndef GL_RootGLU
+#ifndef ROOT_TRootGLU
 #include "TRootGLU.h"
 #endif
 
 #ifdef GDK_WIN32
-#ifndef GL_RootWGL
+#ifndef ROOT_TRootWGL
 #include "TRootWGL.h"
 #endif
 #else
-#ifndef GL_RootGLX
+#ifndef ROOT_TRootGLX
 #include "TRootGLX.h"
 #endif
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TWin32GLViewerImp.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   29/12/96
 
 /*************************************************************************
@@ -22,11 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GL_RootWGL
+#ifndef ROOT_TRootWGL
 #include "TRootWGL.h"
 #endif
 
-#ifndef GL_RootGLU
+#ifndef ROOT_TRootGLU
 #include "TRootGLU.h"
 #endif
 
