@@ -5682,11 +5682,13 @@ gdk_event_translate(GdkEvent * event,
       //vo check if button is grabbed 
       if (!p_grab_window && 
           is_grabbed_button(&window, 0, GDK_ALL_EVENTS_MASK, xevent->time)) {
-         gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
+      /* // bb removed 17.09.04 : side effects !
+          gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
                           GDK_WINDOW_WIN32DATA(window)->grab_event_mask,
                           GDK_WINDOW_WIN32DATA(window)->grab_confine,
                           GDK_WINDOW_WIN32DATA(window)->grab_cursor, 0);
          p_grab_automatic = TRUE;
+      */
       } else if (!propagate(&window, xevent,
                      p_grab_window, p_grab_owner_events, p_grab_mask,
                      doesnt_want_scroll)) {
