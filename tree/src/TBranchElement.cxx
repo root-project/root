@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.16 2001/04/16 19:16:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.17 2001/04/18 06:29:15 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -621,7 +621,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     b >> n;
     fNdata = n;
     clones->Clear();
-//printf("ExpandCreate n=%d, size=%d, branch=%s, class=%s\n",n,clones->GetSize(),GetName(),clones->GetClass()->GetName());
     clones->ExpandCreateFast(n);
   } else if (fType == 31) {    // sub branch of a TClonesArray
     TClonesArray *clones = (TClonesArray*)fObject;
@@ -696,14 +695,10 @@ void TBranchElement::SetAddress(void *add)
          TClonesArray **ppointer = (TClonesArray**)fAddress;
          fObject = (char*)*ppointer;
       } else {
-         printf("Branch: %s, Creating TClonesArray\n",GetName());
-         //Dump();
          TStreamerInfo::Optimize(kFALSE);
          TClass *clm = gROOT->GetClass(fClonesName.Data());
          if (clm) clm->GetStreamerInfo();
-         //TClonesArray **ppointer = (TClonesArray**)&fAddress;
-         fObject = (char*)new TClonesArray(fClonesName.Data(),1500);
-         //fObject = (char*)*ppointer;
+         fObject = (char*)new TClonesArray(fClonesName.Data());
          fAddress = (char*)&fObject;
       }
    }
