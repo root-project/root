@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.10 2001/05/04 13:17:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.11 2001/06/05 10:27:31 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -705,6 +705,23 @@ void TNode::SetNameTitle(const char *name, const char *title)
    fName  = name;
    fTitle = title;
    if (fParent) fParent->GetListOfNodes()->Add(this);
+}
+
+//______________________________________________________________________________
+void TNode::SetParent(TNode *parent)
+{
+   // set the pointer to the parent, keep parents informed about who they have
+
+   if (fParent)   fParent->GetListOfNodes()->Remove(this);
+   else         gGeometry->GetListOfNodes()->Remove(this);
+
+   fParent = parent;
+
+   if (fParent) {
+      fParent->BuildListOfNodes(); // new parent might not have list
+      fParent->GetListOfNodes()->Add(this);
+   }
+   else gGeometry->GetListOfNodes()->Add(this);
 }
 
 //______________________________________________________________________________
