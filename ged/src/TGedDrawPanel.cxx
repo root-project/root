@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedDrawPanel.cxx,v 1.2 2004/02/18 20:31:36 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -56,7 +56,7 @@ enum {
 
   kDraw     = 1000,
   kDefaults = 1001,
-  kClose    = 1002,
+  kClose    = 1002
 };
 
 

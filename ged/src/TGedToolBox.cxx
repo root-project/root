@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.0 2003/07/24 13:41:59 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -46,7 +46,7 @@ enum {
    kToolBoxCurlyArc,
    kToolBoxLatex,
    kToolBoxMarker,
-   kToolBoxCutG,
+   kToolBoxCutG
 };
 
 static ToolBarData_t gToolBoxData[] = {
