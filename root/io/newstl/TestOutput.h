@@ -133,8 +133,11 @@ template <class Key, class T> void TestError(const std::string &test,
 }
 
 void TestError(const std::string &test, const Helper &orig, const Helper &copy) {
-   TestError(test, Form("Helper object wrote %d and read %d\n",
-                        orig.val,copy.val));
+   TestError(test, orig.CompMsg(copy));
+}
+
+void TestError(const std::string &test, const HelperClassDef &orig, const HelperClassDef &copy) {
+   TestError(test, orig.CompMsg(copy));
 }
 
 void TestError(const std::string &test, 
@@ -170,8 +173,7 @@ void TestError(const std::string &test, const EHelper &orig, const EHelper &copy
 }
 
 void TestError(const std::string &test, const THelper &orig, const THelper &copy) {
-   TestError(test, Form("THelper object wrote %d and read %d\n",
-                        orig.val,copy.val));
+   TestError(test, orig.CompMsg(copy));
 }
 
 void TestError(const std::string &test, const TNamed &orig, const TNamed &copy) {

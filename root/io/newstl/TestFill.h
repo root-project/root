@@ -10,6 +10,18 @@ template <> void fill(THelper& filled, UInt_t seed) {
    filled.dval = seed/66.6;
 }
 
+template <> void fill(THelperDerived& filled, UInt_t seed) {
+   filled.val = seed;
+   filled.dval = seed/66.6;
+   filled.f = seed*22.2;
+}
+
+template <> void fill(HelperDerived& filled, UInt_t seed) {
+   filled.val = seed;
+   filled.dval = seed/66.6;
+   filled.f = seed*22.2;
+}
+
 template <class T> void fill(GHelper<T>& filled, UInt_t seed) {
    fill(filled.val,seed);
 }
@@ -146,6 +158,59 @@ template <class Key, class T> void fill(std::multimap<Key,T>& filled, UInt_t see
 //       T val;
 //       fill(val,seed*10+i);
 //       filled.insert(make_pair(key,val));
+  }  
+}
+
+// template <class T> T* createDerived(const T* /* placeHolder used only for overload resolution */);
+
+THelper* createDerived( const THelper* ) {
+   return new THelperDerived;
+}
+
+HelperClassDef* createDerived( const HelperClassDef* ) {
+   return new HelperDerived;
+}
+
+void fillDerived(THelper& input, UInt_t seed) {
+   THelperDerived *val = dynamic_cast<THelperDerived*>(&input);
+   fill(*val,seed);
+}
+
+void fillDerived(HelperClassDef& input, UInt_t seed) {
+   HelperDerived *val = dynamic_cast<HelperDerived*>(&input);
+   fill(*val,seed);
+}
+
+template <class T> void fillDerived(std::vector<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
+
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val = createDerived( (T*)0 );
+      fillDerived(*val,seed*10+i);
+      filled.push_back(val);
+  }  
+}
+
+template <class T> void fillDerived(std::deque<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
+
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val =  createDerived( (T*)0 );
+      fillDerived(*val,seed*10+i);
+      filled.push_back(val);
+  }  
+}
+
+template <class T> void fillDerived(std::list<T*>& filled, UInt_t seed) {
+   UInt_t size = seed%10;
+
+   filled.clear();
+   for(UInt_t i=0; i<size; i++) {
+      T* val =  createDerived( (T*)0 );
+      fillDerived(*val,seed*10+i);
+      filled.push_back(val);
   }  
 }
 

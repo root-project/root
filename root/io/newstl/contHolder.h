@@ -119,6 +119,14 @@ public:
    std::TEST_CONT<const TNamed*>  fPtrConstTNamed; //
 #endif
 
+#if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
+   std::TEST_CONT<THelper*>         fPtrTHelperDerived; //!
+   std::TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  //!
+#else
+   std::TEST_CONT<THelper*>         fPtrTHelperDerived;
+   std::TEST_CONT<HelperClassDef*>  fPtrHelperDerived; 
+#endif
+
 #if defined(R__NO_NESTED_CONTAINER)
    std::TEST_CONT<std::TEST_CONT<Helper> > fNested;  //! this version of ROOT does not support nested container
    std::TEST_CONT<std::vector<Helper> >    fNestedV; //!
@@ -354,6 +362,24 @@ public:
    }
    VERIFY(PtrConstTNamed);
 
+   bool SetOrVerifyPtrTHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasPolymorphClassDefNonTObject(gFile)) {
+         return true;
+      }
+      UInt_t seed = 4 * (entryNumber+1);
+      return utility::SetOrVerifyDerived("fPtrTHelperDerived",fPtrTHelperDerived,seed,entryNumber,reset,testname);
+   }
+   VERIFY(PtrTHelperDerived);
+
+   bool SetOrVerifyPtrHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+      if (!reset && gFile && !HasPolymorphClassDefNonTObject(gFile)) {
+         return true;
+      }
+      UInt_t seed = 5 * (entryNumber+1);
+      return utility::SetOrVerifyDerived("fPtrHelperDerived",fPtrHelperDerived,seed,entryNumber,reset,testname);
+   }
+   VERIFY(PtrHelperDerived);
+
    bool SetOrVerifyNested(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       if (!reset && gFile && !HasNestedContainer(gFile)) {
          return true;
@@ -430,6 +456,9 @@ protected:
       result &= SetOrVerifyPtrTNamed  (entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyPtrConstTNamed  (entryNumber,reset,testname,splitlevel);
 
+      result &= SetOrVerifyPtrTHelperDerived (entryNumber,reset,testname,splitlevel);
+      result &= SetOrVerifyPtrHelperDerived  (entryNumber,reset,testname,splitlevel);
+
       result &= SetOrVerifyNested(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedV(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyNestedL(entryNumber,reset,testname,splitlevel);
@@ -451,7 +480,11 @@ public:
 #if defined(R__NO_NESTED_CONTAINER)
    ClassDef(TEST_CONT_HOLDER,1);
 #else 
+#if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
    ClassDef(TEST_CONT_HOLDER,2);
+#else
+   ClassDef(TEST_CONT_HOLDER,3);
+#endif
 #endif
 };
 

@@ -10,3 +10,10 @@ void vtest(bool readother=false) {
    write<holder>(testname);
    read<holder>(testname,0,readother);
 }
+
+void vreadtest(const char*dirname, int nEntry = 0) {
+   const char* testname = "vector";
+   typedef vectorHolder holder;
+
+   read<holder>(dirname, testname, nEntry);
+}

@@ -7,6 +7,11 @@
 #define R__NO_NESTED_CONTAINER
 #endif
 
+#define R__POLYMORPH_CLASSDEF_NONTOBJECT  ROOT_VERSION(4,0,7)
+#if ROOT_VERSION_CODE < R__POLYMORPH_CLASSDEF_NONTOBJECT 
+#define R__NO_POLYMORPH_CLASSDEF_NONTOBJECT
+#endif
+
 #define R__VAR_ARRAY_OF_CONTAINERS ROOT_VERSION(4,10,0)
 #if ROOT_VERSION_CODE < R__VAR_ARRAY_OF_CONTAINERS
 #define R__NO_VAR_ARRAY_OF_CONTAINERS
@@ -50,6 +55,18 @@ Bool_t FileVersionEqualCurrent(TFile *file) {
    UInt_t cvers = ROOT_VERSION(a,b,c);
    return cvers == ROOT_VERSION_CODE;
 }
+
+Bool_t HasPolymorphClassDefNonTObject(TFile *file) {
+   Bool_t result = FileVersionGreaterThan(file,R__POLYMORPH_CLASSDEF_NONTOBJECT); 
+   if (!result) {
+      if (FileVersionEqualCurrent(file)) {
+         static OutputOneErrorMessage error("polymorphic behavior of non-TObject with a classDef");
+      } else {
+         static OutputOneErrorMessage error((TFile*)gDirectory,"polymorphic behavior of non-TObject with a classDef");
+      }
+   }
+   return result;
+}     
 
 Bool_t HasNestedContainer(TFile *file) {
    Bool_t result = FileVersionGreaterThan(file,R__NESTED_CONTAINER); // file->GetVersion() >= R__NESTED_CONTAINER;

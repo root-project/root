@@ -37,6 +37,31 @@ namespace utility {
       return result;      
    }
 
+  template <class T> bool SetOrVerifyDerived(const char *dataname,
+                                             T& datamember,
+                                             Int_t seed,
+                                             Int_t entryNumber, 
+                                             bool reset, 
+                                             const std::string &testname) {
+      bool result = true;
+
+      if (reset) {
+         if (DebugTest()&TestDebug::kAddresses) {
+            std::stringstream s;
+            s << testname << " address of " << dataname << " is " << &datamember; // << std::ends;
+            Debug(s.str());
+         }
+         fillDerived(datamember, seed);
+      } else {
+         T build;
+         fillDerived(build, seed);
+         std::stringstream s;
+         s << testname << " verify " << dataname << " entry #" <<  entryNumber; // << std::ends;
+         result = IsEquiv(s.str(), build, datamember);
+      }
+      return result;      
+   }
+
    template <class T> bool SetOrVerify(const char *dataname,
                                        T* &datamember,
                                        Int_t seed,
