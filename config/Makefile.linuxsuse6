@@ -35,7 +35,7 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = g77
 F77FLAGS      = $(OPT)
-F77LIBS       = -lg2c
+F77LIBS       = -lg2c -lnsl
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
