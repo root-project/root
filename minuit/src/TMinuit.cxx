@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.19 2002/05/18 08:22:00 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.20 2002/06/03 08:39:46 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -171,7 +171,16 @@ they are accurate.
 <H3>Statistical interpretation:</H3>
 <P>
 For discussuion of basic concepts, such as the meaning of the elements of
-the error matrix, or setting of exact confidence levels (see <A HREF=H1Bibliography.html#bib-EADIE>[bib-EADIE]</A>).
+the error matrix, or setting of exact confidence levels see:
+<ol>
+  <li>F.James. 
+     Determining the statistical Significance of experimental Results. 
+     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li> 
+
+  <li>W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet. 
+     Statistical Methods in Experimental Physics. 
+     North-Holland, 1971.</li> 
+</ol>
 <P>
 <H3>Reliability of MINUIT error estimates.</H3>
 <P>
