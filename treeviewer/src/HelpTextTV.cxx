@@ -83,7 +83,7 @@ const char gTVHelpDraggingItems[]	= "\
 leaves. Dragging an item and dropping to another will copy the content of first\n\
 to the last (leaf->expression, expression->expression). Items far to the right\n\
 side of the list can be easily dragged to the left (where expressions are\n\
-placed) by dragging them to the left at least 10 pixels.\n\n\ 
+placed) by dragging them to the left at least 10 pixels.\n\n\
  ";
 
 
