@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.14 2002/07/29 09:20:26 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.15 2002/12/08 16:58:06 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -1647,10 +1647,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          TContainer *pList = new TContainer;
 
-         pList->AddAll((TCollection *) pClass->
-                       GetListOfAllPublicMethods());
-         pList->AddAll((TCollection *) pClass->
-                       GetListOfAllPublicDataMembers());
+         pList->AddAll(pClass->GetListOfAllPublicMethods());
+         pList->AddAll(pClass->GetListOfAllPublicDataMembers());
 
          switch (context) {
          case kCXX_ScopeMember:
@@ -1738,8 +1736,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          // get methods
          TContainer *pList = new TContainer;
-         pList->AddAll((TCollection *) pClass->
-                       GetListOfAllPublicMethods());
+         pList->AddAll(pClass->GetListOfAllPublicMethods());
 
          // print prototypes
          Bool_t foundOne = kFALSE;
@@ -1796,15 +1793,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
          TContainer *pList = new TContainer;
 
-         // shouldn't TCollection::AddAll( TCollection* ) take a const argument?
          const TSeqCol *pL2 = GetListOfClasses();
-         pList->AddAll((TSeqCol *) pL2);
+         pList->AddAll(pL2);
          //
          const TSeqCol *pC1 = GetListOfGlobals();
-         pList->AddAll((TSeqCol *) pC1);
+         pList->AddAll(pC1);
          //
          const TSeqCol *pC3 = GetListOfGlobalFunctions();
-         pList->AddAll((TSeqCol *) pC3);
+         pList->AddAll(pC3);
 
          pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "");
 
