@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.25 2003/12/12 18:21:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.26 2003/12/16 22:31:48 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -158,14 +158,32 @@ void TGMenuBar::AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
 TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright,
                                  Int_t padtop, Int_t padbottom)
 {
-   // Add popup menu to menu bar. Do not delete returned popup-menu
+   // Add popup menu to menu bar.
+   //
+   // Comment:
+   //    This method is valid  only for horizontal menu bars. 
+   //    The most common case is menu bar containing equidistant titles padding left side.
+   //       TGMenuBar *bar;
+   //       bar->AddPopup("title1", 10);
+   //       bar->AddPopup("title2", 10);
+   //       ...
+   //
+   //    To add equidistant titles  padding right side padleft must be 0.
+   //       TGMenuBar *bar;
+   //       bar->AddPopup("title1", 0, 10);
+   //       bar->AddPopup("title2", 0, 10);
+   //       ...
+   //
+   //    This method guarantee automatic cleanup when menu bar is destroyed.
+   //    Do not delete returned popup-menu
 
    ULong_t hints = kLHintsTop;
 
-   if (padleft>1)   hints |= kLHintsRight;
-   if (padright>1)  hints |= kLHintsLeft;
-   if (padtop>1)    hints |= kLHintsBottom;
-   if (padbottom>1) hints |= kLHintsTop;
+   if (padleft)  {
+      hints |= kLHintsLeft;
+   } else {
+      hints |= kLHintsRight;
+   }
 
    TGLayoutHints *l = new TGLayoutHints(hints, padleft, padright,
                                                padtop, padbottom);
