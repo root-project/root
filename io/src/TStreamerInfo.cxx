@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.28 2001/01/16 17:40:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.29 2001/01/17 08:28:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -149,18 +149,19 @@ void TStreamerInfo::Build()
          if (lbracket && rbracket) {
             refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(dm->GetArrayIndex());
             if (!refcount) {
-               Error("Build","discarded1 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","class:%s, discarded1 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
             dmref = refcount->GetDataMember();
             TDataType *reftype = dmref->GetDataType();
             if (!reftype || reftype->GetType() != 3) {
-               Error("Build","discarded2 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","class:%s, discarded2 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
             TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(dm->GetArrayIndex(),dmref->GetClass(),dmref->GetClass()->GetClassVersion());
             if (!bt) {
-               Error("Build","discarded3 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               if (dmref->GetClass()->Property() & kIsAbstract) continue;
+               Error("Build","class:%s, discarded3 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
                continue;
             }
          }
