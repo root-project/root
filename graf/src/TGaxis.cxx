@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.74 2004/08/17 13:34:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.75 2004/08/23 15:01:23 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -348,7 +348,7 @@ void TGaxis::Paint(Option_t *)
    }
 */
    
-	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,opt.Data(),fGridLength);
+	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
