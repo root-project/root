@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -575,6 +575,7 @@ void TGLVContainer::RemoveItem(TGLVEntry *item)
          item->DestroyWindow();
          delete item;
          fList->Remove(el);
+         delete el;
          break;
       }
    }
