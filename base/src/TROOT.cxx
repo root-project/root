@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.118 2004/03/12 21:45:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.119 2004/03/16 16:15:46 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -111,7 +111,7 @@ namespace std {} using namespace std;
 #include "TUnixSystem.h"
 #elif defined(R__MAC)
 #include "TMacSystem.h"
-#elif defined(WIN32)
+#elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #elif defined(R__VMS)
 #include "TVmsSystem.h"
@@ -446,7 +446,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gVirtualX        = gGXBatch;
    gVirtualGL       = new TVirtualGL;
 
-#ifdef WIN32
+#ifdef R__WIN32
    fBatch = kFALSE;
 #else
    if (gSystem->Getenv("DISPLAY"))
@@ -492,14 +492,15 @@ TROOT::~TROOT()
       // out of date
       if (!fVersionInt) return;
 
-     // Remote cleanup of authentication stuff
+      // Remote cleanup of authentication stuff
       TAuthenticate::CleanupSecContextAll();
 
       // ATTENTION!!! Order is important!
 
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
-#ifdef WIN32
-//  Under Windows, one has to restore the color palettes created by individual canvases
+#ifdef R__WIN32
+      // Under Windows, one has to restore the color palettes created
+      // by individual canvases
       fCanvases->Delete();    SafeDelete(fCanvases);    // first close canvases
 #endif
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
@@ -1328,7 +1329,7 @@ void TROOT::InitSystem()
       gSystem = new TUnixSystem;
 #elif defined(R__MAC)
       gSystem = new TMacSystem;
-#elif defined(WIN32)
+#elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
 #elif defined(R__VMS)
       gSystem = new TVmsSystem;
@@ -1821,7 +1822,7 @@ const char *TROOT::GetMacroPath()
    if (macroPath.Length() == 0) {
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
       if (macroPath.Length() == 0)
-#if !defined (__VMS ) && !defined(WIN32)
+#if !defined (R__VMS) && !defined(R__WIN32)
    #ifdef ROOTMACRODIR
          macroPath = ".:" ROOTMACRODIR;
    #else
