@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.10 2004/02/09 08:28:24 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.11 2004/02/23 23:49:26 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -63,17 +63,17 @@ public:
    const TGWindow *GetParent() const { return fParent; }
    virtual const TGWindow *GetMainFrame() const;
 
-   void MapWindow() { gVirtualX->MapWindow(fId); }
-   void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
-   void MapRaised() { gVirtualX->MapRaised(fId); }
-   void UnmapWindow() { gVirtualX->UnmapWindow(fId); }
-   void DestroyWindow() { gVirtualX->DestroyWindow(fId); }
-   void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
-   void LowerWindow() { gVirtualX->LowerWindow(fId); }
-   void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
-   void SetBackgroundColor(Pixel_t color)
+   virtual void MapWindow() { gVirtualX->MapWindow(fId); }
+   virtual void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
+   virtual void MapRaised() { gVirtualX->MapRaised(fId); }
+   virtual void UnmapWindow() { gVirtualX->UnmapWindow(fId); }
+   virtual void DestroyWindow() { gVirtualX->DestroyWindow(fId); }
+   virtual void RaiseWindow() { gVirtualX->RaiseWindow(fId); }
+   virtual void LowerWindow() { gVirtualX->LowerWindow(fId); }
+   virtual void IconifyWindow() { gVirtualX->IconifyWindow(fId); }
+   virtual void SetBackgroundColor(Pixel_t color)
         { gVirtualX->SetWindowBackground(fId, color); }
-   void SetBackgroundPixmap(Pixmap_t pixmap)
+   virtual void SetBackgroundPixmap(Pixmap_t pixmap)
         { gVirtualX->SetWindowBackgroundPixmap(fId, pixmap); }
 
    virtual Bool_t HandleExpose(Event_t *event)
@@ -87,7 +87,8 @@ public:
    virtual void   Print(Option_t *option="") const;
 
    virtual const char *GetName() const { return fName; }
-   void                SetName(const char *name) { fName = name; }
+   virtual void        SetName(const char *name) { fName = name; }
+
    static Int_t        GetCounter();
 
    ClassDef(TGWindow,0)  // GUI Window base class
