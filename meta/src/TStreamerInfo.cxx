@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.31 2001/01/20 21:29:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.32 2001/01/23 21:10:20 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -531,7 +531,7 @@ void TStreamerInfo::Compile()
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
       // try to group consecutive members of the same type
-      if (fgOptimize && keep>=0 && (element->GetType() < kRegrouped)
+      if (fgOptimize && keep>=0 && (element->GetType() < 10)
                   && (fType[fNdata] == fNewType[fNdata])
                   && (fMethod[keep] == 0)
                   && (element->GetType() > 0)
@@ -1565,6 +1565,29 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerInfo.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerInfo::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TNamed::Streamer(R__b);
+      R__b >> fCheckSum;
+      R__b >> fClassVersion;
+      R__b >> fElements;
+      R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
+   } else {
+      TStreamerInfo::Class()->WriteBuffer(R__b,this);
+   }
 }
 
 //______________________________________________________________________________

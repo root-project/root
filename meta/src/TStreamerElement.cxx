@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.12 2001/01/16 16:45:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.13 2001/01/20 21:24:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -149,6 +149,32 @@ void TStreamerElement::SetStreamer(Streamer_t streamer)
 }
 
 //______________________________________________________________________________
+void TStreamerElement::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerElement.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TNamed::Streamer(R__b);
+      R__b >> fType;
+      R__b >> fSize;
+      R__b >> fArrayLength;
+      R__b >> fArrayDim;
+      R__b.ReadStaticArray(fMaxIndex);
+      fTypeName.Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
+   } else {
+      TStreamerElement::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -162,6 +188,7 @@ TStreamerBase::TStreamerBase()
 {
    // Default ctor.
    
+   fBaseClass = 0;
 }
 
 //______________________________________________________________________________
@@ -180,6 +207,13 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
 TStreamerBase::~TStreamerBase()
 {
    // TStreamerBase dtor.
+}
+
+//______________________________________________________________________________
+TClass *TStreamerBase::GetClassPointer() const
+{
+   //returns a pointer to the TClass of this element
+   return fBaseClass;
 }
 
 //______________________________________________________________________________
@@ -210,6 +244,28 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
 }
 
 //______________________________________________________________________________
+void TStreamerBase::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerBase.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerBase::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         fBaseClass = gROOT->GetClass(GetName());
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+      fBaseClass = gROOT->GetClass(GetName());
+   } else {
+      TStreamerBase::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
 Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 {
    ULong_t args[1];
@@ -233,7 +289,7 @@ ClassImp(TStreamerBasicPointer)
 TStreamerBasicPointer::TStreamerBasicPointer()
 {
    // Default ctor.
-
+   fCounter = 0;
 }
 
 //______________________________________________________________________________
@@ -278,6 +334,30 @@ void TStreamerBasicPointer::Init(TObject *)
    }  
 }
 
+//______________________________________________________________________________
+void TStreamerBasicPointer::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerBasicPointer.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerBasicPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         //Init();
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b >> fCountVersion;
+      fCountName.Streamer(R__b);
+      fCountClass.Streamer(R__b);
+      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+   } else {
+      TStreamerBasicPointer::Class()->WriteBuffer(R__b,this);
+   }
+}
+
 
 //______________________________________________________________________________
 
@@ -293,6 +373,7 @@ TStreamerLoop::TStreamerLoop()
 {
    // Default ctor.
 
+   fCounter = 0;
 }
 
 //______________________________________________________________________________
@@ -339,6 +420,30 @@ const char *TStreamerLoop::GetInclude() const
    return includeName;
 }
 
+//______________________________________________________________________________
+void TStreamerLoop::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerLoop.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerLoop::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         //Init();
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b >> fCountVersion;
+      fCountName.Streamer(R__b);
+      fCountClass.Streamer(R__b);
+      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+   } else {
+      TStreamerLoop::Class()->WriteBuffer(R__b,this);
+   }
+}
+
 
 //______________________________________________________________________________
 
@@ -378,6 +483,26 @@ ULong_t TStreamerBasicType::GetMethod() const
    if (fType ==  TStreamerInfo::kCounter || 
        fType == (TStreamerInfo::kCounter+TStreamerInfo::kSkip)) return (ULong_t)&fCounter;
    return 0;
+}
+
+//______________________________________________________________________________
+void TStreamerBasicType::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerBasicType.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerBasicType::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerBasicType::IsA());
+   } else {
+      TStreamerBasicType::Class()->WriteBuffer(R__b,this);
+   }
 }
 
 
@@ -433,6 +558,26 @@ const char *TStreamerObject::GetInclude() const
    return includeName;
 }
 
+//______________________________________________________________________________
+void TStreamerObject::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerObject.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerObject::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerObject::IsA());
+   } else {
+      TStreamerObject::Class()->WriteBuffer(R__b,this);
+   }
+}
+
 
 //______________________________________________________________________________
 
@@ -479,6 +624,26 @@ const char *TStreamerObjectAny::GetInclude() const
    if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
    else                          sprintf(includeName,"\"%s.h\"",GetTypeName());
    return includeName;
+}
+
+//______________________________________________________________________________
+void TStreamerObjectAny::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerObjectAny.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerObjectAny::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerObjectAny::IsA());
+   } else {
+      TStreamerObjectAny::Class()->WriteBuffer(R__b,this);
+   }
 }
 
 
@@ -534,6 +699,26 @@ const char *TStreamerObjectPointer::GetInclude() const
    return includeName;
 }
 
+//______________________________________________________________________________
+void TStreamerObjectPointer::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerObjectPointer.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerObjectPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerObjectPointer::IsA());
+   } else {
+      TStreamerObjectPointer::Class()->WriteBuffer(R__b,this);
+   }
+}
+
 
 //______________________________________________________________________________
 
@@ -563,6 +748,26 @@ TStreamerString::TStreamerString(const char *name, const char *title, Int_t offs
 TStreamerString::~TStreamerString()
 {
    // TStreamerString dtor.
+}
+
+//______________________________________________________________________________
+void TStreamerString::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerString.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerString::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerString::IsA());
+   } else {
+      TStreamerString::Class()->WriteBuffer(R__b,this);
+   }
 }
 
 //______________________________________________________________________________
@@ -668,6 +873,28 @@ const char *TStreamerSTL::GetInclude() const
 }
 
 //______________________________________________________________________________
+void TStreamerSTL::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerSTL.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerSTL::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerElement::Streamer(R__b);
+      R__b >> fSTLtype;
+      R__b >> fCtype;
+      R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
+   } else {
+      TStreamerSTL::Class()->WriteBuffer(R__b,this);
+   }
+}
+
+//______________________________________________________________________________
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -710,4 +937,24 @@ const char *TStreamerSTLstring::GetInclude() const
 {
    sprintf(includeName,"<string>");
    return includeName;
+}
+
+//______________________________________________________________________________
+void TStreamerSTLstring::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStreamerSTLstring.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TStreamerSTLstring::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TStreamerSTL::Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TStreamerSTLstring::IsA());
+   } else {
+      TStreamerSTLstring::Class()->WriteBuffer(R__b,this);
+   }
 }

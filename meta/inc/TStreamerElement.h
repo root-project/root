@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.11 2001/01/16 16:20:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.12 2001/01/20 21:20:40 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -75,28 +75,28 @@ public:
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
    virtual void     SetType(Int_t dtype) {fType = dtype;}
          
-   ClassDef(TStreamerElement,1)  //base class for one element (data member) to be Streamed
+   ClassDef(TStreamerElement,2)  //base class for one element (data member) to be Streamed
 };
 
 //________________________________________________________________________
 class TStreamerBase : public TStreamerElement {
 
 protected:
-   TClass          *fBaseClass;           //pointer to base class
+   TClass          *fBaseClass;           //!pointer to base class
 
 public:
 
    TStreamerBase();
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
-   virtual TClass  *GetClassPointer() const {return fBaseClass;}
+   virtual TClass  *GetClassPointer() const;
    const char      *GetInclude() const;
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
    virtual void     Init(TObject *obj=0);
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
    
-   ClassDef(TStreamerBase,1)  //Streamer element of type base class
+   ClassDef(TStreamerBase,2)  //Streamer element of type base class
 };
 
 //________________________________________________________________________
@@ -106,7 +106,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //pointer to basic type counter
+   TStreamerBasicType *fCounter;        //!pointer to basic type counter
            
 public:
 
@@ -117,7 +117,7 @@ public:
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    
-   ClassDef(TStreamerBasicPointer,1)  //Streamer element for a pointer to a basic type
+   ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };
 
 //________________________________________________________________________
@@ -127,7 +127,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //pointer to basic type counter
+   TStreamerBasicType *fCounter;        //!pointer to basic type counter
            
 public:
 
@@ -139,7 +139,7 @@ public:
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    
-   ClassDef(TStreamerLoop,1)  //Streamer element for a pointer to an array of objects
+   ClassDef(TStreamerLoop,2)  //Streamer element for a pointer to an array of objects
 };
 
 //________________________________________________________________________
@@ -156,7 +156,7 @@ public:
    Int_t          GetCounter() const {return fCounter;}
    ULong_t        GetMethod() const;
    
-   ClassDef(TStreamerBasicType,1)  //Streamer element for a basic type
+   ClassDef(TStreamerBasicType,2)  //Streamer element for a basic type
 };
 
 //________________________________________________________________________
@@ -174,7 +174,7 @@ public:
    const char    *GetInclude() const;
    virtual void   Init(TObject *obj=0);
    
-   ClassDef(TStreamerObject,1)  //Streamer element of type object
+   ClassDef(TStreamerObject,2)  //Streamer element of type object
 };
 
 //________________________________________________________________________
@@ -191,7 +191,7 @@ public:
    const char    *GetInclude() const;
    virtual void   Init(TObject *obj=0);
    
-   ClassDef(TStreamerObjectAny,1)  //Streamer element of type object other than TObject
+   ClassDef(TStreamerObjectAny,2)  //Streamer element of type object other than TObject
 };
 
 //________________________________________________________________________
@@ -210,7 +210,7 @@ public:
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    
-   ClassDef(TStreamerObjectPointer,1)  //Streamer element of type pointer to a TObject
+   ClassDef(TStreamerObjectPointer,2)  //Streamer element of type pointer to a TObject
 };
 
 //________________________________________________________________________
@@ -222,7 +222,7 @@ public:
    TStreamerString(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerString();
    
-   ClassDef(TStreamerString,1)  //Streamer element of type TString
+   ClassDef(TStreamerString,2)  //Streamer element of type TString
 };
  
 //________________________________________________________________________
@@ -242,7 +242,7 @@ public:
    const char    *GetInclude() const;
    virtual void   ls(Option_t *option="") const;
      
-   ClassDef(TStreamerSTL,1)  //Streamer element of type STL container
+   ClassDef(TStreamerSTL,2)  //Streamer element of type STL container
 };
 
 //________________________________________________________________________
@@ -255,7 +255,7 @@ public:
    virtual       ~TStreamerSTLstring();
    const char    *GetInclude() const;
    
-   ClassDef(TStreamerSTLstring,1)  //Streamer element of type  C++ string
+   ClassDef(TStreamerSTLstring,2)  //Streamer element of type  C++ string
 };
   
 #endif
