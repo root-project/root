@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.44 2003/02/27 21:55:08 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.45 2003/06/18 11:28:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -911,6 +911,44 @@ void TWinNTSystem::CheckChilds()
 //---- Directories -------------------------------------------------------------
 
 //______________________________________________________________________________
+int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
+{
+   // Make a file system directory. Returns 0 in case of success and
+   // -1 if the directory could not be created.
+   // Returns -1 if the directory exist.
+   // If 'recursive' is true, makes parent directories as needed,
+   // or returns 0 if the directory already exist.
+  
+   if (recursive) {
+      TString dirname = DirName(name);
+      if (dirname.Length()==0) {
+         // well we should not have to make the root of the file system!
+         // (and this avoid infinite recursions!)
+         return 0;
+      }
+      if (IsAbsoluteFileName(name)) {
+         // For some good reason DirName strips off the drive letter
+         // (if present), we need it to make the directory on the
+         // right disk, so let's put it back!
+         const char driveletter = DriveName(name);
+         if (driveletter) {
+            dirname.Prepend(":");
+            dirname.Prepend(driveletter);
+         }
+      }
+      if (AccessPathName(dirname, kFileExists)) {
+         int res = mkdir(dirname, true);
+         if (res) return res;
+      }
+      if (!AccessPathName(name, kFileExists)) {
+         return 0;
+      }
+   }
+
+   return MakeDirectory(name);
+}
+
+//______________________________________________________________________________
 int  TWinNTSystem::MakeDirectory(const char *name)
 {
   // Make a WinNT file system directory.
@@ -1221,9 +1259,9 @@ char *TWinNTSystem::ConcatFileName(const char *dir, const char *name)
       if (last == '/' || last == '\\' || last == ':')
          sprintf(buf, "%s%s", dir, name);
       else
-         sprintf(buf, "%s/%s", dir, name);
+         sprintf(buf, "%s\\%s", dir, name);
    } else
-      sprintf(buf, "/%s", name);
+      sprintf(buf, "\\%s", name);
    return buf;
 }
 
@@ -1383,27 +1421,44 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
 
 needshell:
 
+   // Because (problably) we built with cygwin, the path name like:
+   //     LOCALS~1\\Temp
+   // gets extended to 
+   //     LOCALSc:\\Devel
+   // The most likely cause is that '~' is used with Unix semantic of the
+   // home directory (and it also cuts the path short after ... who knows why!)
+   // So we need to detect this case and prevents its expansion :(.
+   
+   char replacement[4];
+   for(int k=0;k<3;k++) replacement[k] = 0x1; // intentionally a non visible, unlikely character
+   replacement[3] = 0x0;
+   Ssiz_t pos = 0;
+   TRegexp TildaNum = "~[0-9]";
+   while( (pos = patbuf0.Index(TildaNum,pos)) != kNPOS ) {
+      patbuf0.Replace(pos,1,replacement);
+   }
 
    // escape shell quote characters
    //  EscChar(patbuf, stuffedPat, sizeof(stuffedPat), shellStuff, shellEscape);
-     patbuf0 = ExpandFileName(patbuf0.Data());
-     Int_t lbuf = ExpandEnvironmentStrings(
+   patbuf0 = ExpandFileName(patbuf0.Data());
+   Int_t lbuf = ExpandEnvironmentStrings(
                                  patbuf0.Data(), // pointer to string with environment variables
                                  cmd,            // pointer to string with expanded environment variables
                                  0               // maximum characters in expanded string
                               );
-      if (lbuf > 0) {
-          cmd = new char[lbuf+1];
-          ExpandEnvironmentStrings(
-                                 patbuf0.Data(), // pointer to string with environment variables
-                                 cmd,            // pointer to string with expanded environment variables
-                                 lbuf            // maximum characters in expanded string
-                              );
-          patbuf0 = cmd;
-          return kFALSE;
-      }
+   if (lbuf > 0) {
+      cmd = new char[lbuf+1];
+      ExpandEnvironmentStrings(
+                               patbuf0.Data(), // pointer to string with environment variables
+                               cmd,            // pointer to string with expanded environment variables
+                               lbuf            // maximum characters in expanded string
+                               );
+      patbuf0 = cmd;
+      patbuf0.ReplaceAll(replacement,"~");
+      return kFALSE;
+   }
 
-      return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

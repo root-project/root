@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.25 2003/02/27 18:48:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.26 2003/06/17 15:19:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -267,7 +267,7 @@ public:
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
    virtual const char     *HomeDirectory(const char *userName = 0);
-   int                     mkdir(const char *name, Bool_t recursive = kFALSE);
+   virtual int             mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
 

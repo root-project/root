@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.61 2003/05/13 06:21:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.62 2003/06/17 15:19:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -659,6 +659,11 @@ int TSystem::mkdir(const char *name, Bool_t recursive)
 
    if (recursive) {
       TString dirname = DirName(name);
+      if (dirname.Length()==0) {
+         // well we should not have to make the root of the file system!
+         // (and this avoid infinite recursions!)
+         return 0;
+      }
       if (AccessPathName(dirname, kFileExists)) {
          int res = mkdir(dirname, true);
          if (res) return res;
@@ -1388,9 +1393,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // if it does not exist yet or the macro file is newer than the shared
    // library.
    //
-   // HOWEVER, CompileMacro currently does NOT detect if any of the file that
-   // are included by the macro file has been changed!!!
-   //
    // Of course the + and ++ notation is supported in similar way for .x and .L.
    //
    // Through the function TSystem::SetMakeSharedLib(), the user will be able to
@@ -1485,7 +1487,15 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
 
-   TString file_location( DirName( library ) ); // Location of the script.
+   TString lib_dirname = DirName( library );
+   // For some probably good reason, DirName on Windows on returns the
+   // 'name' of the directory, omitting the drive letter (even if
+   // there was one). In consequence the result is not useable as it.
+   if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
+     lib_dirname.Prepend(library(0,2));
+   }
+
+   TString file_location( lib_dirname  ); // Location of the script.
 
    if (library_specified && strlen(library_specified) ) {
       // Use the specified name instead of the default
@@ -1498,14 +1508,25 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = TString(library) + "." + fSoExt;
    }
 
-   TString lib_location( DirName( library ) );
+   TString lib_location( lib_dirname );
 
    if (build_loc.Length()==0) {
       build_loc = lib_location;
    } else {
+     
+      // Removes an existing disk specification from the names
+      TRegexp disk_finder ("[A-z]:");
+      Int_t pos = library.Index( disk_finder );
+      if (pos==0) library.Remove(pos,3);
+      pos = lib_location.Index( disk_finder );
+      if (pos==0) lib_location.Remove(pos,3);
+
       library = ConcatFileName( build_loc, library);
       build_loc = ConcatFileName( build_loc, lib_location);
-      if (gSystem->AccessPathName(build_loc,kWritePermission)) mkdir(build_loc, true);
+
+      if (gSystem->AccessPathName(build_loc,kWritePermission)) {
+         mkdir(build_loc, true);
+      }
    }
 
    // ======= Check if the library need to loaded or compiled
@@ -1565,9 +1586,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // Calculate the libraries for linking:
    TString linkLibraries;
    /*
-     this is intentionally disable until it can become usefull
+     this is intentionally disabled until it can become usefull
      if (gEnv) {
-        linkLibraries =  gEnv->GetValue("ACLiC.ACLiC.Libraries","");
+        linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
         linkLibraries.Prepend(" ");
      }
    */
@@ -1764,6 +1785,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       ::Warning("ACLiC","%s is not writeable!",
                 build_loc.Data());
+      if (emergency_loc == build_dir ) {
+         ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
+         return(G__LOADFILE_FAILURE);
+      }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());
       return CompileMacro(filename, opt, library_specified, emergency_loc);
@@ -1786,7 +1811,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
    if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-   dict.Prepend( build_loc + "/" );
+   dict = ConcatFileName( build_loc, dict );
    TString dicth = dict;
    TString dictObj = dict;
    dict += "cxx"; //no need to keep the extention of the original file, any extension will do
@@ -1899,6 +1924,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    testcmd.ReplaceAll("$ExeName",exec);
    testcmd.ReplaceAll("$LinkedLibs",linkLibraries);
    testcmd.ReplaceAll("$BuildDir",build_loc);
+   if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
+   else cmd.ReplaceAll("$Opt",fFlagsOpt);
    // ======= Run the build
 
    if (gDebug>3) {

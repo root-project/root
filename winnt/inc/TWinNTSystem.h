@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.16 2003/02/27 18:48:32 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.17 2003/06/18 11:28:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -166,6 +166,7 @@ public:
    void              Setenv(const char *name, const char *value);
 
    //---- Directories ------------------------------------------
+   int               mkdir(const char *name, Bool_t recursive = kFALSE);
    int               MakeDirectory(const char *name);
    Bool_t            ChangeDirectory(const char *path);
    const char       *GetDirEntry(void *dirp);
