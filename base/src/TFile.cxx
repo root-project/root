@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.57 2002/03/26 14:09:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.58 2002/03/26 16:12:59 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -65,6 +65,7 @@ TFile::TFile() : TDirectory()
    fClassIndex = 0;
    fCache      = 0;
    fProcessIDs = 0;
+   fNProcessIDs= 0;
 
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
@@ -191,6 +192,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fNbytesInfo = 0;
    fCache      = 0;
    fProcessIDs = 0;
+   fNProcessIDs= 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
@@ -453,8 +455,16 @@ void TFile::Init(Bool_t create)
       if (fSeekFree > fBEGIN) ReadStreamerInfo();
    }
 
-   fProcessIDs = new TObjArray(10);
-   return;
+   // Count number of TProcessIDs in this file
+   {
+      TIter next(fKeys);
+      TKey *key;
+      while ((key = (TKey*)next())) {
+          if (!strcmp(key->GetClassName(),"TProcessID")) fNProcessIDs++;
+      }
+      fProcessIDs = new TObjArray(fNProcessIDs+1);
+      return;
+   }
 
 zombie:
    // error in file opening occured, make this object a zombie

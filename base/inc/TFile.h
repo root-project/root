@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.17 2002/03/26 14:09:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.18 2002/03/31 08:18:25 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -49,6 +49,7 @@ protected:
    Int_t       fNbytesFree;       //Number of bytes for free segments structure
    Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
    Int_t       fWritten;          //Number of objects written so far
+   Int_t       fNProcessIDs;      //Number of TProcessID written to this file
    TString     fOption;           //File options
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
@@ -104,6 +105,7 @@ public:
    TObjArray        *GetListOfProcessIDs() const {return fProcessIDs;}
    TList            *GetListOfFree() const { return fFree; }
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }
+   virtual Int_t     GetNProcessIDs() const { return fNProcessIDs; }
    Option_t         *GetOption() const { return fOption.Data(); }
    Double_t          GetBytesRead() const { return fBytesRead; }
    Double_t          GetBytesWritten() const { return fBytesWrite; }
@@ -111,6 +113,7 @@ public:
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Seek_t    GetSize() const;
    TList            *GetStreamerInfoList();
+   virtual void      IncrementProcessIDs() {fNProcessIDs++;}
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
    virtual void      MakeFree(Seek_t first, Seek_t last);
@@ -146,7 +149,7 @@ public:
    static void       SetFileBytesRead(Double_t bytes=0);
    static void       SetFileBytesWritten(Double_t bytes=0);
 
-   ClassDef(TFile,2)  //ROOT file
+   ClassDef(TFile,3)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;
