@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.36 2001/01/28 14:36:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.37 2001/02/02 11:16:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -303,7 +303,7 @@ void TStreamerInfo::BuildCheck()
             printf("        You should update the version to ClassDef(%s,%d).\n",GetName(),fClassVersion+1);
             printf("        Do not try to write objects with the current class definition,\n");
             printf("        the files will not be readable.\n\n");
-            array->RemoveAt(fClassVersion);
+            //array->RemoveAt(fClassVersion);
          } else {
             if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
          }
@@ -586,8 +586,10 @@ void TStreamerInfo::ForceWriteInfo()
    // TStreamerInfo of all the classes referenced by the class.
    
    // flag this class
-   if (!gDirectory->GetFile()) return;
-   TArrayC *cindex = gDirectory->GetFile()->GetClassIndex();
+   //if (!gDirectory->GetFile()) return;
+   //TArrayC *cindex = gDirectory->GetFile()->GetClassIndex();
+   if (!gFile) return;
+   TArrayC *cindex = gFile->GetClassIndex();
    if (cindex->fArray[fNumber]) return;
    cindex->fArray[fNumber] = 1;
    cindex->fArray[0] = 1;
@@ -1615,7 +1617,8 @@ void TStreamerInfo::TagFile()
 {
    // Mark the classindex of teh current file as using this TStreamerInfo
 
-   TFile *file = gDirectory->GetFile();
+   //TFile *file = gDirectory->GetFile();
+   TFile *file = gFile;
    if (file) {
       TArrayC *cindex = file->GetClassIndex();
       Int_t nindex = cindex->GetSize();
