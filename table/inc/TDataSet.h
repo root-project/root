@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name: v3-10-01 $:$Id: TDataSet.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -125,7 +125,7 @@ class TDataSet : public TNamed
     virtual Int_t        GetListSize() const;
     static  TDataSet    *GetMainSet(){ return fgMainSet;}
             TObject     *GetMother() const { return (TObject*)GetParent();}
-    virtual TObject     *GetObject() const {printf("***DUMMY GetObject***\n");return 0;}
+    virtual TObject     *GetObject() const;
     virtual TDataSet    *GetParent() const { return fParent;}
     virtual Long_t       HasData() const {return 0;}    // Check whether this dataset has extra "data-members"
     virtual TDataSet    *Instance() const;
@@ -138,7 +138,7 @@ class TDataSet : public TNamed
     virtual void         Remove(TDataSet *set);
     virtual TDataSet    *RemoveAt(Int_t idx);
     virtual void         SetMother(TDataSet *parent=0){SetParent(parent);};
-    virtual void         SetObject(TObject *obj){printf("***DUMMY PutObject***%p\n",obj);}
+    virtual void         SetObject(TObject *obj);
     virtual void         SetParent(TDataSet *parent=0);
     virtual void         SetWrite();
     virtual void         Shunt(TDataSet *newParent=0);
