@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.103 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.104 2003/12/30 13:16:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1992,7 +1992,11 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    // although this is posix default it has to be set explicitly
    return ::open(pathname, flags | O_BINARY, mode);
 #else
+#if defined (R__LINUX)
    return ::open(pathname, flags | O_LARGEFILE, mode);
+#else
+   return ::open(pathname, flags, mode);
+#endif
 #endif
 }
 

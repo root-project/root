@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.54 2003/12/13 16:01:27 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.55 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2724,7 +2724,7 @@ const char *TWinNTSystem::WinNTHomedirectory(const char *name)
 //---- files -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long_t *size,
+int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
                               Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
