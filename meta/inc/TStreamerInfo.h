@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.28 2001/08/17 07:49:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.29 2001/10/02 16:52:36 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -57,7 +57,7 @@ private:
    static  Bool_t    fgCanDelete;     //True if ReadBuffer can delete object
    static  Bool_t    fgOptimize;      //True if optimization on
    static  TFile    *fgFile;          //Pointer to current file
-   
+   static TStreamerElement *fgElement; //Pointer to current TStreamerElement
    void              BuildUserInfo(const char *info);
 
 public:
@@ -117,6 +117,7 @@ public:
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
 
+   static TStreamerElement   *GetCurrentElement();
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    static Bool_t       CanOptimize();
    static void         Optimize(Bool_t opt=kTRUE);
