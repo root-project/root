@@ -52,7 +52,7 @@ D: interface to X3D
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
 D: LinuxPPC support, contribution to the User's Guide
-D: Customizable context menus
+D: customizable context menus
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov
@@ -70,9 +70,9 @@ D: PostgreSQL interface
 
 N: Olivier Couet
 E: Olivier.Couet@cern.ch
-D: Implement support for CellArrays in TPostScript
+D: implement support for CellArrays in TPostScript
 D: SVG driver
-D: Support of graphics. Development of 3-d interface
+D: graphics support, development of 3-d interface
 
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
@@ -88,7 +88,7 @@ D: TLegend class
 
 N: Pierre-Luc Drouin
 E: pldrouin@physics.carleton.ca
-D: Extensions of TFormula and bug fix
+D: extensions of TFormula and bug fixes
 
 N: Jean-Damien Durand
 E: Jean-Damien.Durand@cern.ch
@@ -104,7 +104,7 @@ D: contribution of TGenPhaseSpace class
 
 N: Kirill Filimonov
 E: KVFilimonov@lbl.gov
-D: Modified Struve functions in TMath
+D: modified Struve functions in TMath
 
 N: Frank Filthaut
 E: filthaut@hef.kun.nl
@@ -118,14 +118,18 @@ N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
 
+N: Gerardo Ganis
+E: Gerardo.Ganis@cern.ch
+D: all matters related to client/server authentication
+
 N: Andrei Gheata
 E: Andrei.Gheata@cern.ch
-D: Main developer of the ROOT geometry classes
+D: main developer of the ROOT geometry classes
 
 N: Mihaela Gheata
 E: Mihaela.Gheata@cern.ch
-D: Many contributions to the geometry package
-D: Extension of g2root. Author of stressgeom
+D: many contributions to the geometry package
+D: extension of g2root, author of stressgeom
 
 N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
@@ -142,7 +146,7 @@ D: class TTimeStamp
 
 N: Miroslav Helbich
 E: helbich@mail.desy.de
-D: Apply method in the TGraph classes
+D: apply method in the TGraph classes
 
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
@@ -169,7 +173,7 @@ D: memory leak checker
 
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
-D: Improvements in the ZIP package
+D: improvements in the ZIP package
 
 N: Susan Kasahara
 E: schubert@physics.umn.edu
@@ -214,11 +218,11 @@ D: TFumili class
 
 N: Anne-Sylvie Nicollerat
 E: Anne-Sylvie.Nicollerat@cern.ch
-D: Improvements in tutorial hadd.C to take into account Trees
+D: improvements in tutorial hadd.C to take into account Trees
 
 N: John Odonnell
 E: odonnell@lanl.gov
-D: contributed to TFormula: support for recursive functions definitions.
+D: contributed to TFormula the support for recursive functions definitions
 
 N: Eddy Offermann
 E: eddy@rentec.com
@@ -230,6 +234,7 @@ E: onuchin@sirius.ihep.su
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
 D: implementation of Qt like signals and slots mechanism (TQObject,
 D: TQConnection, etc.)
+D: author of Carrot (http://carrot.cern.ch)
 
 N: Suzanne Panacek
 E: spanacek@fnal.gov
@@ -262,11 +267,11 @@ D: various contributions to GUI classes
 
 N: Heiko Scheit
 E: Heiko.Scheit@mpi-hd.mpg.de
-D: Improvements in TTreePlayer::DrawSelect
+D: improvements in TTreePlayer::DrawSelect()
 
 N: Jason Seely
 E: seely@mit.edu
-D: Contribution to TH1::GetAsymmetry
+D: contribution to TH1::GetAsymmetry()
 
 N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu
@@ -278,7 +283,7 @@ D: OpenLDAP interface
 
 N: Christian Stratowa
 E: cstrato@EUnet.at
-D: Development of class TGraphSmooth + many suggestions
+D: development of class TGraphSmooth + many suggestions
 
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
@@ -290,7 +295,7 @@ D: TF1, TF2, TF3 Moment functions
 
 N: Marco van Leeuwen
 E: mvl@nikhef.nl
-D: THistPainter improvements: Support for log scales with CONT options
+D: THistPainter improvements: support for log scales with CONT options
 
 N: Brett Viren
 E: bv@bnl.gov
@@ -298,5 +303,5 @@ D: contributed the GUI TGTableLayout manager and the Viewer example program
 
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
-D: contributed to TStyle::CreateGradientColorTable
+D: contributed to TStyle::CreateGradientColorTable()
 
