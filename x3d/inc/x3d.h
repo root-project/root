@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name$:$Id$ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $ */
 /* Author: Mark Spychalla*/
 
 /*************************************************************************
@@ -116,6 +116,8 @@
 
 #define ONE             1
 #define EIGHT           8
+#define FIFTEEN         15
+#define SIXTEEN         16
 #define TWENTYFOUR      24
 
 /* Double buffering constants */

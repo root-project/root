@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.2 2000/10/13 19:04:40 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.3 2000/10/15 01:29:48 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -862,6 +862,94 @@ XColor c;
 }
 
 
+static void SixTeenBitSetColors(g)
+Ginfo *g;
+/******************************************************************************
+   Set up color information/stipples for a fifteen and sixteen bit displays.
+******************************************************************************/
+{
+int index, colorValue;
+Color *colors;
+int numColors;
+
+   /* 15 and 16 bit true colors have 6 bits precision per color however
+      only the 5 most significant bits are used in the color index.
+      Except for 16 bits when green uses all 6 bits. I.e.:
+      15 bits = rrrrrgggggbbbbb
+      16 bits = rrrrrggggggbbbbb
+
+      we calculate r, g and b with a max of 63 and then right shift by 1.
+      However in this case all colors are set with a max of 255 (8 bits)
+      so we just right shift them by 3, 2 and 3 bits respectively (and
+      3, 3, 3 for 15 bits).
+   */
+
+   /* settings for 16 bit true color displays */
+   int greenshift = 5;
+   int redshift   = 6 + greenshift;
+   int reddiv     = 3;
+   int greendiv   = 2;
+   int bluediv    = 3;
+
+   /* correction for 15 bit true color displays */
+   if (g->depth == 15) {
+      redshift = 5 + greenshift;
+      greendiv = 3;
+   }
+
+   /*
+   {
+   XVisualInfo vInfo;
+   XMatchVisualInfo(g->dpy, DefaultScreen(g->dpy), g->depth, TrueColor, &vInfo);
+   printf("red_mask = %lu, green_mask = %lu, blue_mask = %lu,"
+      " bit_per_rgb = %d\n",
+      vInfo.red_mask, vInfo.green_mask, vInfo.blue_mask, vInfo.bits_per_rgb);
+   }
+   */
+
+   colors = g->colors;
+   numColors = g->numColors;
+
+   for(index = 0; index < numColors; index++){
+
+/* In 15/16 bit every color is what it is */
+
+      colors[index].value =
+      (colors[index].red >> reddiv) << redshift |
+      (colors[index].green >> greendiv) << greenshift |
+      (colors[index].blue >> bluediv);
+
+/* Set stipple */
+
+      colors[index].stipple =(int)((double)NUMSTIPPLES *
+      ((double)sqrt((double)(
+      (double)colors[index].red   * (double)colors[index].red +
+      (double)colors[index].green * (double)colors[index].green +
+      (double)colors[index].blue  * (double)colors[index].blue))
+      / MAXCOLORDIST));
+
+/* Set stereo color */
+
+      colorValue= (int)((double)31 *
+      ((double)sqrt((double)((double)colors[index].red *
+      (double)colors[index].red + (double)colors[index].green *
+      (double)colors[index].green + (double)colors[index].blue *
+      (double)colors[index].blue)) / MAXCOLORDIST));
+
+      colors[index].stereoColor = colorValue << redshift | colorValue;
+      }
+
+/* Set various important color values */
+
+   g->stereoBlack  = 0;
+   g->redMask  = 31 << redshift;
+   g->blueMask = 31;
+   g->Black  = 0;
+   g->Red    = 31 << redshift;
+   g->Blue   = 31;
+   g->Purple = (31 << redshift) | 31;
+}
+
 
 static void TwentyFourBitSetColors(g)
 Ginfo *g;
@@ -1044,33 +1132,21 @@ int useroot = 0;
 
    g->depth = ONE;
 
-/* An 8 bit GrayScale ? */
-
    if(XMatchVisualInfo(g->dpy, screen, 8, GrayScale, &vInfo)){
+/* An 8 bit GrayScale ? */
       g->depth = EIGHT;
-   }else{
-
+   }else if(XMatchVisualInfo(g->dpy, screen, 8, PseudoColor, &vInfo)){
 /* An 8 bit PseudoColor ? */
-
-     if(XMatchVisualInfo(g->dpy, screen, 8, PseudoColor, &vInfo)){
-        g->depth = EIGHT;
-     }else{
-
+      g->depth = EIGHT;
+   }else if(XMatchVisualInfo(g->dpy, screen, 15, TrueColor, &vInfo)){
+/* An 15 bit TrueColor ? */
+      g->depth = FIFTEEN;
+   }else if(XMatchVisualInfo(g->dpy, screen, 16, TrueColor, &vInfo)){
 /* An 16 bit TrueColor ? */
-
-#define SIXTEEN  16
-
-       if(XMatchVisualInfo(g->dpy, screen, 16, TrueColor, &vInfo)){
-         g->depth = SIXTEEN;
-       }else{
-
+      g->depth = SIXTEEN;
+   }else if(XMatchVisualInfo(g->dpy, screen, 24, TrueColor, &vInfo)){
 /* A 24 bit TrueColor ? */
-
-         if(XMatchVisualInfo(g->dpy, screen, 24, TrueColor, &vInfo)){
-            g->depth = TWENTYFOUR;
-            }
-         }
-      }
+      g->depth = TWENTYFOUR;
    }
 
    g->pix = XCreatePixmap(g->dpy, RootWindow(g->dpy,screen), g->winX,
@@ -1194,8 +1270,8 @@ int useroot = 0;
       OneBitSetColors(g);
       }
 
-   if(g->depth == SIXTEEN ){
-      TwentyFourBitSetColors(g);
+   if(g->depth == FIFTEEN || g->depth == SIXTEEN){
+      SixTeenBitSetColors(g);
       }
 
    if(g->depth == TWENTYFOUR){
