@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: daemon.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ out:
 #ifdef USE_SIGCHLD
       signal(SIGCLD, SigChild);
 #else
-#if defined(__alpha)
+#if defined(__alpha) && !defined(__linux)
       struct sigaction oldsigact, sigact;
       sigact.sa_handler = SIG_IGN;
       sigemptyset(&sigact.sa_mask);

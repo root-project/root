@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.2 2000/06/08 17:42:50 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -9,29 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #ifdef WIN32
-#if defined(__hpux) && !defined(__GNUG__)
-#pragma OPTIMIZE OFF
-#endif
-
-#if defined(_AIX) && !defined(__GNUG__)
-#endif
-
-#if defined(__alpha) && !defined(__GNUG__)
-#endif
-
-#if defined(__sun) && !defined(__GNUG__)
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__)
-#endif
-
-#if defined(_linux)
-#endif
-
-#ifdef WIN32
 #pragma optimize("",off)
-#endif
-
 #endif
 
 
@@ -982,13 +960,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.2 2000/06/08 17:42:50 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.2 2000/06/08 17:42:50 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1685,7 +1663,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.2 2000/06/08 17:42:50 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

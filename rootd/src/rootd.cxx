@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.2 2000/05/23 15:10:58 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.3 2000/06/11 12:08:30 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -143,7 +143,7 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
 extern "C" int initgroups(char *name, int basegid);
 #endif
 

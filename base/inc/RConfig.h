@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.2 2000/06/09 14:56:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,7 +39,7 @@
 #   define NEED_STRCASECMP
 #endif
 
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
 #   define R__ALPHA
 #   define ANSICPP
 #   ifndef __VMS
@@ -89,7 +89,8 @@
 #   endif
 #endif
 
-#if defined(__linux) && !defined(__powerpc__) && !defined(__ia64__)
+#if defined(__linux) && !defined(__powerpc__) && !defined(__ia64__) && \
+    !defined(__alpha__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -103,6 +104,13 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
+#   define R__B64
+#   define NEED_SIGJMP
+#endif
+
+#if defined(__linux) && defined(__alpha__)
+#   define R__LINUX
+#   define R__UNIX
 #   define R__B64
 #   define NEED_SIGJMP
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.3 2000/06/11 12:12:34 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.4 2000/06/13 18:12:53 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -52,7 +52,7 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
 extern "C" int initgroups(char *name, int basegid);
 #endif
 

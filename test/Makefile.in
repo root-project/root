@@ -275,6 +275,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxalphaegcs)
+# Alpha Linux with egcs
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),mklinux)
 # MkLinux with libc5
 CXX           = g++
