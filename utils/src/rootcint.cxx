@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.156 2004/03/11 06:17:43 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.157 2004/03/11 08:04:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -310,6 +310,7 @@ static int gErrorIgnoreLevel = kError;
 void GetFullyQualifiedName(G__TypeInfo &type, string &fullyQualifiedName);
 void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName);
 void GetFullyQualifiedName(const char *originalName, string &fullyQualifiedName);
+bool IsStdPair(G__ClassInfo &cl);
 
 //______________________________________________________________________________
 void LevelPrint(bool prefix, int level, const char *location,
@@ -981,7 +982,7 @@ bool NeedDestructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
 {
-   if (strncmp(cl.Name(),"pair<",strlen("pair<"))==0) return true;
+   if (IsStdPair(cl)) return true;
 
    if (TClassEdit::IsSTLCont(cl.Name()) != 0 ) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
@@ -1019,90 +1020,6 @@ const char *GetFullShadowName(G__ClassInfo &cl)
    return shadowName.c_str();
 }
 
-// //______________________________________________________________________________
-// // It is a copy of TSTLCont::IsSTLCont, all modification must be done
-// // in it and then copy to here (VP)
-// int IsSTLCont(const char *ty,int testAlloc,int *ppos)
-// {
-// //  ty: 	type name like: vector<list<classA,allocator>,allocator>
-// //  testAlloc:	1=test allocator, if it is not default result is negative
-// //  ppos:	internal use, supposed to be zero in user call
-// //  result:     0=not stl container
-// //              abs(result): code of container 1=vector,2=list,3=deque,4=map
-// //                           5=multimap,6=set,7=multiset
-// //              +ve: it is vector or list with default allocator to any depth
-// //                   like vector<list<vector<int>>>
-// //		-ve: if other then vector or int, or non default allocator
-// //       	     like vector<deque<int>> has answer -1
-// ////////////////////////////////////////////////////////////////////////////////
-
-//   static const char stls[] = {
-//   " vector   list     deque    map      multimap set      multiset "};
-// // 12345678 12345678 12345678 12345678 12345678 12345678 12345678  //
-//   static const char alls[] =
-//   {" alloc __default_alloc_template<true,0> __malloc_alloc_template<0>"};
-// //  0 = start
-// //  1 = in class
-// //
-
-//   char *c,buf[512]; buf[0] = ' ';
-//   int qwe=-1;
-//   if (!ppos) ppos = &qwe;
-//   int &pos = *ppos;
-//   int sta  =  pos+1;
-//   int kase=0,levl=0,stl=0,cnt=0,ztl,i,j;
-
-//   while(ty[++pos]) {
-//      switch(ty[pos]+kase) {
-
-//         case ' ':
-// 	case ' '+1000: break;
-
-//         case '<':
-//            if (++levl>1) break;
-//            for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
-//            buf[j]=' '; buf[j+1]=0;
-//            c = strstr(stls,buf);
-//            if (!c) { kase = 1000; pos--; break;}
-//            stl = (c-stls)/9+1;
-//            if (stl > 2) 	return -stl;
-//            ztl = IsSTLCont(ty,testAlloc,ppos);
-//            if (ztl < 0) 	return -stl;
-//            if (!ty[pos])       	return  stl;
-//            kase = 1000;
-//            break;
-
-//         case ',':
-//            kase = 1000; pos--;	break;
-
-//         case '>':
-//            if (--levl>=0) 	break;
-//            pos--;		return stl;
-
-//         case '<'+1000:
-//            levl++;		break;
-
-//         case ','+1000:
-//            if(levl) 		break;
-//            cnt++; sta = pos+1;	break;
-
-//         case '>'+1000:
-//            if(--levl>=0) 	break;
-//            if (++cnt==2 && testAlloc) {
-//              for(i=sta,j=1;i<pos;i++){if (ty[i]!=' ') buf[j++]=ty[i];}
-//              buf[j]=' '; buf[j+1]=0;
-//              c = strstr(alls,buf);
-//              if (!c) stl = -1000;
-//            }
-//            pos--; 		return stl;
-//         default:;
-//      }// end switch
-
-//   } // end loop
-//   				return stl;
-// }
-
-
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
@@ -1131,6 +1048,14 @@ int IsSTLContainer(G__BaseClassInfo &m)
    int k = ( -TClassEdit::IsSTLCont(type.c_str(),1));
 //   if (k) printf(" %s==%d\n",type.c_str(),k);
    return k;
+}
+
+bool IsStdPair(G__ClassInfo &cl)
+{
+   // Is this an std pair
+
+   return (strncmp(cl.Name(),"pair<",strlen("pair<"))==0
+           && strncmp(cl.FileName(),"prec_stl",8)==0);
 }
 
 //______________________________________________________________________________
@@ -2083,7 +2008,13 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (NeedShadowClass(cl)) {
       fprintf(fp, "      // Make sure the shadow class has the right sizeof\n");
-      fprintf(fp, "      //Assert(sizeof(::%s)", classname.c_str() );
+      if (IsStdPair(cl)) {
+         // Some compiler don't recognize ::pair even after a 'using namespace std;'
+         // and there is not risk of confusion since it is a template.
+         fprintf(fp, "      Assert(sizeof(%s)", classname.c_str() );
+      } else {
+         fprintf(fp, "      Assert(sizeof(::%s)", classname.c_str() );
+      }
       fprintf(fp, " == sizeof(%s));\n", GetFullShadowName(cl));
    }
 
