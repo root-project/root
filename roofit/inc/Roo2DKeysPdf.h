@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.rdl,v 1.2 2001/08/29 20:21:56 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.rdl,v 1.3 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -10,6 +10,7 @@
  *                  by Gerhard Raven.
  *   Wed Aug 15  AB changed grid to 100*100 instead of 50*50
  *   25-Aug-2001 AB Ported to RooFitCore/RooFitModels
+ *   08-Dec-2001 AB added a bandwidth scale factor to allow fine tuning of the PDF
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
@@ -21,14 +22,11 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooDataSet.hh"
 
-//mirror correction limit for boundary correction
-const Double_t ROO2DKEYSPDF_NSIGMAMIROOR = 3.0;
-
 class Roo2DKeysPdf : public RooAbsPdf 
 {
 public:
   Roo2DKeysPdf(const char *name, const char *title,
-             RooAbsReal& x, RooAbsReal &y, RooDataSet& data, TString options = "a");
+             RooAbsReal& x, RooAbsReal &y, RooDataSet& data, TString options = "a", Double_t widthScaleFactor = 1.0);
   Roo2DKeysPdf(const Roo2DKeysPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new Roo2DKeysPdf(*this,newname); }
 
@@ -43,6 +41,15 @@ public:
 //      n = select a normal bandwidth
 //      m = mirror kernal contributions at edges [fold gaussians back into the x,y plane]
   void     setOptions(TString options);
+
+// Set the value of a scale factor to modify the bandwidth by. The default value for this is unity.
+// Modification of 'normal' bandwidths is useful when the data are not 'normally distributed', 
+// otherwise one expects little departure from that behavior.  Note that both the normal and adaptive
+// bandwidth selections are modified by this factor.  Useful for systematic studies.
+//           ***********
+//           *IMPORTANT* The kernel is proportional to 1/widthScaleFactor.
+//           ***********
+  inline void     setWidthScaleFactor(Double_t widthScaleFactor);
 
 // choose the kernel bandwith to use.  The default is 0                                               
 //    0 = use adaptive kernel estimator (uses local population to vary with of kernels)               
@@ -74,8 +81,8 @@ private:
 	     Double_t * _var2, Double_t sigma2); 
 
   //mirror corrections for the boundaries
-  Double_t xBoundaryCorrection(Double_t thisX, Int_t ix);
-  Double_t yBoundaryCorrection(Double_t thisY, Int_t iy);
+  Double_t highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar);
+  Double_t lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar);
 
   Double_t * _x;
   Double_t * _hx;
@@ -94,6 +101,7 @@ private:
   Double_t   _2pi;
   Double_t   _lox,_hix;
   Double_t   _loy,_hiy;
+  Double_t   _widthScaleFactor; //allow manipulation of the bandwidth by a scale factor
 
   Int_t      _nEvents;
   Int_t      _BandWidthType;
@@ -106,4 +114,9 @@ private:
   ClassDef(Roo2DKeysPdf,0) // Non-Parametric Multi Variate KEYS PDF
 };
 
+inline void  Roo2DKeysPdf::setWidthScaleFactor(Double_t widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }
+
 #endif
+
+
+

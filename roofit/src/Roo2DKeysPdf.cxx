@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.5 2001/09/24 23:08:54 verkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -12,10 +12,8 @@
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
-
-// -- CLASS DESCRIPTION [PDF] --
-
 #include "BaBar/BaBar.hh"
+
 #include "RooFitModels/Roo2DKeysPdf.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "TH2.h"
@@ -27,11 +25,12 @@
 ClassImp(Roo2DKeysPdf)
 
 Roo2DKeysPdf::Roo2DKeysPdf(const char *name, const char *title,
-                       RooAbsReal& xx, RooAbsReal & yy, RooDataSet& data,  TString options):
+                       RooAbsReal& xx, RooAbsReal & yy, RooDataSet& data,  TString options, Double_t widthScaleFactor):
   RooAbsPdf(name,title),
   x("x", "x dimension",this, xx),
   y("y", "y dimension",this, yy)
 {
+  setWidthScaleFactor(widthScaleFactor);
   loadDataSet(data, options);
 }
 
@@ -48,6 +47,7 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
 
   _BandWidthType    = other._BandWidthType;
   _MirrorAtBoundary = other._MirrorAtBoundary;
+  _widthScaleFactor = other._widthScaleFactor;
 
   _2pi     = other._2pi;
   _sqrt2pi = other._sqrt2pi;
@@ -179,9 +179,11 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
 void Roo2DKeysPdf::setOptions(TString options)
 {
-  options.ToLower();
+  options.ToLower(); 
   if(options.Contains("a"))      _BandWidthType    = 0;
   else                           _BandWidthType    = 1;
+  if(options.Contains("n"))      _BandWidthType    = 1;
+  else                           _BandWidthType    = 0;
   if(options.Contains("m"))      _MirrorAtBoundary = 1;
   else                           _MirrorAtBoundary = 0;
 }
@@ -218,10 +220,10 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   //////////////////////////////////////
   if(_BandWidthType == 1)  //calculate a trivial bandwith
   {
-    cout << "Roo2DKeysPdf::calculateBandWidth Using a normal bandwith (same for a given dimension)"<<endl;
-    cout << "based on h_j = n^{-1/6}*sigma_j for the j^th dimension and n events"<<endl;
-    Double_t hxGaussian = _n16*_xSigma;
-    Double_t hyGaussian = _n16*_ySigma;
+    cout << "Roo2DKeysPdf::calculateBandWidth Using a normal bandwith (same for a given dimension) based on"<<endl;
+    cout << "                                 h_j = n^{-1/6}*sigma_j for the j^th dimension and n events * "<<_widthScaleFactor<<endl;
+    Double_t hxGaussian = _n16 * _xSigma * _widthScaleFactor;
+    Double_t hyGaussian = _n16 * _ySigma * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j) 
     {
       _hx[j] = hxGaussian;
@@ -233,8 +235,9 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   else //use an adaptive bandwith to reduce the dependance on global data distribution
   {
     cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwith (in general different for all events) [default]"<<endl;
-    Double_t xnorm   = h * pow(_xSigma/sqrtSum, 1.5);
-    Double_t ynorm   = h * pow(_ySigma/sqrtSum, 1.5);
+    cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
+    Double_t xnorm   = h * pow(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
+    Double_t ynorm   = h * pow(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j) 
     {
       Double_t f_ti =  pow ( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
@@ -320,8 +323,12 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
 
       if(_hx[j] != 0.0) zx = exp(-0.5*rx2*rx2)/_hx[j];
       if(_hy[j] != 0.0) zy = exp(-0.5*ry2*ry2)/_hy[j];
-      zx += xBoundaryCorrection(thisX, j);
-      zy += yBoundaryCorrection(thisY, j);
+
+      zx += highBoundaryCorrection(thisX, _hx[j], x.max(), _x[j])
+ 	 +   lowBoundaryCorrection(thisX, _hx[j], x.min(), _x[j]);
+      zy += highBoundaryCorrection(thisY, _hy[j], y.max(), _y[j])
+ 	 +   lowBoundaryCorrection(thisY, _hy[j], y.min(), _y[j]);
+
       f += _n * zy * zx;
     }
   }
@@ -341,46 +348,21 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY)
   return f;
 }
 
-Double_t Roo2DKeysPdf::xBoundaryCorrection(Double_t thisX, Int_t ix)
+// Apply the mirror at boundary correction to a dimension given the space position to evaluate 
+// at (thisVar), the bandwidth at this position (thisH), the boundary (high/low) and the
+// value of the data kernal that this correction is being applied to  tVar (i.e. the _x[ix] etc.)
+Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar)
 {
-  if(_hx[ix] == 0.0) return 0.0;
-  Double_t correction = 0.0;
-  Double_t nSigmaLow  = (thisX - _lox)/_hx[ix];
-  if((nSigmaLow < ROO2DKEYSPDF_NSIGMAMIROOR) && (nSigmaLow>0.0))
-  {
-    correction = (thisX + _x[ix] - 2.0* x.min() )/_hx[ix];
-    correction = exp(-0.5*correction*correction)/_hx[ix];
-    return correction;
-  }
-  Double_t nSigmaHigh  = (_hix - thisX)/_hx[ix];
-  if((nSigmaHigh < ROO2DKEYSPDF_NSIGMAMIROOR) && (nSigmaHigh>0.0))
-  {
-    correction = (thisX - (2.0*x.max() - _x[ix]) )/_hx[ix];
-    correction = exp(-0.5*correction*correction)/_hx[ix];
-    return correction;
-  }
-  return correction;
+  if(thisH == 0.0) return 0.0;
+  Double_t correction = (thisH + tVar - 2.0* high )/thisH;
+  return exp(-0.5*correction*correction)/thisH;
 }
 
-Double_t Roo2DKeysPdf::yBoundaryCorrection(Double_t thisY, Int_t iy)
+Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar)
 {
-  if(_hy[iy] == 0.0) return 0.0;
-  Double_t correction = 0.0;
-  Double_t nSigmaLow   = (thisY - _loy)/_hy[iy];
-  if((nSigmaLow < ROO2DKEYSPDF_NSIGMAMIROOR) && (nSigmaLow > 0.0))
-  {
-    correction = (thisY +  _y[iy] -  2.0*y.min() )/_hy[iy];
-    correction = exp(-0.5*correction*correction)/_hy[iy];
-    return correction;
-  }
-  Double_t nSigmaHigh  = (_hiy - thisY)/_hy[iy];
-  if((nSigmaHigh < ROO2DKEYSPDF_NSIGMAMIROOR) && (nSigmaHigh > 0.0))
-  {
-    correction = (thisY - (2.0*y.max() - _y[iy]) )/_hy[iy];
-    correction = exp(-0.5*correction*correction)/_hy[iy];
-    return correction;
-  }
-  return correction;
+  if(thisH == 0.0) return 0.0;
+  Double_t correction = (thisH + tVar - 2.0* low )/thisH;
+  return exp(-0.5*correction*correction)/thisH;
 }
 
 //==========================================================================================//
@@ -455,7 +437,7 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name)
 void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
 {
   TFile * file = 0;
-
+  cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
   //make sure that any existing file is not over written
   file = new TFile(outputFile, "UPDATE"); 
   if (!file)
@@ -468,8 +450,11 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName)
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
   // make the histogram with a normalization of 1
-  // WVE temp disabled TH2F * hist = this->plot(xArg, yArg, 1.0, _nPoints, _nPoints);
-  // hist->SetName(histName);
+  //  xArg.setPlotBins(_nPoints); yArg.setPlotBins(_nPoints); 
+  //TH2F * hist = xArg.createHistogram(histName, yArg,"Probability");
+  //  TH2F * hist = this->fillHistogram(xArg, yArg, 1.0, _nPoints, _nPoints);
+  //  hist->SetName(histName);
+  //this->fillHistogram(hist, RooArgSet( xArg, yArg ));
   file->Write();
   file->Close();
 }
@@ -520,4 +505,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name)
   file->Write();
   file->Close();
 }
+
+
+
 
