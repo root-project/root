@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.25 2001/11/29 01:12:25 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.26 2001/12/01 08:12:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -375,7 +375,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
       return frame ;
     }
 
-    projIndex = kTRUE ;
+    if (anyServers) projIndex = kTRUE ;
   } 
       
   // If we don't project over the index, just do the regular plotOn
