@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.47 2001/10/10 17:59:00 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.48 2001/10/12 01:48:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -297,6 +297,7 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
+  if (_verboseEval>0) cout << GetName() << ":updating lastNormSet from " << _lastNormSet << " to " << nset << endl ;
   _lastNormSet = (RooArgSet*) nset ;
   _lastNameSet.refill(*nset) ;
 
@@ -329,10 +330,9 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   if (_verboseEval>0) {
     if (!selfNormalized()) {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() 
-	   << ") recreating normalization integral(" 
+	   << ") recreating normalization integral " 
 	   << _lastNormSet << " -> " << nset << "=" ;
-      if (depList) depList->Print("1") ; else cout << "<none>" ;
-      cout << ")" << endl ;
+      if (depList) depList->printToStream(cout,OneLine) ; else cout << "<none>" << endl ;
     } else {
       cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
     }

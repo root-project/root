@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.20 2001/10/09 00:44:00 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.21 2001/10/12 01:48:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -216,7 +216,7 @@ Double_t RooAddPdf::evaluate() const
   // Calculate the current value
 
   const RooArgSet* nset = _pdfList.nset() ;
-  
+
   Double_t value(0) ;
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
@@ -380,7 +380,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 {
   // Return analytical integral defined by given scenario code
 
-  if (code==0) return getVal() ;
+  if (code==0) return getVal(normSet) ;
 
   const Int_t* subCode = _codeReg.retrieve(code-1) ;
   if (!subCode) {

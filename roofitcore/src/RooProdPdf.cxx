@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.15 2001/10/08 05:20:19 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.16 2001/10/12 01:48:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -243,14 +243,14 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
     if (fact) {
       // Factorize, i.e. drop this component pdf
       analVars.add(*pdfDepList) ;
-//       cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
+      //cout << "RooProdPdf::getAI(" << GetName() << ") dropping pdf #" << n << " " << pdf->GetName() << endl ;
       subCode[n] = -1 ;
     } else {
       // Determine partial integration code
       RooArgSet subAnalVars ;
       subCode[n] = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;      
       analVars.add(subAnalVars) ;
-//       cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
+      //cout << "RooProdPdf::getAI(" << GetName() << ") subCode(" << n << "," << pdf->GetName() << ") = " << subCode[n] << endl ;
     }
     delete depIter ;
     delete pdfDepList ;
@@ -269,11 +269,9 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
 {
   // Return analytical integral defined by given scenario code
 
-  //cout << "RooProdPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
-
   // No integration scenario
   if (code==0) {
-    return getVal() ;
+    return getVal(normSet) ;
   }
 
   // Full integration scenario
