@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.3 2000/07/12 17:56:30 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.4 2000/07/13 20:55:47 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -25,6 +25,7 @@
 #include <TGDoubleSlider.h>
 #include <TGFileDialog.h>
 #include <TGTextEdit.h>
+#include <TGShutter.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TH1.h>
@@ -43,6 +44,7 @@ enum ETestCommandIdentifiers {
    M_TEST_DLG,
    M_TEST_MSGBOX,
    M_TEST_SLIDER,
+   M_TEST_SHUTTER,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -75,6 +77,35 @@ const char *filetypes[] = { "All files",     "*",
                             "ROOT files",    "*.root",
                             "ROOT macros",   "*.C",
                             0,               0 };
+
+struct shutterData_t {
+   const char *pixmap_name;
+   const char *tip_text;
+   Int_t       id;
+   TGButton   *button;
+};
+
+shutterData_t histo_data[] = {
+   { "h1_s.xpm",        "TH1",      1001,  0 },
+   { "h2_s.xpm",        "TH2",      1002,  0 },
+   { "h3_s.xpm",        "TH3",      1003,  0 },
+   { "profile_s.xpm",   "TProfile", 1004,  0 },
+   { 0,                 0,          0,     0 }
+};
+
+shutterData_t function_data[] = {
+   { "f1_s.xpm",        "TF1",      2001,  0 },
+   { "f2_s.xpm",        "TF2",      2002,  0 },
+   { 0,                 0,          0,     0 }
+};
+
+shutterData_t tree_data[] = {
+   { "ntuple_s.xpm",    "TNtuple",  3001,  0 },
+   { "tree_s.xpm",      "TTree",    3002,  0 },
+   { "chain_s.xpm",     "TChain",   3003,  0 },
+   { 0,                 0,          0,     0 }
+};
+
 
 const char *editortxt =
 "This is the ROOT text edit widget TGTextEdit. It is not intended as\n"
@@ -218,7 +249,7 @@ private:
    TGTextEntry          *fTitle, *fMsg;
    TGTextBuffer         *fTbtitle, *fTbmsg;
    TGLabel              *fLtitle, *fLmsg;
-   GContext_t            fRedTextGC;
+   TGGC                  fRedTextGC;
 
 public:
    TestMsgBox(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
@@ -247,6 +278,20 @@ public:
 
    virtual void CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+};
+
+class TestShutter : public TGTransientFrame {
+
+private:
+   TGShutter       *fShutter;
+   TGLayoutHints   *fLayout;
+   const TGPicture *fDefaultPic;
+
+public:
+   TestShutter(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
+   ~TestShutter();
+
+   void AddShutterItem(const char *name, shutterData_t data[]);
 };
 
 
@@ -326,6 +371,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Dialog...", M_TEST_DLG);
    fMenuTest->AddEntry("&Message Box...", M_TEST_MSGBOX);
    fMenuTest->AddEntry("&Sliders...", M_TEST_SLIDER);
+   fMenuTest->AddEntry("Sh&utter...", M_TEST_SHUTTER);
    fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
@@ -484,6 +530,10 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_SLIDER:
                      new TestSliders(fClient->GetRoot(), this, 400, 200);
+                     break;
+
+                  case M_TEST_SHUTTER:
+                     new TestShutter(fClient->GetRoot(), this, 400, 200);
                      break;
 
                   default:
@@ -889,30 +939,20 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
 TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
                        UInt_t w, UInt_t h, UInt_t options) :
-     TGTransientFrame(p, main, w, h, options)
+     TGTransientFrame(p, main, w, h, options),
+     fRedTextGC(TGButton::GetDefaultGC())
 {
    // Create message box test dialog. Use this dialog to select the different
    // message dialog box styles and show the message dialog by clicking the
    // "Test" button.
 
    //------------------------------
-   // Create new graphics context for drawing of TGlabel and TGButtons
-   // with text in red.
+   // Set foreground color in graphics context for drawing of
+   // TGlabel and TGButtons with text in red.
 
-   // Use default font as specified in .rootrc
-   FontStruct_t labelfont;
-   labelfont = fClient->GetFontByName(gEnv->GetValue("Gui.NormalFont",
-                "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-
-   // Define new graphics context. Only the fields specified in
-   // fMask will be used (for default TGLabel context see
-   // http://root.cern.ch/root/html/src/TGClient.cxx.html).
-   GCValues_t   gval;
-   gval.fMask = kGCForeground | kGCFont;
-   gval.fFont = gVirtualX->GetFontHandle(labelfont);
-   fClient->GetColorByName("red", gval.fForeground);
-
-   fRedTextGC = gVirtualX->CreateGC(fClient->GetRoot()->GetId(), &gval);
+   ULong_t red;
+   fClient->GetColorByName("red", red);
+   fRedTextGC.SetForeground(red);
    //---------------------------------
 
    int i, ax, ay;
@@ -925,7 +965,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    f4 = new TGCompositeFrame(f2, 60, 20, kHorizontalFrame);
    f5 = new TGCompositeFrame(f2, 60, 20, kHorizontalFrame);
 
-   fTestButton = new TGTextButton(f1, "&Test", 1, fRedTextGC);
+   fTestButton = new TGTextButton(f1, "&Test", 1, fRedTextGC());
 
    // Change background of fTestButton to green
    ULong_t green;
@@ -992,7 +1032,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    f3->AddFrame(fG1, fL3);
    f3->AddFrame(fG2, fL3);
 
-   fLtitle = new TGLabel(f4, new TGString("Title:"), fRedTextGC);
+   fLtitle = new TGLabel(f4, new TGString("Title:"), fRedTextGC());
    fLmsg   = new TGLabel(f5, new TGString("Message:"));
 
    fTitle = new TGTextEntry(f4, fTbtitle = new TGTextBuffer(100));
@@ -1053,7 +1093,6 @@ TestMsgBox::~TestMsgBox()
    delete f3; delete f4; delete f5; delete f2; delete f1;
    delete fL1; delete fL2; delete fL3; delete fL4; delete fL5; delete fL6;
    delete fL21;
-   gVirtualX->DeleteGC(fRedTextGC);
 }
 
 void TestMsgBox::CloseWindow()
@@ -1294,6 +1333,79 @@ Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
    return kTRUE;
+}
+
+TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
+                         UInt_t w, UInt_t h) :
+   TGTransientFrame(p, main, w, h)
+{
+   // Create transient frame containing a shutter widget.
+
+   fDefaultPic = fClient->GetPicture("folder_s.xpm");
+   fShutter = new TGShutter(this, kSunkenFrame);
+
+   AddShutterItem("Histograms", histo_data);
+   AddShutterItem("Functions", function_data);
+   AddShutterItem("Trees", tree_data);
+
+   fLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+   AddFrame(fShutter, fLayout);
+
+   MapSubwindows();
+   Resize(80, 300);
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+                          (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                          (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdum);
+   Move(ax, ay);
+
+   SetWindowName("Shutter Test");
+
+   MapWindow();
+   //fClient->WaitFor(this);
+}
+
+void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
+{
+   TGShutterItem    *item;
+   TGCompositeFrame *container;
+   TGButton         *button;
+   const TGPicture  *buttonpic;
+   static int id = 5001;
+
+   TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
+                                        5, 5, 5, 0);
+
+   item = new TGShutterItem(fShutter, new TGHotString(name), id++);
+   container = (TGCompositeFrame *) item->GetContainer();
+
+   for (int i=0; data[i].pixmap_name != 0; i++) {
+      buttonpic = fClient->GetPicture(data[i].pixmap_name);
+      if (!buttonpic) {
+         Warning("AddShutterItem", "missing pixmap \"%s\", using default",
+                 data[i].pixmap_name);
+         buttonpic = fDefaultPic;
+      }
+
+      button = new TGPictureButton(container, buttonpic, data[i].id);
+      container->AddFrame(button, l);
+      button->Associate(this);
+      button->SetToolTipText(data[i].tip_text);
+      data[i].button = button;
+   }
+
+   fShutter->AddItem(item);
+}
+
+TestShutter::~TestShutter()
+{
+   delete fLayout;
+   delete fShutter;
+   // add other items to be deleted
 }
 
 Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
