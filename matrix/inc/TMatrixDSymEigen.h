@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.h,v 1.2 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.h,v 1.3 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -45,6 +45,13 @@ public :
   TMatrixDSymEigen(const TMatrixDSym      &a);
   TMatrixDSymEigen(const TMatrixDSymEigen &another);
   virtual ~TMatrixDSymEigen() {}
+
+// If matrix A has shape (rowLwb,rowUpb,rowLwb,rowUpb), then each eigen-vector
+// must have an index running between (rowLwb,rowUpb) .
+// For convenience, the column index of the eigen-vector matrix
+// also runs from rowLwb to rowUpb so that the returned matrix
+// has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
+// The same is true for the eigen-value vector .
 
   const TMatrixD &GetEigenVectors() const { return fEigenVectors; }
   const TVectorD &GetEigenValues () const { return fEigenValues; }

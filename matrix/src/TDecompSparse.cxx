@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.8 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.9 2004/12/02 11:53:30 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TDecompSparse::TDecompSparse(Int_t row_lwb,Int_t row_upb,Int_t nr_nonZeros,Int_t
   InitParam();
 
   fRowLwb    = row_lwb;
-  fColLwb    = row_upb;
+  fColLwb    = row_lwb;
   fNrows     = row_upb-row_lwb+1;
   fNnonZeros = nr_nonZeros;
 
@@ -326,8 +326,6 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
   }
   b.Shift(-fRowLwb); // make sure rowlwb = 0
 
-  b.Shift(fColLwb);
-
   // save bs and store residuals
   TVectorD resid = b;
   TVectorD bSave = b;
@@ -372,7 +370,7 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
     }
   }
 
-  b.Shift(fColLwb);
+  b.Shift(fRowLwb);
   return kTRUE;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.13 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.14 2004/10/16 19:46:56 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -18,7 +18,9 @@
 // where U is a upper triangular matrix                                  //
 //                                                                       //
 // The decomposition fails if a diagonal element of fU is <= 0, the      //
-// matrix is not positive negative . The matrix fU is made invalid       // 
+// matrix is not positive negative . The matrix fU is made invalid .     // 
+//                                                                       //
+// fU has the same index range as A .                                    //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +40,7 @@ TDecompChol::TDecompChol(Int_t row_lwb,Int_t row_upb)
   const Int_t nrows = row_upb-row_lwb+1;
   fRowLwb = row_lwb;
   fColLwb = row_lwb;
-  fU.ResizeTo(nrows,nrows);
+  fU.ResizeTo(row_lwb,row_lwb+nrows-1,row_lwb,row_lwb+nrows-1);
 }
 
 //______________________________________________________________________________

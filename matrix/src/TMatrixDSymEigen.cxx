@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.7 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.8 2004/11/05 16:37:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -32,10 +32,11 @@ TMatrixDSymEigen::TMatrixDSymEigen(const TMatrixDSym &a)
 {
   Assert(a.IsValid());
 
-  const Int_t nRows = a.GetNrows();
+  const Int_t nRows  = a.GetNrows();
+  const Int_t rowLwb = a.GetRowLwb();
 
-  fEigenVectors.ResizeTo(nRows,nRows);
-  fEigenValues.ResizeTo(nRows);
+  fEigenValues.ResizeTo(rowLwb,rowLwb+nRows-1);
+  fEigenVectors.ResizeTo(a);
 
   fEigenVectors = a;
 

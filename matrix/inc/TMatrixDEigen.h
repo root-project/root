@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.6 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.7 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -47,6 +47,13 @@ public :
   TMatrixDEigen(const TMatrixD &a);
   TMatrixDEigen(const TMatrixDEigen &another);
   virtual ~TMatrixDEigen() {}
+
+// If matrix A has shape (rowLwb,rowUpb,rowLwb,rowUpb), then each eigen-vector
+// must have an index running between (rowLwb,rowUpb) .
+// For convenience, the column index of the eigen-vector matrix
+// also runs from rowLwb to rowUpb so that the returned matrix
+// has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
+// The same is true for the eigen-value vectors an matrix .
 
   const TMatrixD &GetEigenVectors () const { return fEigenVectors;  }
   const TVectorD &GetEigenValuesRe() const { return fEigenValuesRe; }

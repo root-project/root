@@ -3972,79 +3972,96 @@ void astress_lineqn()
     // Since The Hilbert matrix is accuracy "challenged", I will use a diagonaly
     // dominant one fore sizes > 100, otherwise the verification might fail
 
-    TMatrixDSym m = THilbertMatrixDSym(msize);
-    TMatrixDDiag diag(m);
-    diag += 1.;
+    TMatrixDSym m1 = THilbertMatrixDSym(-1,msize-2);
+    TMatrixDDiag diag1(m1);
+    diag1 += 1.;
 
-    TVectorD rowsum(msize); rowsum.Zero();
-    TVectorD colsum(msize); colsum.Zero();
-
-    for (Int_t irow = 0; irow < m.GetNrows(); irow++) {
-      for (Int_t icol = 0; icol < m.GetNcols(); icol++) {
-        rowsum(irow) += m(irow,icol);
-        colsum(icol) += m(irow,icol);
+    TVectorD rowsum1(-1,msize-2); rowsum1.Zero();
+    TVectorD colsum1(-1,msize-2); colsum1.Zero();
+    for (Int_t irow = m1.GetRowLwb(); irow <= m1.GetColUpb(); irow++) {
+      for (Int_t icol = m1.GetColLwb(); icol <= m1.GetColUpb(); icol++) {
+        rowsum1(irow) += m1(irow,icol);
+        colsum1(icol) += m1(irow,icol);
       }
     }
 
-    TVectorD b(msize);
+    TMatrixDSym m2 = THilbertMatrixDSym(msize);
+    TMatrixDDiag diag2(m2);
+    diag2 += 1.;
+
+    TVectorD rowsum2(msize); rowsum2.Zero();
+    TVectorD colsum2(msize); colsum2.Zero();
+    for (Int_t irow = m2.GetRowLwb(); irow <= m2.GetColUpb(); irow++) {
+      for (Int_t icol = m2.GetColLwb(); icol <= m2.GetColUpb(); icol++) {
+        rowsum2(irow) += m2(irow,icol);
+        colsum2(icol) += m2(irow,icol);
+      }
+    }
+
+    TVectorD b1(-1,msize-2);
+    TVectorD b2(msize);
     {
-      TDecompLU lu(m,1.0e-20);
-      b = rowsum;
-      lu.Solve(b);
+      TDecompLU lu(m1,1.0e-20);
+      b1 = rowsum1;
+      lu.Solve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
-      b = colsum;
-      lu.TransSolve(b);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
+      b1 = colsum1;
+      lu.TransSolve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
     }
 
     {
-      TDecompChol chol(m,1.0e-20);
-      b = rowsum;
-      chol.Solve(b);
+      TDecompChol chol(m1,1.0e-20);
+      b1 = rowsum1;
+      chol.Solve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
-      b = colsum;
-      chol.TransSolve(b);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
+      b1 = colsum1;
+      chol.TransSolve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
     }
 
     {
-      TDecompQRH qrh(m,1.0e-20);
-      b = rowsum;
-      qrh.Solve(b);
+      TDecompQRH qrh1(m1,1.0e-20);
+      b1 = rowsum1;
+      qrh1.Solve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
-      b = colsum;
-      qrh.TransSolve(b);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
+
+      TDecompQRH qrh2(m2,1.0e-20);
+      b2 = colsum2;
+      qrh2.TransSolve(b2);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+        ok &= VerifyVectorValue(b2,1.0,verbose,msize*EPSILON);
     }
 
     {
-      TDecompSVD svd(m);
-      b = rowsum;
-      svd.Solve(b);
+      TDecompSVD svd1(m1);
+      b1 = rowsum1;
+      svd1.Solve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
-      b = colsum;
-      svd.TransSolve(b);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
+
+      TDecompSVD svd2(m2);
+      b2 = colsum2;
+      svd2.TransSolve(b2);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+        ok &= VerifyVectorValue(b2,1.0,verbose,msize*EPSILON);
     }
 
     {
-      TDecompBK bk(m,1.0e-20);
-      b = rowsum;
-      bk.Solve(b);
+      TDecompBK bk(m1,1.0e-20);
+      b1 = rowsum1;
+      bk.Solve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
-      b = colsum;
-      bk.TransSolve(b);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
+      b1 = colsum1;
+      bk.TransSolve(b1);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+        ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
     }
 
 #ifndef __CINT__

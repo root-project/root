@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.15 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBK.cxx,v 1.1 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Sep 2004
 
 /*************************************************************************
@@ -75,8 +75,7 @@ TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
   fNIpiv = nrows;
   fIpiv = new Int_t[fNIpiv];
   memset(fIpiv,0,fNIpiv*sizeof(Int_t));
-  fRowLwb = row_lwb;
-  fColLwb = row_lwb;
+  fColLwb = fRowLwb = row_lwb;
   fU.ResizeTo(nrows,nrows);
 }
 
@@ -95,10 +94,10 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
   fIpiv = new Int_t[fNIpiv]; 
   memset(fIpiv,0,fNIpiv*sizeof(Int_t));
   
-  fRowLwb = a.GetRowLwb();
-  fColLwb = a.GetColLwb();
-  fU.ResizeTo(a);
-  fU = a;
+  const Int_t nRows = a.GetNrows();
+  fColLwb = fRowLwb = a.GetRowLwb();
+  fU.ResizeTo(nRows,nRows);
+  memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
@@ -281,6 +280,8 @@ Bool_t TDecompBK::Decompose()
   if (!ok) SetBit(kSingular);
   else     SetBit(kDecomposed);
 
+  fU.Shift(fRowLwb,fRowLwb);
+
   return ok;
 }
 
@@ -301,9 +302,10 @@ void TDecompBK::SetMatrix(const TMatrixDSym &a)
     memset(fIpiv,0,fNIpiv*sizeof(Int_t));
   }
 
-  fRowLwb = a.GetRowLwb();
-  fU.ResizeTo(a);
-  fU = a;
+  const Int_t nRows = a.GetNrows();
+  fColLwb = fRowLwb = a.GetRowLwb();
+  fU.ResizeTo(nRows,nRows);
+  memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
 //______________________________________________________________________________

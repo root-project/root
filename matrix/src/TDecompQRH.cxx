@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.15 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.16 2004/11/28 19:26:22 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -20,6 +20,14 @@
 //  H  : HouseHolder matrix which is stored through                      //
 //  fUp: (n) - vector with Householder up's                              //
 //  fW : (n) - vector with Householder beta's                            //
+//                                                                       //
+//  If row/column index of A starts at (rowLwb,colLwb) then              //
+//  the decomposed matrices start from :                                 // 
+//  fQ  : (rowLwb,0)                                                     //
+//  fR  : (0,colLwb)                                                     //
+//  and the decomposed vectors start from :                              // 
+//  fUp : (0)                                                            //
+//  fW  : (0)                                                            //
 //                                                                       //
 // Errors arise from formation of reflectors i.e. singularity .          //
 // Note it attempts to handle the cases where the nRow <= nCol .         //

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.17 2004/12/02 11:53:30 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.18 2004/12/07 19:11:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -31,8 +31,10 @@ ClassImp(TDecompLU)
 // fSign gives the sign of the permutation, (-1)^n, where n is the       //
 // number of interchanges in the permutation.                            //
 //                                                                       //
+// fLU has the same indexing range as matrix A .                         //
+//                                                                       //
 // The decomposition fails if a diagonal element of abs(fLU) is == 0,    //
-// The matrix fUL is made invalid                                        //
+// The matrix fUL is made invalid .                                      //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +69,7 @@ TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
   fRowLwb = row_lwb;
   fColLwb = row_lwb;
   fImplicitPivot = 0;
-  fLU.ResizeTo(nrows,nrows);
+  fLU.ResizeTo(row_lwb,row_lwb+nrows-1,row_lwb,row_lwb+nrows-1);
 }
 
 //______________________________________________________________________________

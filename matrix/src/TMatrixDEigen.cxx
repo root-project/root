@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.8 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.9 2004/11/05 16:37:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -50,18 +50,21 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 {
   Assert(a.IsValid());
 
-  const Int_t nRows = a.GetNrows();
-  const Int_t nCols = a.GetNcols();
+  const Int_t nRows  = a.GetNrows();
+  const Int_t nCols  = a.GetNcols();
+  const Int_t rowLwb = a.GetRowLwb();
+  const Int_t colLwb = a.GetColLwb();
 
-  if (nRows != nCols)
+  if (nRows != nCols || rowLwb != colLwb)
   {
     Error("TMatrixDEigen(TMatrixD &)","matrix should be square");
     return;
   }
 
-  fEigenVectors.ResizeTo(nRows,nRows);
-  fEigenValuesRe.ResizeTo(nRows);
-  fEigenValuesIm.ResizeTo(nRows);
+  const Int_t rowUpb = rowLwb+nRows-1;
+  fEigenVectors.ResizeTo(rowLwb,rowUpb,rowLwb,rowUpb);
+  fEigenValuesRe.ResizeTo(rowLwb,rowUpb);
+  fEigenValuesIm.ResizeTo(rowLwb,rowUpb);
 
   TVectorD ortho;
   Double_t work[kWorkMax];
@@ -762,17 +765,26 @@ const TMatrixD TMatrixDEigen::GetEigenValues() const
 // This keeps V a real matrix in both symmetric and non-symmetric
 // cases, and A*V = V*D.
 //
-  const Int_t n = fEigenVectors.GetNrows();
+// Indexing:
+//  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
+//  each eigen-vector must have the shape (rowLwb,rowUpb) .
+//  For convinience, the column index of the eigen-vector matrix
+//  also runs from rowLwb to rowUpb so that the returned matrix
+//  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
+//
+  const Int_t nrows  = fEigenVectors.GetNrows();
+  const Int_t rowLwb = fEigenVectors.GetRowLwb();
+  const Int_t rowUpb = rowLwb+nrows-1;
 
-  TMatrixD D(n,n);
+  TMatrixD D(rowLwb,rowUpb,rowLwb,rowUpb);
 
   Double_t *pD = D.GetMatrixArray();
   const Double_t * const pd = fEigenValuesRe.GetMatrixArray();
   const Double_t * const pe = fEigenValuesIm.GetMatrixArray();
 
-  for (Int_t i = 0; i < n; i++) {
-    const Int_t off_i = i*n;
-    for (Int_t j = 0; j < n; j++)
+  for (Int_t i = 0; i < nrows; i++) {
+    const Int_t off_i = i*nrows;
+    for (Int_t j = 0; j < nrows; j++)
       pD[off_i+j] = 0.0;
     pD[off_i+i] = pd[i];
     if (pe[i] > 0) {
