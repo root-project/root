@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.18 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.19 2003/08/29 09:55:29 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -493,6 +493,8 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
    node->SetName(name);
    // set the mother
    node->SetMotherVolume(fMother);
+   // set the copy number
+   node->SetNumber(fNumber);
    // copy overlaps
    if (fNovlp>0) {
       if (fOverlaps) {

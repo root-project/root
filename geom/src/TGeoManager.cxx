@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.61 2003/09/23 10:33:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.62 2003/10/01 17:53:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -944,7 +944,10 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
          volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("para")) {
          volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
-      } 
+      } else {
+         Error("Node","cannot create shape %s",sh.Data());
+      }    
+
       if (!volume) return;
       vmulti->AddVolume(volume);
    }
@@ -1071,7 +1074,9 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
          volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("para")) {
          volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
-      } 
+      } else {
+         Error("Node","cannot create shape %s",sh.Data());
+      }    
       if (!volume) return;
       vmulti->AddVolume(volume);
    }
@@ -3482,7 +3487,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 // Instanciate a TGeoChecker object and investigates the geometry according to
 // option. Not implemented yet.
    // check shapes first
-   TIter next(fGShapes);
+   TIter next(fShapes);
    TGeoShape *shape;
    Bool_t has_runtime = kFALSE;
    while ((shape = (TGeoShape*)next())) {
@@ -3493,6 +3498,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
          if (!shape->TestShapeBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }      
    if (has_runtime) fTopNode->CheckShapes();
+   else printf(" --- nothing to fix\n");
 }
 
 //_____________________________________________________________________________
