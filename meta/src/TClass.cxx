@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.55 2001/09/18 11:00:31 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.56 2001/10/02 07:30:37 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1074,8 +1074,10 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
    if (sinfo) {
-      Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
-      return;
+      if (sinfo->GetOffsets()) {
+         Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
+         return;
+      }
    }
    if (ignore) SetBit  (kIgnoreTObjectStreamer);
    else        ResetBit(kIgnoreTObjectStreamer);
