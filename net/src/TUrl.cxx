@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.6 2002/03/20 18:54:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.7 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -14,8 +14,9 @@
 // TUrl                                                                 //
 //                                                                      //
 // This class represents a WWW compatible URL.                          //
-// It provides member functions to returns the different parts of       //
-// an URL.                                                              //
+// It provides member functions to return the different parts of        //
+// an URL. The supported url format is:                                 //
+//  [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -25,15 +26,19 @@
 ClassImp(TUrl)
 
 //______________________________________________________________________________
-TUrl::TUrl(const char *url)
+TUrl::TUrl(const char *url, Bool_t defaultIsFile)
 {
    // Parse url character string and split in its different subcomponents.
    // Use IsValid() to check if URL is legal.
    //
-   // url: [proto://]host[:port]/file.ext[#anchor][?options]
+   // url: [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
    //
    // Known protocols: http, root, proof, ftp, news, file, rfio, hpss
-   // (default http).
+   // The default protocol is http, unless defaultIsFile is true in which
+   // case the url is assumed to be of type file.
+   // If a passwd contains a @ it must be escaped by a \\, e.g.
+   // "pip@" becomes "pip\\@".
+   //
    // Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
    // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
    // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
@@ -46,6 +51,8 @@ TUrl::TUrl(const char *url)
    // Set defaults
    fUrl      = "";
    fProtocol = "http";
+   fUser     = "";
+   fPasswd   = "";
    fHost     = "";
    fPort     = 80;
    fFile     = "/";
@@ -94,9 +101,9 @@ TUrl::TUrl(const char *url)
       *s = sav;
       if (!fProtocol.CompareTo("http"))
          fPort = 80;
-      else if (fProtocol.Index("proof") == 0)
+      else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
          fPort = 1093;
-      else if (fProtocol.Index("root") == 0)
+      else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
          fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))
          fPort = 20;
@@ -112,6 +119,41 @@ TUrl::TUrl(const char *url)
          fPort = -1;
          goto cleanup;
       }
+   } else {
+      if (defaultIsFile) {
+         fProtocol = "file";
+         fFile = u;
+         fPort = 0;
+         goto cleanup;
+      }
+      s = u;
+   }
+
+   // Find user and passwd
+   u = s;
+   char *t = s;
+again:
+   if ((s = strchr(t, '@'))) {
+      if (*(s-1) == '\\') {
+         t = s+1;
+         goto again;
+      }
+      sav = *s;
+      *s = 0;
+      char *s2;
+      if ((s2 = strchr(u, ':'))) {
+         *s2 = 0;
+         fUser = u;
+         *s2 = ':';
+         s2++;
+         if (*s2) {
+            fPasswd = s2;
+            fPasswd.ReplaceAll("\\@", "@");
+         }
+      } else
+         fUser = u;
+      *s = sav;
+      s++;
    } else
       s = u;
 
@@ -228,26 +270,40 @@ const char *TUrl::GetUrl()
    // Return full URL.
 
    if (IsValid() && fUrl == "") {
-      if (!fProtocol.CompareTo("file")) {
+      if (fProtocol == "file" || fProtocol == "rfio" || fProtocol == "hpss") {
          fUrl = fProtocol + ":" + fFile;
-         return fUrl.Data();
+         return fUrl;
       }
 
       Bool_t deflt = kTRUE;
       if ((!fProtocol.CompareTo("http")   && fPort != 80)   ||
           (!fProtocol.CompareTo("proof")  && fPort != 1093) ||
           (!fProtocol.CompareTo("proofs") && fPort != 1093) ||
+          (!fProtocol.CompareTo("proofk") && fPort != 1093) ||
           (!fProtocol.CompareTo("root")   && fPort != 1094) ||
           (!fProtocol.CompareTo("roots")  && fPort != 1094) ||
+          (!fProtocol.CompareTo("rootk")  && fPort != 1094) ||
           (!fProtocol.CompareTo("ftp")    && fPort != 20)   ||
           (!fProtocol.CompareTo("news")   && fPort != 119))
          deflt = kFALSE;
+
+      fUrl = fProtocol + "://";
+      if (fUser != "") {
+         fUrl += fUser;
+         if (fPasswd != "") {
+            fUrl += ":";
+            TString passwd = fPasswd;
+            passwd.ReplaceAll("@", "\\@");
+            fUrl += passwd;
+         }
+         fUrl += "@";
+      }
       if (!deflt) {
          char p[10];
          sprintf(p, "%d", fPort);
-         fUrl = fProtocol + "://" + fHost + ":" + p + fFile;
+         fUrl = fUrl + fHost + ":" + p + fFile;
       } else
-         fUrl = fProtocol + "://" + fHost + fFile;
+         fUrl = fUrl + fHost + fFile;
       if (fAnchor != "") {
          fUrl += "#";
          fUrl += fAnchor;
@@ -258,7 +314,7 @@ const char *TUrl::GetUrl()
       }
    }
 
-   return fUrl.Data();
+   return fUrl;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.2 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -18,8 +18,9 @@
 // TUrl                                                                 //
 //                                                                      //
 // This class represents a WWW compatible URL.                          //
-// It provides member functions to returns the different parts of       //
-// an URL.                                                              //
+// It provides member functions to return the different parts of        //
+// an URL. The supported url format is:                                 //
+//  [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +36,9 @@ class TUrl : public TObject {
 
 private:
    TString fUrl;         // full URL
-   TString fProtocol;    // protocol: http, ftp, news, root, rfio, hpss
+   TString fProtocol;    // protocol: http, ftp, news, root, proof, rfio, hpss
+   TString fUser;        // user name
+   TString fPasswd;      // password
    TString fHost;        // remote host
    TString fFile;        // remote object
    TString fAnchor;      // anchor in object
@@ -45,17 +48,19 @@ private:
    TUrl() { fPort = -1; }
 
 public:
-   TUrl(const char *url);
+   TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);
    virtual ~TUrl() { }
 
    const char *GetUrl();
-   const char *GetProtocol() const { return fProtocol.Data(); }
-   const char *GetHost() const { return fHost.Data(); }
-   const char *GetFile() const { return fFile.Data(); }
-   const char *GetAnchor() const { return fAnchor.Data(); }
-   const char *GetOptions() const { return fOptions.Data(); }
+   const char *GetProtocol() const { return fProtocol; }
+   const char *GetUser() const { return fUser; }
+   const char *GetPasswd() const { return fPasswd; }
+   const char *GetHost() const { return fHost; }
+   const char *GetFile() const { return fFile; }
+   const char *GetAnchor() const { return fAnchor; }
+   const char *GetOptions() const { return fOptions; }
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
    void        Print(Option_t *option="") const;
