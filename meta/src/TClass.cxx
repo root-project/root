@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.148 2004/05/28 20:32:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.149 2004/06/09 06:10:21 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -410,6 +410,8 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
+
+   fClassEditors  = new TList();
 }
 
 //______________________________________________________________________________
@@ -457,6 +459,8 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
 
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
+
+   fClassEditors  = new TList();
 
    if (!fClassInfo) {
       SetBit(kLoading);
@@ -542,6 +546,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fProperty       = -1;
    fInterStreamer  = 0;
    fClassMenuList  = 0;
+   fClassEditors   = 0;
 
    ResetInstanceCount();
 
@@ -671,6 +676,8 @@ void TClass::Init(const char *name, Version_t cversion,
    fClassMenuList = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList,this));
 
+   fClassEditors = new TList();
+
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl ) {
@@ -736,6 +743,10 @@ TClass::~TClass()
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList; fClassMenuList=0;
+
+   if (fClassEditors)
+      fClassEditors->Delete();
+   delete fClassEditors; fClassEditors=0;
 
    if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
    fInterStreamer=0;

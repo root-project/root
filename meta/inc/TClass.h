@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.42 2004/04/16 20:53:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.43 2004/05/28 18:14:38 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -82,6 +82,7 @@ private:
    Version_t          fClassVersion;    //Class version Identifier
    G__ClassInfo      *fClassInfo;       //pointer to CINT class info class
    TList             *fClassMenuList;   //list of class menu items
+   TList             *fClassEditors;    //list of class editors
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
@@ -182,6 +183,7 @@ public:
    UInt_t             GetHeapInstanceCount() const { return fOnHeap; }
    void               GetMenuItems(TList *listitems);
    TList             *GetMenuList() const { return fClassMenuList; }
+   TList             *GetEditorList() const { return fClassEditors; }
    TMethod           *GetMethod(const char *method, const char *params);
    TMethod           *GetMethodWithPrototype(const char *method, const char *proto);
    TMethod           *GetMethodAny(const char *method);
