@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.70 2004/08/03 14:50:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.71 2004/08/20 14:59:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -274,6 +274,7 @@ public:
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
+    virtual Long64_t     ReadFile(const char *filename, const char *branchDescriptor="");
     virtual void         Refresh();
     virtual void         RemoveFriend(TTree*);
     virtual void         Reset(Option_t *option="");

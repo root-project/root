@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.8 2002/12/02 18:50:06 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.9 2003/12/19 07:55:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
 #endif
+#include "Riostream.h"
 
 class TBrowser;
 
@@ -77,6 +78,7 @@ public:
     virtual void     PrintValue(Int_t =0) const {;}
     virtual void     ReadBasket(TBuffer &) {;}
     virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {;}
+    virtual void     ReadValue(ifstream & /*s*/) {;}
             Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
     virtual void     SetAddress(void *add=0);
     virtual void     SetBranch(TBranch *branch) { fBranch = branch; }

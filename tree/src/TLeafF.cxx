@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.15 2001/11/29 07:55:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.16 2004/07/29 19:11:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -154,6 +154,14 @@ void TLeafF::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
       }
       value += fLen;
    }
+}
+
+//______________________________________________________________________________
+void TLeafF::ReadValue(ifstream &s)
+{
+// read a float from ifstream s and store it into the branch buffer
+   Float_t *value = (Float_t*)GetValuePointer();
+   for (Int_t i=0;i<fLen;i++) s >> value[i];
 }
 
 //______________________________________________________________________________

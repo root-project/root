@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.5 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.6 2002/09/09 19:52:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
+    virtual void    ReadValue(ifstream & s);
     virtual void    SetAddress(void *add=0);
 
     ClassDef(TLeafF,1)  //A TLeaf for a 32 bit floating point data type.

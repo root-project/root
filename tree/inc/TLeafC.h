@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.4 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
+    virtual void    ReadValue(ifstream & s);
     virtual void    SetAddress(void *add=0);
 
     ClassDef(TLeafC,1)  //A TLeaf for a variable length string.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.13 2001/04/16 19:15:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.14 2001/05/18 15:57:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -154,6 +154,14 @@ void TLeafB::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
       memcpy((char*)list->UncheckedAt(i) + fOffset,&fValue[j], fLen);
       j += fLen;
    }
+}
+
+//______________________________________________________________________________
+void TLeafB::ReadValue(ifstream &s)
+{
+// read a string from ifstream s and store it into the branch buffer
+   char *value = (char*)GetValuePointer();
+   s >> value;
 }
 
 //______________________________________________________________________________

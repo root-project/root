@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.7 2004/06/29 06:49:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.8 2004/07/01 21:27:36 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -171,12 +171,13 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
 }
 
 //_______________________________________________________________________
-Int_t TNtuple::ReadFile(const char *filename)
+Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor*/)
 {
    // Read from filename as many columns as variables in the ntuple
    // the function returns the number of rows found in the file
+   // The second argument "branchDescriptor" is currently not used.
 
-   Int_t nlines = 0;
+   Long64_t nlines = 0;
    ifstream in;
    in.open(filename);
    while (1) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.7 2004/06/11 14:39:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.8 2004/06/21 12:42:07 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -332,7 +332,6 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    SetState(kButtonUp);
    AddInput(kButtonPressMask | kButtonReleaseMask);
    SetColor(fColor);
-   ColorSelected(fColor);  // emit a signal
 }
 
 //________________________________________________________________________________
@@ -352,7 +351,6 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   SetColor(parm2);
                   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                               parm1, parm2);
-                  ColorSelected(fColor);
                }
                break;
 

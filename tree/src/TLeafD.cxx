@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.15 2001/05/18 15:57:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.16 2004/07/29 19:11:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -142,6 +142,14 @@ void TLeafD::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
       memcpy((char*)list->UncheckedAt(i) + fOffset,&fValue[j], 8*fLen);
       j += fLen;
    }
+}
+
+//______________________________________________________________________________
+void TLeafD::ReadValue(ifstream &s)
+{
+// read a double from ifstream s and store it into the branch buffer
+   Double_t *value = (Double_t*)GetValuePointer();
+   for (Int_t i=0;i<fLen;i++) s >> value[i];
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.210 2004/10/06 07:58:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.211 2004/10/14 10:17:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -257,6 +257,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <fstream>
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -894,6 +895,37 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
 //
 //    By default the branch buffers are stored in the same file as the Tree.
 //    use TBranch::SetFile to specify a different file
+//
+//       * address is the address of the first item of a structure
+//         or the address of a pointer to an object (see example).
+//       * leaflist is the concatenation of all the variable names and types
+//         separated by a colon character :
+//         The variable name and the variable type are separated by a slash (/).
+//         The variable type may be 0,1 or 2 characters. If no type is given,
+//         the type of the variable is assumed to be the same as the previous
+//         variable. If the first variable does not have a type, it is assumed
+//         of type F by default. The list of currently supported types is given below:
+//            - C : a character string terminated by the 0 character
+//            - B : an 8 bit signed integer (Char_t)
+//            - b : an 8 bit unsigned integer (UChar_t)
+//            - S : a 16 bit signed integer (Short_t)
+//            - s : a 16 bit unsigned integer (UShort_t)
+//            - I : a 32 bit signed integer (Int_t)
+//            - i : a 32 bit unsigned integer (UInt_t)
+//            - F : a 32 bit floating point (Float_t)
+//            - D : a 64 bit floating point (Double_t)
+//            - L : a 64 bit signed integer (Long64_t)
+//            - l : a 64 bit unsigned integer (ULong64_t)
+//
+//         By default, a variable will be copied to the buffer with the number of
+//         bytes specified in the type descriptor character. However, if the type
+//         consists of 2 characters, the second character is an integer that
+//         specifies the number of bytes to be used when copying the variable
+//         to the output buffer. Example:
+//             X         ; variable X, type Float_t
+//             Y/I       : variable Y, type Int_t
+//             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
+//
 
    gTree = this;
    TBranch *branch = new TBranch(name,address,leaflist,bufsize);
@@ -3630,6 +3662,89 @@ TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *op
    GetPlayer();
    if (fPlayer) return fPlayer->Query(varexp,selection,option,nentries,firstentry);
    return 0;
+}
+
+//______________________________________________________________________________
+Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
+{
+   // Create or simply read branches from filename
+   // if branchDescriptor = "" (default), it is assumed that the Tree descriptor
+   //    is given in the first line of the file with a syntax like
+   //     A/D:Table[2]/F:Ntracks/I:astring/s
+   //  otherwise branchDescriptor must be specified with the above syntax.
+   //
+   // A TBranch object is created for each variable in the expression.
+   // The total number of rows read from the file is returned.
+   
+   gTree = this;
+   ifstream in;
+   in.open(filename);
+   if (!in.good()) {
+      Error("ReadFile","Cannot open file: %s",filename);
+      return 0;
+   }
+   
+   TBranch *branch;
+   char *bdname = new char[1000];
+   char *bd = new char[10000];         
+   Int_t nch = 0;
+   if (branchDescriptor) nch = strlen(branchDescriptor);
+   // branch Descriptor is null, read its definition from the first line in the file
+   if (!nch) {
+      in >> bd;
+      if (!in.good()) {
+         Error("ReadFile","Error reading file: %s",filename);
+         return 0;
+      }
+      nch = strlen(bd);
+   } else {
+      strcpy(bd,branchDescriptor);
+   }
+   
+   //parse the branch descriptor and create a branch for each element
+   //separated by ":"
+   void *address = &bd[9000];
+   char *bdcur = bd;
+   while (bdcur) {
+      char *colon = strchr(bdcur,':');
+      if (colon) *colon = 0;
+      strcpy(bdname,bdcur);
+      char *slash = strchr(bdname,'/');
+      if (slash) *slash = 0;
+      branch = new TBranch(bdname,address,bdcur,32000);
+      if (branch->IsZombie()) {
+         delete branch;
+         Warning("ReadFile","Illegal branch definition: %s",bdcur);
+      } else {
+         fBranches.Add(branch);
+         branch->SetAddress(0);
+      }
+      if (!colon)break;
+      bdcur = colon+1;
+   }
+      
+   //loop on all lines in the file
+   Int_t nbranches = fBranches.GetEntries();
+   Int_t status = 1;
+   Long64_t nlines = 0;
+   while(status > 0) {
+      //loop on branches and read the branch values into their buffer
+      for (Int_t i=0;i<nbranches;i++) {
+         branch = (TBranch*)fBranches.At(i);
+         TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+         leaf->ReadValue(in);
+         status = in.good();
+         if (status < 0) break;
+      }
+      if (status < 0) break;
+      //we are now ready to fill the tree
+      Fill();
+      nlines++;
+   }
+   
+   delete [] bdname;
+   delete [] bd;
+   return nlines;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.1 2001/08/12 09:00:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.h,v 1.2 2003/06/25 13:39:31 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -40,17 +40,17 @@ public:
    TNtupleD(const char *name,const char *title, const char *varlist, Int_t bufsize=32000);
    virtual ~TNtupleD();
 
-   virtual void    Browse(TBrowser *b);
-   virtual Int_t   Fill(const Double_t *x);
-   virtual Int_t   Fill(Double_t x0, Double_t x1, Double_t x2=0, Double_t x3=0,
+   virtual void      Browse(TBrowser *b);
+   virtual Int_t     Fill(const Double_t *x);
+   virtual Int_t     Fill(Double_t x0, Double_t x1, Double_t x2=0, Double_t x3=0,
                         Double_t x4=0, Double_t x5=0, Double_t x6=0, Double_t x7=0,
                         Double_t x8=0, Double_t x9=0, Double_t x10=0,
                         Double_t x11=0, Double_t x12=0, Double_t x13=0,
                         Double_t x14=0);
-   virtual Int_t   GetNvar() const { return fNvar; }
-         Double_t *GetArgs() const { return fArgs; }
-   virtual Int_t   ReadFile(const char *filename);
-            void   ResetBranchAddresses();
+   virtual Int_t     GetNvar() const { return fNvar; }
+           Double_t *GetArgs() const { return fArgs; }
+   virtual Long64_t  ReadFile(const char *filename, const char *branchDescriptor="");
+           void      ResetBranchAddresses();
 
    ClassDef(TNtupleD,1)  //A simple tree with branches of floats.
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.h,v 1.5 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.h,v 1.6 2003/06/04 05:59:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
+    virtual void    ReadValue(ifstream & s);
     virtual void    SetAddress(void *add=0);
     virtual void    SetMaximum(Int_t max) {fMaximum = max;}
     virtual void    SetMinimum(Int_t min) {fMinimum = min;}
