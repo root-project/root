@@ -84,10 +84,16 @@ elif [ $PLATFORM = "macosx" ]; then
    fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
+   # Add versioning information to shared library if available
+   if [ "x$MAJOR" != "x" ]; then
+       VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
+       SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
+       LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
+   fi
    echo $LD $SOFLAGS$SONAME -o $LIB $OBJS \
-	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA $VERSION
    $LD $SOFLAGS$SONAME -o $LIB $OBJS \
-	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA $VERSION
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
    else
@@ -136,9 +142,16 @@ if [ $linkstat -ne 0 ]; then
    exit $linkstat
 fi
 
-if [ "x$MAJOR" != "x" ] && [ -f $LIB.$MAJOR.$MINOR ]; then
-   ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
-   ln -fs $SONAME.$MAJOR        $LIB
+if [ "x$MAJOR" != "x" ]; then
+    if [ -f $LIB.$MAJOR.$MINOR ]; then
+        # Versioned library has format foo.so.3.05
+	ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
+	ln -fs $SONAME.$MAJOR        $LIB
+    elif [ -f $LIB ]; then
+	# Versioned library has format foo.3.05.so
+	ln -fs `echo $SONAME | sed "s/.*\./&${MINOR}./"` `echo $LIB | sed "s/\.${MINOR}//"`
+	ln -fs `echo $SONAME | sed "s/.*\./&${MINOR}./"` `echo $LIB | sed "s/\.${MAJOR}\.${MINOR}//"`
+    fi
 fi
 
 if [ $PLATFORM = "hpux" ]; then
