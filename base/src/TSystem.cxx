@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.13 2001/02/26 02:46:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.14 2001/03/13 17:29:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1451,7 +1451,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   TString includes = GetIncludePath();
   {
     // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-    TRegexp rel_inc("-I[^/\\$-][^:-]+");
+    TRegexp rel_inc("-I[^/\\$%-][^:-]+");
     Int_t len,pos;
     pos = rel_inc.Index(includes,&len);
     while( len != 0 ) {
