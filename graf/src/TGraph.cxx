@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.144 2004/10/22 07:05:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.145 2004/11/05 11:17:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -170,7 +170,7 @@ TGraph::TGraph(const TGraph &gr)
       fX = new Double_t[fMaxSize];
       fY = new Double_t[fMaxSize];
    }
-   
+
    Int_t n = gr.GetN()*sizeof(Double_t);
    memcpy(fX, gr.fX, n);
    memcpy(fY, gr.fY, n);
@@ -226,7 +226,7 @@ TGraph::TGraph(const TH1 *h)
    } else {
       fNpoints = ((TH1*)h)->GetXaxis()->GetNbins();
    }
-   
+
    if (!CtorAllocate()) return;
 
    TAxis *xaxis = ((TH1*)h)->GetXaxis();
@@ -320,7 +320,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    Int_t np = 0;
    while (fgets(line,80,fp)) {
       if( 2 != sscanf(&line[0],format,&x, &y)) {
-         // skip empty and ill-formed lines 
+         // skip empty and ill-formed lines
          continue;
       }
       SetPoint(np,x,y);
@@ -908,7 +908,7 @@ void TGraph::Expand(Int_t newsize, Int_t step)
    }
    Double_t **ps = Allocate(step*(newsize/step + (newsize%step?1:0)));
    CopyAndRelease(ps, 0, fNpoints, 0);
-} 
+}
 
 //______________________________________________________________________________
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
@@ -921,7 +921,7 @@ Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
    CopyPoints(newarrays, 0, iend, 0);
    return newarrays;
 }
-   
+
 //______________________________________________________________________________
 void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 // Set zero values for point arrays in the range [begin, end)
@@ -1059,7 +1059,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 // a little different approach to approximating the uncertainty in y because of the
 // errors in x, is to make it equal the error in x times the slope of the line.
 // The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order. This approach is called "effective variance method".  
+// is of (error of x)**2 order. This approach is called "effective variance method".
 // This improvement has been made in version 4.00/08 by Anna Kreshuk.
 //
 //   Associated functions
@@ -1657,7 +1657,7 @@ Int_t TGraph::InsertPoint()
    }
    Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
    CopyAndRelease(ps, ipoint, fNpoints++, ipoint + 1);
-   
+
    // To avoid redefenitions in descendant classes
    FillZero(ipoint, ipoint + 1);
 
@@ -1976,7 +1976,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
    if(opt.Contains("R")) OptionR    = 1;  else OptionR    = 0;
    if(opt.Contains("1")) OptionOne  = 1;  else OptionOne  = 0;
    if(opt.Contains("F")) OptionFill = 1;  else OptionFill = 0;
-   if(opt.Contains("2") || opt.Contains("3") || 
+   if(opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4")) OptionE = 1;  else OptionE = 0;
    OptionZ    = 0;
 //*-*           If no "drawing" option is selected and if chopt<>' '
@@ -2067,26 +2067,33 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
      rwymax = maximum;
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
-   if (!fHistogram) {
-      // the graph is created with at least as many channels as there are points
-      // to permit zooming on the full range
-      rwxmin = uxmin;
-      rwxmax = uxmax;
-      npt = 100;
-      if (fNpoints > npt) npt = fNpoints;
-      if (gDirectory->GetList()->FindObject(GetName())) {
-         fHistogram = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-      } else {
-         fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-      }
-      if (!fHistogram) return;
-      fHistogram->SetBit(TH1::kNoStats);
-      fHistogram->SetDirectory(0);
-   }
-   fHistogram->SetMinimum(rwymin);
-   fHistogram->SetMaximum(rwymax);
-   fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-   fHistogram->Paint("a");
+     if (!fHistogram) {
+        // the graph is created with at least as many channels as there are points
+        // to permit zooming on the full range
+        rwxmin = uxmin;
+        rwxmax = uxmax;
+        npt = 100;
+        if (fNpoints > npt) npt = fNpoints;
+        if (gDirectory->GetList()->FindObject(GetName())) {
+           fHistogram = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+        } else {
+           fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+        }
+        if (!fHistogram) return;
+        fHistogram->SetMinimum(rwymin);
+        fHistogram->SetMaximum(rwymax);
+        fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
+        fHistogram->SetBit(TH1::kNoStats);
+        fHistogram->SetDirectory(0);
+        fHistogram->Paint("a");
+     } else {
+        if (gPad->GetLogy()) {
+           fHistogram->SetMinimum(rwymin);
+           fHistogram->SetMaximum(rwymax);
+           fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
+        }
+        fHistogram->Paint("a");
+     }
   }
 
   //*-*  Set Clipping option
