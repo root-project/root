@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.2 2001/10/13 21:53:21 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.3 2001/11/07 01:56:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -44,6 +44,7 @@ public:
 
   // Plot methods
   RooPlot* plotNLL(Double_t lo, Double_t hi, Int_t nBins=100) ;
+  RooPlot* plotParamOn(RooPlot* frame) ;
   RooPlot* plotParam(const RooRealVar& param) ;
   RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
   RooPlot* plotPull(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100, Bool_t fitGauss=kFALSE) ;
