@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.7 2002/05/31 01:07:41 verkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.8 2002/05/31 01:49:00 verkerke Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -204,7 +204,7 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
   if (basisIndex == _basisExp) {
     if (rhoQc == -1 || rhoQc == +1) 
-      return (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(-2*_delW));
+      return (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(2*_delW));
     else
       return 1;
   }
@@ -275,7 +275,7 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
 
     // Integration over 'rhoQ'
   case 2:
-    if (basisIndex == _basisExp) return 2*(1 + 0.5*_tag*(-2.*_delW));
+    if (basisIndex == _basisExp) return 2*(1 + 0.5*_tag*(2.*_delW));
 
     if (basisIndex == _basisSin)
 
