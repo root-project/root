@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.4 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.5 2001/05/07 12:28:24 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -56,6 +56,8 @@ protected:
     TString    fFunctionName;        //name of mapping function pointed by fFunction
     TF1       *fFunction;            //!Pointer to function computing axis values
 
+  static Int_t fgMaxDigits;          //!Number of digits above which the 10>N notation is used
+
 public:
         // TGaxis status bits
         enum { kCenterTitle = BIT(12), kRotateTitle = BIT(13) };
@@ -85,6 +87,7 @@ public:
 virtual const char     *GetName() const  {return fName.Data();}
 virtual const char     *GetOption() const {return fChopt.Data();}
 virtual const char     *GetTitle() const {return fTitle.Data();}
+        static Int_t    GetMaxDigits();
                Int_t    GetNdiv() const         {return fNdiv;}
              Double_t   GetWmin() const         {return fWmin;}
              Double_t   GetWmax()  const        {return fWmax;}
@@ -105,6 +108,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
                 void    SetLabelFont(Int_t labelfont) {fLabelFont = labelfont;} // *MENU*
                 void    SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
                 void    SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
+         static void    SetMaxDigits(Int_t maxd=5);
         virtual void    SetName(const char *name); // *MENU*
                 void    SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
                 void    SetGridLength(Float_t gridlength) {fGridLength = gridlength;}

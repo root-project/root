@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.17 2001/08/27 06:43:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.18 2001/08/28 15:04:28 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -25,6 +25,8 @@
 #include "TStyle.h"
 #include "TF1.h"
 #include "TMath.h"
+
+Int_t TGaxis::fgMaxDigits = 5;
 
 ClassImp(TGaxis)
 
@@ -262,6 +264,14 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 }
 
 //______________________________________________________________________________
+Int_t TGaxis::GetMaxDigits() 
+{
+   // static function returning fgMaxDigits (See SetMaxDigits)
+   
+   return fgMaxDigits;
+}
+
+//______________________________________________________________________________
 void TGaxis::Paint(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this axis with its current attributes*-*-*-*-*-*-*
@@ -387,6 +397,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //       chopt='N': No bining optimization
 //       chopt='I': Integer labelling
 //
+// Maximum Number of Digits for the axis labels
+// --------------------------------------------
+// See the static function TGaxis::SetMaxDigits
 //
 // Time representation.
 // --------------------
@@ -465,7 +478,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t timed, wTimeIni;
    struct tm* utctis;
 
-   const Int_t precision = 5;
    Double_t epsilon = 0.00001;
    const Double_t kPI=3.141592;
 //*-*-______________________________________
@@ -1059,7 +1071,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                WW     = TMath::Max(TMath::Abs(wmin),TMath::Abs(wmax));
 
 //*-*-              First case : (wmax-wmin)/N1A less than 0.001
-//*-*-              (0.001 precision of 5 (precision) characters). Then we use x 10 n
+//*-*-              (0.001 fgMaxDigits of 5 (fgMaxDigits) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
                if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < 0.00099) {
                   AF    = TMath::Log10(WW) + epsilon;
@@ -1069,8 +1081,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      IEXE    = TMath::Abs(NEXE);
                      Wlabel  = Wlabel*TMath::Power(10,IEXE);
                      DWlabel = DWlabel*TMath::Power(10,IEXE);
-                     IF1     = precision;
-                     IF2     = precision-2;
+                     IF1     = fgMaxDigits;
+                     IF2     = fgMaxDigits-2;
                      goto L110;
                   }
                }
@@ -1078,14 +1090,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                else         AF = TMath::Log10(WW*0.0001);
                AF += epsilon;
                NF  = Int_t(AF)+1;
-               if (NF > precision)  FLEXPO = kTRUE;
-               if (NF < -precision) FLEXNE = kTRUE;
+               if (NF > fgMaxDigits)  FLEXPO = kTRUE;
+               if (NF < -fgMaxDigits) FLEXNE = kTRUE;
 
 //*-*-              Use x 10 n format.
 
                if (FLEXPO) {
                   FLEXE = kTRUE;
-                  while ( WW > TMath::Power(10,precision-1)) {
+                  while ( WW > TMath::Power(10,fgMaxDigits-1)) {
                      NEXE++;
                      WW      /= 10;
                      Wlabel  /= 10;
@@ -1095,7 +1107,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
                if (FLEXNE) {
                   FLEXE = kTRUE;
-                  RNE   = 1/TMath::Power(10,precision-2);
+                  RNE   = 1/TMath::Power(10,fgMaxDigits-2);
                   while (WW < RNE) {
                      NEXE--;
                      WW      *= 10;
@@ -1105,13 +1117,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                NA = 0;
-               for (i=precision-1; i>0; i--) {
-                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = precision-i;
+               for (i=fgMaxDigits-1; i>0; i--) {
+                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = fgMaxDigits-i;
                }
                ndyn = N1A;
                while (ndyn) {
                   Double_t wdyn = TMath::Abs((wmax-wmin)/ndyn);
-                  if (wdyn <= 0.999 && NA < precision-2) {
+                  if (wdyn <= 0.999 && NA < fgMaxDigits-2) {
                      NA++;
                      ndyn /= 10;
                   }
@@ -1119,7 +1131,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                IF2 = NA;
-               IF1 = TMath::Max(NF+NA,precision)+1;
+               IF1 = TMath::Max(NF+NA,fgMaxDigits)+1;
 L110:
                if (TMath::Min(wmin,wmax) < 0)IF1 = IF1+1;
                IF1 = TMath::Min(IF1,32);
@@ -1815,6 +1827,20 @@ void TGaxis::SetFunction(const char *funcname)
       fWmin = fFunction->GetXmin();
       fWmax = fFunction->GetXmax();
    }
+}
+
+//______________________________________________________________________________
+void TGaxis::SetMaxDigits(Int_t maxd) 
+{
+   // static function to set fgMaxDigits
+   //fgMaxDigits is the maximum number of digits permitted for the axis
+   //labels above which the notation with 10^N is used.
+   //For example, to accept 6 digits number like 900000 on an axis
+   //call TGaxis::SetMaxDigits(6). The default value is 5.
+   //fgMaxDigits must be greater than 0.
+   
+   fgMaxDigits = maxd;
+   if (maxd < 1) fgMaxDigits = 1;
 }
 
 //______________________________________________________________________________
