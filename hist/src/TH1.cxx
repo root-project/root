@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.71 2001/12/04 14:40:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.72 2001/12/09 17:32:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3383,6 +3383,14 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
       }
    }
 
+   // save list of functions
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj=next())) {
+      obj->SavePrimitive(out,"nodraw");
+      out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+   }
+   
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);

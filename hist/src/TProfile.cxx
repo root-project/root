@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.15 2001/07/09 20:30:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.16 2001/09/26 11:17:44 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -875,8 +875,9 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
                  <<","<<GetXaxis()->GetNbins()
                  <<","<<GetXaxis()->GetXmin()
-                 <<","<<GetXaxis()->GetXmax();
-              out<<");"<<endl;
+                 <<","<<GetXaxis()->GetXmax()
+                 <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
+
    if (fMinimum != -1111) {
       out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
    }
@@ -910,6 +911,15 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
+
+   // save list of functions
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj=next())) {
+      obj->SavePrimitive(out,"nodraw");
+      out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+   }
+
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
