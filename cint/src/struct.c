@@ -862,6 +862,9 @@ int type;
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(G__struct.memvar[i],0,sizeof(struct G__var_array));
 #endif
+#ifndef G__OLDIMPLEMENTATION1866
+    G__struct.memvar[i]->ifunc = (struct G__ifunc_table*)NULL;
+#endif
     G__struct.memvar[i]->varlabel[0][0]=0;
     G__struct.memvar[i]->paran[0]=0;
     G__struct.memvar[i]->allvar=0;
@@ -992,6 +995,9 @@ int *pig15;
     var->next = (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(var->next,0,sizeof(struct G__var_array));
+#endif
+#ifndef G__OLDIMPLEMENTATION1866
+    var->next->ifunc = (struct G__ifunc_table*)NULL;
 #endif
     var->next->tagnum=var->tagnum;
     var = var->next;

@@ -286,7 +286,7 @@ FILE *fp;
   fpos_t pos;
   char store_var_type;
   struct G__input_file ftemp,store_ifile;
-  G__value buf;
+  G__value buf = G__null;
 #ifdef G__ASM
   G__ALLOC_ASMENV;
 #endif
@@ -386,8 +386,8 @@ FILE *fp;
   G__asm_exec = 0 ;
 #endif
 
-    /* execution */
-    buf = G__exec_statement();
+  /* execution */
+  buf = G__exec_statement();
 
 #ifndef G__OLDIMPLEMENTATION1247
   G__asm_inst = store_asm_inst;
@@ -817,6 +817,20 @@ char *unnamedmacro;
 #endif
 
   return(buf);
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1867
+/**************************************************************************
+* G__exec_text_str()
+**************************************************************************/
+char* G__exec_text_str(unnamedmacro,result)
+char *unnamedmacro;
+char *result;
+{
+  G__value buf = G__exec_text(unnamedmacro);
+  G__valuemonitor(buf,result);
+  return(result);
 }
 #endif
 

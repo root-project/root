@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015085
-#define G__CINTVERSIONSTR  "5.15.85, Apr 21 2003"
+#define G__CINTVERSION      5015086
+#define G__CINTVERSIONSTR  "5.15.86, Apr 29 2003"
 
 
 /**********************************************************************
@@ -1998,6 +1998,7 @@ extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude)
 extern G__EXPORT G__value G__exec_tempfile_fp G__P((FILE *fp));
 extern G__EXPORT G__value G__exec_tempfile G__P((G__CONST char *file));
 extern G__EXPORT G__value G__exec_text G__P((G__CONST char *unnamedmacro));
+extern G__EXPORT char* G__exec_text_str G__P((G__CONST char *unnamedmacro,char* result));
 extern G__EXPORT char* G__lasterror_filename G__P((void));
 extern G__EXPORT int G__lasterror_linenum G__P((void));
 extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));

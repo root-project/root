@@ -156,8 +156,13 @@ void G__CallFunc::SetArgArray(long *p,int narg)
       // Following data shouldn't matter, but set just in case
       arginfo.Next();
       para.para[i].type = arginfo.Type()->Type();
+#ifndef G__OLDIMPLEMENTATION1865
+      para.para[i].tagnum = arginfo.Type()->Tagnum();
+      para.para[i].typenum = arginfo.Type()->Typenum();
+#else
       para.para[i].tagnum = -1;
       para.para[i].typenum = -1;
+#endif
       para.paran=i+1;
 #elif !defined(G__OLDIMPLEMENTATION1707)
       if (p[i]) {

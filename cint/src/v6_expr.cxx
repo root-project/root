@@ -121,8 +121,10 @@ char *exprwithspace;
 #endif
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1802
+#if !defined(G__OLDIMPLEMENTATION1863)
   char *exprnospace=(char*)malloc(strlen(exprwithspace)+2);
+#elif !defined(G__OLDIMPLEMENTATION1802)
+  char *exprnospace=(char*)malloc(strlen(exprwithspace)+1);
 #else
   char exprnospace[G__ONELINE];
 #endif
@@ -1041,7 +1043,11 @@ char *expression;
 
 #ifndef G__OLDIMPLEMENTATION1802
   if(strlen(expression)>G__BUFLEN-2) 
-    ebuf=(char*)malloc(strlen(expression)+2);
+#ifdef G__OLDIMPLEMENTATION1863_YET 
+    ebuf=(char*)malloc(strlen(expression)+2); /* Don't know why? t538.cxx */
+#else
+    ebuf=(char*)malloc(strlen(expression)+1);
+#endif
   if(!ebuf) {
     G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
     return(G__null);

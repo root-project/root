@@ -774,12 +774,26 @@ char *string,*endmark;
       
     case '*':
       /* comment */
+#ifndef G__OLDIMPLEMENTATION1864
+      if(0==double_quote && 0==single_quote && i>0) {
+	if(string[i-1]=='/' && commentflag) {
+	  G__skip_comment();
+	  --i;
+	  ignoreflag=1;
+	}
+	else if(i>2 && isspace(string[i-1] && isalpha(string[i-2]))) {
+	  --i;
+	}
+      }
+
+#else
       if(0==double_quote && 0==single_quote && i>0 && string[i-1]=='/' &&
 	 commentflag) {
 	G__skip_comment();
 	--i;
 	ignoreflag=1;
       }
+#endif
       break;
 
     case '#':

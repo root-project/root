@@ -114,7 +114,7 @@ typedef malloc_alloc alloc;
 
 
 //////////////////////////////////////////////////////////////////////
-#elif defined(G__HPUX)
+#elif defined(G__HPUX) 
 
 class allocator {
 };
@@ -152,7 +152,7 @@ public:
   pointer allocate(size_type _N, void *);
 #endif
   //char  *_Charalloc(size_type _N);
-#if !defined(G__KCC) && !defined(G__BORLANDCC5) && !defined(G__INTEL_COMPILER) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__AIX)
+#if !defined(G__KCC) && !defined(G__BORLANDCC5) && !defined(G__INTEL_COMPILER) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__AIX) && !defined(G__ALPHA)
   void deallocate(void *_P, size_type);
 #else
   void deallocate(T *_P, size_type); //???

@@ -1291,7 +1291,11 @@ char *typename;
 
   len=strlen(temp);
 
-  if(len > 0 && temp[len-1]=='*') {
+  if(
+#ifndef G__OLDIMPLEMENTATION1863
+     len>0 && 
+#endif
+     temp[len-1]=='*') {
     temp[--len]='\0';
     ispointer = 'A' - 'a';
   }

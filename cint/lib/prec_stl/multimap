@@ -77,6 +77,7 @@ class multimap {
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)
+#elif defined(G__ALPHA)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
@@ -84,7 +85,7 @@ class multimap {
    public:
     iterator() ;
     iterator(const iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__ALPHA)
     iterator& operator=(const iterator& x) ;
 #endif
     value_type& operator*() ;
@@ -116,13 +117,14 @@ class multimap {
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)
+#elif defined(G__ALPHA)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
 	{
    public:
     reverse_iterator(const reverse_iterator& x);
-#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__ALPHA)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
     value_type& operator*() ;

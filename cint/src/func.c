@@ -3736,6 +3736,20 @@ int hash;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1867
+  if(1670==hash&&strcmp(funcname,"G__exec_text_str")==0) {
+    if(G__no_exec_compile) return(1);
+    G__CHECKNONULL(0,'C');
+    G__CHECKNONULL(1,'C');
+    G__storerewindposition();
+    G__letint(result7,'C',
+	      (long)G__exec_text_str((char *)G__int(libp->para[0]),
+				     (char *)G__int(libp->para[1])));
+    G__security_recover(G__serr);
+    return(1);
+  }
+#endif
+
   /*********************************************************************
   * low priority
   *********************************************************************/

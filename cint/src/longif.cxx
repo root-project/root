@@ -11,14 +11,12 @@
 extern "C" void G__cpp_reset_tagtablelongif();
 
 extern "C" void G__set_cpp_environmentlongif() {
-#if 0
   G__add_compiledheader("longlong.h");
   G__add_compiledheader("<iostream.h");
   G__add_compiledheader("<iosenum.h");
   G__add_compiledheader("<bool.h");
   G__add_compiledheader("<_iostream");
   G__add_compiledheader("longdbl.h");
-#endif
   G__cpp_reset_tagtablelongif();
 }
 class G__longifdOcxx_tag {};
@@ -312,7 +310,7 @@ static int G__longif_29_8_0(G__value *result7,G__CONST char *funcname,struct G__
 
 static int G__longif_29_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
-        const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator=((const long)G__int(libp->para[0]));
+        const G__ulonglong& obj=((G__ulonglong*)(G__getstructoffset()))->operator=((long)G__int(libp->para[0]));
          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
       }
    return(1 || funcname || hash || result7 || libp) ;
@@ -556,52 +554,52 @@ static int G__longif__1_2(G__value *result7,G__CONST char *funcname,struct G__pa
 }
 
 static int G__longif__2_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const double)G__double(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((double)G__double(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__3_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const float)G__double(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((float)G__double(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__4_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const char)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((char)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__5_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const short)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((short)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__6_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const int)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((int)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const long)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((long)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const unsigned char)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((unsigned char)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__9_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const unsigned short)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((unsigned short)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__0_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const unsigned int)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((unsigned int)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__longif__1_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ateval((const unsigned long)G__int(libp->para[0])));
+      G__letint(result7,105,(long)G__ateval((unsigned long)G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1137,7 +1135,7 @@ static void G__setup_memfuncG__ulonglong(void) {
    G__memfunc_setup("operator++",962,G__longif_29_6_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("operator--",966,G__longif_29_7_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("operator--",966,G__longif_29_8_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,0,1,1,1,0,"i - - 0 - dmy",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("operator=",937,G__longif_29_9_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"l - - 10 - x",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("operator=",937,G__longif_29_9_0,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"l - - 0 - x",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("operator=",937,G__longif_29_0_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("operator+=",980,G__longif_29_1_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("operator-=",982,G__longif_29_2_1,117,G__get_linked_tagnum(&G__longifLN_G__ulonglong),-1,1,1,1,1,0,"u 'G__ulonglong' - 11 - x",(char*)NULL,(void*)NULL,0);
@@ -1215,63 +1213,63 @@ static void G__cpp_setup_func0() {
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__2_2,105,-1,-1,0,1,1,1,0,"d - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__2_2,105,-1,-1,0,1,1,1,0,"d - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const double))G__ateval,0);
+,(void*)(int (*)(double))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__3_2,105,-1,-1,0,1,1,1,0,"f - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__3_2,105,-1,-1,0,1,1,1,0,"f - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const float))G__ateval,0);
+,(void*)(int (*)(float))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__4_2,105,-1,-1,0,1,1,1,0,"c - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__4_2,105,-1,-1,0,1,1,1,0,"c - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const char))G__ateval,0);
+,(void*)(int (*)(char))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__5_2,105,-1,-1,0,1,1,1,0,"s - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__5_2,105,-1,-1,0,1,1,1,0,"s - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const short))G__ateval,0);
+,(void*)(int (*)(short))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__6_2,105,-1,-1,0,1,1,1,0,"i - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__6_2,105,-1,-1,0,1,1,1,0,"i - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const int))G__ateval,0);
+,(void*)(int (*)(int))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__7_2,105,-1,-1,0,1,1,1,0,"l - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__7_2,105,-1,-1,0,1,1,1,0,"l - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const long))G__ateval,0);
+,(void*)(int (*)(long))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__8_2,105,-1,-1,0,1,1,1,0,"b - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__8_2,105,-1,-1,0,1,1,1,0,"b - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const unsigned char))G__ateval,0);
+,(void*)(int (*)(unsigned char))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__9_2,105,-1,-1,0,1,1,1,0,"r - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__9_2,105,-1,-1,0,1,1,1,0,"r - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const unsigned short))G__ateval,0);
+,(void*)(int (*)(unsigned short))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__0_3,105,-1,-1,0,1,1,1,0,"h - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__0_3,105,-1,-1,0,1,1,1,0,"h - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const unsigned int))G__ateval,0);
+,(void*)(int (*)(unsigned int))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
-   G__memfunc_setup("G__ateval",898,G__longif__1_3,105,-1,-1,0,1,1,1,0,"k - - 10 - x",(char*)NULL
+   G__memfunc_setup("G__ateval",898,G__longif__1_3,105,-1,-1,0,1,1,1,0,"k - - 0 - x",(char*)NULL
 #ifndef G__ateval
-,(void*)(int (*)(const unsigned long))G__ateval,0);
+,(void*)(int (*)(unsigned long))G__ateval,0);
 #else
 ,(void*)NULL,0);
 #endif
@@ -1474,6 +1472,8 @@ extern "C" void G__cpp_reset_tagtablelongif() {
 extern "C" void G__cpp_setup_tagtablelongif() {
 
    /* Setting up class,struct,union tag entry */
+   G__get_linked_tagnum(&G__longifLN_ostream);
+   G__get_linked_tagnum(&G__longifLN_istream);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__longlong),sizeof(G__longlong),-1,3840,(char*)NULL,G__setup_memvarG__longlong,G__setup_memfuncG__longlong);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__ulonglong),sizeof(G__ulonglong),-1,3840,(char*)NULL,G__setup_memvarG__ulonglong,G__setup_memfuncG__ulonglong);
    G__tagtable_setup(G__get_linked_tagnum(&G__longifLN_G__longdouble),sizeof(G__longdouble),-1,3840,(char*)NULL,G__setup_memvarG__longdouble,G__setup_memfuncG__longdouble);

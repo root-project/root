@@ -55,11 +55,10 @@ DLLPOST     = .dl
 ##########################################################
 # Control default behavior of cint command line input
 ##########################################################
+INPUTMODE = command
 #INPUTMODE = C++
-#INPUTMODE = root
-INPUTMODE = cint
-#INPUTMODELOCK = on
 INPUTMODELOCK = off
+#INPUTMODELOCK = on
 
 # End of $CINTSYSDIR/MAKEINFO ##############################
 
@@ -67,7 +66,7 @@ INPUTMODELOCK = off
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /home/gotom/src/cint-gcc3.0
+CINTSYSDIR = /home/gotom/src/cint-gcc3.2
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = pthread.dll
 OPTION     = $(CCDLLOPT)
