@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.158 2005/01/12 07:50:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.159 2005/01/12 18:02:28 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2634,7 +2634,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (fLookupType[0]==kDirect) {                                                            \
          label = (char*)leaf->GetValuePointer();                                                \
       } else {                                                                                  \
-         label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);                                \
+         label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,instance);                         \
       }                                                                                         \
       Int_t bin = fAxis->FindBin(label);                                                        \
       return bin-0.5;                                                                           \

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.224 2005/01/12 18:56:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.225 2005/01/13 10:10:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2170,7 +2170,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
 //                 For example, with arr1[3] and arr2[2]
-//    tree->Draw("arr1-Alt$(arr2,0)");
+//    tree->Draw("arr1+Alt$(arr2,0)");
 //                 will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
 //                 Or with a variable size array arr3
 //    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");

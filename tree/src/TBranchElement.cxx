@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.160 2005/01/03 21:58:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.161 2005/01/12 07:50:03 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -178,7 +178,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
    if (splitlevel > 0) {
       const char* elem_type = element->GetTypeName();
-      fSTLtype = TClassEdit::IsSTLCont(elem_type);
+      fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(elem_type));
       TClass *clm;
       if (element->CannotSplit()) {
          //printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.177 2005/01/05 15:03:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.178 2005/01/11 13:06:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -674,7 +674,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
 //                 For example, with arr1[3] and arr2[2]
-//    tree->Draw("arr1-Alt$(arr2,0)");
+//    tree->Draw("arr1+Alt$(arr2,0)");
 //                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
 //                 Or with a variable size array arr3
 //    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
