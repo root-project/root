@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.3 2000/10/31 11:18:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.4 2000/11/02 14:01:23 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -210,6 +210,7 @@ void TMethodCall::Execute(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    if (fDtorOnly) {
 #ifdef WIN32
       long saveglobalvar = G__getgvp();
@@ -224,6 +225,7 @@ void TMethodCall::Execute(void *object)
 #endif
    } else
       fFunc->Exec(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -235,7 +237,9 @@ void TMethodCall::Execute(void *object, const char *params)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    fFunc->Exec(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -245,7 +249,9 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    retLong = fFunc->ExecInt(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -257,7 +263,9 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    retLong = fFunc->ExecInt(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -267,7 +275,9 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    retDouble = fFunc->ExecDouble(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -279,7 +289,9 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    retDouble = fFunc->ExecDouble(address);
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -289,7 +301,9 @@ void TMethodCall::Execute(void *object, char **retText)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    *retText =(char*) (fFunc->ExecInt(address));
+   --G__templevel;
 }
 
 //______________________________________________________________________________
@@ -301,7 +315,9 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   ++G__templevel;
    *retText =(char*)( fFunc->ExecInt(address));
+   --G__templevel;
 }
 
 //______________________________________________________________________________

@@ -1862,7 +1862,11 @@ void G__free_tempobject()
   int store_tagnum;
   int iout=0;
   int store_return;
-  char statement[G__ONELINE];
+  // The only 2 potential risks of making this a static are
+  //  - a destructor indirectly provokes a call to G__free_tempobject
+  //  - multi-thread application (but the rest of CINT is not 
+  //      multi-threadable anyway).
+  static char statement[G__ONELINE];
   struct G__tempobject_list *store_p_tempbuf;
 
 #ifndef G__OLDIMPLEMENTATION1164

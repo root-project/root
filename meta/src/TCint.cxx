@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.32 2001/07/09 07:47:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.33 2001/10/03 18:56:44 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -119,6 +119,21 @@ void TCint::ClearFileBusy()
    // by G__init_cint() and G__dlmod().
 
    G__clearfilebusy(0);
+}
+
+//______________________________________________________________________________
+void TCint::ClearStack() 
+{
+   // Delete existing temporary values
+
+   ++G__templevel;      // Destroy only the temporary below the current level
+   int store_command_eval = G__command_eval;
+   G__command_eval = 0; // Force the deletion
+
+   G__free_tempobject();
+
+   G__command_eval = store_command_eval;
+   --G__templevel;
 }
 
 //______________________________________________________________________________

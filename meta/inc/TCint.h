@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.3 2001/04/09 14:20:55 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.4 2001/05/25 06:25:03 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public:
 
    void    AddIncludePath(const char *path);
    void    ClearFileBusy();
+   void    ClearStack(); // Delete existing temporary values
    void    EndOfLineAction();
    Int_t   GetMore() const { return fMore; }
    char   *GetPrompt() { return fPrompt; }
