@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.5 2000/06/16 07:37:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.6 2000/06/16 10:29:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -732,7 +732,7 @@ void THistPainter::PaintAxis()
 //    ty = 2;   tick marks and labels on right side are drawn
 //       Use TPad::SetTicks(tx,ty) to set these options
 
-   if (Hoption.Same && Hoption.Axis <= 0) return;
+   if (Hoption.Same || Hoption.Axis <= 0) return;
 
    static char chopt[10] = "";
    Double_t gridl = 0;
