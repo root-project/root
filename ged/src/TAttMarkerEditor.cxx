@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.2 2004/06/18 22:10:13 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -11,9 +11,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TAttMarkerEditor                                                      //
+//  TAttMarkerEditor                                                    //
 //                                                                      //
-//  Editor of marker attributes.                                          //
+//  Implements GUI for editing marker attributes.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -50,17 +50,14 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fColorSelect = new TGColorSelect(f2, 0, kCOLOR);
-   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
 
    fMarkerSelect = new TGedMarkerSelect(f2, 1, kMARKER);
-   fMarkerSelect->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
    f2->AddFrame(fMarkerSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fMarkerSelect->Associate(this);
 
    fSizeCombo = BuildMarkerSizeComboBox(f2, kMARKER_SIZE);
-   fSizeCombo->Connect("Selected(Int_t)", "TAttMarkerEditor", this, "DoMarkerSize(Int_t)");
    f2->AddFrame(fSizeCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fSizeCombo->Resize(50, 20);
    fSizeCombo->Associate(this);
@@ -71,7 +68,6 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t id, Int_t width,
    ge->fGedFrame = this;
    ge->fCanvas = 0;
    cl->GetEditorList()->Add(ge);
-
 }
 
 //______________________________________________________________________________
@@ -87,6 +83,17 @@ TAttMarkerEditor::~TAttMarkerEditor()
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
    Cleanup();
+}
+
+//______________________________________________________________________________
+void TAttMarkerEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+
+   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
+   fMarkerSelect->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
+   fSizeCombo->Connect("Selected(Int_t)", "TAttMarkerEditor", this, "DoMarkerSize(Int_t)");
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -123,6 +130,7 @@ void TAttMarkerEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p);
 
+   if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 

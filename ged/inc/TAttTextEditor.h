@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.h,v 1.0 2004/05/11 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 //  TAttTextEditor                                                      //
 //                                                                      //
-//  Editor of text attributes.                                          //
+//  Implements GUI for editing text attributes.                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,8 +42,8 @@ protected:
    TGComboBox          *fAlignCombo;      // font aligh combo box
    TGColorSelect       *fColorSelect;     // color selection widget
 
-   static TGComboBox *BuildFontSizeComboBox(TGFrame *parent, Int_t id);
-   static TGComboBox *BuildTextAlignComboBox(TGFrame *parent, Int_t id);
+   static  TGComboBox *BuildFontSizeComboBox(TGFrame *parent, Int_t id);
+   static  TGComboBox *BuildTextAlignComboBox(TGFrame *parent, Int_t id);
 
 public:
    TAttTextEditor(const TGWindow *p, Int_t id,
@@ -55,7 +55,7 @@ public:
    virtual void   SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TAttTextEditor,0)  //editor of text attributes
+   ClassDef(TAttTextEditor,0)  //GUI for editing text attributes
 };
 
 #endif

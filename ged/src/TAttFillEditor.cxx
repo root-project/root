@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.00 2004/05/10 05:27:57 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 //  TAttFillEditor                                                      //
 //                                                                      //
-//  Editor of fill attributes.                                          //
+//  Implements GUI for editing fill attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,11 +47,9 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fColorSelect = new TGColorSelect(f2, 0, kCOLOR);
-   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttFillEditor", this, "DoFillColor(Pixel_t)");
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
    fPatternSelect = new TGedPatternSelect(f2, 1, kPATTERN);
-   fPatternSelect->Connect("PatternSelected(Style_t)", "TAttFillEditor", this, "DoFillPattern(Style_t)");
    f2->AddFrame(fPatternSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fPatternSelect->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -62,7 +60,6 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t id, Int_t width,
    ge->fGedFrame = this;
    ge->fCanvas = 0;
    cl->GetEditorList()->Add(ge);
-   
 }
 
 //______________________________________________________________________________
@@ -78,6 +75,16 @@ TAttFillEditor::~TAttFillEditor()
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
    Cleanup(); 
+}
+
+//______________________________________________________________________________
+void TAttFillEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+
+   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttFillEditor", this, "DoFillColor(Pixel_t)");
+   fPatternSelect->Connect("PatternSelected(Style_t)", "TAttFillEditor", this, "DoFillPattern(Style_t)");
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -105,6 +112,7 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Style_t s = fAttFill->GetFillStyle();
    fPatternSelect->SetPattern(s);
 
+   if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 

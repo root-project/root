@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.00 2004/05/11 05:27:57 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -11,11 +11,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TAxisEditor                                                      //
+//  TAxisEditor                                                         //
 //                                                                      //
-//  Editor of axis attributes. It contains three frames related         //
-//  to the axis (TGedAxisFrame), axis title (TGedAxisTitle) and         //
-//  axis label (TGedAxisLabel) attributes.                              //
+//  Implements GUI for axis attributes.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -62,13 +60,6 @@ enum {
    kAXIS_LBLSORT
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGedAxisFrame, TGedAxisTitle, TGedAxisLabel                         //
-//                                                                      //
-//  Frames related to axis, axis title and axis label attributes.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
@@ -83,7 +74,6 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fAxisColor = new TGColorSelect(f2, 0, kCOL_AXIS);
-   fAxisColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoAxisColor(Pixel_t)");
    f2->AddFrame(fAxisColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fAxisColor->Associate(this);
    TGLabel *fTicksLabel = new TGLabel(f2, "Ticks:");
@@ -93,29 +83,24 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                        TGNumberFormat::kNEAAnyNumber,
                                        TGNumberFormat::kNELLimitMinMax,-1.,1.);
    fTickLength->GetNumberEntry()->SetToolTipText("Set ticks' length");
-   fTickLength->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTickLength()");
    f2->AddFrame(fTickLength, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fTicksBoth = new TGCheckButton(f3, "+-", kAXIS_TICKSBOTH);
-   fTicksBoth->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTicks()");
    fTicksBoth->SetToolTipText("Draw ticks on both axis sides");
    f3->AddFrame(fTicksBoth, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 1, 0));
    fOptimize = new TGCheckButton(f3, "Optimize", kAXIS_OPTIM);
    fOptimize->SetState(kButtonDown);
-   fOptimize->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoDivisions()");
    fOptimize->SetToolTipText("Optimize the number of axis divisions");
    f3->AddFrame(fOptimize, new TGLayoutHints(kLHintsTop, 28, 1, 1, 0));
    AddFrame(f3, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fLogAxis = new TGCheckButton(f4, "Log", kAXIS_LOG);
-   fLogAxis->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoLogAxis()");
    f4->AddFrame(fLogAxis, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 0, 0));
    fLogAxis->SetToolTipText("Draw logarithmic scale");
    fMoreLog = new TGCheckButton(f4, "MoreLog", kAXIS_LBLLOG);
-   fMoreLog->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoMoreLog()");
    f4->AddFrame(fMoreLog, new TGLayoutHints(kLHintsLeft, 19, 1, 0, 0));
    fMoreLog->SetToolTipText("Draw more logarithmic labels");
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -125,19 +110,16 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv3->GetNumberEntry()->SetToolTipText("Tertiary axis divisions");
-   fDiv3->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
    f5->AddFrame(fDiv3, new TGLayoutHints(kLHintsLeft, 27, 0, 1, 1));
    fDiv2 = new TGNumberEntry(f5, 5, 2, kAXIS_DIV2, TGNumberFormat::kNESInteger,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv2->GetNumberEntry()->SetToolTipText("Secondary axis divisions");
-   fDiv2->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
    f5->AddFrame(fDiv2, new TGLayoutHints(kLHintsLeft, 1, 0, 1, 1));
    fDiv1 = new TGNumberEntry(f5, 0, 2, kAXIS_DIV3, TGNumberFormat::kNESInteger,
                                        TGNumberFormat::kNEANonNegative, 
                                        TGNumberFormat::kNELLimitMinMax, 0, 99);
    fDiv1->GetNumberEntry()->SetToolTipText("Primary axis divisions");
-   fDiv1->Connect("ValueSet(Long_t)", "TAxisEditor", this,"DoDivisions()");
    f5->AddFrame(fDiv1, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1));
    AddFrame(f5, new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fTicksFlag = 1;
@@ -148,12 +130,10 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    fTitle = new TGTextEntry(this, new TGTextBuffer(50), kTITLE);
    fTitle->Resize(135, fTitle->GetDefaultHeight());
    fTitle->SetToolTipText("Enter the axis title string");
-   fTitle->Connect("TextChanged(const char *)", "TAxisEditor", this, "DoTitle(const char *)");;
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
    
    TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fTitleColor = new TGColorSelect(f6, 0, kCOL_TIT);
-   fTitleColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoTitleColor(Pixel_t)");
    f6->AddFrame(fTitleColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fTitleColor->Associate(this);
    TGLabel *fSizeLbl1 = new TGLabel(f6, "Size:");                              
@@ -163,19 +143,16 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                       TGNumberFormat::kNEANonNegative, 
                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
    fTitleSize->GetNumberEntry()->SetToolTipText("Set title size");
-   fTitleSize->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTitleSize()");
    f6->AddFrame(fTitleSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    fTitleFont = new TGFontTypeComboBox(this, kFONT_TIT);
    fTitleFont->Resize(137, 20);
-   fTitleFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoTitleFont(Int_t)"); 
    AddFrame(fTitleFont, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
 
    TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fCentered = new TGCheckButton(f7, "Centered", kAXIS_CENTERED);
    fCentered->SetToolTipText("Center axis title");
-   fCentered->Connect("Toggled(Bool_t)","TAxisEditor",this, "DoTitleCentered()");
    f7->AddFrame(fCentered, new TGLayoutHints(kLHintsTop, 3, 1, 1, 0));
    TGLabel *fOffsetLbl = new TGLabel(f7, "Offset:");                              
    f7->AddFrame(fOffsetLbl, new TGLayoutHints(kLHintsLeft, 23, 1, 3, 0));
@@ -185,14 +162,12 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    fRotated = new TGCheckButton(f8, "Rotated", kAXIS_ROTATED);
    fRotated->SetState(kButtonDown);
    fRotated->SetToolTipText("Rotate axis title by 180 degrees");
-   fRotated->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTitleRotated()");
    f8->AddFrame(fRotated, new TGLayoutHints(kLHintsTop, 3, 1, 6, 0));
    fTitleOffset = new TGNumberEntry(f8, 1.00, 6, kAXIS_TITOFFSET, 
                                         TGNumberFormat::kNESRealTwo,
                                         TGNumberFormat::kNEAAnyNumber, 
                                         TGNumberFormat::kNELLimitMinMax, 0.1, 10.);
    fTitleOffset->GetNumberEntry()->SetToolTipText("Set title offset");
-   fTitleOffset->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoTitleOffset()");
    f8->AddFrame(fTitleOffset, new TGLayoutHints(kLHintsLeft, 6, 1, 0, 0));
    AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
@@ -201,7 +176,6 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    fLabelPrec = 2;
    TGCompositeFrame *f9 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fLabelColor = new TGColorSelect(f9, 0, kCOL_LBL);
-   fLabelColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoLabelColor(Pixel_t)");
    f9->AddFrame(fLabelColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fLabelColor->Associate(this);
    TGLabel *fSizeLbl2 = new TGLabel(f9, "Size:");                              
@@ -211,13 +185,11 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                       TGNumberFormat::kNEANonNegative, 
                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
    fLabelSize->GetNumberEntry()->SetToolTipText("Set labels' size");
-   fLabelSize->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoLabelSize()");
    f9->AddFrame(fLabelSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    AddFrame(f9, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f10 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fNoExponent = new TGCheckButton(f10, "NoExp", kAXIS_LBLEXP);
-   fNoExponent->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoNoExponent()");
    fNoExponent->SetToolTipText("Labels drawn without exponent notation");
    f10->AddFrame(fNoExponent, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 1, 8, 0));
    fLabelOffset = new TGNumberEntry(f10, 0.005, 6, kAXIS_LBLOFFSET, 
@@ -225,13 +197,11 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
                                          TGNumberFormat::kNEAAnyNumber, 
                                          TGNumberFormat::kNELLimitMinMax,-1.,1.);
    fLabelOffset->GetNumberEntry()->SetToolTipText("Set labels' offset");
-   fLabelOffset->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoLabelOffset()");
    f10->AddFrame(fLabelOffset, new TGLayoutHints(kLHintsLeft, 11, 1, 3, 0));
    AddFrame(f10, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    fLabelFont = new TGFontTypeComboBox(this, kFONT_LBL);
    fLabelFont->Resize(137, 20);
-   fLabelFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoLabelFont(Int_t)"); 
    AddFrame(fLabelFont, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 0));
    fLabelFont->Associate(this);
    
@@ -259,6 +229,35 @@ TAxisEditor::~TAxisEditor()
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
    Cleanup();
+}
+
+//______________________________________________________________________________
+void TAxisEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+
+   fAxisColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoAxisColor(Pixel_t)");
+   fTickLength->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTickLength()");
+   fTicksBoth->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTicks()");
+   fOptimize->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoDivisions()");
+   fLogAxis->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoLogAxis()");
+   fMoreLog->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoMoreLog()");
+   fDiv3->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   fDiv2->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   fDiv1->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
+   fTitle->Connect("TextChanged(const char *)", "TAxisEditor", this, "DoTitle(const char *)");;
+   fTitleColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoTitleColor(Pixel_t)");
+   fTitleSize->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTitleSize()");
+   fTitleFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoTitleFont(Int_t)"); 
+   fCentered->Connect("Toggled(Bool_t)","TAxisEditor",this, "DoTitleCentered()");
+   fRotated->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoTitleRotated()");
+   fTitleOffset->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoTitleOffset()");
+   fLabelColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoLabelColor(Pixel_t)");
+   fLabelSize->Connect("ValueSet(Long_t)","TAxisEditor",this,"DoLabelSize()");
+   fNoExponent->Connect("Toggled(Bool_t)","TAxisEditor",this,"DoNoExponent()");
+   fLabelOffset->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoLabelOffset()");
+   fLabelFont->Connect("Selected(Int_t)", "TAxisEditor", this, "DoLabelFont(Int_t)"); 
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -358,6 +357,7 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    if (noexp) fNoExponent->SetState(kButtonDown);
    else       fNoExponent->SetState(kButtonUp);
 
+   if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 

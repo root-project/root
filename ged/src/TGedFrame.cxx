@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.0 2004/05/10 05:27:57 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.1 2004/06/18 21:46:02 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 //  TGedFrame                                                           //
 //                                                                      //
-//  Base attribute frame - a service class.                             //
+//  Base frame for implementing GUI - a service class.                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +37,7 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
    
    fPad    = 0;
    fModel  = 0;
+   fInit   = kTRUE;
    
    Associate(p);
    
@@ -53,13 +54,13 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
 }
 
 //______________________________________________________________________________
-void TGedFrame::MakeTitle(const char *p)
+void TGedFrame::MakeTitle(const char *title)
 {
    // Create attribute frame title.
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
-   f1->AddFrame(new TGLabel(f1, p), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f1->AddFrame(new TGLabel(f1, title), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1),
                 new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));

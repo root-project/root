@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.0 2004/05/11 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -14,11 +14,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TAttAxisEditor                                                      //
+//  TAxisEditor                                                         //
 //                                                                      //
-//  Editor of axis attributes. It contains three frames related         //
-//  to the axis (TGedAxisFrame), axis title (TGedAxisTitle) and         //
-//  axis label (TGedAxisLabel) attributes.                              //
+//  Implements GUI for axis attributes.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -40,14 +38,6 @@ class TGCheckButton;
 class TGColorSelect;
 class TGFontTypeComboBox;
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAxisEditor                                                         //
-//                                                                      //
-//  Editor related to axis, axis title and axis label attributes.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TAxisEditor : public TGedFrame {
 
@@ -78,6 +68,8 @@ protected:
    TGNumberEntry       *fLabelOffset;  // label offset number entry
    TGCheckButton       *fNoExponent;   // check box for No exponent choice
 
+   virtual void ConnectSignals2Slots();
+
 public:
    TAxisEditor(const TGWindow *p, Int_t id,
                Int_t width = 140, Int_t height = 30,
@@ -106,7 +98,6 @@ public:
    virtual void   DoLabelFont(Int_t font);
    virtual void   DoLabelOffset();
    virtual void   DoNoExponent();
-
 
    ClassDef(TAxisEditor,0)  // axis editor
 };

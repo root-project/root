@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.0 2004/05/11 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 //  TAttMarkerEditor                                                    //
 //                                                                      //
-//  Editor of marker attributes.                                        //
+//  Implements GUI for editing marker attributes.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,8 @@ protected:
    TGColorSelect       *fColorSelect;     // color selection widget
    TGedMarkerSelect    *fMarkerSelect;    // marker selection widget
 
-   static TGComboBox *BuildMarkerSizeComboBox(TGFrame *parent, Int_t id);
+   static  TGComboBox *BuildMarkerSizeComboBox(TGFrame *parent, Int_t id);
+   virtual void        ConnectSignals2Slots();
 
 public:
    TAttMarkerEditor(const TGWindow *p, Int_t id,
@@ -56,7 +57,7 @@ public:
    virtual void     DoMarkerSize(Int_t size);
    virtual void     DoMarkerStyle(Style_t style);
 
-   ClassDef(TAttMarkerEditor,0)  //editor of marker attributes
+   ClassDef(TAttMarkerEditor,0)  // GUI for editing marker attributes
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.3 2004/04/22 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.4 2004/06/18 15:50:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -14,9 +14,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGedEditor (very first prototype)                                    //
+// TGedEditor                                                           //
 //                                                                      //
-// Editor is a composite frame that contains ToolBox and TGedAttFrames. //
+// Editor is a composite frame that contains GUI for editting objects   //
+// in a canvas. It looks for the class ROOT_classname + 'Editor'.       //
+//                                                                      //
 // It connects to a Canvas and listens for selected objects             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -61,8 +63,9 @@ public:
    virtual void Show();
    virtual void Hide();
    virtual void DeleteEditors();
+   virtual void RecursiveRemove(TObject* obj);
    
-   ClassDef(TGedEditor,0)  //new editor (very first prototype)
+   ClassDef(TGedEditor,0)  //new editor 
 };
 
 #endif

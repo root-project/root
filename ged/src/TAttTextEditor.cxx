@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.2 2004/06/18 22:13:35 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 //  TAttTextEditor                                                      //
 //                                                                      //
-//  Editor of text attributes.                                          //
+//  Implements GUI for editing text attributes.                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

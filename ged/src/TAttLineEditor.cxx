@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.00 2004/05/10 05:27:57 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 //  TAttLineEditor                                                      //
 //                                                                      //
-//  Editor of line attributes.                                          //
+//  Implements GUI for editing line attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -51,18 +51,15 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    fColorSelect = new TGColorSelect(f2, 0, kCOLOR);
-   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
 
    fStyleCombo = new TGLineStyleComboBox(this, kLINE_STYLE);
-   fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)"); 
    fStyleCombo->Resize(137, 20);
    AddFrame(fStyleCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fStyleCombo->Associate(this);
 
    fWidthCombo = new TGLineWidthComboBox(f2, kLINE_WIDTH);
-   fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)"); 
    fWidthCombo->Resize(91, 20);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fWidthCombo->Associate(this);
@@ -72,7 +69,6 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t id, Int_t width,
    ge->fGedFrame = this;
    ge->fCanvas = 0;
    cl->GetEditorList()->Add(ge);
-
 }
 
 //______________________________________________________________________________
@@ -91,6 +87,18 @@ TAttLineEditor::~TAttLineEditor()
 }
 
 //______________________________________________________________________________
+void TAttLineEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+
+   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
+   fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)"); 
+   fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)"); 
+
+   fInit = kFALSE;
+}
+
+//______________________________________________________________________________
 void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used line attributes.
@@ -98,7 +106,7 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TAttLine")) {
+   if (obj == 0 || !obj->InheritsFrom("TAttLine") || obj->InheritsFrom("TPad")) {
       SetActive(kFALSE);
       return;
    }
@@ -115,6 +123,7 @@ void TAttLineEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p);
 
+   if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 

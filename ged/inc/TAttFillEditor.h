@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.0 2004/05/10 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 //  TAttFillEditor                                                      //
 //                                                                      //
-//  Editor of fill attributes.                                          //
+//  Implements GUI for editing fill attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +38,8 @@ protected:
    TAttFill            *fAttFill;          // fill attribute object
    TGColorSelect       *fColorSelect;      // fill color widget
    TGedPatternSelect   *fPatternSelect;    // fill pattern widget
+
+   virtual void ConnectSignals2Slots();
  
 public:
    TAttFillEditor(const TGWindow *p, Int_t id,
@@ -50,7 +52,7 @@ public:
    virtual void   DoFillColor(Pixel_t color);
    virtual void   DoFillPattern(Style_t color);
            
-   ClassDef(TAttFillEditor,0)  //editor of fill attributes
+   ClassDef(TAttFillEditor,0)  //GUI for editing fill attributes
 };
 
 #endif

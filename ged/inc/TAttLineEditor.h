@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.h,v 1.0 2004/05/10 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.h,v 1.1 2004/06/18 15:55:00 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 //  TAttLineEditor                                                      //
 //                                                                      //
-//  Editor of line attributes.                                          //
+//  Implements GUI for editing line attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +40,8 @@ protected:
    TGLineWidthComboBox  *fWidthCombo;       // line width combo box
    TGColorSelect        *fColorSelect;      // line color widget
 
+   virtual void   ConnectSignals2Slots();
+
 public:
    TAttLineEditor(const TGWindow *p, Int_t id,
                   Int_t width = 140, Int_t height = 30,
@@ -52,7 +54,7 @@ public:
    virtual void   DoLineStyle(Int_t style);
    virtual void   DoLineWidth(Int_t width);
 
-   ClassDef(TAttLineEditor,0)  // editor of line attributes
+   ClassDef(TAttLineEditor,0)  // GUI for editing line attributes
 };
 
 #endif

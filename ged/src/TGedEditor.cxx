@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.6 2004/06/18 15:50:43 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.7 2004/06/18 22:26:53 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -248,4 +248,14 @@ TGedEditor::~TGedEditor()
   
   fStyle->Cleanup();
   Cleanup();
+}
+
+//______________________________________________________________________________
+ void TGedEditor::RecursiveRemove(TObject* obj)
+{
+   // Remove references to fModel in case the fModel is being deleted
+   // Deactivate attribute frames if they point to obj
+
+   if (fModel != obj ) return;
+   SetModel(fPad,0,0);
 }

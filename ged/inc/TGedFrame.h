@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.0 2004/05/10 16:28:28 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.1 2004/06/18 21:46:02 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 //                                                                      //
 //  TGedFrame                                                           //
 //                                                                      //
-//  Base attribute frame - a service class.                             //
+//  Base editor's attribute frame - a service class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -37,9 +37,10 @@ class TGedFrame : public TGCompositeFrame, public TGWidget {
 protected:
           TObject      *fModel;       // selected object, if exists
           TVirtualPad  *fPad;         // selected pad, if exists
-
-   virtual void MakeTitle(const char *c);
-
+          Bool_t        fInit;        // init flag for setting signals/slots
+          
+   virtual void MakeTitle(const char *title);
+   
 public:
    TGedFrame(const TGWindow *p, Int_t id,
              Int_t width = 140, Int_t height = 30,
@@ -55,7 +56,7 @@ public:
    virtual void     SetModel(TVirtualPad *pad, TObject *obj, Int_t event) = 0;
    virtual void     Update();
 
-   ClassDef(TGedFrame, 0); //base attribute frame
+   ClassDef(TGedFrame, 0); //base editor's frame
 };
 
 
@@ -84,7 +85,7 @@ public:
 
    virtual void  SetModel(TVirtualPad *pad, TObject *obj, Int_t event);
 
-   ClassDef(TGedNameFrame,0)  //frame showing the object name
+   ClassDef(TGedNameFrame,0)  //frame showing the selected object name
 };
 
 #endif
