@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.139 2002/12/02 18:50:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.140 2002/12/02 22:07:07 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2716,7 +2716,10 @@ Int_t TTree::LoadTree(Int_t entry)
                needUpdate = kTRUE;
 
             }
-         } // else we assume it is a simple tree so we have nothing to do.         
+         } else {
+            // we assume it is a simple tree so we have nothing to do.        
+            t->LoadTree(entry);
+         }
       } // for each friend
 
       if (needUpdate) {
