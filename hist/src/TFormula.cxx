@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.52 2003/08/12 07:48:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.53 2003/08/29 07:03:25 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -899,7 +899,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   Analyze(ctemp.Data(),err,offset);
                 } else {
                   ctemp = chaine(0,puiss-1);
-                  Analyze(ctemp.Data(),err);
+                  Analyze(ctemp.Data(),err,offset);
                   ctemp = chaine(puiss,lchain-puiss);
                   Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "^";
