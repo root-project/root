@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.5 2004/09/15 17:09:51 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.6 2004/09/17 11:12:06 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TXNetConn.h"
 #include "TXPhyConnection.h"
 #include "TXProtocol.h"
+#include "MessageTypes.h"
 
 #include "XrdSec/XrdSecInterface.hh"
 
@@ -882,6 +883,18 @@ Bool_t TXNetConn::GetAccessToSrv()
                                " Turning ON back compatibility mode.",
                                 fUrl.GetHost(), fUrl.GetPort());
       }
+      // Send closing message to rootd (to avoid spurious error messages
+      // on the server side)
+      {
+         char sbuf[2*sizeof(Int_t)];
+         Int_t len = htonl(0);
+         memcpy(sbuf, &len, sizeof(Int_t));
+         Int_t kind = htonl((Int_t)kROOTD_BYE);
+         memcpy(sbuf+sizeof(Int_t), &kind, sizeof(Int_t));
+         ConnectionManager->GetConnection(fLogConnID)
+                          ->GetPhyConnection()->WriteRaw(sbuf, 2*sizeof(Int_t));
+      }
+      ConnectionManager->Disconnect(fLogConnID, kTRUE);
       break;
 
    case TXNetConn::kSTBaseXrootd:
@@ -1128,7 +1141,7 @@ Bool_t TXNetConn::DoLogin()
    char *plist = 0;
    resp = SendGenCommand(&reqhdr, fRedirInternalToken.Data(),
                          (void **)&plist, 0,
-                         kTRUE, (char *)"XTNetconn::doLogin",&reshdr);
+                         kTRUE, (char *)"TXNetconn::doLogin",&reshdr);
 
    // Check if we need to authenticate
    if (reshdr.dlen && plist) {
@@ -1314,7 +1327,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 
          resp = SendGenCommand(&reqhdr, credentials->buffer,
                                (void **)&srvans, 0, kTRUE,
-                               (char *)"XTNetconn::DoAuthentication",&reshdr);
+                               (char *)"TXNetconn::DoAuthentication",&reshdr);
          if (DebugLevel() >= TXDebug::kHIDEBUG)
             Info("DoAuthenticate","Server reply: status: %d dlen: %d",
                                   reshdr.status,reshdr.dlen);
