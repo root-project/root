@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.13 2001/06/01 16:18:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.14 2001/06/17 23:08:45 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -277,6 +277,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
+         fNoLogo = kTRUE;
          argv[i] = 0;
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
@@ -301,7 +302,7 @@ void TApplication::GetOptions(int *argc, char **argv)
                   lnk = lnk->Next();
                }
                delete w;
-            } else if (flags == 0) {
+            } else if (flags == 0 || flags == 1) {
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));

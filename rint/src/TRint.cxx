@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.8 2001/06/05 11:13:13 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.9 2001/06/22 16:10:19 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -120,7 +120,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    gBenchmark = new TBenchmark();
 
-   if (!noLogo)
+   if (!noLogo && !NoLogoOpt())
       PrintLogo();
 
    // Everybody expects iostream to be available, so load it...

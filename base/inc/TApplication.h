@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.3 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.4 2001/06/01 16:18:44 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -46,6 +46,7 @@ private:
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
    Bool_t             fReturnFromRun;  //When true return from Run()
    Bool_t             fNoLog;          //Do not process logon and logoff macros
+   Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
    TObjArray         *fFiles;          //Array of input files (TObjString's)
    char              *fIdleCommand;    //Command to execute while application is idle
@@ -94,6 +95,7 @@ public:
    char          **Argv() const  { return fArgv; }
    char           *Argv(int index) const { return fArgv[index]; }
    Bool_t          NoLogOpt() const { return fNoLog; }
+   Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
    TObjArray      *InputFiles() const { return fFiles; }
    void            ClearInputFiles();
