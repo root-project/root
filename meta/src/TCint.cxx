@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.99 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.100 2005/02/15 09:57:56 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -316,7 +316,7 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
                *error = (EErrorCode)local_error;
          }
 
-         if (ret==0) ret = G__int(local_res);
+         if (ret==0) ret = G__int_cast(local_res);
 
          gROOT->SetLineHasBeenProcessed();
       } else
@@ -388,7 +388,7 @@ Long_t TCint::Calc(const char *line, EErrorCode *error)
    }
 #endif
 
-   result = (Long_t) G__int(G__calc((char *)line));
+   result = (Long_t) G__int_cast(G__calc((char *)line));
    if (error) *error = (EErrorCode)G__lasterror();
 
 #ifdef WIN32

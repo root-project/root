@@ -757,7 +757,7 @@ int G__close_inputfiles()
     if(G__srcfile[iarg].dictpos) {
 #ifndef G__OLDIMPLEMENTATION2227
       if(G__srcfile[iarg].dictpos->ptype &&
-	 G__srcfile[iarg].dictpos->ptype!=G__PVOID) {
+	 G__srcfile[iarg].dictpos->ptype!=(char*)G__PVOID) {
 	free((void*)G__srcfile[iarg].dictpos->ptype);
       }
 #endif

@@ -2142,6 +2142,7 @@ extern G__EXPORT int G__delete_ipath G__P((G__CONST char *ipath));
 extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));
+extern G__EXPORT long G__int_cast G__P((G__value buf));
 extern G__EXPORT double G__double G__P((G__value buf));
 extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
