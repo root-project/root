@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.39 2004/02/09 14:10:44 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.40 2004/02/18 16:59:44 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -169,13 +169,13 @@ they are accurate.
 For discussuion of basic concepts, such as the meaning of the elements of
 the error matrix, or setting of exact confidence levels see:
 <ol>
-  <li>F.James. 
-     Determining the statistical Significance of experimental Results. 
-     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li> 
+  <li>F.James.
+     Determining the statistical Significance of experimental Results.
+     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li>
 
-  <li>W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet. 
-     Statistical Methods in Experimental Physics. 
-     North-Holland, 1971.</li> 
+  <li>W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet.
+     Statistical Methods in Experimental Physics.
+     North-Holland, 1971.</li>
 </ol>
 <P>
 <H3>Reliability of MINUIT error estimates.</H3>
@@ -297,79 +297,88 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
       //preset all pointers to null
       fCpnam     = 0;
       fU         = 0;
-      fAlim      = 0; 
-      fBlim      = 0; 
+      fAlim      = 0;
+      fBlim      = 0;
       fPstar     = 0;
       fGin       = 0;
-      fNvarl     = 0; 
-      fNiofex    = 0; 
-   
-      fNexofi    = 0; 
-      fIpfix     = 0; 
-      fErp       = 0; 
-      fErn       = 0; 
-      fWerr      = 0; 
-      fGlobcc    = 0; 
+      fNvarl     = 0;
+      fNiofex    = 0;
+
+      fNexofi    = 0;
+      fIpfix     = 0;
+      fErp       = 0;
+      fErn       = 0;
+      fWerr      = 0;
+      fGlobcc    = 0;
       fX         = 0;
-      fXt        = 0; 
-      fDirin     = 0; 
-      fXs        = 0; 
-      fXts       = 0; 
-      fDirins    = 0; 
-      fGrd       = 0; 
-      fG2        = 0; 
-      fGstep     = 0; 
-      fDgrd      = 0; 
+      fXt        = 0;
+      fDirin     = 0;
+      fXs        = 0;
+      fXts       = 0;
+      fDirins    = 0;
+      fGrd       = 0;
+      fG2        = 0;
+      fGstep     = 0;
+      fDgrd      = 0;
       fGrds      = 0;
-      fG2s       = 0; 
-      fGsteps    = 0; 
-      fPstst     = 0; 
-      fPbar      = 0; 
-      fPrho      = 0; 
-      fWord7     = 0; 
-      fVhmat     = 0; 
-      fVthmat    = 0; 
-      fP         = 0; 
-      fXpt       = 0; 
-      fYpt       = 0; 
-      fChpt      = 0; 
-      fCONTgcc   = 0; 
-      fCONTw     = 0; 
-      fFIXPyy    = 0; 
-      fGRADgf    = 0; 
-      fHESSyy    = 0; 
-      fIMPRdsav  = 0; 
-      fIMPRy     = 0; 
-      fMATUvline = 0; 
-      fMIGRflnu  = 0; 
-      fMIGRstep  = 0; 
-      fMIGRgs    = 0; 
-      fMIGRvg    = 0; 
-      fMIGRxxs   = 0; 
-      fMNOTxdev  = 0; 
-      fMNOTw     = 0; 
-      fMNOTgcc   = 0; 
-      fPSDFs     = 0; 
-      fSEEKxmid  = 0; 
-      fSEEKxbest = 0; 
-      fSIMPy     = 0; 
-      fVERTq     = 0; 
-      fVERTs     = 0; 
-      fVERTpp    = 0; 
-      fCOMDplist = 0; 
-      fPARSplist = 0;   
+      fG2s       = 0;
+      fGsteps    = 0;
+      fPstst     = 0;
+      fPbar      = 0;
+      fPrho      = 0;
+      fWord7     = 0;
+      fVhmat     = 0;
+      fVthmat    = 0;
+      fP         = 0;
+      fXpt       = 0;
+      fYpt       = 0;
+      fChpt      = 0;
+      fCONTgcc   = 0;
+      fCONTw     = 0;
+      fFIXPyy    = 0;
+      fGRADgf    = 0;
+      fHESSyy    = 0;
+      fIMPRdsav  = 0;
+      fIMPRy     = 0;
+      fMATUvline = 0;
+      fMIGRflnu  = 0;
+      fMIGRstep  = 0;
+      fMIGRgs    = 0;
+      fMIGRvg    = 0;
+      fMIGRxxs   = 0;
+      fMNOTxdev  = 0;
+      fMNOTw     = 0;
+      fMNOTgcc   = 0;
+      fPSDFs     = 0;
+      fSEEKxmid  = 0;
+      fSEEKxbest = 0;
+      fSIMPy     = 0;
+      fVERTq     = 0;
+      fVERTs     = 0;
+      fVERTpp    = 0;
+      fCOMDplist = 0;
+      fPARSplist = 0;
+
+      fStatus       = 0;
+      fEmpty        = 0;
+      fObjectFit    = 0;
+      fMethodCall   = 0;
+      fPlot         = 0;
+      fGraphicsMode = kTRUE;
+
    } else {
       BuildArrays(25);
 
-      fStatus     = 0;
-      fEmpty      = 0;
-      fMethodCall = 0;
+      fStatus       = 0;
+      fEmpty        = 0;
+      fObjectFit    = 0;
+      fMethodCall   = 0;
+      fPlot         = 0;
       fGraphicsMode = kTRUE;
-      fPlot       = 0;
       SetMaxIterations();
       mninit(5,6,7);
    }
-   
+
    gMinuit = this;
    gROOT->GetListOfSpecials()->Add(gMinuit);
 
@@ -385,11 +394,12 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 
    BuildArrays(maxpar);
 
-   fStatus     = 0;
-   fEmpty      = 0;
-   fMethodCall = 0;
+   fStatus       = 0;
+   fEmpty        = 0;
+   fObjectFit    = 0;
+   fMethodCall   = 0;
+   fPlot         = 0;
    fGraphicsMode = kTRUE;
-   fPlot       = 0;
    SetMaxIterations();
 
    mninit(5,6,7);
@@ -438,7 +448,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fGin    = new Double_t[fMaxpar2];
    fNvarl  = new Int_t[fMaxpar2];
    fNiofex = new Int_t[fMaxpar2];
-   
+
    fNexofi = new Int_t[fMaxpar];
    fIpfix  = new Int_t[fMaxpar];
    fErp    = new Double_t[fMaxpar];
@@ -652,7 +662,7 @@ void TMinuit::DeleteArrays()
    delete [] fXpt;
    delete [] fYpt;
    delete [] fChpt;
-   
+
    delete [] fCONTgcc;
    delete [] fCONTw;
    delete [] fFIXPyy;
@@ -678,7 +688,7 @@ void TMinuit::DeleteArrays()
    delete [] fVERTpp;
    delete [] fCOMDplist;
    delete [] fPARSplist;
-   
+
    fEmpty = 1;
 }
 
@@ -692,13 +702,13 @@ Int_t TMinuit::Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, I
 //    flag:    Indicates what is to be calculated (see example below)
 //    grad:    array of gradients
 //  Output parameters:
-//    fval:    The calculated function value. 
+//    fval:    The calculated function value.
 //    grad:    The (optional) vector of first derivatives).
-// 
-// The meaning of the parameters par is of course defined by the user, 
-// who uses the values of those parameters to calculate his function value. 
+//
+// The meaning of the parameters par is of course defined by the user,
+// who uses the values of those parameters to calculate his function value.
 // The starting values must be specified by the user.
-// Later values are determined by Minuit as it searches for the minimum 
+// Later values are determined by Minuit as it searches for the minimum
 // or performs whatever analysis is requested by the user.
 //
 // Note that this virtual function may be redefined in a class derived from TMinuit.
@@ -707,22 +717,22 @@ Int_t TMinuit::Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, I
 // Example of Minimisation function:
 /*
    if (flag == 1) {
-      read input data, 
-      calculate any necessary constants, etc. 
+      read input data,
+      calculate any necessary constants, etc.
    }
    if (flag == 2) {
-      calculate GRAD, the first derivatives of FVAL 
-     (this is optional) 
+      calculate GRAD, the first derivatives of FVAL
+     (this is optional)
    }
-   Always calculate the value of the function, FVAL, 
-   which is usually a chisquare or log likelihood. 
+   Always calculate the value of the function, FVAL,
+   which is usually a chisquare or log likelihood.
    if (iflag == 3) {
-      will come here only after the fit is finished. 
-      Perform any final calculations, output fitted data, etc. 
+      will come here only after the fit is finished.
+      Perform any final calculations, output fitted data, etc.
    }
 */
 //  See concrete examples in TH1::H1FitChisquare, H1FitLikelihood
-   
+
    if (fFCN) (*fFCN)(npar,grad,fval,par,flag);
    return 0;
 }
@@ -1138,7 +1148,7 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
 	unext = fU[ke2-1] - bwidy;
 //*-*-                prepare this line background pattern for contour
 	chln = " ";
-// TH	
+// TH
 	chln.Resize(nx+1);
 	chln[ixmid-1] = '*';
 	if (ixzero != 0) chln[ixzero-1] = ':';
@@ -6009,7 +6019,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
  //*-*   via the Plug-in handler. To get the plot, you can do:
  //*-*       TGraph *gr = (TGraph*)gMinuit->GetPlot();
  //*-*       gr->Draw("al");
- //*-*   
+ //*-*
  //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
@@ -6022,7 +6032,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
         }
         return;
      }
-     
+
      static TString cdot   = ".";
      static TString cslash = "/";
 
