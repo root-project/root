@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.27 2001/01/19 18:12:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.28 2001/01/22 11:19:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1306,7 +1306,7 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
         }
         uxmin     = gPad->PadtoX(rwxmin);
         uxmax     = gPad->PadtoX(rwxmax);
-     } else {
+     } else { 
         rwxmin = rwxmax = x[0];
         rwymin = rwymax = y[0];
         for (i=1;i<npoints;i++) {
@@ -2145,14 +2145,14 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
         else             xw = x[ip-1];
 
         if (!OptionRot) {
-          Int_t ix = gPad->XtoAbsPixel(xw)-ax1Pix;
+          Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
           Int_t yPixel = gPad->YtoAbsPixel(y[ip]);
           if (minPix[ix] > yPixel) minPix[ix] = yPixel;
           if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
           (nrEntries[ix])++;
         } else {
-          Int_t iy = gPad->YtoAbsPixel(y[ip])-ay1Pix;
-          Int_t xPixel = gPad->XtoAbsPixel(xw);
+          Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip]))-ay1Pix;
+          Int_t xPixel = gPad->XtoAbsPixel(gPad->XtoPad(xw));
           if (minPix[iy] > xPixel) minPix[iy] = xPixel;
           if (maxPix[iy] < xPixel) maxPix[iy] = xPixel;
           (nrEntries[iy])++;
