@@ -42,7 +42,7 @@ public:
           void  CleanTasks();
   virtual void  Clear(Option_t *option="");
   virtual void  Continue(); // *MENU*
-  virtual void  Execute(Option_t *option);
+  virtual void  Exec(Option_t *option);
           void  ExecuteTask(Option_t *option="0");  // *MENU*
           void  ExecuteTasks(Option_t *option);
           Int_t GetBreakin() {return fBreakin;}

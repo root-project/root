@@ -18,7 +18,7 @@
 // Use the TTask::Add function to add a subtask to an existing TTask.
 // To execute a TTask, one calls the ExecuteTask function. ExecuteTask will
 // call recursively:
-//     - the TTask::Execute function of the derived class
+//     - the TTask::Exec function of the derived class
 //     - TTask::ExecuteTasks to execute for each task the list of its subtasks.
 // If the top level task (see example below) is added to the list of Root
 // browsable objects, the tree of tasks can be visualized by the Root browser.
@@ -191,7 +191,7 @@ void TTask::Continue() {
 }   
 
 //______________________________________________________________________________
-void TTask::Execute(Option_t *option) {
+void TTask::Exec(Option_t *option) {
 // dummy Execute
 // This function must be redefined in the derived classes
 }
@@ -199,7 +199,7 @@ void TTask::Execute(Option_t *option) {
 //______________________________________________________________________________
 void TTask::ExecuteTask(Option_t *option) {
 // Execute main task and its subtasks.
-// When calling this function, the Execute function of the corresponding class
+// When calling this function, the Exec function of the corresponding class
 // is invoked, then the list of its subtasks is executed calling recursively
 //  all the subtasks, etc
 //
@@ -220,7 +220,8 @@ void TTask::ExecuteTask(Option_t *option) {
       cout<<"Execute task:"<<GetName()<<" : "<<GetTitle()<<endl;
       TROOT::IncreaseDirLevel();
    }
-   Execute(option);
+   Exec(option);
+   
    fHasExecuted = kTRUE;
    ExecuteTasks(option);
 
@@ -257,7 +258,7 @@ void TTask::ExecuteTasks(Option_t *option) {
          cout<<"Execute task:"<<task->GetName()<<" : "<<task->GetTitle()<<endl;
          TROOT::IncreaseDirLevel();
       }
-      task->Execute(option);
+      task->Exec(option);
       task->fHasExecuted = kTRUE;
       task->ExecuteTasks(option);
       if (gDebug > 1) TROOT::DecreaseDirLevel();
