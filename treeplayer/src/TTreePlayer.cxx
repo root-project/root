@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.68 2001/12/04 14:40:21 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.69 2001/12/08 15:22:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1654,6 +1654,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    TObjArray branches(100);
    Int_t *leafStatus = new Int_t[nleaves];
    for (l=0;l<nleaves;l++) {
+      Int_t kmax = 0;
       head = headOK;
       leafStatus[l] = 0;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
@@ -1687,7 +1688,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"%s%-15s *%s;\n",head,leafobj->GetTypeName(), leafobj->GetName());
          continue;
       }
-       if (branch->IsA() == TBranchElement::Class()) {
+      if (leafcount) {
+         len = leafcount->GetMaximum();
+         strcpy(blen,leafcount->GetName());
+         bname = &blen[0];
+         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         lenb = strlen(blen);
+         if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
+         else                     sprintf(blen,"%d",len);
+      }
+      if (branch->IsA() == TBranchElement::Class()) {
          bre = (TBranchElement*)branch;
          if (bre->GetType() != 3 && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) leafStatus[l] = 0;
          if (bre->GetType() == 3) {
@@ -1716,7 +1726,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
                if (elem->IsA() == TStreamerBase::Class()) {leafStatus[l] = 1; continue;}
                if (!gROOT->GetClass(elem->GetTypeName())) {leafStatus[l] = 1; continue;}
                if (!gROOT->GetClass(elem->GetTypeName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
-               fprintf(fp,"%s%-15s %s;\n",head,elem->GetTypeName(), branchname);
+               if (leafcount) fprintf(fp,"%s%-15s %s[kMax%s];\n",head,elem->GetTypeName(), branchname,blen);
+               else           fprintf(fp,"%s%-15s %s;\n",head,elem->GetTypeName(), branchname);
             } else {
                if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
                fprintf(fp,"%s%-15s %s;\n",head,bre->GetClassName(), branchname);
@@ -1726,14 +1737,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
        }
      if (strlen(leaf->GetTypeName()) == 0) {leafStatus[l] = 1; continue;}
       if (leafcount) {
-         len = leafcount->GetMaximum();
-         strcpy(blen,leafcount->GetName());
-         bname = &blen[0];
-         while (*bname) {if (*bname == '.') *bname='_'; bname++;}
-         lenb = strlen(blen);
-         Int_t kmax = 0;
-         if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
-         else                     sprintf(blen,"%d",len);
+         //len = leafcount->GetMaximum();
+         //strcpy(blen,leafcount->GetName());
+         //bname = &blen[0];
+         //while (*bname) {if (*bname == '.') *bname='_'; bname++;}
+         //lenb = strlen(blen);
+         //Int_t kmax = 0;
+         //if (blen[lenb-1] == '_') {blen[lenb-1] = 0; kmax = 1;}
+         //else                     sprintf(blen,"%d",len);
 	 // Dimensions can be in the branchname for a split Object with a fix length C array.
 	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
 	 char *dimensions = 0;
@@ -1779,8 +1790,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
-      if ( branch->GetNleaves() <= 1) {
-         if (!leafcount) strcpy(branchname,leaf->GetTitle());
+      if ( branch->GetNleaves() <= 1 ) {
+         if (branch->IsA() != TBranchObject::Class()) {
+            if (!leafcount) strcpy(branchname,leaf->GetTitle());
+         }
       }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
@@ -1939,6 +1952,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             continue;
          }
          strcpy(branchname,branch->GetName());
+      }
+      if (branch->IsA() == TBranchElement::Class()) {
+         if (((TBranchElement*)branch)->GetType() == 3) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
       if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s);\n",branch->GetName(),branchname);
