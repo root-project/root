@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.8 2000/10/12 16:53:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.9 2000/10/30 11:00:41 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -208,7 +208,7 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
                                   TObject *obj, const char *name)
 {
    // Retrieve icons associated with class "name". Association is made
-   // via the $ROOTSYS/root.mimes file or via the user's ~/.root.mimes.
+   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
    *pic  = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
    if (*pic == 0) {
@@ -701,7 +701,7 @@ void TRootBrowser::DisplayDirectory()
 void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/icons/root.mimes file.
+   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
 
    char action[512];
 

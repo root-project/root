@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -53,7 +53,7 @@ TSystemFile::~TSystemFile()
 void TSystemFile::Browse(TBrowser *b)
 {
    // Execute default action for this system file (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/icons/root.mimes file.
+   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
 
 #ifndef WIN32
    if (b)

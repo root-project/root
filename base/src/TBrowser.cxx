@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.2 2000/09/08 07:40:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.3 2001/01/15 18:06:38 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -186,7 +186,7 @@ void TBrowser::Create(TObject *obj)
 void TBrowser::ExecuteDefaultAction(TObject *obj)
 {
    // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/icons/root.mimes file.
+   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
 
    if (obj && fImp)
       fImp->ExecuteDefaultAction(obj);

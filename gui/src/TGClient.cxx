@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.7 2000/10/10 10:20:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.8 2001/03/07 11:50:20 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -290,7 +290,7 @@ TGClient::TGClient(const char *dpyName)
 # endif
    sprintf(line, "%s/.root.mimes", gSystem->Getenv("HOME"));
 #else
-   sprintf(line,"%s[ICONS]",gSystem->Getenv("ROOTSYS"));
+   sprintf(line,"[%s.ICONS]",gSystem->Getenv("ROOTSYS"));
    strcpy(icon_path,gEnv->GetValue("Gui.IconPath",line));
    sprintf(line,"%sroot.mimes",gSystem->Getenv("HOME"));
 #endif
@@ -298,12 +298,12 @@ TGClient::TGClient(const char *dpyName)
    strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
    if (gSystem->AccessPathName(mime_file, kReadPermission))
 #ifdef R__VMS
-      sprintf(mime_file,"%s[ICONS]root.mimes",gSystem->Getenv("ROOTSYS"));
+      sprintf(mime_file,"[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
 #else
 # ifdef ROOTETCDIR
       sprintf(mime_file, "%s/root.mimes", ROOTETCDIR);
 # else
-      sprintf(mime_file, "%s/icons/root.mimes", gSystem->Getenv("ROOTSYS"));
+      sprintf(mime_file, "%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
 # endif
 #endif
    // Set DISPLAY based on utmp (only if DISPLAY is not yet set).
