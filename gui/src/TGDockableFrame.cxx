@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.2 2004/07/08 17:01:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.3 2004/07/09 00:36:05 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TGDockableFrame.h"
 #include "TGWindow.h"
 #include "TVirtualX.h"
-
+#include "Riostream.h"
 
 
 ClassImp(TGDockButton)
@@ -437,3 +437,63 @@ void TGDockableFrame::SetWindowName(const char *name)
       if (fFrame) fFrame->SetWindowName(fDockName);
    }
 }
+
+//______________________________________________________________________________
+void TGDockableFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a dockable frame widget as a C++ statement(s) on output stream out.
+
+   char quote = '"';
+
+   out << endl << "   // dockable frame" << endl;
+   out << "   TGDockableFrame *";
+   out << GetName()<<" = new TGDockableFrame(" << fParent->GetName();
+   
+   if (GetOptions() == kHorizontalFrame) {
+      if (fWidgetId == -1) {
+         out << ");" << endl;
+      } else {
+         out << "," << fWidgetId << ");" << endl;
+      }
+   } else {
+      out << "," << fWidgetId << "," << GetOptionString() << ");" << endl;
+   }
+   
+   out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
+       << GetName() << "->GetContainer();" << endl;
+   
+   TGFrameElement *el;
+   TIter next(GetContainer()->GetList());
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+   
+   out << endl << "   // next lines belong to the dockable frame widget" << endl;
+   if (EnableUndock()) 
+      out << "   " << GetName() << "->EnableUndock(kTRUE);" << endl;
+   else
+      out << "   " << GetName() << "->EnableUndock(kFALSE);" << endl;
+     
+   if (EnableHide()) 
+      out << "   " << GetName() << "->EnableHide(kTRUE);" << endl;
+   else
+      out << "   " << GetName() << "->EnableHide(kFALSE);" << endl;
+  
+   if (fDockName != "")
+      out << "   " << GetName() << "->SetWindowName(" << quote << fDockName
+          << quote << ");" << endl;
+   
+   if (IsUndocked())
+      out << "   " << GetName() << "->UndockContainer();" << endl;
+   else
+      out << "   " << GetName() << "->DockContainer();" << endl;
+
+   if (IsHidden())
+      out << "   " << GetName() << "->HideContainer();" << endl;
+
+   out << endl;
+}  

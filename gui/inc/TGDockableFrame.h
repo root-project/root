@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.1 2004/07/08 14:40:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.2 2004/07/09 00:36:05 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -138,6 +138,7 @@ public:
    Bool_t IsHidden() const { return fHidden; }
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGDockableFrame,0)
 };
