@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.22 2002/09/21 20:46:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.23 2002/09/30 09:18:53 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -66,6 +66,8 @@ protected:
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
                                 { return TObject::Write(name, opt, bufs); }
 
+   void     WriteObject(const void *actualObjStart, TClass *actualClass);
+
 public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
@@ -115,8 +117,8 @@ public:
    virtual TObject *ReadObject(const TClass *cl);
    virtual void     WriteObject(const TObject *obj);
 
-   //To be implemented void *ReadObjectXXXX(const TClass *cl);
-   void     WriteObject(const void *obj, TClass *actualClass);
+   void    *ReadObjectAny(const TClass* cast);
+   Int_t    WriteObjectAny(const void *obj, TClass *ptrClass);
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
@@ -248,17 +250,14 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
    // since the pointer could be zero (so typeid(*obj) is not usable).
 
    TClass *cl = TBuffer::GetClass(typeid(Tmpl));
-   // ReadObject returns a TObject* ... this is WRONG in the case where
-   // the class does not inherit from TObject as a first base class.
-   // So for now we cast to void* before casting to the actual type.
-   obj = (Tmpl *) ( (void*) buf.ReadObject(cl) );
+   obj = (Tmpl *) ( (void*) buf.ReadObjectAny(cl) );
    return buf;
 }
 
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 {
    TClass *cl = (obj) ? TBuffer::GetClass(typeid(*obj)) : 0;
-   buf.WriteObject(obj, cl);
+   buf.WriteObjectAny(obj, cl);
    return buf;
 }
 #else
@@ -427,8 +426,7 @@ inline TBuffer &TBuffer::operator>>(ULong_t &l)
 template <>
 #endif
 inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
-   { TClass *cl = (obj) ? obj->IsA() : 0;
-     buf.WriteObject(obj, cl);
+   { buf.WriteObjectAny(obj,TObject::Class());
      return buf; }
 //______________________________________________________________________________
 //inline TBuffer &operator>>(TBuffer &buf, TObject *&obj)

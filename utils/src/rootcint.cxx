@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.106 2002/10/22 10:37:45 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.107 2002/10/23 10:51:22 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -772,7 +772,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
          case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
             if (!R__t)  return 1;
-            fprintf(fp, "            %s = (%s)R__b.ReadObject(%s);\n",R__t,tiName,tcl);
+            fprintf(fp, "            %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
             break;
 
          case G__BIT_ISENUM:
@@ -808,7 +808,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
          case G__BIT_ISPOINTER:
             if (!R__t)  return 1;
-            fprintf(fp, "            %s = (%s)R__b.ReadObject(%s);\n",R__t,tiName,tcl);
+            fprintf(fp, "            %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
             break;
 
          default:
@@ -857,7 +857,7 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
          case G__BIT_ISPOINTER:
             if (!R__t)  return 1;
-            fprintf(fp, "            R__b.WriteObject(%s,%s);\n",R__t,tcl);
+            fprintf(fp, "            R__b.WriteObjectAny(%s,%s);\n",R__t,tcl);
             break;
 
          default:
@@ -1316,7 +1316,7 @@ void WriteInputOperator(G__ClassInfo &cl)
    fprintf(fp, "   // Read a pointer to an object of class %s.\n\n", cl.Fullname());
 
    if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject")) {
-      fprintf(fp, "   obj = (%s *) buf.ReadObject(%s::Class());\n", cl.Fullname(),
+      fprintf(fp, "   obj = (%s *) buf.ReadObjectAny(%s::Class());\n", cl.Fullname(),
               cl.Fullname());
    } else {
       fprintf(fp, "   ::Error(\"%s::operator>>\", \"objects not inheriting"
@@ -1472,11 +1472,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "&%s_Dictionary, ",G__map_cpp_name((char *)cl.Fullname()));
    }
 
-   if (cl.HasMethod("IsA")) {
-      //      fprintf(fp, " 0, ");
-   } else {
-      fprintf(fp, "&%s_IsA, ", G__map_cpp_name((char *)cl.Fullname()));
-   }
+   fprintf(fp, "&%s_IsA, ", G__map_cpp_name((char *)cl.Fullname()));
    fprintf(fp, "%d);\n", cl.RootFlag());
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
@@ -1491,12 +1487,14 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "   }\n\n");
    }
 
-   if (!cl.HasMethod("IsA")) {
-      fprintf(fp, "   // Return the actual TClass for the object argument\n");
-      fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+   fprintf(fp, "   // Return the actual TClass for the object argument\n");
+   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+   if (!cl.HasMethod("IsA") || cl.IsTmplt()) {
       fprintf(fp, "      return gROOT->GetClass(typeid(*(%s*)obj));\n",cl.Fullname());
-      fprintf(fp, "   }\n");
+   } else {
+      fprintf(fp, "      return ((%s*)obj)->IsA();\n",cl.Fullname());
    }
+   fprintf(fp, "   }\n");
 
    fprintf(fp,"}\n\n");
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.141 2002/08/23 08:53:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.142 2002/09/27 18:06:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1337,7 +1337,8 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
 
          // Class    derived from TObject
       case kObject:  {
-                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      char *temp = pointer+fOffset[i];
+                      TObject *obj = (TObject*)(temp+aElement->GetTObjectOffset());
                       printf("%s",obj->GetName());
                       break;
                      }
@@ -1514,7 +1515,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 
          // Class    derived from TObject
       case kObject:  {
-                      TObject *obj = (TObject*)ladd;
+                      TObject *obj = (TObject*)( ((char*)ladd) + aElement->GetTObjectOffset() );
                       printf("%s",obj->GetName());
                       break;
                      }
@@ -1870,28 +1871,30 @@ SWIT: switch (kase) {
 
          // Class *  derived from TObject with comment field  //->
          case kObjectp: {
-                         TObject **obj = (TObject**)(pointer+fOffset[i]);
+                         char **obj = (char**)(pointer+fOffset[i]);
                          if (!(*obj)) {
                             TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                            *obj = (TObject*)el->GetClass()->New();
+                            *obj = (char*)el->GetClass()->New();
                          }
+                         TObject *tobj =  (TObject*) ( *obj + aElement->GetTObjectOffset() );
                          Bool_t old = gROOT->ReadingObject();
                          gROOT->SetReadingObject(kTRUE);
-                         (*obj)->Streamer(b);
+                         tobj->Streamer(b);
                          gROOT->SetReadingObject(old);
-                         if ((*obj)->IsZombie()) {
-                            delete (*obj);
+                         if (tobj->IsZombie()) {
+                            delete tobj;
                             *obj = 0;
                          }
                          break;
                         }
 
          // Class*   derived from TObject
-         case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
-                          //delete the object or collection
+         case kObjectP: { char **obj = (char**)(pointer+fOffset[i]);
+                          TClass *cle = aElement->GetClassPointer();
                           for (Int_t j=0;j<fLength[i];j++) {
-                             if (fgCanDelete) delete obj[j];
-                             b >> obj[j];
+                             //delete the object or collection
+                             if (fgCanDelete&&obj[j]) delete (TObject*)(obj[j]+aElement->GetTObjectOffset());
+                             obj[j] = (char*) b.ReadObjectAny(cle);
                           }
                           break;
                         }
@@ -1906,7 +1909,8 @@ SWIT: switch (kase) {
          case kObject:  {
                          TClass *cl = aElement->GetClassPointer();
                          if (cl->GetClassInfo()) {
-                            ((TObject*)(pointer+fOffset[i]))->Streamer(b);
+                            TObject *tobj = (TObject*)(pointer+fOffset[i]+aElement->GetTObjectOffset());
+                            tobj->Streamer(b);
                             break;
                          } else {
                             UInt_t start,count;
@@ -1929,7 +1933,7 @@ SWIT: switch (kase) {
                          TClass *cl = aElement->GetClassPointer();
                          if (cl->GetClassInfo()) {
                             Int_t size = cl->Size();
-                            TObject *obj = (TObject*)(pointer+fOffset[i]);
+                            TObject *obj = (TObject*)(pointer+fOffset[i]+aElement->GetTObjectOffset());
                             for (Int_t j=0;j<fLength[i];j++) {
                                obj->Streamer(b);
                                obj = (TObject*)((char*)obj+size);
@@ -1998,7 +2002,7 @@ SWIT: switch (kase) {
                         }            
          case kAnyP:// Class*   Class not derived from TObject and with no comment field
                         {
-                         void **obj = (void**)(pointer+fOffset[i]);
+                         char **obj = (char**)(pointer+fOffset[i]);
                          Streamer_t pstreamer = aElement->GetStreamer();
                          TClass *cle = aElement->GetClassPointer();
                          if (pstreamer == 0) {
@@ -2020,7 +2024,7 @@ SWIT: switch (kase) {
                             } else {
                               // if (gDebug >= 0) printf("WARNING, in ReadBuffer::kAnyP Streamer is null for %s\n",cle->GetName());
                                for (Int_t j=0;j<fLength[i];j++) {
-                                  obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for now
+                                  obj[j] = (char*)b.ReadObjectAny(cle);
                                }
                             } 
                          } else {
@@ -2029,7 +2033,7 @@ SWIT: switch (kase) {
                             if (*obj==0)  {
                               // NOTE should we allocated more?
                                TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)fElem[i];
-                               *obj = (TObject*)el->GetClass()->New();
+                               *obj = (char*)el->GetClass()->New();
                             }
                             (*pstreamer)(b,obj,0);
                          }
@@ -2450,24 +2454,26 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kObjectp: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               TObject **obj = (TObject**)(pointer+offset);
+               char **obj = (char**)(pointer+offset);
                if (!(*obj)) {
                   TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
-                  *obj = (TObject*)el->GetClass()->New();
+                  *obj = (char*)el->GetClass()->New();
                }
-               (*obj)->Streamer(b);
+               TObject *tobj = (TObject*) ( *obj + aElement->GetTObjectOffset() );
+               tobj->Streamer(b);
             }
             break;}
 
          // Class*   Class derived from TObject
          case kObjectP: {
+            TClass *cle = aElement->GetClassPointer();
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
-               TObject **obj = (TObject**)(pointer+offset);
+               char **obj = (char**)(pointer+offset);
                //delete the object or collection
                for (Int_t j=0;j<fLength[i];j++) {
-                  if (fgCanDelete) delete obj[j];
-                  b >> obj[j];
+                  if (fgCanDelete&&obj[j]) delete (TObject*)(obj[j] + aElement->GetTObjectOffset());
+                  obj[j] = (char*) b.ReadObjectAny(cle);
                }
             }
             break;}
@@ -2487,7 +2493,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             if (cl->GetClassInfo()) {
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
-                  ((TObject*)(pointer+offset))->Streamer(b);
+                  TObject *tobj = (TObject*)(pointer+offset + aElement->GetTObjectOffset());
+                  tobj->Streamer(b);
                }
             } else {
                Version_t v;
@@ -2513,6 +2520,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
                   pointer += offset;
+                  pointer += aElement->GetTObjectOffset();
                   for (Int_t j=0;j<fLength[i];j++) {
                      ((TObject*)pointer)->Streamer(b);
                      pointer += size;
@@ -2598,7 +2606,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             } else {
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
-                  void **obj = (void**)(pointer+offset);
+                  char **obj = (char**)(pointer+offset);
                   //delete the object or collection
                   //NOTE: Need a TClass::Delete ... if (fgCanDelete) delete obj[j];
                   if (cle->InheritsFrom(TArray::Class())) {
@@ -2615,7 +2623,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      }
                   } else {
                      for (Int_t j=0;j<fLength[i];j++) {
-                        obj[j] = (void*)b.ReadObject(0); // cle should be the parameter but ReadObject uses IsA for now
+                        obj[j] = (char*)b.ReadObjectAny(cle); 
                      }
                   }
                }
@@ -3052,22 +3060,27 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
 
          // Class *  Class derived from TObject and with comment field //->
-         case kObjectp: { TObject **obj = (TObject**)(pointer+fOffset[i]);
+         case kObjectp: { char **obj = (char**)(pointer+fOffset[i]);
+                          TObject *tobj;
                           if (!(*obj)) {
                              TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
                              if (gDebug) {
                                 Error("WriteBuffer","-> specified but pointer is null");
                                 el->ls();
                              }
-                             *obj = (TObject*)el->GetClass()->New();
-                             (*obj)->SetBit(kZombie);
+                             *obj = (char*)el->GetClass()->New();
+                             tobj = (TObject*) ( *obj + aElement->GetTObjectOffset() );
+                             tobj->SetBit(kZombie);
+                          } else {
+                             tobj = (TObject*) ( *obj + aElement->GetTObjectOffset() );
                           }
-                          (*obj)->Streamer(b);
+                          tobj->Streamer(b);
                           break;
                         }
 
          // Class*   Class derived from TObject
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
+                          TClass *cle = aElement->GetClassPointer();
                           //must write StreamerInfo if pointer is null
                           if (!(*obj)) {
                              TStreamerObjectPointer *elp = (TStreamerObjectPointer*)aElement;
@@ -3075,7 +3088,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                              cl->GetStreamerInfo()->ForceWriteInfo((TFile *)b.GetParent());
                           }
                           for (Int_t j=0;j<fLength[i];j++) {
-                             b << obj[j];
+                             b.WriteObjectAny(obj[j],cle);
                           }
                           break;
                         }
@@ -3090,11 +3103,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                         }
 
          // Class  derived from TObject
-         case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
+         case kObject:  { ((TObject*)(pointer+fOffset[i]+aElement->GetTObjectOffset()))->Streamer(b); break;}
          case kOffsetL + kObject: {
                            TClass *cle = aElement->GetClassPointer();
                            Int_t size = cle->Size();
-                           TObject *obj = (TObject*)(pointer+fOffset[i]);
+                           TObject *obj = (TObject*)(pointer+fOffset[i]+aElement->GetTObjectOffset());
                            for (Int_t j=0;j<fLength[i];j++) {
                               obj->Streamer(b);
                               obj = (TObject*)((char*)obj+size);
@@ -3143,7 +3156,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                         }
          case kAnyP:// Class*   Class not derived from TObject and no comment
                         {
-                          void **obj = (void**)(pointer+fOffset[i]);
+                          char **obj = (char**)(pointer+fOffset[i]);
                           Streamer_t pstreamer = aElement->GetStreamer();
                           //must write StreamerInfo if pointer is null
                           if (!(*obj)) {
@@ -3159,12 +3172,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                              TClass *cle = aElement->GetClassPointer();
                              for (Int_t j=0;j<fLength[i];j++) {                             
                                 TClass *cl_actual = cle->GetActualClass(obj[j]);
-                                if (!cl_actual) {
-                                   Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
-                                          GetName(),aElement->GetName(),cle->GetName());
-                                   cl_actual = cle;
-                                }
-
+                                if (!cl_actual) cl_actual = cle;
                                 //Note that this does not work if the class has a custom Streamer
                                 //with no bytecount
                                 if (cl_actual->InheritsFrom(TArray::Class())) {
@@ -3178,8 +3186,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                                    if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(obj[j]); b << ar; break;}
                                    if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(obj[j]); b << ar; break;}
                                 }
-                                // if (gDebug >= 0) printf("WARNING, WriteObject for kAnyP\n");
-                                b.WriteObject(obj[j],cl_actual);
+                                Int_t res = b.WriteObjectAny(obj[j],cle);
+                                if (res==2) {
+                                   Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
+                                           GetName(),aElement->GetName(),cle->GetName());
+                                }
                              } 
                           }
                           break;
@@ -3402,9 +3413,11 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kObjectp: {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-               TObject **obj = (TObject**)(pointer+fOffset[i]);
-               if (*obj) (*obj)->Streamer(b);
-               else {
+               char **obj = (char**)(pointer+fOffset[i]);
+               if (*obj) {
+                  TObject *tobj = (TObject*)( *obj + aElement->GetTObjectOffset() );
+                  tobj->Streamer(b);
+               } else {
                   Error("WriteBufferClones","-> specified but pointer is null");
                   aElement->ls();
                }
@@ -3413,11 +3426,12 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
          // Class*   Class derived from TObject
          case kObjectP: {
+            TClass *cle = aElement->GetClassPointer();
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-               TObject **obj = (TObject**)(pointer+fOffset[i]);
+               void **obj = (void**)(pointer+fOffset[i]);
                for (Int_t j=0;j<fLength[i];j++) {
-                  b << obj[j];
+                  b.WriteObjectAny(obj[j],cle);
                }
             }
             break;}
@@ -3436,7 +3450,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kObject:  {
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-               ((TObject*)(pointer+fOffset[i]))->Streamer(b);
+               ((TObject*)(pointer+fOffset[i]+aElement->GetTObjectOffset()))->Streamer(b);
             }
             break;}
          case kOffsetL + kObject:  {
@@ -3444,7 +3458,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
             Int_t size = cl->Size();
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-               pointer += fOffset[i];
+               pointer += fOffset[i] + aElement->GetTObjectOffset();
                for (Int_t j=0;j<fLength[i];j++) {
                   ((TObject*)pointer)->Streamer(b);
                   pointer += size;
@@ -3500,18 +3514,13 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
            } else {
               for (Int_t k=0;k<nc;k++) {
                  pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-                 void **obj = (void**)(pointer+fOffset[i]);
+                 char **obj = (char**)(pointer+fOffset[i]);
                  for (Int_t j=0;j<fLength[i];j++) {
-                    TClass *cl_actual = cle->GetActualClass(obj[j]);
-                    if (!cl_actual) {
+                    Int_t res = b.WriteObjectAny(obj[j],cle);
+                    if (res==2) {
                        Warning("WriteBuffer","The actual class of %s::%s is not available. Only the \"%s\" part will be written\n",
-                              GetName(),aElement->GetName(),cle->GetName());
-                       cl_actual = cle;
+                               GetName(),aElement->GetName(),cle->GetName());
                     }
-                    if (cl_actual->InheritsFrom(TArray::Class())) {
-                      // no op until we test ... 
-                    } 
-                    b.WriteObject(obj[j],cl_actual);
                  } 
               }
             }

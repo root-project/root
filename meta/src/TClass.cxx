@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.86 2002/10/18 16:31:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.87 2002/10/31 07:27:37 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -792,10 +792,13 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    if (!fClassInfo) {
       TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
       if (!sinfo) return -1;
-      TIter next(sinfo->GetElements());
       TStreamerElement *element;
       Int_t offset = 0;
-      while ((element = (TStreamerElement*)next())) {
+
+      TObjArray &elems = *(sinfo->GetElements());
+      Int_t size = elems.GetLast();
+      for(Int_t i=0; i<size; i++) {
+         element = (TStreamerElement*)elems[i];
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase *base = (TStreamerBase*)element;
             TClass *baseclass = base->GetClassPointer();
@@ -809,10 +812,13 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    TClass     *c;
    Int_t      off;
    TBaseClass *inh;
-   TIter      next(GetListOfBases());
+   TObjLink *lnk = 0;
+   if (fBase==0) lnk = GetListOfBases()->FirstLink();
+   else lnk = fBase->FirstLink();
 
    // otherwise look at inheritance tree
-   while ((inh = (TBaseClass *) next())) {
+   while (lnk) {
+      inh = (TBaseClass *)lnk->GetObject();
       //use option load=kFALSE to avoid a warning like:
       //"Warning in <TClass::TClass>: no dictionary for class TRefCnt is available"
       //We can not afford to not have the class if it exist, so we 
@@ -823,6 +829,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          off = c->GetBaseClassOffset(cl);
          if (off != -1) return off + inh->GetDelta();
       }
+      lnk = lnk->Next();
    }
    return -1;
 }

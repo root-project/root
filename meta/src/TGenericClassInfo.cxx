@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.3 2002/05/10 10:17:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.1 2002/05/10 21:34:39 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -55,24 +55,11 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
-                                        void* showmembers,  VoidFuncPtr_t dictionary,
-                                        Int_t pragmabits)
-      : fAction(action), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(showmembers),
-        fVersion(version)
-   {
-      Init(pragmabits);
-   }
-
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
                                         VoidFuncPtr_t dictionary,
-                                        Int_t pragmabits)
+                                        IsAFunc_t isa, Int_t pragmabits)
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(0), fShowMembers(0),
+        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(0),
         fVersion(version)
    {
       Init(pragmabits);

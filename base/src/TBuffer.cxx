@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.34 2002/07/18 11:04:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.35 2002/09/30 09:18:53 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1455,12 +1455,29 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 //______________________________________________________________________________
 TObject *TBuffer::ReadObject(const TClass *clReq)
 {
-   // Read object from I/O buffer. clReq can be used to cross check
-   // if the actually read object is of the requested class.
+   // Read object from I/O buffer. clReq is NOT used.
+   // The value returned is the address actual start in memory of the object.
+   // Note that if the actual class of the object does not inherit first 
+   // from TObject, the type of the pointer is NOT 'TObject*'.  
+   // [More accurately, the class needs to start with the TObject part, for 
+   // the pointer to a real TOject*].
+   // We recommend using ReadObjectAny instead of ReadObject
+   
+   return (TObject*) ReadObjectAny(0);
+}
 
-   Int_t isTObject = (clReq &&
-                      (clReq == TObject::Class() ||
-                       clReq->InheritsFrom(TObject::Class())));
+//______________________________________________________________________________
+void *TBuffer::ReadObjectAny(const TClass *clCast)
+{
+   // Read object from I/O buffer. 
+   // A typical use for this function is:
+   //    MyClass *ptr = b.ReadObjectAny(MyClass::Class());
+   // I.e. clCast should point to a TClass object describing the class pointed 
+   // to by your pointer.
+   // In case of multiple inheritance, the return value might not be the 
+   // real beginning of the object in memory.  You will need to use a dynamic_cast
+   // later if you need to retrieve it. 
+
    Assert(IsReading());
 
    // make sure fMap is initialized
@@ -1469,29 +1486,29 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    // before reading object save start position
    UInt_t startpos = UInt_t(fBufCur-fBuffer);
 
-   // attempt to load next object as TClass clReq
+   // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
-   TClass *clRef = ReadClass(clReq, &tag);
+   TClass *clRef = ReadClass(clCast, &tag);
+   Int_t baseOffset = 0;
+   if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
+      //baseOffset will be -1 if clRef does not inherit from clCast.
+      baseOffset = clRef->GetBaseClassOffset(clCast);
+      if (baseOffset==-1) {
+         Error("ReadObject", "got object of wrong class");
+         // exception
+         baseOffset = 0;
+      }
+   }
 
    // check if object has not already been read
    // (this can only happen when called via CheckObject())
-   void *obj;
+   char *obj;
    if (fVersion > 0) {
-      obj = (void *) fMap->GetValue(startpos+kMapOffset);
+      obj = (char *) fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = 0;
       if (obj) {
-         Int_t ibad = 0;
-         if (isTObject)
-            ibad = (!((TObject*)obj)->InheritsFrom(clReq));
-         else
-            ibad = (clReq && clRef &&
-                    clRef!=(TClass*)(-1) && !clRef->InheritsFrom(clReq));
-         if (ibad) {
-            Error("ReadObject", "got object of wrong class");
-            // exception
-         }
          CheckByteCount(startpos, tag, 0);
-         return (TObject*)obj;
+         return (obj+baseOffset);
       }
    }
 
@@ -1510,7 +1527,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
       // got a reference to an already read object
       if (fVersion > 0) {
          tag += fDisplacement;
-         tag = CheckObject(tag, clReq);
+         tag = CheckObject(tag, clCast);
       } else {
          if (tag > (UInt_t)fMap->GetSize()) {
             Error("ReadObject", "object tag too large, I/O buffer corrupted");
@@ -1518,21 +1535,24 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
             // exception
          }
       }
+      obj = (char *) fMap->GetValue(tag);
 
-      obj = (void *) fMap->GetValue(tag);
-      if (obj && isTObject && !((TObject*)obj)->IsA()->InheritsFrom(clReq)) {
-         Error("ReadObject", "got object of wrong class");
-         // exception
-      }
+      // There used to be a warning printed here when:
+      //   obj && isTObject && !((TObject*)obj)->IsA()->InheritsFrom(clReq)
+      // however isTObject was based on clReq (now clCast).
+      // If the test was to fail, then it is as likely that the object is not a TObject
+      // and then we have a potential core dump.
+      // At this point (missing clRef), we do NOT have enough information to really
+      // answer the question: is the object read of the type I requested.
 
    } else {
 
       // allocate a new object based on the class found
-      obj = (void *)clRef->New();
+      obj = (char *)clRef->New();
       if (!obj) {
          Error("ReadObject", "could not create object of class %s",
                clRef->GetName());
-         // exception
+         // exception 
          return 0;
       }
 
@@ -1548,7 +1568,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
       CheckByteCount(startpos, tag, clRef);
    }
 
-   return (TObject*)obj;
+   return obj+baseOffset;
 }
 
 //______________________________________________________________________________
@@ -1556,15 +1576,15 @@ void TBuffer::WriteObject(const TObject *obj)
 {
    // Write object to I/O buffer.
 
-   TClass *cl = 0;
-   if (obj) cl = obj->IsA();
-   WriteObject(obj,cl);
+   WriteObjectAny(obj,TObject::Class());
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteObject(const void *obj, TClass *actualClass)
+void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 {
    // Write object to I/O buffer.
+   // This function assumes that the value of 'actualObjectStart' is the actual start of
+   // the object of class 'actualClass'
 
    Assert(IsWriting());
 
@@ -1573,12 +1593,12 @@ void TBuffer::WriteObject(const void *obj, TClass *actualClass)
 
    ULong_t idx;
 
-   if (!obj) {
+   if (!actualObjectStart) {
 
       // save kNullTag to represent NULL pointer
       *this << kNullTag;
 
-   } else if ((idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj)) != 0) {
+   } else if ((idx = (ULong_t)fMap->GetValue(Void_Hash(actualObjectStart), (Long_t)actualObjectStart)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -1598,16 +1618,46 @@ void TBuffer::WriteObject(const void *obj, TClass *actualClass)
 
       // add to map before writing rest of object (to handle self reference)
       // (+kMapOffset so it's != kNullTag)
-      MapObject(obj, cntpos+kMapOffset);
+      MapObject(actualObjectStart, cntpos+kMapOffset);
 
-      // let the object write itself (cast const away)
-      //      ((TObject *)obj)->Streamer(*this);
-      //Could try to see if we have a streamer stored in the class
-      actualClass->Streamer((void*)obj,*this);
+      actualClass->Streamer((void*)actualObjectStart,*this);
 
       // write byte count
       SetByteCount(cntpos);
    }
+}
+
+//______________________________________________________________________________
+Int_t TBuffer::WriteObjectAny(const void *obj, TClass *ptrClass)
+{
+   // Write object to I/O buffer.
+   // This function assumes that the value in 'obj' is the value stored in 
+   // a pointer to a "ptrClass".  The actual type of the object pointed to can be
+   // any class derieved from "ptrClass".
+   // Return:
+   //  0: failure (not used yet)
+   //  1: success
+   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.
+
+   if (obj==0) {
+      WriteObject(0,0);
+      return 1;
+   }
+   
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   if (clActual) {
+      const char* temp = (const char*)obj;
+      // clActual->GetStreamerInfo();
+      Int_t offset = (ptrClass!=clActual)?clActual->GetBaseClassOffset(ptrClass):0;
+      temp -= offset;
+      WriteObject( temp, clActual );
+      return 1;
+   } else {
+      WriteObject( obj, ptrClass);
+      return 2;
+   }
+      
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.6 2002/05/09 22:56:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.1 2002/05/10 21:34:38 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -48,12 +48,8 @@ namespace ROOT {
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       VoidFuncPtr_t dictionary, Int_t pragmabits);
-
-      TGenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
-                       void *showmembers, VoidFuncPtr_t dictionary, Int_t pragmabits);
+                       VoidFuncPtr_t dictionary, 
+                       IsAFunc_t isa, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.50 2002/08/09 19:26:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.51 2002/09/06 19:30:17 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -46,6 +46,7 @@ TStreamerElement::TStreamerElement()
    fMethod      = 0;
    fOffset      = 0;
    fClassObject = 0;
+   fTObjectOffset = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -65,6 +66,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fStreamer    = 0;
    fMethod      = 0;
    fClassObject = 0;
+   fTObjectOffset = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -197,6 +199,9 @@ const char *TStreamerElement::GetTypeNameBasic() const
 void TStreamerElement::Init(TObject *)
 {
    fClassObject = GetClassPointer();
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
@@ -292,7 +297,12 @@ void TStreamerElement::Update(TClass *oldClass, TClass *newClass)
    //function called by the TClass constructor when replacing a fake class
    //by the real class
    
-   if (fClassObject == oldClass) fClassObject = newClass;
+   if (fClassObject == oldClass) {
+      fClassObject = newClass;
+      if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+         fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+      }
+   }
 }
 
    
@@ -386,7 +396,7 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
      // printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      fBaseClass->ReadBuffer(b,pointer);
+      fBaseClass->ReadBuffer(b,pointer+fOffset);
    }
    return 0;
 }
@@ -420,6 +430,9 @@ void TStreamerBase::Update(TClass *oldClass, TClass *newClass)
    
    if (fClassObject == oldClass) fClassObject = newClass;
    if (fBaseClass   == oldClass) fBaseClass   = newClass;
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
@@ -753,6 +766,9 @@ TStreamerObject::~TStreamerObject()
 void TStreamerObject::Init(TObject *)
 {
    fClassObject = GetClassPointer();
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
@@ -829,6 +845,9 @@ TStreamerObjectAny::~TStreamerObjectAny()
 void TStreamerObjectAny::Init(TObject *)
 {
    fClassObject = GetClassPointer();
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
@@ -908,6 +927,9 @@ TStreamerObjectPointer::~TStreamerObjectPointer()
 void TStreamerObjectPointer::Init(TObject *)
 {
    fClassObject = GetClassPointer();
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
@@ -998,6 +1020,9 @@ TStreamerObjectAnyPointer::~TStreamerObjectAnyPointer()
 void TStreamerObjectAnyPointer::Init(TObject *)
 {
    fClassObject = GetClassPointer();
+   if (fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
+      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+   }
 }
 
 //______________________________________________________________________________
