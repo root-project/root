@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.45 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.46 2004/10/13 15:34:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
         fStatus(kNotActive) { }
 
    const char *GetName() const { return fHostName; }
+   Int_t       GetOrdinal() const { return fOrdinal; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
 
    void Print(Option_t *option="") const;

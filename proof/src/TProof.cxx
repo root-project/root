@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.70 2004/07/20 20:53:45 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.71 2004/10/13 15:34:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -759,16 +759,24 @@ TList *TProof::GetSlaveInfo()
          fSlaveInfo->Add(slaveinfo);
       }
 
-      TIter next1(GetListOfActiveSlaves());
-      while ((slave = (TSlave *) next1())) {
-         TSlaveInfo *info = (TSlaveInfo *)fSlaveInfo->FindObject(slave->GetName());
-         info->SetStatus(TSlaveInfo::kActive);
-      }
+      TIter nextinfo(fSlaveInfo);
+      TSlaveInfo *info;
+      while ((info = (TSlaveInfo *) nextinfo())) {
+         TIter next1(GetListOfActiveSlaves());
+         while ((slave = (TSlave *) next1())) {
+            if (info->GetOrdinal() == slave->GetOrdinal()) {
+               info->SetStatus(TSlaveInfo::kActive);
+               break;
+            }
+         }
 
-      TIter next2(GetListOfBadSlaves());
-      while ((slave = (TSlave *) next2())) {
-         TSlaveInfo *info = (TSlaveInfo *)fSlaveInfo->FindObject(slave->GetName());
-         info->SetStatus(TSlaveInfo::kBad);
+         TIter next2(GetListOfBadSlaves());
+         while ((slave = (TSlave *) next2())) {
+            if (info->GetOrdinal() == slave->GetOrdinal()) {
+               info->SetStatus(TSlaveInfo::kBad);
+               break;
+            }
+         }
       }
 
    } else {
