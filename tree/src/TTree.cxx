@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.229 2005/01/25 07:24:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.230 2005/01/25 19:58:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2012,11 +2012,14 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //*-*                  ===========================================
 //
 //  varexp is an expression of the general form
-//   - "e1"           produces a 1-d histogram of expression "e1"
-//   - "e1:e2"        produces a 2-d histogram (or profile) of "e1" versus "e2"
-//   - "e1:e2:e3"     produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
-//   - "e1:e2:e3:e4"  produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
-//                    and "e4" mapped on the color number.
+//   - "e1"           produces a 1-d histogram (TH1F) of expression "e1"
+//   - "e1:e2"        produces an unbinned 2-d scatter-plot (TGraph) of "e1" versus "e2"
+//   - "e1:e2:e3"     produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1" 
+//                    versus "e2" versus "e3"
+//   - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1" 
+//                    versus "e2" versus "e3" and "e4" mapped on the color number.
+//  (to create histograms in the 2, 3, and 4 dimesional case, see section "Saving 
+//  the result of Draw to an histogram")
 //
 //  Example:
 //     varexp = x     simplest case: draw a 1-Dim distribution of column named x
@@ -2135,15 +2138,31 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //       }
 //    }
 //
+//     Retrieving the result of Draw
+//     =============================
+//
+//  By default the temporary histogram created is called "htemp", but only in
+//  the one dimensional Draw("e1") it contains the TTree's data points. For
+//  a two dimensional Draw, the data is filled into a TGraph which is named 
+//  "Graph". They can be retrieved by calling
+//    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
+//    TGraph *graph = (TGraph*)gPad->GetPrimitive("graph"); // 2D
+//
+//  For a three and four dimensional Draw the TPloyMarker3D is unnamed, and
+//  cannot be retrieved. 
+//
+//  gPad always contains a TH1 derived object called "htemp" which allows to
+//  access the axes:
+//    TGraph *graph = (TGraph*)gPad->GetPrimitive("graph"); // 2D
+//    TH2F   *htemp = (TH2F*)gPad->GetPrimitive("htemp"); // empty, but has axes
+//    TAxis  *xaxis = htemp->GetXaxis();
+//
 //     Saving the result of Draw to an histogram
 //     =========================================
-//  By default the temporary histogram created is called htemp.
-//  One can retrieve a pointer to this histogram with:
-//    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp");
-//
+//  
 //  If varexp0 contains >>hnew (following the variable(s) name(s),
 //  the new histogram created is called hnew and it is kept in the current
-//  directory (and also the current pad).
+//  directory (and also the current pad). This works for all dimensions.
 //  Example:
 //    tree.Draw("sqrt(x)>>hsqrt","y>0")
 //    will draw sqrt(x) and save the histogram as "hsqrt" in the current
@@ -2167,9 +2186,9 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //   When a new binning is used the new value will become the default.
 //   Values can be skipped.
 //  Example:
-//    tree.Draw("sqrt(x)>>hsqrt(500,10,20)"
+//    tree.Draw("sqrt(x)>>hsqrt(500,10,20)")
 //          // plot sqrt(x) between 10 and 20 using 500 bins
-//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,60,50,.1,.5)"
+//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,60,50,.1,.5)")
 //          // plot sqrt(x) against sin(y)
 //          // 100 bins in x-direction; lower limit on x-axis is 10; upper limit is 60
 //          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
