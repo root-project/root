@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.8 2003/09/10 16:40:57 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.9 2003/09/10 17:11:00 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -404,11 +404,11 @@ void TMultiLayerPerceptron::GetEntry(Int_t entry)
    // Load an entry into the network
    if (fData)
       fData->GetEntry(entry);
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   TNeuron *neuron;
-   while ((neuron = (TNeuron *) it->Next()))
+   Int_t nentries = fNetwork.GetEntriesFast();
+   for (Int_t i=0;i<nentries;i++) {
+      TNeuron *neuron = (TNeuron *)fNetwork.UncheckedAt(i);
       neuron->SetNewEvent();
-   delete it;
+   }
 }
 
 //______________________________________________________________________________
@@ -524,19 +524,18 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                Int_t idx = 0;
                TNeuron *neuron = NULL;
                TSynapse *synapse = NULL;
-               TObjArrayIter *it =
-                   (TObjArrayIter *) fNetwork.MakeIterator();
-               while ((neuron = (TNeuron *) it->Next())) {
+               Int_t nentries = fNetwork.GetEntriesFast();
+               for (i=0;i<nentries;i++) {
+                  neuron = (TNeuron *) fNetwork.UncheckedAt(i);
                   prod -= dir[idx++] * neuron->GetDEDw();
                   norm += neuron->GetDEDw() * neuron->GetDEDw();
                }
-               delete it;
-               it = (TObjArrayIter *) fSynapses.MakeIterator();
-               while ((synapse = (TSynapse *) it->Next())) {
+               nentries = fSynapses.GetEntriesFast();
+               for (i=0;i<nentries;i++) {
+                  synapse = (TSynapse *) fSynapses.UncheckedAt(i);
                   prod -= dir[idx++] * synapse->GetDEDw();
                   norm += synapse->GetDEDw() * synapse->GetDEDw();
                }
-               delete it;
                ConjugateGradientsDir(dir, (norm - prod) / Onorm);
             }
             if (LineSearch(dir, buffer))
@@ -555,15 +554,16 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                   Onorm += dir[i] * dir[i];
                TNeuron *neuron = NULL;
                TSynapse *synapse = NULL;
-               TObjArrayIter *it =
-                   (TObjArrayIter *) fNetwork.MakeIterator();
-               while ((neuron = (TNeuron *) it->Next()))
+               Int_t nentries = fNetwork.GetEntriesFast();
+               for (i=0;i<nentries;i++) {
+                  neuron = (TNeuron *) fNetwork.UncheckedAt(i);
                   norm += neuron->GetDEDw() * neuron->GetDEDw();
-               delete it;
-               it = (TObjArrayIter *) fSynapses.MakeIterator();
-               while ((synapse = (TSynapse *) it->Next()))
+               }
+               nentries = fSynapses.GetEntriesFast();
+               for (i=0;i<nentries;i++) {
+                  synapse = (TSynapse *) fSynapses.UncheckedAt(i);
                   norm += synapse->GetDEDw() * synapse->GetDEDw();
-               delete it;
+               }
                ConjugateGradientsDir(dir, norm / Onorm);
             }
             if (LineSearch(dir, buffer))
@@ -713,61 +713,69 @@ void TMultiLayerPerceptron::ComputeDEDw()
 {
    // Compute the DEDw = sum on all training events of dedw for each weight
    // normalized by the number of events.
-   TObjArrayIter *its = (TObjArrayIter *) fSynapses.MakeIterator();
+   Int_t i,j;
+   Int_t nentries = fSynapses.GetEntriesFast();
    TSynapse *synapse;
-   while ((synapse = (TSynapse *) its->Next()))
+   for (i=0;i<nentries;i++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(i);
       synapse->SetDEDw(0.);
-   delete its;
-   TObjArrayIter *itn = (TObjArrayIter *) fNetwork.MakeIterator();
+   }
    TNeuron *neuron;
-   while ((neuron = (TNeuron *) itn->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (i=0;i<nentries;i++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(i);
       neuron->SetDEDw(0.);
-   delete itn;
-   Int_t i;
+   }
    if (fTraining) {
       Int_t nEvents = fTraining->GetN();
       for (i = 0; i < nEvents; i++) {
          GetEntry(fTraining->GetEntry(i));
-         its = (TObjArrayIter *) fSynapses.MakeIterator();
-         while ((synapse = (TSynapse *) its->Next())) {
+         nentries = fSynapses.GetEntriesFast();
+         for (j=0;j<nentries;j++) {
+            synapse = (TSynapse *) fSynapses.UncheckedAt(j);
             synapse->SetDEDw(synapse->GetDEDw() + synapse->GetDeDw());
          }
-         delete its;
-         itn = (TObjArrayIter *) fNetwork.MakeIterator();
-         while ((neuron = (TNeuron *) itn->Next())) {
+         nentries = fNetwork.GetEntriesFast();
+         for (j=0;j<nentries;j++) {
+            neuron = (TNeuron *) fNetwork.UncheckedAt(j);
             neuron->SetDEDw(neuron->GetDEDw() + neuron->GetDeDw());
          }
-         delete itn;
       }
-      its = (TObjArrayIter *) fSynapses.MakeIterator();
-      while ((synapse = (TSynapse *) its->Next()))
+      nentries = fSynapses.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         synapse = (TSynapse *) fSynapses.UncheckedAt(j);
          synapse->SetDEDw(synapse->GetDEDw() / (Double_t) nEvents);
-      delete its;
-      itn = (TObjArrayIter *) fNetwork.MakeIterator();
-      while ((neuron = (TNeuron *) itn->Next()))
+      }
+      nentries = fNetwork.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         neuron = (TNeuron *) fNetwork.UncheckedAt(j);
          neuron->SetDEDw(neuron->GetDEDw() / (Double_t) nEvents);
-      delete itn;
+      }
    } else if (fData) {
       Int_t nEvents = (Int_t) fData->GetEntries();
       for (i = 0; i < nEvents; i++) {
          GetEntry(i);
-         its = (TObjArrayIter *) fSynapses.MakeIterator();
-         while ((synapse = (TSynapse *) its->Next()))
+         nentries = fSynapses.GetEntriesFast();
+         for (j=0;j<nentries;j++) {
+            synapse = (TSynapse *) fSynapses.UncheckedAt(j);
             synapse->SetDEDw(synapse->GetDEDw() + synapse->GetDeDw());
-         delete its;
-         itn = (TObjArrayIter *) fNetwork.MakeIterator();
-         while ((neuron = (TNeuron *) itn->Next()))
+         }
+         nentries = fNetwork.GetEntriesFast();
+         for (j=0;j<nentries;j++) {
+            neuron = (TNeuron *) fNetwork.UncheckedAt(j);
             neuron->SetDEDw(neuron->GetDEDw() + neuron->GetDeDw());
-         delete itn;
+         }
       }
-      its = (TObjArrayIter *) fSynapses.MakeIterator();
-      while ((synapse = (TSynapse *) its->Next()))
+      nentries = fSynapses.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         synapse = (TSynapse *) fSynapses.UncheckedAt(j);
          synapse->SetDEDw(synapse->GetDEDw() / (Double_t) nEvents);
-      delete its;
-      itn = (TObjArrayIter *) fNetwork.MakeIterator();
-      while ((neuron = (TNeuron *) itn->Next()))
+      }
+      nentries = fNetwork.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         neuron = (TNeuron *) fNetwork.UncheckedAt(j);
          neuron->SetDEDw(neuron->GetDEDw() / (Double_t) nEvents);
-      delete itn;
+      }
    }
 }
 
@@ -775,18 +783,21 @@ void TMultiLayerPerceptron::ComputeDEDw()
 void TMultiLayerPerceptron::Randomize()
 {
    // Randomize the weights
-   TObjArrayIter *its = (TObjArrayIter *) fSynapses.MakeIterator();
-   TObjArrayIter *itn = (TObjArrayIter *) fNetwork.MakeIterator();
+   Int_t nentries = fSynapses.GetEntriesFast();
+   Int_t j;
    TSynapse *synapse;
    TNeuron *neuron;
    TTimeStamp ts;
    TRandom3 gen(ts.GetSec());
-   while ((synapse = (TSynapse *) its->Next()))
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       synapse->SetWeight(gen.Rndm() - 0.5);
-   while ((neuron = (TNeuron *) itn->Next()))
+   }
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       neuron->SetWeight(gen.Rndm() - 0.5);
-   delete its;
-   delete itn;
+   }
 }
 
 //______________________________________________________________________________
@@ -1263,38 +1274,39 @@ void TMultiLayerPerceptron::MLP_Stochastic(Double_t * buffer)
    
    Int_t nEvents = fTraining->GetN();
    Int_t *index = new Int_t[nEvents];
-   Int_t i;
+   Int_t i,j,nentries;
    for (i = 0; i < nEvents; i++)
       index[i] = i;
    fEta *= fEtaDecay;
    Shuffle(index, nEvents);
+   TNeuron *neuron;
+   TSynapse *synapse;
    for (i = 0; i < nEvents; i++) {
       GetEntry(fTraining->GetEntry(index[i]));
       // First compute DeDw for all neurons: force calculation before 
       // modifying the weights.
-      TObjArrayIter *it = (TObjArrayIter *) fFirstLayer.MakeIterator();
-      TNeuron *neuron = NULL;
-      while ((neuron = (TNeuron *) it->Next()))
+      nentries = fFirstLayer.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
          neuron->GetDeDw();
-      delete it;
-      it = (TObjArrayIter *) fNetwork.MakeIterator();
+      }
       Int_t cnt = 0;
       // Step for all neurons
-      while ((neuron = (TNeuron *) it->Next())) {
+      nentries = fNetwork.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         neuron = (TNeuron *) fNetwork.UncheckedAt(j);
          buffer[cnt] = (-fEta) * (neuron->GetDeDw() + fDelta) 
 		       + fEpsilon * buffer[cnt];
          neuron->SetWeight(neuron->GetWeight() + buffer[cnt++]);
       }
-      delete it;
-      it = (TObjArrayIter *) fSynapses.MakeIterator();
-      TSynapse *synapse = NULL;
       // Step for all synapses
-      while ((synapse = (TSynapse *) it->Next())) {
+      nentries = fSynapses.GetEntriesFast();
+      for (j=0;j<nentries;j++) {
+         synapse = (TSynapse *) fSynapses.UncheckedAt(j);
          buffer[cnt] = (-fEta) * (synapse->GetDeDw() + fDelta) 
                        + fEpsilon * buffer[cnt];
          synapse->SetWeight(synapse->GetWeight() + buffer[cnt++]);
       }
-      delete it;
    }
    delete[]index;
 }
@@ -1374,19 +1386,22 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
    // It returns true if the line search fails.
    
    Int_t idx = 0;
+   Int_t j,nentries;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
    // store weights before line search 
    Double_t *origin = new Double_t[fNetwork.GetEntriesFast() +
                                    fSynapses.GetEntriesFast()];
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       origin[idx++] = neuron->GetWeight();
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       origin[idx++] = synapse->GetWeight();
-   delete it;
+   }
    // try to find a triplet (alpha1, alpha2, alpha3) such that 
    // Error(alpha1)>Error(alpha2)<Error(alpha3)
    Double_t err1 = GetError(kTraining);
@@ -1449,14 +1464,16 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
    GetError(kTraining);
    // Stores weight changes (can be used by a later stochastic step)
    idx = 0;
-   it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       buffer[idx] = neuron->GetWeight() - origin[idx++];
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       buffer[idx] = synapse->GetWeight() - origin[idx++];
-   delete it;
+   }
    return false;
 }
 
@@ -1469,16 +1486,19 @@ void TMultiLayerPerceptron::ConjugateGradientsDir(Double_t * dir, Double_t beta)
    //  g_{(t+1)} (g_{(t+1)}-g_{(t)}) / ||g_{(t)}||^2     (Ribiere-Polak)
    
    Int_t idx = 0;
+   Int_t j,nentries;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       dir[idx] = -neuron->GetDEDw() + beta * dir[idx++];
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       dir[idx] = -synapse->GetDEDw() + beta * dir[idx++];
-   delete it;
+   }
 }
 
 //______________________________________________________________________________
@@ -1518,28 +1538,33 @@ void TMultiLayerPerceptron::SetGammaDelta(TMatrix & gamma, TMatrix & delta,
    
    Int_t els = fNetwork.GetEntriesFast() + fSynapses.GetEntriesFast();
    Int_t idx = 0;
+   Int_t j,nentries;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       gamma[idx++][0] = -neuron->GetDEDw();
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       gamma[idx++][0] = -synapse->GetDEDw();
-   delete it;
+   }
    for (Int_t i = 0; i < els; i++)
       delta[i] = buffer[i];
    ComputeDEDw();
    idx = 0;
-   it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       gamma[idx++][0] += neuron->GetDEDw();
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       gamma[idx++][0] += synapse->GetDEDw();
-   delete it;
+   }
 }
 
 //______________________________________________________________________________
@@ -1549,17 +1574,20 @@ Double_t TMultiLayerPerceptron::DerivDir(Double_t * dir)
    // = derivative along direction
    
    Int_t idx = 0;
+   Int_t j,nentries;
    Double_t output = 0;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       output += neuron->GetDEDw() * dir[idx++];
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       output += synapse->GetDEDw() * dir[idx++];
-   delete it;
+   }
    return output;
 }
 
@@ -1572,16 +1600,19 @@ void TMultiLayerPerceptron::BFGSDir(TMatrix & BFGSH, Double_t * dir)
    Int_t els = fNetwork.GetEntriesFast() + fSynapses.GetEntriesFast();
    TMatrix dedw(els, 1);
    Int_t idx = 0;
+   Int_t j,nentries;
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
-   TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
-   while ((neuron = (TNeuron *) it->Next()))
+   nentries = fNetwork.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      neuron = (TNeuron *) fNetwork.UncheckedAt(j);
       dedw[idx++][0] = neuron->GetDEDw();
-   delete it;
-   it = (TObjArrayIter *) fSynapses.MakeIterator();
-   while ((synapse = (TSynapse *) it->Next()))
+   }
+   nentries = fSynapses.GetEntriesFast();
+   for (j=0;j<nentries;j++) {
+      synapse = (TSynapse *) fSynapses.UncheckedAt(j);
       dedw[idx++][0] = synapse->GetDEDw();
-   delete it;
+   }
    TMatrix direction(BFGSH, TMatrix::kMult, dedw);
    for (Int_t i = 0; i < els; i++)
       dir[i] = -direction[i][0];
