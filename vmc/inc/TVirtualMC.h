@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.9 2003/06/15 19:36:03 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -112,7 +112,7 @@ class TVirtualMC : public TNamed {
     virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
     
     // set geometry from Root (built via TGeo)
-    virtual void  SetRootGeometry() = 0; 
+    virtual void  SetRootGeometry() {} 
 		               
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
