@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.78 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofNTuple.cxx,v 1.1 2005/03/10 17:57:04 rdm Exp $
 // Author: Marek Biskup   28/01/2005
 
 /*************************************************************************
@@ -173,50 +173,6 @@ Bool_t TProofNTuple::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    return kTRUE;
 }
 
-
-//______________________________________________________________________________
-void TProofNTuple::DrawCopy(const Option_t* option)
-{
-   // Draws a copy on the current pad
-   // no changes to the drawn plot can affect this one.
-
-   if (option);
-   if (fDimension == 2) {
-      TGraph *g = new TGraph(fEntries);
-      for (int i = 0; i < fEntries; i++)
-         g->SetPoint(i, GetX(i), GetY(i));
-
-      g->SetEditable(kFALSE);
-      g->SetBit(kCanDelete);
-      if (option[0] == 0 || strcmp(option, "same") == 0)
-         g->Draw("p");
-      else
-         g->Draw(option);
-      gPad->Update();
-      return;
-   }
-
-   if (fDimension == 3 && 0) {
-      TGraph2D *g = new TGraph2D(fEntries);
-      for (int i = 0; i < fEntries; i++)
-         g->SetPoint(i, GetX(i), GetY(i), GetZ(i));
-
-      g->SetBit(kCanDelete);
-      if (option[0] == 0 || strcmp(option, "same") == 0)
-         g->Draw("p");
-      else
-         g->Draw(option);
-      gPad->Update();
-      return;
-   }
-   if (fDimension == 3) {
-      TPolyMarker3D *pm3d = new TPolyMarker3D(fEntries);
-      for (int i = 0; i < fEntries; i++)
-         pm3d->SetPoint(i, GetX(i), GetY(i), GetZ(i));
-      pm3d->Draw();
-   }
-   return;
-}
 
 //______________________________________________________________________________
 Bool_t TProofNTuple::Add(TProofNTuple* ntuple)

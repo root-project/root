@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.51 2005/03/13 15:06:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.52 2005/03/14 22:19:00 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include "TEventList.h"
 #include "TProofLimitsFinder.h"
 #include "TSortedList.h"
-#include "TDrawInfo.h"
+#include "TTreeDrawArgsParser.h"
 #include "TCanvas.h"
 #include "Api.h"
 
@@ -323,7 +323,7 @@ Long64_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
-   TDrawInfo info;
+   TTreeDrawArgsParser info;
    info.Parse(varexp, selection, option);
    TString selector = info.GetProofSelectorName();
 

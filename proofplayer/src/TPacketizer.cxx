@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.22 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.23 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -768,10 +768,12 @@ void TPacketizer::SplitEventList(TDSet *dset) {
       else
          high = el->GetTDSetOffset();
 
-//      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < low) {
-//         Error("SplitEventList", "event outside of the range of any of the TDSetElements");
-//         currPos++;        // unnecessary check
-//      }
+#ifdef DEBUG
+      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < low) {
+         Error("SplitEventList", "event outside of the range of any of the TDSetElements");
+         currPos++;        // unnecessary check
+      }
+#endif
 
       TEventList* newEventList = new TEventList();
       while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < high) {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.5 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.6 2005/03/11 08:25:53 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -106,8 +106,6 @@ void TDrawFeedback::Feedback(TList *objs)
 
          if (TH1 *h = dynamic_cast<TH1*>(o)) {
             h->DrawCopy(fOption);
-         } else if (TProofNTuple *n = dynamic_cast<TProofNTuple*>(o)) {
-            n->DrawCopy(fOption);
          }
 
          gPad->Update();

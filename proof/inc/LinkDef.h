@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.20 2005/02/07 18:02:37 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.21 2005/03/10 17:57:04 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -54,7 +54,6 @@
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TStatus+;
-#pragma link C++ class TDrawInfo+;
 #pragma link C++ class TProofNTuple+;
 
 

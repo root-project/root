@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.4 2004/07/29 10:54:54 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.5 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -22,8 +22,8 @@
 #include "TString.h"
 #endif
 
-#ifndef ROOT_TDrawInfo
-#include "TDrawInfo.h"
+#ifndef ROOT_TTreeDrawArgsParser
+#include "TTreeDrawArgsParser.h"
 #endif
 
 class TTree;
@@ -40,7 +40,7 @@ class TProofNTuple;
 class TProofDraw : public TSelector {
 
 protected:
-   TDrawInfo            fDrawInfo;
+   TTreeDrawArgsParser  fTreeDrawArgsParser;
    TStatus             *fStatus;
    TString              fSelection;
    TString              fInitialExp;

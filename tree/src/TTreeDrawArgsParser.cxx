@@ -1,5 +1,5 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.3 2005/03/10 19:15:22 rdm Exp $
-// Author: Marek Biskup   24/01/2004
+// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.4 2005/03/11 11:51:21 brun Exp $
+// Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -11,25 +11,25 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TDrawInfo                                                            //
+// TTreeDrawArgsParser                                                  //
 //                                                                      //
-// Class that parses all parameters for TTree::Draw().                  //
+// A class that parses all parameters for TTree::Draw().                //
 // See TTree::Draw() for the format description.                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TDrawInfo.h"
+#include "TTreeDrawArgsParser.h"
 #include "TDirectory.h"
 
 
-Int_t TDrawInfo::fgMaxDimension = 4;
-Int_t TDrawInfo::fgMaxParameters = 9;
+Int_t TTreeDrawArgsParser::fgMaxDimension = 4;
+Int_t TTreeDrawArgsParser::fgMaxParameters = 9;
 
 
-ClassImp(TDrawInfo)
+ClassImp(TTreeDrawArgsParser)
 
 //______________________________________________________________________________
-TDrawInfo::TDrawInfo()
+TTreeDrawArgsParser::TTreeDrawArgsParser()
 {
    // Constructor - cleans all the class variables.
 
@@ -38,13 +38,13 @@ TDrawInfo::TDrawInfo()
 
 
 //______________________________________________________________________________
-TDrawInfo::~TDrawInfo()
+TTreeDrawArgsParser::~TTreeDrawArgsParser()
 {
    // Destructor.
 }
 
 //______________________________________________________________________________
-void TDrawInfo::ClearPrevious()
+void TTreeDrawArgsParser::ClearPrevious()
 {
    // Resets all the variables of the class.
 
@@ -62,14 +62,14 @@ void TDrawInfo::ClearPrevious()
       fParameterGiven[i] = kFALSE;
       fParameters[i] = 0;
    }
-   fDraw = kTRUE;
+   fShouldDraw = kTRUE;
    fOriginal = 0;
    fDrawProfile = kFALSE;
    fOutputType = kUNKNOWN;
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::SplitVariables(TString variables)
+Bool_t TTreeDrawArgsParser::SplitVariables(TString variables)
 {
    // Parse expression [var1 [:var2 [:var3] ...]],
    // number of variables cannot be greater than fgMaxDimension.
@@ -108,7 +108,7 @@ Bool_t TDrawInfo::SplitVariables(TString variables)
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::ParseName(TString name)
+Bool_t TTreeDrawArgsParser::ParseName(TString name)
 {
    // Syntax:
    // [[+]name[(num1 [, [num2] ] [, [num3] ] ...)]]
@@ -166,7 +166,7 @@ Bool_t TDrawInfo::ParseName(TString name)
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::ParseVarExp()
+Bool_t TTreeDrawArgsParser::ParseVarExp()
 {
    // Split variables and parse name and parameters in brackets.
 
@@ -191,7 +191,7 @@ Bool_t TDrawInfo::ParseVarExp()
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::ParseOption()
+Bool_t TTreeDrawArgsParser::ParseOption()
 {
    // Check if options contain some data important for choosing the type of the
    // drawn object.
@@ -199,7 +199,7 @@ Bool_t TDrawInfo::ParseOption()
    fOption.ToLower();
 
    if (fOption.Contains("goff")) {
-      fDraw = kFALSE;
+      fShouldDraw = kFALSE;
    }
    if (fOption.Contains("prof")) {
       fDrawProfile = kTRUE;
@@ -208,7 +208,7 @@ Bool_t TDrawInfo::ParseOption()
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::Parse(const char *varexp, const char *selection, Option_t *option)
+Bool_t TTreeDrawArgsParser::Parse(const char *varexp, const char *selection, Option_t *option)
 {
    // Parses parameters from TTree::Draw().
    // varexp - Variable expression; see TTree::Draw()
@@ -240,7 +240,7 @@ Bool_t TDrawInfo::Parse(const char *varexp, const char *selection, Option_t *opt
 }
 
 //______________________________________________________________________________
-TDrawInfo::EOutputType TDrawInfo::DefineType()
+TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 {
    // Put the type of the draw result into fOutputType and return it.
 
@@ -278,7 +278,7 @@ TDrawInfo::EOutputType TDrawInfo::DefineType()
 }
 
 //______________________________________________________________________________
-TString TDrawInfo::GetProofSelectorName() const
+TString TTreeDrawArgsParser::GetProofSelectorName() const
 {
    // Returns apropriate TSelector class name for proof for the object that is to be drawn
    // assumes that Parse() method has been called before.
@@ -309,7 +309,7 @@ TString TDrawInfo::GetProofSelectorName() const
 }
 
 //______________________________________________________________________________
-Double_t TDrawInfo::GetParameter(Int_t num) const
+Double_t TTreeDrawArgsParser::GetParameter(Int_t num) const
 {
    // returns *num*-th parameter from brackets in the expression
    // in case of an error (wrong number) returns 0.0
@@ -324,7 +324,7 @@ Double_t TDrawInfo::GetParameter(Int_t num) const
 }
 
 //______________________________________________________________________________
-Double_t TDrawInfo::GetIfSpecified(Int_t num, Double_t def) const
+Double_t TTreeDrawArgsParser::GetIfSpecified(Int_t num, Double_t def) const
 {
    // num - parameter number
    // def - default value of the parameter
@@ -338,7 +338,7 @@ Double_t TDrawInfo::GetIfSpecified(Int_t num, Double_t def) const
 }
 
 //______________________________________________________________________________
-Bool_t TDrawInfo::IsSpecified(int num) const
+Bool_t TTreeDrawArgsParser::IsSpecified(int num) const
 {
    // returns kTRUE if the *num*-th parameter was specified
    // otherwise returns fFALSE
@@ -353,7 +353,7 @@ Bool_t TDrawInfo::IsSpecified(int num) const
 }
 
 //______________________________________________________________________________
-TString TDrawInfo::GetVarExp(Int_t num) const
+TString TTreeDrawArgsParser::GetVarExp(Int_t num) const
 {
    // Returns the *num*-th variable string
    // in case of an error prints an error message and returns an empty string.
@@ -366,7 +366,7 @@ TString TDrawInfo::GetVarExp(Int_t num) const
 }
 
 //______________________________________________________________________________
-TString TDrawInfo::GetVarExp() const
+TString TTreeDrawArgsParser::GetVarExp() const
 {
    // Returns the variable string, i.e. [var1[:var2[:var2[:var4]]]].
 
@@ -379,3 +379,15 @@ TString TDrawInfo::GetVarExp() const
    }
    return exp;
 }
+
+
+//______________________________________________________________________________
+TString TTreeDrawArgsParser::GetObjectTitle() const 
+{
+   // Returns the desired plot title.
+   if (fSelection != "") 
+      return Form("%s {%s}", GetVarExp().Data(), fSelection.Data());
+   else 
+      return GetVarExp();
+}
+

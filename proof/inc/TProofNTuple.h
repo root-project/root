@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.78 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofNTuple.h,v 1.1 2005/03/10 17:57:04 rdm Exp $
 // Author: Marek Biskup   28/01/2005
 
 /*************************************************************************
@@ -70,7 +70,6 @@ public:
    }
    virtual Double_t    Get(Int_t entry, Int_t coord);
 
-   virtual void        DrawCopy(const Option_t* option);
    virtual Int_t       Merge(TCollection* list);
    virtual Bool_t      Add(TProofNTuple* ntuple);
 
