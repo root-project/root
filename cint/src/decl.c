@@ -1917,7 +1917,11 @@ int tagnum,typenum;      /* overrides global variables */
 		G__var_type = var_type;
 #ifndef G__OLDIMPLEMENTATION1137
 #ifndef G__OLDIMPLEMENTATION1251
-		if(known&& (G__globalvarpointer||G__asm_noverflow)) {
+		if((known && (G__globalvarpointer||G__asm_noverflow))
+#ifndef G__OLDIMPLEMENTATION1325
+		   || G__NOLINK != G__globalcomp 
+#endif
+		   ) {
 #else
 		if(G__globalvarpointer) {
 #endif

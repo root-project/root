@@ -5773,7 +5773,11 @@ asm_ifunc_start:   /* loop compilation execution label */
        *  type func(type paraname=default,...)
        ****************************************/
       else {
-	if(p_ifunc->para_default[ifn][ipara]) {
+	if(
+#ifndef G__OLDIMPLEMENTATION1324
+	   p_ifunc->para_nu[ifn]>ipara && 
+#endif
+	   p_ifunc->para_default[ifn][ipara]) {
 	  if(p_ifunc->para_default[ifn][ipara]->type==G__DEFAULT_FUNCCALL) {
 	    G__ASSERT(p_ifunc->para_default[ifn][ipara]->ref);
 	    *p_ifunc->para_default[ifn][ipara] =

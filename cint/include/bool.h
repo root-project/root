@@ -1,5 +1,5 @@
-#ifndef G__BOOL_H
-#define G__BOOL_H
+#pragma ifndef G__BOOL_H
+#pragma define G__BOOL_H
 
 #undef FALSE
 #undef TRUE
@@ -12,5 +12,5 @@ enum bool { FALSE = 0, false = 0, TRUE = 1, true = 1 };
 //const bool false=0;
 //const bool FALSE=0;
 
-#endif
+#pragma endif
 

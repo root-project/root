@@ -154,7 +154,7 @@ int wctomb(char *string,wchar_t widecharacter);
 //int sprintf(char *string,char *format,arglist,...);
 //int fscanf(FILE *fp,char *format,arglist,...);
 //int scanf(char *format,arglist,...);
-int sscanf(char *string,char *format,arglist,...);
+//int sscanf(char *string,char *format,arglist,...);
 void exit(int status);
 //int atexit(void(*function)(void));
 

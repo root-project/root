@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 
+//////////////////////////////////////////////////////////////////////
 #if defined(G__GNUC)
 
 template <int inst>
@@ -30,11 +31,13 @@ class __malloc_alloc_template {
 typedef __malloc_alloc_template<0> malloc_alloc;
 typedef malloc_alloc alloc;
 
+//////////////////////////////////////////////////////////////////////
 #elif defined(G__HPUX)
 
 class allocator {
 };
 
+//////////////////////////////////////////////////////////////////////
 #else // non gcc, non HPUX compiler
 
 template <class T>
@@ -101,6 +104,7 @@ class allocator<void> {
 };
 
 #endif // G__GNUC
+//////////////////////////////////////////////////////////////////////
 
 /**********************************************************************
 * auto_ptr
@@ -113,17 +117,11 @@ private:
 public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
-  auto_ptr(const auto_ptr& a) : ptr(a.ptr), owns(a.owns) {
-    a.owns = 0;
-  }
-
+  auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
+  
   // this implementation may not be correct
-  template <class T> auto_ptr(const auto_ptr<T>& a) {
-      owns = a.owns;
-      ptr = a.ptr;
-      a.owns = 0;
-  }
-
+  template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
+  
 #if 0
   // this does not exist in standard.
   template <class T> auto_ptr(T* a) {
@@ -131,9 +129,9 @@ public:
     owns=true;
   }
 #endif
-
-  auto_ptr& operator=(const auto_ptr& a) {
-    if (&a != this) {
+  
+  auto_ptr& operator=(auto_ptr& a) {
+    if (a.ptr != ptr) {
       if (owns) delete ptr;
       owns = a.owns;
       ptr = a.ptr;
@@ -141,29 +139,33 @@ public:
     }
     return(*this);
   }
-
+  
   // this implementation may not be correct
-  template <class T> auto_ptr& operator=(const auto_ptr<T>& a) {
-    if(ptr != a.get()) {
+  template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
+    if (a.ptr != ptr) {
       if (owns) delete ptr;
-        owns = a.owns;
-      }
-      else {
-        owns = owns || a.owns ? true : false;
-      }
-    ptr = new X(*a);
-    a.owns = 0;
+      owns = a.owns;
+      ptr = a.release();
+    }
     return(*this);
   }
-
-  ~auto_ptr() {
-    if (owns) delete ptr;
-  }
-
+  
+  ~auto_ptr() { if(owns) delete ptr; }
+  
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
-  X* release() const { owns = false; return ptr; }
+  X* release() { owns=false; return ptr; }
+#if 0
+  // My g++, VC++, BC++ does not support this so far.
+  void reset(X* p=0) {
+    if(p!=ptr || !owns) { 
+      if(owns) delete ptr;  
+      ptr = p; 
+      owns = p?true:false;
+    }
+  }
+#endif
 
   // auto_ptr conversions
   //auto_ptr(auto_ptr_ref<X>& x) { }

@@ -12,17 +12,11 @@ private:
 public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
-  auto_ptr(const auto_ptr& a) : ptr(a.ptr), owns(a.owns) {
-    a.owns = 0;
-  }
-
+  auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
+  
   // this implementation may not be correct
-  template <class T> auto_ptr(const auto_ptr<T>& a) {
-      owns = a.owns;
-      ptr = a.ptr;
-      a.owns = 0;
-  }
-
+  template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
+  
 #if 0
   // this does not exist in standard.
   template <class T> auto_ptr(T* a) {
@@ -30,9 +24,9 @@ public:
     owns=true;
   }
 #endif
-
-  auto_ptr& operator=(const auto_ptr& a) {
-    if (&a != this) {
+  
+  auto_ptr& operator=(auto_ptr& a) {
+    if (a.ptr != ptr) {
       if (owns) delete ptr;
       owns = a.owns;
       ptr = a.ptr;
@@ -40,29 +34,30 @@ public:
     }
     return(*this);
   }
-
+  
   // this implementation may not be correct
-  template <class T> auto_ptr& operator=(const auto_ptr<T>& a) {
-    if(ptr != a.get()) {
+  template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
+    if (a.ptr != ptr) {
       if (owns) delete ptr;
       owns = a.owns;
-    }	
-    else {
-      owns = owns || a.owns ? true : false;
+      ptr = a.release();
     }
-    ptr = new X(*a);
-    a.owns = 0;
     return(*this);
   }
-
-  ~auto_ptr() {
-    if (owns) delete ptr;
-  }
-
+  
+  ~auto_ptr() { if(owns) delete ptr; }
+  
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
-  X* release() const { owns = false; return ptr; }
+  X* release() { owns=false; return ptr; }
+  void reset(X* p=0) {
+    if(p!=ptr || !owns) { 
+      if(owns) delete ptr;  
+      ptr = p; 
+      owns = p?true:false;
+    }
+  }
 
   // auto_ptr conversions
   //auto_ptr(auto_ptr_ref<X>& x) { }
@@ -72,10 +67,9 @@ public:
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 template<class T,class X>
-auto_ptr<T>& operator=(auto_ptr<T>& a,auto_ptr<X>& b) 
-{
-  a = auto_ptr<T>(b.get());
-  b.release();
+auto_ptr<T>& operator=(auto_ptr<T>& a,auto_ptr<X>& b) {
+  a.reset(b.release());
+  return(a);
 }
 #endif
 
