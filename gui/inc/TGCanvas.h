@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.15 2003/06/24 13:41:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.16 2003/06/27 10:25:39 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -124,7 +124,7 @@ public:
    virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);
 
    virtual const TGFrame *GetNextSelected(void **current);
-   virtual TGFrame *GetLastActive() const { return fLastActiveEl->fFrame; }
+   virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
 
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleButton(Event_t *event);

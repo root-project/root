@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.17 2003/07/09 12:34:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.18 2003/07/10 09:55:44 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -453,6 +453,8 @@ void  TGLVContainer::SetColHeaders(const char* n1,const char* n2,const char* n3,
 {
    // set columns headers
 
+   if (!fListView) return;
+
    Int_t ncol = -1;
    if (n12 && strlen(n12)) ncol=12;
    else if (n11 && strlen(n11)) ncol=11;
@@ -490,6 +492,8 @@ void  TGLVContainer::SetColHeaders(const char* n1,const char* n2,const char* n3,
 void TGLVContainer::SetViewMode(EListViewMode viewMode)
 {
    // Set list view mode for container.
+
+   if (!fListView) return;
 
    if (fViewMode != viewMode) {
       TGLayoutHints *oldLayout = fItemLayout;
@@ -539,6 +543,8 @@ void TGLVContainer::SetColumns(Int_t *cpos, Int_t *jmode)
 {
    // Set column information for list items.
 
+   if (!fListView) return;
+
    fCpos  = cpos;
    fJmode = jmode;
 
@@ -556,6 +562,8 @@ TGDimension TGLVContainer::GetMaxItemSize() const
    // Get size of largest item in container.
 
    TGDimension csize, maxsize(0,0);
+
+   if (!fListView) return maxsize;
 
    TGFrameElement *el;
    TIter next(fList);
@@ -579,6 +587,8 @@ Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
 {
    // Get width of largest subname in container.
 
+   if (!fListView) return 0;
+
    if (idx == 0)
       return GetMaxItemSize().fWidth;
 
@@ -598,6 +608,8 @@ Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
 void TGLVContainer::RemoveItemWithData(void *userData)
 {
    // Remove item with fUserData == userData from container.
+
+   if (!fListView) return;
 
    TGFrameElement *el;
    TIter next(fList);
