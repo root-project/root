@@ -644,7 +644,11 @@ $(STRESS):      $(STRESSO) $(EVENT)
 		@echo "$@ done"
 
 $(STRESSGEOM):  $(STRESSGEOMO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+else
 		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
