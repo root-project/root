@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.58 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.59 2005/03/11 00:49:46 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -864,7 +864,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
    Bool_t checkstd = TSystem::ConsistentWith(path, dirptr);
 
    // Require match of 'user' and 'host'
-   Bool_t checknet = kFALSE;
+   Bool_t checknet = path ? kFALSE : kTRUE;
    if (path && strlen(path)) {
 
       TUrl url(path);
@@ -888,6 +888,6 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
          checknet = kTRUE;
    }
 
-   return (checkstd || checknet);
+   return (checkstd && checknet);
 }
 
