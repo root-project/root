@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.31 2002/03/28 01:47:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.32 2002/07/17 14:59:56 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -206,7 +206,7 @@ TApplication::~TApplication()
    // TApplication dtor.
 
    for (int i = 0; i < fArgc; i++)
-      SafeDelete(fArgv[i]);
+      if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
    SafeDelete(fAppImp);
 }
