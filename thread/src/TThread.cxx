@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.5 2001/04/03 10:40:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.6 2001/05/31 16:23:10 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -237,6 +237,7 @@ void TThread::Constructor()
 {
    // Common thread constructor.
 
+   fClean = 0;
    fState = kNewState;
 
    fId = 0;
