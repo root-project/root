@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: LinkDef.h,v 1.1 2000/06/14 16:30:14 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: LinkDef.h,v 1.2 2001/06/22 16:10:16 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,5 +18,6 @@
 
 #pragma link C++ function Getline(char*);
 #pragma link C++ function Getlinem(EGetLineMode,char*);
+#pragma link C++ function Gl_histadd(char*);
 
 #endif
