@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.67 2004/06/24 09:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.68 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1995,7 +1995,7 @@ void TMatrixD::Streamer(TBuffer &R__b)
       fNelems = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
     }
-    if (fNelems <= kSizeMax) {
+    if (fNelems > 0 && fNelems <= kSizeMax) {
       memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
       delete [] fElements;
       fElements = fDataStack;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.18 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.19 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1938,7 +1938,7 @@ void TMatrixF::Streamer(TBuffer &R__b)
       Error("TMatrixF::Streamer","Unknown version number: %d",R__v);
       Assert(0);
     }
-    if (fNelems <= kSizeMax) {
+    if (fNelems > 0 && fNelems <= kSizeMax) {
       memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
       delete [] fElements;
       fElements = fDataStack;
@@ -1984,7 +1984,7 @@ void TMatrix::Streamer(TBuffer &R__b)
       fNelems = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TMatrix::IsA());
     }
-    if (fNelems <= kSizeMax) {
+    if (fNelems > 0 && fNelems <= kSizeMax) {
       memcpy(fDataStack,fElements,fNelems*sizeof(Float_t));
       delete [] fElements;
       fElements = fDataStack;
