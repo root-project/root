@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.8 2000/10/12 10:37:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.1 2000/11/21 21:10:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -711,7 +711,7 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
 }   
 
 //______________________________________________________________________________
-void TStreamerInfo::ls(Option_t *option="")
+void TStreamerInfo::ls(Option_t *option)
 {
 //  List the TStreamerElement list and also the precomputed tables
    
