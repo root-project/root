@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.13 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.14 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -145,8 +145,7 @@ protected:
 
    static Time_t      GetLastClick();
 
-   virtual void DoRedraw();
-   virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
+   virtual void   DoRedraw();
    virtual void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
@@ -206,6 +205,7 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    DrawBorder();
+   virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
 
    UInt_t GetWidth() const { return fWidth; }
    UInt_t GetHeight() const { return fHeight; }
@@ -326,8 +326,6 @@ protected:
 
    TList    *fBindList;    // list with key bindings
 
-   virtual const TGWindow *GetMainFrame() const { return this; }
-
 public:
    TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
                UInt_t options = kVerticalFrame);
@@ -352,6 +350,8 @@ public:
 
    virtual Bool_t BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const;
    virtual void   RemoveBind(const TGWindow *w, Int_t keycode, Int_t modifier) const;
+
+   virtual const TGWindow *GetMainFrame() const { return this; }
 
    ClassDef(TGMainFrame,0)  // Top level window frame
 };

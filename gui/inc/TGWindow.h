@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.3 2001/04/11 17:28:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.4 2001/04/28 16:30:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 
 class TTimer;
 
+
 class TGWindow : public TGObject {
 
 friend class TGClient;
@@ -45,8 +46,6 @@ protected:
    TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
 
    virtual void DoRedraw() { }
-   virtual const TGWindow *GetMainFrame() const
-      { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
 
 public:
    TGWindow(const TGWindow *p, Int_t x, Int_t y,
@@ -61,6 +60,8 @@ public:
    virtual ~TGWindow();
 
    const TGWindow *GetParent() const { return fParent; }
+   virtual const TGWindow *GetMainFrame() const
+      { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
 
    void MapWindow() { gVirtualX->MapWindow(fId); }
    void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
@@ -93,7 +94,7 @@ public:
 // TGUnknownWindowHandler                                               //
 //                                                                      //
 // Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Moptif (see TRootOIViewer).       //
+// Typically windows created by Xt or Motif (see TRootOIViewer).        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
