@@ -6,6 +6,8 @@ PLATFORM      = linux
 
 DEBUGFLAGS    = -g
 OPTFLAGS      = -O2
+# Optional compiler options for gcc >= 3.4.0
+#OPTFLAGS      = -O3 -march=opteron
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -17,12 +19,12 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -pipe -Wall -m64 -fPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -Wall -m64 -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -m64 -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -pipe -Wall -fPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -pipe -Wall -m64 -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 COMPILER      = gnu

@@ -218,7 +218,7 @@ linuxia64ecc)
    ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags=
+   auxcflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664icc)
