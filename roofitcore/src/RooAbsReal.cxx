@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.78 2002/03/29 03:18:59 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.79 2002/04/03 23:37:23 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -519,6 +519,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     return 0;
   }
 
+
   // Check that the plot variables are all actually RooRealVars and print a warning if we do not
   // explicitly depend on one of them. Fill a set (not list!) of cloned plot variables.
   RooArgSet plotClones;
@@ -535,6 +536,14 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 	   << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
     }
     plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
+  }
+
+  // Call checkDependents
+  RooArgSet allDeps(plotClones) ;
+  if (projectedVars) allDeps.add(*projectedVars) ;
+  if (checkDependents(&allDeps)) {
+    cout << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkDependents, abort" << endl ;
+    return hist ;
   }
 
   // Create a standalone projection object to use for calculating bin contents
@@ -708,6 +717,17 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   deps->remove(*plotVar,kTRUE,kTRUE) ;
   deps->add(*plotVar) ;
 
+  
+  // Now that we have the final set of dependents, call checkDependents()
+  if (checkDependents(deps)) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") error in checkDependents, abort" << endl ;
+    delete deps ;
+    delete plotCloneSet ;
+    if (projDataNeededVars) delete projDataNeededVars ;
+    return frame ;
+  }
+
+
   RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList) ;
 
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
@@ -812,6 +832,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   }
 
   delete projectionCompList ;
+  delete plotCloneSet ;
   return frame;
 }
 

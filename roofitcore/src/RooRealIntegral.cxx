@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.56 2002/03/29 03:19:00 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.57 2002/04/10 20:59:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -142,7 +142,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Initial fill of list of LValue leaf servers (put in intDepList)
   RooArgSet exclLVServers("exclLVServers") ;
   exclLVServers.add(intDepList) ;
-
+  
   // Obtain mutual exclusive dependence by iterative reduction
   TIterator *sIter = exclLVServers.createIterator() ;
   bIter = exclLVBranches.createIterator() ;
@@ -181,6 +181,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;
   }
+
      
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Check for dependents that the PDF insists on integrating *
@@ -231,6 +232,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
     // If this dependent arg is self-normalized, stop here
     //if (function.selfNormalized()) continue ;
+
     Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue
     if (arg->isDerived()) {
@@ -300,7 +302,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooArgSet *argDepList = arg->getDependents(&intDepList) ;
       TIterator *adIter = argDepList->createIterator() ;
       while (argDep=(RooAbsArg*)adIter->Next()) {
-	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
+	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class()) && intDepList.contains(*argDep)) {
 	  numIntDepList.add(*argDep,kTRUE) ;
 	}
       }
@@ -313,12 +315,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Loop again over function servers to add remaining numeric integrations
   sIter->Reset() ;
   while(arg=(RooAbsArg*)sIter->Next()) {
-
+    
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
 
       // Process only derived RealLValues
-      if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived()) {
+      if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived() && intDepList.contains(*arg)) {
 	numIntDepList.add(*arg,kTRUE) ;	
       } else {
 	
@@ -409,9 +411,10 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
    while(client=(RooAbsArg*)cIter->Next()) {
      // If client is not an LValue, recurse
      if (!exclLVBranches.find(client->GetName())) {
+       
        if (!servesExclusively(client,exclLVBranches)) {
 	 // Client is a non-LValue that doesn't have an exclusive LValue server
-	 ret = kFALSE ;
+	 return kFALSE ;	 
        }
      } else {
        // Client is an LValue       
