@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.45 2003/06/30 15:45:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.46 2003/07/06 19:40:24 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -460,6 +460,18 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 */
 //End_Html
 //*-*
+//*-*  Special functions
+//*-*  -----------------
+//*-*  By default, the formula is assigned fNumber=0. However, the following 
+//*-*  formula built with simple functions are assigned  fNumber:
+//*-*    "gaus"    100
+//*-*    "expo"    200
+//*-*    "polN"    300+N
+//*-*    "landau"  400
+//*-*  Note that expressions like gaus(0), expo(1) will force fNumber=0
+//*-*
+//*-*  Warning when deriving a class from TFormula
+//*-*  -------------------------------------------
 //*-*   If you overload this member function, you also HAVE TO
 //*-*   never call the constructor:
 //*-*

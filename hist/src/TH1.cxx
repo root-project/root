@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.150 2003/07/02 21:18:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.151 2003/07/08 06:57:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1775,8 +1775,11 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //      ==========================
 //      Parameters must be initialized before invoking the Fit function.
 //      The setting of the parameter initial values is automatic for the
-//      predefined functions : poln, expo, gaus. One can however disable
+//      predefined functions : poln, expo, gaus, landau. One can however disable
 //      this automatic computation by specifying the option "B".
+//      Note that if a predefined function is defined with an argument,
+//      eg, gaus(0), expo(1), you must specify the initial values for
+//      the parameters.
 //      You can specify boundary limits for some or all parameters via
 //           f1->SetParLimits(p_number, parmin, parmax);
 //      if parmin>=parmax, the parameter is fixed
