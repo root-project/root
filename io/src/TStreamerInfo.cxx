@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.61 2001/04/20 09:47:05 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.62 2001/04/20 21:21:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -913,13 +913,26 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
 }
 
 //______________________________________________________________________________
-Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j) const
+Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const
 {
 //  return value of element i in object at pointer.
-//  if element is an array, j is the index in the array
-   
-   char *ladd = pointer + fOffset[i];
-   switch (fType[i]) {
+//  The function may be called in two ways:
+//    -method1  len < 0
+//           i is assumed to be the TStreamerElement number i in StreamerInfo
+//    -method2  len >= 0
+//           i is the type
+//           address of variable is directly pointer.
+               
+   char *ladd;
+   Int_t atype;
+   if (len >= 0) {
+      ladd  = pointer;
+      atype = i;
+   } else {
+      ladd  = pointer + fOffset[i];
+      atype = fType[i];
+   }
+   switch (atype) {
          // basic types
       case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
       case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
@@ -1097,14 +1110,31 @@ void TStreamerInfo::Optimize(Bool_t opt)
 
 
 //______________________________________________________________________________
-void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i) const
+void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t len) const
 {
 //  print value of element i in object at pointer
-   
+//  The function may be called in two ways:
+//    -method1  len < 0
+//           i is assumed to be the TStreamerElement number i in StreamerInfo
+//    -method2  len >= 0
+//           i is the type
+//           address of variable is directly pointer.
+//           len is the number of elements to be printed starting at pointer.
+               
    printf(" %-15s = ",name);
    Int_t j;
-   char *ladd = pointer + fOffset[i];
-   switch (fType[i]) {
+   char *ladd;
+   Int_t atype,aleng;
+   if (len >= 0) {
+      ladd  = pointer;
+      atype = i;
+      aleng = len;
+   } else {
+      ladd  = pointer + fOffset[i];
+      atype = fType[i];
+      aleng = fLength[i];
+   }
+   switch (atype) {
          // basic types
       case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;} 
       case kShort:             {Short_t *val  = (Short_t*)ladd;  printf("%d",*val);  break;}
@@ -1118,16 +1148,16 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i) const
       case kULong:             {ULong_t *val  = (ULong_t*)ladd;  printf("%ld",*val); break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%f ",val[j]);  break;}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<fLength[i];j++) printf("%g ",val[j]);  break;}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<aleng;j++) printf("%f ",val[j]);  break;}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<aleng;j++) printf("%g ",val[j]);  break;}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
@@ -2370,6 +2400,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // array counter [n]
          case kCounter: { Int_t *x=(Int_t*)(pointer+fOffset[i]);
                           b << x[0];
+                          if ( i == last-1) return x[0]; // info used by TBranchElement::FillLeaves
                           //Int_t *counter = (Int_t*)fMethod[i];
                           //*counter = x[0];
                           break;
