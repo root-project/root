@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.40 2002/02/07 08:41:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.41 2002/02/07 08:42:59 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -658,14 +658,19 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Delete current tree and connect new tree
    TDirectory *cursav = gDirectory;
-   delete fFile; fFile = 0;
+   //delete file unless the file owns this chain !!
+   if (fFile) {
+      if (!fDirectory->GetList()->FindObject(this)) {
+         delete fFile; fFile = 0;
+      }
+   }
    TChainElement *element = (TChainElement*)fFiles->At(t);
    if (!element) return -4;
    fFile = TFile::Open(element->GetTitle());
    if (fFile->IsZombie()) {
       delete fFile; fFile = 0;
       return -3;
-   }
+   } 
    fTree = (TTree*)fFile->Get(element->GetName());
    fTreeNumber = t;
    fDirectory = fFile;
@@ -1027,6 +1032,24 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 
    // invalidate current Tree
    fTreeNumber = -1;
+}
+
+//______________________________________________________________________________
+void TChain::SetDirectory(TDirectory *dir)
+{
+   // Remove reference to this chain from current directory and add
+   // reference to new directory dir. dir can be 0 in which case the chain
+   // does not belong to any directory.
+
+   if (fDirectory == dir) return;
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fDirectory = dir;
+   if (fDirectory) {
+      fDirectory->GetList()->Add(this);
+      fFile = fDirectory->GetFile();
+   } else {
+      fFile = 0;
+   }
 }
 
 //______________________________________________________________________________

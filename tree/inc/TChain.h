@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.20 2002/01/19 11:04:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.21 2002/02/03 17:32:27 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
     virtual void      Reset(Option_t *option="");
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
+    virtual void      SetDirectory(TDirectory *dir);
     static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetWeight(Double_t w=1, Option_t *option="");
