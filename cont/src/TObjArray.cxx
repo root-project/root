@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.9 2001/04/04 14:07:26 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.1.1.6 2001/04/13 13:06:11 fisyak Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -203,16 +203,6 @@ TObject *TObjArray::After(TObject *obj) const
    if (idx == -1 || idx == fSize-1) return 0;
 
    return fCont[idx+1];
-}
-
-//______________________________________________________________________________
-TObject *TObjArray::At(Int_t i) const
-{
-   // Return the object at position i. Returns 0 if i is out of bounds.
-
-   if (BoundsOk("At", i))
-      return fCont[i-fLowerBound];
-   return 0;
 }
 
 //______________________________________________________________________________
