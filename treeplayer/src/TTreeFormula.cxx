@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.110 2003/02/07 23:46:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.111 2003/02/11 12:17:19 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3684,7 +3684,8 @@ void TTreeFormula::Streamer(TBuffer &R__b)
       R__b >> fNcodes;
       R__b.ReadFastArray(fCodes, fNcodes);
       R__b >> fMultiplicity;
-      R__b >> fInstance;
+      Int_t instance;
+      R__b >> instance; //data member removed
       R__b >> fNindex;
       if (fNindex) {
          fLookupType = new Int_t[fNindex];

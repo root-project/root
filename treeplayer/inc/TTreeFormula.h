@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.26 2003/01/24 07:04:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.27 2003/01/30 06:40:33 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -63,7 +63,6 @@ protected:
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
    Int_t       fMultiplicity;     //  Indicator of the variability of the formula
-   Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
    Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
    TObjArray   fLeaves;           //!  List of leaf used in this formula.
@@ -132,7 +131,7 @@ public:
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,6)  //The Tree formula
+   ClassDef(TTreeFormula,7)  //The Tree formula
 };
 
 #endif
