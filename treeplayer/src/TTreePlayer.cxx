@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.30 2000/12/15 09:34:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.31 2000/12/19 10:44:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1506,7 +1506,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       TBranch *branch = leaf->GetBranch();
       branchname[0] = 0;
       strcpy(branchname,branch->GetName());
-      Int_t nch = strlen(branchname);
       if (!branches.FindObject(branch)) branches.Add(branch);
       else leafStatus[l] = 1;
       if ( branch->GetNleaves() > 1) {
