@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.12 2002/12/03 11:20:10 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.13 2003/11/05 13:24:46 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -50,11 +50,13 @@ class TGListTree;
 class TGListTreeItem;
 class TGListView;
 class TGHProgressBar;
+class TGButton;
 
 
 class TTreeViewer : public TGMainFrame {
 
 friend class TGClient;
+friend class TGButton;
 
 public:
    //---- item types used as user data
@@ -87,6 +89,7 @@ private:
    Int_t                fTreeIndex;             // index of current tree in list
    const TGPicture      *fPicX, *fPicY, *fPicZ; // pictures for X, Y and Z expressions
    const TGPicture      *fPicDraw, *fPicStop;   // pictures for Draw/Stop buttons
+   const TGPicture      *fPicRefr;              // pictures for Refresh buttons //ia
    Cursor_t             fDefaultCursor;         // default cursor
    Cursor_t             fWatchCursor;           // watch cursor
    TTimer               *fTimer;                // tree viewer timer
@@ -138,6 +141,7 @@ private:
    TGTextEntry          *fBarListOut;   // tree output event list name entry
    TGPictureButton      *fDRAW;         // DRAW button
    TGPictureButton      *fSTOP;         // interrupt current command (not yet)
+   TGPictureButton      *fREFR;         // REFRESH button  //ia
    TGStatusBar          *fStatusBar;    // status bar
    TGComboBox           *fCombo;        // combo box with session records
    TGPictureButton      *fBGFirst;
@@ -181,6 +185,7 @@ public:
                                  Bool_t next , Bool_t last);
    virtual void  CloseWindow();
    virtual void  Delete(Option_t *) { }                          // *MENU*
+   void          DoRefresh();
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*
