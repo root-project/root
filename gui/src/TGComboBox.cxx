@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.21 2004/07/07 10:17:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.22 2004/09/17 08:46:25 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -452,7 +452,8 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
    for (int i = 1; i <= 4; i++)
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-   fComboFrame->SetHeight(25);
+
+   GetListBox()->Resize(GetListBox()->GetWidth(), 72);
    Select(1);  // to have first entry selected
 }
 
