@@ -832,6 +832,40 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    return fitResult;
 }
 
+//______________________________________________________________________________
+TAxis *TGraph2D::GetXaxis() const
+{
+   // Get x axis of the graph.
+
+   //if (!gPad) return 0;
+   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
+}
+
+//______________________________________________________________________________
+TAxis *TGraph2D::GetYaxis() const
+{
+   // Get y axis of the graph.
+
+   //if (!gPad) return 0;
+   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
+}
+
+
+//______________________________________________________________________________
+TAxis *TGraph2D::GetZaxis() const
+{
+   // Get z axis of the graph.
+
+   //if (!gPad) return 0;
+   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   if (!h) return 0;
+   return h->GetZaxis();
+}
+
 
 //______________________________________________________________________________
 TList *TGraph2D::GetContourList(Double_t contour)
