@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.15 2002/12/10 14:00:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.16 2003/02/24 21:31:39 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -355,8 +355,6 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef __CINT__
-
 inline TMatrixDRow::TMatrixDRow(const TMatrixD &matrix, Int_t row)
        : fMatrix(&matrix), fInc(matrix.fNrows)
 {
@@ -514,7 +512,5 @@ inline Double_t &TMatrixDFlat::operator[](Int_t i)
 {
    return (Double_t&)((*(const TMatrixDFlat *)this)(i));
 }
-
-#endif
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.22 2002/10/25 15:29:50 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.23 2003/07/12 16:14:27 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -239,8 +239,6 @@ inline Bool_t TMatrixD::IsValid() const
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef __CINT__
-
 inline TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols)
 {
    Allocate(no_rows, no_cols);
@@ -438,7 +436,5 @@ inline TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
 
    return *this;
 }
-
-#endif
 
 #endif

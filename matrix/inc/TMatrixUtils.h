@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.18 2002/12/10 14:00:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.19 2003/02/24 21:31:39 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -356,8 +356,6 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef __CINT__
-
 inline TMatrixRow::TMatrixRow(const TMatrix &matrix, Int_t row)
        : fMatrix(&matrix), fInc(matrix.fNrows)
 {
@@ -515,7 +513,5 @@ inline Real_t &TMatrixFlat::operator[](Int_t i)
 {
    return (Real_t&)((*(const TMatrixFlat *)this)(i));
 }
-
-#endif
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.21 2002/10/25 15:29:50 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.22 2003/07/12 19:43:59 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -191,8 +191,6 @@ void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2);
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef __CINT__
-
 inline TVectorD::TVectorD(Int_t n)
 {
    Allocate(n);
@@ -301,7 +299,5 @@ inline TVectorD &TVectorD::Zero()
       memset(fElements, 0, fNrows*sizeof(Double_t));
    return *this;
 }
-
-#endif
 
 #endif
