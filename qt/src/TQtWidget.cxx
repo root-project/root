@@ -1,6 +1,6 @@
 // Author: Valery Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtWidget.cxx,v 1.35 2004/06/28 20:16:55 fine Exp $
+** $Id: TQtThread.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -137,6 +137,18 @@ void TQtWidget::Disconnect()
   TCanvas *c = fCanvas; fCanvas = 0; delete c;
   qApp->unlock();
 }
+//_____________________________________________________________________________
+void TQtWidget::Refresh()
+{
+   // Qt slot to allow Qt signal refreshing TOOT TCanvas if needed
+
+   TCanvas *c = Canvas();
+   if (!fPixmapID.paintingActive())  AdjustBufferSize();
+   if (c) {
+      c->Resize();
+      c->Update();
+   }
+}
 
 //_____________________________________________________________________________
 void TQtWidget::resize (int w, int h)
@@ -153,20 +165,32 @@ void TQtWidget::customEvent(QCustomEvent *e)
 {
    // The custom responce to the special WIN32 events
    // These events are not present with X11 systems
-
-   if (e->type() == QEvent::User)
+   switch (e->type() - QEvent::User) {
+   case kEXITSIZEMOVE:
    { // WM_EXITSIZEMOVE
       fPaint = TRUE;
       setUpdatesEnabled( TRUE );
       exitSizeEvent();
+         break;
    }
-   if (e->type() == QEvent::User+1)
+   case kENTERSIZEMOVE:
    {
       //  WM_ENTERSIZEMOVE
       fSizeChanged=FALSE;
       fPaint = FALSE;
       setUpdatesEnabled( FALSE );
    }
+   case kFORCESIZE:
+   default:
+      { 
+         // Force resize
+         fPaint       = TRUE;
+         fSizeChanged = TRUE;
+         setUpdatesEnabled( TRUE );
+         exitSizeEvent();
+         break;
+      }
+   };
 }
 //_____________________________________________________________________________
 void TQtWidget::focusInEvent ( QFocusEvent *e )
@@ -384,13 +408,7 @@ void TQtWidget::exitSizeEvent ()
    // Responce to the "exit size event"
 
    if (!fSizeChanged) return;
-   TCanvas *c = Canvas();
-   // fprintf(stderr, "TQtWidget::exitSizeEvent . . .Active = %d fS=%d,c=%p:%p w=%d h=%d\n",fPixmapID.paintingActive(),fSizeChanged,c, fCanvas, size().width(),size().height());
-   if (!fPixmapID.paintingActive())  AdjustBufferSize();
-   if (c) {
-      c->Resize();
-      c->Update();
-   }
+   Refresh();
 }
 
 //____________________________________________________________________________

@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TGQt.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
+** $Id: TGQt.cxx,v 1.59 2004/07/12 16:55:04 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -422,10 +422,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-#ifndef WIN32
-   // vf   fQtInputHandler =   new TQtInputHandler();
-#endif
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.59 2004/07/12 16:55:04 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -715,6 +712,11 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
       bitBlt ( dst,QPoint(xpos,ypos),src,sr,Qt::CopyROP); // bool ignoreMask )
       if (isPainted) Begin();
       Emitter()->EmitPadPainted(src);
+      if (!fSelectedBuffer && (fSelectedWindow->devType() == QInternal::Widget ) )
+      {
+        TQtWidget *w = (TQtWidget *)fSelectedWindow;
+        w->EmitCanvasPainted(); 
+      }
    }
 }
 //______________________________________________________________________________

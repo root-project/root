@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TQtWidget.h,v 1.17 2004/07/02 00:22:49 fine Exp $
+** $Id: TQtWidget.h,v 1.18 2004/07/12 01:48:02 fine Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 **
@@ -37,6 +37,11 @@ class TQtWidgetBuffer : public QPixmap
 class  TQtWidget : public QWidget {
  Q_OBJECT
 public:
+   enum {
+      kEXITSIZEMOVE,
+      kENTERSIZEMOVE,
+      kFORCESIZE
+   };
   TQtWidget( QWidget* parent=0, const char* name=0, WFlags f=Qt::WStyle_NoBorder, bool embedded=TRUE);
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c){ fCanvas = c;} 
@@ -62,12 +67,12 @@ protected:
    QWidget    *fWrapper;
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;
-
+   virtual void EmitCanvasPainted() { emit CanvasPainted(); }
    TCanvas  *Canvas();
    bool paintFlag(bool mode=TRUE);
    void AdjustBufferSize();
 
-   // overloaded methods
+   // overloaded QWidget methods
    bool paintingActive () const;
 
    virtual void enterEvent       ( QEvent *      );
@@ -97,6 +102,10 @@ public slots:
    virtual void cd();
    virtual void cd(int subpadnumber);
    void Disconnect();
+   void Refresh(); 
+signals:
+   // emit the Qt signal when the double buffer of the TCamvas has been filled up
+   void CanvasPainted(); 
 
 };
 
