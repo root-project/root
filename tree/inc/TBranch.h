@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.6 2000/12/26 14:22:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.7 2001/02/06 10:55:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -94,6 +94,8 @@ public:
     virtual void     DropBaskets();
     virtual Int_t    Fill();
     virtual void     FillLeaves(TBuffer &b);
+    virtual TBranch *FindBranch(const char *name);
+    virtual TLeaf   *FindLeaf(const char *name);
     virtual char    *GetAddress() const {return fAddress;}
     virtual Int_t    GetBasketSize() const {return fBasketSize;}
     virtual Int_t    GetCompressionLevel() const {return fCompress;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.18 2001/03/12 07:17:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.19 2001/03/29 11:04:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,6 +37,7 @@ R__EXTERN TTree *gTree;
 Int_t TBranch::fgCount = 0;
 
 const Int_t kMaxRAM = 10;
+const Int_t kMaxLen = 512;
 
 ClassImp(TBranch)
 
@@ -83,6 +84,7 @@ TBranch::TBranch(): TNamed()
    fOffset         = 0;
    fDirectory      = 0;
    fFileName       = "";
+   gBranch = this;
 }
 
 //______________________________________________________________________________
@@ -129,6 +131,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
 //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+   gBranch = this;
    Int_t i;
    fCompress = compress;
    if (compress == -1 && gTree->GetDirectory()) {
@@ -447,6 +450,63 @@ void TBranch::FillLeaves(TBuffer &b)
     TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
     leaf->FillBasket(b);
   }
+}
+
+//______________________________________________________________________________
+TBranch *TBranch::FindBranch(const char* branchname) 
+{
+   char name[kMaxLen];
+   TIter next(GetListOfBranches());
+   
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      strcpy(name,branch->GetName());
+      char *dim = (char*)strstr(name,"[");
+      if (dim) dim[0]='\0';
+      if (!strcmp(branchname,name)) return branch;
+   }
+   
+   //search in list of friends
+   return 0;
+}
+
+//______________________________________________________________________________
+TLeaf *TBranch::FindLeaf(const char* searchname) 
+{
+   char leafname[kMaxLen];
+   char longname[kMaxLen];
+   
+   // For leaves we allow for one level up to be prefixed to the
+   // name
+   
+   TIter next (GetListOfLeaves());
+   TLeaf *leaf;
+   while ((leaf = (TLeaf*)next())) {
+      strcpy(leafname,leaf->GetName());
+      char *dim = (char*)strstr(leafname,"[");
+      if (dim) dim[0]='\0';
+      
+      if (!strcmp(searchname,leafname)) return leaf;
+      
+      TBranch * branch = leaf->GetBranch();
+      if (branch) {
+         sprintf(longname,"%s.%s",branch->GetName(),leafname);
+         char *dim = (char*)strstr(longname,"[");
+         if (dim) dim[0]='\0';
+         if (!strcmp(searchname,longname)) return leaf;
+
+         // The following is for the case where the branch is only
+         // a sub-branch.  Since we do not see it through
+         // TTree::GetListOfBranches, we need to see it indirectly.
+         // This is the less sturdy part of this search ... it may
+         // need refining ... 
+         if (strstr(searchname,".")
+             && !strcmp(searchname,branch->GetName())) return leaf;                //printf("found leaf3=%s/%s, branch=%s, i=%d\n",leaf->GetName(),leaf->GetTitle(),branch->GetName(),i);
+      }
+   }
+   
+   //search in list of friends
+   return 0;
 }
 
 
@@ -920,8 +980,6 @@ void TBranch::Streamer(TBuffer &b)
 //*-*              =========================================
    if (b.IsReading()) {
       UInt_t R__s, R__c;
-      TBranch *branchSave = gBranch;
-      gBranch = this;
       fTree = gTree;
       fAddress = 0;
       gROOT->SetReadingObject(kTRUE);
@@ -929,7 +987,11 @@ void TBranch::Streamer(TBuffer &b)
       if (v > 5) {
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
-         gBranch = branchSave;
+         TIter next(GetListOfLeaves());
+         TLeaf *leaf;
+         while ((leaf=(TLeaf*)next())) {
+            leaf->SetBranch(this);
+         }
          fDirectory = gDirectory;
          fNleaves = fLeaves.GetEntriesFast();
          if (fFileName.Length() != 0) fDirectory = 0;
@@ -937,6 +999,7 @@ void TBranch::Streamer(TBuffer &b)
          return;
       }
       //====process old versions before automatic schema evolution
+      gBranch = this;
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;
