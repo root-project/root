@@ -267,6 +267,7 @@
 **************************************************************************/
 #define G__HAS_DEFAULTCONSTRUCTOR  0x01
 #define G__HAS_COPYCONSTRUCTOR     0x02
+#define G__HAS_CONSTRUCTOR         0x03
 #define G__HAS_DESTRUCTOR          0x04
 #define G__HAS_ASSIGNMENTOPERATOR  0x08
 #define G__HAS_OPERATORNEW1ARG     0x10

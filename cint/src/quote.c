@@ -473,7 +473,7 @@ char *temp;
     break;
   case 'd':
   case 'f':
-    sprintf(temp,"%.12e",buf.obj.d);
+    sprintf(temp,"%.17e",buf.obj.d);
     break;
   case 'w':
     G__logicstring(buf,1,temp1);

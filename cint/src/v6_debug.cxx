@@ -506,7 +506,7 @@ char *namedmacro;
   G__tmpnam(tname);
   strcat(tname,G__NAMEDMACROEXT);
   fp = fopen(tname,"w");
-  if(!fp) return (char*)NULL;
+  if(!fp) return((char*)NULL);
   fprintf(fp,"%s",namedmacro);
   fprintf(fp,"\n");
   fclose(fp);

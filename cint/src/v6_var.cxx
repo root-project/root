@@ -5932,6 +5932,13 @@ int parameter00;
   
   var->statictype[var->allvar] = G__AUTO; /* auto */
 
+#ifndef G__OLDIMPLEMENTATION1552
+  if(2==G__decl_obj) { /* this is set in decl.c G__initstructary */
+    var->statictype[var->allvar] = G__AUTOARYDISCRETEOBJ; /* auto */
+  }
+#endif
+
+
 #ifndef G__OLDIMPLEMENTATION612
   /***************************************************
   * if namespace, set G__static_alloc, it should be
@@ -6506,7 +6513,11 @@ int parameter00;
      *********************************************************/
   case 'u': /* struct, union */
     if(G__struct.isabstract[G__tagnum]&&0==G__ansiheader&&0==G__funcheader
-       &&G__PARANORMAL==G__reftype) {
+       &&G__PARANORMAL==G__reftype
+#ifndef G__OLDIMPLEMENTATION1556
+       &&(G__CPPLINK!=G__globalcomp||G__tagdefining!=G__tagnum)
+#endif
+       ) {
       G__fprinterr(G__serr,"Error: abstract class object '%s %s' declared",G__struct.name[G__tagnum],item);
       G__genericerror((char*)NULL);
       var->hash[ig15]=0;

@@ -411,7 +411,14 @@ int noerror;
       tagname += 5;
     }
 #endif
-    else        env_tagnum = G__defined_tagname(temp,0);
+#ifndef G__OLDIMPLEMENTATION1550
+    else {
+      env_tagnum = G__defined_tagname(temp,noerror);
+      if(-1==env_tagnum) return(-1);
+    }
+#else
+    else env_tagnum = G__defined_tagname(temp,0);
+#endif
   }
   else {
     strcpy(atom_tagname,temp);

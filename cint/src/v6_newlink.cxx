@@ -2187,8 +2187,18 @@ char *path;
   store_allincludepath = realloc((void*)G__allincludepath
 				 ,strlen(G__allincludepath)+strlen(temp)+5);
   if(store_allincludepath) {
+#ifndef G__OLDIMPLEMENTATION1553
+    int i=0,flag=0;
+    while(temp[i]) if(isspace(temp[i++])) flag=1;
+    G__allincludepath = store_allincludepath;
+    if(flag)
+      sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I\"%s\" ",temp);
+    else
+      sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I%s ",temp);
+#else
     G__allincludepath = store_allincludepath;
     sprintf(G__allincludepath+strlen(G__allincludepath) ,"-I%s ",temp);
+#endif
   }
   else {
     G__genericerror("Internal error: memory allocation failed for includepath buffer");
@@ -6024,7 +6034,12 @@ FILE *fp;
 	  else
 	    fprintf(fp,"- ");
 
+#ifndef G__OLDIMPLEMENTATION1551
+	  fprintf(fp,"%d "
+		,ifunc->para_reftype[j][k]+ifunc->para_isconst[j][k]*10);
+#else
 	  fprintf(fp,"%d ",ifunc->para_reftype[j][k]);
+#endif
 	  if(ifunc->para_def[j][k])
 	    fprintf(fp,"%s ",G__quotedstring(ifunc->para_def[j][k],buf));
 	  else fprintf(fp,"- ");

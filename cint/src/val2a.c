@@ -1573,6 +1573,16 @@ int noerror;
       typenam[--len]='\0';
       flag=1;
       break;
+#ifndef G__OLDIMPLEMENTATION1557
+    case ' ':
+    case '\t':
+    case '\n':
+    case '\r':
+    case '\f':
+      typenam[--len]='\0';
+      flag=1;
+      break;
+#endif
     default:
       flag=0;
       break;

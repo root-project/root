@@ -2075,6 +2075,12 @@ int memfunc_flag;
 	    G__store_struct_offset = store_struct_offset;
 	  }
 #endif /* 1341 */
+#ifndef G__OLDIMPLEMENTATION1554
+	  else if(-1!=i && fpara.paran==1) {
+	    G__fprinterr(G__serr,"Error: No matching constructor for explicit conversion %s",item);
+	    G__genericerror((char*)NULL);
+	  }
+#endif
 #ifndef G__OLDIMPLEMENTATION641
 	  /* omitted constructor, return uninitialized object */
 	  *known3 = 1;

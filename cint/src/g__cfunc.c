@@ -3561,17 +3561,17 @@ void G__list_sut(fp) FILE *fp; {
    fprintf(fp,"   int G__tracemode(int on_off);\n");
    /* fprintf(fp,"   int G__breakline(int line);\n"); */
    fprintf(fp,"   int G__stepmode(int on_off);\n");
-   fprintf(fp,"   [anytype] G__calc(char *expression);\n");
-   fprintf(fp,"   [anytype] G__exec_text(char *unnamedmacro);\n");
-   fprintf(fp,"   [anytype] G__exec_tempfile(char *file);\n");
+   fprintf(fp,"   [anytype] G__calc(const char *expression);\n");
+   fprintf(fp,"   [anytype] G__exec_text(const char *unnamedmacro);\n");
+   fprintf(fp,"   [anytype] G__exec_tempfile(const char *file);\n");
 #ifndef G__OLDIMPLEMENTATION1546
-   fprintf(fp,"   char* G__load_text(char *namedmacro);\n");
+   fprintf(fp,"   char* G__load_text(const char *namedmacro);\n");
 #endif
-   fprintf(fp,"   int G__loadfile(char *file);\n");
-   fprintf(fp,"   int G__unloadfile(char *file);\n");
-   fprintf(fp,"   int G__reloadfile(char *file);\n");
-   fprintf(fp,"   int G__loadsystemfile(char* sysdllname);\n");
-   fprintf(fp,"   void G__add_ipath(char *pathname);\n");
+   fprintf(fp,"   int G__loadfile(const char *file);\n");
+   fprintf(fp,"   int G__unloadfile(const char *file);\n");
+   fprintf(fp,"   int G__reloadfile(const char *file);\n");
+   fprintf(fp,"   int G__loadsystemfile(const char* sysdllname);\n");
+   fprintf(fp,"   void G__add_ipath(const char *pathname);\n");
    fprintf(fp,"   int G__split(char *line,char *string,int argc,char *argv[]);\n");
    fprintf(fp,"   int G__readline(FILE *fp,char *line,char *argbuf,int *argn,char *arg[]);\n");
    fprintf(fp,"   int G__cmparray(short array1[],short array2[],int num,short mask);\n");

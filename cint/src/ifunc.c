@@ -2312,7 +2312,15 @@ int func_now;
 #endif
 	struct G__ifunc_table *store_pifunc = G__p_ifunc;
 	G__p_ifunc = &G__ifunc;
+#ifndef G__OLDIMPLEMENTATION1555
+	if(G__CPPLINK==G__globalcomp && G__decl && G__prerun)
+	  G__noerr_defined = 1;
+#endif
 	*ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+#ifndef G__OLDIMPLEMENTATION1555
+	if(G__CPPLINK==G__globalcomp && G__decl && G__prerun)
+	  G__noerr_defined = 0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1380
 	tmpx = ifunc->para_default[func_now][iin];
 #ifndef G__OLDIMPLEMENTATION1455

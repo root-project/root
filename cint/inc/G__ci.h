@@ -21,8 +21,9 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015004
-#define G__CINTVERSIONSTR  "5.15.04, June 17 2001"
+#define G__CINTVERSION      5015005
+#define G__CINTVERSIONSTR  "5.15.05, June 23 2001"
+
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -651,6 +652,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__LOCALSTATIC (-2)
 #define G__LOCALSTATICBODY (-3)
 #define G__COMPILEDGLOBAL  (-4)
+#define G__AUTOARYDISCRETEOBJ (-5)
 
 #define G__LOCAL    0
 #ifdef G__MEMBERFUNC
@@ -1715,10 +1717,10 @@ extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));
 extern G__EXPORT double G__double G__P((G__value buf));
-extern G__EXPORT G__value G__calc G__P((char *expr));
-extern G__EXPORT int  G__loadfile G__P((char *filename));
-extern G__EXPORT int  G__unloadfile G__P((char *filename));
-extern G__EXPORT int G__init_cint G__P((char *command));
+extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
+extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
+extern G__EXPORT int  G__unloadfile G__P((G__CONST char* filename));
+extern G__EXPORT int G__init_cint G__P((G__CONST char* command));
 extern G__EXPORT void G__scratch_all G__P((void));
 extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
@@ -1729,7 +1731,7 @@ extern G__EXPORT char *G__type2string G__P((int type,int tagnum,int typenum,int 
 extern G__EXPORT void G__alloc_tempobject G__P((int tagnum,int typenum));
 extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
 extern G__EXPORT void G__free_p2fsetup G__P((void));
-extern G__EXPORT int G__genericerror G__P((char *message));
+extern G__EXPORT int G__genericerror G__P((G__CONST char *message));
 extern G__EXPORT char* G__tmpnam G__P((char* name));
 extern G__EXPORT int G__setTMPDIR G__P((char* badname));
 extern G__EXPORT void G__setPrerun G__P((int prerun));
@@ -1793,14 +1795,14 @@ extern G__EXPORT float* G__Floatref G__P((G__value *buf));
 extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
 extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
 extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
-extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
-extern G__EXPORT G__value G__exec_text G__P((char *unnamedmacro));
+extern G__EXPORT G__value G__exec_tempfile G__P((G__CONST char *file));
+extern G__EXPORT G__value G__exec_text G__P((G__CONST char *unnamedmacro));
 extern G__EXPORT char* G__lasterror_filename G__P(());
 extern G__EXPORT int G__lasterror_linenum G__P(());
 extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
 
 #ifndef G__OLDIMPLEMENTATION1546
-extern G__EXPORT char* G__load_text G__P((char *namedmacro));
+extern G__EXPORT char* G__load_text G__P((G__CONST char *namedmacro));
 extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
@@ -1866,10 +1868,10 @@ static void (*G__add_macro) G__P((G__CONST char *macro));
 static void (*G__check_setup_version) G__P((int version,G__CONST char *func));
 static long (*G__int) G__P((G__value buf));
 static double (*G__double) G__P((G__value buf));
-static G__value (*G__calc) G__P((char *expr));
-static int  (*G__loadfile) G__P((char *filename));
-static int  (*G__unloadfile) G__P((char *filename));
-static int (*G__init_cint) G__P((char *command));
+static G__value (*G__calc) G__P((G__CONST char *expr));
+static int  (*G__loadfile) G__P((G__CONST char* filename));
+static int  (*G__unloadfile) G__P((G__CONST char* filename));
+static int (*G__init_cint) G__P((G__CONST char* command));
 static void (*G__scratch_all) G__P((void));
 static void (*G__setdouble) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 static void (*G__setint) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
@@ -1880,7 +1882,7 @@ static char* (*G__type2string) G__P((int type,int tagnum,int typenum,int reftype
 static void (*G__alloc_tempobject) G__P((int tagnum,int typenum));
 static void (*G__set_p2fsetup) G__P((void (*p2f)()));
 static void (*G__free_p2fsetup) G__P((void));
-static int (*G__genericerror) G__P((char *message));
+static int (*G__genericerror) G__P((G__CONST char *message));
 static char* (*G__tmpnam) G__P((char* name));
 static int (*G__setTMPDIR) G__P((char* badname));
 static void (*G__setPrerun) G__P((int prerun));
@@ -1944,14 +1946,14 @@ static float* (*G__Floatref) G__P((G__value *buf));
 static double* (*G__Doubleref) G__P((G__value *buf));
 static int (*G__loadsystemfile) G__P((G__CONST char* filename));
 static void (*G__set_ignoreinclude) G__P((G__IgnoreInclude ignoreinclude));
-static G__value (*G__exec_tempfile) G__P((char *file));
-static G__value (*G__exec_text) G__P((char *unnamedmacro));
+static G__value (*G__exec_tempfile) G__P((G__CONST char *file));
+static G__value (*G__exec_text) G__P((G__CONST char *unnamedmacro));
 static char* (*G__lasterror_filename) G__P(());
 static int (*G__lasterror_linenum) G__P(());
 static void (*G__va_arg_put) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
 
 #ifndef G__OLDIMPLEMENTATION1546
-static char* (*G__load_text) G__P((char *namedmacro));
+static char* (*G__load_text) G__P((G__CONST char *namedmacro));
 static void (*G__set_emergencycallback) G__P((void (*p2f)()));
 #endif
 #ifndef G__OLDIMPLEMENTATION1485
@@ -2141,10 +2143,10 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__check_setup_version = (void (*) G__P((int version,G__CONST char *func)) ) a37;
   G__int = (long (*) G__P((G__value buf)) ) a38;
   G__double = (double (*) G__P((G__value buf)) ) a39;
-  G__calc = (G__value (*) G__P((char *expr)) ) a40;
-  G__loadfile = (int (*) G__P((char *filename)) ) a41;
-  G__unloadfile = (int (*) G__P((char *filename)) ) a42;
-  G__init_cint = (int (*) G__P((char *command)) ) a43;
+  G__calc = (G__value (*) G__P((G__CONST char *expr)) ) a40;
+  G__loadfile = (int (*) G__P((G__CONST char *filename)) ) a41;
+  G__unloadfile = (int (*) G__P((G__CONST char *filename)) ) a42;
+  G__init_cint = (int (*) G__P((G__CONST char *command)) ) a43;
   G__scratch_all = (void (*) G__P((void)) ) a44;
   G__setdouble = (void (*) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a45;
   G__setint = (void (*) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a46;
@@ -2155,7 +2157,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__alloc_tempobject = (void (*) G__P((int tagnum,int typenum)) ) a51;
   G__set_p2fsetup = (void (*) G__P((void (*p2f)())) ) a52;
   G__free_p2fsetup = (void (*) G__P((void)) ) a53;
-  G__genericerror = (int (*) G__P((char *message)) ) a54;
+  G__genericerror = (int (*) G__P((G__CONST char *message)) ) a54;
   G__tmpnam = (char* (*) G__P((char* name)) ) a55;
   G__setTMPDIR = (int (*) G__P((char* badname)) ) a56;
   G__setPrerun = (void (*) G__P((int prerun)) ) a57;
@@ -2219,13 +2221,13 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__Doubleref = (double* (*) G__P((G__value *buf)) ) a117;
   G__loadsystemfile = (int (*) G__P((G__CONST char* filename)) ) a118;
   G__set_ignoreinclude = (void (*) G__P((G__IgnoreInclude ignoreinclude)) ) a119;
-  G__exec_tempfile = (G__value (*) G__P((char *file)) ) a120;
-  G__exec_text = (G__value (*) G__P((char *unnamedmacro)) ) a121;
+  G__exec_tempfile = (G__value (*) G__P((G__CONST char *file)) ) a120;
+  G__exec_text = (G__value (*) G__P((G__CONST char *unnamedmacro)) ) a121;
   G__lasterror_filename = (char* (*) G__P(()) ) a122;
   G__lasterror_linenum = (int (*) G__P(()) ) a123;
   G__va_arg_put = (void (*) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n)) ) a124;
 #ifndef G__OLDIMPLEMENTATION1546
-  G__load_text = (char* (*) G__P((char *namedmacro)) ) a125;
+  G__load_text = (char* (*) G__P((G__CONST char *namedmacro)) ) a125;
   G__set_emergencycallback= (void (*) G__P((void (*p2f)())) ) a126;
 #endif
 #ifndef G__OLDIMPLEMENTATION1485

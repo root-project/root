@@ -479,10 +479,31 @@ int isglobal;
 	 * destruction of array 
 	 ********************************************************/
 	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
+#ifndef G__OLDIMPLEMENTATION1552
+	  if(G__AUTOARYDISCRETEOBJ==var->statictype[itemp]) {
+	    long store_globalvarpointer = G__globalvarpointer;
+	    size=G__struct.size[G__tagnum];
+	    for(i=var->varlabel[itemp][1];i>=0;--i) {
+	      G__store_struct_offset = var->p[itemp]+size*i;
+	      G__globalvarpointer = G__store_struct_offset;
+	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
+	      if(0==itemp1) break;
+	    }
+	    G__globalvarpointer = store_globalvarpointer;
+	    free((void*)var->p[itemp]);
+	  }
+	  else {
+	    G__store_struct_offset = var->p[itemp];
+	    if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
+	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
+	    G__cpp_aryconstruct=0;
+	  }
+#else
 	  G__store_struct_offset = var->p[itemp];
 	  if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
 	  G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	  G__cpp_aryconstruct=0;
+#endif
 	  cpplink=1;
 	}
 	else {

@@ -672,6 +672,89 @@ char *name;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1552
+/******************************************************************
+* G__initstructary(p_inc,new_name)
+*
+*  A string[3] = { "abc", "def", "hij" };
+*  A string[]  = { "abc", "def", "hij" };
+*                 ^
+******************************************************************/
+void G__initstructary(new_name,tagnum)
+char* new_name;
+int tagnum;
+{
+  char *index;
+  int p_inc;
+  int cin;
+  char buf[G__ONELINE];
+  G__value reg;
+  long store_struct_offset = G__store_struct_offset;
+  long store_globalvarpointer = G__globalvarpointer;
+  long adr;
+  long len;
+  int known;
+  int i;
+
+#ifdef G__ASM
+  G__abortbytecode();
+#endif
+
+  /* count number of array elements if needed */
+  index = strchr(new_name,'[');
+  if(*(index+1)==']') {
+    fpos_t store_pos;
+    int store_line = G__ifile.line_number; 
+    fgetpos(G__ifile.fp,&store_pos);
+
+    p_inc=0;
+    do {
+      cin = G__fgetstream(buf,",}");
+      ++p_inc;
+    } while(cin!='}'); 
+
+    strcpy(buf,index+1);
+    sprintf(index+1,"%d",p_inc);
+    strcat(new_name,buf);
+
+    G__ifile.line_number = store_line; 
+    fsetpos(G__ifile.fp,&store_pos);
+  }
+  else {
+    p_inc=G__getarrayindex(index);
+  }
+
+  /* allocate memory */
+  reg = G__null;
+  G__decl_obj=2;
+  adr=G__int(G__letvariable(new_name,reg,&G__global,G__p_local));
+  G__decl_obj=0;
+
+  /* read and initalize each element */
+  strcpy(buf,G__struct.name[tagnum]);
+  strcat(buf,"(");
+  len = strlen(buf);
+  i=0;
+  do {
+    cin = G__fgetstream(buf+len,",}");
+    strcat(buf,")");
+    if(G__CPPLINK!=G__struct.iscpplink[tagnum]) {
+      G__store_struct_offset = adr + i*G__struct.size[tagnum];
+    }
+    else {
+      G__globalvarpointer = adr + i*G__struct.size[tagnum];
+    }
+    reg=G__getfunction(buf,&known,G__CALLCONSTRUCTOR);
+    ++i;
+  } while(cin!='}'); 
+
+  /* post processing */
+  G__store_struct_offset = store_struct_offset;
+  G__globalvarpointer = store_globalvarpointer;
+
+}
+#endif
+
 /******************************************************************
 * void G__define_var(tagnum,typenum)
 *
@@ -1984,6 +2067,22 @@ int tagnum,typenum;      /* overrides global variables */
 	  G__var_type = var_type;
 	  G__letvariable(new_name,reg,&G__global,G__p_local);
 	  goto readnext;
+	}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1552
+	if(initary && strchr(new_name,'[') &&
+	   (G__struct.funcs[G__tagnum]&G__HAS_CONSTRUCTOR)) {
+	  G__initstructary(new_name,G__tagnum);
+	  G__decl=store_decl;
+	  G__constvar=0;
+	  G__tagnum = store_tagnum;
+	  G__typenum = store_typenum;
+	  G__reftype=G__PARANORMAL;
+	  G__static_alloc=store_static_alloc2;
+	  G__dynconst=0;
+	  G__globalvarpointer = G__PVOID;
+	  return;
 	}
 #endif
 
