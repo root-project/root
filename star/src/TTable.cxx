@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2001/03/02 00:45:03 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.8 2001/03/16 22:25:56 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -1952,6 +1952,7 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
   if (b.IsReading())
   {
    long rbytes;
+   Int_t  ibytes;
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)
      //   char name[20];   /* table name */
@@ -1960,8 +1961,11 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (20+4) + (20+4) + 4;
      b.SetBufferOffset(len);
    }
-   b >> fMaxIndex;       // fTableHeader->nok;          /* # rows filled */
-   b >> rbytes;          /* number of bytes per row */
+   Int_t maxIndex;
+   b >> maxIndex;         // fTableHeader->nok;          /* # rows filled */
+   fMaxIndex = maxIndex;  // fTableHeader->nok;          /* # rows filled */
+   b >> ibytes;           /* number of bytes per row */
+   rbytes = ibytes;       /* number of bytes per row */
    if (rbytes - GetRowSize()) {
       Warning("StreamerHeader","Wrong row size: must be %d, read %d bytes\n",GetRowSize(),rbytes);
    }
@@ -1975,8 +1979,8 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
    }
   }
   else {
-    b << fMaxIndex;              //fTableHeader->nok;          /* # rows filled */
-    b << fSize;                  //  fTableHeader->rbytes;     /* number of bytes per row */
+    b << Int_t(fMaxIndex);              //fTableHeader->nok;          /* # rows filled */
+    b << Int_t(fSize);                  //  fTableHeader->rbytes;     /* number of bytes per row */
   }
 }
 
