@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.86 2002/04/12 19:19:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.87 2002/04/14 14:38:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -635,11 +635,31 @@ void TBranchElement::Browse(TBrowser *b)
          Int_t len = mothername.Length();
          if (len) {
             if (mothername(len-1)!='.') {
-               mothername.Append(".");
-               name.Prepend(mothername);
+               // We do not know for sure whether the mother's name is
+               // already preprended.  So we need to check:
+               //    a) it is prepended
+               //    b) it is NOT the name of a daugher (i.e. mothername.mothername exist)
+               TString doublename = mothername;
+               doublename.Append(".");
+               Int_t isthere = (name.Index(doublename)==0);
+               if (!isthere) {
+                  name.Prepend(doublename);
+               } else {
+                  if (GetMother()->FindBranch(mothername)) {
+                     doublename.Append(mothername);
+                     isthere = (name.Index(doublename)==0);
+                     if (!isthere) {
+                        mothername.Append(".");
+                        name.Prepend(mothername);
+                     }
+                  } else {
+                     // Nothing to do because the mother's name is
+                     // already in the name.
+                  }
+               }
             } else {
                // If the mother's name end with a dot then 
-               // the daughter probabley already contains the mother's name
+               // the daughter probably already contains the mother's name
                if (name.Index(mothername)==kNPOS) {
                   name.Prepend(mothername);
                }

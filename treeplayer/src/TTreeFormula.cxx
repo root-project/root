@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.89 2002/03/26 07:05:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.90 2002/04/04 17:28:52 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1380,12 +1380,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
    const char *cname = name.Data();
 
-   char   first[kMaxLen];  first[0] = '\0';
-   char  second[kMaxLen]; second[0] = '\0';
-   char   right[kMaxLen];  right[0] = '\0';
-   char    dims[kMaxLen];   dims[0] = '\0';
-   char    work[kMaxLen];   work[0] = '\0';
-   char scratch[kMaxLen];
+   char    first[kMaxLen];  first[0] = '\0';
+   char   second[kMaxLen]; second[0] = '\0';
+   char    right[kMaxLen];  right[0] = '\0';
+   char     dims[kMaxLen];   dims[0] = '\0';
+   char     work[kMaxLen];   work[0] = '\0';
+   char  scratch[kMaxLen];
+   char scratch2[kMaxLen];
    char *current;
 
    TLeaf *leaf=0, *tmp_leaf=0;
@@ -1611,12 +1612,16 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             // we always remove it in the present case.
             if (cname[i]) work[strlen(work)-1] = '\0';
             sprintf(scratch,"%s.%s",first,work);
+            sprintf(scratch2,"%s.%s.%s",first,second,work);
+
+            
 
             // First look for the current 'word' in the list of
             // leaf of the
             if (branch) {
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
             }
             if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                // This is a non-object leaf, it should NOT be specified more except for
@@ -1627,6 +1632,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (branch) {
                tmp_branch = branch->FindBranch(work);
                if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
+               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch2);
             }
             if (tmp_branch) {
                branch=tmp_branch;
@@ -1635,6 +1641,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                if (!final) {
                   tmp_leaf = branch->FindLeaf(work);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
                   if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                      // This is a non-object leaf, it should NOT be specified
                      // more except for dimensions.
