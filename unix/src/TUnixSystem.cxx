@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.49 2002/12/10 02:52:43 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.50 2002/12/10 12:12:30 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1296,10 +1296,17 @@ void TUnixSystem::StackTrace()
    Bool_t demangle = kTRUE;
 
    // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
-   // could also use c++filt --format=gnu-new-abi for g++ v3 and icc
+#if defined(R__INTEL_COMPILER)
+#if defined(R__B64)
+   const char *cppfilt = "eccfilt";
+#else
+   const char *cppfilt = "iccfilt";
+#endif
+#else
    const char *cppfilt = "c++filt";
-#if defined(R__INTEL_COMPILER) || (__GNUC__ >= 3)
-   const char *cppfiltarg = "--format=gnu-new-abi";
+#endif
+#if (__GNUC__ >= 3)
+   const char *cppfiltarg = "--format=gnu-v3";
 #else
    const char *cppfiltarg = "";
 #endif
