@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.59 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.60 2003/11/10 14:05:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2032,7 +2032,8 @@ Int_t TProofServ::CheckAuth(Int_t cSec, char **Det)
                }
                // Usr Dir
                Cdir = new char[strlen(Ucer)+5];
-               strncpy(Cdir,Ucer,Pcer); Cdir[Pcer+1]= '\0';
+               strncpy(Cdir,Ucer,Pcer);
+               Cdir[Pcer]= '\0';
                // Create Output
                details = new char[strlen(Adir)+strlen(Cdir)+strlen(Ucer)+strlen(Ukey)+40];
                sprintf(details,"pt=0 ru:1 cd:%s cf:%s kf:%s ad:%s",Cdir,Ucer,Ukey,Adir);
@@ -2182,8 +2183,8 @@ void TProofServ::RecvHostAuth()
          Int_t nold = hostAuth->NumMethods();
          Int_t i,j;
          // We add new methods or update details; in any case the
-         // should be the one we have found, so we start from the
-         // last ...
+         // first should be the one we have found, so we start from
+         // the last one ...
          for (i = nmet-1; i > -1; i-- ) {
             int jm = -1;
             for (j = 0; j < nold; j++ ) {

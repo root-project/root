@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.38 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.39 2003/11/07 03:29:41 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -479,8 +479,8 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
 
    // Attempt authentication
    if (!auth->Authenticate()) {
-      Error("TNetFile", "%s authentication failed for host %s",
-            TAuthenticate::GetAuthMethod(auth->GetSecurity()), fUrl.GetHost());
+      Error("TNetFile", "authentication failed for %s@%s",
+            auth->GetUser(), fUrl.GetHost());
       delete auth;
       goto zombie;
    }

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.54 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.55 2003/11/20 23:00:46 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -324,11 +324,15 @@ void ProofdLogin()
       struct shmid_ds shm_ds;
       if (gShmIdCred > 0) {
         if (shmctl(gShmIdCred, IPC_STAT, &shm_ds) == -1)
-           Error(ErrFatal, -1, "ProofdLogin: can't get info about shared memory segment %d", gShmIdCred);
+           Error(ErrFatal, -1,
+                 "ProofdLogin: can't get info about shared memory segment %d",
+                 gShmIdCred);
         shm_ds.shm_perm.uid = pw->pw_uid;
         shm_ds.shm_perm.gid = pw->pw_gid;
-        if ( shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1)
-           Error(ErrFatal, -1, "ProofdLogin: can't change ownership of shared memory segment %d", gShmIdCred);
+        if (shmctl(gShmIdCred, IPC_SET, &shm_ds) == -1)
+           Error(ErrFatal, -1,
+                 "ProofdLogin: can't change ownership of shared memory segment %d",
+                 gShmIdCred);
       }
 #endif
       // set access control list from /etc/initgroup
@@ -906,6 +910,13 @@ void ProofdExec()
    // CleanUp authentication table, if needed or required ...
    RpdCheckSession();
 
+   // Check if at any level there is request for Globus Authetication
+   // for proofd or rootd
+   strcpy(gRcFile, ".rootrc");
+   CheckGlobus(gRcFile);
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
+
    // Init Random machinery ...
    RpdInitRand();
 
@@ -1265,13 +1276,6 @@ int main(int argc, char **argv)
 
    // Log to stderr if not started as daemon ...
    if (gForegroundFlag) RpdSetRootLogFlag(1);
-
-   // Check if at any level there is request for Globus Authetication
-   // for proofd or rootd
-   strcpy(gRcFile, ".rootrc");
-   CheckGlobus(gRcFile);
-   if (gDebug > 0)
-      ErrorInfo("main: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
 
    if (!gInetdFlag) {
 

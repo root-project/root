@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.6 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.7 2003/11/20 23:00:46 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -39,21 +39,18 @@ extern "C" {
 #include "rpderr.h"
 
 static gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
-int gShmIdCred = -1;
-char gConfDir[kMAXPATHLEN] = { 0 };
-static int gLocalCallEnv = -1;
-char gUser[256] = { 0 };
+static int gShmIdCred = -1;
 
 int GlobusGetDelCred();
 void GlobusCleanup();
 void GlobusError(char *, OM_uint32, OM_uint32, int);
 int GlobusStoreSecContext(char *, gss_ctx_id_t, char *);
 int GlobusGetLocalEnv(int *, TString);
-int GlobusGetNames(int, char **, char **);
-int GlobusGetCredHandle(int, gss_cred_id_t *);
+int GlobusGetNames(Int_t, TString &, TString &, Int_t &);
+int GlobusGetCredHandle(Int_t, Int_t, gss_cred_id_t *);
 int GlobusCheckSecContext(char *, char *);
 int GlobusUpdateSecContInfo(int);
-void GlobusSetCertificates(int);
+void GlobusSetCertificates(int,int,TString, TString &);
 
 Int_t GlobusAuthenticate(TAuthenticate *, TString &, TString &);
 
@@ -69,17 +66,6 @@ static char **hostGlbSecCont = 0;
 static char **subjGlbSecCont = 0;
 static gss_ctx_id_t *sptrGlbSecCont = 0;
 static int NumGlbSecCont = 0;
-
-// OffSet in Auth Tab remote file
-TString gDetails;
-static int gNeedProxy = 1;
-char gPromptReUse[20];
-Int_t gPrompt = 0;
-Int_t gRSAKey = 0;
-
-TSocket *sock = 0;
-THostAuth *HostAuth = 0;
-TString protocol;
 
 //______________________________________________________________________________
 Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
@@ -100,15 +86,13 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    OM_uint32 GssRetFlags = 0;
    OM_uint32 GssReqFlags = 0;
    int GlbTokenStatus = 0;
-   char *isuj = 0;
    char *ssuj = 0;
    char *host_subj = 0;
    gss_buffer_desc OutBuf;
 
    // From the calling TAuthenticate
-   sock = Auth->GetSocket();
-   HostAuth = Auth->GetHostAuth();
-   protocol = Auth->GetProtocol();
+   TSocket *sock = Auth->GetSocket();
+   TString protocol = Auth->GetProtocol();
 
    if (gDebug > 2)
       Info("GlobusAuthenticate", " enter: protocol:'%s' user:'%s'", protocol.Data(),
@@ -120,43 +104,47 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       return 1;
    }
    Int_t ReUse = TAuthenticate::GetAuthReUse();
-   gPrompt     = TAuthenticate::GetPromptUser();
-   sprintf(gPromptReUse, "pt:%d ru:%d", gPrompt, ReUse);
+   Int_t Prompt = TAuthenticate::GetPromptUser();
+   TString PromptReUse = TString(Form("pt:%d ru:%d", Prompt, ReUse));
    if (gDebug > 2)
-      Info("GlobusAuthenticate", "gPrompt: %d, ReUse: %d", gPrompt, ReUse);
+      Info("GlobusAuthenticate", "Prompt: %d, ReUse: %d", Prompt, ReUse);
 
    // The host FQDN ... for debugging
    const char *hostFQDN = sock->GetInetAddress().GetHostName();
 
    // Determine local calling environment ...
-   if ((rc = GlobusGetLocalEnv(&gLocalCallEnv, protocol))) {
-      Error("GlobusAuthenticate",
+   Int_t LocalCallEnv = -1;
+   if ((rc = GlobusGetLocalEnv(&LocalCallEnv, protocol))) {
+      if (gDebug > 0)
+          Error("GlobusAuthenticate",
             "unable to set relevant environment variables (rc=%d)",
             rc);
       return -1;
    }
    if (gDebug > 3)
-      Info("GlobusAuthenticate", " gLocalCallEnv is %d", gLocalCallEnv);
+      Info("GlobusAuthenticate", " LocalCallEnv is %d", LocalCallEnv);
 
    // Set local certificates according to user requests ...
-   GlobusSetCertificates(gLocalCallEnv);
+   GlobusSetCertificates(LocalCallEnv,Prompt,PromptReUse,details);
 
    // Now we send to the rootd/proofd daemons the issuer name of our globus certificates ..
    // We get it the x509 relevant certificate ... the location depends on the calling environment
-   char *stmp;
-   if ((rc = GlobusGetNames(gLocalCallEnv, &isuj, &stmp))) {
-      Error("GlobusAuthenticate",
-            "PROOF Master: unable to determine relevant names(rc=%d)", rc);
+   Int_t NeedProxy;
+   TString isuj, stmp;
+   if ((rc = GlobusGetNames(LocalCallEnv, isuj, stmp, NeedProxy))) {
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
+               "PROOF Master: unable to determine relevant names(rc=%d)", rc);
       return -1;
    }
    if (gDebug > 2)
-      Info("GlobusAuthenticate", " Issuer name is %s (%d)", isuj,
-           strlen(isuj));
-   if (stmp) delete[] stmp;
+      Info("GlobusAuthenticate", " Issuer name is %s (%d)",
+           isuj.Data(),isuj.Length());
 
    // Get credential handle ... either genuine or delegated
-   if (GlobusGetCredHandle(gLocalCallEnv, &GlbCredHandle)) {
-      Error("GlobusAuthenticate", "unable to acquire valid credentials");
+   if (GlobusGetCredHandle(LocalCallEnv, NeedProxy, &GlbCredHandle)) {
+      if (gDebug > 0)
+         Error("GlobusAuthenticate", "unable to acquire valid credentials");
       return -1;
    }
    if (gDebug > 3)
@@ -172,15 +160,17 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if ((MajStat =
         gss_inquire_cred(&MinStat, GlbCredHandle, &Name, &LifeTime,
                          &CredUsage, &Mech)) != GSS_S_COMPLETE) {
-      GlobusError("GlobusAuthenticate: gss_inquire_cred", MajStat, MinStat,
-                  0);
+      if (gDebug > 0)
+         GlobusError("GlobusAuthenticate: gss_inquire_cred",
+             MajStat, MinStat,0);
       return -1;
    }
    if ((MajStat =
         gss_display_name(&MinStat, Name, &OutBuf,
                          &NameType)) != GSS_S_COMPLETE) {
-      GlobusError("GlobusAuthenticate: gss_inquire_cred", MajStat, MinStat,
-                  0);
+      if (gDebug > 0)
+         GlobusError("GlobusAuthenticate: gss_inquire_cred",
+            MajStat, MinStat, 0);
       return -1;
    } else {
       ssuj = StrDup((char *) OutBuf.value);
@@ -204,7 +194,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    rc = 0;
    if ((rc =
         TAuthenticate::AuthExists(Auth, (Int_t) TAuthenticate::kGlobus,
-                                  gDetails, Options, &kind,
+                                  details, Options, &kind,
                                   &retval)) == 1) {
       // A valid authentication exists: we are done ...
       if (Options) delete[] Options;
@@ -228,28 +218,31 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    char *buf = new char[20];
    sprintf(buf, "%d", (int) (strlen(isuj) + 1));
    if ((bsnd = sock->Send(buf, kMESS_STRING)) != (int) (strlen(buf) + 1)) {
-      Error("GlobusAuthenticate",
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
             "Length of Issuer name not send correctly: bytes sent: %d (tot len: %d)",
             bsnd - 1, strlen(buf));
       return 0;
    }
-   if (buf) delete[] buf;
    // Now we send it to the server daemon
-   if ((bsnd = sock->Send(isuj, kMESS_STRING)) != (int) (strlen(isuj) + 1)) {
-      Error("GlobusAuthenticate",
+   if ((bsnd = sock->Send(isuj.Data(), kMESS_STRING)) < (Int_t) (isuj.Length() + 1)) {
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
             "Issuer name not send correctly: bytes sent: %d (tot len: %d)",
-            bsnd - 1, strlen(isuj));
+            bsnd - 1, isuj.Length());
       return 0;
    }
    // Now we wait for the replay from the server ...
    sock->Recv(retval, kind);
    if (kind != kROOTD_GLOBUS) {
-      Error("GlobusAuthenticate",
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
             "recv host subj: unexpected message from daemon: kind: %d (expecting: %d)",
             kind, kROOTD_GLOBUS);
    } else {
       if (retval == 0) {
-         Error("GlobusAuthenticate",
+         if (gDebug > 0)
+            Error("GlobusAuthenticate",
                "recv host subj: host not able to authenticate this CA");
          return 3;
       } else {
@@ -259,11 +252,13 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
          host_subj = new char[retval + 1];
          brcv = sock->Recv(host_subj, retval, kind);
          if (brcv < (retval - 1)) {
-            Error("GlobusAuthenticate",
+            if (gDebug > 0) {
+               Error("GlobusAuthenticate",
                   "recv host subj: did not receive all the bytes (recv: %d, due >%d)",
                   brcv, retval);
-            Error("GlobusAuthenticate", "recv host subj: (%d) %s",
+               Error("GlobusAuthenticate", "recv host subj: (%d) %s",
                   strlen(host_subj), host_subj);
+            }
             return 0;
          }
       }
@@ -280,7 +275,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
 
    // Type of request for credentials depend on calling environment
    GssReqFlags =
-       gLocalCallEnv >
+       LocalCallEnv >
        0 ? (GSS_C_DELEG_FLAG | GSS_C_MUTUAL_FLAG) : GSS_C_MUTUAL_FLAG;
    if (gDebug > 3)
       Info("GlobusAuthenticate",
@@ -298,7 +293,8 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
                                            globus_gss_assist_token_send_fd,
                                            (void *) FILE_SockFd)) !=
        GSS_S_COMPLETE) {
-      GlobusError("GlobusAuthenticate: gss_assist_init_sec_context",
+      if (gDebug > 0)
+         GlobusError("GlobusAuthenticate: gss_assist_init_sec_context",
                   MajStat, MinStat, GlbTokenStatus);
       if (host_subj) delete[] host_subj;
       return 0;
@@ -319,13 +315,14 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Receive username used for login or key request info and type of key
    int nrec = sock->Recv(retval, type);  // returns user
 
+   Int_t RSAKey = 0;
    if (ReUse == 1) {
 
       if (type != kROOTD_RSAKEY)
          Warning("GlobusAuthenticate",
                  "problems recvn RSA key flag: got message %d, flag: %d",
-                 type, gRSAKey);
-      gRSAKey = 1;
+                 type, RSAKey);
+      RSAKey = 1;
 
       // Send the key securely
       TAuthenticate::SendRSAPublicKey(sock);
@@ -353,13 +350,11 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
 
    // Return username
    user = lUser;
-   // Keep track of remote login username ...
-   strcpy(gUser, lUser);
 
    // Receive Token
    char *Token = 0;
    if (ReUse == 1 && OffSet > -1) {
-      if (TAuthenticate::SecureRecv(sock, gRSAKey, &Token) == -1) {
+      if (TAuthenticate::SecureRecv(sock, RSAKey, &Token) == -1) {
          Warning("SRPAuthenticate",
                  "Problems secure-receiving Token - may result in corrupted Token");
       }
@@ -372,9 +367,8 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
 
    // Create and save AuthDetails object
    TAuthenticate::SaveAuthDetails(Auth, (Int_t) TAuthenticate::kGlobus,
-                                  OffSet, ReUse, gDetails, lUser, gRSAKey,
+                                  OffSet, ReUse, details, lUser, RSAKey,
                                   Token);
-   details = gDetails;
 
    // receive status from server
    sock->Recv(server_auth, kind);
@@ -387,7 +381,6 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
               " it looks like server did not authenticate ");
 
    // free allocated memory ...
-   if (isuj) delete[] isuj;
    if (ssuj) delete[] ssuj;
    if (rfrm) delete[] rfrm;
    if (lUser) delete[] lUser;
@@ -427,7 +420,8 @@ int GlobusGetDelCred()
    if ((MajStat =
         gss_import_cred(&MinStat, &GlbDelCredHandle, 0, 0, credential, 0,
                         0)) != GSS_S_COMPLETE) {
-      GlobusError("GlobusGetDelCred: gss_import_cred", MajStat, MinStat,
+      if (gDebug > 0)
+         GlobusError("GlobusGetDelCred: gss_import_cred", MajStat, MinStat,
                   0);
       return 1;
    } else if (gDebug > 3)
@@ -572,20 +566,22 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
                  GlbDelCredHandle);
          }
          *LocalEnv = 2;
-         strncpy(gConfDir, lApp->Argv()[2], strlen(lApp->Argv()[2]) + 1);
          gShmIdCred = atoi(lApp->Argv()[7]);
          if (setenv("X509_CERT_DIR", lApp->Argv()[8], 1)) {
-            Error("GlobusGetLocalEnv",
+            if (gDebug > 0)
+               Error("GlobusGetLocalEnv",
                   "PROOF Master: unable to set X509_CERT_DIR ");
             retval = 1;
          }
          if (setenv("X509_USER_CERT", lApp->Argv()[9], 1)) {
-            Error("GlobusGetLocalEnv",
+            if (gDebug > 0)
+               Error("GlobusGetLocalEnv",
                   "PROOF Master: unable to set X509_USER_CERT ");
             retval = 2;
          }
          if (setenv("X509_USER_KEY", lApp->Argv()[10], 1)) {
-            Error("GlobusGetLocalEnv",
+            if (gDebug > 0)
+               Error("GlobusGetLocalEnv",
                   "PROOF Master: unable to set X509_USER_KEY ");
             retval = 3;
          }
@@ -613,7 +609,7 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
 }
 
 //______________________________________________________________________________
-int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
+int GlobusGetNames(int LocalEnv, TString &IssuerName, TString &SubjectName, Int_t &NeedProxy)
 {
    // Get Issuer and Client Names from local certificates.
    // Returns 0 is successfull, 1 otherwise.
@@ -634,7 +630,8 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
          cert_file = new char[lcf];
          strncpy(cert_file, getenv("X509_USER_CERT"), lcf + 1);
       } else {
-         Error("GlobusGetNames",
+         if (gDebug > 0)
+            Error("GlobusGetNames",
                "PROOF Master: host certificate not defined");
          retval = 1;
       }
@@ -656,7 +653,8 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
 
    // Test the existence of the certificate file //
    if (gSystem->AccessPathName(cert_file, kReadPermission)) {
-      Error("GlobusGetNames", "cannot read requested file %s",
+      if (gDebug > 0)
+         Error("GlobusGetNames", "cannot read requested file %s",
             cert_file);
       if (cert_file) delete[] cert_file;
       return 4;
@@ -666,29 +664,30 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
    // Second: load the certificate ...
    FILE *fcert = fopen(cert_file, "r");
    if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
-      Error("GlobusGetNames", "Unable to load user certificate ");
+      if (gDebug > 0)
+         Error("GlobusGetNames", "Unable to load user certificate ");
       if (cert_file) delete[] cert_file;
       return 5;
    }
    fclose(fcert);
 
    // Get the issuer name
-   *IssuerName =
-       StrDup(X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0));
+   IssuerName =
+       TString(X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0));
    // Get the subject name
-   *SubjectName =
-       StrDup(X509_NAME_oneline(X509_get_subject_name(xcert), 0, 0));
+   SubjectName =
+       TString(X509_NAME_oneline(X509_get_subject_name(xcert), 0, 0));
 
    if (gDebug > 2) {
-      Info("GlobusGetNames", "Issuer Name: %s", *IssuerName);
-      Info("GlobusGetNames", "Subject Name: %s", *SubjectName);
+      Info("GlobusGetNames", "Issuer Name: %s", IssuerName.Data());
+      Info("GlobusGetNames", "Subject Name: %s", SubjectName.Data());
    }
 
    if (cert_file) delete[] cert_file;
 
    // Now check if there is a proxy file associated with this user
    int nProxy = 1;
-   gNeedProxy = 1;
+   NeedProxy = 1;
    char proxy_file[256];
    sprintf(proxy_file, "/tmp/x509up_u%d", getuid());
  again:
@@ -700,36 +699,32 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
       // Second: load the proxy certificate ...
       fcert = fopen(proxy_file, "r");
       if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
-         Error("GlobusGetNames", "Unable to load user proxy certificate ");
+         if (gDebug > 0)
+            Error("GlobusGetNames",
+                  "Unable to load user proxy certificate ");
          return 5;
       }
       fclose(fcert);
       // Get proxy names
-      char *ProxyIssuerName =
-          StrDup(X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0));
-      char *ProxySubjectName =
-          StrDup(X509_NAME_oneline(X509_get_subject_name(xcert), 0, 0));
+      TString ProxyIssuerName(X509_NAME_oneline(X509_get_issuer_name(xcert),0,0));
+      TString ProxySubjectName(X509_NAME_oneline(X509_get_subject_name(xcert),0,0));
       if (gDebug > 3) {
-         Info("GlobusGetNames", "Proxy Issuer Name: %s", ProxyIssuerName);
-         Info("GlobusGetNames", "Proxy Subject Name: %s",
-              ProxySubjectName);
+         Info("GlobusGetNames",
+              "Proxy Issuer Name: %s", ProxyIssuerName.Data());
+         Info("GlobusGetNames",
+              "Proxy Subject Name: %s",ProxySubjectName.Data());
       }
 
-      if (strstr(ProxyIssuerName, *SubjectName) == ProxyIssuerName) {
-         gNeedProxy = 0;
+      if (ProxyIssuerName.Index(SubjectName) == 0) {
+         NeedProxy = 0;
          setenv("X509_USER_PROXY", proxy_file, 1);
-         if (ProxyIssuerName) delete[] ProxyIssuerName;
-         if (ProxySubjectName) delete[] ProxySubjectName;
          if (gDebug > 3)
-            Info("GlobusGetNames", "Using Proxy file:%s (gNeedProxy:%d)",
-                 getenv("X509_USER_PROXY"), gNeedProxy);
-
+            Info("GlobusGetNames", "Using Proxy file:%s (NeedProxy:%d)",
+                 getenv("X509_USER_PROXY"), NeedProxy);
          return retval;
       } else {
          sprintf(proxy_file, "/tmp/x509up_u%d.%d", getuid(), nProxy);
          nProxy++;
-         if (ProxyIssuerName) delete[] ProxyIssuerName;
-         if (ProxySubjectName) delete[] ProxySubjectName;
          goto again;
       }
    } else {
@@ -741,7 +736,7 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
 }
 
 //______________________________________________________________________________
-int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
+int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHandle)
 {
    // Get Credential Handle, either from scratch, or from delegated info ...
    // Returns 0 is successfull, 1 otherwise.
@@ -758,7 +753,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
       // credentials from the shared memory segment the first time we are called ...
       if (GlbDelCredHandle == GSS_C_NO_CREDENTIAL) {
          if (GlobusGetDelCred()) {
-            Error("GlobusGetCredHandle",
+            if (gDebug > 0)
+               Error("GlobusGetCredHandle",
                   "unable to fetch valid credentials from the shared memory segment");
             retval = 1;
             goto exit;
@@ -770,7 +766,7 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
       // Inquire Globus credentials:
       // This is looking to file X509_USER_PROXY for valid a X509 cert
       // (default /tmp/x509up_u<uid> )
-      if ((gNeedProxy == 1) ||
+      if ((NeedProxy == 1) ||
           (MajStat =
            globus_gss_assist_acquire_cred(&MinStat, GSS_C_INITIATE,
                                           CredHandle)) != GSS_S_COMPLETE) {
@@ -785,7 +781,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
             // Try to get credentials with usual command line ...
             char *GlobusLocation = getenv("GLOBUS_LOCATION");
             if (GlobusLocation == 0) {
-               Error("GlobusGetCredHandle",
+               if (gDebug > 0)
+                  Error("GlobusGetCredHandle",
                      "Please define a valid GLOBUS_LOCATION");
                retval = 2;
                goto exit;
@@ -844,7 +841,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                  globus_gss_assist_acquire_cred(&MinStat, GSS_C_INITIATE,
                                                 CredHandle)) !=
                 GSS_S_COMPLETE) {
-               GlobusError("GlobusGetCredHandle: gss_assist_acquire_cred",
+               if (gDebug > 0)
+                  GlobusError("GlobusGetCredHandle: gss_assist_acquire_cred",
                            MajStat, MinStat, 0);
                retval = 3;
                goto exit;
@@ -902,7 +900,8 @@ int GlobusCheckSecContext(char *Host, char *SubjName)
                                         TargName, &GlbContLifeTime,
                                         &MechType, &GssRetFlags, &Dum1,
                                         &Dum2)) != GSS_S_COMPLETE) {
-                  GlobusError("GlobusCheckSecContext: gss_inquire_context",
+                  if (gDebug > 0)
+                     GlobusError("GlobusCheckSecContext: gss_inquire_context",
                               MajStat, MinStat, 0);
                   GlobusUpdateSecContInfo(i);  // delete it from tables ...
                } else {
@@ -954,7 +953,8 @@ int GlobusUpdateSecContInfo(int entry)
                                      &GlbContLifeTime, &MechType,
                                      &GssRetFlags, &Dum1,
                                      &Dum2)) != GSS_S_COMPLETE) {
-               GlobusError("GlobusUpdateSecContInfo: gss_inquire_context",
+               if (gDebug > 0)
+                  GlobusError("GlobusUpdateSecContInfo: gss_inquire_context",
                            MajStat, MinStat, 0);
             } else {
                // This is a valid one ...
@@ -1006,19 +1006,19 @@ int GlobusUpdateSecContInfo(int entry)
 }
 
 //______________________________________________________________________________
-void GlobusSetCertificates(int LocalEnv)
+void GlobusSetCertificates(int LocalEnv, int Prompt, TString PromptReUse, TString &Details)
 {
    // Defines certificate and key files to use, inquiring the client if needed.
 
    char *userhome = getenv("HOME");
    char *globusdef = ".globus";
-   char *details = 0;
+   char *locdet = 0;
    Int_t nr, i;
 
    if (gDebug > 2)
       Info("GlobusSetCertificates", "Enter: LocalEnv: %d", LocalEnv);
 
-   gDetails = "";
+   Details = "";
 
    if (LocalEnv < 2) {
 
@@ -1028,16 +1028,16 @@ void GlobusSetCertificates(int LocalEnv)
       char tmpvar[4][kMAXPATHLEN];
       char *ddir = 0, *dcer = 0, *dkey = 0, *dadi = 0;
       if (strlen(TAuthenticate::GetDefaultUser()) > 0) {
-         details = StrDup(TAuthenticate::GetDefaultUser());
+         locdet = StrDup(TAuthenticate::GetDefaultUser());
       } else {
-         details =
+         locdet =
          StrDup("cd:~/.globus cf:usercert.pem kf:userkey.pem ad:/etc/grid-security/certificates");
       }
 
       if (gDebug > 3)
-         Info("GlobusSetCertificates", " details : %s", details);
+         Info("GlobusSetCertificates", " locdet : %s", locdet);
 
-      nr = sscanf(details, "%s %s %s %s", tmpvar[0], tmpvar[1], tmpvar[2],
+      nr = sscanf(locdet, "%s %s %s %s", tmpvar[0], tmpvar[1], tmpvar[2],
                   tmpvar[3]);
       for (i = 0; i < nr; i++) {
          if (!strncmp(tmpvar[i], "cd:", 3) || !strncmp(tmpvar[i], "Cd:", 3)
@@ -1068,13 +1068,13 @@ void GlobusSetCertificates(int LocalEnv)
 
       // Check if needs to prompt the client
       char *det = 0;
-      if (gPrompt) {
+      if (Prompt) {
          char *dets = 0;
          if (!gROOT->IsProofServ()) {
             dets =
                 Getline(Form
                        (" Local Globus Certificates (%s)\n Enter <key>:<new value> to change: ",
-                         details));
+                         locdet));
          } else {
             Warning("GlobusSetCertificate",
                     "proofserv: cannot prompt for info");
@@ -1094,7 +1094,7 @@ void GlobusSetCertificates(int LocalEnv)
          det = "";
       }
 
-      if (details) delete[] details;
+      if (locdet) delete[] locdet;
 
       if (strlen(det) > 0) {
 
@@ -1131,11 +1131,9 @@ void GlobusSetCertificates(int LocalEnv)
             }
          }
       }
-      // Build gDetails
-      temp[0] = '\0';
-      sprintf(temp, "%s cd:%s cf:%s kf:%s ad:%s", gPromptReUse, ddir, dcer,
-              dkey, dadi);
-      gDetails = temp;
+      // Build Details
+      Details = PromptReUse +
+         TString(Form(" cd:%s cf:%s kf:%s ad:%s", ddir, dcer, dkey, dadi));
 
       // Perform "~" expansion ... or allow for paths relative to .globus
       if (!strncmp(ddir, "~/", 2)) {
@@ -1228,8 +1226,9 @@ void GlobusCleanup()
       if ((MajStat =
            gss_delete_sec_context(&MinStat, sptrGlbSecCont + i,
                                   GSS_C_NO_BUFFER)) != GSS_S_COMPLETE) {
-         GlobusError("GlobusCleanup: gss_delete_sec_context", MajStat,
-                     MinStat, 0);
+         if (gDebug > 0)
+            GlobusError("GlobusCleanup: gss_delete_sec_context",
+               MajStat,MinStat, 0);
          status = 1;
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.13 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.14 2003/11/20 23:00:46 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -67,10 +67,6 @@ public:
 };
 static Krb5AuthInit krb5auth_init;
 
-TSocket *sock = 0;
-THostAuth *HostAuth = 0;
-Int_t  gRSAKey = 0;
-
 struct TKrb5CleanUp {
 
    bool                  fSignal;
@@ -123,15 +119,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
    int retval;
    int Auth, kind;
+   TSocket *sock = auth->GetSocket();
 
    char answer[100];
    int type;
 
    TString targetUser(user);
-
-   // From the calling TAuthenticate
-   sock = auth->GetSocket();
-   HostAuth = auth->GetHostAuth();
 
    // first check if protocol version supports kerberos, krb5 support
    // was introduced in rootd version 6
@@ -271,13 +264,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          if (strstr(auth->GetProtocol(),"proof"))
             Server = "proofd";
          if (retval == kErrConnectionRefused) {
-            Error("Krb5Authenticate",
+            if (gDebug > 0)
+               Error("Krb5Authenticate",
                   "%s@%s does not accept connections from %s%s",
                   Server.Data(),auth->GetRemoteHost(),
                   auth->GetUser(),gSystem->HostName());
             return -2;
          } else if (retval == kErrNotAllowed) {
-            Error("Krb5Authenticate",
+            if (gDebug > 0)
+               Error("Krb5Authenticate",
                   "%s@%s does not accept %s authentication from %s@%s",
                   Server.Data(),auth->GetRemoteHost(),
                   TAuthenticate::GetAuthMethod(2),
@@ -462,13 +457,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       // Receive key request
       int nrec=sock->Recv(retval, type);
 
+      Int_t RSAKey = 0;
       if (ReUse == 1) {
 
          if (type != kROOTD_RSAKEY)
             Warning("Krb5Auth",
                     "problems recvn RSA key flag: got message %d, flag: %d",
-                     type,gRSAKey);
-         gRSAKey = 1;
+                     type,RSAKey);
+         RSAKey = 1;
 
          // Send the key securely
          TAuthenticate::SendRSAPublicKey(sock);
@@ -497,7 +493,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       // Receive Token
       char *Token = 0;
       if (ReUse == 1 && OffSet > -1) {
-         if (TAuthenticate::SecureRecv(sock,gRSAKey,&Token) == -1) {
+         if (TAuthenticate::SecureRecv(sock,RSAKey,&Token) == -1) {
             Warning("Krb5Auth",
                     "problems secure-receiving Token - may result in corrupted Token");
          }
@@ -509,7 +505,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
       // Create and save AuthDetails object
       TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,
-                                     OffSet,ReUse,Details,lUser,gRSAKey,Token);
+                                     OffSet,ReUse,Details,lUser,RSAKey,Token);
       det = Details;
       if (Token) delete[] Token;
       if (lUser) delete[] lUser;

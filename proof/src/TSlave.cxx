@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.19 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.20 2003/11/07 03:29:42 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -81,6 +81,26 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       auth = new TAuthenticate(fSocket, host,
                                Form("%s:%d", proof->GetUrlProt(),ProofdProto), "");
 
+      // If trasmission of the SRP password is requested make sure
+      // that ReUse is switched on to get and send also the Public Key
+      // For masters this is already checked in TProofServ
+      if (!fProof->IsMaster()) {
+         if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
+            TString SRPDets(auth->GetHostAuth()->GetDetails(1));
+            Int_t pos = SRPDets.Index("ru:0");
+            if (pos > -1) {
+               SRPDets.ReplaceAll("ru:0",4,"ru:1",4);
+               auth->GetHostAuth()->SetDetails(1,SRPDets);
+            } else {
+               TSubString ss = SRPDets.SubString("ru:no",TString::kIgnoreCase);
+               if (!ss.IsNull()) {
+                  SRPDets.ReplaceAll(ss.Data(),5,"ru:1",4);
+                  auth->GetHostAuth()->SetDetails(1,SRPDets);
+               }
+            }
+         }
+      }
+
       // Authenticate to proofd...
       if (!proof->IsMaster()) {
 
@@ -89,16 +109,11 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          // - ~/.rootnetrc or ~/.netrc
          // - interactive
          if (!auth->Authenticate()) {
-            int sec = auth->GetSecurity();
-            if (sec >= 0 && sec <= kMAXSEC) {
-               Error("TSlave", "%s authentication failed for host %s",
-                     TAuthenticate::GetAuthMethod(sec), host);
-            } else {
-               Error("TSlave",
-                     "authentication failed for host %s (method: %d - unknown)",
-                      host, sec);
-            }
+            Error("TSlave", "authentication failed for %s@%s",
+                            auth->GetUser(), host);
             delete auth;
+            // This is to terminate properly remote proofd in case of failure
+            fSocket->Send(Form("%d %s", getpid(), host), kROOTD_CLEANUP);
             SafeDelete(fSocket);
             return;
          }
@@ -129,16 +144,11 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          // Checks for (user,passwd) are done inside TAuthenticate now (4/2003)
 
          if (!auth->Authenticate()) {
-            int sec = auth->GetSecurity();
-            if (sec >= 0 && sec <= kMAXSEC) {
-               Error("TSlave", "%s authentication failed for host %s",
-                      TAuthenticate::GetAuthMethod(sec), host);
-            } else {
-               Error("TSlave",
-                     "authentication failed for host %s (method: %d - unknown)",
-                      host, sec);
-            }
+            Error("TSlave", "authentication failed for %s@%s",
+                            auth->GetUser(), host);
             delete auth;
+            // This is to terminate properly remote proofd in case of failure
+            fSocket->Send(Form("%d %s", getpid(), host), kROOTD_CLEANUP);
             SafeDelete(fSocket);
             return;
          }
@@ -203,10 +213,12 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          if (!fProof->IsMaster()) {
             if (gEnv->GetValue("Proofd.SendSRPPwd",0))
-               sndsrp = kTRUE;
+               if (RemoteOffSet > -1)
+                  sndsrp = kTRUE;
          } else {
             if (fProof->fSRPPwd && fProof->fPasswd != "")
-               sndsrp = kTRUE;
+               if (RemoteOffSet > -1)
+                  sndsrp = kTRUE;
          }
 
          if (fSecurity == TAuthenticate::kClear ||
@@ -385,7 +397,8 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
            }
            // This is the list we are looking for ...
            if (!strcmp(key, "proofserv") || cont == 1) {
-              PDB(kGlobal,3) Info("SendHostAuth","found proofserv: %s", rest);
+              PDB(kGlobal,3)
+                 Info("SendHostAuth","found proofserv: %s", rest);
 
               if (cont == 0) {
                  pnx = strstr(line, rest);
@@ -397,7 +410,9 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
               while (pnx != 0 && cont == 0) {
                  rest[0] = '\0';
                  sscanf(pnx, "%s %s", host, rest);
-                 PDB(kGlobal,3) Info("SendHostAuth", "found host: %s %s (cont=%d)", host, rest, cont);
+                 PDB(kGlobal,3)
+                    Info("SendHostAuth", "found host: %s %s (cont=%d)",
+                          host, rest, cont);
 
                  // Check if a protocol is requested
                  char *pd1 = 0, *pd2 = 0;
@@ -411,7 +426,9 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                        // Method passed as string: translate it to number
                        met = TAuthenticate::GetAuthMethodIdx(meth);
                        if (met == -1)
-                          PDB(kGlobal,2) Info("SendHostAuth", "unrecognized method (%s): ", meth);
+                          PDB(kGlobal,2)
+                             Info("SendHostAuth",
+                                  "unrecognized method (%s): ", meth);
                     } else {
                        met = atoi(meth);
                     }
@@ -423,12 +440,15 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                     int plen = (int)(pd1-host);
                     host[plen]='\0';
                  }
-                 PDB(kGlobal,3) Info("SendHostAuth", "host user method: %s %s %d", host, usr, met);
+                 PDB(kGlobal,3)
+                    Info("SendHostAuth",
+                         "host user method: %s %s %d", host, usr, met);
 
                  // Get methods from file .rootauthrc
                  char **user; Int_t *nmeth,  *security[kMAXSEC]; char **details[kMAXSEC];
                  user = new char*[1]; user[0] = StrDup(usr);
-                 Int_t Nuser = TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
+                 Int_t Nuser =
+                    TAuthenticate::GetAuthMeth(host, "root", &user, &nmeth, security, details);
                  // Now copy the info to send into buffer
                  int ju = 0;
                  for (ju = 0; ju < Nuser; ju++) {
@@ -495,7 +515,9 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
       // This includes the other slaves and additional info received from the Client
 
       PDB(kGlobal,3)
-         Info("SendHostAuth","Number of HostAuth instantiations in memory: %d",authInfo->GetSize());
+         Info("SendHostAuth",
+              "Number of HostAuth instantiations in memory: %d",
+              authInfo->GetSize());
 
       // Loop over list of auth info
       if (authInfo->GetSize() > 0) {
@@ -514,7 +536,8 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
             buf = new char[bsiz];
             sprintf(buf,"h:%s u:%s n:%d",fHA->GetHost(),fHA->GetUser(),nmeth);
             for (i = 0; i < nmeth; i++) {
-               sprintf(buf,"%s '%d %s' ", buf, fHA->GetMethods(i), fHA->GetDetails(fHA->GetMethods(i)));
+               sprintf(buf,"%s '%d %s' ", buf,
+                       fHA->GetMethods(i), fHA->GetDetails(fHA->GetMethods(i)));
             }
             sl->GetSocket()->Send(buf, kPROOF_SENDHOSTAUTH);
             delete [] buf;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.15 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.16 2003/10/22 18:48:36 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -128,7 +128,7 @@ again:
    Recv(fProtocol, tmpkind);
    kind = tmpkind;
    if (fProtocol > 6) {
-      fSocket->Send(Form("%d", TNetFile::GetClientProtocol()), 
+      fSocket->Send(Form("%d", TNetFile::GetClientProtocol()),
                     kROOTD_PROTOCOL2);
       Recv(fProtocol, tmpkind);
       kind = tmpkind;
@@ -139,8 +139,8 @@ again:
                             Form("%s:%d", url.GetProtocol(), fProtocol),
                             url.GetUser());
    if (!auth->Authenticate()) {
-      Error("TFTP", "%s authentication failed for host %s",
-            TAuthenticate::GetAuthMethod(auth->GetSecurity()), url.GetHost());
+      Error("TFTP", "authentication failed for %s@%s",
+            auth->GetUser(), url.GetHost());
       delete auth;
       goto zombie;
    }

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.3 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.4 2003/10/22 18:48:36 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -673,11 +673,19 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
       }
    }
 
+   // Needs to set this for consistency
+   if (setenv("X509_USER_CERT", "/etc/grid-security/hostcert.pem", 1)) {
+      ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_CERT ");
+   }
+   if (setenv("X509_USER_KEY", "/etc/grid-security/hostkey.pem", 1)) {
+      ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_KEY ");
+   }
+
    // Now check if there is a proxy file associated with this user
    char proxy_file[256];
    sprintf(proxy_file, "/tmp/x509up_u%d", getuid());
 
-   if (gDebug > 3)
+   if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: testing Proxy file: %s",
                 proxy_file);
 

@@ -512,6 +512,9 @@ int TestAuth(int port = 1094, char *user = "", char *krb5  = "", char *globus  =
    if (lDebug > 0)
       TAuthenticate::PrintHostAuth();
 
+// Now cleanup host auth info used for the test
+   TAuthenticate::GetAuthInfo().Delete();
+
 // Delete file
    gSystem->Unlink("TestFile.root");
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.31 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.32 2003/11/25 11:35:55 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -244,6 +244,7 @@ Bool_t TAuthenticate::Authenticate()
    Int_t RemMeth = 0, rMth[kMAXSEC], tMth[kMAXSEC] = {0};
    Int_t meth = 0;
    char NoSupport[80] = { 0 };
+   char TriedMeth[80] = { 0 };
 
    TString user, passwd;
    Bool_t pwhash;
@@ -272,6 +273,12 @@ Bool_t TAuthenticate::Authenticate()
            "trying authentication: method:%d, default details:%s",
            fSecurity, fDetails.Data());
 
+   // Keep track of tried methods in a list
+   if (strlen(TriedMeth) > 0)
+      sprintf(TriedMeth, "%s/%s", TriedMeth, fgAuthMeth[fSecurity].Data());
+   else
+      sprintf(TriedMeth, "%s", fgAuthMeth[fSecurity].Data());
+
    // Set environments
    SetEnvironment();
 
@@ -286,6 +293,8 @@ Bool_t TAuthenticate::Authenticate()
    Int_t st = -1;
    if (fSecurity == kClear) {
 
+      Bool_t rc = kFALSE;
+
       // UsrPwd Authentication
       user = fgDefaultUser;
       if (user != "")
@@ -293,16 +302,23 @@ Bool_t TAuthenticate::Authenticate()
       if (passwd == "") {
          if (fgPromptUser)
             user = PromptUser(fRemote);
-         if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kFALSE))
-            return kFALSE;
+         rc = GetUserPasswd(user, passwd, pwhash, (Bool_t &)kFALSE);
       }
       fUser = user;
       fPasswd = passwd;
 
-      if (fUser != "root")
-         st = ClearAuth(user, passwd, pwhash);
+      if (!rc) {
+
+         if (fUser != "root")
+            st = ClearAuth(user, passwd, pwhash);
+      } else {
+         Error("Authenticate",
+               "unable to get user name for UsrPwd authentication");
+      }
 
    } else if (fSecurity == kSRP) {
+
+      Bool_t rc = kFALSE;
 
       // SRP Authentication
       user = fgDefaultUser;
@@ -311,13 +327,13 @@ Bool_t TAuthenticate::Authenticate()
       if (passwd == "") {
          if (fgPromptUser)
             user = PromptUser(fRemote);
-         if (GetUserPasswd(user, passwd, pwhash, (Bool_t &)kTRUE))
-            return kFALSE;
+         rc = GetUserPasswd(user, passwd, pwhash, (Bool_t &)kTRUE);
       }
       fUser = user;
       fPasswd = passwd;
 
       if (!fgSecAuthHook) {
+
          char *p;
          TString lib = RootDir + "/libSRPAuth";
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
@@ -325,13 +341,17 @@ Bool_t TAuthenticate::Authenticate()
             gSystem->Load(lib);
          }
       }
-      if (fgSecAuthHook) {
+      if (!rc && fgSecAuthHook) {
+
          st = (*fgSecAuthHook) (this, user, passwd, fRemote, fDetails,
                                 fVersion);
       } else {
-         Error("Authenticate",
-               "no support for SRP authentication available");
-         return kFALSE;
+         if (!fgSecAuthHook)
+            Error("Authenticate",
+                  "no support for SRP authentication available");
+         if (rc)
+            Error("Authenticate",
+                  "unable to get user name for SRP authentication");
       }
       // Fill present user info ...
       if (st == 1) {
@@ -358,7 +378,6 @@ Bool_t TAuthenticate::Authenticate()
          } else {
             Error("Authenticate",
                   "support for kerberos5 auth locally unavailable");
-            return kFALSE;
          }
       } else {
          if (gDebug > 0)
@@ -387,7 +406,6 @@ Bool_t TAuthenticate::Authenticate()
          } else {
             Error("Authenticate",
                   "no support for Globus authentication available");
-            return kFALSE;
          }
       } else {
          if (gDebug > 0)
@@ -456,26 +474,30 @@ Bool_t TAuthenticate::Authenticate()
             Info("Authenticate",
                  "method not even started: insufficient or wrong info: %s",
                  "try with next method, if any");
-         if (meth < nmet) {
+         if (meth < nmet - 1) {
             meth++;
             goto negotia;
          } else if (strlen(NoSupport) > 0)
             Info("Authenticate",
                  "attempted methods %s are not supported by remote server version",
                  NoSupport);
+         Info("Authenticate",
+              "failure: list of attempted methods: %s", TriedMeth);
          return kFALSE;
       } else {
          if (fVersion < 2) {
             if (gDebug > 2)
                Info("Authenticate",
                     "negotiation not supported remotely: try next method, if any");
-            if (meth < nmet) {
+            if (meth < nmet - 1) {
                meth++;
                goto negotia;
             } else if (strlen(NoSupport) > 0)
                Info("Authenticate",
                     "attempted methods %s are not supported by remote server version",
                     NoSupport);
+            Info("Authenticate",
+                 "failure: list of attempted methods: %s", TriedMeth);
             return kFALSE;
          }
          // Attempt negotiation ...
@@ -486,6 +508,8 @@ Bool_t TAuthenticate::Authenticate()
          if (kind == kROOTD_ERR) {
             if (gDebug > 0)
                AuthError("Authenticate", stat);
+            Info("Authenticate",
+                 "failure: list of attempted methods: %s", TriedMeth);
             return kFALSE;
          } else if (kind == kROOTD_NEGOTIA) {
             if (stat > 0) {
@@ -508,6 +532,8 @@ Bool_t TAuthenticate::Authenticate()
                   Info("Authenticate",
                        "attempted methods %s are not supported by remote server version",
                        NoSupport);
+               Info("Authenticate",
+                    "failure: list of attempted methods: %s", TriedMeth);
                return kFALSE;
             }
             // If no more local methods, exit
@@ -516,6 +542,8 @@ Bool_t TAuthenticate::Authenticate()
                   Info("Authenticate",
                        "attempted methods %s are not supported by remote server version",
                        NoSupport);
+               Info("Authenticate",
+                    "failure: list of attempted methods: %s", TriedMeth);
                return kFALSE;
             }
             // Look if a non tried method matches
@@ -533,18 +561,22 @@ Bool_t TAuthenticate::Authenticate()
             }
             if (gDebug > 0)
                Warning("Authenticate",
-                       "do not match with those locally available: %s",
+                       "no match with those locally available: %s",
                        lav);
             if (strlen(NoSupport) > 0)
                Info("Authenticate",
                     "attempted methods %s are not supported by remote server version",
                     NoSupport);
+            Info("Authenticate",
+                 "failure: list of attempted methods: %s", TriedMeth);
             return kFALSE;
          } else                 // unknown message code at this stage
          if (strlen(NoSupport) > 0)
             Info("Authenticate",
                  "attempted methods %s are not supported by remote server version",
                  NoSupport);
+            Info("Authenticate",
+                 "failure: list of attempted methods: %s", TriedMeth);
          return kFALSE;
       }
    }
@@ -2174,13 +2206,15 @@ Int_t TAuthenticate::RfioAuth(TString & User)
 
             // Authentication failed
             if (stat == kErrConnectionRefused) {
-               Error("RfioAuth",
+               if (gDebug > 0)
+                  Error("RfioAuth",
                      "%s@%s does not accept connections from %s%s",
                      Server.Data(),fRemote.Data(),
                      fUser.Data(),gSystem->HostName());
                return -2;
             } else if (stat == kErrNotAllowed) {
-               Error("RfioAuth",
+               if (gDebug > 0)
+                  Error("RfioAuth",
                      "%s@%s does not accept %s authentication from %s@%s",
                      Server.Data(),fRemote.Data(),
                      TAuthenticate::fgAuthMeth[5].Data(),
@@ -2525,13 +2559,15 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
          if (fProtocol.Contains("proof"))
             Server = "proofd";
          if (stat == kErrConnectionRefused) {
-            Error("ClearAuth",
+            if (gDebug > 0)
+               Error("ClearAuth",
                   "%s@%s does not accept connections from %s@%s",
                   Server.Data(),fRemote.Data(),
                   fUser.Data(),gSystem->HostName());
             return -2;
          } else if (stat == kErrNotAllowed) {
-            Error("ClearAuth",
+            if (gDebug > 0)
+               Error("ClearAuth",
                   "%s@%s does not accept %s authentication from %s@%s",
                   Server.Data(),fRemote.Data(),
                   TAuthenticate::fgAuthMeth[0].Data(),
