@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.57 2004/10/19 17:13:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.58 2004/10/20 13:48:21 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -158,6 +158,10 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Macro files",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML files",    "*.xml",
+                                      "PNG files",    "*.png",
+                                      "XPM files",    "*.xpm",
+                                      "JPEG files",   "*.jpg",
+                                      "TIFF files",   "*.tiff",
                                       "All files",    "*",
                                       0,              0 };
 
