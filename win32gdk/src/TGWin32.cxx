@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.12 2002/11/01 21:37:02 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.13 2002/12/10 13:26:33 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1118,27 +1118,15 @@ void TGWin32::DrawText(int x, int y, float angle, float mgn,
 
    if (text) {
       length = strlen(text);
-      if ((length == 1) && (text[0] < 0)) {
-          fThreadP.Drawable = (GdkDrawable *) gCws->drawing;
-          fThreadP.pParam = gTextFont;
-          fThreadP.GC = (GdkGC *) gGCtext;
-          fThreadP.x = x;
-          fThreadP.y = y2;
-          sprintf(fThreadP.sParam,"%s",text);
-          fThreadP.iParam = 1;
-          PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT_WC, 0, 0L);  
-          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      } else {
-          fThreadP.Drawable = (GdkDrawable *) gCws->drawing;
-          fThreadP.pParam = gTextFont;
-          fThreadP.GC = (GdkGC *) gGCtext;
-          fThreadP.x = x;
-          fThreadP.y = y2;
-          sprintf(fThreadP.sParam,"%s",text);
-          fThreadP.iParam = strlen(text);
-          PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT, 0, 0L);  
-          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      }
+      fThreadP.Drawable = (GdkDrawable *) gCws->drawing;
+      fThreadP.pParam = gTextFont;
+      fThreadP.GC = (GdkGC *) gGCtext;
+      fThreadP.x = x;
+      fThreadP.y = y2;
+      sprintf(fThreadP.sParam,"%s",text);
+      fThreadP.iParam = length;
+      PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT_WC, 0, 0L);  
+      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
 
    fThreadP.GC = (GdkGC *) gGCtext;

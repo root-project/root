@@ -1,5 +1,6 @@
 
 
+#include <wchar.h>
 #include "TROOT.h"
 #include "TGWin32.h"
 #include "gdk/gdkkeysyms.h"
@@ -888,9 +889,17 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_DRAW_TEXT_WC:
+                {
+                int i;
+                GdkWChar wctext[1024];
+                for(i=0;i<fThreadP.iParam;i++)
+                    wctext[i] = btowc((int)fThreadP.sParam[i]);
+                wctext[fThreadP.iParam] = 0;
                 gdk_draw_text_wc((GdkDrawable *) fThreadP.Drawable,
-                          (GdkFont *) fThreadP.pParam, (GdkGC *) fThreadP.GC, fThreadP.x, fThreadP.y,
-                          (const GdkWChar *) fThreadP.sParam, 1);
+                          (GdkFont *) fThreadP.pParam, (GdkGC *)fThreadP.GC, 
+                          fThreadP.x, fThreadP.y,
+                          (const GdkWChar *) wctext, fThreadP.iParam);
+                }
                 break;
    
             case WIN32_GDK_FONT_FULLNAME_FREE:
