@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.3 2004/01/08 23:06:52 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.4 2004/01/09 09:22:08 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ static const char *gCintDevelopers[] = {
 
 static const char *gRootDocumentation[] = {
    "Ilka Antcheva",
-   "Susan Panachek",
+   "Suzanne Panachek",
    0
 };
 
