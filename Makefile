@@ -243,7 +243,7 @@ $(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
 dist:
 	@$(MAKEDIST)
 
-distsrc: distclean
+distsrc:
 	@$(MAKEDISTSRC)
 
 clean::
