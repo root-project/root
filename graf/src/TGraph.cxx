@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.94 2003/03/05 20:40:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.95 2003/03/17 13:02:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1835,17 +1835,17 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 //*-*                    ================================
 //
 //
-//   Draws one dimensional graphs. The aspect of the graph is done
-// according to the value of the chopt.
+//  Draws one dimensional graphs. The aspect of the graph is done
+//  according to the value of the chopt.
 //
-// _Input parameters:
+//  Input parameters:
 //
 //  npoints : Number of points in X or in Y.
 //  x[npoints] or x[2] : X coordinates or (XMIN,XMAX) (WC space).
 //  y[npoints] or y[2] : Y coordinates or (YMIN,YMAX) (WC space).
 //  chopt : Option.
 //
-//  chopt='L' :  A simple polyline beetwen every points is drawn
+//  chopt='L' :  A simple polyline between every points is drawn
 //
 //  chopt='F' :  A fill area is drawn ('CF' draw a smooth fill area)
 //
@@ -1865,7 +1865,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
    Int_t OptionLine , OptionAxis , OptionCurve,OptionStar ,OptionMark;
    Int_t OptionBar  , OptionR    , OptionOne;
-   Int_t OptionFill , OptionZ    ,OptionCurveFill;
+   Int_t OptionFill , OptionZ    , OptionCurveFill;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
