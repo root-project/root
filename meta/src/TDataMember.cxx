@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.21 2004/03/12 00:31:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.22 2004/07/13 05:46:04 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -385,7 +385,8 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
       for (i=0;i<token_cnt;i++) if(tokens[i]) delete tokens[i];
 
    // if option string does not exist but it's an Enum - parse it!!!!
-   } else if (!strncmp(GetFullTypeName(),"enum",4)) {
+   //} else if (!strncmp(GetFullTypeName(),"enum",4)) {
+   } else if (IsEnum()) {
 
       TGlobal *global = 0;
       TDataMember::fOptions = new TList();
