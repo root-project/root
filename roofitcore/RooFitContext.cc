@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.23 2001/09/08 01:49:41 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.24 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -264,12 +264,13 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       // Update normSet with components from trimData
       _normSet->replace(*trimData->get()) ;
       
-      // WVE --- Is this still necessary now that we use RooNameSets? --------
-      // Make sure PDF releases all handles to old data set before deleting it
+      // WVE --- Is this still necessary now that we use RooNameSets? YES!!! --------
+      //         Forces actual calculation of normalization of cached 
+      //         variables while this is still posible
       TIterator* pcIter = _pdfCompList->createIterator() ;
       while(arg=(RooAbsArg*)pcIter->Next()){
 	if (arg->IsA()->InheritsFrom(RooAbsPdf::Class())) {	  
-	  ((RooAbsPdf*)arg)->syncNormalization(_normSet) ; 
+	  ((RooAbsPdf*)arg)->getVal(_normSet) ; 
 	}
       }
       delete pcIter ;
