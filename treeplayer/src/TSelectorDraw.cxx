@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.38 2004/10/05 07:02:21 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.39 2004/10/13 10:06:09 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -512,6 +512,16 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmin[1] = xmin;
                fVmax[1] = xmax;
                if (xmin < xmax) CanRebin = kFALSE;
+            }
+            if (fAction == 2) {
+               //we come here when option = "same prof"
+               fAction = -4;
+               TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
+               if (oldhtemp) {
+                  fNbins[1] = oldhtemp->GetXaxis()->GetNbins();
+                  fVmin[1]  = oldhtemp->GetXaxis()->GetXmin();
+                  fVmax[1]  = oldhtemp->GetXaxis()->GetXmax();
+               }
             }
             if (opt.Contains("profs"))
                hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"s");
