@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id:$
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.22 2003/06/17 09:13:56 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,7 @@
 
 #include "TGeoSphere.h"
 #include "TGeoPcon.h"
+#include "TGeoTorus.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
@@ -910,6 +911,28 @@ void TGeoPainter::PaintCompositeShape(TGeoVolume *vol, Option_t *option)
 }
 
 //______________________________________________________________________________
+void *TGeoPainter::MakeTorus3DBuffer(const TGeoVolume *vol)
+{
+// Create a torus 3D buffer for a given shape.
+   Int_t n = fNsegments+1;
+   TGeoShape *shape = vol->GetShape();
+   TGeoTorus *tor = (TGeoTorus*)shape;
+   if (!tor) return 0;
+   X3DPoints *buff = new X3DPoints;
+   Int_t numpoints = n*(n-1);
+   Bool_t hasrmin = (tor->GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (tor->GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) numpoints *= 2;
+   else if (hasphi) numpoints += 2;
+   Double_t *points = new Double_t[3*numpoints];
+   if (!points) return 0;
+
+   shape->SetPoints(points);
+   buff->points = points;
+   return buff;
+}   
+
+//______________________________________________________________________________
 void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
 {
 // Create a box 3D buffer for a given shape.
@@ -927,6 +950,237 @@ void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
    buff->points = points;
    return buff;
 }   
+
+//______________________________________________________________________________
+void TGeoPainter::PaintTorus(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
+{
+// paint a torus in pad or x3d
+   Int_t i, j;
+   const Int_t n = fNsegments+1;
+   Int_t indx, indp, startcap=0;
+   
+   TGeoTorus *tor = (TGeoTorus*)shape;
+   if (!tor) return;
+   Int_t numpoints = n*(n-1);
+   Bool_t hasrmin = (tor->GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (tor->GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) numpoints *= 2;
+   else if (hasphi) numpoints += 2;
+
+   //*-* Allocate memory for points *-*
+
+   Float_t *points = new Float_t[3*numpoints];
+   if (!points) return;
+
+   shape->SetPoints(points);
+
+   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
+//   if (!rangeView && gPad->GetView3D()) gVirtualGL->PaintCone(points,-n,2);
+
+//==   for (i = 0; i < numpoints; i++)
+//==            gNode->Local2Master(&points[3*i],&points[3*i]);
+   Bool_t is3d = kFALSE;
+   if (strstr(option, "x3d")) is3d=kTRUE;   
+   
+    X3DBuffer *buff = new X3DBuffer;
+    if (buff) {
+        buff->numPoints =   numpoints;
+        buff->numSegs = (2*n-1)*(n-1);
+        buff->numPolys = (n-1)*(n-1);
+        if (hasrmin) {
+           buff->numSegs   += (2*n-1)*(n-1);
+           buff->numPolys  += (n-1)*(n-1);
+        }   
+        if (is3d && hasphi)  {
+           buff->numSegs   += 2*(n-1);
+           buff->numPolys  += 2*(n-1);
+        }   
+//        if (!is3d) buff->numPolys = 0;
+    }
+
+    buff->points = points;
+
+    Int_t c = ((fGeom->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
+    if (c < 0) c = 0;
+   if (fPaintingOverlaps) {
+      if (fOverlap->IsExtrusion()) {
+         if (fOverlap->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      } else {
+         if (fOverlap->GetNode(0)->GetVolume()->GetShape()==shape) c=8;
+         else c=12;
+      }   
+   }
+//*-* Allocate memory for segments *-*
+
+    indp = n*(n-1); // start index for points on inner surface
+    buff->segs = new Int_t[buff->numSegs*3];
+    memset(buff->segs, 0, buff->numSegs*3*sizeof(Int_t));
+    if (buff->segs) {
+       // outer surface phi circles = n*(n-1) -> [0, n*(n-1) -1]
+       // connect point j with point j+1 on same row
+       indx = 0;
+       for (i = 0; i < n; i++) { // rows [0,n-1]
+          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+             buff->segs[indx+(i*(n-1)+j)*3] = c;
+             buff->segs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;   // j on row i
+             buff->segs[indx+(i*(n-1)+j)*3+2] = i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+          }
+       }
+       indx += 3*n*(n-1);
+       // outer surface generators = (n-1)*(n-1) -> [n*(n-1), (2*n-1)*(n-1) -1]
+       // connect point j on row i with point j on row i+1
+       for (i = 0; i < n-1; i++) { // rows [0, n-2]
+          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+             buff->segs[indx+(i*(n-1)+j)*3] = c;
+             buff->segs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;     // j on row i
+             buff->segs[indx+(i*(n-1)+j)*3+2] = (i+1)*(n-1)+j; // j on row i+1
+          }
+       }
+       indx += 3*(n-1)*(n-1);
+       startcap = (2*n-1)*(n-1);
+                
+       if (hasrmin) {
+          // inner surface phi circles = n*(n-1) -> [(2*n-1)*(n-1), (3*n-1)*(n-1) -1]
+          // connect point j with point j+1 on same row
+          for (i = 0; i < n; i++) { // rows [0, n-1]
+             for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+                buff->segs[indx+(i*(n-1)+j)*3] = c;              // lighter color
+                buff->segs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;   // j on row i
+                buff->segs[indx+(i*(n-1)+j)*3+2] = indp + i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+             }
+          }
+          indx += 3*n*(n-1);
+          // inner surface generators = (n-1)*n -> [(3*n-1)*(n-1), (4*n-2)*(n-1) -1]
+          // connect point j on row i with point j on row i+1
+          for (i = 0; i < n-1; i++) { // rows [0, n-2]
+             for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+                buff->segs[indx+(i*(n-1)+j)*3] = c;                // lighter color
+                buff->segs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;     // j on row i
+                buff->segs[indx+(i*(n-1)+j)*3+2] = indp + (i+1)*(n-1)+j; // j on row i+1
+             }
+          }
+          indx += 3*(n-1)*(n-1);
+          startcap = (4*n-2)*(n-1);
+       }   
+
+       if (is3d && hasphi) {
+          if (hasrmin) {
+           // endcaps = 2*(n-1) -> [(4*n-2)*(n-1), 4*n*(n-1)-1]
+             i = 0;
+             for (j = 0; j < n-1; j++) { 
+                buff->segs[indx+j*3] = c+1;
+                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+                buff->segs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row 0
+             }
+             indx += 3*(n-1);
+             i = n-1;   
+             for (j = 0; j < n-1; j++) { 
+                buff->segs[indx+j*3] = c+1;
+                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+                buff->segs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row n-1
+             }
+             indx += 3*(n-1);
+          } else {
+             i = 0;
+             for (j = 0; j < n-1; j++) { 
+                buff->segs[indx+j*3] = c+1;
+                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+                buff->segs[indx+j*3+2] = n*(n-1);       // center of first endcap
+             }
+             indx += 3*(n-1);
+             i = n-1;   
+             for (j = 0; j < n-1; j++) { 
+                buff->segs[indx+j*3] = c+1;
+                buff->segs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+                buff->segs[indx+j*3+2] = n*(n-1)+1;     // center of second endcap
+             }
+             indx += 3*(n-1);
+          }
+       }
+    }               
+                   
+//*-* Allocate memory for polygons *-*
+
+    indx = 0;
+    buff->polys = 0;
+    if (is3d) {
+       buff->polys = new Int_t[buff->numPolys*6];
+       memset(buff->polys, 0, buff->numPolys*6*sizeof(Int_t));
+       if (buff->polys) {
+          // outer surface = (n-1)*(n-1) -> [0, (n-1)*(n-1)-1]
+          // normal pointing out
+          for (i=0; i<n-1; i++) {
+             for (j=0; j<n-1; j++) {
+                buff->polys[indx++] = c;
+                buff->polys[indx++] = 4;
+                buff->polys[indx++] = (n-1)*i+j; // seg j on outer row i
+                buff->polys[indx++] = n*(n-1)+(n-1)*i+j; // generator j on outer row i
+                buff->polys[indx++] = (n-1)*(i+1)+j; // seg j on outer row i+1
+                buff->polys[indx++] = n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on outer row i
+             }   
+          }
+          if (hasrmin) {
+             indp = (2*n-1)*(n-1); // start index of inner segments
+             // inner surface = (n-1)*(n-1) -> [(n-1)*(n-1), 2*(n-1)*(n-1)-1] 
+             // normal pointing out 
+             for (i=0; i<n-1; i++) {
+                for (j=0; j<n-1; j++) {
+                   buff->polys[indx++] = c;
+                   buff->polys[indx++] = 4;
+                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row i
+                   buff->polys[indx++] = indp+n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on inner row i
+                   buff->polys[indx++] = indp+(n-1)*(i+1)+j; // seg j on inner row i+1
+                   buff->polys[indx++] = indp+n*(n-1)+(n-1)*i+j; // generator j on inner row i
+                }   
+             }
+          }   
+          if (hasphi) {
+             // endcaps = 2*(n-1) -> [2*(n-1)*(n-1), 2*n*(n-1)-1]
+             i=0; // row 0
+             Int_t np = (hasrmin)?4:3;
+             for (j=0; j<n-1; j++) {
+                buff->polys[indx++] = c+1;
+                buff->polys[indx++] = np;
+                buff->polys[indx++] = (n-1)*i+j;         // seg j on outer row 0
+                buff->polys[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0
+                if (hasrmin)
+                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row 0
+                buff->polys[indx++] = startcap+j;        // endcap j on row 0
+             }   
+
+             i=n-1; // row n-1
+             for (j=0; j<n-1; j++) {
+                buff->polys[indx++] = c+1;
+                buff->polys[indx++] = np;
+                buff->polys[indx++] = (n-1)*i+j;         // seg j on outer row n-1
+                buff->polys[indx++] = startcap+(n-1)+j;      // endcap j on row n-1
+                if (hasrmin)
+                   buff->polys[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1
+                buff->polys[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1
+             } 
+          }
+       }
+    }           
+    //*-* Paint in the pad
+    PaintShape(buff,rangeView, glmat);
+
+    if (is3d) {
+        if(buff && buff->points && buff->segs)
+            FillX3DBuffer(buff);
+        else {
+            gSize3D.numPoints -= buff->numPoints;
+            gSize3D.numSegs   -= buff->numSegs;
+            gSize3D.numPolys  -= buff->numPolys;
+        }
+    }
+
+    delete [] points;
+    if (buff->segs)     delete [] buff->segs;
+    if (buff->polys)    delete [] buff->polys;
+    if (buff)           delete    buff;
+}
+
 //______________________________________________________________________________
 void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {

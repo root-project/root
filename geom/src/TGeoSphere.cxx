@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.16 2003/03/11 07:48:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.17 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -10,6 +10,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//_____________________________________________________________________________
+// TGeoSphere - spherical shell class. It takes 6 parameters : 
+//           - inner and outer radius Rmin, Rmax
+//           - the theta limits Tmin, Tmax
+//           - the phi limits Pmin, Pmax (the sector in phi is considered
+//             starting from Pmin to Pmax counter-clockwise
+//
+//_____________________________________________________________________________
+//Begin_Html
+/*
+<img src="gif/t_sphere.gif">
+*/
+//End_Html
+
 #include "TROOT.h"
 
 #include "TGeoCone.h"
@@ -19,23 +33,9 @@
 
 #include "TGeoSphere.h"
 
-/*************************************************************************
- * TGeoSphere - spherical shell class. It takes 6 parameters : 
- *           - inner and outer radius Rmin, Rmax
- *           - the theta limits Tmin, Tmax
- *           - the phi limits Pmin, Pmax (the sector in phi is considered
- *             starting from Pmin to Pmax counter-clockwise
- *
- *************************************************************************/
-//Begin_Html
-/*
-<img src="gif/t_sphere.gif">
-*/
-//End_Html
-
 ClassImp(TGeoSphere)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoSphere::TGeoSphere()
 {
 // Default constructor
@@ -49,7 +49,8 @@ TGeoSphere::TGeoSphere()
    fPhi1 = 0.0;
    fPhi2 = 360.0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoSphere::TGeoSphere(Double_t rmin, Double_t rmax, Double_t theta1,
                        Double_t theta2, Double_t phi1, Double_t phi2)
            :TGeoBBox(0, 0, 0)
@@ -60,7 +61,8 @@ TGeoSphere::TGeoSphere(Double_t rmin, Double_t rmax, Double_t theta1,
    ComputeBBox();
    SetNumberOfDivisions(20);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t theta1,
                        Double_t theta2, Double_t phi1, Double_t phi2)
            :TGeoBBox(name, 0, 0, 0)
@@ -71,7 +73,8 @@ TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t 
    ComputeBBox();
    SetNumberOfDivisions(20);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoSphere::TGeoSphere(Double_t *param, Int_t /*nparam*/)
            :TGeoBBox(0, 0, 0)
 {
@@ -83,12 +86,14 @@ TGeoSphere::TGeoSphere(Double_t *param, Int_t /*nparam*/)
    ComputeBBox();
    SetNumberOfDivisions(20);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoSphere::~TGeoSphere()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________   
 void TGeoSphere::ComputeBBox()
 {
 // compute bounding box of the sphere
@@ -163,7 +168,13 @@ void TGeoSphere::ComputeBBox()
    fDZ = (zmax-zmin)/2;
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________   
+void TGeoSphere::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh, Bool_t checkPh) const
 {
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
@@ -190,7 +201,7 @@ Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh,
    return kTRUE;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Bool_t TGeoSphere::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
@@ -217,14 +228,8 @@ Bool_t TGeoSphere::Contains(Double_t *point) const
    }      
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoSphere::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
@@ -233,7 +238,8 @@ Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 2*n*nz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the sphere
@@ -451,7 +457,8 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
    }      
    return kBig;            
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the sphere
@@ -500,7 +507,7 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    // compute distance to shape
    Double_t snxt = kBig;
    if (rzero) {
-      gGeoManager->SetNormalChecked(1.);
+//      gGeoManager->SetNormalChecked(1.);
       return fRmax;
    }
    // first do rmin, rmax
@@ -600,7 +607,7 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    return snxt;            
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check, Bool_t firstcross) const
 {
 // compute distance to sphere of radius rsph. Direction has to be a unit vector
@@ -630,7 +637,7 @@ Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph,
    return kBig;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoVolume *TGeoSphere::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                                Double_t /*start*/, Double_t /*step*/) 
 {
@@ -639,7 +646,7 @@ TGeoVolume *TGeoSphere::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/
    return 0;
 }      
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 const char *TGeoSphere::GetAxisName(Int_t iaxis) const
 {
 // Returns name of axis IAXIS.
@@ -655,7 +662,7 @@ const char *TGeoSphere::GetAxisName(Int_t iaxis) const
    }
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoSphere::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -681,7 +688,8 @@ Double_t TGeoSphere::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) con
    }
    return dx;
 }         
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -706,7 +714,8 @@ void TGeoSphere::GetBoundingCylinder(Double_t *param) const
    }   
    while (param[3]<param[2]) param[3]+=360.;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::InspectShape() const
 {
 // print shape parameters
@@ -719,7 +728,8 @@ void TGeoSphere::InspectShape() const
    printf("    Ph2  = %11.5f\n", fPhi2);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -729,7 +739,8 @@ void TGeoSphere::Paint(Option_t *option)
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintSphere(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
@@ -738,7 +749,7 @@ void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintSphere(this, option, glmat);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void *TGeoSphere::Make3DBuffer(const TGeoVolume *vol) const
 {
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
@@ -746,13 +757,7 @@ void *TGeoSphere::Make3DBuffer(const TGeoVolume *vol) const
    return painter->MakeSphere3DBuffer(vol);
 }   
 
-//-----------------------------------------------------------------------------
-void TGeoSphere::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -798,7 +803,8 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<6; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(6, saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                Double_t theta2, Double_t phi1, Double_t phi2)
 {
@@ -822,7 +828,8 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
    if (phi2<0) fPhi2+=360.;
    if (TMath::Abs(phi2-phi1)!=360.) TGeoShape::SetBit(kGeoPhiSeg);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::SetDimensions(Double_t *param)
 {
    Double_t rmin = param[0];
@@ -837,7 +844,8 @@ void TGeoSphere::SetDimensions(Double_t *param)
 //   if (nparam > 5) phi2   = param[5];
    SetSphDimensions(rmin, rmax, theta1, theta2, phi1, phi2);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::SetNumberOfDivisions(Int_t p)
 {
    fNseg = p;
@@ -846,7 +854,8 @@ void TGeoSphere::SetNumberOfDivisions(Int_t p)
    Double_t dtheta = TMath::Abs(fTheta2-fTheta1);
    fNz = Int_t(fNseg*dtheta/dphi) +1;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::SetPoints(Double_t *buff) const
 {
 // create sphere mesh points
@@ -891,7 +900,8 @@ void TGeoSphere::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::SetPoints(Float_t *buff) const
 {
 // create sphere mesh points
@@ -938,7 +948,8 @@ void TGeoSphere::SetPoints(Float_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoSphere::Sizeof3D() const
 {
 // fill size of this 3-D object

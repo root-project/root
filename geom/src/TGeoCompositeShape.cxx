@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.10 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.11 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -9,13 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoBoolNode.h"
-#include "TVirtualGeoPainter.h"
-
-#include "TGeoCompositeShape.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // TGeoCompositeShape - class handling Boolean composition of shapes
@@ -77,15 +70,15 @@
 // at its turn B+C into B and C and create a TGeoUnion("B","C"). The B and C
 // identifiers will be looked for and replaced by the pointers to the actual shapes
 // into the new node. Finally, the composite "A+B+C" will be represented as:
-/*
-                 A
-                /
-   [A+B+C] = (+)             B
-                \           /
-                 [B+C] = (+)
-                            \
-                             C
-*/
+//
+//                 A
+//                |
+//   [A+B+C] = (+)             B
+//                |           |
+//                 [B+C] = (+)
+//                            |
+//                             C
+//
 // where [] is a composite shape, (+) is a Boolean node of type union and A, B,
 // C are pointers to the corresponding shapes.
 //   Building this composite shapes takes the following line :
@@ -95,17 +88,17 @@
 //   This expression means: subtract the union of C and D from the union of A and
 // B. The usage of paranthesys to force operator precedence is always recommended.
 // The representation of the corresponding composite shape looks like:
-/*
-                                   A
-                                  /
-                       [A+B] = (+)
-                      /           \
-   [(A+B)\(C+D)] = (\)           C B
-                      \         /  
-                       [C+D]=(+)
-                                \
-                                 D
-*/
+//
+//                                   A
+//                                  |
+//                       [A+B] = (+)
+//                      |           |
+//   [(A+B)\(C+D)] = (\)           C B
+//                      |         |  
+//                       [C+D]=(+)
+//                                |
+//                                 D
+//
 //      TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2", "(A+B)\(C+D)");
 //   
 //   Building composite shapes as in the 2 examples above is not always quite
@@ -150,9 +143,16 @@
 // rules (see TGeoVolume). Volumes created based on composite shapes cannot be
 // divided. Visualization of such volumes is currently not implemented.
 
+//#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoBoolNode.h"
+#include "TVirtualGeoPainter.h"
+
+#include "TGeoCompositeShape.h"
 ClassImp(TGeoCompositeShape)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)
 {
@@ -160,7 +160,8 @@ TGeoCompositeShape::TGeoCompositeShape()
    SetBit(TGeoShape::kGeoComb);
    fNode  = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
@@ -177,7 +178,8 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
    }
    ComputeBBox();
 }  
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape(const char *expression)
                    :TGeoBBox(0, 0, 0)
 {
@@ -193,26 +195,30 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    }
    ComputeBBox();
 }  
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCompositeShape::~TGeoCompositeShape()
 {
 // destructor
    if (fNode) delete fNode;
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::ComputeBBox()
 {
 // compute bounding box of the sphere
    if(fNode) fNode->ComputeBBox(fDX, fDY, fDZ, fOrigin);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Bool_t TGeoCompositeShape::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    if (fNode) return fNode->Contains(point);
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCompositeShape::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
@@ -221,7 +227,8 @@ Double_t TGeoCompositeShape::DistToIn(Double_t *point, Double_t *dir, Int_t iact
    if (fNode) return fNode->DistToIn(point, dir, iact, step, safe);
    return kBig;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCompositeShape::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
@@ -229,14 +236,8 @@ Double_t TGeoCompositeShape::DistToOut(Double_t *point, Double_t *dir, Int_t iac
    if (fNode) return fNode->DistToOut(point, dir, iact, step, safe);
    return kBig;
 }   
-//-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, 
                                        Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/) 
 {
@@ -244,14 +245,16 @@ TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*
    Error("Divide", "Composite shapes cannot be divided");
    return 0;
 }      
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::InspectShape() const
 {
 // print shape parameters
    printf("*** TGeoCompositeShape : %s = %s\n", GetName(), GetTitle());
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::MakeNode(const char *expression)
 {
 // Make a booleann node according to the top level boolean operation of expression.
@@ -284,12 +287,8 @@ void TGeoCompositeShape::MakeNode(const char *expression)
          fNode = new TGeoIntersection(sleft.Data(), sright.Data());
    }
 }               
-//-----------------------------------------------------------------------------
-void TGeoCompositeShape::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -298,32 +297,37 @@ void TGeoCompositeShape::Paint(Option_t *option)
    if (!painter) return;
    PaintNext(glmat, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
    if (fNode) fNode->PaintNext(glmat, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCompositeShape::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
    return kBig;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::SetPoints(Double_t *buff) const
 {
 // create points for a composite shape
    TGeoBBox::SetPoints(buff);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::SetPoints(Float_t *buff) const
 {
 // create points for a composite shape
    TGeoBBox::SetPoints(buff);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCompositeShape::Sizeof3D() const
 {
 // compute size of this 3D object

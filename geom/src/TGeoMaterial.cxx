@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.6 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.7 2003/02/17 11:57:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -113,11 +113,13 @@ Double_t TGeoMaterial::Coulomb(Double_t z)
 Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
 {
 // return true if the other material has the same physical properties
-   if (fA != other->GetA()) return kFALSE;
-   if (fZ != other->GetZ()) return kFALSE;
-   if (fDensity != other->GetDensity()) return kFALSE;
-   if (fRadLen != other->GetRadLen()) return kFALSE;
-   if (fIntLen != other->GetIntLen()) return kFALSE;
+   if (other==this) return kTRUE;
+   if (other->IsMixture()) return kFALSE;
+   if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
+   if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
+   if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
+//   if (fRadLen != other->GetRadLen()) return kFALSE;
+//   if (fIntLen != other->GetIntLen()) return kFALSE;
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
@@ -222,15 +224,20 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
 Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 {
 // return true if the other material has the same physical properties
-   if (!TGeoMaterial::IsEqual(other)) return kFALSE;
-   TGeoMixture *mix = 0;
-   mix = (TGeoMixture*)other;
+   if (other->IsEqual(this)) return kTRUE;
+   if (!other->IsMixture()) return kFALSE;
+   TGeoMixture *mix = (TGeoMixture*)other;
    if (!mix) return kFALSE;
    if (fNelements != mix->GetNelements()) return kFALSE;
+   if (TMath::Abs(fA-other->GetA())>1E-3) return kFALSE;
+   if (TMath::Abs(fZ-other->GetZ())>1E-3) return kFALSE;
+   if (TMath::Abs(fDensity-other->GetDensity())>1E-6) return kFALSE;
+//   if (fRadLen != other->GetRadLen()) return kFALSE;
+//   if (fIntLen != other->GetIntLen()) return kFALSE;
    for (Int_t i=0; i<fNelements; i++) {
-      if (fZmixture[i] != (mix->GetZmixt())[i]) return kFALSE;
-      if (fAmixture[i] != (mix->GetAmixt())[i]) return kFALSE;
-      if (fWeights[i] != (mix->GetWmixt())[i]) return kFALSE;
+      if (TMath::Abs(fZmixture[i]-(mix->GetZmixt())[i])>1E-3) return kFALSE;
+      if (TMath::Abs(fAmixture[i]-(mix->GetAmixt())[i])>1E-3) return kFALSE;
+      if (TMath::Abs(fWeights[i]-(mix->GetWmixt())[i])>1E-3) return kFALSE;
    }
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.9 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.10 2003/06/17 09:13:55 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -9,34 +9,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoEltu.h"
-
-/*************************************************************************
- * TGeoEltu - elliptical tube class. It takes 3 parameters : 
- * semi-axis of the ellipse along x, semi-asix of the ellipse along y
- * and half-length dz. 
- *
- *************************************************************************/
+//_____________________________________________________________________________
+// TGeoEltu - elliptical tube class. It takes 3 parameters : 
+// semi-axis of the ellipse along x, semi-asix of the ellipse along y
+// and half-length dz. 
+//
+//_____________________________________________________________________________
 //Begin_Html
 /*
 <img src="gif/t_eltu.gif">
 */
 //End_Html
 
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoEltu.h"
 
 ClassImp(TGeoEltu)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoEltu::TGeoEltu()
 {
 // Dummy constructor
    SetBit(TGeoShape::kGeoEltu);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
            :TGeoTube(a, b, dz)
 {
@@ -45,7 +45,8 @@ TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
            :TGeoTube(name, a, b, dz)
 {
@@ -54,7 +55,8 @@ TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
    SetEltuDimensions(a, b, dz);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoEltu::TGeoEltu(Double_t *param)
 {
 // Default constructor specifying minimum and maximum radius
@@ -65,12 +67,14 @@ TGeoEltu::TGeoEltu(Double_t *param)
    SetDimensions(param);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoEltu::~TGeoEltu()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________   
 void TGeoEltu::ComputeBBox()
 {
 // compute bounding box of the tube
@@ -78,7 +82,14 @@ void TGeoEltu::ComputeBBox()
    fDY = fRmax;
    fDZ = fDz;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________   
+void TGeoEltu::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoEltu::Contains(Double_t *point) const
 {
 // test if point is inside the elliptical tube
@@ -87,7 +98,8 @@ Bool_t TGeoEltu::Contains(Double_t *point) const
    if (r2>1.)  return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each vertex
@@ -95,7 +107,8 @@ Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints=4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
@@ -171,7 +184,8 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    }
    return snxt;      
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
@@ -237,21 +251,16 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    }
    return snxt;   
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoEltu::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
    Error("Divide", "Elliptical tubes divisions not implemenetd");
    return 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -262,7 +271,8 @@ void TGeoEltu::GetBoundingCylinder(Double_t *param) const
    param[2] = 0.;                  // Phi1
    param[3] = 360.;                // Phi2 
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -284,7 +294,8 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 
    return (new TGeoEltu(a, b, dz));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::InspectShape() const
 {
 // print shape parameters
@@ -294,19 +305,16 @@ void TGeoEltu::InspectShape() const
    printf("    dz   = %11.5f\n", fDz);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
-void TGeoEltu::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoEltu::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
    return kBig;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
 {
    if ((a<=0) || (b<0) || (dz<0)) {
@@ -316,7 +324,8 @@ void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
    fRmax=b;
    fDz=dz;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::SetDimensions(Double_t *param)
 {
    Double_t a    = param[0];
@@ -324,7 +333,8 @@ void TGeoEltu::SetDimensions(Double_t *param)
    Double_t dz   = param[2];
    SetEltuDimensions(a, b, dz);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::SetPoints(Double_t *buff) const
 {
 // create tube mesh points
@@ -369,7 +379,8 @@ void TGeoEltu::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoEltu::SetPoints(Float_t *buff) const
 {
 // create tube mesh points

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.8 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.9 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -9,30 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// TGeoShape - base class for all geometrical shapes. Abstract functionality
-//   regarding point and segment classification has to be implemented by classes
-//   that inherits from it.
-//
-//
-//Begin_Html
-/*
-<img src="gif/t_shape.jpg">
-*/
-//End_Html
-#include "TObjArray.h"
-
-#include "TGeoMatrix.h"
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoShape.h"
-#include "TVirtualGeoPainter.h"
-
 //____________________________________________________________________________
 // TGeoShape - Base abstract class for all shapes. 
 //____________________________________________________________________________
-
-
+//
+//
 //   Shapes are geometrical objects that provide the basic modelling 
 // functionality. They provide the definition of the LOCAL frame of coordinates,
 // with respect to which they are defined. Any implementation of a shape deriving
@@ -152,15 +133,30 @@
 // is always invoked in a generic way from the volume level. Details on how to
 // do that can be found in TGeoVolume class. One can see how all division options
 // are interpreted and which is their result inside specific shape classes.
+//_____________________________________________________________________________
+//
+//Begin_Html
+/*
+<img src="gif/t_shape.jpg">
+*/
+//End_Html
+
+#include "TObjArray.h"
+
+#include "TGeoMatrix.h"
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoShape.h"
+#include "TVirtualGeoPainter.h"
+
 
 const Double_t TGeoShape::kRadDeg = 180./TMath::Pi();
 const Double_t TGeoShape::kDegRad = TMath::Pi()/180.;
 const Double_t TGeoShape::kBig = 1E30;
 
-ClassImp(TGeoParamCurve)
 ClassImp(TGeoShape)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoShape::TGeoShape()
 {
 // Default constructor
@@ -172,7 +168,8 @@ TGeoShape::TGeoShape()
 //   fShapeId = gGeoManager->GetListOfShapes()->GetSize();
 //   gGeoManager->AddShape(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape::TGeoShape(const char *name)
           :TNamed(name, "")
 {
@@ -185,13 +182,15 @@ TGeoShape::TGeoShape(const char *name)
    fShapeId = gGeoManager->GetListOfShapes()->GetSize();
    gGeoManager->AddShape(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape::~TGeoShape()
 {
 // Destructor
    if (gGeoManager) gGeoManager->GetListOfShapes()->Remove(this);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 const char *TGeoShape::GetName() const
 {
    if (!strlen(fName)) {
@@ -199,14 +198,16 @@ const char *TGeoShape::GetName() const
    }
    return TNamed::GetName();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const
 {
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return 9999;
    return painter->ShapeDistancetoPrimitive(this, numpoints, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoShape::ClosenessToCorner(Double_t *point, Bool_t in,
                                  Double_t *vertex, Double_t *normals, Double_t *cldir)
 {
@@ -285,7 +286,7 @@ Double_t TGeoShape::ClosenessToCorner(Double_t *point, Bool_t in,
    return close; // never happens
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoShape::DistToCorner(Double_t *point, Double_t *dir, Bool_t in, 
                                  Double_t *vertex, Double_t *norm, Int_t &inorm)
 {
@@ -397,7 +398,8 @@ Double_t TGeoShape::DistToCorner(Double_t *point, Double_t *dir, Bool_t in,
    }   
    return snxt;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoShape::GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz)
 {
 // get visible vertex number for : box, trd1, trd2, trap, gtra, para shapes   
@@ -420,7 +422,8 @@ Int_t TGeoShape::GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz)
    if (!vx) return imax;
    return imin;
 }               
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines

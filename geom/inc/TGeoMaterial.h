@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.6 2003/01/07 09:48:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.7 2003/02/17 11:57:30 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
+   virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
    void                     SetIndex(Int_t index) {fIndex=index;}
    static  Double_t         ScreenFactor(Double_t z);
@@ -111,6 +112,7 @@ public:
    Double_t                *GetAmixt() const     {return fAmixture;}
    Double_t                *GetWmixt() const     {return fWeights;}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
+   virtual Bool_t           IsMixture() const {return kTRUE;}
    virtual void             Print(const Option_t *option="") const;
 
   ClassDef(TGeoMixture, 1)              // material mixtures

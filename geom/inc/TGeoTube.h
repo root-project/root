@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.9 2003/02/07 13:46:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.10 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -45,6 +45,7 @@ public:
    // methods
 
    virtual void          ComputeBBox();
+   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
@@ -54,7 +55,6 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    static  void          DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta);
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual const char   *GetAxisName(Int_t iaxis) const;
@@ -68,7 +68,6 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
@@ -112,6 +111,7 @@ public:
    virtual ~TGeoTubeSeg();
    // methods
    virtual void          ComputeBBox();
+   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToOutS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
@@ -122,7 +122,6 @@ public:
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -133,7 +132,6 @@ public:
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
@@ -177,12 +175,12 @@ public:
    virtual ~TGeoCtub();
    // methods
    virtual void          ComputeBBox();
+   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -192,7 +190,6 @@ public:
    const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,

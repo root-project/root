@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.33 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.34 2003/06/24 12:37:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -51,8 +51,8 @@ private :
    Int_t                 fNNodes;           // total number of physical nodes
    TString               fPath;             //! path to current node
    TString               fParticleName;     //! particles to be drawn
-   Double_t              fNormal;           //! cosine of incident angle on current checked surface
-   Double_t              fNormalChecked;    //! cosine of incident angle on next crossed surface
+   Double_t              fNormal[3];        //! cosine of incident angle on current checked surface
+//   Double_t              fNormalChecked;    //! cosine of incident angle on next crossed surface
    Double_t             *fCldir;            //! unit vector to current closest shape
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
@@ -228,23 +228,6 @@ public:
                                      Double_t dz, Double_t *vertices=0);
    TGeoVolume            *MakeBox(const char *name, const TGeoMedium *medium,
                                      Double_t dx, Double_t dy, Double_t dz);
-   TGeoVolume            *MakePara(const char *name, const TGeoMedium *medium,
-                                     Double_t dx, Double_t dy, Double_t dz,
-                                     Double_t alpha, Double_t theta, Double_t phi);
-   TGeoVolume            *MakeSphere(const char *name, const TGeoMedium *medium,
-                                     Double_t rmin, Double_t rmax,
-                                     Double_t themin=0, Double_t themax=180,
-                                     Double_t phimin=0, Double_t phimax=360);
-   TGeoVolume            *MakeTube(const char *name, const TGeoMedium *medium,
-                                      Double_t rmin, Double_t rmax, Double_t dz);
-   TGeoVolume            *MakeTubs(const char *name, const TGeoMedium *medium,
-                                      Double_t rmin, Double_t rmax, Double_t dz,
-                                      Double_t phi1, Double_t phi2);
-   TGeoVolume            *MakeEltu(const char *name, const TGeoMedium *medium,
-                                      Double_t a, Double_t b, Double_t dz);
-   TGeoVolume            *MakeCtub(const char *name, const TGeoMedium *medium,
-                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz);
    TGeoVolume            *MakeCone(const char *name, const TGeoMedium *medium,
                                       Double_t dz, Double_t rmin1, Double_t rmax1,
                                       Double_t rmin2, Double_t rmax2);
@@ -252,23 +235,42 @@ public:
                                       Double_t dz, Double_t rmin1, Double_t rmax1,
                                       Double_t rmin2, Double_t rmax2,
                                       Double_t phi1, Double_t phi2);
+   TGeoVolume            *MakeCtub(const char *name, const TGeoMedium *medium,
+                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
+                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz);
+   TGeoVolume            *MakeEltu(const char *name, const TGeoMedium *medium,
+                                      Double_t a, Double_t b, Double_t dz);
+   TGeoVolume            *MakeGtra(const char *name, const TGeoMedium *medium,
+                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
+                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                   Double_t tl2, Double_t alpha2);
+   TGeoVolume            *MakePara(const char *name, const TGeoMedium *medium,
+                                     Double_t dx, Double_t dy, Double_t dz,
+                                     Double_t alpha, Double_t theta, Double_t phi);
    TGeoVolume            *MakePcon(const char *name, const TGeoMedium *medium,
                                       Double_t phi, Double_t dphi, Int_t nz);
    TGeoVolume            *MakePgon(const char *name, const TGeoMedium *medium,
                                       Double_t phi, Double_t dphi, Int_t nedges, Int_t nz);
+   TGeoVolume            *MakeSphere(const char *name, const TGeoMedium *medium,
+                                     Double_t rmin, Double_t rmax,
+                                     Double_t themin=0, Double_t themax=180,
+                                     Double_t phimin=0, Double_t phimax=360);
+   TGeoVolume            *MakeTorus(const char *name, const TGeoMedium *medium, Double_t r,
+                                    Double_t rmin, Double_t rmax, Double_t phi1=0, Double_t dphi=360);
+   TGeoVolume            *MakeTrap(const char *name, const TGeoMedium *medium,
+                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
+                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
+                                   Double_t tl2, Double_t alpha2);
    TGeoVolume            *MakeTrd1(const char *name, const TGeoMedium *medium,
                                       Double_t dx1, Double_t dx2, Double_t dy, Double_t dz);
    TGeoVolume            *MakeTrd2(const char *name, const TGeoMedium *medium,
                                       Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                       Double_t dz);
-   TGeoVolume            *MakeTrap(const char *name, const TGeoMedium *medium,
-                                   Double_t dz, Double_t theta, Double_t phi, Double_t h1,
-                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
-                                   Double_t tl2, Double_t alpha2);
-   TGeoVolume            *MakeGtra(const char *name, const TGeoMedium *medium,
-                                   Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
-                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
-                                   Double_t tl2, Double_t alpha2);
+   TGeoVolume            *MakeTube(const char *name, const TGeoMedium *medium,
+                                      Double_t rmin, Double_t rmax, Double_t dz);
+   TGeoVolume            *MakeTubs(const char *name, const TGeoMedium *medium,
+                                      Double_t rmin, Double_t rmax, Double_t dz,
+                                      Double_t phi1, Double_t phi2);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
    
@@ -276,6 +278,7 @@ public:
    TGeoNode              *FindNextBoundary(Double_t stepmax=1e30,const char *path="");
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
+   Double_t              *FindNormal(Bool_t forward=kTRUE);
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    Double_t               Safety();
@@ -357,8 +360,8 @@ public:
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
    Double_t              *GetCldirChecked() const  {return fCldirChecked;}
    Double_t              *GetCldir() const         {return fCldir;}
-   Double_t               GetNormalChecked() const {return fNormalChecked;}
-   Double_t               GetNormal() const        {return fNormal;}
+//   Double_t               GetNormalChecked() const {return fNormalChecked;}
+   const Double_t        *GetNormal() const        {return fNormal;}
    Int_t                  GetLevel() const         {return fLevel;}
    const char            *GetPath() const;
    Int_t                  GetStackLevel() const    {return fCache->GetStackLevel();}
@@ -371,7 +374,7 @@ public:
    void                   SetCurrentDirection(Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
    void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) { 
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}
-   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
+//   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    
    //--- point/vector reference frame conversion   
@@ -391,6 +394,7 @@ public:
    void                   TopToMaster(const Double_t *top, Double_t *master) const;
 
    //--- general use getters/setters
+   TGeoMaterial          *FindDuplicateMaterial(const TGeoMaterial *mat) const;
    TGeoMaterial          *GetMaterial(const char *matname) const;
    TGeoMaterial          *GetMaterial(Int_t id) const;
    TGeoMedium            *GetMedium(const char *medium) const;

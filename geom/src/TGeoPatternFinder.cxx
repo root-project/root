@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.6 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.7 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -35,7 +35,6 @@ ClassImp(TGeoPatternHoneycomb)
 TGeoPatternFinder::TGeoPatternFinder()
 {
 // Default constructor
-   fBasicCell  = 0;
    fMatrix     = 0;
    fCurrent    = -1;
    fNdivisions = 0;
@@ -50,7 +49,6 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
 {
 // Default constructor
    fVolume     = vol;
-   fBasicCell  = 0;
    fMatrix     = 0;
    fCurrent    = -1;
    fNdivisions = ndiv;
@@ -63,12 +61,6 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
 TGeoPatternFinder::~TGeoPatternFinder()
 {
 // Destructor
-}
-//-----------------------------------------------------------------------------
-TGeoVolume *TGeoPatternFinder::GetBasicVolume() const
-{
-// returns the pointer to the volume corresponding to a given division
-   return fBasicCell;
 }
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.16 2003/04/17 15:51:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.17 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -10,19 +10,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoTrd2.h"
-
-
- /*************************************************************************
- * TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It 
- *   has 5 parameters, the half lengths in x at -dz and +dz, the half
- *  lengths in y at -dz and +dz, and the half length in z (dz).
- *
- *************************************************************************/
+//_____________________________________________________________________________
+// TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It 
+//   has 5 parameters, the half lengths in x at -dz and +dz, the half
+//  lengths in y at -dz and +dz, and the half length in z (dz).
+//
+//_____________________________________________________________________________
 //Begin_Html
 /*
 <img src="gif/t_trd2.gif">
@@ -41,16 +34,23 @@
 */
 //End_Html
 
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoTrd2.h"
+
 ClassImp(TGeoTrd2)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoTrd2::TGeoTrd2()
 {
    // dummy ctor
    SetBit(kGeoTrd2);
    fDz = fDx1 = fDx2 = fDy1 = fDy2 = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoTrd2::TGeoTrd2(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz)
          :TGeoBBox(0,0,0)
 {
@@ -68,7 +68,8 @@ TGeoTrd2::TGeoTrd2(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Doubl
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoTrd2::TGeoTrd2(const char * name, Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz)
          :TGeoBBox(name, 0,0,0)
 {
@@ -86,7 +87,8 @@ TGeoTrd2::TGeoTrd2(const char * name, Double_t dx1, Double_t dx2, Double_t dy1, 
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoTrd2::TGeoTrd2(Double_t *param)
          :TGeoBBox(0,0,0)
 {
@@ -101,12 +103,14 @@ TGeoTrd2::TGeoTrd2(Double_t *param)
    if ((fDx1<0) || (fDx2<0) || (fDy1<0) || (fDy2<0) || (fDz<0)) SetBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoTrd2::~TGeoTrd2()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::ComputeBBox()
 {
 // compute bounding box for a trd2
@@ -115,7 +119,14 @@ void TGeoTrd2::ComputeBBox()
    fDZ = fDz;
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________   
+void TGeoTrd2::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoTrd2::Contains(Double_t *point) const
 {
 // test if point is inside this shape
@@ -129,7 +140,8 @@ Bool_t TGeoTrd2::Contains(Double_t *point) const
    if (TMath::Abs(point[0]) > dx) return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the trd2
@@ -176,7 +188,8 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    snxt = dist[TMath::LocMin(3,dist)];
    return snxt;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the trd2
@@ -270,15 +283,8 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    }
    return kBig;
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoTrd2::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoTrd2::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -295,7 +301,7 @@ Double_t TGeoTrd2::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }         
             
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const
 {
 // get the most visible corner from outside point and the normals
@@ -340,7 +346,8 @@ void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
    }
    SetVertex(vertex);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
 {
 // get the opposite corner of the intersected face
@@ -362,7 +369,8 @@ void TGeoTrd2::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *ve
    } 
    SetVertex(vertex);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -411,14 +419,16 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return 0;
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
    TGeoBBox::GetBoundingCylinder(param);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
 // Fills real parameters of a positioned box inside this. Returns 0 if successfull.
@@ -473,7 +483,8 @@ Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    dz = dd[2];
    return 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -497,7 +508,8 @@ TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 
    return (new TGeoTrd2(dx1, dx2, dy1, dy2, dz));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::InspectShape() const
 {
 // print shape parameters
@@ -509,12 +521,8 @@ void TGeoTrd2::InspectShape() const
    printf("    dz  = %11.5f\n", fDz);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
-void TGeoTrd2::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoTrd2::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -541,7 +549,8 @@ Double_t TGeoTrd2::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::SetDimensions(Double_t *param)
 {
 // set arb8 params in one step :
@@ -552,7 +561,8 @@ void TGeoTrd2::SetDimensions(Double_t *param)
    fDz  = param[4];
    ComputeBBox();
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::SetPoints(Double_t *buff) const
 {
 // create trd2 mesh points
@@ -566,7 +576,8 @@ void TGeoTrd2::SetPoints(Double_t *buff) const
    buff[18] =  fDx2; buff[19] =  fDy2; buff[20] =  fDz;
    buff[21] =  fDx2; buff[22] = -fDy2; buff[23] =  fDz;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::SetPoints(Float_t *buff) const
 {
 // create trd2 mesh points
@@ -580,7 +591,8 @@ void TGeoTrd2::SetPoints(Float_t *buff) const
    buff[18] =  fDx2; buff[19] =  fDy2; buff[20] =  fDz;
    buff[21] =  fDx2; buff[22] = -fDy2; buff[23] =  fDz;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::SetVertex(Double_t *vertex) const
 {
 // set vertex of a corner according to visibility flags
@@ -606,7 +618,8 @@ void TGeoTrd2::SetVertex(Double_t *vertex) const
       }
    }            
 } 
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoTrd2::Sizeof3D() const
 {
 // fill size of this 3-D object

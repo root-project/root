@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.18 2003/06/23 12:31:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.19 2003/07/07 21:04:26 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
    virtual void      *MakeBox3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakeTorus3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeTube3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol) = 0;
    virtual void      *MakePcon3DBuffer(const TGeoVolume *vol) = 0;
@@ -104,6 +105,7 @@ public:
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintCompositeShape(TGeoVolume *vol, Option_t *option="") = 0;
+   virtual void       PaintTorus(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;
    virtual void       PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;

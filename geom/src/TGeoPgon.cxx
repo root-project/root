@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.22 2003/04/17 15:51:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.23 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -10,24 +10,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TVirtualGeoPainter.h"
-#include "TGeoPgon.h"
-
-
- /*************************************************************************
- * TGeoPgon - a polygone. It has at least 10 parameters :
- *            - the lower phi limit;
- *            - the range in phi;
- *            - the number of edges on each z plane;
- *            - the number of z planes (at least two) where the inner/outer 
- *              radii are changing;
- *            - z coordinate, inner and outer radius for each z plane
- *
- *************************************************************************/
+//_____________________________________________________________________________
+// TGeoPgon - a polygone. It has at least 10 parameters :
+//            - the lower phi limit;
+//            - the range in phi;
+//            - the number of edges on each z plane;
+//            - the number of z planes (at least two) where the inner/outer 
+//              radii are changing;
+//            - z coordinate, inner and outer radius for each z plane
+//
+//_____________________________________________________________________________
 //Begin_Html
 /*
 <img src="gif/t_pgon.gif">
@@ -38,17 +30,25 @@
 <img src="gif/t_pgondivZ.gif">
 */
 //End_Html
+
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TVirtualGeoPainter.h"
+#include "TGeoPgon.h"
    
 ClassImp(TGeoPgon)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPgon::TGeoPgon()
 {
 // dummy ctor
    SetBit(TGeoShape::kGeoPgon);
    fNedges = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(phi, dphi, nz) 
 {
@@ -56,7 +56,8 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
    SetBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
          :TGeoPcon(name, phi, dphi, nz) 
 {
@@ -64,7 +65,8 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
    SetBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPgon::TGeoPgon(Double_t *param)
          :TGeoPcon(0,0,0) 
 {
@@ -82,12 +84,14 @@ TGeoPgon::TGeoPgon(Double_t *param)
    SetDimensions(param);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPgon::~TGeoPgon()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::ComputeBBox()
 {
 // compute bounding box for a polygone
@@ -138,7 +142,14 @@ void TGeoPgon::ComputeBBox()
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________   
+void TGeoPgon::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoPgon::Contains(Double_t *point) const
 {
 // test if point is inside this shape
@@ -174,7 +185,8 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
    
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax)
 {
 // defines z position of a section plane, rmin and rmax at this z.
@@ -185,255 +197,7 @@ void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    if (snum==(fNz-1)) ComputeBBox();
 }
 
-//-----------------------------------------------------------------------------
-/*
-Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const
-{
-// compute distance to outside from a  pgon phi trapezoid
-//   printf("Checking sector : iz=%i isect=%i\n", iz, isect);
-//   printf(" point is : %f %f %f\n", point[0], point[1], point[2]);
-//   printf(" dir   is : %f %f %f\n", dir[0], dir[1], dir[2]);
-   Double_t saf, dist;
-   Double_t zmin = fZ[iz];
-   Double_t zmax = fZ[iz+1];
-   if (zmax==zmin) return 0;
-   Double_t divphi = fDphi/fNedges;
-   Double_t phi1 = (fPhi1 + divphi*(isect-1))*kDegRad;
-   Double_t phi2 = phi1 + divphi*kDegRad;
-//   printf(" phi1=%f phi2=%f\n", phi1*kRadDeg, phi2*kRadDeg);
-   Double_t phim = 0.5*(phi1+phi2);
-   Double_t cphim = TMath::Cos(phim);
-   Double_t sphim = TMath::Sin(phim);
-   Double_t *norm = gGeoManager->GetNormalChecked();
-   Double_t *snorm = gGeoManager->GetCldirChecked();
-   Double_t minsafe = 0;
-   Double_t dmin = kBig;
-   Double_t no[3];
-   Bool_t intersect = kFALSE;
-   // check outer slanted face
-   Double_t ct, st;
-   Double_t fz = (fRmax[iz+1]-fRmax[iz])/(zmax-zmin);
-//   printf("alfa=%f\n", TMath::ATan(fzo)*kRadDeg);
-   st = 1./TMath::Sqrt(1.+fz*fz);
-   ct = -fz*st;
-   if (st<0) st=-st;
-//   printf("theta outer : cto=%f sto=%f\n", cto, sto);
-   // normal
-   no[0] = st*cphim;
-   no[1] = st*sphim;
-   no[2] = ct;
-//   printf("normal to outer : %f %f %f\n", no[0], no[1], no[2]);
-   saf = (fRmax[iz]*cphim-point[0])*no[0]+
-         (fRmax[iz]*sphim-point[1])*no[1]+
-         (fZ[iz]-point[2])*no[2];
-   minsafe = saf;
-   memcpy(snorm, &no[0], 3*sizeof(Double_t));         
-//   printf("safe to outer : %f\n", saf[0]);
-   Double_t calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
-   if (calf>0) {
-      dmin = saf/calf;
-      memcpy(norm, &no[0], 3*sizeof(Double_t));
-   }   
-//   printf("out = %f\n", dist[0]);
-
-   // check inner slanted face
-   fz = (fRmin[iz+1]-fRmin[iz])/(zmax-zmin);
-//   printf("alfa=%f\n", TMath::ATan(fzi)*kRadDeg);
-   st = -1./TMath::Sqrt(1.+fz*fz);
-   ct = -fz*st;
-   if (st<0) st=-st;
-//   printf("theta inner : cto=%f sto=%f\n", cti, sti);
-   // normal
-   no[0] = -st*cphim;
-   no[1] = -st*sphim;
-   no[2] = ct;
-//   printf("normal to inner : %f %f %f\n", ni[0], ni[1], ni[2]);
-   saf = (fRmin[iz]*cphim-point[0])*no[0]+
-         (fRmin[iz]*sphim-point[1])*no[1]+
-         (fZ[iz]-point[2])*no[2];
-   if (saf<minsafe) {
-      minsafe = saf;
-      memcpy(snorm, &no[0], 3*sizeof(Double_t));
-   }            
-//   printf("safe to inner : %f\n", saf[1]);
-   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
-   if (calf>0) {
-      dist = saf/calf;
-      if (dist<dmin) {
-         dmin = dist;
-         memcpy(norm, &no[0], 3*sizeof(Double_t));
-      }   
-   }   
-//   printf("in  = %f\n", dist[1]);
-               
-   // check upper and lower Z planes
-   saf = point[2]-fZ[iz];
-   if (saf<minsafe) {
-      minsafe = saf;
-      memset(snorm, 0, 3*sizeof(Int_t));
-      snorm[2] = -1;
-   }            
-//   printf("safe to down : %f\n", saf[2]);
-   if (dir[2]<0) {
-      intersect = kTRUE;
-      dist=-saf/dir[2];
-      if (dist<dmin) {
-         dmin = dist;
-         memset(norm, 0, 3*sizeof(Double_t));
-         norm[2] = -1;
-      }   
-   }   
-//   printf("down= %f\n", dist[2]);
-   saf = fZ[iz+1]-point[2];
-   if (saf<minsafe) {
-      minsafe = saf;
-      memset(snorm, 0, 3*sizeof(Int_t));
-      snorm[2] = 1;
-   }            
-//   printf("safe to up : %f\n", saf[3]);
-   if (!intersect) {
-      if (dir[2]>0) {
-         dist=saf/dir[2];
-         if (dist<dmin) {
-            dmin = dist;
-            memset(norm, 0, 3*sizeof(Double_t));
-            norm[2] = 1;
-         }   
-      }
-   } else {
-      intersect = kFALSE;
-   }         
-//   printf("up  = %f\n", dist[3]);
-   // check phi1 and phi2 walls
-   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t phi = TMath::ATan2(point[1], point[0]);
-   if (phi<phi1) phi+=2*TMath::Pi();
-//   printf("phi point : %f\n", phi*kRadDeg);
-   no[0] = TMath::Sin(phi1);
-   no[1] = -TMath::Cos(phi1);
-   no[2] = 0;
-//   printf("normal to phi1 : %f %f %f\n", nph1[0], nph1[1], nph1[2]);
-   saf = TMath::Abs(r*TMath::Sin(phi-phi1));
-   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
-//   printf(" angle between dir and N: %f\n", TMath::ACos(calf)*kRadDeg);
-   if (calf>0) {
-      dist = saf/calf;
-      if (dist<dmin) {
-         // we have to check the other wall too
-         Double_t no2[3];
-         no2[0] = -TMath::Sin(phi2);
-         no2[1] = TMath::Cos(phi2);
-         no2[2] = 0;
-         Double_t saf2 = TMath::Abs(r*TMath::Sin(phi2-phi));
-         calf = dir[0]*no2[0]+dir[1]*no2[1]+dir[2]*no2[2];
-         if (calf>0) {
-            Double_t dist2 = saf2/calf;
-            if (dist2<dist) {
-               isect++;
-               // check if phi1 wall is real
-               if (isect>fNedges) {
-                  if (fDphi==360) {
-                     isect=1; 
-                  } else {
-                  // this was last sector
-                     dmin = dist2;
-                     memcpy(norm, &no2[0], 3*sizeof(Double_t));
-                     if (saf2<minsafe) {
-                        minsafe = saf2;
-                        memcpy(snorm, &no2[0], 3*sizeof(Double_t));
-                     }
-                     if ((fNedges==1) && (saf<saf2)) {
-                        minsafe = saf;
-                        memcpy(snorm, &no[0], 3*sizeof(Double_t));
-                     }
-                     return dmin;            
-                  }
-               } 
-               // propagate to next sector
-               dmin = dist + 1E-12;  // be sure to propagate INSIDE next sector
-               for (Int_t i=0; i<3; i++) point[i]+=dmin*dir[i];
-               dmin += DistToOutSect(point, dir, iz, isect);
-               return dmin;   
-            }   
-         }
-         isect--;
-         // check if phi1 wall is real
-         if (isect==0) {
-            if (fDphi==360) {
-               isect=fNedges; 
-            } else {
-            // this was last sector
-               dmin = dist;
-               memcpy(norm, &no[0], 3*sizeof(Double_t));
-               if (saf<minsafe) {
-                  minsafe = saf;
-                  memcpy(snorm, &no[0], 3*sizeof(Double_t));
-               } 
-               return dmin;            
-            }
-         } 
-         // propagate to next sector
-         dmin = dist + 1E-12;  // be sure to propagate INSIDE next sector
-         for (Int_t i=0; i<3; i++) point[i]+=dmin*dir[i];
-         dmin += DistToOutSect(point, dir, iz, isect);
-         return dmin;   
-      }   
-   }   
-   if (fDphi != 360) {
-      if ((isect==1) && (saf<minsafe)) {
-         minsafe = saf;
-         memcpy(snorm, &no[0], 3*sizeof(Double_t));
-      }   
-   }            
-//   printf("phi1= %f\n", dist[4]);
-
-//   printf("safe to phi1 : %f\n", saf[4]);
-   no[0] = -TMath::Sin(phi2);
-   no[1] = TMath::Cos(phi2);
-   no[2] = 0;
-//   printf("normal to phi2 : %f %f %f\n", nph2[0], nph2[1], nph2[2]);
-   saf = TMath::Abs(r*TMath::Sin(phi2-phi));
-//   printf("safe to phi2 : %f\n", saf[5]);
-   calf = dir[0]*no[0]+dir[1]*no[1]+dir[2]*no[2];
-//   printf(" angle between dir and N: %f\n", TMath::ACos(calf)*kRadDeg);
-   if (calf>0) {
-      dist = saf/calf;
-      if (dist<dmin) {
-         isect++;
-         // check if phi1 wall is real
-         if (isect>fNedges) {
-            if (fDphi==360) {
-               isect=1; 
-            } else {
-            // this was last sector
-               dmin = dist;
-               memcpy(norm, &no[0], 3*sizeof(Double_t));
-               if (saf<minsafe) {
-                  minsafe = saf;
-                  memcpy(snorm, &no[0], 3*sizeof(Double_t));
-               } 
-               return dmin;            
-            }
-         } 
-         // propagate to next sector
-         dmin = dist + 1E-6;  // be sure to propagate INSIDE next sector
-         for (Int_t i=0; i<3; i++) point[i]+=dmin*dir[i];
-         dmin += DistToOutSect(point, dir, iz, isect);
-         return dmin;   
-      }   
-   }
-   if (fDphi != 360) {
-      if ((isect==fNedges) && (saf<minsafe)) {
-         minsafe = saf;
-         memcpy(snorm, &no[0], 3*sizeof(Double_t));
-      }   
-   }            
-//   printf("phi2= %f\n", dist[5]);
-   return dmin; 
-//   if (imin==0)
-}
-*/
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &isect) const
 {
 // compute distance to outside from a  pgon phi trapezoid
@@ -542,7 +306,8 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
    dmin += DistToOutSect(&pt[0], dir, iz, isect)+1E-8;
    return dmin;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polygone
@@ -562,7 +327,6 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       ipl++;
       if (dir[2]<=0) return 1E-6;
    }
-//   Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
 
    // now find out in which phi section the point is in
    Double_t divphi = fDphi/fNedges;
@@ -576,7 +340,8 @@ Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t dsec = DistToOutSect(pt, dir, ipl, ipsec);
    return dsec;   
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the polygone
@@ -693,7 +458,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return (snxt+eps);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t & /*ipsec*/, 
                                 UChar_t &bits, Double_t *saf) const 
 {
@@ -708,7 +473,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
    Double_t nwall[3];
    Double_t s=kBig;
    Double_t snxt=kBig;
-   gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
+//   gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
    if (bits & kUp) {
       if (dir[2]>=0) return kBig;
       snxt=-saf[1]/dir[2];
@@ -750,7 +515,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
             s=-saf[2]/calf;
 //            printf("dist to inner : %f\n", s);
             if (s<snxt) {
-               gGeoManager->SetNormalChecked(-calf);
+//               gGeoManager->SetNormalChecked(-calf);
                snxt=s;
             }
          }
@@ -770,7 +535,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
             s=-saf[3]/calf;
 //            printf("dist to outer : %f\n", s);
             if (s<snxt) {
-               gGeoManager->SetNormalChecked(TMath::Abs(calf));
+//               gGeoManager->SetNormalChecked(TMath::Abs(calf));
                snxt=s;
             }
          }
@@ -791,7 +556,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
          s=-saf[4]/calf;
 //         printf("dist to phi1 : %f\n", s);
          if (s<snxt) {
-            gGeoManager->SetNormalChecked(-calf);
+//            gGeoManager->SetNormalChecked(-calf);
             snxt=s;
          }
       }
@@ -811,7 +576,7 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
          s=-saf[5]/calf;
 //         printf("dist to phi2 : %f\n", s);
          if (s<snxt) {
-            gGeoManager->SetNormalChecked(-calf);
+//            gGeoManager->SetNormalChecked(-calf);
             snxt=s;
          }
       }
@@ -821,7 +586,8 @@ Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t
    snxt += DistToIn(point, dir, 3);
    return snxt;        
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
@@ -829,14 +595,8 @@ Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 2*n*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -927,7 +687,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPgon::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -950,14 +710,16 @@ void TGeoPgon::GetBoundingCylinder(Double_t *param) const
    param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1;     // Phi1
    param[3] = param[2]+fDphi;                   // Phi2
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::InspectShape() const
 {
    printf("*** TGeoPgon parameters ***\n");
    printf("    Nedges = %i\n", fNedges);
    TGeoPcon::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -967,7 +729,8 @@ void TGeoPgon::Paint(Option_t *option)
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
@@ -975,12 +738,8 @@ void TGeoPgon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (!painter) return;
    painter->PaintPcon(this, option, glmat);
 }
-//-----------------------------------------------------------------------------
-void TGeoPgon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -1102,7 +861,8 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
    safe = TMath::Min(safe, TMath::Min(ssp[0],ssp[1]));
    return safe;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::SetDimensions(Double_t *param)
 {
    fPhi1    = param[0];
@@ -1115,7 +875,8 @@ void TGeoPgon::SetDimensions(Double_t *param)
    for (Int_t i=0; i<fNz; i++) 
       DefineSection(i, param[4+3*i], param[5+3*i], param[6+3*i]);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::SetPoints(Double_t *buff) const
 {
 // create polygone mesh points
@@ -1146,7 +907,8 @@ void TGeoPgon::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::SetPoints(Float_t *buff) const
 {
 // create polygone mesh points
@@ -1177,7 +939,8 @@ void TGeoPgon::SetPoints(Float_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPgon::Sizeof3D() const
 {
 // fill size of this 3-D object

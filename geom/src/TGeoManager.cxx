@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.55 2003/06/25 14:30:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.56 2003/06/29 22:20:04 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -427,6 +427,7 @@
 #include "TGeoPgon.h"
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
+#include "TGeoTorus.h"
 #include "TGeoCompositeShape.h"
 #include "TVirtualGeoPainter.h"
 #include "TVirtualGeoTrack.h"
@@ -494,9 +495,9 @@ void TGeoManager::Init()
    fLevel = 0;
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
-   fNormalChecked = 0;
+//   fNormalChecked = 0;
    fCldirChecked = new Double_t[3];
-   fNormal = 0;
+   memset(fNormal, 0, 3*sizeof(Double_t));
    fCldir = new Double_t[3];
    fVolumes = new TObjArray(256);
    fShapes = new TObjArray(256);
@@ -2437,6 +2438,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       snext = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, iact, fStep, &safe);
 //      if (snext<0) {printf("ToIn top volume %s : fStep=%g (%f,%f,%f,%f,%f,%f)\n", fTopVolume->GetName(),snext,fPoint[0],fPoint[1],fPoint[2],fDirection[0],fDirection[1],fDirection[2]);exit(1);}
       if (snext < fStep) {
+         fIsStepEntering = kTRUE;
          fStep = snext;
          return fTopNode;
       }
@@ -2450,6 +2452,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 //   if (snext<0) {printf("ToOut %s : fStep=%g (%f,%f,%f,%f,%f,%f)\n",fCurrentNode->GetName(), snext,point[0],point[1],point[2],dir[0],dir[1],dir[2]);exit(1);}
    if (snext < fStep) {
       fStep = snext;
+      fIsStepEntering = kFALSE;
       if (fStep<1E-4) return fCurrentNode;
    }   
 //   printf("to exiting : %g\n", fStep);
@@ -2477,6 +2480,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 //         printf("-> to out : %g\n", snext);
          if (snext<fStep) {
 //            printf(" this is closer...\n");
+            fIsStepEntering = kFALSE;
             fStep = snext;
             clnode = fCurrentNode;
          }
@@ -2493,6 +2497,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 //               printf("-> to in : %g\n", snext);
                if (snext<fStep) {
 //                  printf(" this is closer\n");
+                  fIsStepEntering = kFALSE;
                   fStep = snext;
                   clnode = current;
                }
@@ -2520,6 +2525,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safe);
 //      if (snext<0) {printf("ToInDiv %s : fStep=%g (%f,%f,%f,%f,%f,%f)\n",current->GetName(), snext,lpoint[0],lpoint[1],lpoint[2],ldir[0],ldir[1],ldir[2]);exit(1);}
       if (snext<fStep) {
+         fIsStepEntering = kTRUE;
          fStep=snext;
          clnode = current;
       }
@@ -2532,6 +2538,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], 1, fStep, &safe);
 //      if (snext<0) {printf("ToInDiv %s : fStep=%g (%f,%f,%f,%f,%f,%f)\n",current->GetName(), snext,lpoint[0],lpoint[1],lpoint[2],ldir[0],ldir[1],ldir[2]);exit(1);}
       if (snext<fStep) {
+         fIsStepEntering = kTRUE;
          fStep=snext;
          clnode = current;
       }
@@ -2559,8 +2566,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          }   
             
          if (snext<fStep) {
+            fIsStepEntering = kTRUE;
             fStep=snext;
-	    clnode = current;
+	         clnode = current;
          }
       }
       return clnode;
@@ -2586,6 +2594,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 //            printf("<<< step : %g\n", snext);
             if (snext<fStep) {
 //               printf("%s CLOSER at: %f\n", current->GetName(), snext);
+               fIsStepEntering = kTRUE;
                fStep=snext;
                clnode = current;
             }
@@ -2622,6 +2631,111 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    return SearchNode();
 }
    
+//_____________________________________________________________________________
+Double_t *TGeoManager::FindNormal(Bool_t forward)
+{
+// Computes normal vector to the next surface that will be or was already 
+// crossed when propagating on a straight line from a given point/direction.
+// Returns the normal vector cosines in the MASTER coordinate system. The dot 
+// product of the normal and the current direction is positive defined.
+   Double_t saved_point[3];
+   Double_t saved_direction[3];
+   Double_t saved_step = fStep;
+   Double_t is_entering = fIsEntering;
+   Double_t bigstep = 1.E6;
+   Int_t i, istep;
+   Int_t start = GetCurrentNodeId();
+   memcpy(saved_point, fPoint, 3*sizeof(Double_t));
+   memcpy(saved_direction, fDirection, 3*sizeof(Double_t));
+   PushPath();
+   if (!forward) {
+      // change to opposite direction
+      for (i=0; i<3; i++) fDirection[i] *= -1.;
+      // compute distance to already crossed boundary
+      FindNextBoundary();
+      // if it is nothing backwards, restore state and  return NULL
+      if (fStep>bigstep) {
+         memcpy(fPoint, saved_point, 3*sizeof(Double_t));
+         memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+         fStep = saved_step;
+         fIsEntering = is_entering;
+         PopPath();
+         return 0;
+      }   
+      // try to cross the boundary
+      istep = 0;
+      Step();
+      // if this fails, do extra small steps (up to a total of 1cm)
+      while (!fIsEntering) {
+         istep++;
+         if (istep>1E3) {
+            // we have a big problem not being able to reach the boundary
+            Error("FindNormal", "cannot reach backward boundary");
+            printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
+            printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
+            memcpy(fPoint, saved_point, 3*sizeof(Double_t));
+            memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+            fStep = saved_step;
+            fIsEntering = is_entering;
+            PopPath();
+            return 0;
+         }     
+         fStep = 1E-3;
+         Step();
+      }
+      if (!fIsStepEntering) CdNode(start);
+      // restore initial direction
+      memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+   } else {
+      FindNextBoundary();
+      if (fStep>bigstep) {
+         memcpy(fPoint, saved_point, 3*sizeof(Double_t));
+         memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+         fStep = saved_step;
+         fIsEntering = is_entering;
+         PopPath();
+         return 0;
+      }   
+      // try to cross the boundary
+      istep = 0;
+      Step();
+      // if this fails, do extra small steps (up to a total of 1cm)
+      while (!fIsEntering) {
+         istep++;
+         if (istep>1E3) {
+            // we have a big problem not being able to reach the boundary
+            Error("FindNormal", "cannot reach backward boundary");
+            printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
+            printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
+            memcpy(fPoint, saved_point, 3*sizeof(Double_t));
+            memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+            fStep = saved_step;
+            fIsEntering = is_entering;
+            PopPath();
+            return 0;
+         }     
+         fStep = 1E-3;
+         Step();
+      }
+      if (!fIsStepEntering) CdNode(start);
+   }   
+   // now the current point is close to the boundary of the current node
+   // we compute the normal
+   Double_t lnorm[3];
+   Double_t lpt[3];
+   Double_t ldir[3];
+   MasterToLocal(fPoint, lpt);
+   MasterToLocalVect(fDirection, ldir);        
+   fCurrentNode->GetVolume()->GetShape()->ComputeNormal(lpt,ldir,lnorm);
+   LocalToMasterVect(lnorm, fNormal);
+   memcpy(fPoint, saved_point, 3*sizeof(Double_t));
+   memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+   fStep = saved_step;
+   fIsEntering = is_entering;
+   PopPath();
+   return fNormal;
+}   
+
 //_____________________________________________________________________________
 Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
 {
@@ -2792,6 +2906,22 @@ Int_t TGeoManager::GetUID(const char *volname) const
    }
    return -1;
 }          
+
+//_____________________________________________________________________________
+TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
+{
+// Find if a given material duplicates an existing one.
+   Int_t index = fMaterials->IndexOf(mat);
+   if (index <= 0) return 0;
+   TGeoMaterial *other;
+   for (Int_t i=0; i<index; i++) {
+      other = (TGeoMaterial*)fMaterials->At(i);
+      if (other == mat) continue;
+      if (other->IsEq(mat)) return other;
+   }     
+   return 0;
+}
+
 //_____________________________________________________________________________
 TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
@@ -2945,6 +3075,17 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, const TGeoMedium *medium,
    TGeoVolume *vol = new TGeoVolume(name, sph, medium);
    return vol;
 }
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoManager::MakeTorus(const char *name, const TGeoMedium *medium, Double_t r,
+                                   Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
+{
+// Make in one step a volume pointing to a torus shape with given medium.
+   TGeoTorus *tor = new TGeoTorus(name,r,rmin,rmax,phi1,dphi);
+   TGeoVolume *vol = new TGeoVolume(name, tor, medium);
+   return vol;
+}
+
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::MakeTube(const char *name, const TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)

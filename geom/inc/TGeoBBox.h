@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.7 2003/02/10 09:54:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.8 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -45,6 +45,7 @@ public:
    virtual ~TGeoBBox();
    // methods
    virtual void          ComputeBBox();
+   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -52,7 +53,6 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual const char   *GetAxisName(Int_t iaxis) const;
@@ -70,7 +70,6 @@ public:
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}
    virtual Bool_t        IsNullBox() const {return ((fDX==0)&&(fDY==0)&&(fDZ==0))?kTRUE:kFALSE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

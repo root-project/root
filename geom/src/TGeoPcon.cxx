@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.18 2003/04/17 15:51:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.19 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -10,25 +10,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TVirtualGeoPainter.h"
-#include "TGeoTube.h"
-#include "TGeoCone.h"
-#include "TGeoPcon.h"
-
-
-/*************************************************************************
- * TGeoPcon - a polycone. It has at least 9 parameters :
- *            - the lower phi limit;
- *            - the range in phi;
- *            - the number of z planes (at least two) where the inner/outer 
- *              radii are changing;
- *            - z coordinate, inner and outer radius for each z plane
- *
- *************************************************************************/
+//_____________________________________________________________________________
+// TGeoPcon - a polycone. It has at least 9 parameters :
+//            - the lower phi limit;
+//            - the range in phi;
+//            - the number of z planes (at least two) where the inner/outer 
+//              radii are changing;
+//            - z coordinate, inner and outer radius for each z plane
+//
+//_____________________________________________________________________________
 //Begin_Html
 /*
 <img src="gif/t_pcon.gif">
@@ -53,9 +43,18 @@
 */
 //End_Html
 
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TVirtualGeoPainter.h"
+#include "TGeoTube.h"
+#include "TGeoCone.h"
+#include "TGeoPcon.h"
+
 ClassImp(TGeoPcon)
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPcon::TGeoPcon()
 {
 // dummy ctor
@@ -64,7 +63,8 @@ TGeoPcon::TGeoPcon()
    fRmax = 0;
    fZ    = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
          :TGeoBBox(0, 0, 0)
 {
@@ -78,7 +78,8 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
          :TGeoBBox(name, 0, 0, 0)
 {
@@ -92,7 +93,8 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t *param)
          :TGeoBBox(0, 0, 0)
 {
@@ -109,7 +111,8 @@ TGeoPcon::TGeoPcon(Double_t *param)
    SetDimensions(param);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPcon::~TGeoPcon()
 {
 // destructor
@@ -117,7 +120,8 @@ TGeoPcon::~TGeoPcon()
    if (fRmax) {delete[] fRmax; fRmax = 0;}
    if (fZ)    {delete[] fZ; fZ = 0;}
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________   
 void TGeoPcon::ComputeBBox()
 {
 // compute bounding box of the pcon
@@ -165,7 +169,14 @@ void TGeoPcon::ComputeBBox()
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________   
+void TGeoPcon::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoPcon::Contains(Double_t *point) const
 {
 // test if point is inside this shape
@@ -206,7 +217,8 @@ Bool_t TGeoPcon::Contains(Double_t *point) const
    if (ddp<=fDphi) return kTRUE;
    return kFALSE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
@@ -214,7 +226,8 @@ Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 2*n*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
@@ -264,7 +277,8 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    snxt += DistToOut(&point_new[0], dir, 3) + 1E-6;
    return snxt;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1, 
                               Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const
 {
@@ -308,7 +322,8 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    if (iz<0 || iz>(fNz-2)) return kBig;
    return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
 }      
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
@@ -362,14 +377,8 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    // compute distance to boundary
    return DistToSegZ(point,dir,ifirst, c1,s1,c2,s2,cfio,sfio,cdfi);
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoPcon::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax)
 {
 // defines z position of a section plane, rmin and rmax at this z.
@@ -383,12 +392,14 @@ void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
    }
    if (snum==(fNz-1)) ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoPcon::GetNsegments() const
 {
    return gGeoManager->GetNsegments();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -476,7 +487,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 const char *TGeoPcon::GetAxisName(Int_t iaxis) const
 {
 // Returns name of axis IAXIS.
@@ -492,7 +503,7 @@ const char *TGeoPcon::GetAxisName(Int_t iaxis) const
    }
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoPcon::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -514,7 +525,7 @@ Double_t TGeoPcon::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }         
             
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPcon::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -535,7 +546,8 @@ void TGeoPcon::GetBoundingCylinder(Double_t *param) const
    param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1;     // Phi1
    param[3] = param[2]+fDphi;                   // Phi2
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::InspectShape() const
 {
 // print shape parameters
@@ -547,7 +559,8 @@ void TGeoPcon::InspectShape() const
       printf("     plane %i: z=%11.5f Rmin=%11.5f Rmax=%11.5f\n", ipl, fZ[ipl], fRmin[ipl], fRmax[ipl]);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void *TGeoPcon::Make3DBuffer(const TGeoVolume *vol) const
 {
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
@@ -555,7 +568,7 @@ void *TGeoPcon::Make3DBuffer(const TGeoVolume *vol) const
    return painter->MakePcon3DBuffer(vol);
 }   
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPcon::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -565,7 +578,8 @@ void TGeoPcon::Paint(Option_t *option)
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintPcon(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
@@ -573,12 +587,8 @@ void TGeoPcon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (!painter) return;
    painter->PaintPcon(this, option, glmat);
 }
-//-----------------------------------------------------------------------------
-void TGeoPcon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -777,7 +787,8 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    safe = TMath::Min(safe, TMath::Min(safdown, safup));
    return safe;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::SetDimensions(Double_t *param)
 {
    fPhi1    = param[0];
@@ -789,7 +800,8 @@ void TGeoPcon::SetDimensions(Double_t *param)
    for (Int_t i=0; i<fNz; i++) 
       DefineSection(i, param[3+3*i], param[4+3*i], param[5+3*i]);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::SetPoints(Double_t *buff) const
 {
 // create polycone mesh points
@@ -819,7 +831,8 @@ void TGeoPcon::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::SetPoints(Float_t *buff) const
 {
 // create polycone mesh points
@@ -849,7 +862,8 @@ void TGeoPcon::SetPoints(Float_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPcon::Sizeof3D() const
 {
 // fill size of this 3-D object

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.19 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.20 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -10,21 +10,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TVirtualGeoPainter.h"
-#include "TGeoCone.h"
-
-
-/*************************************************************************
- * TGeoCone - conical tube  class. It has 5 parameters :
- *            dz - half length in z
- *            Rmin1, Rmax1 - inside and outside radii at -dz
- *            Rmin2, Rmax2 - inside and outside radii at +dz
- *
- *************************************************************************/
+//--------------------------------------------------------------------------
+// TGeoCone - conical tube  class. It has 5 parameters :
+//            dz - half length in z
+//            Rmin1, Rmax1 - inside and outside radii at -dz
+//            Rmin2, Rmax2 - inside and outside radii at +dz
+//
+//--------------------------------------------------------------------------
 //Begin_Html
 /*
 <img src="gif/t_cone.gif">
@@ -48,13 +40,14 @@
 */
 //End_Html
 
-/*************************************************************************
- * TGeoConeSeg - a phi segment of a conical tube. Has 7 parameters :
- *            - the same 5 as a cone;
- *            - first phi limit (in degrees)
- *            - second phi limit 
- *
- *************************************************************************/
+//--------------------------------------------------------------------------
+// TGeoConeSeg - a phi segment of a conical tube. Has 7 parameters :
+//            - the same 5 as a cone;
+//            - first phi limit (in degrees)
+//            - second phi limit 
+//
+//--------------------------------------------------------------------------
+//
 //Begin_Html
 /*
 <img src="gif/t_coneseg.gif">
@@ -67,9 +60,16 @@
 */
 //End_Html
 
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TVirtualGeoPainter.h"
+#include "TGeoCone.h"
+
 ClassImp(TGeoCone)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoCone::TGeoCone()
 {
 // Default constructor
@@ -80,7 +80,8 @@ TGeoCone::TGeoCone()
    fRmin2 = 0.0;
    fRmax2 = 0.0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCone::TGeoCone(Double_t dz, Double_t rmin1, Double_t rmax1,
                    Double_t rmin2, Double_t rmax2)
          :TGeoBBox(0, 0, 0)
@@ -93,7 +94,8 @@ TGeoCone::TGeoCone(Double_t dz, Double_t rmin1, Double_t rmax1,
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCone::TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1,
                    Double_t rmin2, Double_t rmax2)
          :TGeoBBox(name, 0, 0, 0)
@@ -106,7 +108,8 @@ TGeoCone::TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCone::TGeoCone(Double_t *param)
          :TGeoBBox(0, 0, 0)
 {
@@ -122,12 +125,14 @@ TGeoCone::TGeoCone(Double_t *param)
       SetBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoCone::~TGeoCone()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________
 void TGeoCone::ComputeBBox()
 {
 // compute bounding box of the sphere
@@ -135,7 +140,50 @@ void TGeoCone::ComputeBBox()
    box->SetBoxDimensions(TMath::Max(fRmax1, fRmax2), TMath::Max(fRmax1, fRmax2), fDz);
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
+void TGeoCone::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+{
+// Compute normal to closest surface from POINT. 
+   Double_t safr,safe,phi;
+   memset(norm,0,3*sizeof(Double_t));
+   phi = TMath::ATan2(point[1],point[0]);
+   Double_t cphi = TMath::Cos(phi);
+   Double_t sphi = TMath::Sin(phi);
+   Double_t ro1 = 0.5*(fRmin1+fRmin2);
+   Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
+   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+   Double_t ro2 = 0.5*(fRmax1+fRmax2);
+   Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
+   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+   
+   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t rin = tg1*point[2]+ro1;
+   Double_t rout = tg2*point[2]+ro2;
+   safe = TMath::Abs(fDz-TMath::Abs(point[2]));
+   norm[2] = 1;
+   
+   safr = (ro1>0)?(TMath::Abs((r-rin)*cr1)):kBig;
+   if (safr<safe) {
+      safe = safr;
+      norm[0] = cr1*cphi;
+      norm[1] = cr1*sphi;
+      norm[2] = tg1*cr1;
+   }      
+   safr = TMath::Abs((rout-r)*cr2);
+   if (safr<safe) {
+      norm[0] = cr2*cphi;
+      norm[1] = cr2*sphi;
+      norm[2] = tg2*cr2;
+   }      
+   if (norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2]<0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoCone::Contains(Double_t *point) const
 {
 // test if point is inside this cone
@@ -146,7 +194,8 @@ Bool_t TGeoCone::Contains(Double_t *point) const
    if ((r2<rl*rl) || (r2>rh*rh)) return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, 
                               Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
@@ -205,7 +254,7 @@ Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Double_t dz,
    return TMath::Min(TMath::Min(sr1, sr2), sz);                   
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cone
@@ -218,7 +267,8 @@ Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    // compute distance to surface 
    return TGeoCone::DistToOutS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz, 
                              Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
@@ -302,7 +352,7 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz,
    return snxt;
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
@@ -316,7 +366,7 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return TGeoCone::DistToInS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2,
                               Double_t &b, Double_t &delta)
 {
@@ -347,7 +397,7 @@ void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t 
    }   
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Int_t TGeoCone::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
@@ -355,14 +405,8 @@ Int_t TGeoCone::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoCone::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -422,7 +466,8 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return 0;            
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 const char *TGeoCone::GetAxisName(Int_t iaxis) const
 { 
 // Returns name of axis IAXIS.
@@ -437,7 +482,8 @@ const char *TGeoCone::GetAxisName(Int_t iaxis) const
          return "undefined";
    }
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCone::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -457,7 +503,8 @@ Double_t TGeoCone::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    }
    return dx;
 }         
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -469,7 +516,8 @@ void TGeoCone::GetBoundingCylinder(Double_t *param) const
    param[2] = 0.;                         // Phi1
    param[3] = 360.;                       // Phi1
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -497,7 +545,8 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 
    return (new TGeoCone(rmin1, rmax1, rmin2, rmax2, dz));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::InspectShape() const
 {
 // print shape parameters
@@ -509,19 +558,16 @@ void TGeoCone::InspectShape() const
    printf("    Rmax2 = %11.5f\n", fRmax2);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void *TGeoCone::Make3DBuffer(const TGeoVolume *vol) const
 {
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return 0;
    return painter->MakeTube3DBuffer(vol);
 }   
-//-----------------------------------------------------------------------------
-void TGeoCone::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -531,7 +577,8 @@ void TGeoCone::Paint(Option_t *option)
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTube(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
@@ -539,7 +586,8 @@ void TGeoCone::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (!painter) return;
    painter->PaintTube(this, option, glmat);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -562,7 +610,8 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                            Double_t rmin2, Double_t rmax2, Int_t skipz)
 {
@@ -598,7 +647,8 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                              Double_t rmin2, Double_t rmax2)
 {
@@ -649,7 +699,8 @@ void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    
    fDz   = dz;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::SetDimensions(Double_t *param)
 {
    Double_t dz    = param[0];
@@ -659,7 +710,8 @@ void TGeoCone::SetDimensions(Double_t *param)
    Double_t rmax2 = param[4];
    SetConeDimensions(dz, rmin1, rmax1, rmin2, rmax2);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::SetPoints(Double_t *buff) const
 {
 // create cone mesh points
@@ -700,7 +752,8 @@ void TGeoCone::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::SetPoints(Float_t *buff) const
 {
 // create cone mesh points
@@ -741,7 +794,8 @@ void TGeoCone::SetPoints(Float_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoCone::Sizeof3D() const
 {
 // fill size of this 3-D object
@@ -757,14 +811,15 @@ void TGeoCone::Sizeof3D() const
 
 ClassImp(TGeoConeSeg)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg()
 {
 // Default constructor
    SetBit(TGeoShape::kGeoConeSeg);
    fPhi1 = fPhi2 = 0.0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1, 
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
             :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2)
@@ -774,7 +829,8 @@ TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
    SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1, 
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
             :TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2)
@@ -784,7 +840,8 @@ TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t
    SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(Double_t *param)
             :TGeoCone(0,0,0,0,0)
 {
@@ -800,12 +857,14 @@ TGeoConeSeg::TGeoConeSeg(Double_t *param)
    SetDimensions(param);
    ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoConeSeg::~TGeoConeSeg()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________
 void TGeoConeSeg::ComputeBBox()
 {
 // compute bounding box of the tube segment
@@ -849,7 +908,14 @@ void TGeoConeSeg::ComputeBBox()
    fDY = (ymax-ymin)/2;
    fDZ = fDz;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
+void TGeoConeSeg::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoConeSeg::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
@@ -863,7 +929,8 @@ Bool_t TGeoConeSeg::Contains(Double_t *point) const
    if (ddp > dphi) return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2)
 {
    // Static method to compute distance to a conical surface with : 
@@ -932,7 +999,8 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
    }
    return kBig;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
                                    Double_t s2, Double_t c2, Double_t sm, Double_t cm)
 {
@@ -956,7 +1024,8 @@ Double_t TGeoConeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, 
    }
    return TMath::Min(sfi1, sfi2);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
@@ -993,7 +1062,7 @@ Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Do
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
@@ -1031,7 +1100,7 @@ Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, 
                                 Double_t rmin2, Double_t rmax2, Double_t dz, Double_t phi1, Double_t phi2)
 {
@@ -1072,7 +1141,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
             r2q=rmax2*rmax2;
          }      
          if ((r1q<=riq) && (riq<=r2q)) {
-            gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
+//            gGeoManager->SetNormalChecked(TMath::Abs(dir[2]));
             if (riq==0) return s;
             cpsi=(xi*cfio+yi*sfio)/TMath::Sqrt(riq);
             if (cpsi>=cdfi) return s;
@@ -1099,7 +1168,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
             if ((r1q<=riq) && (riq<=r2q)) {
                if ((yi*cfio-xi*sfio)<=0) {
                   snxt = s;
-                  gGeoManager->SetNormalChecked(TMath::Abs(un));
+//                  gGeoManager->SetNormalChecked(TMath::Abs(un));
                }
             }
          }
@@ -1118,7 +1187,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
             r2q=(tg2*zi+ro2)*(tg2*zi+ro2);
             if ((r1q<=riq) && (riq<=r2q)) {
                if ((yi*cfio-xi*sfio)>=0) {
-                  gGeoManager->SetNormalChecked(TMath::Abs(un));
+//                  gGeoManager->SetNormalChecked(TMath::Abs(un));
                   snxt = s;
                }
             }
@@ -1128,7 +1197,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
    return snxt;               
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
@@ -1140,7 +1209,8 @@ Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
    }
    return TGeoConeSeg::DistToInS(point, dir,fRmin1,fRmax1,fRmin2,fRmax2,fDz, fPhi1, fPhi2);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoConeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
@@ -1148,14 +1218,8 @@ Int_t TGeoConeSeg::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = 4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoConeSeg::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return kBig;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -1218,7 +1282,8 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          return 0;            
    }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -1239,7 +1304,8 @@ Double_t TGeoConeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) co
    }
    return dx;
 }         
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
@@ -1252,7 +1318,8 @@ void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const
    param[3] = fPhi2;                        // Phi2
    while (param[3]<param[2]) param[3]+=360.;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -1280,7 +1347,8 @@ TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 
    return (new TGeoConeSeg(rmin1, rmax1, rmin2, rmax2, dz, fPhi1, fPhi2));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::InspectShape() const
 {
 // print shape parameters
@@ -1294,14 +1362,16 @@ void TGeoConeSeg::InspectShape() const
    printf("    phi2  = %11.5f\n", fPhi2);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void *TGeoConeSeg::Make3DBuffer(const TGeoVolume *vol) const
 {
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return 0;
    return painter->MakeTubs3DBuffer(vol);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -1311,7 +1381,8 @@ void TGeoConeSeg::Paint(Option_t *option)
    if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTubs(this, option);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
 {
 // paint this shape according to option
@@ -1319,13 +1390,8 @@ void TGeoConeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (!painter) return;
    painter->PaintTubs(this, option, glmat);
 }
-//-----------------------------------------------------------------------------
-void TGeoConeSeg::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -1358,7 +1424,8 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(4,saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                               Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz)
 {
@@ -1396,7 +1463,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
    return saf[TMath::LocMax(4,saf)];
 }
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                    Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
@@ -1410,7 +1477,8 @@ void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    fPhi2 = phi2;
    while (fPhi2<fPhi1) fPhi2+=360.;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::SetDimensions(Double_t *param)
 {
    Double_t dz    = param[0];
@@ -1422,7 +1490,8 @@ void TGeoConeSeg::SetDimensions(Double_t *param)
    Double_t phi2  = param[6];
    SetConsDimensions(dz, rmin1, rmax1,rmin2, rmax2, phi1, phi2);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::SetPoints(Double_t *buff) const
 {
 // create cone segment mesh points
@@ -1465,7 +1534,8 @@ void TGeoConeSeg::SetPoints(Double_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::SetPoints(Float_t *buff) const
 {
 // create cone segment mesh points
@@ -1508,7 +1578,8 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
         }
     }
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoConeSeg::Sizeof3D() const
 {
 // fill size of this 3-D object

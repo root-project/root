@@ -103,6 +103,7 @@ public:
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    virtual void       ModifiedPad() const;
    virtual void      *MakeBox3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakeTorus3DBuffer(const TGeoVolume *vol);
    virtual void      *MakeTube3DBuffer(const TGeoVolume *vol);
    virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol);
    virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol);
@@ -111,6 +112,7 @@ public:
    void               PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat);
    void               PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintCompositeShape(TGeoVolume *vol, Option_t *option="");
+   void               PaintTorus(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintTube(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintTubs(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    void               PaintSphere(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);

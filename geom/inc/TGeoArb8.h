@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.8 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.9 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -62,6 +62,7 @@ public:
    virtual ~TGeoArb8();
    // methods
    virtual void          ComputeBBox();
+   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    void                  ComputeTwist();
    virtual Bool_t        Contains(Double_t *point) const;     
    Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const;
@@ -69,7 +70,6 @@ public:
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -82,7 +82,6 @@ public:
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          InspectShape() const;
    Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}
-   virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);

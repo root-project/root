@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.7 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.8 2003/01/12 14:49:31 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -40,7 +40,6 @@ protected :
    Int_t               fCurrent;        // current division element
    Int_t               fNdivisions;     // number of divisions
    Int_t               fDivIndex;       // index of first div. node
-   TGeoVolume         *fBasicCell;      // basic volume used for this pattern
    TGeoMatrix         *fMatrix;         // generic matrix
    TGeoVolume         *fVolume;         // volume to which applies
 
@@ -52,23 +51,21 @@ public:
    virtual ~TGeoPatternFinder();
    // methods
    virtual void        cd(Int_t /*idiv*/) {}
-   TGeoVolume         *GetBasicVolume() const;
    virtual Int_t       GetByteCount() const {return 36;}
-   Int_t               GetCurrent()  {return fCurrent;}
-   Int_t               GetDivIndex() {return fDivIndex;}
-   virtual TGeoMatrix *GetMatrix()   {return fMatrix;}
-   Int_t               GetNdiv()     {return fNdivisions;}
+   Int_t               GetCurrent()      {return fCurrent;}
+   Int_t               GetDivIndex()     {return fDivIndex;}
+   virtual TGeoMatrix *GetMatrix()       {return fMatrix;}
+   Int_t               GetNdiv() const   {return fNdivisions;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
    Double_t            GetStart() const  {return fStart;}
    Double_t            GetStep() const   {return fStep;}
    Double_t            GetEnd() const    {return fEnd;}
    TGeoVolume         *GetVolume() const {return fVolume;}
    virtual TGeoNode   *FindNode(Double_t * /*point*/) {return 0;} 
-   virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
-  ClassDef(TGeoPatternFinder, 2)              // patterns to divide volumes
+  ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
 };
 
 

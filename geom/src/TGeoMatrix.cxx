@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.9 2003/06/23 12:31:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.10 2003/06/25 14:30:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1018,10 +1018,13 @@ Bool_t TGeoGenTrans::Normalize()
       fScale[i] /= normfactor;
    return kTRUE;
 }
+
 //-----------------------------------------------------------------------------
 TGeoIdentity::TGeoIdentity()
 {
 // dummy ctor
+   if (!gGeoIdentity) gGeoIdentity = this;
+   RegisterYourself();
 }
 //-----------------------------------------------------------------------------
 TGeoIdentity::TGeoIdentity(const char *name)

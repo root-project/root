@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.14 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.15 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -10,22 +10,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoPara.h"
-
-/*************************************************************************
- * TGeoPara - parallelipeped class. It has 6 parameters :
- *         dx, dy, dz - half lengths in X, Y, Z
- *         alpha - angle w.r.t the Y axis from center of low Y edge to
- *                 center of high Y edge [deg]
- *         theta, phi - polar and azimuthal angles of the segment between
- *                 low and high Z surfaces [deg]
- *
- *************************************************************************/
-
+//_____________________________________________________________________________
+// TGeoPara - parallelipeped class. It has 6 parameters :
+//         dx, dy, dz - half lengths in X, Y, Z
+//         alpha - angle w.r.t the Y axis from center of low Y edge to
+//                 center of high Y edge [deg]
+//         theta, phi - polar and azimuthal angles of the segment between
+//                 low and high Z surfaces [deg]
+//
+//_____________________________________________________________________________
+//
 //Begin_Html
 /*
 <img src="gif/t_para.gif">
@@ -47,9 +41,15 @@
 */
 //End_Html
 
+#include "TROOT.h"
+
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoPara.h"
+
 ClassImp(TGeoPara)
    
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPara::TGeoPara()
 {
 // Default constructor
@@ -62,7 +62,8 @@ TGeoPara::TGeoPara()
    fTxz = 0;
    fTyz = 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
                    Double_t theta, Double_t phi)
            :TGeoBBox(0, 0, 0)
@@ -86,7 +87,8 @@ TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
                    Double_t theta, Double_t phi)
            :TGeoBBox(name, 0, 0, 0)
@@ -110,7 +112,8 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
    }
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPara::TGeoPara(Double_t *param)
            :TGeoBBox(0, 0, 0)
 {
@@ -126,12 +129,14 @@ TGeoPara::TGeoPara(Double_t *param)
    if ((fX<0) || (fY<0) || (fZ<0)) SetBit(kGeoRunTimeShape);
    else ComputeBBox();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPara::~TGeoPara()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------   
+
+//_____________________________________________________________________________   
 void TGeoPara::ComputeBBox()
 {
 // compute bounding box
@@ -141,7 +146,14 @@ void TGeoPara::ComputeBBox()
    TGeoBBox::SetBoxDimensions(dx, dy, dz);
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________   
+void TGeoPara::ComputeNormal(Double_t * /*point*/, Double_t * /*dir*/, Double_t * /*norm*/)
+{
+// Compute normal to closest surface from POINT. 
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoPara::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
@@ -154,7 +166,8 @@ Bool_t TGeoPara::Contains(Double_t *point) const
    if (TMath::Abs(xt) > fX) return kFALSE;
    return kTRUE;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
@@ -199,7 +212,8 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    snxt = TMath::Min(sn1, TMath::Min(sn2, sn3));
    return snxt;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
@@ -286,14 +300,8 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (smin<=0) return kBig;
    return smin;
 }
-//-----------------------------------------------------------------------------
-Double_t TGeoPara::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
-{
-// computes the distance to next surface of the sphere along a ray
-// starting from given point to the given direction.
-   return 0;
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                              Double_t start, Double_t step) 
 {
@@ -331,7 +339,6 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
    vmulti->AddVolume(vol);
    voldiv->SetFinder(finder);
-   finder->SetBasicVolume(vol);
    finder->SetDivIndex(voldiv->GetNdaughters());
    for (Int_t ic=0; ic<ndiv; ic++) {
       voldiv->AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
@@ -339,7 +346,8 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
    return vmulti;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
 // Get range of shape for a given axis.
@@ -366,14 +374,15 @@ Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }         
             
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPara::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
    TGeoBBox::GetBoundingCylinder(param);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
 // Fills real parameters of a positioned box inside this. Returns 0 if successfull.
@@ -445,7 +454,8 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    dz = dd[2];
    return 0;
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
 // in case shape has some negative parameters, these has to be computed
@@ -464,7 +474,8 @@ TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    else dz=fZ;
    return (new TGeoPara(dx, dy, dz, fAlpha, fTheta, fPhi));
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPara::InspectShape() const
 {
 // print shape parameters
@@ -477,12 +488,8 @@ void TGeoPara::InspectShape() const
    printf("    phi   = %11.5f\n", fPhi);
    TGeoBBox::InspectShape();
 }
-//-----------------------------------------------------------------------------
-void TGeoPara::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
-{
-// computes next intersection point of curve c with this shape
-}
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
@@ -506,7 +513,8 @@ Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
    return saf[TMath::LocMax(3,saf)];
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPara::SetDimensions(Double_t *param)
 {
    fX     = param[0];
@@ -521,7 +529,8 @@ void TGeoPara::SetDimensions(Double_t *param)
    fTxz   = tth*TMath::Cos(ph);
    fTyz   = tth*TMath::Sin(ph);
 }   
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPara::SetPoints(Double_t *buff) const
 {
 // create sphere mesh points
@@ -538,7 +547,8 @@ void TGeoPara::SetPoints(Double_t *buff) const
    *buff++ = +fZ*TXZ+TXY*fY+fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
    *buff++ = +fZ*TXZ-TXY*fY+fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPara::SetPoints(Float_t *buff) const
 {
 // create sphere mesh points
@@ -555,7 +565,8 @@ void TGeoPara::SetPoints(Float_t *buff) const
    *buff++ = +fZ*TXZ+TXY*fY+fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
    *buff++ = +fZ*TXZ-TXY*fY+fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 void TGeoPara::Sizeof3D() const
 {
 // fill size of this 3-D object
