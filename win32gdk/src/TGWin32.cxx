@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.20 2003/03/10 07:57:14 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.21 2003/03/28 21:27:48 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TStorage.h"
 #include "TStyle.h"
 #include "TSystem.h"
+#include "TApplication.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -359,7 +360,22 @@ TGWin32::TGWin32(const char *name, const char *title):TVirtualX(name,
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
 
-   if(!gROOT->IsBatch()) {
+   Bool_t splash = kTRUE;
+   if (gApplication->Argc()>1) {
+      TString arg;
+      for(int i=1; i<2; i++) {
+         arg = gApplication->Argv(i);
+         arg.Strip(TString::kBoth);
+
+         if(arg=="-l") {
+            splash=kFALSE;
+            break;
+         }
+      }
+   }
+   hThread2 = NULL;
+
+   if(!gROOT->IsBatch() && splash) {
       hThread2 = (HANDLE)_beginthreadex( NULL, 0, &HandleSplashThread, 0, 0, &thread2ID );
    }
 
