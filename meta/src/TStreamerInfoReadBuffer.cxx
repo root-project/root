@@ -942,7 +942,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         proxy->Commit(env);
                      }
                   }
-                  b.CheckByteCount(start,count,aElement->GetFullName());
+                  b.CheckByteCount(start,count,aElement->GetTypeName());
                   continue;
                }
                if (fOldVersion<3){   // case of old TStreamerInfo
@@ -959,7 +959,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                } else {
                   DOLOOP {(*pstreamer)(b,arr[k]+ioffset,fLength[i]);}
                }
-               b.CheckByteCount(start,count,aElement->GetFullName());
+               b.CheckByteCount(start,count,aElement->GetTypeName());
             }
             continue;
 
@@ -1156,6 +1156,7 @@ Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
 {
    //  The STL vector/list is deserialized from the buffer b
 
+   if (!nc) return 0;
    int ret = ReadBuffer(b, *cont, first,nc,eoffset,1);
    return ret;
 }
