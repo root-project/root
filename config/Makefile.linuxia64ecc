@@ -28,14 +28,14 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) -restrict \
 
 # Linker:
 LD            = ecc
-LDFLAGS       = -i_dynamic $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Qoption,ld,-soname,
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        = -lm -ldl
+CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
