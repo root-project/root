@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgProxy.cc,v 1.19 2002/09/05 04:33:13 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.20 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,7 +62,7 @@ RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& 
 
 RooArgProxy::~RooArgProxy()
 {
-  _owner->unRegisterProxy(*this) ;
+  if (_owner) _owner->unRegisterProxy(*this) ;
   if (_ownArg) delete _arg ;
 }
 

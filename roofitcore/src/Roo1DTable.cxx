@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.14 2002/09/05 04:33:00 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.15 2003/05/14 02:58:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -91,18 +91,19 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
 
   _total += weight ;
 
-  Bool_t found(kFALSE) ;
+  //Bool_t found(kFALSE) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
     if (cat.getIndex()==entry->getVal()) {
       _count[i] += weight ; ;
-      found=kTRUE ;
+      //found=kTRUE ;
+      return;
     }
   }  
 
-  if (!found) {
-    _nOverflow += weight ;
-  }
+  //if (!found) {
+  _nOverflow += weight ;
+  //}
 }
 
 

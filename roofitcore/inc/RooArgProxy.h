@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooArgProxy.rdl,v 1.15 2002/09/05 04:33:14 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,7 +24,7 @@ class RooArgProxy : public TNamed, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooArgProxy() {} ;
+  RooArgProxy() : _owner(0), _arg(0) {} ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg, 
 	      Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
