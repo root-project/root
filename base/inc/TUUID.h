@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.6 2002/07/11 21:46:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.7 2002/08/02 18:54:36 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -39,11 +39,13 @@
 
 // forward declaration
 class TBuffer;
+class TFile;
 class TDirectory;
 
 
 class TUUID {
 
+friend class TFile;
 friend class TDirectory;
 
 protected:
@@ -69,6 +71,9 @@ protected:
    void  SetFromString(const char *uuid_str);
 
    void  StreamerV1(TBuffer &b);
+   void         FillBuffer(char *&buffer);
+   void         ReadBuffer(char *&buffer);
+   Int_t        Sizeof() const { return 16; }
 
 public:
    TUUID();
@@ -85,9 +90,6 @@ public:
    void         SetUUID(const char *uuid_str);
    UInt_t       GetUUIDNumber() const { return fUUIDIndex; }
    void         SetUUIDNumber(UInt_t index) { fUUIDIndex = index; }
-   void         FillBuffer(char *&buffer);
-   void         ReadBuffer(char *&buffer);
-   Int_t        Sizeof() const { return 16; }
 
    ClassDef(TUUID,1)  // Universally Unique IDentifier
 };
