@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.4 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.5 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -166,7 +166,8 @@ void TLeafF::SetAddress(void *add)
    if (add) {
       if (TestBit(kIndirectAddress)) {
          fPointer = (Float_t**) add;
-         if (*fPointer==0) *fPointer = new Float_t[fNdata];
+         delete *fPointer;
+         *fPointer = new Float_t[fNdata];
          fValue = *fPointer;
       } else {
          fValue = (Float_t*)add;
