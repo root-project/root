@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.34 2001/05/25 06:51:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.35 2001/05/28 15:48:03 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1221,7 +1221,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    }
    delete [] name;
    Modified();
-   padsav->cd();
+   if (padsav) padsav->cd();
 }
 
 //______________________________________________________________________________
