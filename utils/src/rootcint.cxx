@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.182 2004/07/30 20:25:29 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.183 2004/07/30 20:31:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2265,8 +2265,12 @@ void WriteNamespaceInit(G__ClassInfo &cl)
    fprintf(fp, "#endif\n");
 #endif
 
-   fprintf(fp, "   inline TGenericClassInfo *%s::GenerateInitInstance()\n   {\n",
-           classname.c_str());
+   if (classname=="ROOT") {
+      fprintf(fp, "   inline TGenericClassInfo *GenerateInitInstance()\n   {\n");
+   } else {
+      fprintf(fp, "   inline TGenericClassInfo *%s::GenerateInitInstance()\n   {\n",
+              classname.c_str());
+   }
 
    fprintf(fp, "      static ::ROOT::TGenericClassInfo \n");
 
