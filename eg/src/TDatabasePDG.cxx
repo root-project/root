@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.5 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.6 2001/03/05 09:22:15 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -531,6 +531,8 @@ Int_t TDatabasePDG::WritePDGTable(const char *filename)
    // write contents of the particle DB into a file
 
   Error("WritePDGTable"," not implemented yet");
+  return 0;
+/*
   if (1) return 0;
 
   FILE *file = fopen(filename,"w");
@@ -540,6 +542,7 @@ Int_t TDatabasePDG::WritePDGTable(const char *filename)
   }
 
   fclose(file);
+*/
 }
 
 
