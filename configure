@@ -683,7 +683,7 @@ fi
 if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
    checklib64="yes"
 fi
-if test "x$platform" = "macosx" ; then
+if test "x$platform" = "xmacosx" ; then
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
 fi
 
