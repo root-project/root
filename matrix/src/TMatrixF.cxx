@@ -1747,22 +1747,6 @@ Bool_t operator==(const TMatrixF &m1,const TMatrixF &m2)
 }
 
 //______________________________________________________________________________
-Bool_t operator==(const TMatrixFSym &m1,const TMatrixF &m2)
-{
-  // Check to see if two matrices are identical.
-
-  if (!AreCompatible(m1,m2)) return kFALSE;
-  return (memcmp(m1.GetElements(),m2.GetElements(),
-                 m1.GetNoElements()*sizeof(Float_t)) == 0);
-}
-
-//______________________________________________________________________________
-Bool_t operator==(const TMatrixF &m1,const TMatrixFSym &m2)
-{
-  return operator==(m2,m1);
-}
-
-//______________________________________________________________________________
 TMatrixF operator+(const TMatrixF &source1,const TMatrixF &source2)
 {
   TMatrixF target(source1);

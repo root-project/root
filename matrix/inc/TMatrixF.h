@@ -136,8 +136,6 @@ public:
   TMatrixF &Apply(const TElementPosActionF &action);
 
   friend Bool_t    operator== (const TMatrixF    &m1,const TMatrixF    &m2);
-  friend Bool_t    operator== (const TMatrixFSym &m1,const TMatrixF    &m2);
-  friend Bool_t    operator== (const TMatrixF    &m1,const TMatrixFSym &m2);
 
   friend TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixF    &source2);
   friend TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixFSym &source2);
@@ -200,8 +198,6 @@ inline const Float_t  &TMatrixF::operator    ()(Int_t rown,Int_t coln) const {
 }
 
 Bool_t    operator== (const TMatrixF    &m1,const TMatrixF    &m2);
-Bool_t    operator== (const TMatrixFSym &m1,const TMatrixF    &m2);
-Bool_t    operator== (const TMatrixF    &m1,const TMatrixFSym &m2);
 
 TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixF    &source2);
 TMatrixF  operator+  (const TMatrixF    &source1,const TMatrixFSym &source2);
