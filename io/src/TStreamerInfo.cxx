@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.160 2003/03/02 11:39:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.161 2003/03/05 23:31:07 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1948,11 +1948,11 @@ SWIT: switch (kase) {
                          } else {
                             // The streamer is written for the data member NOT the class
                             // so we do not need to worry about the loop.
-                            if (*obj==0)  {
+                            //if (*obj==0)  {
                               // NOTE should we allocated more?
-                               TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)fElem[i];
-                               *obj = (char*)el->GetClass()->New();
-                            }
+                               //TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)fElem[i];
+                               //*obj = (char*)el->GetClass()->New(); this is done by pstreamer
+                            //}
                             (*pstreamer)(b,obj,0);
                          }
                          break;
@@ -2700,7 +2700,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
                   void **obj = (void**)(pointer+offset);
-                  if (!(*obj)) *obj = cle->New();
+                  //if (!(*obj)) *obj = cle->New(); this should be done by pstreamer!
                   (*pstreamer)(b,obj,0);
                }
             } else {
