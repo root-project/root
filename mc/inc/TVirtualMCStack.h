@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMCStack.h,v 1.3 2002/04/26 08:46:10 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMCStack.h,v 1.4 2003/02/26 13:30:55 brun Exp $
 // Authors: Ivana Hrivnacova 13/04/2002
 
 #ifndef ROOT_TVirtualMCStack
@@ -28,11 +28,12 @@ public:
 		          Double_t polx, Double_t poly, Double_t polz,
 		          TMCProcess mech, Int_t& ntr, Double_t weight,
 		          Int_t is) = 0;
-    virtual TParticle* GetNextTrack(Int_t& itrack) = 0;    
-    virtual TParticle* GetPrimaryForTracking(Int_t i) = 0;    
+    virtual TParticle* GetNextTrack(Int_t& itrack)       = 0;
+    virtual TParticle* GetCurrentTrack()                 = 0;    
+    virtual TParticle* GetPrimaryForTracking(Int_t i)    = 0;    
     
     // set methods
-    virtual void       SetCurrentTrack(Int_t track) = 0;                           
+    virtual void       SetCurrentTrack(Int_t track)      = 0;                           
 
     // get methods
     virtual Int_t      GetNtrack()    const = 0;
