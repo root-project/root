@@ -657,9 +657,9 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.7 2000/08/12 23:23:25 cholm Exp $
-// $Date: 2000/08/12 23:23:25 $
-// $Author: cholm $
+// $Id: TPrincipal.cxx,v 1.1 2000/08/15 07:48:50 brun Exp $
+// $Date: 2000/08/15 07:48:50 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
@@ -2061,8 +2061,8 @@ TPrincipal::SumOfSquareResiduals(Double_t* x, Double_t* s)
   if (!x) 
     return;
 
-  Double_t p[fNumberOfVariables];
-  Double_t xp[fNumberOfVariables];
+  Double_t p[100];
+  Double_t xp[100];
 
   X2P(x,p);
   for (Int_t i = fNumberOfVariables; i > 0; i--) {
@@ -2071,8 +2071,6 @@ TPrincipal::SumOfSquareResiduals(Double_t* x, Double_t* s)
       s[i] += (x[j] - xp[j])*(x[j] - xp[j]);
     }
   }
-  // delete [] p;
-  // delete [] xp;
 }
 
 //____________________________________________________________________
