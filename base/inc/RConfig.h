@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.72 2004/04/06 22:55:36 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.73 2004/06/04 00:39:37 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -396,7 +396,6 @@
 #   endif
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
-#      define R__BAD_OVERLOAD_RESOLUTION_WITH_TEMPLATE
 #   endif
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.51 2004/06/03 21:05:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.52 2004/06/04 05:16:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1523,15 +1523,8 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    return nbytes;
 }
 
-//______________________________________________________________________________
-template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option) 
-{
-   // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
-    return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
-}
-
-//______________________________________________________________________________
-Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *option)
+//____________________________________________________________________________________
+Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *option)
 {
    // Write object obj to this directory
    // The data structure corresponding to this object is serialized.
@@ -1580,7 +1573,7 @@ Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *op
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
-         Error("WriteObject","Directory %s is not writable", fFile->GetName());
+         Error("WriteTObject","Directory %s is not writable", fFile->GetName());
       }
       return 0;
    }

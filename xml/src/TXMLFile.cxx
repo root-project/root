@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.3 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -462,7 +462,7 @@ Int_t TXMLFile::ReOpen(Option_t* mode)
 }
 
 //______________________________________________________________________________
-Int_t TXMLFile::WriteObject(const TObject* obj, const char* name, Option_t* option) 
+Int_t TXMLFile::WriteTObject(const TObject* obj, const char* name, Option_t* option) 
 {
   // write object, derived from TObject class, to file  
     

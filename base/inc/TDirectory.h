@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.22 2004/06/04 00:39:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.23 2004/06/04 05:16:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -90,9 +90,9 @@ public:
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle); 
-   template <class T> void GetObjectAny(const char* namecycle, T*& ptr) // See TDirectory::Get for information
+   template <class T> inline void GetObjectAny(const char* namecycle, T*& ptr) // See TDirectory::Get for information
       {
-         ptr = (T*)GetObjectAnyChecked(namecycle,TClass::GetClass(typeid(T)));
+         ptr = (T*)GetObjectAnyChecked(namecycle,TBuffer::GetClass(typeid(T)));
       }
    virtual void       *GetObjectAnyChecked(const char *namecycle, const char* classname);
    virtual void       *GetObjectAnyChecked(const char *namecycle, const TClass* cl);
@@ -132,12 +132,11 @@ public:
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
-#ifndef R__BAD_OVERLOAD_RESOLUTION_WITH_TEMPLATE
-   virtual Int_t       WriteObject(const TObject *obj, const char *name=0, Option_t *option="");
-#else
-           Int_t       WriteObject(const TObject *obj) { return WriteObject(obj,obj->GetName()); };
-#endif
-   template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option="");
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="");
+   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
+      {
+         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option);
+      }
    virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
    virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
    virtual void        WriteDirHeader();

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.3 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.4 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -91,7 +91,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) { return 0; }
       virtual void      WriteFree() {}
       virtual void      WriteHeader() {}
-      virtual Int_t     WriteObject(const TObject* obj, const char* name = 0, Option_t *option="");
+      virtual Int_t     WriteTObject(const TObject* obj, const char* name = 0, Option_t *option="");
       virtual Int_t     WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
       virtual Int_t     WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t *option="");
       virtual void      WriteStreamerInfo();
