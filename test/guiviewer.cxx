@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.3 2001/05/15 14:19:04 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.4 2001/05/28 14:10:30 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -269,9 +269,6 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    //cerr << "x=[" << xmin << " - " << xmax << "], "
    //     << "y=[" << ymin << " - " << ymax << "]\n";
 
-   fHScaleCanvas->GetCanvas()->SetEditable(kTRUE);
-   fVScaleCanvas->GetCanvas()->SetEditable(kTRUE);
-
    fHScale->SetWmin(xmin);
    fHScale->SetWmax(xmax);
    fVScale->SetWmin(ymin);
@@ -291,8 +288,6 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    fVScaleCanvas->GetCanvas()->Update();
    fClient->ForceRedraw();  //prevent GUI from being starved of redraws
 
-   fHScaleCanvas->GetCanvas()->SetEditable(kFALSE);
-   fVScaleCanvas->GetCanvas()->SetEditable(kFALSE);
 }
 
 
