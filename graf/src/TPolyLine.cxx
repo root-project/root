@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.16 2003/11/02 10:32:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.17 2004/04/30 06:34:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,11 +50,17 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
 {
 //*-*-*-**-*-*PolyLine normal constructor without initialisation*-*-*-*-*-*-*-*
 //*-*         ==================================================
+   fOption = option;
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
-   fOption = option;
 }
 
 //______________________________________________________________________________
@@ -63,14 +69,20 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
+   fOption = option;
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
    fLastPoint = fN-1;
-   fOption = option;
 }
 
 //______________________________________________________________________________
@@ -79,14 +91,20 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
+   fOption = option;
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
    fLastPoint = fN-1;
-   fOption = option;
 }
 
 //______________________________________________________________________________
@@ -536,7 +554,16 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
 //______________________________________________________________________________
 void TPolyLine::SetPolyLine(Int_t n)
 {
-   if (n < 1) return;
+   // if n <= 0 the current arrays of points are deleted.
+   
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    if (n < fN) {
       fN = n;
       fLastPoint = n - 1;
@@ -550,6 +577,16 @@ void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Set new values for this polyline*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
+// if n <= 0 the current arrays of points are deleted.
+   
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    fN =n;
    if (fX) delete [] fX;
    if (fY) delete [] fY;
@@ -568,6 +605,16 @@ void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Set new values for this polyline*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
+// if n <= 0 the current arrays of points are deleted.
+   
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    fN =n;
    if (fX) delete [] fX;
    if (fY) delete [] fY;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.11 2002/05/18 08:22:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.12 2002/10/31 07:27:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -37,12 +37,18 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
       :TObject(), TAttMarker()
 {
 
+   fOption = option;
+   SetBit(kCanDelete);
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -50,15 +56,21 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
 
+   fOption = option;
+   SetBit(kCanDelete);
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
    fLastPoint = fN-1;
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -66,15 +78,21 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
 
+   fOption = option;
+   SetBit(kCanDelete);
    fLastPoint = -1;
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      fX = fY = 0;
+      return;
+   }
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
    fLastPoint = fN-1;
-   fOption = option;
-   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -239,7 +257,7 @@ void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
    // set point number n
    // if n is greater than the current size, the arrays are automatically
    // extended
-
+   
    if (n < 0) return;
    if (!fX || !fY || n >= fN) {
       // re-allocate the object
@@ -268,12 +286,22 @@ void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n)
 {
+   // if n <= 0 the current arrays of points are deleted.
    SetPoint(n-1,0,0);
 }
 
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
+   // if n <= 0 the current arrays of points are deleted.
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    fN =n;
    if (fX) delete [] fX;
    if (fY) delete [] fY;
@@ -290,6 +318,15 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
+   // if n <= 0 the current arrays of points are deleted.
+   if (n <= 0) {
+      fN = 0;
+      fLastPoint = -1;
+      delete [] fX;
+      delete [] fY;
+      fX = fY = 0;
+      return;
+   }
    fN =n;
    if (fX) delete [] fX;
    if (fY) delete [] fY;
