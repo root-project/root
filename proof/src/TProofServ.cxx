@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.8 2000/12/13 12:08:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.9 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -95,7 +95,13 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
    gSystem->Syslog(loglevel, bp);
 
    if (abort) {
-      gProofServ->GetSocket()->Send(kPROOF_FATAL);
+      static Bool_t recursive = kFALSE;
+
+      if (!recursive) {
+         recursive = kTRUE;
+         gProofServ->GetSocket()->Send(kPROOF_FATAL);
+         recursive = kFALSE;
+      }
 
       fprintf(stderr, "aborting\n");
       fflush(stderr);
@@ -185,7 +191,6 @@ TProofServ::TProofServ(int *argc, char **argv)
    fLogLevel    = 1;
    fRealTime    = 0.0;
    fCpuTime     = 0.0;
-   fSocket      = new TSocket(0);
 
    GetOptions(argc, argv);
    Setup();
@@ -367,17 +372,18 @@ Bool_t TProofServ::GetNextPacket(Int_t &nentries, Stat_t &firstentry)
 //______________________________________________________________________________
 void TProofServ::GetOptions(int *argc, char **argv)
 {
-   // Get and handle command line options.
+   // Get and handle command line options. Fixed format:
+   // <socket> "proofserv"|"proofslave" <confdir>
 
-   for (int i = 1; i < *argc; i++) {
-      if (!strcmp(argv[i], "proofserv") || !strcmp(argv[i], "proofslave")) {
-         fService = argv[i];
-         fMasterServ = kTRUE;
-         if (!strcmp(argv[i], "proofslave")) fMasterServ = kFALSE;
-      } else {
-         fConfDir = argv[i];
-      }
+   fSocket = new TSocket(atoi(argv[1]));
+
+   if (!strcmp(argv[2], "proofserv") || !strcmp(argv[2], "proofslave")) {
+      fService = argv[2];
+      fMasterServ = kTRUE;
+      if (!strcmp(argv[2], "proofslave")) fMasterServ = kFALSE;
    }
+
+   fConfDir = argv[3];
 }
 
 //______________________________________________________________________________
