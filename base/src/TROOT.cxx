@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.43 2001/06/22 16:10:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.44 2001/07/09 00:56:35 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -286,21 +286,22 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
-   fRootFolder->AddFolder("Classes",   "List of active classes",fClasses);
-   fRootFolder->AddFolder("Colors",    "List of active colors",fColors);
+   fRootFolder->AddFolder("Classes",   "List of Active Classes",fClasses);
+   fRootFolder->AddFolder("Colors",    "List of Active Colors",fColors);
    fRootFolder->AddFolder("MapFiles",  "List of MapFiles",fMappedFiles);
-   fRootFolder->AddFolder("Sockets",   "List of Socket connections",fSockets);
+   fRootFolder->AddFolder("Sockets",   "List of Socket Connections",fSockets);
    fRootFolder->AddFolder("Canvases",  "List of Canvases",fCanvases);
    fRootFolder->AddFolder("Styles",    "List of Styles",fStyles);
    fRootFolder->AddFolder("Functions", "List of Functions",fFunctions);
    fRootFolder->AddFolder("Tasks",     "List of Tasks",fTasks);
    fRootFolder->AddFolder("Geometries","List of Geometries",fGeometries);
    fRootFolder->AddFolder("Browsers",  "List of Browsers",fBrowsers);
-   fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
+   fRootFolder->AddFolder("Specials",  "List of Special Objects",fSpecials);
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
-   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove collections",fCleanups);
-   fRootFolder->AddFolder("StreamerInfo","List of active StreamerInfo classes",fStreamerInfo);
-   fRootFolder->AddFolder("ROOT Files","List of connected root files",fFiles);
+   fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
+   fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
+   fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
+   fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
    // by default, add the list of tasks, canvases and browsers in the Cleanups list
    fCleanups->Add(fCanvases);
