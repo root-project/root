@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.9 2002/05/10 09:06:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.11 2002/07/27 11:05:49 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -158,6 +158,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixRow &r);
    void operator=(const TVector &vec);
 
    const Real_t &operator()(Int_t i) const;
@@ -196,6 +197,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixColumn &c);
    void operator=(const TVector &vec);
 
    const Real_t &operator()(Int_t i) const;
@@ -233,6 +235,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixDiag &d);
    void operator=(const TVector &vec);
 
    const Real_t &operator()(Int_t i) const;
@@ -306,6 +309,16 @@ inline TMatrixRow::TMatrixRow(const TMatrix &matrix, Int_t row)
    fPtr = &(matrix.fIndex[0][fRowInd]);
 }
 
+inline void TMatrixRow::operator=(const TMatrixRow &mr)
+{
+   if (fMatrix != mr.fMatrix && AreCompatible(*fMatrix,*mr.fMatrix)) {
+      Real_t *rp1 = fPtr;
+      Real_t *rp2 = mr.fPtr;
+      for ( ; rp1 < fPtr + fMatrix->fNelems; rp1 += fInc,rp2 += fInc)
+         *rp1 = *rp2;
+   }
+}
+
 inline const Real_t &TMatrixRow::operator()(Int_t i) const
 {
    // Get hold of the i-th row's element.
@@ -362,6 +375,16 @@ inline TMatrixColumn::TMatrixColumn(const TMatrix &matrix, Int_t col)
    fPtr = &(matrix.fIndex[fColInd][0]);
 }
 
+inline void TMatrixColumn::operator=(const TMatrixColumn &mc)
+{
+   if (fMatrix != mc.fMatrix && AreCompatible(*fMatrix,*mc.fMatrix)) {
+      Real_t *cp1 = fPtr;
+      Real_t *cp2 = mc.fPtr;
+      while (cp1 < fPtr + fMatrix->fNrows)
+         *cp1++ = *cp2++;
+   }
+}
+
 inline const Real_t &TMatrixColumn::operator()(Int_t i) const
 {
    // Access the i-th element of the column
@@ -399,6 +422,17 @@ inline TMatrixDiag::TMatrixDiag(const TMatrix &matrix)
       return;
    }
    fPtr = &(matrix.fElements[0]);
+}
+
+inline void TMatrixDiag::operator=(const TMatrixDiag &md)
+{
+   if (fMatrix != md.fMatrix && AreCompatible(*fMatrix,*md.fMatrix)) {
+      Real_t *dp1 = fPtr;
+      Real_t *dp2 = md.fPtr;
+      Int_t i;
+      for (i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += fInc)
+         *dp1 = *dp2;
+   }
 }
 
 inline const Real_t &TMatrixDiag::operator()(Int_t i) const

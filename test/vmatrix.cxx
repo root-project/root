@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.11 2002/05/10 08:30:09 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.12 2002/07/26 15:41:14 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -598,7 +598,7 @@ void test_determinant(int msize)
    Assert( m.Determinant() == m_tran.Determinant() );
 
    {
-      cout << "\nswap two rows/cols of a matrix and watch det's sign";
+      cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign";
       m.UnitMatrix();
       TMatrixRow(m,3) = pattern;
       const double det1 = m.Determinant();
@@ -611,6 +611,23 @@ void test_determinant(int msize)
       TVector vcol2(m.GetRowLwb(),m.GetRowUpb()); vcol2 = col2;
       TVector vcol4(m.GetRowLwb(),m.GetRowUpb()); vcol4 = TMatrixColumn(m,4);
       col2 = vcol4; TMatrixColumn(m,4) = vcol2;
+      Assert( m.Determinant() == det1 );
+   }
+
+   {
+      cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign";
+      m.UnitMatrix();
+      TMatrixRow(m,3) = pattern;
+      const double det1 = m.Determinant();
+
+      TMatrix m_save( m);
+      TMatrixRow(m,1) = TMatrixRow(m_save,3);
+      TMatrixRow(m,3) = TMatrixRow(m_save,1);
+      Assert( m.Determinant() == -det1 );
+
+      m_save = m;
+      TMatrixColumn(m,2) = TMatrixColumn(m_save,4);
+      TMatrixColumn(m,4) = TMatrixColumn(m_save,2);
       Assert( m.Determinant() == det1 );
    }
 

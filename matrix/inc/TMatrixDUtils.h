@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.6 2002/05/10 07:18:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.8 2002/07/27 11:05:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -158,6 +158,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixDRow &r);
    void operator=(const TVectorD &vec);
 
    const Double_t &operator()(Int_t i) const;
@@ -196,6 +197,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixDColumn &c);
    void operator=(const TVectorD &vec);
 
    const Double_t &operator()(Int_t i) const;
@@ -233,6 +235,7 @@ public:
    void operator+=(Double_t val);
    void operator*=(Double_t val);
 
+   void operator=(const TMatrixDDiag &d);
    void operator=(const TVectorD &vec);
 
    const Double_t &operator()(Int_t i) const;
@@ -306,6 +309,16 @@ inline TMatrixDRow::TMatrixDRow(const TMatrixD &matrix, Int_t row)
    fPtr = &(matrix.fIndex[0][fRowInd]);
 }
 
+inline void TMatrixDRow::operator=(const TMatrixDRow &mr)
+{
+   if (fMatrix != mr.fMatrix && AreCompatible(*fMatrix,*mr.fMatrix)) {
+      Double_t *rp1 = fPtr;
+      Double_t *rp2 = mr.fPtr;
+      for ( ; rp1 < fPtr + fMatrix->fNelems; rp1 += fInc,rp2 += fInc)
+         *rp1 = *rp2;
+   }
+}
+
 inline const Double_t &TMatrixDRow::operator()(Int_t i) const
 {
    // Get hold of the i-th row's element.
@@ -362,6 +375,16 @@ inline TMatrixDColumn::TMatrixDColumn(const TMatrixD &matrix, Int_t col)
    fPtr = &(matrix.fIndex[fColInd][0]);
 }
 
+inline void TMatrixDColumn::operator=(const TMatrixDColumn &mc)
+{
+   if (fMatrix != mc.fMatrix && AreCompatible(*fMatrix,*mc.fMatrix)) {
+      Double_t *cp1 = fPtr;
+      Double_t *cp2 = mc.fPtr;
+      while (cp1 < fPtr + fMatrix->fNrows)
+         *cp1++ = *cp2++;
+   }
+}
+
 inline const Double_t &TMatrixDColumn::operator()(Int_t i) const
 {
    // Access the i-th element of the column
@@ -399,6 +422,17 @@ inline TMatrixDDiag::TMatrixDDiag(const TMatrixD &matrix)
       return;
    }
    fPtr = &(matrix.fElements[0]);
+}
+
+inline void TMatrixDDiag::operator=(const TMatrixDDiag &md)
+{
+   if (fMatrix != md.fMatrix && AreCompatible(*fMatrix,*md.fMatrix)) {
+      Double_t *dp1 = fPtr;
+      Double_t *dp2 = md.fPtr;
+      Int_t i;
+      for (i = 0; i < fNdiag; i++, dp1 += fInc, dp2 += fInc)
+         *dp1 = *dp2;
+   }
 }
 
 inline const Double_t &TMatrixDDiag::operator()(Int_t i) const
