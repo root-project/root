@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.6 2005/03/04 07:11:54 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.7 2005/03/25 19:41:03 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -117,7 +117,8 @@ public:
     void      SetTextSize(Float_t textsize);
     void      SetTitle(const char *title);
     void      UpdateWindow(Int_t mode);
-    void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
+    void      Warp(Int_t ix, Int_t iy){ Warp(ix,iy,0); }
+    void      Warp(Int_t ix, Int_t iy, Window_t id);
     Int_t     WriteGIF(char *name);
     void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
