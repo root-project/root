@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.11 2004/01/29 11:20:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.12 2004/01/29 11:57:58 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
    const Int_t kname  = 1;
    const Int_t kvalue = 25;
    const Int_t ktitle = 37;
-   const Int_t kline  = 255;
+   const Int_t kline  = 1024;
    char line[kline];
    char *pname;
 
