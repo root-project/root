@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.13 2002/03/26 07:05:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.14 2002/09/21 21:58:07 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -51,7 +51,6 @@ public:
     virtual TH1           *GetHistogram() const = 0;
     virtual Int_t          GetNfill() const = 0;
     virtual Int_t          GetSelectedRows() const = 0;
-    virtual Int_t          GetMultiplicity() const = 0;
     virtual TTreeFormula  *GetSelect() const = 0;
     virtual TTreeFormula  *GetVar1() const = 0;
     virtual TTreeFormula  *GetVar2() const = 0;
@@ -61,7 +60,6 @@ public:
     virtual Double_t      *GetV2() const = 0;
     virtual Double_t      *GetV3() const = 0; 
     virtual Double_t      *GetW() const = 0;
-    virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;
     virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
