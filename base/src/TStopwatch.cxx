@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.2 2000/06/22 14:34:08 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -47,9 +47,7 @@ TStopwatch::TStopwatch()
    // Create a stopwatch and start it.
 
 #ifdef R__UNIX
-//printf("Tstopwatch constructor0 gTicks=%d\n",gTicks);
    if (!gTicks) gTicks = (clock_t)sysconf(_SC_CLK_TCK);
-//printf("Tstopwatch constructor gTicks=%d\n",gTicks);
 #endif
    fState         = kUndefined;
    fTotalCpuTime  = 0;
@@ -159,7 +157,6 @@ Double_t TStopwatch::GetRealTime(){
 #elif defined(R__UNIX)
    struct tms cpt;
    Double_t trt =  (Double_t)times(&cpt);
-printf("GetRealTime: trt=%g, gTicks=%d\n",trt,gTicks);
    return trt / (double)gTicks;
 #elif defined(R__VMS)
   return(Double_t)clock()/gTicks;
