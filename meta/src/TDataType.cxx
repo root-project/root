@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.11 2004/02/18 07:28:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.12 2004/02/18 08:50:55 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -102,17 +102,10 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kULong_t;
    } else if (!strcmp(typeid(long).name(), typeinfo.name())) {
       retType = kLong_t;
-#ifdef R__WIN32
-   } else if (!strcmp(typeid(unsigned __int64).name(), typeinfo.name())) {
+   } else if (!strcmp(typeid(ULong64_t).name(), typeinfo.name())) {
       retType = kULong64_t;
-   } else if (!strcmp(typeid(__int64).name(), typeinfo.name())) {
+   } else if (!strcmp(typeid(Long64_t).name(), typeinfo.name())) {
       retType = kLong64_t;
-#else
-   } else if (!strcmp(typeid(unsigned long long).name(), typeinfo.name())) {
-      retType = kULong64_t;
-   } else if (!strcmp(typeid(long long).name(), typeinfo.name())) {
-      retType = kLong64_t;
-#endif
    } else if (!strcmp(typeid(unsigned short).name(), typeinfo.name())) {
       retType = kUShort_t;
    } else if (!strcmp(typeid(short).name(), typeinfo.name())) {
@@ -236,8 +229,8 @@ void TDataType::SetType(const char *name)
    } else if (!strcmp("double", name)) {
       fType = kDouble_t;
       fSize = sizeof(Double_t);
-   } 
-   
+   }
+
    if (!strcmp("Double32_t", fName.Data())) {
       fType = kDouble32_t;
    }
