@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.15 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.16 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -697,7 +697,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
          rmax2 = fRmax[ipnew+1];
          is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
          ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
-         dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+         dz = 0.5*(fZ[ipnew+1]-fZ[ipnew]);
          if (is_seg) {
             if (is_tube) safdown = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
             else         safdown = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
@@ -723,7 +723,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
          rmax2 = fRmax[ipnew+1];
          is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
          ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
-         dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+         dz = 0.5*(fZ[ipnew+1]-fZ[ipnew]);
          if (is_seg) {
             if (is_tube) safup = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
             else         safup = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
