@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.27 2005/01/04 14:38:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.28 2005/01/19 13:19:34 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -17,10 +17,15 @@
 
 #include "TAttMarker.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TError.h"
 
 #include "TGLSceneObject.h"
 #include "TGLFrustum.h"
+
+#include <assert.h>
+
+#include <iostream> // Remove
 
 ClassImp(TGLSceneObject)
 
@@ -177,27 +182,34 @@ void TGLSelection::Stretch(Double_t xs, Double_t ys, Double_t zs)
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
-                               const Float_t *color, UInt_t glName, TObject *obj)
-                   :fVertices(start, end), fColor(),
-                    fGLName(glName), fNextT(0), fRealObject(obj)
+TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color, 
+                               UInt_t glName, TObject *obj) :
+   fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()), 
+   fColor(),
+   fGLName(glName),
+   fNextT(0), 
+   fRealObject(obj),
+   fIsSelected(kFALSE)
 {
-   fIsSelected = kFALSE;
    SetColor(color, kTRUE);
-   SetBBox(start, end);
+   fColor[3] = 1.f - buffer.fTransparency / 100.f;
+   SetBBox(buffer);
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end, Int_t reserve,
-                               const Float_t *color, UInt_t glName, TObject *obj)
-                   :fVertices(reserve, 0.), fColor(),
-                    fGLName(glName), fNextT(0), fRealObject(obj)
+TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve, 
+                               const Float_t *color, UInt_t glName, TObject *obj) :
+   fVertices(verticesReserve, 0.), 
+   fColor(),
+   fGLName(glName),
+   fNextT(0),
+   fRealObject(obj),
+   fIsSelected(kFALSE)
 {
-   fIsSelected = kFALSE;
    SetColor(color, kTRUE);
-   SetBBox(start, end);
+   fColor[3] = 1.f - buffer.fTransparency / 100.f;
+   SetBBox(buffer);
 }
-
 
 //______________________________________________________________________________
 Bool_t TGLSceneObject::IsTransparent()const
@@ -263,39 +275,47 @@ void TGLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
 }
 
 //______________________________________________________________________________
-void TGLSceneObject::SetBBox(const Double_t *start, const Double_t *end)
+void TGLSceneObject::SetBBox(const TBuffer3D & buffer)
 {
-   Double_t xmin = start[0], xmax = xmin;
-   Double_t ymin = start[1], ymax = ymin;
-   Double_t zmin = start[2], zmax = zmin;
-
-   for (Int_t nv = 3, e = end - start; nv < e; nv += 3) {
-      xmin = TMath::Min(xmin, start[nv]);
-      xmax = TMath::Max(xmax, start[nv]);
-      ymin = TMath::Min(ymin, start[nv + 1]);
-      ymax = TMath::Max(ymax, start[nv + 1]);
-      zmin = TMath::Min(zmin, start[nv + 2]);
-      zmax = TMath::Max(zmax, start[nv + 2]);
+   // Use the buffer bounding box if provided
+   if (buffer.SectionsValid(TBuffer3D::kBoundingBox))  {
+      fSelectionBox.SetBBox(buffer.fBBLowVertex[0], buffer.fBBHighVertex[0],
+                            buffer.fBBLowVertex[1], buffer.fBBHighVertex[1],
+                            buffer.fBBLowVertex[2], buffer.fBBHighVertex[2]);
    }
+   // otherwise build a bounding box based on extent of points
+   else {
+      Double_t xmin = buffer.fPnts[0], xmax = xmin;
+      Double_t ymin = buffer.fPnts[1], ymax = ymin;
+      Double_t zmin = buffer.fPnts[2], zmax = zmin;
 
-   fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
+      for (UInt_t nv = 3; nv < buffer.NbPnts(); nv += 3) {
+         xmin = TMath::Min(xmin, buffer.fPnts[nv]);
+         xmax = TMath::Max(xmax, buffer.fPnts[nv]);
+         ymin = TMath::Min(ymin, buffer.fPnts[nv + 1]);
+         ymax = TMath::Max(ymax, buffer.fPnts[nv + 1]);
+         zmin = TMath::Min(zmin, buffer.fPnts[nv + 2]);
+         zmax = TMath::Max(zmax, buffer.fPnts[nv + 2]);
+      }
+
+      fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
+   }
 }
 
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname, TObject *realobj)
-               :TGLSceneObject(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts, color, glname, realobj),
-                fNormals(3 * buff.fNbPols)
+               :TGLSceneObject(buff, color, glname, realobj),
+                fNormals(3 * buff.NbPols())
 {
-   fColor[3] = 1.f - buff.fTransparency / 100.f;
-   fNbPols = buff.fNbPols;
+   fNbPols = buff.NbPols();
 
    Int_t *segs = buff.fSegs;
    Int_t *pols = buff.fPols;
-   Int_t shiftInd = buff.TestBit(TBuffer3D::kIsReflection) ? 1 : -1;
+   Int_t shiftInd = buff.fReflection ? 1 : -1;
 
    Int_t descSize = 0;
 
-   for (Int_t i = 0, j = 1; i < buff.fNbPols; ++i, ++j)
+   for (UInt_t i = 0, j = 1; i < fNbPols; ++i, ++j)
    {
       descSize += pols[j] + 1;
       j += pols[j] + 1;
@@ -303,7 +323,7 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
 
    fPolyDesc.resize(descSize);
    {//fix for scope
-   for (Int_t numPol = 0, currInd = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
+   for (UInt_t numPol = 0, currInd = 0, j = 1; numPol < fNbPols; ++numPol) {
       Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
       Int_t s1 = pols[segmentInd];
@@ -493,12 +513,12 @@ void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
 }
 
 //______________________________________________________________________________
-TGLPolyMarker::TGLPolyMarker(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-                  :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r),
+TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, const Float_t *c, UInt_t n, TObject *r)
+                  :TGLSceneObject(buffer, c, n, r),
                    fStyle(7)
 {
    //TAttMarker is not TObject descendant, so I need dynamic_cast
-   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(b.fId))
+   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buffer.fID))
       fStyle = realObj->GetMarkerStyle();
 }
 
@@ -615,8 +635,8 @@ void TGLPolyMarker::DrawStars()const
 }
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-                :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
+TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, const Float_t *c, UInt_t n, TObject *r)
+                :TGLSceneObject(buffer, c, n, r)
 {
 }
 
@@ -644,15 +664,27 @@ void TGLPolyLine::GLDraw(const TGLFrustum *fr)const
 UInt_t TGLSphere::fSphereList = 0;
 
 //______________________________________________________________________________
-TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-                :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
+TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, const Float_t *c, UInt_t n, TObject *r)
+                :TGLSceneObject(buffer, c, n, r)
 {
    // Default ctor
-   fX      = b.fPnts[0];
-   fY      = b.fPnts[1];
-   fZ      = b.fPnts[2];
-   fNdiv   = (Int_t)b.fPnts[9];
-   fRadius = b.fPnts[10];
+   // TODO: Can get this from BB at present as we know it is full
+   // sphere. When cut we need to extract translation from local master matrix
+   fX      = (buffer.fBBLowVertex[0] + buffer.fBBLowVertex[0])/2.0;
+   fY      = (buffer.fBBLowVertex[1] + buffer.fBBLowVertex[1])/2.0;
+   fZ      = (buffer.fBBLowVertex[2] + buffer.fBBLowVertex[2])/2.0;
+   fRadius = buffer.fRadiusOuter;
+
+   // TODO: 
+   // Support hollow & cut spheres
+   // buffer.fRadiusInner;
+   // buffer.fThetaMin;
+   // buffer.fThetaMax;
+   // buffer.fPhiMin;
+   // buffer.fPhiMax;
+
+   fNdiv   = 20; // Same hardcoded value as passed through buffer previously
+                 // This will come from viewer LOD scheme on draw in future
 }
 
 //______________________________________________________________________________
@@ -1230,11 +1262,11 @@ void CylinderSegMesh::Draw(const Double_t *rot)const
 }
 
 //______________________________________________________________________________
-TGLCylinder::TGLCylinder(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, 16, c, n, r)
+TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer, const Float_t *c, UInt_t n, TObject *r)
+            :TGLSceneObject(buffer, 16, c, n, r)
 {
-   fInv = b.TestBit(TBuffer3D::kIsReflection);
-   CreateParts(b);
+   fInv = buffer.fReflection;
+   CreateParts(buffer);
 }
 
 //______________________________________________________________________________
@@ -1244,6 +1276,68 @@ TGLCylinder::~TGLCylinder()
       delete fParts[i];
       fParts[i] = 0;//not to have invalid pointer for pseudo-destructor call :)
    }
+}
+
+//______________________________________________________________________________
+void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
+{
+   Double_t r1 = buffer.fRadiusInner;
+   Double_t r2 = buffer.fRadiusOuter;
+   Double_t r3 = buffer.fRadiusInner;
+   Double_t r4 = buffer.fRadiusOuter;
+   Double_t dz = buffer.fHalfLength;
+
+   // Stuff the transposed rotation component of the local -> master 
+   // translation matrix into verticies array
+   // Then stuff the translation component in to 'center' - as before
+   // TODO: Clean this up - will be tidied as part of local frame conversion
+   // of whole viewer - don't forget to remove the hack on TGeo side
+   // Shapes which can't provide local frame + trans matrix will not be able
+   // to use these tube drawing routines -> raw tesselation
+   const Double_t * lm = buffer.fLocalMaster;
+
+   // Note buffer contains row major matrix currently
+   // TODO: Decide on column or row major and comment in TBuffer3D
+   fVertices[0] =  lm[0]; fVertices[1] =  lm[4]; fVertices[2] =  lm[8];  fVertices[3] =  0.0;
+   fVertices[4] =  lm[1]; fVertices[5] =  lm[5]; fVertices[6] =  lm[9];  fVertices[7] =  0.0;
+   fVertices[8] =  lm[2]; fVertices[9] =  lm[6]; fVertices[10] = lm[10]; fVertices[11] = 0.0;
+   fVertices[12] = 0.0;   fVertices[13] = 0.0;   fVertices[14] = 0.0;    fVertices[15] = 1.0;
+
+   Vertex3d center = {{lm[12], lm[13], lm[14]}};
+
+   switch (buffer.Type()) {
+   case TBuffer3DTypes::kTube:
+      {
+         Vertex3d low = {{0., 0., -1.}};
+         Vertex3d high = {{0., 0., 1.}};
+         fParts.push_back(new TubeMesh(r1, r2, r3, r4, dz, center, low, high));
+      }
+      break;
+   case TBuffer3DTypes::kTubeSeg:
+      {
+         const TBuffer3DTubeSeg * segBuffer = dynamic_cast<const TBuffer3DTubeSeg *>(&buffer);
+         if (!segBuffer) { 
+            assert(kFALSE); 
+            return; 
+         }
+
+         Double_t phi1 = segBuffer->fPhiMin;
+         Double_t phi2 = segBuffer->fPhiMax;
+			if (phi2 < phi1) phi2 += 360.;
+			phi1 *= TMath::DegToRad();
+			phi2 *= TMath::DegToRad();
+        
+         // TODO: Check with Timur what this means - was hardcoded into the buffer
+         // on TGeo side - so hardcoded here now....same as above for kTUBE
+         Vertex3d low = {{0., 0., -1.}}; // Vertex3d low = {{p[44], p[45], p[46]}};
+         Vertex3d high = {{0., 0., 1.}}; // Vertex3d high = {{p[47], p[48], p[49]}};    
+         fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1, 
+                                          phi2, center, low, high));
+      }
+      break;
+   default:;
+   //polycone should be here
+   }  
 }
 
 //______________________________________________________________________________
@@ -1295,44 +1389,3 @@ void TGLCylinder::Stretch(Double_t, Double_t, Double_t)
    //non-stretchable now
 }
 
-//______________________________________________________________________________
-void TGLCylinder::CreateParts(const TBuffer3D &buff)
-{
-   const Double_t *p = buff.fPnts;
-   Double_t r1 = p[28];
-   Double_t r2 = p[29];
-   Double_t r3 = p[30];
-   Double_t r4 = p[31];
-   Double_t dz = p[32];
-   Vertex3d center = {{p[0], p[1], p[2]}};
-
-   fVertices[0]  = p[33], fVertices[1]  = p[36], fVertices[2]  = p[39], fVertices[3]  = 0.;
-   fVertices[4]  = p[34], fVertices[5]  = p[37], fVertices[6]  = p[40], fVertices[7]  = 0.;
-   fVertices[8]  = p[35], fVertices[9]  = p[38], fVertices[10] = p[41], fVertices[11] = 0.;
-   fVertices[12] = 0.,    fVertices[13] = 0.,    fVertices[14] = 0.,    fVertices[15] = 1.;
-
-   switch (buff.fType) {
-   case TBuffer3D::kTUBE:
-      {
-         Vertex3d low = {{0., 0., -1.}};
-         Vertex3d high = {{0., 0., 1.}};
-         fParts.push_back(new TubeMesh(r1, r2, r3, r4, dz, center, low, high));
-      }
-      break;
-   case TBuffer3D::kTUBS:
-      {
-         Double_t phi1 = p[42];
-         Double_t phi2 = p[43];
-			if (phi2 < phi1) phi2 += 360.;
-			phi1 *= TMath::DegToRad();
-			phi2 *= TMath::DegToRad();
-         Vertex3d low = {{p[44], p[45], p[46]}};
-         Vertex3d high = {{p[47], p[48], p[49]}};
-         fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1, 
-                                          phi2, center, low, high));
-      }
-      break;
-   default:;
-   //polycone should be here
-   }  
-}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.21 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.22 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -37,7 +37,6 @@ protected :
    Double_t              fRmin2; // inner radius at +dz
    Double_t              fRmax2; // outer radius at +dz
 // methods
-
 public:
    // constructors
    TGeoCone();
@@ -72,6 +71,7 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 56;}
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Double_t      GetDz() const    {return fDz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
@@ -83,7 +83,6 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Int_t skipz=0);
@@ -91,9 +90,9 @@ public:
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoCone, 1)         // conical tube class
@@ -148,6 +147,7 @@ public:
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
@@ -155,7 +155,6 @@ public:
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz=0);
@@ -163,9 +162,9 @@ public:
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buffer) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoConeSeg, 1)         // conical tube segment class 

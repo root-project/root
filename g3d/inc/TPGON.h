@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPGON.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 
 class TPGON : public TPCON {
     protected:
-        virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n); // Fill the table of cosin
+        virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const; // Fill the table of cosin
     public:
         TPGON();
         TPGON(const char *name, const char *title, const char *material, Float_t phi1, Float_t dphi1,

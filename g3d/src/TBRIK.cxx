@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.4 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.cxx,v 1.5 2004/09/14 15:56:15 brun Exp $
 // Author: Nenad Buncic 17/09/95 
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TNode.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
 ClassImp(TBRIK)
@@ -68,85 +69,21 @@ Int_t TBRIK::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
-//______________________________________________________________________________
-void TBRIK::Paint(Option_t *option)
-{
-   // Paint this 3-D shape with its current attributes
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t NbPnts = 8;
-   Int_t NbSegs = 12;
-   Int_t NbPols = 6;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kBRIK;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0   ; buff->fSegs[ 2] = 1   ;
-   buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1   ; buff->fSegs[ 5] = 2   ;
-   buff->fSegs[ 6] = c+1 ; buff->fSegs[ 7] = 2   ; buff->fSegs[ 8] = 3   ;
-   buff->fSegs[ 9] = c   ; buff->fSegs[10] = 3   ; buff->fSegs[11] = 0   ;
-   buff->fSegs[12] = c+2 ; buff->fSegs[13] = 4   ; buff->fSegs[14] = 5   ;
-   buff->fSegs[15] = c+2 ; buff->fSegs[16] = 5   ; buff->fSegs[17] = 6   ;
-   buff->fSegs[18] = c+3 ; buff->fSegs[19] = 6   ; buff->fSegs[20] = 7   ;
-   buff->fSegs[21] = c+3 ; buff->fSegs[22] = 7   ; buff->fSegs[23] = 4   ;
-   buff->fSegs[24] = c   ; buff->fSegs[25] = 0   ; buff->fSegs[26] = 4   ;
-   buff->fSegs[27] = c+2 ; buff->fSegs[28] = 1   ; buff->fSegs[29] = 5   ;
-   buff->fSegs[30] = c+1 ; buff->fSegs[31] = 2   ; buff->fSegs[32] = 6   ;
-   buff->fSegs[33] = c+3 ; buff->fSegs[34] = 3   ; buff->fSegs[35] = 7   ;
-
-   buff->fPols[ 0] = c   ; buff->fPols[ 1] = 4   ;  buff->fPols[ 2] = 0  ;
-   buff->fPols[ 3] = 9   ; buff->fPols[ 4] = 4   ;  buff->fPols[ 5] = 8  ;
-   buff->fPols[ 6] = c+1 ; buff->fPols[ 7] = 4   ;  buff->fPols[ 8] = 1  ;
-   buff->fPols[ 9] = 10  ; buff->fPols[10] = 5   ;  buff->fPols[11] = 9  ;
-   buff->fPols[12] = c   ; buff->fPols[13] = 4   ;  buff->fPols[14] = 2  ;
-   buff->fPols[15] = 11  ; buff->fPols[16] = 6   ;  buff->fPols[17] = 10 ;
-   buff->fPols[18] = c+1 ; buff->fPols[19] = 4   ;  buff->fPols[20] = 3  ;
-   buff->fPols[21] = 8   ; buff->fPols[22] = 7   ;  buff->fPols[23] = 11 ;
-   buff->fPols[24] = c+2 ; buff->fPols[25] = 4   ;  buff->fPols[26] = 0  ;
-   buff->fPols[27] = 3   ; buff->fPols[28] = 2   ;  buff->fPols[29] = 1  ;
-   buff->fPols[30] = c+3 ; buff->fPols[31] = 4   ;  buff->fPols[32] = 4  ;
-   buff->fPols[33] = 5   ; buff->fPols[34] = 6   ;  buff->fPols[35] = 7  ;
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
 
 //______________________________________________________________________________
-void TBRIK::SetPoints(Double_t *buff)
+void TBRIK::SetPoints(Double_t *points) const
 {
    // Create BRIK points
 
-   if (buff) {
-      buff[ 0] = -fDx ; buff[ 1] = -fDy ; buff[ 2] = -fDz;
-      buff[ 3] = -fDx ; buff[ 4] =  fDy ; buff[ 5] = -fDz;
-      buff[ 6] =  fDx ; buff[ 7] =  fDy ; buff[ 8] = -fDz;
-      buff[ 9] =  fDx ; buff[10] = -fDy ; buff[11] = -fDz;
-      buff[12] = -fDx ; buff[13] = -fDy ; buff[14] =  fDz;
-      buff[15] = -fDx ; buff[16] =  fDy ; buff[17] =  fDz;
-      buff[18] =  fDx ; buff[19] =  fDy ; buff[20] =  fDz;
-      buff[21] =  fDx ; buff[22] = -fDy ; buff[23] =  fDz;
+   if (points) {
+      points[ 0] = -fDx ; points[ 1] = -fDy ; points[ 2] = -fDz;
+      points[ 3] = -fDx ; points[ 4] =  fDy ; points[ 5] = -fDz;
+      points[ 6] =  fDx ; points[ 7] =  fDy ; points[ 8] = -fDz;
+      points[ 9] =  fDx ; points[10] = -fDy ; points[11] = -fDz;
+      points[12] = -fDx ; points[13] = -fDy ; points[14] =  fDz;
+      points[15] = -fDx ; points[16] =  fDy ; points[17] =  fDz;
+      points[18] =  fDx ; points[19] =  fDy ; points[20] =  fDz;
+      points[21] =  fDx ; points[22] = -fDy ; points[23] =  fDz;
    }
 }
 
@@ -158,4 +95,63 @@ void TBRIK::Sizeof3D() const
    gSize3D.numPoints += 8;
    gSize3D.numSegs   += 12;
    gSize3D.numPolys  += 6;
+}
+
+//______________________________________________________________________________
+const TBuffer3D & TBRIK::GetBuffer3D(Int_t reqSections) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TShape::FillBuffer3D(buffer, reqSections);
+
+   // No kShapeSpecific or kBoundingBox
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t NbPnts = 8;
+      Int_t NbSegs = 12;
+      Int_t NbPols = 6;
+      if (buffer.SetRawSizes(NbPnts, NbPnts*3, NbSegs, NbSegs*3, NbPols, NbPols*6)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      // Points
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      Int_t c = GetBasicColor();
+
+      // Segments
+      buffer.fSegs[ 0] = c   ; buffer.fSegs[ 1] = 0   ; buffer.fSegs[ 2] = 1   ;
+      buffer.fSegs[ 3] = c+1 ; buffer.fSegs[ 4] = 1   ; buffer.fSegs[ 5] = 2   ;
+      buffer.fSegs[ 6] = c+1 ; buffer.fSegs[ 7] = 2   ; buffer.fSegs[ 8] = 3   ;
+      buffer.fSegs[ 9] = c   ; buffer.fSegs[10] = 3   ; buffer.fSegs[11] = 0   ;
+      buffer.fSegs[12] = c+2 ; buffer.fSegs[13] = 4   ; buffer.fSegs[14] = 5   ;
+      buffer.fSegs[15] = c+2 ; buffer.fSegs[16] = 5   ; buffer.fSegs[17] = 6   ;
+      buffer.fSegs[18] = c+3 ; buffer.fSegs[19] = 6   ; buffer.fSegs[20] = 7   ;
+      buffer.fSegs[21] = c+3 ; buffer.fSegs[22] = 7   ; buffer.fSegs[23] = 4   ;
+      buffer.fSegs[24] = c   ; buffer.fSegs[25] = 0   ; buffer.fSegs[26] = 4   ;
+      buffer.fSegs[27] = c+2 ; buffer.fSegs[28] = 1   ; buffer.fSegs[29] = 5   ;
+      buffer.fSegs[30] = c+1 ; buffer.fSegs[31] = 2   ; buffer.fSegs[32] = 6   ;
+      buffer.fSegs[33] = c+3 ; buffer.fSegs[34] = 3   ; buffer.fSegs[35] = 7   ;
+
+      // Polygons
+      buffer.fPols[ 0] = c   ; buffer.fPols[ 1] = 4   ;  buffer.fPols[ 2] = 0  ;
+      buffer.fPols[ 3] = 9   ; buffer.fPols[ 4] = 4   ;  buffer.fPols[ 5] = 8  ;
+      buffer.fPols[ 6] = c+1 ; buffer.fPols[ 7] = 4   ;  buffer.fPols[ 8] = 1  ;
+      buffer.fPols[ 9] = 10  ; buffer.fPols[10] = 5   ;  buffer.fPols[11] = 9  ;
+      buffer.fPols[12] = c   ; buffer.fPols[13] = 4   ;  buffer.fPols[14] = 2  ;
+      buffer.fPols[15] = 11  ; buffer.fPols[16] = 6   ;  buffer.fPols[17] = 10 ;
+      buffer.fPols[18] = c+1 ; buffer.fPols[19] = 4   ;  buffer.fPols[20] = 3  ;
+      buffer.fPols[21] = 8   ; buffer.fPols[22] = 7   ;  buffer.fPols[23] = 11 ;
+      buffer.fPols[24] = c+2 ; buffer.fPols[25] = 4   ;  buffer.fPols[26] = 0  ;
+      buffer.fPols[27] = 3   ; buffer.fPols[28] = 2   ;  buffer.fPols[29] = 1  ;
+      buffer.fPols[30] = c+3 ; buffer.fPols[31] = 4   ;  buffer.fPols[32] = 4  ;
+      buffer.fPols[33] = 5   ; buffer.fPols[34] = 6   ;  buffer.fPols[35] = 7  ;
+
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+   return buffer;
 }

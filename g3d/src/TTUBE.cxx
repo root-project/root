@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.7 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.8 2004/11/17 13:18:51 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TNode.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
 ClassImp(TTUBE)
@@ -84,7 +85,7 @@ TTUBE::TTUBE(const char *name, const char *title, const char *material, Float_t 
 
 
 //______________________________________________________________________________
-void TTUBE::MakeTableOfCoSin()
+void TTUBE::MakeTableOfCoSin() const // Internal cache - const so other const fn can use
 {
    const Double_t PI  = TMath::ATan(1) * 4.0;
    const Double_t TWOPI  =2*PI;
@@ -144,115 +145,6 @@ Int_t TTUBE::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TTUBE::Paint(Option_t *option)
-{
-   // Paint this 3-D shape with its current attributes
-
-   Int_t i, j, indx;
-   Int_t n = GetNumberOfDivisions();
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 8*n;
-   Int_t NbPols = 4*n;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kANY;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   for (i = 0; i < 4; i++) {
-      for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c;
-         buff->fSegs[(i*n+j)*3+1] = i*n+j;
-         buff->fSegs[(i*n+j)*3+2] = i*n+j+1;
-      }
-      buff->fSegs[(i*n+j-1)*3+2] = i*n;
-   }
-   for (i = 4; i < 6; i++) {
-      for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c+1;
-         buff->fSegs[(i*n+j)*3+1] = (i-4)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (i-2)*n+j;
-      }
-   }
-   for (i = 6; i < 8; i++) {
-      for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c;
-         buff->fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
-      }
-   }
-
-   indx = 0;
-   i=0;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+5] = i*n+j;
-      buff->fPols[indx+4] = (4+i)*n+j;
-      buff->fPols[indx+3] = (2+i)*n+j;
-      buff->fPols[indx+2] = (4+i)*n+j+1;
-   }
-   buff->fPols[indx+2] = (4+i)*n;
-   i=1;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+2] = i*n+j;
-      buff->fPols[indx+3] = (4+i)*n+j;
-      buff->fPols[indx+4] = (2+i)*n+j;
-      buff->fPols[indx+5] = (4+i)*n+j+1;
-   }
-   buff->fPols[indx+5] = (4+i)*n;
-   i=2;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c+i;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+2] = (i-2)*2*n+j;
-      buff->fPols[indx+3] = (4+i)*n+j;
-      buff->fPols[indx+4] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx+5] = (4+i)*n+j+1;
-   }
-   buff->fPols[indx+5] = (4+i)*n;
-   i=3;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c+i;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+5] = (i-2)*2*n+j;
-      buff->fPols[indx+4] = (4+i)*n+j;
-      buff->fPols[indx+3] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx+2] = (4+i)*n+j+1;
-   }
-   buff->fPols[indx+2] = (4+i)*n;
-
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//______________________________________________________________________________
 void TTUBE::SetNumberOfDivisions (Int_t ndiv)
 {
    // Set number of divisions used to draw this tube
@@ -263,7 +155,7 @@ void TTUBE::SetNumberOfDivisions (Int_t ndiv)
 
 
 //______________________________________________________________________________
-void TTUBE::SetPoints(Double_t *buff)
+void TTUBE::SetPoints(Double_t *points) const
 {
    // Create TUBE points
 	            
@@ -272,29 +164,105 @@ void TTUBE::SetPoints(Double_t *buff)
 		                
    n = GetNumberOfDivisions();
    
-   if (buff) {
+   if (points) {
       if (!fCoTab)   MakeTableOfCoSin();
       for (j = 0; j < n; j++) {
-         buff[indx+6*n] = buff[indx] = fRmin * fCoTab[j];
+         points[indx+6*n] = points[indx] = fRmin * fCoTab[j];
          indx++;
-         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmin * fSiTab[j];
+         points[indx+6*n] = points[indx] = fAspectRatio*fRmin * fSiTab[j];
          indx++;
-         buff[indx+6*n] = fDz;
-         buff[indx]     =-fDz;
+         points[indx+6*n] = fDz;
+         points[indx]     =-fDz;
          indx++;
       }
       for (j = 0; j < n; j++) {
-         buff[indx+6*n] = buff[indx] = fRmax * fCoTab[j];
+         points[indx+6*n] = points[indx] = fRmax * fCoTab[j];
          indx++;
-         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmax * fSiTab[j];
+         points[indx+6*n] = points[indx] = fAspectRatio*fRmax * fSiTab[j];
          indx++;
-         buff[indx+6*n]= fDz;
-         buff[indx]    =-fDz;
+         points[indx+6*n]= fDz;
+         points[indx]    =-fDz;
          indx++;
       }
    }
 }
 
+//______________________________________________________________________________
+void TTUBE::SetSegsAndPols(TBuffer3D & buffer) const
+{
+   Int_t i, j;
+   Int_t n = GetNumberOfDivisions();
+   Int_t c = GetBasicColor();
+
+   for (i = 0; i < 4; i++) {
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[(i*n+j)*3  ] = c;
+         buffer.fSegs[(i*n+j)*3+1] = i*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = i*n+j+1;
+      }
+      buffer.fSegs[(i*n+j-1)*3+2] = i*n;
+   }
+   for (i = 4; i < 6; i++) {
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[(i*n+j)*3  ] = c+1;
+         buffer.fSegs[(i*n+j)*3+1] = (i-4)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+      }
+   }
+   for (i = 6; i < 8; i++) {
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[(i*n+j)*3  ] = c;
+         buffer.fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
+      }
+   }
+
+   Int_t indx = 0;
+   i=0;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buffer.fPols[indx  ] = c;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+5] = i*n+j;
+      buffer.fPols[indx+4] = (4+i)*n+j;
+      buffer.fPols[indx+3] = (2+i)*n+j;
+      buffer.fPols[indx+2] = (4+i)*n+j+1;
+   }
+   buffer.fPols[indx+2] = (4+i)*n;
+   i=1;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buffer.fPols[indx  ] = c;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+2] = i*n+j;
+      buffer.fPols[indx+3] = (4+i)*n+j;
+      buffer.fPols[indx+4] = (2+i)*n+j;
+      buffer.fPols[indx+5] = (4+i)*n+j+1;
+   }
+   buffer.fPols[indx+5] = (4+i)*n;
+   i=2;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buffer.fPols[indx  ] = c+i;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+2] = (i-2)*2*n+j;
+      buffer.fPols[indx+3] = (4+i)*n+j;
+      buffer.fPols[indx+4] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx+5] = (4+i)*n+j+1;
+   }
+   buffer.fPols[indx+5] = (4+i)*n;
+   i=3;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buffer.fPols[indx  ] = c+i;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+5] = (i-2)*2*n+j;
+      buffer.fPols[indx+4] = (4+i)*n+j;
+      buffer.fPols[indx+3] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx+2] = (4+i)*n+j+1;
+   }
+   buffer.fPols[indx+2] = (4+i)*n;
+}
 
 //______________________________________________________________________________
 void TTUBE::Sizeof3D() const
@@ -334,3 +302,52 @@ void TTUBE::Streamer(TBuffer &R__b)
       TTUBE::Class()->WriteBuffer(R__b,this);
    }
 }
+
+//_______________________________________________________________________
+const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TShape::FillBuffer3D(buffer, reqSections);
+
+   // TODO: Although we now have a TBuffer3DTube class for
+   // tube shapes, we do not use it for old geometry tube, as 
+   // OGL viewer needs various rotation matrix info we can't easily
+   // pass yet. To be revisited.
+
+   if (reqSections & TBuffer3D::kBoundingBox) {
+      buffer.fBBLowVertex[0]  = -fRmax;
+      buffer.fBBLowVertex[1]  = -fRmax;
+      buffer.fBBLowVertex[2]  = -fDz;
+      buffer.fBBHighVertex[0] = fRmax;
+      buffer.fBBHighVertex[1] = fRmax;
+      buffer.fBBHighVertex[2] = fDz;
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fBBLowVertex, 1);
+         TransformPoints(buffer.fBBHighVertex, 1);
+      }
+      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
+   }
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = GetNumberOfDivisions();
+      Int_t NbPnts = 4*n;
+      Int_t NbSegs = 8*n;
+      Int_t NbPols = 4*n;
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+      SetSegsAndPols(buffer);
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+   return buffer;
+}
+
+
+
+

@@ -10,56 +10,27 @@
  *************************************************************************/
 
 #include "TBuffer3D.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
-#include "TView.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TBuffer3D)
 
-
 //______________________________________________________________________________
-TBuffer3D::TBuffer3D()
+TBuffer3D::TBuffer3D(Int_t type) :
+   fType(type)
 {
-   fTransparency = 0;
-   fType         = -1;
-   fOption       = kPAD;
-   fId           = 0;
-   fNbPnts       = 0;
-   fNbSegs       = 0;
-   fNbPols       = 0;
-   fPnts         = 0;
-   fSegs         = 0;
-   fPols         = 0;
-   fPntsSize     = 0;
-   fSegsSize     = 0;
-   fPolsSize     = 0;
-   fColor        = 0;
+	Init();
 }
 
 
 //______________________________________________________________________________
-TBuffer3D::TBuffer3D(Int_t n1, Int_t n2, Int_t n3)
+TBuffer3D::TBuffer3D(Int_t type,
+                     UInt_t reqPnts, UInt_t reqPntsCapacity,
+                     UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                     UInt_t reqPols, UInt_t reqPolsCapacity) :
+      fType(type)
 {
-   fTransparency = 0;
-   fPntsSize     = n1;
-   fSegsSize     = n2;
-   fPolsSize     = n3;
-
-   fType         = -1;
-   fOption       = kPAD;
-   fId           = 0;
-
-   fNbPnts       = 0;
-   fNbSegs       = 0;
-   fNbPols       = 0;
-
-   fPnts         = 0;
-   fSegs         = 0;
-   fPols         = 0;
-   fColor        = 0;
-   if ( fPntsSize>0 ) fPnts = new Double_t[fPntsSize];
-   if ( fSegsSize>0 ) fSegs = new Int_t[fSegsSize];
-   if ( fPolsSize>0 ) fPols = new Int_t[fPolsSize];
+	Init();
+   SetRawSizes(reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity);
 }
 
 
@@ -71,86 +42,197 @@ TBuffer3D::~TBuffer3D()
    if (fPols) delete [] fPols;
 }
 
-
 //______________________________________________________________________________
-void TBuffer3D::Paint(Option_t *option)
+void TBuffer3D::Init()
 {
-   Int_t i, i0, i1, i2;
-   Double_t x0, y0, z0, x1, y1, z1;
-   TVirtualViewer3D *viewer3D;
-   TView *view;
+   fID            = 0;
+   fColor         = 0;
+   fTransparency  = 0;
+   fLocalFrame	   = kFALSE;
+   fReflection    = kFALSE;
+   SetLocalMasterIdentity();
 
-   // Compute the shape range and update gPad->fView
-   switch (fOption) {
-      case kRANGE:
-         x0 = x1 = fPnts[0];
-         y0 = y1 = fPnts[1];
-         z0 = z1 = fPnts[2];
-         for (i=1; i<fNbPnts; i++) {
-         i0 = 3*i; i1 = i0+1; i2 = i0+2;
-            x0 = fPnts[i0] < x0 ? fPnts[i0] : x0;
-            y0 = fPnts[i1] < y0 ? fPnts[i1] : y0;
-            z0 = fPnts[i2] < z0 ? fPnts[i2] : z0;
-            x1 = fPnts[i0] > x1 ? fPnts[i0] : x1;
-            y1 = fPnts[i1] > y1 ? fPnts[i1] : y1;
-            z1 = fPnts[i2] > z1 ? fPnts[i2] : z1;
-         }
-         view = gPad->GetView();
-         if (view->GetAutoRange()) view->SetRange(x0,y0,z0,x1,y1,z1,2);
-         break;
+   // Reset bounding box
+   for (UInt_t i=0; i<3; i++) {
+      fBBLowVertex[i] = 0.0;
+      fBBHighVertex[i] = 0.0;
+   }
 
-      // Update viewer
-      case kSIZE:
-      case kX3D:
-      case kOGL:
-         viewer3D = gPad->GetViewer3D();
-         if (viewer3D) viewer3D->UpdateScene(option);
-         break;
+   fPnts          = 0;
+   fSegs          = 0;
+   fPols          = 0;
 
-      // Paint this in gPad
-      case kPAD:
-      default:
-         if (option && !strcmp(option, "ogl")) return; // In case of OpenGL, the pad is not redrawn
-         if (fTransparency > 50) return;  //do not show semi transparent objects
-         if ( fType==kMARKER ) {
-            view = gPad->GetView();
-            if (!view) return;
-            Double_t pndc[3], temp[3];
-            for (i=0; i<fNbPnts; i++) {
-               for ( i0=0; i0<3; i0++ ) temp[i0] = fPnts[3*i+i0];
-               view->WCtoNDC(temp, pndc);
-               gPad->PaintPolyMarker(1, &pndc[0], &pndc[1]);
-            }
-         } else {
-            for (i=0; i<fNbSegs; i++) {
-               i0 = 3*fSegs[3*i+1];
-               Double_t *ptpoints_0 = &(fPnts[i0]);
-               i0 = 3*fSegs[3*i+2];
-               Double_t *ptpoints_3 = &(fPnts[i0]);
-               gPad->PaintLine3D(ptpoints_0, ptpoints_3);
-            }
-         }
-         break;
+   fNbPnts        = 0;           
+   fNbSegs        = 0;           
+   fNbPols        = 0;        
+   fPntsCapacity  = 0;  
+   fSegsCapacity  = 0;  
+   fPolsCapacity  = 0;  
+
+   ClearSectionsValid();
+}
+
+void TBuffer3D::ClearSectionsValid()
+{ 
+   fSections = 0U; 
+   SetRawSizes(0, 0, 0, 0, 0, 0);
+}
+
+void TBuffer3D::SetLocalMasterIdentity()
+{
+   for (UInt_t i=0; i<16; i++) {
+      if (i%5) {
+         fLocalMaster[i] = 0.0;
+      }
+      else {
+         fLocalMaster[i] = 1.0;
+      }
    }
 }
 
+ //______________________________________________________________________________
+Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
+                              UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                              UInt_t reqPols, UInt_t reqPolsCapacity)
+{
+   Bool_t allocateOK = kTRUE;
+
+   fNbPnts = reqPnts;
+   fNbSegs = reqSegs;
+   fNbPols = reqPols;
+   
+   if (reqPntsCapacity > fPntsCapacity) {
+      delete [] fPnts;
+      fPnts = new Double_t[reqPntsCapacity];
+      if (fPnts) {
+         fPntsCapacity = reqPntsCapacity;
+      } else {
+         fPntsCapacity = fNbPnts = 0;
+         allocateOK = kFALSE;
+      }
+   }
+   if (reqSegsCapacity > fSegsCapacity) {
+      delete [] fSegs;
+      fSegs = new Int_t[reqSegsCapacity];
+      if (fSegs) {
+         fSegsCapacity = reqSegsCapacity;
+      } else {
+         fSegsCapacity = fNbSegs = 0;
+         allocateOK = kFALSE;
+      }
+   }
+   if (reqPolsCapacity > fPolsCapacity) {
+      delete [] fPols;
+      fPols = new Int_t[reqPolsCapacity];
+      if (fPols) {
+         fPolsCapacity = reqPolsCapacity;
+      } else {
+         fPolsCapacity = fNbPols = 0;
+         allocateOK = kFALSE;
+      }
+   }
+
+   return allocateOK; 
+}
 
 //______________________________________________________________________________
-void TBuffer3D::ReAllocate(Int_t n1, Int_t n2, Int_t n3)
+TBuffer3DSphere::TBuffer3DSphere() : TBuffer3D(TBuffer3DTypes::kSphere)
 {
-   if (n1 > fPntsSize) {
-      delete [] fPnts;
-      fPntsSize = n1;
-      fPnts     = new Double_t[fPntsSize];
-   }
-   if (n2 > fSegsSize) {
-      delete [] fSegs;
-      fSegsSize = n2;
-      fSegs     = new Int_t[fSegsSize];
-   }
-   if (n3 > fPolsSize) {
-      delete [] fPols;
-      fPolsSize = n3;
-      fPols     = new Int_t[fPolsSize];
-   }
+   Init();
+}
+
+//______________________________________________________________________________
+TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
+                                 UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                 UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3D(TBuffer3DTypes::kSphere, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+void TBuffer3DSphere::Init()
+{
+   fRadiusInner = 0.0;
+   fRadiusOuter = 0.0;
+   fThetaMin    = 0.0;
+   fThetaMax    = 180.0;
+   fPhiMin      = 0.0;
+   fPhiMax      = 360.0;
+}
+
+//______________________________________________________________________________
+Bool_t TBuffer3DSphere::IsSolidUncut() const
+{
+   // TODO: Rounding errors?
+   if (fRadiusInner   != 0.0   ||
+       fThetaMin      != 0.0   ||
+       fThetaMax      != 180.0 ||
+       fPhiMin        != 0.0   || 
+       fPhiMax        != 360.0 ) {
+          return kFALSE;
+       } else {
+          return kTRUE;
+       }
+}
+
+//______________________________________________________________________________
+TBuffer3DTube::TBuffer3DTube() : TBuffer3D(TBuffer3DTypes::kTube)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
+                             UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                             UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3D(TBuffer3DTypes::kTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+TBuffer3DTube::TBuffer3DTube(Int_t type) : TBuffer3D(type)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+TBuffer3DTube::TBuffer3DTube(Int_t type,
+                             UInt_t reqPnts, UInt_t reqPntsCapacity,
+                             UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                             UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3D(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+void TBuffer3DTube::Init()
+{
+   fRadiusInner   = 0.0;
+   fRadiusOuter   = 1.0;
+   fHalfLength    = 1.0;   
+}
+
+//______________________________________________________________________________
+TBuffer3DTubeSeg::TBuffer3DTubeSeg() : TBuffer3DTube(TBuffer3DTypes::kTubeSeg)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqPols, UInt_t reqPolsCapacity) :
+   TBuffer3DTube(TBuffer3DTypes::kTubeSeg, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+void TBuffer3DTubeSeg::Init()
+{
+   fPhiMin  = 0.0;
+   fPhiMax  = 360.0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.40 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.41 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -870,24 +870,24 @@ void TGeoArb8::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoArb8::SetPoints(Double_t *buff) const
+void TGeoArb8::SetPoints(Double_t *points) const
 {
 // create arb8 mesh points
    for (Int_t i=0; i<8; i++) {
-      buff[3*i] = fXY[i][0];
-      buff[3*i+1] = fXY[i][1];
-      buff[3*i+2] = (i<4)?-fDz:fDz;
+      points[3*i] = fXY[i][0];
+      points[3*i+1] = fXY[i][1];
+      points[3*i+2] = (i<4)?-fDz:fDz;
    }
 }
 
 //_____________________________________________________________________________
-void TGeoArb8::SetPoints(Float_t *buff) const
+void TGeoArb8::SetPoints(Float_t *points) const
 {
 // create arb8 mesh points
    for (Int_t i=0; i<8; i++) {
-      buff[3*i] = fXY[i][0];
-      buff[3*i+1] = fXY[i][1];
-      buff[3*i+2] = (i<4)?-fDz:fDz;
+      points[3*i] = fXY[i][0];
+      points[3*i+1] = fXY[i][1];
+      points[3*i+2] = (i<4)?-fDz:fDz;
    }
 }
 
@@ -1568,4 +1568,3 @@ void TGeoGtra::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   pShape = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
-

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.26 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.27 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -346,17 +346,17 @@ void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::SetPoints(Double_t *buff) const
+void TGeoCompositeShape::SetPoints(Double_t *points) const
 {
 // create points for a composite shape
-   TGeoBBox::SetPoints(buff);
+   TGeoBBox::SetPoints(points);
 }
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::SetPoints(Float_t *buff) const
+void TGeoCompositeShape::SetPoints(Float_t *points) const
 {
 // create points for a composite shape
-   TGeoBBox::SetPoints(buff);
+   TGeoBBox::SetPoints(points);
 }
 
 //_____________________________________________________________________________
@@ -373,3 +373,4 @@ Int_t TGeoCompositeShape::GetNmeshVertices() const
    if (!fNode) return 0;
    return 8;
 }      
+

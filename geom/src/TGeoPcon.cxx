@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.43 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.44 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -54,7 +54,7 @@
 #include "TGeoPcon.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
-
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoPcon)
 
@@ -689,67 +689,19 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
 
    Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
    Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+   if (buff)
+   {
+      SetPoints(buff->fPnts);
+      SetSegsAndPols(*buff);
+   }
 
-   buff->fType = TBuffer3D::kPCON;
-
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   SetSegsAndPols(buff);
-   
    return buff;  
 }
 
 //_____________________________________________________________________________
-void TGeoPcon::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-   
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   const Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t nz = GetNz();
-   if (nz < 2) return;
-   Int_t NbPnts = nz*2*n;
-   if (NbPnts <= 0) return;
-   Double_t dphi = GetDphi();
-
-   Bool_t specialCase = kFALSE;
-   if (dphi == 360) specialCase = kTRUE;
-
-   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kPCON;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-   TransformPoints(buff);
-
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
@@ -762,9 +714,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
 
    Bool_t specialCase = kFALSE;
    if (dphi == 360) specialCase = kTRUE;
-   // Basic colors: 0, 1, ... 7
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
    Int_t indx, indx2, k;
    indx = indx2 = 0;
@@ -774,14 +724,14 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
    for (i = 0; i < nz*2; i++) {
       indx2 = i*n;
       for (j = 1; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2+j-1;
+         buff.fSegs[indx++] = indx2+j;
       }
       if (specialCase) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2+j-1;
+         buff.fSegs[indx++] = indx2;
       }
    }
 
@@ -789,9 +739,9 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
    for (i = 0; i < 2; i++) {
       indx2 = i*(nz-1)*2*n;
       for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n+j;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = indx2+n+j;
       }
    }
 
@@ -800,16 +750,16 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
       //inside cilinder
       indx2 = i*n*2;
       for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+2;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
+         buff.fSegs[indx++] = c+2;
+         buff.fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = indx2+n*2+j;
       }
       //outside cilinder
       indx2 = i*n*2+n;
       for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+3;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
+         buff.fSegs[indx++] = c+3;
+         buff.fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = indx2+n*2+j;
       }
    }
 
@@ -818,9 +768,9 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
    if (!specialCase) {
       for (i = 1; i < (nz-1); i++) {
          for (j = 0; j < 2; j++) {
-            buff->fSegs[indx++] = c;
-            buff->fSegs[indx++] =  2*i    * n + j*(n-1);
-            buff->fSegs[indx++] = (2*i+1) * n + j*(n-1);
+            buff.fSegs[indx++] = c;
+            buff.fSegs[indx++] =  2*i    * n + j*(n-1);
+            buff.fSegs[indx++] = (2*i+1) * n + j*(n-1);
          }
       }
    }
@@ -831,69 +781,69 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
    //bottom & top, number of polygons: 2*(n-1)
    // special case number of polygons: 2*n
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*nz*m+j+1;
-      buff->fPols[indx++] = j;
+      buff.fPols[indx++] = c+3;
+      buff.fPols[indx++] = 4;
+      buff.fPols[indx++] = 2*nz*m+j;
+      buff.fPols[indx++] = m+j;
+      buff.fPols[indx++] = 2*nz*m+j+1;
+      buff.fPols[indx++] = j;
    }
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+n+j;
-      buff->fPols[indx++] = (nz*2-2)*m+j;
-      buff->fPols[indx++] = 2*nz*m+n+j+1;
-      buff->fPols[indx++] = (nz*2-2)*m+m+j;
+      buff.fPols[indx++] = c+3;
+      buff.fPols[indx++] = 4;
+      buff.fPols[indx++] = 2*nz*m+n+j;
+      buff.fPols[indx++] = (nz*2-2)*m+j;
+      buff.fPols[indx++] = 2*nz*m+n+j+1;
+      buff.fPols[indx++] = (nz*2-2)*m+m+j;
    }
    if (specialCase) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*nz*m;
-      buff->fPols[indx++] = j;
+      buff.fPols[indx++] = c+3;
+      buff.fPols[indx++] = 4;
+      buff.fPols[indx++] = 2*nz*m+j;
+      buff.fPols[indx++] = m+j;
+      buff.fPols[indx++] = 2*nz*m;
+      buff.fPols[indx++] = j;
 	 
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+n+j;
-      buff->fPols[indx++] = (nz*2-2)*m+m+j;
-      buff->fPols[indx++] = 2*nz*m+n;
-      buff->fPols[indx++] = (nz*2-2)*m+j;
+      buff.fPols[indx++] = c+3;
+      buff.fPols[indx++] = 4;
+      buff.fPols[indx++] = 2*nz*m+n+j;
+      buff.fPols[indx++] = (nz*2-2)*m+m+j;
+      buff.fPols[indx++] = 2*nz*m+n;
+      buff.fPols[indx++] = (nz*2-2)*m+j;
    }
 
    //inside & outside, number of polygons: (nz-1)*2*(n-1)
    for (k = 0; k < (nz-1); k++) {
       for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*k*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
-         buff->fPols[indx++] = (2*k+2)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+         buff.fPols[indx++] = c;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = 2*k*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
+         buff.fPols[indx++] = (2*k+2)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
      }
      for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*k+1)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j;
-         buff->fPols[indx++] = (2*k+3)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
+         buff.fPols[indx++] = c+1;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = (2*k+1)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+3)*n+j;
+         buff.fPols[indx++] = (2*k+3)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
      }
      if (specialCase) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*k*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n;
-         buff->fPols[indx++] = (2*k+2)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+         buff.fPols[indx++] = c;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = 2*k*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+2)*n;
+         buff.fPols[indx++] = (2*k+2)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
 	    
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*k+1)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j;
-         buff->fPols[indx++] = (2*k+3)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n;
+         buff.fPols[indx++] = c+1;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = (2*k+1)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+3)*n+j;
+         buff.fPols[indx++] = (2*k+3)*m+j;
+         buff.fPols[indx++] = nz*2*m+(2*k+3)*n;
       }
    }
 
@@ -902,22 +852,22 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
    if (!specialCase) {
       indx2 = nz*2*(n-1);
       for (k = 0; k < (nz-1); k++) {
-         buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
-         buff->fPols[indx++] = indx2+2*(k+1)*n;
-         buff->fPols[indx++] = indx2+2*nz*n+2*k;
-         buff->fPols[indx++] = indx2+(2*k+3)*n;
+         buff.fPols[indx++] = c+2;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
+         buff.fPols[indx++] = indx2+2*(k+1)*n;
+         buff.fPols[indx++] = indx2+2*nz*n+2*k;
+         buff.fPols[indx++] = indx2+(2*k+3)*n;
 	    
-         buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
-         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;
-         buff->fPols[indx++] = indx2+2*nz*n+2*k+1;
-         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;
+         buff.fPols[indx++] = c+2;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
+         buff.fPols[indx++] = indx2+(2*k+3)*n+n-1;
+         buff.fPols[indx++] = indx2+2*nz*n+2*k+1;
+         buff.fPols[indx++] = indx2+2*(k+1)*n+n-1;
       }
-      buff->fPols[indx-8] = indx2+n;
-      buff->fPols[indx-2] = indx2+2*n-1;
+      buff.fPols[indx-8] = indx2+n;
+      buff.fPols[indx-2] = indx2+2*n-1;
    }
 }   
 
@@ -1065,7 +1015,7 @@ void TGeoPcon::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoPcon::SetPoints(Double_t *buff) const
+void TGeoPcon::SetPoints(Double_t *points) const
 {
 // create polycone mesh points
     Double_t phi, dphi;
@@ -1074,29 +1024,29 @@ void TGeoPcon::SetPoints(Double_t *buff) const
     Int_t i, j;
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (i = 0; i < fNz; i++)
         {
             for (j = 0; j < n; j++)
             {
                 phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                buff[indx++] = fRmin[i] * TMath::Cos(phi);
-                buff[indx++] = fRmin[i] * TMath::Sin(phi);
-                buff[indx++] = fZ[i];
+                points[indx++] = fRmin[i] * TMath::Cos(phi);
+                points[indx++] = fRmin[i] * TMath::Sin(phi);
+                points[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
                 phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                buff[indx++] = fRmax[i] * TMath::Cos(phi);
-                buff[indx++] = fRmax[i] * TMath::Sin(phi);
-                buff[indx++] = fZ[i];
+                points[indx++] = fRmax[i] * TMath::Cos(phi);
+                points[indx++] = fRmax[i] * TMath::Sin(phi);
+                points[indx++] = fZ[i];
             }
         }
     }
 }
 
 //_____________________________________________________________________________
-void TGeoPcon::SetPoints(Float_t *buff) const
+void TGeoPcon::SetPoints(Float_t *points) const
 {
 // create polycone mesh points
     Double_t phi, dphi;
@@ -1105,22 +1055,22 @@ void TGeoPcon::SetPoints(Float_t *buff) const
     Int_t i, j;
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (i = 0; i < fNz; i++)
         {
             for (j = 0; j < n; j++)
             {
                 phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                buff[indx++] = fRmin[i] * TMath::Cos(phi);
-                buff[indx++] = fRmin[i] * TMath::Sin(phi);
-                buff[indx++] = fZ[i];
+                points[indx++] = fRmin[i] * TMath::Cos(phi);
+                points[indx++] = fRmin[i] * TMath::Sin(phi);
+                points[indx++] = fZ[i];
             }
             for (j = 0; j < n; j++)
             {
                 phi = (fPhi1+j*dphi)*TMath::DegToRad();
-                buff[indx++] = fRmax[i] * TMath::Cos(phi);
-                buff[indx++] = fRmax[i] * TMath::Sin(phi);
-                buff[indx++] = fZ[i];
+                points[indx++] = fRmax[i] * TMath::Cos(phi);
+                points[indx++] = fRmax[i] * TMath::Sin(phi);
+                points[indx++] = fZ[i];
             }
         }
     }
@@ -1138,15 +1088,49 @@ Int_t TGeoPcon::GetNmeshVertices() const
 void TGeoPcon::Sizeof3D() const
 {
 ///// fill size of this 3-D object
-///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///   TVirtualGeoPainter *painter = gGeoManager->GetGeomer();
 ///   if (!painter) return;
 ///    Int_t n;
-///
+   ///
 ///    n = gGeoManager->GetNsegments()+1;
-///
+   ///
 ///    Int_t numPoints = fNz*2*n;
 ///    Int_t numSegs   = 4*(fNz*n-1+(fDphi == 360));
 ///    Int_t numPolys  = 2*(fNz*n-1+(fDphi == 360));
 ///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
+//_____________________________________________________________________________
+const TBuffer3D & TGeoPcon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      const Int_t n = gGeoManager->GetNsegments()+1;
+      Int_t nz = GetNz();
+      Int_t NbPnts = nz*2*n;
+      if (nz >= 2 && NbPnts > 0) {
+         Bool_t specialCase = (GetDphi() == 360);
+         Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+         Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+         if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+            buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+         }
+      }
+   }
+   // TODO: Push down to TGeoShape?? Wuld have to do raw sizes set first..
+   // can rest of TGeoShape be defered until after this?
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);      
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
+}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.46 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.47 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -69,6 +69,7 @@
 #include "TGeoCone.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoCone)
 
@@ -669,127 +670,47 @@ TBuffer3D *TGeoCone::MakeBuffer3D() const
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 8*n;
    Int_t NbPols = 4*n; 
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts,
+                                   NbSegs, 3*NbSegs,
+                                   NbPols, 6*NbPols);
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-
-   buff->fType = TBuffer3D::kTUBE;
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   
-   SetSegsAndPols(buff);
-   
+   if (buff)
+   {
+      SetPoints(buff->fPnts);   
+      SetSegsAndPols(*buff);
+   }
    return buff; 
 }
 
 //_____________________________________________________________________________
-void TGeoCone::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t n = gGeoManager->GetNsegments();
-
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   // In case of OpenGL a cone can be drawn with specialized functions
-   if (!strcmp(option, "ogl")) {
-      TBuffer3D *buff = gPad->AllocateBuffer3D(42, 0, 0);
-
-      buff->fNbPnts  = 9;//9 points! not 3
-      buff->fNbSegs  = 0;
-      buff->fNbPols  = 0;
-      buff->fColor   = vol->GetLineColor();
-
-      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
-      buff->fPnts[3]  =  fRmax1; buff->fPnts[4]  =  fRmax1; buff->fPnts[5]  = -fDz;
-      buff->fPnts[6]  = -fRmax1; buff->fPnts[7]  =  fRmax1; buff->fPnts[8]  = -fDz;
-      buff->fPnts[9]  = -fRmax1; buff->fPnts[10] = -fRmax1; buff->fPnts[11] = -fDz;
-      buff->fPnts[12] =  fRmax1; buff->fPnts[13] = -fRmax1; buff->fPnts[14] = -fDz;
-
-      buff->fPnts[15] =  fRmax2; buff->fPnts[16] =  fRmax2; buff->fPnts[17] =  fDz;
-      buff->fPnts[18] = -fRmax2; buff->fPnts[19] =  fRmax2; buff->fPnts[20] =  fDz;
-      buff->fPnts[21] = -fRmax2; buff->fPnts[22] = -fRmax2; buff->fPnts[23] =  fDz;
-      buff->fPnts[24] =  fRmax2; buff->fPnts[25] = -fRmax2; buff->fPnts[26] =  fDz;
-
-      buff->fPnts[27] = (Float_t)n;
-      buff->fPnts[28] = fRmin1;
-      buff->fPnts[29] = fRmax1;
-      buff->fPnts[30] = fRmin2;
-      buff->fPnts[31] = fRmax2;
-      buff->fPnts[32] = fDz;
-
-      TransformPoints(buff);
-      buff->fId   = vol;
-      buff->fType = TBuffer3D::kTUBE;
-
-      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
-      const Double_t *rotM = m->GetRotationMatrix();
-      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
-
-      buff->Paint(option);
-      return;
-   }
-
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 8*n;
-   Int_t NbPols = 4*n;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-
-   buff->fType = TBuffer3D::kANY;
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoCone::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoCone::SetSegsAndPols(TBuffer3D &buffer) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t i,j;
    Int_t n = gGeoManager->GetNsegments();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
    for (i = 0; i < 4; i++) {
       for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c;
-         buff->fSegs[(i*n+j)*3+1] = i*n+j;
-         buff->fSegs[(i*n+j)*3+2] = i*n+j+1;
+         buffer.fSegs[(i*n+j)*3  ] = c;
+         buffer.fSegs[(i*n+j)*3+1] = i*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = i*n+j+1;
       }
-      buff->fSegs[(i*n+j-1)*3+2] = i*n;
+      buffer.fSegs[(i*n+j-1)*3+2] = i*n;
    }
    for (i = 4; i < 6; i++) {
       for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c+1;
-         buff->fSegs[(i*n+j)*3+1] = (i-4)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+         buffer.fSegs[(i*n+j)*3  ] = c+1;
+         buffer.fSegs[(i*n+j)*3+1] = (i-4)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (i-2)*n+j;
       }
    }
    for (i = 6; i < 8; i++) {
       for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c;
-         buff->fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
+         buffer.fSegs[(i*n+j)*3  ] = c;
+         buffer.fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
       }
    }
 
@@ -797,47 +718,47 @@ void TGeoCone::SetSegsAndPols(TBuffer3D *buff) const
    i=0;
    for (j = 0; j < n; j++) {
       indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+5] = i*n+j;
-      buff->fPols[indx+4] = (4+i)*n+j;
-      buff->fPols[indx+3] = (2+i)*n+j;
-      buff->fPols[indx+2] = (4+i)*n+j+1;
+      buffer.fPols[indx  ] = c;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+5] = i*n+j;
+      buffer.fPols[indx+4] = (4+i)*n+j;
+      buffer.fPols[indx+3] = (2+i)*n+j;
+      buffer.fPols[indx+2] = (4+i)*n+j+1;
    }
-   buff->fPols[indx+2] = (4+i)*n;
+   buffer.fPols[indx+2] = (4+i)*n;
    i=1;
    for (j = 0; j < n; j++) {
       indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+2] = i*n+j;
-      buff->fPols[indx+3] = (4+i)*n+j;
-      buff->fPols[indx+4] = (2+i)*n+j;
-      buff->fPols[indx+5] = (4+i)*n+j+1;
+      buffer.fPols[indx  ] = c;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+2] = i*n+j;
+      buffer.fPols[indx+3] = (4+i)*n+j;
+      buffer.fPols[indx+4] = (2+i)*n+j;
+      buffer.fPols[indx+5] = (4+i)*n+j+1;
    }
-   buff->fPols[indx+5] = (4+i)*n;
+   buffer.fPols[indx+5] = (4+i)*n;
    i=2;
    for (j = 0; j < n; j++) {
       indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c+i;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+2] = (i-2)*2*n+j;
-      buff->fPols[indx+3] = (4+i)*n+j;
-      buff->fPols[indx+4] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx+5] = (4+i)*n+j+1;
+      buffer.fPols[indx  ] = c+i;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+2] = (i-2)*2*n+j;
+      buffer.fPols[indx+3] = (4+i)*n+j;
+      buffer.fPols[indx+4] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx+5] = (4+i)*n+j+1;
    }
-   buff->fPols[indx+5] = (4+i)*n;
+   buffer.fPols[indx+5] = (4+i)*n;
    i=3;
    for (j = 0; j < n; j++) {
       indx = 6*(i*n+j);
-      buff->fPols[indx  ] = c+i;
-      buff->fPols[indx+1] = 4;
-      buff->fPols[indx+5] = (i-2)*2*n+j;
-      buff->fPols[indx+4] = (4+i)*n+j;
-      buff->fPols[indx+3] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx+2] = (4+i)*n+j+1;
+      buffer.fPols[indx  ] = c+i;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+5] = (i-2)*2*n+j;
+      buffer.fPols[indx+4] = (4+i)*n+j;
+      buffer.fPols[indx+3] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx+2] = (4+i)*n+j+1;
    }
-   buff->fPols[indx+2] = (4+i)*n;
+   buffer.fPols[indx+2] = (4+i)*n;
 }
 
 //_____________________________________________________________________________
@@ -980,7 +901,7 @@ void TGeoCone::SetDimensions(Double_t *param)
 }
 
 //_____________________________________________________________________________
-void TGeoCone::SetPoints(Double_t *buff) const
+void TGeoCone::SetPoints(Double_t *points) const
 {
 // create cone mesh points
     Double_t dz, phi, dphi;
@@ -991,38 +912,38 @@ void TGeoCone::SetPoints(Double_t *buff) const
     dz    = fDz;
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmin1 * TMath::Cos(phi);
-            buff[indx++] = fRmin1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmin1 * TMath::Cos(phi);
+            points[indx++] = fRmin1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmax1 * TMath::Cos(phi);
-            buff[indx++] = fRmax1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
-        }
-
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmin2 * TMath::Cos(phi);
-            buff[indx++] = fRmin2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmax1 * TMath::Cos(phi);
+            points[indx++] = fRmax1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
 
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmax2 * TMath::Cos(phi);
-            buff[indx++] = fRmax2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmin2 * TMath::Cos(phi);
+            points[indx++] = fRmin2 * TMath::Sin(phi);
+            points[indx++] = dz;
+        }
+
+        for (j = 0; j < n; j++) {
+            phi = j*dphi*TMath::DegToRad();
+            points[indx++] = fRmax2 * TMath::Cos(phi);
+            points[indx++] = fRmax2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
     }
 }
 
 //_____________________________________________________________________________
-void TGeoCone::SetPoints(Float_t *buff) const
+void TGeoCone::SetPoints(Float_t *points) const
 {
 // create cone mesh points
     Double_t dz, phi, dphi;
@@ -1033,32 +954,32 @@ void TGeoCone::SetPoints(Float_t *buff) const
     dz    = fDz;
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmin1 * TMath::Cos(phi);
-            buff[indx++] = fRmin1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmin1 * TMath::Cos(phi);
+            points[indx++] = fRmin1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmax1 * TMath::Cos(phi);
-            buff[indx++] = fRmax1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
-        }
-
-        for (j = 0; j < n; j++) {
-            phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmin2 * TMath::Cos(phi);
-            buff[indx++] = fRmin2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmax1 * TMath::Cos(phi);
+            points[indx++] = fRmax1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
 
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = fRmax2 * TMath::Cos(phi);
-            buff[indx++] = fRmax2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmin2 * TMath::Cos(phi);
+            points[indx++] = fRmin2 * TMath::Sin(phi);
+            points[indx++] = dz;
+        }
+
+        for (j = 0; j < n; j++) {
+            phi = j*dphi*TMath::DegToRad();
+            points[indx++] = fRmax2 * TMath::Cos(phi);
+            points[indx++] = fRmax2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
     }
 }
@@ -1085,6 +1006,36 @@ void TGeoCone::Sizeof3D() const
 ///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
+//_____________________________________________________________________________
+const TBuffer3D & TGeoCone::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments();
+      Int_t NbPnts = 4*n;
+      Int_t NbSegs = 8*n;
+      Int_t NbPols = 4*n;
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+
+   // TODO: Can we push this as common down to TGeoShape?
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
+}
 
 ClassImp(TGeoConeSeg)
 
@@ -1908,192 +1859,101 @@ TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 2*NbPnts;
    Int_t NbPols = NbPnts-2; 
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, 
+                                   NbSegs, 3*NbSegs,
+                                   NbPols, 6*NbPols);
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (buff)
+   {
+      SetPoints(buff->fPnts);
+      SetSegsAndPols(*buff);
+   }
 
-   buff->fType = TBuffer3D::kTUBS;
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   SetSegsAndPols(buff);
-  
    return buff;
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   // In case of OpenGL a cone can be drawn with specialized functions
-   if (!strcmp(option, "ogl")) {
-
-      Int_t n = gGeoManager->GetNsegments();
-      TGeoVolume *vol = gGeoManager->GetPaintVolume();
-
-      TBuffer3D *buff = gPad->AllocateBuffer3D(50, 0, 0);
-
-      buff->fNbPnts  = 9;//9 points! not 3
-      buff->fNbSegs  = 0;
-      buff->fNbPols  = 0;
-      buff->fColor   = vol->GetLineColor();
-
-      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
-      buff->fPnts[3]  =  fRmax1; buff->fPnts[4]  =  fRmax1; buff->fPnts[5]  = -fDz;
-      buff->fPnts[6]  = -fRmax1; buff->fPnts[7]  =  fRmax1; buff->fPnts[8]  = -fDz;
-      buff->fPnts[9]  = -fRmax1; buff->fPnts[10] = -fRmax1; buff->fPnts[11] = -fDz;
-      buff->fPnts[12] =  fRmax1; buff->fPnts[13] = -fRmax1; buff->fPnts[14] = -fDz;
-
-      buff->fPnts[15] =  fRmax2; buff->fPnts[16] =  fRmax2; buff->fPnts[17] =  fDz;
-      buff->fPnts[18] = -fRmax2; buff->fPnts[19] =  fRmax2; buff->fPnts[20] =  fDz;
-      buff->fPnts[21] = -fRmax2; buff->fPnts[22] = -fRmax2; buff->fPnts[23] =  fDz;
-      buff->fPnts[24] =  fRmax2; buff->fPnts[25] = -fRmax2; buff->fPnts[26] =  fDz;
-
-      buff->fPnts[27] = (Float_t)n;
-      buff->fPnts[28] = fRmin1;
-      buff->fPnts[29] = fRmax1;
-      buff->fPnts[30] = fRmin2;
-      buff->fPnts[31] = fRmax2;
-      buff->fPnts[32] = fDz;
-
-      TransformPoints(buff);
-      buff->fId   = vol;
-      buff->fType = TBuffer3D::kTUBS;
-
-      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
-      const Double_t *rotM = m->GetRotationMatrix();
-      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
-      buff->fPnts[42] = fPhi1;
-      buff->fPnts[43] = fPhi2;
-
-      buff->fPnts[44] = 0.;
-      buff->fPnts[45] = 0.;
-      buff->fPnts[46] = -1.;
-
-      buff->fPnts[47] = 0.;
-      buff->fPnts[48] = 0.;
-      buff->fPnts[49] = 1.;
-      buff->Paint(option);
-
-      return;
-   }
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = 4*n;
-   Int_t NbSegs = 2*NbPnts;
-   Int_t NbPols = NbPnts-2;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kTUBS;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-  // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoConeSeg::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoConeSeg::SetSegsAndPols(TBuffer3D &buffer) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
    Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
-   memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));
+   memset(buffer.fSegs, 0, buffer.NbSegs()*3*sizeof(Int_t));
    for (i = 0; i < 4; i++) {
       for (j = 1; j < n; j++) {
-         buff->fSegs[(i*n+j-1)*3  ] = c;
-         buff->fSegs[(i*n+j-1)*3+1] = i*n+j-1;
-         buff->fSegs[(i*n+j-1)*3+2] = i*n+j;
+         buffer.fSegs[(i*n+j-1)*3  ] = c;
+         buffer.fSegs[(i*n+j-1)*3+1] = i*n+j-1;
+         buffer.fSegs[(i*n+j-1)*3+2] = i*n+j;
       }
    }
    for (i = 4; i < 6; i++) {
       for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c+1;
-         buff->fSegs[(i*n+j)*3+1] = (i-4)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+         buffer.fSegs[(i*n+j)*3  ] = c+1;
+         buffer.fSegs[(i*n+j)*3+1] = (i-4)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (i-2)*n+j;
       }
    }
    for (i = 6; i < 8; i++) {
       for (j = 0; j < n; j++) {
-         buff->fSegs[(i*n+j)*3  ] = c;
-         buff->fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-         buff->fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
+         buffer.fSegs[(i*n+j)*3  ] = c;
+         buffer.fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
+         buffer.fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
       }
    }
 
    Int_t indx = 0;
-   memset(buff->fPols, 0, buff->fNbPols*6*sizeof(Int_t));
+   memset(buffer.fPols, 0, buffer.NbPols()*6*sizeof(Int_t));
    i = 0;
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = (4+i)*n+j+1;
-      buff->fPols[indx++] = (2+i)*n+j;
-      buff->fPols[indx++] = (4+i)*n+j;
-      buff->fPols[indx++] = i*n+j;
+      buffer.fPols[indx++] = c;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = (4+i)*n+j+1;
+      buffer.fPols[indx++] = (2+i)*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j;
+      buffer.fPols[indx++] = i*n+j;
    }
    i = 1;
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = i*n+j;
-      buff->fPols[indx++] = (4+i)*n+j;
-      buff->fPols[indx++] = (2+i)*n+j;
-      buff->fPols[indx++] = (4+i)*n+j+1;
+      buffer.fPols[indx++] = c;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = i*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j;
+      buffer.fPols[indx++] = (2+i)*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j+1;
    }
    i = 2;
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+i;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = (i-2)*2*n+j;
-      buff->fPols[indx++] = (4+i)*n+j;
-      buff->fPols[indx++] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx++] = (4+i)*n+j+1;
+      buffer.fPols[indx++] = c+i;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = (i-2)*2*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j;
+      buffer.fPols[indx++] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j+1;
    }
    i = 3;
    for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+i;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = (4+i)*n+j+1;
-      buff->fPols[indx++] = ((i-2)*2+1)*n+j;
-      buff->fPols[indx++] = (4+i)*n+j;
-      buff->fPols[indx++] = (i-2)*2*n+j;
+      buffer.fPols[indx++] = c+i;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = (4+i)*n+j+1;
+      buffer.fPols[indx++] = ((i-2)*2+1)*n+j;
+      buffer.fPols[indx++] = (4+i)*n+j;
+      buffer.fPols[indx++] = (i-2)*2*n+j;
    }
-   buff->fPols[indx++] = c+2;
-   buff->fPols[indx++] = 4;
-   buff->fPols[indx++] = 6*n;
-   buff->fPols[indx++] = 4*n;
-   buff->fPols[indx++] = 7*n;
-   buff->fPols[indx++] = 5*n;
-   buff->fPols[indx++] = c+2;
-   buff->fPols[indx++] = 4;
-   buff->fPols[indx++] = 6*n-1;
-   buff->fPols[indx++] = 8*n-1;
-   buff->fPols[indx++] = 5*n-1;
-   buff->fPols[indx++] = 7*n-1;
+   buffer.fPols[indx++] = c+2;
+   buffer.fPols[indx++] = 4;
+   buffer.fPols[indx++] = 6*n;
+   buffer.fPols[indx++] = 4*n;
+   buffer.fPols[indx++] = 7*n;
+   buffer.fPols[indx++] = 5*n;
+   buffer.fPols[indx++] = c+2;
+   buffer.fPols[indx++] = 4;
+   buffer.fPols[indx++] = 6*n-1;
+   buffer.fPols[indx++] = 8*n-1;
+   buffer.fPols[indx++] = 5*n-1;
+   buffer.fPols[indx++] = 7*n-1;
 }
 
 //_____________________________________________________________________________
@@ -2219,7 +2079,7 @@ void TGeoConeSeg::SetDimensions(Double_t *param)
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::SetPoints(Double_t *buff) const
+void TGeoConeSeg::SetPoints(Double_t *points) const
 {
 // create cone segment mesh points
     Int_t j, n;
@@ -2234,36 +2094,36 @@ void TGeoConeSeg::SetPoints(Double_t *buff) const
 
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmin1 * TMath::Cos(phi);
-            buff[indx++] = fRmin1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmin1 * TMath::Cos(phi);
+            points[indx++] = fRmin1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmax1 * TMath::Cos(phi);
-            buff[indx++] = fRmax1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmax1 * TMath::Cos(phi);
+            points[indx++] = fRmax1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmin2 * TMath::Cos(phi);
-            buff[indx++] = fRmin2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmin2 * TMath::Cos(phi);
+            points[indx++] = fRmin2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmax2 * TMath::Cos(phi);
-            buff[indx++] = fRmax2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmax2 * TMath::Cos(phi);
+            points[indx++] = fRmax2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
     }
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::SetPoints(Float_t *buff) const
+void TGeoConeSeg::SetPoints(Float_t *points) const
 {
 // create cone segment mesh points
     Int_t j, n;
@@ -2278,30 +2138,30 @@ void TGeoConeSeg::SetPoints(Float_t *buff) const
 
     Int_t indx = 0;
 
-    if (buff) {
+    if (points) {
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmin1 * TMath::Cos(phi);
-            buff[indx++] = fRmin1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmin1 * TMath::Cos(phi);
+            points[indx++] = fRmin1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmax1 * TMath::Cos(phi);
-            buff[indx++] = fRmax1 * TMath::Sin(phi);
-            buff[indx++] = -dz;
+            points[indx++] = fRmax1 * TMath::Cos(phi);
+            points[indx++] = fRmax1 * TMath::Sin(phi);
+            points[indx++] = -dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmin2 * TMath::Cos(phi);
-            buff[indx++] = fRmin2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmin2 * TMath::Cos(phi);
+            points[indx++] = fRmin2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
         for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            buff[indx++] = fRmax2 * TMath::Cos(phi);
-            buff[indx++] = fRmax2 * TMath::Sin(phi);
-            buff[indx++] = dz;
+            points[indx++] = fRmax2 * TMath::Cos(phi);
+            points[indx++] = fRmax2 * TMath::Sin(phi);
+            points[indx++] = dz;
         }
     }
 }
@@ -2327,4 +2187,33 @@ void TGeoConeSeg::Sizeof3D() const
 ///    Int_t numSegs   = n*8;
 ///    Int_t numPolys  = n*4-2;
 ///    painter->AddSize3D(numPoints, numSegs, numPolys);
+}
+
+//_____________________________________________________________________________
+const TBuffer3D & TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments()+1;
+      Int_t NbPnts = 4*n;
+      Int_t NbSegs = 2*NbPnts;
+      Int_t NbPols = NbPnts-2;
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.11 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -13,8 +13,8 @@
 #include "TNode.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
-
 
 ClassImp(TSPHE)
 
@@ -137,233 +137,6 @@ Int_t TSPHE::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TSPHE::Paint(Option_t *option)
-{
-   // Paint this 3-D shape with its current attributes
-
-   Int_t i, j;
-   const Int_t n = GetNumberOfDivisions()+1;
-
-   // In case of OpenGL a simple sphere can be drawn with a specialized function
-   TBuffer3D *buff = gPad->AllocateBuffer3D(11, 0, 0);
-   if (!buff) return;
-   if (buff->fOption == TBuffer3D::kOGL &&
-       fRmin == 0 && fThemin == 0 && fThemax >= 180 && fPhimin == 0 && fPhimax >= 360) {
-      buff->fNbPnts  = 3;
-      buff->fNbSegs  = 0;
-      buff->fNbPols  = 0;
-      buff->fColor   = GetLineColor();
-      buff->fPnts[0] =      0; buff->fPnts[1] =      0; buff->fPnts[2] =      0;
-      buff->fPnts[3] =  fRmax; buff->fPnts[4] =  fRmax; buff->fPnts[5] =  fRmax;
-      buff->fPnts[6] = -fRmax; buff->fPnts[7] = -fRmax; buff->fPnts[8] = -fRmax;
-      buff->fPnts[9] = (Float_t)n;
-      buff->fPnts[10] = fRmax;
-      TransformPoints(buff);
-      buff->fId   = this;
-      buff->fType = TBuffer3D::kSPHE;
-      buff->Paint(option);
-      return;
-   }
-
-   Int_t nz = fNz+1;
-   if (nz < 2) return;
-   Int_t NbPnts = 2*n*nz;
-   if (NbPnts <= 0) return;
- 
-   Bool_t specialCase = kFALSE;
-   if (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01) specialCase = kTRUE;
-
-   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
-   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
-
-   buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kANY;
-
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
-   //inside & outside spheres, number of segments: 2*nz*(n-1)
-   //             special case number of segments: 2*nz*n
-   for (i = 0; i < nz*2; i++) {
-      indx2 = i*n;
-      for (j = 1; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2+j;
-      }
-      if (specialCase) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2;
-      }
-   }
-
-   //bottom & top lines, number of segments: 2*n
-   for (i = 0; i < 2; i++) {
-      indx2 = i*(nz-1)*2*n;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n+j;
-      }
-   }
-
-   //inside & outside spheres, number of segments: 2*(nz-1)*n
-   for (i = 0; i < (nz-1); i++) {
-
-      //inside sphere
-      indx2 = i*n*2;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+2;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
-      }
-      //outside sphere
-      indx2 = i*n*2+n;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+3;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
-      }
-   }
-
-   //left & right sections, number of segments: 2*(nz-2)
-   //          special case number of segments: 0
-   if (!specialCase) {
-      for (i = 1; i < (nz-1); i++) {
-         for (j = 0; j < 2; j++) {
-            buff->fSegs[indx++] = c;
-            buff->fSegs[indx++] =  2*i    * n + j*(n-1);
-            buff->fSegs[indx++] = (2*i+1) * n + j*(n-1);
-         }
-      }
-   }
-
-   Int_t m = n - 1 + (specialCase == kTRUE);
-   indx = 0;
-
-   //bottom & top, number of polygons: 2*(n-1)
-   // special case number of polygons: 2*n
-   for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*nz*m+j+1;
-      buff->fPols[indx++] = j;
-   }
-   for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+n+j;
-      buff->fPols[indx++] = (nz*2-2)*m+j;
-      buff->fPols[indx++] = 2*nz*m+n+j+1;
-      buff->fPols[indx++] = (nz*2-2)*m+m+j;
-   }
-   if (specialCase) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*nz*m;
-      buff->fPols[indx++] = j;
-      
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*nz*m+n+j;
-      buff->fPols[indx++] = (nz*2-2)*m+j;
-      buff->fPols[indx++] = 2*nz*m+n;
-      buff->fPols[indx++] = (nz*2-2)*m+m+j;
-   }
-
-   //inside & outside, number of polygons: (nz-1)*2*(n-1)
-   for (k = 0; k < (nz-1); k++) {
-     for (j = 0; j < n-1; j++) {
-        buff->fPols[indx++] = c;
-        buff->fPols[indx++] = 4;
-        buff->fPols[indx++] = 2*k*m+j;
-        buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
-        buff->fPols[indx++] = (2*k+2)*m+j;
-        buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
-     }
-     for (j = 0; j < n-1; j++) {
-        buff->fPols[indx++] = c+1;
-        buff->fPols[indx++] = 4;
-        buff->fPols[indx++] = (2*k+1)*m+j;
-        buff->fPols[indx++] = nz*2*m+(2*k + 3)*n+j;
-        buff->fPols[indx++] = (2*k+ 3)*m+j;
-        buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
-     }
-    	 
-     if (specialCase) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*k*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n+j;
-         buff->fPols[indx++] = (2*k+2)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+2)*n;
-	    
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*k+1)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n+j;
-         buff->fPols[indx++] = (2*k+3)*m+j;
-         buff->fPols[indx++] = nz*2*m+(2*k+3)*n;
-      }
-   }
-
-   //left & right sections, number of polygons: 2*(nz-1)
-   //          special case number of polygons: 0
-   if (!specialCase) {
-      indx2 = nz*2*(n-1);
-      for (k = 0; k < (nz-1); k++) {
-         buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
-         buff->fPols[indx++] = indx2+2*(k+1)*n;
-         buff->fPols[indx++] = indx2+2*nz*n+2*k;
-         buff->fPols[indx++] = indx2+(2*k+3)*n;
-	    
-	 buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
-         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;
-         buff->fPols[indx++] = indx2+2*nz*n+2*k+1;
-         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;
-      }
-
-      buff->fPols[indx-8] = indx2+n;
-      buff->fPols[indx-2] = indx2+2*n-1;
-   }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-
-//______________________________________________________________________________
 void TSPHE::SetEllipse(const Float_t *factors){
 
    if (factors[0] > 0) faX = factors[0];
@@ -383,7 +156,7 @@ void TSPHE::SetNumberOfDivisions (Int_t p)
 
 
 //______________________________________________________________________________
-void TSPHE::SetPoints(Double_t *buff)
+void TSPHE::SetPoints(Double_t *points) const
 {
    // Create SPHE points
 
@@ -392,7 +165,7 @@ void TSPHE::SetPoints(Double_t *buff)
 
    n = GetNumberOfDivisions()+1;
 
-   if (buff) {
+   if (points) {
       if (!fCoTab)   MakeTableOfCoSin();
       Float_t z;
       for (i = 0; i < fNz+1; i++) {
@@ -400,16 +173,16 @@ void TSPHE::SetPoints(Double_t *buff)
          Float_t sithet = TMath::Sqrt(TMath::Abs(1-fCoThetaTab[i]*fCoThetaTab[i]));
          Float_t zi = fRmin*sithet;
          for (j = 0; j < n; j++) {
-            buff[indx++] = faX*zi * fCoTab[j];
-            buff[indx++] = faY*zi * fSiTab[j];
-            buff[indx++] = faZ*z;
+            points[indx++] = faX*zi * fCoTab[j];
+            points[indx++] = faY*zi * fSiTab[j];
+            points[indx++] = faZ*z;
          }
          z = fRmax * fCoThetaTab[i];
          zi = fRmax*sithet;
          for (j = 0; j < n; j++) {
-            buff[indx++] = faX*zi * fCoTab[j];
-            buff[indx++] = faY*zi * fSiTab[j];
-            buff[indx++] = faZ*z;
+            points[indx++] = faX*zi * fCoTab[j];
+            points[indx++] = faY*zi * fSiTab[j];
+            points[indx++] = faZ*z;
          }
       }
    }
@@ -437,7 +210,7 @@ void TSPHE::Sizeof3D() const
 
 
 //______________________________________________________________________________
-void TSPHE::MakeTableOfCoSin()
+void TSPHE::MakeTableOfCoSin() const
 {
     const Double_t PI  = TMath::ATan(1) * 4.0;
     const Double_t ragrad  = PI/180.0;
@@ -530,4 +303,221 @@ void TSPHE::Streamer(TBuffer &b)
    } else {
       TSPHE::Class()->WriteBuffer(b,this);
    }
+}
+
+//_______________________________________________________________________
+const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
+{
+   static TBuffer3DSphere buffer;
+
+   TShape::FillBuffer3D(buffer, reqSections);
+
+   if (reqSections & TBuffer3D::kShapeSpecific) {
+      buffer.fRadiusInner  = fRmin;
+      buffer.fRadiusOuter  = fRmax;
+      buffer.fThetaMin     = fThemin;
+      buffer.fThetaMax     = fThemax;
+      buffer.fPhiMin       = fPhimin;
+      buffer.fPhiMax       = fPhimax;
+      buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
+   }
+   if (reqSections & TBuffer3D::kBoundingBox) {
+      buffer.fBBLowVertex[0]  = -fRmax;
+      buffer.fBBLowVertex[1]  = -fRmax;
+      buffer.fBBLowVertex[2]  = -fRmax;
+      buffer.fBBHighVertex[0] = fRmax;
+      buffer.fBBHighVertex[1] = fRmax;
+      buffer.fBBHighVertex[2] = fRmax;
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fBBLowVertex, 1);
+         TransformPoints(buffer.fBBHighVertex, 1);
+      }
+      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
+   }
+
+   // Needed by kRawSizes / kRaw
+   const Int_t n = GetNumberOfDivisions()+1;
+   const Int_t nz = fNz+1;
+   Bool_t specialCase = (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t NbPnts = 2*n*nz;
+      Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+      Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      // Points
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      Int_t c = GetBasicColor();
+
+      // Segments
+      Int_t indx = 0;
+      Int_t indx2 = 0;
+      Int_t i, j, k;
+      //inside & outside spheres, number of segments: 2*nz*(n-1)
+      //             special case number of segments: 2*nz*n
+      for (i = 0; i < nz*2; i++) {
+         indx2 = i*n;
+         for (j = 1; j < n; j++) {
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] = indx2+j-1;
+            buffer.fSegs[indx++] = indx2+j;
+         }
+         if (specialCase) {
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] = indx2+j-1;
+            buffer.fSegs[indx++] = indx2;
+         }
+      }
+
+      //bottom & top lines, number of segments: 2*n
+      for (i = 0; i < 2; i++) {
+         indx2 = i*(nz-1)*2*n;
+         for (j = 0; j < n; j++) {
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] = indx2+j;
+            buffer.fSegs[indx++] = indx2+n+j;
+         }
+      }
+
+      //inside & outside spheres, number of segments: 2*(nz-1)*n
+      for (i = 0; i < (nz-1); i++) {
+
+         //inside sphere
+         indx2 = i*n*2;
+         for (j = 0; j < n; j++) {
+            buffer.fSegs[indx++] = c+2;
+            buffer.fSegs[indx++] = indx2+j;
+            buffer.fSegs[indx++] = indx2+n*2+j;
+         }
+         //outside sphere
+         indx2 = i*n*2+n;
+         for (j = 0; j < n; j++) {
+            buffer.fSegs[indx++] = c+3;
+            buffer.fSegs[indx++] = indx2+j;
+            buffer.fSegs[indx++] = indx2+n*2+j;
+         }
+      }
+
+      //left & right sections, number of segments: 2*(nz-2)
+      //          special case number of segments: 0
+      if (!specialCase) {
+         for (i = 1; i < (nz-1); i++) {
+            for (j = 0; j < 2; j++) {
+               buffer.fSegs[indx++] = c;
+               buffer.fSegs[indx++] =  2*i    * n + j*(n-1);
+               buffer.fSegs[indx++] = (2*i+1) * n + j*(n-1);
+            }
+         }
+      }
+
+      // Polygons
+      Int_t m = n - 1 + (specialCase == kTRUE);
+      indx = 0;
+
+      //bottom & top, number of polygons: 2*(n-1)
+      // special case number of polygons: 2*n
+      for (j = 0; j < n-1; j++) {
+         buffer.fPols[indx++] = c+3;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*nz*m+j;
+         buffer.fPols[indx++] = m+j;
+         buffer.fPols[indx++] = 2*nz*m+j+1;
+         buffer.fPols[indx++] = j;
+      }
+      for (j = 0; j < n-1; j++) {
+         buffer.fPols[indx++] = c+3;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*nz*m+n+j;
+         buffer.fPols[indx++] = (nz*2-2)*m+j;
+         buffer.fPols[indx++] = 2*nz*m+n+j+1;
+         buffer.fPols[indx++] = (nz*2-2)*m+m+j;
+      }
+      if (specialCase) {
+         buffer.fPols[indx++] = c+3;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*nz*m+j;
+         buffer.fPols[indx++] = m+j;
+         buffer.fPols[indx++] = 2*nz*m;
+         buffer.fPols[indx++] = j;
+         
+         buffer.fPols[indx++] = c+3;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*nz*m+n+j;
+         buffer.fPols[indx++] = (nz*2-2)*m+j;
+         buffer.fPols[indx++] = 2*nz*m+n;
+         buffer.fPols[indx++] = (nz*2-2)*m+m+j;
+      }
+
+      //inside & outside, number of polygons: (nz-1)*2*(n-1)
+      for (k = 0; k < (nz-1); k++) {
+        for (j = 0; j < n-1; j++) {
+           buffer.fPols[indx++] = c;
+           buffer.fPols[indx++] = 4;
+           buffer.fPols[indx++] = 2*k*m+j;
+           buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j+1;
+           buffer.fPols[indx++] = (2*k+2)*m+j;
+           buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+        }
+        for (j = 0; j < n-1; j++) {
+           buffer.fPols[indx++] = c+1;
+           buffer.fPols[indx++] = 4;
+           buffer.fPols[indx++] = (2*k+1)*m+j;
+           buffer.fPols[indx++] = nz*2*m+(2*k + 3)*n+j;
+           buffer.fPols[indx++] = (2*k+ 3)*m+j;
+           buffer.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
+        }
+       	 
+        if (specialCase) {
+            buffer.fPols[indx++] = c;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = 2*k*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
+            buffer.fPols[indx++] = (2*k+2)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+2)*n;
+   	    
+            buffer.fPols[indx++] = c+1;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = (2*k+1)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+3)*n+j;
+            buffer.fPols[indx++] = (2*k+3)*m+j;
+            buffer.fPols[indx++] = nz*2*m+(2*k+3)*n;
+         }
+      }
+
+      //left & right sections, number of polygons: 2*(nz-1)
+      //          special case number of polygons: 0
+      if (!specialCase) {
+         indx2 = nz*2*(n-1);
+         for (k = 0; k < (nz-1); k++) {
+            buffer.fPols[indx++] = c+2;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
+            buffer.fPols[indx++] = indx2+2*(k+1)*n;
+            buffer.fPols[indx++] = indx2+2*nz*n+2*k;
+            buffer.fPols[indx++] = indx2+(2*k+3)*n;
+   	    
+   	      buffer.fPols[indx++] = c+2;
+            buffer.fPols[indx++] = 4;
+            buffer.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
+            buffer.fPols[indx++] = indx2+(2*k+3)*n+n-1;
+            buffer.fPols[indx++] = indx2+2*nz*n+2*k+1;
+            buffer.fPols[indx++] = indx2+2*(k+1)*n+n-1;
+         }
+
+         buffer.fPols[indx-8] = indx2+n;
+         buffer.fPols[indx-2] = indx2+2*n-1;
+      }
+
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+
+   return buffer;
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.18 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.19 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -65,6 +65,7 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64+12*fNz;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    Int_t                 GetNedges() const   {return fNedges;}
@@ -72,14 +73,13 @@ public:
    virtual Int_t         GetNsegments() const {return fNedges;}     
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoPgon, 1)         // polygone class 

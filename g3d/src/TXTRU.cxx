@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.16 2004/09/14 15:56:15 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.17 2004/11/18 14:35:25 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -7,6 +7,7 @@
 ///#include "GLConstants.h"
 
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
 #include "Riostream.h"
@@ -415,105 +416,6 @@ Float_t TXTRU::GetSectionZ(Int_t n) const {
    return fZ[n];
 }
 
-//______________________________________________________________________________
-void TXTRU::Paint(Option_t *option)
-{
-   // Paint this 3-D shape with its current attributes
-
-   // Check that the polygon is well formed
-   // convex vs. concave, z ordered monotonically
-
-   if (fPolygonShape == kUncheckedXY ||
-       fZOrdering    == kUncheckedZ     ) CheckOrdering();
-       
-   Int_t NbPnts = fNz*fNxy;
-   Int_t NbSegs = fNxy*(2*fNz-1);
-   Int_t NbPols = fNxy*(fNz-1)+2;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs,
-                                            6*(NbPols-2)+2*(2+fNxy));
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kXTRU;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   Int_t i,j;
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
-   for (i=0; i<fNz; i++) {
-      // loop Z planes
-      indx2 = i*fNxy;
-      // loop polygon segments
-      for (j=0; j<fNxy; j++) {
-         k = (j+1)%fNxy;
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+k;
-      }
-   } // total: fNz*fNxy polygon segments
-   for (i=0; i<fNz-1; i++) {
-      // loop Z planes
-      indx2 = i*fNxy;
-      // loop polygon segments
-      for (j=0; j<fNxy; j++) {
-         k = j + fNxy;
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+k;
-      }
-   } // total (fNz-1)*fNxy lateral segments
-
-   indx = 0;
-
-   // fill lateral polygons
-   for (i=0; i<fNz-1; i++) {
-      indx2 = i*fNxy;
-      for (j=0; j<fNxy; j++) {
-      k = (j+1)%fNxy;
-      buff->fPols[indx++] = c+j%3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = indx2+j;
-      buff->fPols[indx++] = fNz*fNxy+indx2+k;
-      buff->fPols[indx++] = indx2+fNxy+j;
-      buff->fPols[indx++] = fNz*fNxy+indx2+j;
-      }
-   } // total (fNz-1)*fNxy polys
-   buff->fPols[indx++] = c+2;
-   buff->fPols[indx++] = fNxy;
-   indx2 = 0;
-   for (j = fNxy - 1; j >= 0; --j) {
-      buff->fPols[indx++] = indx2+j;
-   }
-
-   buff->fPols[indx++] = c;
-   buff->fPols[indx++] = fNxy;
-   indx2 = (fNz-1)*fNxy;
- 
-   for (j=0; j<fNxy; j++) {
-      buff->fPols[indx++] = indx2+j;
-   }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
 
 //______________________________________________________________________________
 void TXTRU::Print(Option_t *option) const
@@ -594,12 +496,12 @@ void TXTRU::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TXTRU::SetPoints(Double_t *buff)
+void TXTRU::SetPoints(Double_t *points) const
 {
    // Create TXTRU points in buffer
    // order as expected by other methods (counterclockwise xy, increasing z)
 
-   if (buff) {
+   if (points) {
       Int_t ipt, ixy, iz, ioff;
       Float_t x, y;
 
@@ -621,9 +523,9 @@ void TXTRU::SetPoints(Double_t *buff)
             ioff = ipt*3;                  // 3 words per point (x,y,z)
             x = fXvtx[ixy];
             y = fYvtx[ixy];
-            buff[ioff  ] = x*fScale[iz] + fX0[iz];
-            buff[ioff+1] = y*fScale[iz] + fY0[iz];
-            buff[ioff+2] = fZ[iz];
+            points[ioff  ] = x*fScale[iz] + fX0[iz];
+            points[ioff+1] = y*fScale[iz] + fY0[iz];
+            points[ioff+2] = fZ[iz];
             ipt++;
          }
       }
@@ -865,4 +767,101 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
       cout << polybuff[ioff++] << ")" << endl;
    }
    cout << " buffer size " << buffsize << " last used " << --ioff << endl;
+}
+
+
+//_______________________________________________________________________
+const TBuffer3D & TXTRU::GetBuffer3D(Int_t reqSections) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TShape::FillBuffer3D(buffer, reqSections);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      // Check that the polygon is well formed
+      // convex vs. concave, z ordered monotonically
+
+      if (fPolygonShape == kUncheckedXY ||
+          fZOrdering    == kUncheckedZ) {
+         const_cast<TXTRU *>(this)->CheckOrdering();
+      }
+      Int_t NbPnts = fNz*fNxy;
+      Int_t NbSegs = fNxy*(2*fNz-1);
+      Int_t NbPols = fNxy*(fNz-1)+2;
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+fNxy))) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if (reqSections & TBuffer3D::kRaw) {
+      // Points
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      Int_t c = GetBasicColor();
+
+      Int_t i,j, k;
+      Int_t indx, indx2;
+      indx = indx2 = 0;
+
+      // Segments
+      for (i=0; i<fNz; i++) {
+         // loop Z planes
+         indx2 = i*fNxy;
+         // loop polygon segments
+         for (j=0; j<fNxy; j++) {
+            k = (j+1)%fNxy;
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] = indx2+j;
+            buffer.fSegs[indx++] = indx2+k;
+         }
+      } // total: fNz*fNxy polygon segments
+      for (i=0; i<fNz-1; i++) {
+         // loop Z planes
+         indx2 = i*fNxy;
+         // loop polygon segments
+         for (j=0; j<fNxy; j++) {
+            k = j + fNxy;
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] = indx2+j;
+            buffer.fSegs[indx++] = indx2+k;
+         }
+      } // total (fNz-1)*fNxy lateral segments
+
+            // Polygons
+      indx = 0;
+
+      // fill lateral polygons
+      for (i=0; i<fNz-1; i++) {
+         indx2 = i*fNxy;
+         for (j=0; j<fNxy; j++) {
+         k = (j+1)%fNxy;
+         buffer.fPols[indx++] = c+j%3;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = indx2+j;
+         buffer.fPols[indx++] = fNz*fNxy+indx2+k;
+         buffer.fPols[indx++] = indx2+fNxy+j;
+         buffer.fPols[indx++] = fNz*fNxy+indx2+j;
+         }
+      } // total (fNz-1)*fNxy polys
+      buffer.fPols[indx++] = c+2;
+      buffer.fPols[indx++] = fNxy;
+      indx2 = 0;
+      for (j = fNxy - 1; j >= 0; --j) {
+         buffer.fPols[indx++] = indx2+j;
+      }
+
+      buffer.fPols[indx++] = c;
+      buffer.fPols[indx++] = fNxy;
+      indx2 = (fNz-1)*fNxy;
+    
+      for (j=0; j<fNxy; j++) {
+         buffer.fPols[indx++] = indx2+j;
+      }
+
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+
+   return buffer;
 }

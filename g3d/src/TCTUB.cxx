@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.2 2000/11/21 20:15:33 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -97,7 +97,7 @@ static Double_t Product(const Double_t *x, const Float_t *y)
 
 
 //______________________________________________________________________________
-void TCTUB::SetPoints(Double_t *buff)
+void TCTUB::SetPoints(Double_t *points) const
 {
    // Create TUBS points
 
@@ -108,31 +108,31 @@ void TCTUB::SetPoints(Double_t *buff)
 
    dz   = TTUBE::fDz;
 
-   if (buff) {
+   if (points) {
       Int_t indx = 0;
 
       if (!fCoTab)   MakeTableOfCoSin();
 
       for (j = 0; j < n; j++) {
-         buff[indx+6*n] = buff[indx] = fRmin * fCoTab[j];
+         points[indx+6*n] = points[indx] = fRmin * fCoTab[j];
          indx++;
-         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmin * fSiTab[j];
+         points[indx+6*n] = points[indx] = fAspectRatio*fRmin * fSiTab[j];
          indx++;
-         buff[indx+6*n] = dz;
-         buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
-         buff[indx]     =-dz;
-         buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
+         points[indx+6*n] = dz;
+         points[indx+6*n]-= Product(&points[indx+6*n-2],fCosHigh)/fCosHigh[2];
+         points[indx]     =-dz;
+         points[indx]    -= Product(&points[indx-2],fCosLow)/fCosLow[2];
          indx++;
       }
       for (j = 0; j < n; j++) {
-         buff[indx+6*n] = buff[indx] = fRmax * fCoTab[j];
+         points[indx+6*n] = points[indx] = fRmax * fCoTab[j];
          indx++;
-         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmax * fSiTab[j];
+         points[indx+6*n] = points[indx] = fAspectRatio*fRmax * fSiTab[j];
          indx++;
-         buff[indx+6*n] = dz;
-         buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
-         buff[indx]     =-dz;
-         buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
+         points[indx+6*n] = dz;
+         points[indx+6*n]-= Product(&points[indx+6*n-2],fCosHigh)/fCosHigh[2];
+         points[indx]     =-dz;
+         points[indx]    -= Product(&points[indx-2],fCosLow)/fCosLow[2];
          indx++;
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.14 2004/12/03 12:03:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.15 2005/01/04 10:33:15 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -37,7 +37,6 @@ private:
    Bool_t         fAllActive;
    Bool_t         fNeedFrustum;
    Int_t          fActiveCam;
-   UInt_t         fSelected;
 
    TGLSceneObject *fFirstT;
    TGLSceneObject *fSelectedObj;
@@ -60,6 +59,7 @@ public:
    }
    void SetActive(UInt_t cam);
    void AddNewObject(TGLSceneObject *newObject);
+   void RemoveAllObjects();
    void AddNewCamera(TGLCamera *newCamera);
    TGLSceneObject *SelectObject(Int_t x, Int_t y, Int_t);
 

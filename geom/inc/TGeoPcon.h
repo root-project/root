@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.18 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.19 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -37,6 +37,8 @@ protected:
    Double_t             *fRmin;  //[fNz] pointer to array of inner radii 
    Double_t             *fRmax;  //[fNz] pointer to array of outer radii 
    Double_t             *fZ;     //[fNz] pointer to array of Z planes positions 
+   
+   // methods
 public:
    // constructors
    TGeoPcon();
@@ -62,6 +64,7 @@ public:
    virtual const char   *GetAxisName(Int_t iaxis) const;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetDphi() const {return fDphi;}
@@ -78,7 +81,6 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    Double_t             &Phi1()          {return fPhi1;}
    Double_t             &Dphi()          {return fDphi;}
    Double_t             &Rmin(Int_t ipl) {return fRmin[ipl];}
@@ -88,9 +90,9 @@ public:
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in=kTRUE, Double_t safmin=TGeoShape::Big()) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoPcon, 1)         // polycone class 

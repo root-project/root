@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.19 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.20 2004/12/13 16:56:22 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -16,7 +16,11 @@
 #include "TH3.h"
 #include "TRandom.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualViewer3D.h"
 #include "TGeometry.h"
+
+#include <assert.h>
 
 ClassImp(TPolyMarker3D)
 
@@ -299,49 +303,66 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::Paint(Option_t *option)
+void TPolyMarker3D::Paint(Option_t * /*option*/ )
 {
-   // Paint this 3-D polymarker.
+   static TBuffer3D buffer(TBuffer3DTypes::kMarker);
+   
+   buffer.ClearSectionsValid();
 
-   Int_t NbPnts = Size();
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 1, 0);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kMARKER;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = 0;
-   buff->fNbPols = 0;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
+   // Section kCore
+   buffer.fID           = this;
+   buffer.fColor        = GetMarkerColor();   
+   buffer.fTransparency = 0;    
+   buffer.fLocalFrame   = kFALSE; 
+   
+   // We fill kCore and kRawSizes on first pass and try with viewer
+   Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
+   if (reqSections == TBuffer3D::kNone) {
       return;
    }
-    
-   for (Int_t i=0; i<3*NbPnts; i++) buff->fPnts[i] = (Double_t)fP[i];
-
-   if (gGeometry) {   
-      Double_t dlocal[3];
-      Double_t dmaster[3];
-      for (Int_t j=0; j<buff->fNbPnts; j++) {
-         dlocal[0] = buff->fPnts[3*j];
-         dlocal[1] = buff->fPnts[3*j+1];
-         dlocal[2] = buff->fPnts[3*j+2];
-         gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
-         buff->fPnts[3*j]   = dmaster[0];
-         buff->fPnts[3*j+1] = dmaster[1];
-         buff->fPnts[3*j+2] = dmaster[2];
+   
+   if (reqSections & TBuffer3D::kRawSizes) {
+      if (!buffer.SetRawSizes(Size(), 3*Size(), 1, 1, 0, 0)) {
+         return;
       }
+      buffer.SetSectionsValid(TBuffer3D::kRawSizes);
    }
 
-   // Paint gPad->fBuffer3D
-   buff->fSegs[0] = ((GetMarkerColor() % 8) - 1) * 4;
-   if ( buff->fSegs[0]<0 ) buff->fSegs[0] = 0;
-   buff->fColor = GetMarkerColor();
-   TAttMarker::Modify();
-   buff->Paint(option);
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      // Points
+      for (UInt_t i=0; i<3*buffer.NbPnts(); i++) {
+         buffer.fPnts[i] = (Double_t)fP[i];
+      }
+
+      // Transform points - we don't support local->global matrix 
+      // so always work in global reference frame
+      if (gGeometry) {   
+         Double_t dlocal[3];
+         Double_t dmaster[3];
+         for (UInt_t j=0; j<buffer.NbPnts(); j++) {
+            dlocal[0] = buffer.fPnts[3*j];
+            dlocal[1] = buffer.fPnts[3*j+1];
+            dlocal[2] = buffer.fPnts[3*j+2];
+            gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+            buffer.fPnts[3*j]   = dmaster[0];
+            buffer.fPnts[3*j+1] = dmaster[1];
+            buffer.fPnts[3*j+2] = dmaster[2];
+         }
+      }
+
+      // Basic colors: 0, 1, ... 7
+      Int_t c = (((GetMarkerColor()) %8) -1) * 4;
+      if (c < 0) c = 0;
+
+      // Segments
+      buffer.fSegs[0] = c;
+
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+      
+      TAttMarker::Modify();
+   }
+
+   gPad->GetViewer3D()->AddObject(buffer);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPGON.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -69,7 +69,7 @@ TPGON::~TPGON ()
 }
 
 //______________________________________________________________________________
-void TPGON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n)
+void TPGON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
  // Fill the table of cos and sin to prepare drawing
   Double_t factor = 1./TMath::Cos(angstep/2);

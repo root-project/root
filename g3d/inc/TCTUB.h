@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.h,v 1.2 2000/11/21 20:11:41 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TCTUB : public TTUBS {
         Float_t fCosLow[3];        // dir cosinus of surface cutting tube at low z
         Float_t fCosHigh[3];       // dir cosinus of surface cutting tube at high z
 
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TCTUB();
         TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
@@ -44,7 +45,7 @@ class TCTUB : public TTUBS {
              Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2,
              Float_t *lowNormal, Float_t *highNormal);
         virtual ~TCTUB();
-        virtual void SetPoints(Double_t *buff);
+
         ClassDef(TCTUB,2)  //The Cut Tube shape
 };
 

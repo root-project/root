@@ -10,8 +10,6 @@
 #ifndef ROOT_TGeoPainter
 #define ROOT_TGeoPainter
 
-#include "X3DBuffer.h"
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGeoPainter                                                          //
@@ -119,6 +117,7 @@ public:
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
+           Bool_t     PaintShape(const TGeoShape & shape, Option_t * option) const;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
    virtual void       PrintOverlaps() const;
    void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.70 2005/02/18 09:26:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.71 2005/03/03 22:06:49 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -913,10 +913,10 @@ again:
                      Iconify();
                      break;
                   case kViewX3D:
-                     gPad->x3d("x3d");
+                     gPad->GetViewer3D("x3d");
                      break;
                   case kViewOpenGL:
-                     gPad->x3d("ogl");
+                     gPad->GetViewer3D("ogl");
                      break;
 
                   // Handle Option menu items...

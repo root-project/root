@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.13 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.14 2005/02/28 20:52:43 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGeoParaboloid.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoParaboloid)
    
@@ -288,128 +289,87 @@ TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
    Int_t NbSegs = n*(2*n+3);
    Int_t NbPols = n*(n+2);
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 2*n*5 + n*n*6);
 
-   buff->fType = TBuffer3D::kPARA;
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
+   if (buff)
+   {
+      SetPoints(buff->fPnts);
+      SetSegsAndPols(*buff);
+   }
 
-   SetPoints(buff->fPnts);
-   
-   SetSegsAndPols(buff);
-   
    return buff; 
 }
 
 //_____________________________________________________________________________
-void TGeoParaboloid::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t n = gGeoManager->GetNsegments();
-   Int_t NbPnts = n*(n+1)+2;
-   Int_t NbSegs = n*(2*n+3);
-   Int_t NbPols = n*(n+2);
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 2*n*5 + n*n*6);
-
-   buff->fType = TBuffer3D::kPARA;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoParaboloid::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoParaboloid::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t indx, i, j;
    Int_t n = gGeoManager->GetNsegments();
 
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
    Int_t nn1 = (n+1)*n+1;
    indx = 0;
    // Lower end-cap (n radial segments)
    for (j=0; j<n; j++) {
-      buff->fSegs[indx++] = c+2;
-      buff->fSegs[indx++] = 0;
-      buff->fSegs[indx++] = j+1;
+      buff.fSegs[indx++] = c+2;
+      buff.fSegs[indx++] = 0;
+      buff.fSegs[indx++] = j+1;
    }
    // Sectors (n)
    for (i=0; i<n+1; i++) {
       // lateral (circles) segments (n)
       for (j=0; j<n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = n*i+1+j;
-         buff->fSegs[indx++] = n*i+1+((j+1)%n);
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = n*i+1+j;
+         buff.fSegs[indx++] = n*i+1+((j+1)%n);
       }
       if (i==n) break;  // skip i=n for generators
       // generator segments (n)
       for (j=0; j<n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = n*i+1+j;
-         buff->fSegs[indx++] = n*(i+1)+1+j;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = n*i+1+j;
+         buff.fSegs[indx++] = n*(i+1)+1+j;
       }
    }
    // Upper end-cap
    for (j=0; j<n; j++) {
-      buff->fSegs[indx++] = c+1;
-      buff->fSegs[indx++] = n*n+1+j;
-      buff->fSegs[indx++] = nn1;
+      buff.fSegs[indx++] = c+1;
+      buff.fSegs[indx++] = n*n+1+j;
+      buff.fSegs[indx++] = nn1;
    }
 
    indx = 0;
 
    // lower end-cap (n polygons)
    for (j=0; j<n; j++) {
-      buff->fPols[indx++] = c+2;
-      buff->fPols[indx++] = 3;
-      buff->fPols[indx++] = n+j;
-      buff->fPols[indx++] = (j+1)%n;
-      buff->fPols[indx++] = j;
+      buff.fPols[indx++] = c+2;
+      buff.fPols[indx++] = 3;
+      buff.fPols[indx++] = n+j;
+      buff.fPols[indx++] = (j+1)%n;
+      buff.fPols[indx++] = j;
    }
    // Sectors (n)
    for (i=0; i<n; i++) {
       // lateral faces (n)
       for (j=0; j<n; j++) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*i+1)*n+j;
-         buff->fPols[indx++] = 2*(i+1)*n+j;
-         buff->fPols[indx++] = (2*i+3)*n+j;
-         buff->fPols[indx++] = 2*(i+1)*n+((j+1)%n);
+         buff.fPols[indx++] = c;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = (2*i+1)*n+j;
+         buff.fPols[indx++] = 2*(i+1)*n+j;
+         buff.fPols[indx++] = (2*i+3)*n+j;
+         buff.fPols[indx++] = 2*(i+1)*n+((j+1)%n);
       }
    }
    // upper end-cap (n polygons)
    for (j=0; j<n; j++) {
-      buff->fPols[indx++] = c+1;
-      buff->fPols[indx++] = 3;
-      buff->fPols[indx++] = 2*n*(n+1)+j;
-      buff->fPols[indx++] = 2*n*(n+1)+((j+1)%n);
-      buff->fPols[indx++] = (2*n+1)*n+j;
+      buff.fPols[indx++] = c+1;
+      buff.fPols[indx++] = 3;
+      buff.fPols[indx++] = 2*n*(n+1)+j;
+      buff.fPols[indx++] = 2*n*(n+1)+((j+1)%n);
+      buff.fPols[indx++] = (2*n+1)*n+j;
    }
 }
 
@@ -447,7 +407,7 @@ void TGeoParaboloid::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoParaboloid::SetPoints(Double_t *buff) const
+void TGeoParaboloid::SetPoints(Double_t *points) const
 {
 // Create paraboloid mesh points.
 // Npoints = n*(n+1) + 2
@@ -464,7 +424,7 @@ void TGeoParaboloid::SetPoints(Double_t *buff) const
 //   lateral(i): ((2*i+1)*n+j, 2*(i+1)*n+j, (2*i+3)*n+j, 2*(i+1)*n+(j+1)%n)
 //                                                      i,j = [0,n-1]
 //   upper: ((2n+1)*n+j, 2*n*(n+1)+(j+1)%n, 2*n*(n+1)+j)   j=[0,n-1]
-   if (!buff) return;
+   if (!points) return;
    Double_t ttmin, ttmax;
    ttmin = TMath::ATan2(-fDz, fRlo);
    ttmax = TMath::ATan2(fDz, fRhi);
@@ -476,9 +436,9 @@ void TGeoParaboloid::SetPoints(Double_t *buff) const
    Double_t phi, sph, cph;
    Int_t indx = 0;
    // center of the lower endcap:
-   buff[indx++] = 0; // x
-   buff[indx++] = 0; // y
-   buff[indx++] = -fDz;
+   points[indx++] = 0; // x
+   points[indx++] = 0; // y
+   points[indx++] = -fDz;
    for (Int_t i=0; i<n+1; i++) {  // nz planes = n+1
       if (i==0) {
          r = fRlo;
@@ -496,15 +456,15 @@ void TGeoParaboloid::SetPoints(Double_t *buff) const
          phi = j*dphi*TMath::DegToRad();
          sph=TMath::Sin(phi);
          cph=TMath::Cos(phi);
-         buff[indx++] = r*cph;
-         buff[indx++] = r*sph;
-         buff[indx++] = z;
+         points[indx++] = r*cph;
+         points[indx++] = r*sph;
+         points[indx++] = z;
       }
    } 
    // center of the upper endcap
-   buff[indx++] = 0; // x
-   buff[indx++] = 0; // y
-   buff[indx++] = fDz;
+   points[indx++] = 0; // x
+   points[indx++] = 0; // y
+   points[indx++] = fDz;
 }
 
 //_____________________________________________________________________________
@@ -528,9 +488,9 @@ void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t * /*option*/)
 }         
 
 //_____________________________________________________________________________
-void TGeoParaboloid::SetPoints(Float_t *buff) const
+void TGeoParaboloid::SetPoints(Float_t *points) const
 {
-   if (!buff) return;
+   if (!points) return;
    Double_t ttmin, ttmax;
    ttmin = TMath::ATan2(-fDz, fRlo);
    ttmax = TMath::ATan2(fDz, fRhi);
@@ -542,9 +502,9 @@ void TGeoParaboloid::SetPoints(Float_t *buff) const
    Double_t phi, sph, cph;
    Int_t indx = 0;
    // center of the lower endcap:
-   buff[indx++] = 0; // x
-   buff[indx++] = 0; // y
-   buff[indx++] = -fDz;
+   points[indx++] = 0; // x
+   points[indx++] = 0; // y
+   points[indx++] = -fDz;
    for (Int_t i=0; i<n+1; i++) {  // nz planes = n+1
       if (i==0) {
          r = fRlo;
@@ -562,15 +522,15 @@ void TGeoParaboloid::SetPoints(Float_t *buff) const
          phi = j*dphi*TMath::DegToRad();
          sph=TMath::Sin(phi);
          cph=TMath::Cos(phi);
-         buff[indx++] = r*cph;
-         buff[indx++] = r*sph;
-         buff[indx++] = z;
+         points[indx++] = r*cph;
+         points[indx++] = r*sph;
+         points[indx++] = z;
       }
    } 
    // center of the upper endcap
-   buff[indx++] = 0; // x
-   buff[indx++] = 0; // y
-   buff[indx++] = fDz;
+   points[indx++] = 0; // x
+   points[indx++] = 0; // y
+   points[indx++] = fDz;
 }
 
 //_____________________________________________________________________________
@@ -579,4 +539,31 @@ void TGeoParaboloid::Sizeof3D() const
 ///   Int_t n = gGeoManager->GetNsegments();
 ///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
 ///   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
+}
+
+//_____________________________________________________________________________
+const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments();
+      Int_t NbPnts = n*(n+1)+2;
+      Int_t NbSegs = n*(2*n+3);
+      Int_t NbPols = n*(n+2);
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 2*n*5 + n*n*6)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+      SetSegsAndPols(buffer);  
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
 }

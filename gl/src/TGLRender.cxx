@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.23 2004/12/06 07:53:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.24 2005/01/04 10:33:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
 #include "TGLCamera.h"
+
+#include <assert.h>
 
 //ClassImp(TGLRender)
 
@@ -59,7 +61,6 @@ TGLRender::TGLRender()
    fPlaneEqn[1] = fPlaneEqn[2] = fPlaneEqn[3] = 0.;
    fClipping = kFALSE;
    fNeedFrustum = kFALSE;
-   fSelected = 0;
 
    fFirstT = 0;
    fSelectedObj = 0;
@@ -80,8 +81,17 @@ void TGLRender::Traverse()
       Init();
    }
 
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   // If no current camera there is nothing to draw
+   // Should not happen but until objects are added
+   // viewer extents are not set, and hence cameras 
+   // not made
+   // TODO: This all needs to be fixed properly
+   if (end == 0) {
+      return;
+   }
 
    if (!fAllActive) {
       start = fActiveCam;
@@ -125,6 +135,13 @@ void TGLRender::AddNewObject(TGLSceneObject *newobject)
 }
 
 //______________________________________________________________________________
+void TGLRender::RemoveAllObjects()
+{
+   fGLObjects.Delete();
+   assert(fGLObjects.GetEntriesFast() == 0);
+}
+
+//______________________________________________________________________________
 void TGLRender::AddNewCamera(TGLCamera *newcamera)
 {
    fGLCameras.AddLast(newcamera);
@@ -164,23 +181,21 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
       TGLSceneObject *hitObject = 0;
       for (Int_t j = 0; j < hits; ++j) {
          chosen = objNames[j].second;
-         hitObject = (TGLSceneObject *)fGLObjects.At(chosen - 1);
+         hitObject = (TGLSceneObject *)fGLObjects.At(chosen);
          if (!hitObject->IsTransparent())
             break;
       }
       if (hitObject->IsTransparent()) {
          chosen = objNames[0].second;
-         hitObject = (TGLSceneObject *)fGLObjects.At(chosen - 1);
+         hitObject = (TGLSceneObject *)fGLObjects.At(chosen);
       }
-      if (fSelected != chosen) {
+      if (hitObject != fSelectedObj) {
          if (fSelectedObj) fSelectedObj->Select(kFALSE);
-         fSelected = chosen;
          fSelectedObj = hitObject;
          fSelectedObj->Select();
          Traverse();
       }
-   } else if (fSelected) {
-      fSelected = 0;
+   } else if (fSelectedObj) {
       fSelectedObj->Select(kFALSE);
       fSelectedObj = 0;
       Traverse();

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.2 2000/11/21 20:14:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -44,10 +44,13 @@ class TTUBE : public TShape {
 
         Float_t fAspectRatio; // defines  (the ellipse semi-axis in Y)/(the ellipse semi-axis in X)
 
-        Double_t   *fSiTab;   //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
-        Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+        // Internal cache
+        mutable Double_t   *fSiTab;   //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
+        mutable Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
-        virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
+        virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
+        virtual void    SetPoints(Double_t *points) const;
+        virtual void    SetSegsAndPols(TBuffer3D & buffer) const;
 
     public:
         TTUBE();
@@ -56,16 +59,15 @@ class TTUBE : public TShape {
         virtual ~TTUBE();
 
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
+        virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
         virtual Float_t GetRmin()  {return fRmin;}
         virtual Float_t GetRmax()  {return fRmax;}
         virtual Float_t GetDz()    {return fDz;}
         virtual Int_t   GetNdiv()  {return fNdiv;}
         virtual Float_t GetAspectRatio(){return fAspectRatio;}
         virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDivNum;}
-        virtual void    Paint(Option_t *option);
         virtual void    SetNumberOfDivisions (Int_t ndiv);
         virtual void    SetAspectRatio(Float_t factor=1){fAspectRatio = factor;}
-	virtual void    SetPoints(Double_t *buff);
         virtual void    Sizeof3D() const;
 
         ClassDef(TTUBE,3)  //TUBE shape

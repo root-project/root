@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.5 2003/08/23 00:08:12 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.6 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -16,6 +16,9 @@
 #include "TGeometry.h"
 #include "TMaterial.h"
 #include "TFile.h"
+#include "TBuffer3D.h"
+
+#include <assert.h> // Is there a ROOT equiv?
 
 ClassImp(TShape)
 
@@ -105,15 +108,15 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TShape::Paint(Option_t *)
+/*void TShape::Paint(Option_t *)
 {
    AbstractMethod("TShape::Paint(Option_t *)");
-}
+}*/
 
 
 //______________________________________________________________________________
-void TShape::SetPoints(Double_t *){
-   AbstractMethod("SetPoints(Double_t *buffer)");
+void TShape::SetPoints(Double_t *)  const {
+   AbstractMethod("SetPoints(Double_t *buffer)  const");
 }
 
 
@@ -151,21 +154,56 @@ void TShape::Streamer(TBuffer &R__b)
 }
 
 //_____________________________________________________________________________
-void TShape::TransformPoints(TBuffer3D *buff) const
+void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
-   // Tranform a buffer (LocalToMaster)
+   // Tranform points (LocalToMaster)
 
-   if (gGeometry) {
+   if (gGeometry && points) {
       Double_t dlocal[3];
       Double_t dmaster[3];
-      for (Int_t j=0; j<buff->fNbPnts; j++) {
-         dlocal[0] = buff->fPnts[3*j];
-         dlocal[1] = buff->fPnts[3*j+1];
-         dlocal[2] = buff->fPnts[3*j+2];
+      for (UInt_t j=0; j<NbPnts; j++) {
+         dlocal[0] = points[3*j];
+         dlocal[1] = points[3*j+1];
+         dlocal[2] = points[3*j+2];
          gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
-         buff->fPnts[3*j]   = dmaster[0];
-         buff->fPnts[3*j+1] = dmaster[1];
-         buff->fPnts[3*j+2] = dmaster[2];
+         points[3*j]   = dmaster[0];
+         points[3*j+1] = dmaster[1];
+         points[3*j+2] = dmaster[2];
       }
    }
 }
+
+void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
+{
+   // We have to set kRawSize (unless already done) to allocate buffer space 
+   // before kRaw can be filled
+   if (reqSections & TBuffer3D::kRaw)
+   {
+      if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes))
+      {
+         assert(kFALSE);
+      }
+   }
+
+
+   if (reqSections & TBuffer3D::kCore) {
+	   buffer.ClearSectionsValid();
+		buffer.fID = const_cast<TShape *>(this);
+      buffer.fColor = GetLineColor();
+      buffer.fTransparency = 0;    
+		buffer.fLocalFrame = kFALSE; // Only support master frame for these shapes
+      buffer.fReflection = kFALSE;
+
+      buffer.SetLocalMasterIdentity();
+      buffer.SetSectionsValid(TBuffer3D::kCore);
+   }
+}
+
+Int_t TShape::GetBasicColor() const
+{
+   Int_t basicColor = ((GetLineColor() %8) -1) * 4;
+   if (basicColor < 0) basicColor = 0;
+
+   return basicColor;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.53 2005/01/28 10:01:04 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.54 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,11 @@
 #include "TGeoChecker.h"
 #include "TGeoPhysicalNode.h"
 #include "TGeoPainter.h"
+
+#include "X3DBuffer.h"
+
+#include "TBuffer3D.h"
+#include "TVirtualViewer3D.h"
 
 ClassImp(TGeoPainter)
 
@@ -490,9 +495,6 @@ Int_t TGeoPainter::CountVisibleNodes()
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
-   // Draw the current top volume in the pad or 3-d viewer
-   // if option contains the string "ogl" or "x3d" the volume is drawn
-   // with the GL or X3D viewer instead of the pad.
    fLastVolume = 0;
    CountVisibleNodes();         
    TString opt = option;
@@ -505,7 +507,6 @@ void TGeoPainter::Draw(Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
-   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
@@ -515,24 +516,11 @@ void TGeoPainter::Draw(Option_t *option)
    // append this volume to pad
    fGeom->GetTopVolume()->AppendPad(option);
 
-   // Create a 3-D view
-   TView *view = gPad->GetView();
-   if (!view) {
-      view = new TView(11);
-      view->SetAutoRange(kTRUE);
-      TBuffer3D *buff = gPad->GetBuffer3D();
-      buff->fOption = TBuffer3D::kRANGE;
-      Paint("range");
-      buff->fOption = TBuffer3D::kPAD;
-      view->SetAutoRange(kFALSE);
-      if (has_pad) gPad->Update();
-   }
-   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
-   
-   //if options "ogl" or "x3d" are specified, invoke the viewer
-   if (opt.Contains("ogl") || opt.Contains("x3d")) gPad->x3d(option);
+ 
+   // Create / recycle 3D viewer and paint pad into it
+   gPad->GetViewer3D(option);  
 }
 
 //______________________________________________________________________________
@@ -549,8 +537,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
-   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
-   // Clear pad if option "same" not given
+   
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
@@ -559,20 +546,6 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    // append this volume to pad
    overlap->AppendPad(option);
 
-   // Create a 3-D view
-   TView *view = gPad->GetView();
-   if (!view) {
-      view = new TView(11);
-      view->SetAutoRange(kTRUE);
-      TBuffer3D *buff = gPad->GetBuffer3D();
-      buff->fOption = TBuffer3D::kRANGE;
-      PaintOverlap(ovlp, "range");
-      buff->fOption = TBuffer3D::kPAD;
-      view->SetAutoRange(kFALSE);
-      overlap->GetPolyMarker()->Draw("SAME");
-      if (has_pad) gPad->Update();
-   }
-   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 
@@ -586,8 +559,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
       fVisLock = kFALSE;
    }   
    fPaintingOverlaps = kFALSE;
-   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
-   // Clear pad if option "same" not given
+   
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
@@ -596,20 +568,6 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // append this volume to pad
    fGeom->GetCurrentVolume()->AppendPad(option);
 
-   // Create a 3-D view
-   TView *view = gPad->GetView();
-   if (!view) {
-      view = new TView(11);
-      view->SetAutoRange(kTRUE);
-      TBuffer3D *buff = gPad->GetBuffer3D();
-      buff->fOption = TBuffer3D::kRANGE;
-      fVisOption = kGeoVisOnly;
-      Paint("range");
-//      fGeom->GetCurrentVolume()->Paint("range");
-      view->SetAutoRange(kFALSE);
-      if (has_pad) gPad->Update();
-   }
-   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 
@@ -812,6 +770,7 @@ void TGeoPainter::Paint(Option_t *option)
 {
 // Paint current geometry according to option.
    if (!fGeom) return;
+
    if (strlen(option) || !fIsRaytracing) {
       if (fVisOption==kGeoVisOnly) {
          fGeom->GetCurrentNode()->Paint(option);
@@ -926,6 +885,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       gGeoManager->SetMatrixTransform(kFALSE);
    }   
 // Temporary solution must go in TGeovolume ...
+// TODO: Still needed?
    if (!strstr(option,"range")) {
       ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
       ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
@@ -936,17 +896,19 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    Int_t level = fGeom->GetLevel();
    Bool_t vis=(node->IsVisible() && (level || (!level && fTopVisible)) && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    Int_t id;
+   Bool_t drawDaughters = kTRUE;
+
    switch (fVisOption) {
       case kGeoVisDefault:
          if (vis && (level<=fVisLevel)) {
-            vol->GetShape()->Paint(option);
+            drawDaughters = PaintShape(*(vol->GetShape()),option);
             if (!fVisLock && !node->IsOnScreen()) {
                fVisVolumes->Add(vol);
                vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
          }   
             // draw daughters
-         if (level<fVisLevel) {
+         if (drawDaughters && level<fVisLevel) {
             if ((!nd) || (!node->IsVisDaughters())) return;
             for (id=0; id<nd; id++) {
                daughter = node->GetDaughter(id);
@@ -960,13 +922,13 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          if (level>fVisLevel) return;
          last = ((nd==0) || (level==fVisLevel) || (!node->IsVisDaughters()))?kTRUE:kFALSE;
          if (vis && last) {
-            vol->GetShape()->Paint(option);
+            drawDaughters = PaintShape(*(vol->GetShape()),option);
             if (!fVisLock && !node->IsOnScreen()) {
                fVisVolumes->Add(vol);
                vol->SetAttBit(TGeoAtt::kVisOnScreen);
             }   
          }            
-         if (last) return;
+         if (last || !drawDaughters) return;
          for (id=0; id<nd; id++) {
             daughter = node->GetDaughter(id);
             fGeom->CdDown(id);
@@ -975,7 +937,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          }
          break;
       case kGeoVisOnly:
-         vol->GetShape()->Paint(option);
+         drawDaughters = PaintShape(*(vol->GetShape()),option);
          if (!fVisLock && !node->IsOnScreen()) {
             fVisVolumes->Add(vol);
             vol->SetAttBit(TGeoAtt::kVisOnScreen);
@@ -986,7 +948,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          vol = fGeom->GetCurrentVolume();
          while (fGeom->GetLevel()) {
             if (vol->IsVisible()) {
-               vol->GetShape()->Paint(option);
+               drawDaughters = PaintShape(*(vol->GetShape()),option);
                if (!fVisLock && !fGeom->GetCurrentNode()->IsOnScreen()) {
                   fVisVolumes->Add(fGeom->GetCurrentVolume());
                   vol->SetAttBit(TGeoAtt::kVisOnScreen);
@@ -999,6 +961,31 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
          return;
    }
 } 
+
+//______________________________________________________________________________
+Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t * /* option */ ) const
+{
+   Bool_t addDaughters = kTRUE;
+
+   TVirtualViewer3D * viewer = gPad->GetViewer3D();
+
+   if (!viewer) {
+      assert(kFALSE);
+      return addDaughters;
+   }
+
+   Bool_t localFrame = viewer->PreferLocalFrame();
+   const TBuffer3D & buffer = 
+      shape.GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific, localFrame);
+
+   Int_t reqSections = viewer->AddObject(buffer, &addDaughters);
+   if (reqSections != TBuffer3D::kNone) {
+      shape.GetBuffer3D(reqSections, localFrame);
+      viewer->AddObject(buffer);
+   }
+
+   return addDaughters;
+}
 
 //______________________________________________________________________________
 void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)

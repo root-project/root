@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.9 2004/12/07 14:24:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.10 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
    virtual const char   *GetAxisName(Int_t iaxis) const;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 56;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
@@ -79,14 +80,13 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoTorus, 1)         // torus class

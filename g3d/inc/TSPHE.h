@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.5 2003/03/21 20:57:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.6 2004/08/03 16:01:17 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -30,9 +30,10 @@
 class TSPHE : public TShape {
 
     private:
-       Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
-       Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
-       Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
+       // Internal cache
+       mutable Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
+       mutable Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
+       mutable Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
        Int_t      fNdiv;        // number of divisions
        Int_t      fNz;          //! number of sections
        Float_t    fAspectRatio; // Relation between asumth and grid size (by default 1.0)
@@ -49,9 +50,8 @@ class TSPHE : public TShape {
         Float_t faY;      // Coeff along Oy
         Float_t faZ;      // Coeff along Oz
         
-        virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
-
-
+        virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TSPHE();
         TSPHE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t themin,
@@ -59,6 +59,7 @@ class TSPHE : public TShape {
         TSPHE(const char *name, const char *title, const char *material, Float_t rmax);
         virtual ~TSPHE();
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
+        virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
         virtual Float_t GetRmin() const {return fRmin;}
         virtual Float_t GetRmax() const {return fRmax;}
         virtual Float_t GetThemin() const {return fThemin;}
@@ -67,11 +68,9 @@ class TSPHE : public TShape {
         virtual Float_t GetPhimax() const {return fPhimax;}
         virtual Float_t GetAspectRatio() const { return fAspectRatio;}
         virtual Int_t   GetNumberOfDivisions () const {return fNdiv;}
-        virtual void    Paint(Option_t *option);
         virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
         virtual void    SetEllipse(const Float_t *factors);
         virtual void    SetNumberOfDivisions (Int_t p);
-        virtual void    SetPoints (Double_t *buff);
         virtual void    Sizeof3D() const;
 
         ClassDef(TSPHE,3)  //SPHE shape

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.39 2005/02/03 16:58:57 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.40 2005/02/28 20:52:43 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -80,6 +80,7 @@
 #include "TGeoBBox.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoBBox)
    
@@ -457,94 +458,51 @@ void TGeoBBox::InspectShape() const
 TBuffer3D *TGeoBBox::MakeBuffer3D() const
 {
    // Creates a TBuffer3D describing *this* shape.
-   // Coordinates are in local reference frame.
-
-   Int_t NbPnts = 8;
-   Int_t NbSegs = 12;
-   Int_t NbPols = 6;
-   
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   buff->fType = TBuffer3D::kBRIK;
-   
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   
-   SetPoints(buff->fPnts);
-   SetSegsAndPols(buff);
+   // Coordinates are in local reference frame.   
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   8, 3*8,      // Points 
+                                   12, 3*12,    // Segments
+                                   6, 6*6);     // Polygons
+   if (buff)
+   {
+      SetPoints(buff->fPnts);
+      SetSegsAndPols(*buff);
+   }
 
    return buff;   
 }
 
 //_____________________________________________________________________________
-void TGeoBBox::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t NbPnts = 8;
-   Int_t NbSegs = 12;
-   Int_t NbPols = 6;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-   
-   buff->fType = TBuffer3D::kBRIK;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-   
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoBBox::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoBBox::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
    
-   buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0   ; buff->fSegs[ 2] = 1   ;
-   buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1   ; buff->fSegs[ 5] = 2   ;
-   buff->fSegs[ 6] = c+1 ; buff->fSegs[ 7] = 2   ; buff->fSegs[ 8] = 3   ;
-   buff->fSegs[ 9] = c   ; buff->fSegs[10] = 3   ; buff->fSegs[11] = 0   ;
-   buff->fSegs[12] = c+2 ; buff->fSegs[13] = 4   ; buff->fSegs[14] = 5   ;
-   buff->fSegs[15] = c+2 ; buff->fSegs[16] = 5   ; buff->fSegs[17] = 6   ;
-   buff->fSegs[18] = c+3 ; buff->fSegs[19] = 6   ; buff->fSegs[20] = 7   ;
-   buff->fSegs[21] = c+3 ; buff->fSegs[22] = 7   ; buff->fSegs[23] = 4   ;
-   buff->fSegs[24] = c   ; buff->fSegs[25] = 0   ; buff->fSegs[26] = 4   ;
-   buff->fSegs[27] = c+2 ; buff->fSegs[28] = 1   ; buff->fSegs[29] = 5   ;
-   buff->fSegs[30] = c+1 ; buff->fSegs[31] = 2   ; buff->fSegs[32] = 6   ;
-   buff->fSegs[33] = c+3 ; buff->fSegs[34] = 3   ; buff->fSegs[35] = 7   ;
+   buff.fSegs[ 0] = c   ; buff.fSegs[ 1] = 0   ; buff.fSegs[ 2] = 1   ;
+   buff.fSegs[ 3] = c+1 ; buff.fSegs[ 4] = 1   ; buff.fSegs[ 5] = 2   ;
+   buff.fSegs[ 6] = c+1 ; buff.fSegs[ 7] = 2   ; buff.fSegs[ 8] = 3   ;
+   buff.fSegs[ 9] = c   ; buff.fSegs[10] = 3   ; buff.fSegs[11] = 0   ;
+   buff.fSegs[12] = c+2 ; buff.fSegs[13] = 4   ; buff.fSegs[14] = 5   ;
+   buff.fSegs[15] = c+2 ; buff.fSegs[16] = 5   ; buff.fSegs[17] = 6   ;
+   buff.fSegs[18] = c+3 ; buff.fSegs[19] = 6   ; buff.fSegs[20] = 7   ;
+   buff.fSegs[21] = c+3 ; buff.fSegs[22] = 7   ; buff.fSegs[23] = 4   ;
+   buff.fSegs[24] = c   ; buff.fSegs[25] = 0   ; buff.fSegs[26] = 4   ;
+   buff.fSegs[27] = c+2 ; buff.fSegs[28] = 1   ; buff.fSegs[29] = 5   ;
+   buff.fSegs[30] = c+1 ; buff.fSegs[31] = 2   ; buff.fSegs[32] = 6   ;
+   buff.fSegs[33] = c+3 ; buff.fSegs[34] = 3   ; buff.fSegs[35] = 7   ;
    
-   buff->fPols[ 0] = c   ; buff->fPols[ 1] = 4   ;  buff->fPols[ 2] = 0  ;
-   buff->fPols[ 3] = 9   ; buff->fPols[ 4] = 4   ;  buff->fPols[ 5] = 8  ;
-   buff->fPols[ 6] = c+1 ; buff->fPols[ 7] = 4   ;  buff->fPols[ 8] = 1  ;
-   buff->fPols[ 9] = 10  ; buff->fPols[10] = 5   ;  buff->fPols[11] = 9  ;
-   buff->fPols[12] = c   ; buff->fPols[13] = 4   ;  buff->fPols[14] = 2  ;
-   buff->fPols[15] = 11  ; buff->fPols[16] = 6   ;  buff->fPols[17] = 10 ;
-   buff->fPols[18] = c+1 ; buff->fPols[19] = 4   ;  buff->fPols[20] = 3  ;
-   buff->fPols[21] = 8   ; buff->fPols[22] = 7   ;  buff->fPols[23] = 11 ;
-   buff->fPols[24] = c+2 ; buff->fPols[25] = 4   ;  buff->fPols[26] = 0  ;
-   buff->fPols[27] = 3   ; buff->fPols[28] = 2   ;  buff->fPols[29] = 1  ;
-   buff->fPols[30] = c+3 ; buff->fPols[31] = 4   ;  buff->fPols[32] = 4  ;
-   buff->fPols[33] = 5   ; buff->fPols[34] = 6   ;  buff->fPols[35] = 7  ;
+   buff.fPols[ 0] = c   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ;
+   buff.fPols[ 3] = 9   ; buff.fPols[ 4] = 4   ;  buff.fPols[ 5] = 8  ;
+   buff.fPols[ 6] = c+1 ; buff.fPols[ 7] = 4   ;  buff.fPols[ 8] = 1  ;
+   buff.fPols[ 9] = 10  ; buff.fPols[10] = 5   ;  buff.fPols[11] = 9  ;
+   buff.fPols[12] = c   ; buff.fPols[13] = 4   ;  buff.fPols[14] = 2  ;
+   buff.fPols[15] = 11  ; buff.fPols[16] = 6   ;  buff.fPols[17] = 10 ;
+   buff.fPols[18] = c+1 ; buff.fPols[19] = 4   ;  buff.fPols[20] = 3  ;
+   buff.fPols[21] = 8   ; buff.fPols[22] = 7   ;  buff.fPols[23] = 11 ;
+   buff.fPols[24] = c+2 ; buff.fPols[25] = 4   ;  buff.fPols[26] = 0  ;
+   buff.fPols[27] = 3   ; buff.fPols[28] = 2   ;  buff.fPols[29] = 1  ;
+   buff.fPols[30] = c+3 ; buff.fPols[31] = 4   ;  buff.fPols[32] = 4  ;
+   buff.fPols[33] = 5   ; buff.fPols[34] = 6   ;  buff.fPols[35] = 7  ;
 }
 
 //_____________________________________________________________________________
@@ -633,39 +591,39 @@ void TGeoBBox::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoBBox::SetBoxPoints(Double_t *buff) const
+void TGeoBBox::SetBoxPoints(Double_t *points) const
 {
-   TGeoBBox::SetPoints(buff);
+   TGeoBBox::SetPoints(points);
 }
 
 //_____________________________________________________________________________
-void TGeoBBox::SetPoints(Double_t *buff) const
+void TGeoBBox::SetPoints(Double_t *points) const
 {
 // create box points
-   if (!buff) return;
-   buff[ 0] = -fDX+fOrigin[0]; buff[ 1] = -fDY+fOrigin[1]; buff[ 2] = -fDZ+fOrigin[2];
-   buff[ 3] = -fDX+fOrigin[0]; buff[ 4] =  fDY+fOrigin[1]; buff[ 5] = -fDZ+fOrigin[2];
-   buff[ 6] =  fDX+fOrigin[0]; buff[ 7] =  fDY+fOrigin[1]; buff[ 8] = -fDZ+fOrigin[2];
-   buff[ 9] =  fDX+fOrigin[0]; buff[10] = -fDY+fOrigin[1]; buff[11] = -fDZ+fOrigin[2];
-   buff[12] = -fDX+fOrigin[0]; buff[13] = -fDY+fOrigin[1]; buff[14] =  fDZ+fOrigin[2];
-   buff[15] = -fDX+fOrigin[0]; buff[16] =  fDY+fOrigin[1]; buff[17] =  fDZ+fOrigin[2];
-   buff[18] =  fDX+fOrigin[0]; buff[19] =  fDY+fOrigin[1]; buff[20] =  fDZ+fOrigin[2];
-   buff[21] =  fDX+fOrigin[0]; buff[22] = -fDY+fOrigin[1]; buff[23] =  fDZ+fOrigin[2];
+   if (!points) return;
+   points[ 0] = -fDX+fOrigin[0]; points[ 1] = -fDY+fOrigin[1]; points[ 2] = -fDZ+fOrigin[2];
+   points[ 3] = -fDX+fOrigin[0]; points[ 4] =  fDY+fOrigin[1]; points[ 5] = -fDZ+fOrigin[2];
+   points[ 6] =  fDX+fOrigin[0]; points[ 7] =  fDY+fOrigin[1]; points[ 8] = -fDZ+fOrigin[2];
+   points[ 9] =  fDX+fOrigin[0]; points[10] = -fDY+fOrigin[1]; points[11] = -fDZ+fOrigin[2];
+   points[12] = -fDX+fOrigin[0]; points[13] = -fDY+fOrigin[1]; points[14] =  fDZ+fOrigin[2];
+   points[15] = -fDX+fOrigin[0]; points[16] =  fDY+fOrigin[1]; points[17] =  fDZ+fOrigin[2];
+   points[18] =  fDX+fOrigin[0]; points[19] =  fDY+fOrigin[1]; points[20] =  fDZ+fOrigin[2];
+   points[21] =  fDX+fOrigin[0]; points[22] = -fDY+fOrigin[1]; points[23] =  fDZ+fOrigin[2];
 }
 
 //_____________________________________________________________________________
-void TGeoBBox::SetPoints(Float_t *buff) const
+void TGeoBBox::SetPoints(Float_t *points) const
 {
 // create box points
-   if (!buff) return;
-   buff[ 0] = -fDX+fOrigin[0]; buff[ 1] = -fDY+fOrigin[1]; buff[ 2] = -fDZ+fOrigin[2];
-   buff[ 3] = -fDX+fOrigin[0]; buff[ 4] =  fDY+fOrigin[1]; buff[ 5] = -fDZ+fOrigin[2];
-   buff[ 6] =  fDX+fOrigin[0]; buff[ 7] =  fDY+fOrigin[1]; buff[ 8] = -fDZ+fOrigin[2];
-   buff[ 9] =  fDX+fOrigin[0]; buff[10] = -fDY+fOrigin[1]; buff[11] = -fDZ+fOrigin[2];
-   buff[12] = -fDX+fOrigin[0]; buff[13] = -fDY+fOrigin[1]; buff[14] =  fDZ+fOrigin[2];
-   buff[15] = -fDX+fOrigin[0]; buff[16] =  fDY+fOrigin[1]; buff[17] =  fDZ+fOrigin[2];
-   buff[18] =  fDX+fOrigin[0]; buff[19] =  fDY+fOrigin[1]; buff[20] =  fDZ+fOrigin[2];
-   buff[21] =  fDX+fOrigin[0]; buff[22] = -fDY+fOrigin[1]; buff[23] =  fDZ+fOrigin[2];
+   if (!points) return;
+   points[ 0] = -fDX+fOrigin[0]; points[ 1] = -fDY+fOrigin[1]; points[ 2] = -fDZ+fOrigin[2];
+   points[ 3] = -fDX+fOrigin[0]; points[ 4] =  fDY+fOrigin[1]; points[ 5] = -fDZ+fOrigin[2];
+   points[ 6] =  fDX+fOrigin[0]; points[ 7] =  fDY+fOrigin[1]; points[ 8] = -fDZ+fOrigin[2];
+   points[ 9] =  fDX+fOrigin[0]; points[10] = -fDY+fOrigin[1]; points[11] = -fDZ+fOrigin[2];
+   points[12] = -fDX+fOrigin[0]; points[13] = -fDY+fOrigin[1]; points[14] =  fDZ+fOrigin[2];
+   points[15] = -fDX+fOrigin[0]; points[16] =  fDY+fOrigin[1]; points[17] =  fDZ+fOrigin[2];
+   points[18] =  fDX+fOrigin[0]; points[19] =  fDY+fOrigin[1]; points[20] =  fDZ+fOrigin[2];
+   points[21] =  fDX+fOrigin[0]; points[22] = -fDY+fOrigin[1]; points[23] =  fDZ+fOrigin[2];
 }
 
 //_____________________________________________________________________________
@@ -674,4 +632,51 @@ void TGeoBBox::Sizeof3D() const
 ///// fill size of this 3-D object
 ///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
 ///    if (painter) painter->AddSize3D(8, 12, 6);
+}
+
+//_____________________________________________________________________________
+const TBuffer3D & TGeoBBox::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   FillBuffer3D(buffer, reqSections, localFrame);
+
+   // TODO: A box itself has has nothing more as already described
+   // by bounding box. How will viewer interpret?
+   if (reqSections & TBuffer3D::kRawSizes) {
+      if (buffer.SetRawSizes(8, 3*8, 12, 3*12, 6, 6*6)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
+}
+
+void TGeoBBox::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
+{
+   TGeoShape::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kBoundingBox) {
+		buffer.fBBLowVertex[0]  = fOrigin[0] - fDX;
+		buffer.fBBLowVertex[1]  = fOrigin[1] - fDY;
+		buffer.fBBLowVertex[2]  = fOrigin[2] - fDZ;
+		buffer.fBBHighVertex[0] = fOrigin[0] + fDX;
+		buffer.fBBHighVertex[1] = fOrigin[1] + fDY;
+		buffer.fBBHighVertex[2] = fOrigin[2] + fDZ;
+
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fBBLowVertex, 1);
+         TransformPoints(buffer.fBBHighVertex, 1);
+      }
+      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
+    }
 }

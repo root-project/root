@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.17 2004/11/25 12:10:00 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.18 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class TGeoCompositeShape : public TGeoBBox
 private :
 // data members
    TGeoBoolNode         *fNode;             // top boolean node
-   
+
 public:
    // constructors
    TGeoCompositeShape();
@@ -62,8 +62,8 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t * /*param*/) {;}
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoCompositeShape, 1)         // boolean composite shape

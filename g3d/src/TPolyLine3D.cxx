@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.19 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.20 2004/12/13 16:56:22 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -14,8 +14,12 @@
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"
 #include "TView.h"
+#include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
+
+#include <assert.h>
 
 ClassImp(TPolyLine3D)
 
@@ -460,60 +464,75 @@ Int_t TPolyLine3D::Merge(TCollection *list)
 }
 
 //______________________________________________________________________________
-void TPolyLine3D::Paint(Option_t *option)
+void TPolyLine3D::Paint(Option_t * /* option */ )
 {
-   // Paint this 3-D polyline with its current attributes.
+   static TBuffer3D buffer(TBuffer3DTypes::kLine);
+   
+   // TPolyLine3D can only be described by filling the TBuffer3D 'tesselation'
+   // parts - so there are no 'optional' sections - we just fill everything.
+   
+   buffer.ClearSectionsValid();
 
-   Int_t i;
-   Int_t NbPnts = Size();
-   Int_t NbSegs = NbPnts-1;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 0);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kLINE;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = 0;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
+   // Section kCore
+   buffer.fID           = this;
+   buffer.fColor        = GetLineColor();   
+   buffer.fTransparency = 0;    
+   buffer.fLocalFrame   = kFALSE; 
+   buffer.SetSectionsValid(TBuffer3D::kCore);
+   
+   // We fill kCore and kRawSizes on first pass and try with viewer
+   Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
+   if (reqSections == TBuffer3D::kNone) {
       return;
    }
-
-   for (i=0; i<3*NbPnts; i++) buff->fPnts[i] = (Double_t)fP[i];
-
-   // Basic colors: 0, 1, ... 8
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   // Allocate memory for segments *-*
-   for (i = 0; i < NbSegs; i++) {
-       buff->fSegs[3*i  ] = c;
-       buff->fSegs[3*i+1] = i;
-       buff->fSegs[3*i+2] = i+1;
-   }
-
-   if (gGeometry) {   
-      Double_t dlocal[3];
-      Double_t dmaster[3];
-      for (Int_t j=0; j<buff->fNbPnts; j++) {
-         dlocal[0] = buff->fPnts[3*j];
-         dlocal[1] = buff->fPnts[3*j+1];
-         dlocal[2] = buff->fPnts[3*j+2];
-         gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
-         buff->fPnts[3*j]   = dmaster[0];
-         buff->fPnts[3*j+1] = dmaster[1];
-         buff->fPnts[3*j+2] = dmaster[2];
+   
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t NbPnts = Size();
+      Int_t NbSegs = NbPnts-1;
+      if (!buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, 0, 0)) {
+         return;
       }
+      buffer.SetSectionsValid(TBuffer3D::kRawSizes);
    }
 
-   // Paint gPad->fBuffer3D
-   TAttLine::Modify();
-   buff->Paint(option); 
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      // Points
+      for (UInt_t i=0; i<3*buffer.NbPnts(); i++) {
+         buffer.fPnts[i] = (Double_t)fP[i];
+      }
+
+      // Transform points
+      if (gGeometry && !buffer.fLocalFrame) {   
+         Double_t dlocal[3];
+         Double_t dmaster[3];
+         for (UInt_t j=0; j<buffer.NbPnts(); j++) {
+            dlocal[0] = buffer.fPnts[3*j];
+            dlocal[1] = buffer.fPnts[3*j+1];
+            dlocal[2] = buffer.fPnts[3*j+2];
+            gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+            buffer.fPnts[3*j]   = dmaster[0];
+            buffer.fPnts[3*j+1] = dmaster[1];
+            buffer.fPnts[3*j+2] = dmaster[2];
+         }
+      }
+
+      // Basic colors: 0, 1, ... 8
+      Int_t c = (((GetLineColor()) %8) -1) * 4;
+      if (c < 0) c = 0;
+
+      // Segments
+      for (UInt_t i = 0; i < buffer.NbSegs(); i++) {
+          buffer.fSegs[3*i  ] = c;
+          buffer.fSegs[3*i+1] = i;
+          buffer.fSegs[3*i+2] = i+1;
+      }
+
+      TAttLine::Modify();
+      
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+   
+   gPad->GetViewer3D()->AddObject(buffer);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONE.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCONE.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -33,7 +33,8 @@ class TCONE : public TTUBE {
         Float_t fRmin2;        // inside radius at the high z limit
         Float_t fRmax2;        // outside radius at the high z limit
 
-    public:
+        virtual void    SetPoints(Double_t *points) const;
+   public:
         TCONE();
         TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,
               Float_t rmin2, Float_t rmax2);
@@ -42,7 +43,6 @@ class TCONE : public TTUBE {
 
         Float_t         GetRmin2() const {return fRmin2;}
         Float_t         GetRmax2() const {return fRmax2;}
-        virtual void    SetPoints(Double_t *buff);
 
         ClassDef(TCONE,1)  //CONE shape
 };

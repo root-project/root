@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TGTRA::~TGTRA ()
 }
 
 //______________________________________________________________________________
-void TGTRA::SetPoints (Double_t *buff)
+void TGTRA::SetPoints (Double_t *points) const
 {
    // Create GTRA points
 
@@ -119,20 +119,20 @@ void TGTRA::SetPoints (Double_t *buff)
    dx1 = 2*fH1*TMath::Tan(alpha1);
    dx2 = 2*fH2*TMath::Tan(alpha2);
 
-   if (buff) {
-      buff[ 0] = -fBl1;        buff[ 1] = -fH1;    buff[ 2] = -dz;
-      buff[ 9] =  fBl1;        buff[ 10] = -fH1;    buff[ 11] = -dz;
-      buff[ 6] =  fTl1+dx1;    buff[ 7] =  fH1;    buff[ 8] = -dz;
-      buff[ 3] = -fTl1+dx1;    buff[4] =  fH1;    buff[5] = -dz;
-      buff[12] = -fBl2+dx;     buff[13] = -fH2+dy; buff[14] = dz;
-      buff[21] =  fBl2+dx;     buff[22] = -fH2+dy; buff[23] = dz;
-      buff[18] =  fTl2+dx+dx2; buff[19] =  fH2+dy; buff[20] = dz;
-      buff[15] = -fTl2+dx+dx2; buff[16] =  fH2+dy; buff[17] = dz;
+   if (points) {
+      points[ 0] = -fBl1;        points[ 1] = -fH1;    points[ 2] = -dz;
+      points[ 9] =  fBl1;        points[10] = -fH1;    points[11] = -dz;
+      points[ 6] =  fTl1+dx1;    points[ 7] =  fH1;    points[ 8] = -dz;
+      points[ 3] = -fTl1+dx1;    points[4]  =  fH1;    points[5] = -dz;
+      points[12] = -fBl2+dx;     points[13] = -fH2+dy; points[14] = dz;
+      points[21] =  fBl2+dx;     points[22] = -fH2+dy; points[23] = dz;
+      points[18] =  fTl2+dx+dx2; points[19] =  fH2+dy; points[20] = dz;
+      points[15] = -fTl2+dx+dx2; points[16] =  fH2+dy; points[17] = dz;
       for (Int_t i = 12; i < 24; i+=3) {
-         x = buff[i];
-         y = buff[i+1];
-         buff[i]     = x*TMath::Cos(twist) + y*TMath::Sin(twist);
-         buff[i+1]  = -x*TMath::Sin(twist) + y*TMath::Cos(twist);
+         x = points[i];
+         y = points[i+1];
+         points[i]     = x*TMath::Cos(twist) + y*TMath::Sin(twist);
+         points[i+1]  = -x*TMath::Sin(twist) + y*TMath::Cos(twist);
       }
    }
 }

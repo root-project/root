@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.14 2004/09/20 16:00:25 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.15 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -350,7 +350,7 @@ Int_t TGeoUnion::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-void TGeoUnion::SetPoints(Double_t * /*buff*/) const
+void TGeoUnion::SetPoints(Double_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }
@@ -373,7 +373,7 @@ Double_t TGeoUnion::Safety(Double_t *point, Bool_t) const
 }   
 
 //-----------------------------------------------------------------------------
-void TGeoUnion::SetPoints(Float_t * /*buff*/) const
+void TGeoUnion::SetPoints(Float_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }
@@ -594,12 +594,12 @@ Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t) const
    return saf1;
 }   
 //-----------------------------------------------------------------------------
-void TGeoSubtraction::SetPoints(Double_t * /*buff*/) const
+void TGeoSubtraction::SetPoints(Double_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }
 //-----------------------------------------------------------------------------
-void TGeoSubtraction::SetPoints(Float_t * /*buff*/) const
+void TGeoSubtraction::SetPoints(Float_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }
@@ -882,12 +882,12 @@ Double_t TGeoIntersection::Safety(Double_t *point, Bool_t) const
    return TMath::Max(saf1,saf2);
 }   
 //-----------------------------------------------------------------------------
-void TGeoIntersection::SetPoints(Double_t * /*buff*/) const
+void TGeoIntersection::SetPoints(Double_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }
 //-----------------------------------------------------------------------------
-void TGeoIntersection::SetPoints(Float_t * /*buff*/) const
+void TGeoIntersection::SetPoints(Float_t * /*points*/) const
 {
 // Fill buffer with shape vertices.
 }

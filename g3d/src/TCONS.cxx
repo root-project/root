@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONS.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCONS.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -77,7 +77,7 @@ TCONS::~TCONS()
 }
 
 //______________________________________________________________________________
-void TCONS::SetPoints(Double_t *buff)
+void TCONS::SetPoints(Double_t *points) const
 {
    // Create CONS points
 
@@ -94,26 +94,26 @@ void TCONS::SetPoints(Double_t *buff)
 
    if (!fCoTab) MakeTableOfCoSin();
 
-   if (buff) {
+   if (points) {
       for (j = 0; j < n; j++) {
-         buff[indx++] = rmin1 * fCoTab[j];
-         buff[indx++] = rmin1 * fSiTab[j];
-         buff[indx++] = -dz;
+         points[indx++] = rmin1 * fCoTab[j];
+         points[indx++] = rmin1 * fSiTab[j];
+         points[indx++] = -dz;
       }
       for (j = 0; j < n; j++) {
-         buff[indx++] = rmax1 * fCoTab[j];
-         buff[indx++] = rmax1 * fSiTab[j];
-         buff[indx++] = -dz;
+         points[indx++] = rmax1 * fCoTab[j];
+         points[indx++] = rmax1 * fSiTab[j];
+         points[indx++] = -dz;
       }
       for (j = 0; j < n; j++) {
-         buff[indx++] = fRmin2 * fCoTab[j];
-         buff[indx++] = fRmin2 * fSiTab[j];
-         buff[indx++] = dz;
+         points[indx++] = fRmin2 * fCoTab[j];
+         points[indx++] = fRmin2 * fSiTab[j];
+         points[indx++] = dz;
       }
       for (j = 0; j < n; j++) {
-         buff[indx++] = fRmax2 * fCoTab[j];
-         buff[indx++] = fRmax2 * fSiTab[j];
-         buff[indx++] = dz;
+         points[indx++] = fRmax2 * fCoTab[j];
+         points[indx++] = fRmax2 * fSiTab[j];
+         points[indx++] = dz;
       }
    }
 }

@@ -24,23 +24,37 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPad
-#include "TVirtualPad.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
-class TVirtualViewer3D {
+class TBuffer3D;
+class TVirtualPad;
 
-protected:
-   TVirtualPad    *fPad;        // pad to be displayed in a 3D viewer
-
+class TVirtualViewer3D
+{
 public:
-   TVirtualViewer3D() : fPad(0) { }
-   TVirtualViewer3D(TVirtualPad *pad);
-   virtual     ~TVirtualViewer3D() { }
-   virtual void CreateScene(Option_t *option);
-   virtual void UpdateScene(Option_t *option);
+   virtual ~TVirtualViewer3D() {};
+   
+   // Viewers must always handle master (absolute) positions - and
+   // buffer producers must be able to supply them. Some viewers may 
+   // prefer local frame & translation - and producers can optionally
+   // supply them
+   virtual Bool_t PreferLocalFrame() const = 0;  
 
-   static  TVirtualViewer3D *Viewer3D(Option_t *option);
+   // Addition/removal of objects must occur between Begin/EndUpdate calls
+   virtual void   BeginScene() = 0;
+   virtual Bool_t BuildingScene() const = 0;
+   virtual void   EndScene() = 0;
+
+   // Simple object addition - buffer represents a unique single positioned object
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;               
+
+   // Complex object addition - for adding placed objects which have common template 
+   // shapes. In this case buffer describes template shape (aside from kCore). 
+   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   
+   static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
 
    ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers
 };

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONS.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCONS.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -32,6 +32,7 @@ class TCONS : public TTUBS {
         Float_t fRmin2;        // inside radius at the high z limit
         Float_t fRmax2;        // outside radius at the high z limit
 
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TCONS();
         TCONS(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,
@@ -42,7 +43,6 @@ class TCONS : public TTUBS {
 
         virtual Float_t GetRmin2() const {return fRmin2;}
         virtual Float_t GetRmax2() const {return fRmax2;}
-        virtual void    SetPoints(Double_t *buff);
 
         ClassDef(TCONS,1)  //CONS shape
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.22 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.23 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 #include "TGeoTorus.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
-
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoTorus)
 
@@ -518,74 +518,19 @@ TBuffer3D *TGeoTorus::MakeBuffer3D() const
       NbPols += 2*(n-1);
    }
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+   if (buff)
+   {
+      SetPoints(buff->fPnts);   
+      SetSegsAndPols(*buff);
+   }
 
-   buff->fType = TBuffer3D::kTORUS;
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   
-   SetSegsAndPols(buff);
-   
    return buff; 
 }
 
 //_____________________________________________________________________________
-void TGeoTorus::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t NbPnts = n*(n-1);
-   Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
-   Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) NbPnts *= 2;
-   else if (hasphi) NbPnts += 2;
-
-   Int_t NbSegs = (2*n-1)*(n-1);
-   Int_t NbPols = (n-1)*(n-1);
-   if (hasrmin) {
-      NbSegs += (2*n-1)*(n-1);
-      NbPols += (n-1)*(n-1);
-   }
-   if (hasphi) {
-      NbSegs += 2*(n-1);
-      NbPols += 2*(n-1);
-   }
-
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-
-   buff->fType = TBuffer3D::kTORUS;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoTorus::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t i, j;
@@ -596,20 +541,19 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
    Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
    if (hasrmin) NbPnts *= 2;
    else if (hasphi) NbPnts += 2;
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
    indp = n*(n-1); // start index for points on inner surface
-   memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));
+   memset(buff.fSegs, 0, buff.NbSegs()*3*sizeof(Int_t));
 
    // outer surface phi circles = n*(n-1) -> [0, n*(n-1) -1]
    // connect point j with point j+1 on same row
    indx = 0;
    for (i = 0; i < n; i++) { // rows [0,n-1]
       for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-         buff->fSegs[indx+(i*(n-1)+j)*3] = c;
-         buff->fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;   // j on row i
-         buff->fSegs[indx+(i*(n-1)+j)*3+2] = i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+         buff.fSegs[indx+(i*(n-1)+j)*3] = c;
+         buff.fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;   // j on row i
+         buff.fSegs[indx+(i*(n-1)+j)*3+2] = i*(n-1)+((j+1)%(n-1)); // j+1 on row i
       }
    }
    indx += 3*n*(n-1);
@@ -617,9 +561,9 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
    // connect point j on row i with point j on row i+1
    for (i = 0; i < n-1; i++) { // rows [0, n-2]
       for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-         buff->fSegs[indx+(i*(n-1)+j)*3] = c;
-         buff->fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;     // j on row i
-         buff->fSegs[indx+(i*(n-1)+j)*3+2] = (i+1)*(n-1)+j; // j on row i+1
+         buff.fSegs[indx+(i*(n-1)+j)*3] = c;
+         buff.fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;     // j on row i
+         buff.fSegs[indx+(i*(n-1)+j)*3+2] = (i+1)*(n-1)+j; // j on row i+1
       }
    }
    indx += 3*(n-1)*(n-1);
@@ -630,9 +574,9 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
       // connect point j with point j+1 on same row
       for (i = 0; i < n; i++) { // rows [0, n-1]
          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-            buff->fSegs[indx+(i*(n-1)+j)*3] = c;              // lighter color
-            buff->fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;   // j on row i
-            buff->fSegs[indx+(i*(n-1)+j)*3+2] = indp + i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+            buff.fSegs[indx+(i*(n-1)+j)*3] = c;              // lighter color
+            buff.fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;   // j on row i
+            buff.fSegs[indx+(i*(n-1)+j)*3+2] = indp + i*(n-1)+((j+1)%(n-1)); // j+1 on row i
          }
       }
       indx += 3*n*(n-1);
@@ -640,9 +584,9 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
       // connect point j on row i with point j on row i+1
       for (i = 0; i < n-1; i++) { // rows [0, n-2]
          for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
-            buff->fSegs[indx+(i*(n-1)+j)*3] = c;                // lighter color
-            buff->fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;     // j on row i
-            buff->fSegs[indx+(i*(n-1)+j)*3+2] = indp + (i+1)*(n-1)+j; // j on row i+1
+            buff.fSegs[indx+(i*(n-1)+j)*3] = c;                // lighter color
+            buff.fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;     // j on row i
+            buff.fSegs[indx+(i*(n-1)+j)*3+2] = indp + (i+1)*(n-1)+j; // j on row i+1
          }
       }
       indx += 3*(n-1)*(n-1);
@@ -654,49 +598,49 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
          // endcaps = 2*(n-1) -> [(4*n-2)*(n-1), 4*n*(n-1)-1]
          i = 0;
          for (j = 0; j < n-1; j++) {
-            buff->fSegs[indx+j*3] = c+1;
-            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
-            buff->fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row 0
+            buff.fSegs[indx+j*3] = c+1;
+            buff.fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+            buff.fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row 0
          }
          indx += 3*(n-1);
          i = n-1;
          for (j = 0; j < n-1; j++) {
-            buff->fSegs[indx+j*3] = c+1;
-            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
-            buff->fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row n-1
+            buff.fSegs[indx+j*3] = c+1;
+            buff.fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+            buff.fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row n-1
          }
          indx += 3*(n-1);
       } else {
          i = 0;
          for (j = 0; j < n-1; j++) {
-            buff->fSegs[indx+j*3] = c+1;
-            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
-            buff->fSegs[indx+j*3+2] = n*(n-1);       // center of first endcap
+            buff.fSegs[indx+j*3] = c+1;
+            buff.fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+            buff.fSegs[indx+j*3+2] = n*(n-1);       // center of first endcap
          }
          indx += 3*(n-1);
          i = n-1;
          for (j = 0; j < n-1; j++) {
-            buff->fSegs[indx+j*3] = c+1;
-            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
-            buff->fSegs[indx+j*3+2] = n*(n-1)+1;     // center of second endcap
+            buff.fSegs[indx+j*3] = c+1;
+            buff.fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+            buff.fSegs[indx+j*3+2] = n*(n-1)+1;     // center of second endcap
          }
          indx += 3*(n-1);
       }
    }
 
    indx = 0;
-   memset(buff->fPols, 0, buff->fNbPols*6*sizeof(Int_t));
+   memset(buff.fPols, 0, buff.NbPols()*6*sizeof(Int_t));
 
    // outer surface = (n-1)*(n-1) -> [0, (n-1)*(n-1)-1]
    // normal pointing out
    for (i=0; i<n-1; i++) {
       for (j=0; j<n-1; j++) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on outer row i
-         buff->fPols[indx++] = (n-1)*(i+1)+j; // seg j on outer row i+1
-         buff->fPols[indx++] = n*(n-1)+(n-1)*i+j; // generator j on outer row i
-         buff->fPols[indx++] = (n-1)*i+j; // seg j on outer row i
+         buff.fPols[indx++] = c;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on outer row i
+         buff.fPols[indx++] = (n-1)*(i+1)+j; // seg j on outer row i+1
+         buff.fPols[indx++] = n*(n-1)+(n-1)*i+j; // generator j on outer row i
+         buff.fPols[indx++] = (n-1)*i+j; // seg j on outer row i
       }
    }
    if (hasrmin) {
@@ -705,12 +649,12 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
       // normal pointing out
       for (i=0; i<n-1; i++) {
          for (j=0; j<n-1; j++) {
-            buff->fPols[indx++] = c;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = indp+n*(n-1)+(n-1)*i+j; // generator j on inner row i
-            buff->fPols[indx++] = indp+(n-1)*(i+1)+j; // seg j on inner row i+1
-            buff->fPols[indx++] = indp+n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on inner r>
-            buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row i
+            buff.fPols[indx++] = c;
+            buff.fPols[indx++] = 4;
+            buff.fPols[indx++] = indp+n*(n-1)+(n-1)*i+j; // generator j on inner row i
+            buff.fPols[indx++] = indp+(n-1)*(i+1)+j; // seg j on inner row i+1
+            buff.fPols[indx++] = indp+n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on inner r>
+            buff.fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row i
          }
       }
    }
@@ -719,24 +663,24 @@ void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
       i=0; // row 0
       Int_t np = (hasrmin)?4:3;
       for (j=0; j<n-1; j++) {
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = np;
-         buff->fPols[indx++] = j;         // seg j on outer row 0  a
-	 buff->fPols[indx++] = startcap+j;        // endcap j on row 0  d
+         buff.fPols[indx++] = c+1;
+         buff.fPols[indx++] = np;
+         buff.fPols[indx++] = j;         // seg j on outer row 0  a
+	 buff.fPols[indx++] = startcap+j;        // endcap j on row 0  d
          if(hasrmin)
-	    buff->fPols[indx++] = indp+j; // seg j on inner row 0  c
-         buff->fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0  b
+	    buff.fPols[indx++] = indp+j; // seg j on inner row 0  c
+         buff.fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0  b
       }
 
       i=n-1; // row n-1
       for (j=0; j<n-1; j++) {
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = np;
-         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1 a
-	 buff->fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1 d
+         buff.fPols[indx++] = c+1;
+         buff.fPols[indx++] = np;
+         buff.fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1 a
+	 buff.fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1 d
          if (hasrmin)
-            buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1 c
-         buff->fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1 b
+            buff.fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1 c
+         buff.fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1 b
       }
    }
 }
@@ -803,10 +747,10 @@ void TGeoTorus::SetDimensions(Double_t *param)
 }
 
 //_____________________________________________________________________________
-void TGeoTorus::SetPoints(Double_t *buff) const
+void TGeoTorus::SetPoints(Double_t *points) const
 {
 // Create torus mesh points
-   if (!buff) return;
+   if (!points) return;
    Int_t n = gGeoManager->GetNsegments()+1;
    Double_t phin, phout;
    Double_t dpin = 360./(n-1);
@@ -824,9 +768,9 @@ void TGeoTorus::SetPoints(Double_t *buff) const
          phin = j*dpin*TMath::DegToRad();
          ci = TMath::Cos(phin);
          si = TMath::Sin(phin);
-         buff[indx++] = (fR+fRmax*ci)*co;
-         buff[indx++] = (fR+fRmax*ci)*so;
-         buff[indx++] = fRmax*si;
+         points[indx++] = (fR+fRmax*ci)*co;
+         points[indx++] = (fR+fRmax*ci)*so;
+         points[indx++] = fRmax*si;
       }
    }     
     
@@ -840,29 +784,29 @@ void TGeoTorus::SetPoints(Double_t *buff) const
             phin = j*dpin*TMath::DegToRad();
             ci = TMath::Cos(phin);
             si = TMath::Sin(phin);
-            buff[indx++] = (fR+fRmin*ci)*co;
-            buff[indx++] = (fR+fRmin*ci)*so;
-            buff[indx++] = fRmin*si;
+            points[indx++] = (fR+fRmin*ci)*co;
+            points[indx++] = (fR+fRmin*ci)*so;
+            points[indx++] = fRmin*si;
          }
       }  
    } else {
       if (fDphi!=360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [3*n*n, 3*n*n+1]
-         buff[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
-         buff[indx++] = 0;
-         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = 0;
+         points[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
+         points[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
+         points[indx++] = 0;
+         points[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
+         points[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
+         points[indx++] = 0;
       }
    }      
 }        
 
 //_____________________________________________________________________________
-void TGeoTorus::SetPoints(Float_t *buff) const
+void TGeoTorus::SetPoints(Float_t *points) const
 {
 // Create torus mesh points
-   if (!buff) return;
+   if (!points) return;
    Int_t n = gGeoManager->GetNsegments()+1;
    Double_t phin, phout;
    Double_t dpin = 360./(n-1);
@@ -881,9 +825,9 @@ void TGeoTorus::SetPoints(Float_t *buff) const
          phin = j*dpin*TMath::DegToRad();
          ci = TMath::Cos(phin);
          si = TMath::Sin(phin);
-         buff[indx++] = (fR+fRmax*ci)*co;
-         buff[indx++] = (fR+fRmax*ci)*so;
-         buff[indx++] = fRmax*si;
+         points[indx++] = (fR+fRmax*ci)*co;
+         points[indx++] = (fR+fRmax*ci)*so;
+         points[indx++] = fRmax*si;
       }
    }     
     
@@ -898,9 +842,9 @@ void TGeoTorus::SetPoints(Float_t *buff) const
             phin = j*dpin*TMath::DegToRad();
             ci = TMath::Cos(phin);
             si = TMath::Sin(phin);
-            buff[indx++] = (fR+fRmin*ci)*co;
-            buff[indx++] = (fR+fRmin*ci)*so;
-            buff[indx++] = fRmin*si;
+            points[indx++] = (fR+fRmin*ci)*co;
+            points[indx++] = (fR+fRmin*ci)*so;
+            points[indx++] = fRmin*si;
          }
       }  
    } else {
@@ -908,12 +852,12 @@ void TGeoTorus::SetPoints(Float_t *buff) const
       // just add extra 2 points on the centers of the 2 phi cuts [n*n, n*n+1]
       // ip1 = n*(n-1) + 0;
       // ip2 = n*(n-1) + 1
-         buff[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
-         buff[indx++] = 0;
-         buff[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
-         buff[indx++] = 0;
+         points[indx++] = fR*TMath::Cos(fPhi1*TMath::DegToRad());
+         points[indx++] = fR*TMath::Sin(fPhi1*TMath::DegToRad());
+         points[indx++] = 0;
+         points[indx++] = fR*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
+         points[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
+         points[indx++] = 0;
       }
    }      
 }        
@@ -1109,6 +1053,48 @@ Double_t TGeoTorus::ToBoundary(Double_t *pt, Double_t *dir, Double_t r) const
    return TGeoShape::Big();   
 }      
 
+//_____________________________________________________________________________
+const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments()+1;
+      Int_t NbPnts = n*(n-1);
+      Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
+      Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
+      if (hasrmin) NbPnts *= 2;
+      else if (hasphi) NbPnts += 2;
+
+      Int_t NbSegs = (2*n-1)*(n-1);
+      Int_t NbPols = (n-1)*(n-1);
+      if (hasrmin) {
+         NbSegs += (2*n-1)*(n-1);
+         NbPols += (n-1)*(n-1);
+      }
+      if (hasphi) {
+         NbSegs += 2*(n-1);
+         NbPols += 2*(n-1);
+      }
+
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   // TODO: Push down to TGeoShape?? But would have to do raw sizes set first..
+   // can rest of TGeoShape be defered until after
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);      
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
       
-   
+   return buffer;
+}
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.11 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.h,v 1.12 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -41,7 +41,6 @@ protected :
    Double_t              fTyz;       // tangent of XZ section angle
 
 // methods
-
 public:
    // constructors
    TGeoPara();
@@ -80,8 +79,8 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoPara, 1)         // box primitive

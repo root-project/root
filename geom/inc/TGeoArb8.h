@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.15 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.16 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -53,6 +53,7 @@ protected:
    Double_t              fDz;          // half length in Z
    Double_t             *fTwist;       //! [4] tangents of twist angles 
    Double_t              fXY[8][2];    // list of vertices
+
 public:
    // constructors
    TGeoArb8();
@@ -93,8 +94,8 @@ public:
    void                  SetPlaneVertices(Double_t zpl, Double_t *vertices) const;
    virtual void          SetVertex(Int_t vnum, Double_t x, Double_t y);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoArb8, 1)         // arbitrary trapezoid with 8 vertices

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.21 2004/01/18 12:31:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.22 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -328,14 +328,14 @@ void TGeoNode::ls(Option_t * /*option*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoNode::Paint(Option_t *option)
+/*void TGeoNode::Paint(Option_t *option)
 {
 // Paint this node and its content according to visualization settings.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->PaintNode(this, option);
 }
-
+*/
 //_____________________________________________________________________________
 void TGeoNode::PrintCandidates() const
 {

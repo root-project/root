@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.26 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.27 2005/01/28 10:01:04 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -148,6 +148,7 @@
 #include "TGeoVolume.h"
 #include "TGeoShape.h"
 #include "TVirtualGeoPainter.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGeoShape)
 
@@ -355,26 +356,18 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 }
 
 //_____________________________________________________________________________
-void TGeoShape::TransformPoints(TBuffer3D *buff) const
+void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
-   // Tranform a buffer (LocalToMaster)
-   // Set reflection flag and transparency
+   // Tranform a set of points (LocalToMaster)
    if (gGeoManager) {
-      Bool_t isReflection = gGeoManager->IsMatrixReflection();
-      buff->SetBit(TBuffer3D::kIsReflection, isReflection);
-      TGeoVolume *vol = gGeoManager->GetPaintVolume();
-      buff->fTransparency = (vol==0)?0:vol->GetTransparency();
-      Double_t visdensity = gGeoManager->GetVisDensity();
-      if (visdensity>0 && vol->GetMedium()) {
-         if (vol->GetMaterial()->GetDensity() < visdensity) buff->fTransparency = 90;
-      }   
       Double_t dlocal[3];
       Double_t dmaster[3];
       Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
-      for (Int_t j = 0; j < buff->fNbPnts; j++) {
-         dlocal[0] = buff->fPnts[3*j];
-         dlocal[1] = buff->fPnts[3*j+1];
-         dlocal[2] = buff->fPnts[3*j+2];
+
+      for (UInt_t j = 0; j < NbPnts; j++) {
+         dlocal[0] = points[3*j];
+         dlocal[1] = points[3*j+1];
+         dlocal[2] = points[3*j+2];
          if (gGeoManager->IsMatrixTransform()) {
             TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
             if (bomb) glmat->LocalToMasterBomb(dlocal, dmaster);
@@ -383,9 +376,93 @@ void TGeoShape::TransformPoints(TBuffer3D *buff) const
             if (bomb) gGeoManager->LocalToMasterBomb(dlocal, dmaster);
             else      gGeoManager->LocalToMaster(dlocal,dmaster);
          }
-         buff->fPnts[3*j]   = dmaster[0];
-         buff->fPnts[3*j+1] = dmaster[1];
-         buff->fPnts[3*j+2] = dmaster[2];
+         points[3*j]   = dmaster[0];
+         points[3*j+1] = dmaster[1];
+         points[3*j+2] = dmaster[2];
+      }
+
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
+{
+   // Catch this common potential error here
+   // We have to set kRawSize (unless already done) to allocate buffer space 
+   // before kRaw can be filled
+   if (reqSections & TBuffer3D::kRaw) {
+      if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+         assert(kFALSE);
       }
    }
+
+   if (reqSections & TBuffer3D::kCore) {
+		// If writing core section all others will be invalid
+      buffer.ClearSectionsValid();
+		
+      // Check/grab some objects we need
+      if (!gGeoManager) { 
+         assert(kFALSE); 
+         return; 
+      }
+      const TGeoVolume * paintVolume = gGeoManager->GetPaintVolume();
+      if (!paintVolume) { 
+         assert(kFALSE); 
+         return; 
+      }
+
+		buffer.fID = const_cast<TGeoVolume *>(paintVolume);
+      buffer.fColor = paintVolume->GetLineColor();
+
+      buffer.fTransparency = paintVolume->GetTransparency();
+      Double_t visdensity = gGeoManager->GetVisDensity();
+      if (visdensity>0 && paintVolume->GetMedium()) {
+         if (paintVolume->GetMaterial()->GetDensity() < visdensity) {
+            buffer.fTransparency = 90;
+         }
+      }
+
+      buffer.fLocalFrame = localFrame;
+      buffer.fReflection = gGeoManager->IsMatrixReflection();
+
+      // Set up local -> master translation matrix
+      if (localFrame) {
+         TGeoMatrix * localMasterMat = 0;
+         
+         // Internal hierarchy of a composite shape sits on top of the current 
+         // matrix (as for below)
+         if (gGeoManager->IsMatrixTransform()) {
+            localMasterMat = gGeoManager->GetGLMatrix();
+         }
+         // Geometry hierarchy is developed normally from top level downwards 
+         // by PaintNode
+         else {
+            localMasterMat = gGeoManager->GetCurrentMatrix();
+         }
+         if (!localMasterMat) { 
+            assert(kFALSE); 
+            return; 
+         }
+         localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
+      }
+      else {
+         buffer.SetLocalMasterIdentity();
+      }
+
+		buffer.SetSectionsValid(TBuffer3D::kCore);
+   }
+}
+
+//_____________________________________________________________________________
+Int_t TGeoShape::GetBasicColor() const
+{
+   Int_t basicColor = 0; // TODO: Check on sensible fallback
+   if (gGeoManager) {
+      const TGeoVolume * volume = gGeoManager->GetPaintVolume();
+      if (volume) {
+            basicColor = ((volume->GetLineColor() %8) -1) * 4;
+            if (basicColor < 0) basicColor = 0;
+      }
+   }
+   return basicColor;
 }

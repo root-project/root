@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.9 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.10 2005/02/03 11:40:38 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -46,6 +46,7 @@ protected:
    Int_t                 fSeg;   // !current segment [0,fNvert-1]
    Int_t                 fIz;    // !current z plane [0,fNz-1]
 
+   // methods
    Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const;
    void                  GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const;
    void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
@@ -53,6 +54,7 @@ protected:
    Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin);
    void                  SetIz(Int_t iz) {fIz = iz;}
    void                  SetSeg(Int_t iseg) {fSeg = iseg;}
+
 public:
    // constructors
    TGeoXtru();
@@ -71,6 +73,7 @@ public:
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Int_t                 GetNz() const    {return fNz;}
    Int_t                 GetNvert() const {return fNvert;}
@@ -85,16 +88,15 @@ public:
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual void          Paint(Option_t *option);
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetCurrentZ(Double_t z, Int_t iz);
    void                  SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoXtru, 2)         // extruded polygon class 

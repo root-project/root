@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD2.h,v 1.2 2000/12/13 15:13:47 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRD2.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   13/09/95
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TTRD2 : public TBRIK {
         Float_t fDx2;        // half length in x at the high z surface
         Float_t fDy2;        // half length in y at the high z surface
 
-
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TTRD2();
         TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2,
@@ -43,7 +43,6 @@ class TTRD2 : public TBRIK {
 
         Float_t         GetDx2() const {return fDx2;}
         Float_t         GetDy2() const {return fDy2;}
-        virtual void    SetPoints(Double_t *buff);
 
         ClassDef(TTRD2,1)  //TRD2 shape
 };

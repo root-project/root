@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.5 2002/01/16 13:53:53 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.6 2004/08/03 16:01:19 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -57,6 +57,10 @@ private:
    UInt_t          fHeight;             // viewer height
    Int_t           fXPos;               // viewer X position
    Int_t           fYPos;               // viewer Y position
+   TVirtualPad    *fPad;                // pad we are attached to 
+   Bool_t          fBuildingScene;      // Rebuilding 3D scene
+   enum EPass { kSize, kDraw };         // Multi-pass build : size then draw
+   EPass           fPass;
 
    void     CreateViewer(const char *name);
    void     InitX3DWindow();
@@ -64,7 +68,7 @@ private:
 
    Bool_t   HandleContainerButton(Event_t *ev);
 
-   static Bool_t fgActive;    // TViewerX3D is a singleton
+   static Bool_t fgCreated;    // TViewerX3D is a singleton
 
 public:
    TViewerX3D(TVirtualPad *pad);
@@ -80,11 +84,16 @@ public:
    void     Show() { MapRaised(); }
    void     Update();
 
-   void     CreateScene(Option_t *option);
-   void     UpdateScene(Option_t *option);
+   void     PaintPolyMarker(const TBuffer3D & buffer) const;
 
-   void     PaintPolyMarker(Option_t *option);
-
+   // TVirtualViewer3D interface
+   virtual Bool_t PreferLocalFrame() const { return kFALSE; }
+   virtual void   BeginScene();
+   virtual Bool_t BuildingScene()    const { return fBuildingScene; }
+   virtual void   EndScene();
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);   
+   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

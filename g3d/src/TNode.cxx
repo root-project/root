@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.20 2003/07/18 08:48:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.21 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TNode.h"
 #include "TBrowser.h"
 #include "X3DBuffer.h"
+#include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 
 #if 0
@@ -307,16 +308,14 @@ void TNode::Draw(Option_t *option)
 
    AppendPad(option);
 
-//*-*- Create a 3-D View
-   TView *view = gPad->GetView();
-   if (!view) {
-      view = new TView(1);
-      view->SetAutoRange(kTRUE);
-      TBuffer3D *buff = gPad->GetBuffer3D();
-      buff->fOption = TBuffer3D::kRANGE;
-      Paint("range");
-      buff->fOption = TBuffer3D::kPAD;
-      view->SetAutoRange(kFALSE);
+   // TODO: Not ideal - but Draw() can be called directly - various entry points
+   TVirtualViewer3D * viewer = gPad->GetViewer3D();
+   if (viewer) {
+      viewer->BeginScene();
+   }
+   Paint(option);
+   if (viewer) {
+      viewer->EndScene();
    }
 }
 
@@ -609,8 +608,6 @@ void TNode::Paint(Option_t *option)
 
    Int_t level = 0;
    if (gGeometry) level = gGeometry->GeomLevel();
-// restrict the levels for "range" option
-   if (level > 3 && option && strlen(option) && strcmp(option,"range") == 0) return;
 //*-*- Update translation vector and rotation matrix for new level
    if (level) {
       gGeometry->UpdateTempMatrix(fX,fY,fZ,fMatrix->GetMatrix(),fMatrix->IsReflection());
@@ -628,6 +625,9 @@ void TNode::Paint(Option_t *option)
 
    TAttLine::Modify();
    TAttFill::Modify();
+
+   Bool_t viewerWantsSons = kTRUE;
+
    if (fVisibility && fShape->GetVisibility()) {
       gNode = this;
       fShape->SetLineColor(GetLineColor());
@@ -635,12 +635,28 @@ void TNode::Paint(Option_t *option)
       fShape->SetLineWidth(GetLineWidth());
       fShape->SetFillColor(GetFillColor());
       fShape->SetFillStyle(GetFillStyle());
-      fShape->Paint(option);
+
+      TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+      if (viewer3D) {
+         // We only provide master frame positions in these shapes
+         // so don't ask viewer preference
+
+         // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
+         // Not all will support the last two - which is fine
+         const TBuffer3D & buffer = 
+            fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
+         Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
+         if (reqSections != TBuffer3D::kNone)
+         {
+            fShape->GetBuffer3D(reqSections);
+            viewer3D->AddObject(buffer);
+         }
+      }
    }
    if ( TestBit(kSonsInvisible) ) return;
 
 //*-*- Paint all sons
-   if(!nsons) return;
+   if(!nsons || !viewerWantsSons) return;
 
    gGeometry->PushLevel();
    TNode *node;

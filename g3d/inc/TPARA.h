@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -36,6 +36,7 @@ class TPARA : public TBRIK {
         Float_t fTheta;  // polar angle from the centre of the low z to the high z
         Float_t fPhi;    // polar angle from the centre of the low z to the high z
 
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TPARA();
         TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
@@ -45,7 +46,6 @@ class TPARA : public TBRIK {
         virtual Float_t  GetAlpha() const  {return fAlpha;}
         virtual Float_t  GetTheta() const  {return fTheta;}
         virtual Float_t  GetPhi() const    {return fPhi;}
-        virtual void     SetPoints  (Double_t *buff);
 
         ClassDef(TPARA,1)  //PARA shape
 };

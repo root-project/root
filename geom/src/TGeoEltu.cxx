@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.22 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.23 2005/02/28 20:52:43 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -27,6 +27,8 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoEltu.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoEltu)
    
@@ -404,7 +406,7 @@ void TGeoEltu::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoEltu::SetPoints(Double_t *buff) const
+void TGeoEltu::SetPoints(Double_t *points) const
 {
 // create tube mesh points
     Double_t dz;
@@ -421,15 +423,15 @@ void TGeoEltu::SetPoints(Double_t *buff) const
     Double_t a2=fRmin*fRmin;
     Double_t b2=fRmax*fRmax;
 
-    if (buff) {
+    if (points) {
 
         for (j = 0; j < n; j++) {
-            buff[indx+6*n] = buff[indx] = 0;
+            points[indx+6*n] = points[indx] = 0;
             indx++;
-            buff[indx+6*n] = buff[indx] = 0;
+            points[indx+6*n] = points[indx] = 0;
             indx++;
-            buff[indx+6*n] = dz;
-            buff[indx]     =-dz;
+            points[indx+6*n] = dz;
+            points[indx]     =-dz;
             indx++;
         }
         for (j = 0; j < n; j++) {
@@ -438,12 +440,12 @@ void TGeoEltu::SetPoints(Double_t *buff) const
             cph=TMath::Cos(phi);
             r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
             r=TMath::Sqrt(r2);
-            buff[indx+6*n] = buff[indx] = r*cph;
+            points[indx+6*n] = points[indx] = r*cph;
             indx++;
-            buff[indx+6*n] = buff[indx] = r*sph;
+            points[indx+6*n] = points[indx] = r*sph;
             indx++;
-            buff[indx+6*n]= dz;
-            buff[indx]    =-dz;
+            points[indx+6*n]= dz;
+            points[indx]    =-dz;
             indx++;
         }
     }
@@ -456,7 +458,7 @@ Int_t TGeoEltu::GetNmeshVertices() const
 }   
    
 //_____________________________________________________________________________
-void TGeoEltu::SetPoints(Float_t *buff) const
+void TGeoEltu::SetPoints(Float_t *points) const
 {
 // create tube mesh points
     Double_t dz;
@@ -473,15 +475,15 @@ void TGeoEltu::SetPoints(Float_t *buff) const
     Double_t a2=fRmin*fRmin;
     Double_t b2=fRmax*fRmax;
 
-    if (buff) {
+    if (points) {
 
         for (j = 0; j < n; j++) {
-            buff[indx+6*n] = buff[indx] = 0;
+            points[indx+6*n] = points[indx] = 0;
             indx++;
-            buff[indx+6*n] = buff[indx] = 0;
+            points[indx+6*n] = points[indx] = 0;
             indx++;
-            buff[indx+6*n] = dz;
-            buff[indx]     =-dz;
+            points[indx+6*n] = dz;
+            points[indx]     =-dz;
             indx++;
         }
         for (j = 0; j < n; j++) {
@@ -490,13 +492,40 @@ void TGeoEltu::SetPoints(Float_t *buff) const
             cph=TMath::Cos(phi);
             r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
             r=TMath::Sqrt(r2);
-            buff[indx+6*n] = buff[indx] = r*cph;
+            points[indx+6*n] = points[indx] = r*cph;
             indx++;
-            buff[indx+6*n] = buff[indx] = r*sph;
+            points[indx+6*n] = points[indx] = r*sph;
             indx++;
-            buff[indx+6*n]= dz;
-            buff[indx]    =-dz;
+            points[indx+6*n]= dz;
+            points[indx]    =-dz;
             indx++;
         }
     }
+}
+
+//_____________________________________________________________________________
+const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments();
+      Int_t NbPnts = 4*n;
+      Int_t NbSegs = 8*n;
+      Int_t NbPols = 4*n;      
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+      SetSegsAndPols(buffer);  
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.7 2004/09/14 15:56:15 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.8 2004/11/16 13:17:21 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TNode.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
 ClassImp(TPCON)
@@ -81,7 +82,7 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
 
 
 //______________________________________________________________________________
-void TPCON::MakeTableOfCoSin()
+void TPCON::MakeTableOfCoSin() const
 {
    const Double_t PI  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = PI/180.0;
@@ -158,7 +159,7 @@ Int_t TPCON::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n)
+void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const
 {
    // Fill the table of cos and sin to prepare drawing
    Double_t ph = phi-angstep;
@@ -171,204 +172,6 @@ void  TPCON::FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n)
 
 
 //______________________________________________________________________________
-void TPCON::Paint(Option_t *option)
-{
-   // Paint this 3-D shape with its current attributes
-
-   Int_t i, j;
-   if (fNz < 2) return;
-   const Int_t n = GetNumberOfDivisions()+1;
-   Int_t NbPnts = fNz*2*n;
-   if (NbPnts <= 0) return;
-
-   // Special case: PCON should be drawn like a TUBE
-   Bool_t specialCase = kFALSE;
-   if (fDphi1 == 360) specialCase = kTRUE;
-
-   Int_t NbSegs = 4*(fNz*n-1+(specialCase == kTRUE));
-   Int_t NbPols = 2*(fNz*n-1+(specialCase == kTRUE));
-
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kPCON;
-   buff->fId   = this;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;   
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = GetLineColor();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
-
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
-
-   //inside & outside circles, number of segments: 2*fNz*(n-1)
-   //             special case number of segments: 2*fNz*n
-   for (i = 0; i < fNz*2; i++) {
-      indx2 = i*n;
-      for (j = 1; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2+j;
-      }
-      if (specialCase) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j-1;
-         buff->fSegs[indx++] = indx2;
-      }
-   }
-   
-   //bottom & top lines, number of segments: 2*n
-   for (i = 0; i < 2; i++) {
-      indx2 = i*(fNz-1)*2*n;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n+j;
-      }
-   }
-   
-   //inside & outside cilindres, number of segments: 2*(fNz-1)*n
-   for (i = 0; i < (fNz-1); i++) {
-   
-      //inside cilinder
-      indx2 = i*n*2;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+2;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
-      }
-      //outside cilinder
-      indx2 = i*n*2+n;
-      for (j = 0; j < n; j++) {
-         buff->fSegs[indx++] = c+3;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+n*2+j;
-      }
-   }
-   
-   //left & right sections, number of segments: 2*(fNz-2)
-   //          special case number of segments: 0
-   if (!specialCase) {
-      for (i = 1; i < (fNz-1); i++) {
-         for (j = 0; j < 2; j++) {
-            buff->fSegs[indx++] = c;
-            buff->fSegs[indx++] =  2*i    * n + j*(n-1);
-            buff->fSegs[indx++] = (2*i+1) * n + j*(n-1);
-         }
-      }
-   }
-
-   Int_t m = n - 1 + (specialCase == kTRUE);
-   indx = 0;
-
-   //bottom & top, number of polygons: 2*(n-1)
-   // special case number of polygons: 2*n
-   for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*fNz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*fNz*m+j+1;
-      buff->fPols[indx++] = j;
-   }
-   for (j = 0; j < n-1; j++) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*fNz*m+n+j;
-      buff->fPols[indx++] = (fNz*2-2)*m+j;
-      buff->fPols[indx++] = 2*fNz*m+n+j+1;
-      buff->fPols[indx++] = (fNz*2-2)*m+m+j;
-   }
-   if (specialCase) {
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*fNz*m+j;
-      buff->fPols[indx++] = m+j;
-      buff->fPols[indx++] = 2*fNz*m;
-      buff->fPols[indx++] = j;
-	 
-      buff->fPols[indx++] = c+3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = 2*fNz*m+n+j;
-      buff->fPols[indx++] = (fNz*2-2)*m+j;
-      buff->fPols[indx++] = 2*fNz*m+n;
-      buff->fPols[indx++] = (fNz*2-2)*m+m+j;
-   }
-   for (k = 0; k < (fNz-1); k++) {
-      for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*k*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j+1;
-         buff->fPols[indx++] = (2*k+2)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
-      }
-      for (j = 0; j < n-1; j++) {
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*k+1)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
-         buff->fPols[indx++] = (2*k+3)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j+1;
-      }
-
-      if (specialCase) {
-         buff->fPols[indx++] = c;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = 2*k*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n;
-         buff->fPols[indx++] = (2*k+2)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
-	    
-         buff->fPols[indx++] = c+1;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = (2*k+1)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
-         buff->fPols[indx++] = (2*k+3)*m+j;
-         buff->fPols[indx++] = fNz*2*m+(2*k+3)*n;
-      }
-   }
-
-  if (!specialCase) {
-      indx2 = fNz*2*(n-1);
-      for (k = 0; k < (fNz-1); k++) {
-         buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*fNz*n+2*(k-1);
-         buff->fPols[indx++] = indx2+2*(k+1)*n;
-         buff->fPols[indx++] = indx2+2*fNz*n+2*k;
-         buff->fPols[indx++] = indx2+(2*k+3)*n;
-	    
-         buff->fPols[indx++] = c+2;
-         buff->fPols[indx++] = 4;
-         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*fNz*n+2*(k-1)+1;
-         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;
-         buff->fPols[indx++] = indx2+2*fNz*n+2*k+1;
-         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;
-      }
-      buff->fPols[indx-8] = indx2+n;
-      buff->fPols[indx-2] = indx2+2*n-1;
-   }
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//______________________________________________________________________________
 void TPCON::SetNumberOfDivisions (Int_t p)
 {
     if (GetNumberOfDivisions () == p) return;
@@ -378,7 +181,7 @@ void TPCON::SetNumberOfDivisions (Int_t p)
 
 
 //______________________________________________________________________________
-void TPCON::SetPoints(Double_t *buff)
+void TPCON::SetPoints(Double_t *points) const
 {
    // Create PCON points
 
@@ -387,18 +190,18 @@ void TPCON::SetPoints(Double_t *buff)
 
    Int_t n = GetNumberOfDivisions()+1;
 
-   if (buff) {
+   if (points) {
       if (!fCoTab) MakeTableOfCoSin();
       for (i = 0; i < fNz; i++) {
          for (j = 0; j < n; j++) {
-            buff[indx++] = fRmin[i] * fCoTab[j];
-            buff[indx++] = fRmin[i] * fSiTab[j];
-            buff[indx++] = fDz[i];
+            points[indx++] = fRmin[i] * fCoTab[j];
+            points[indx++] = fRmin[i] * fSiTab[j];
+            points[indx++] = fDz[i];
          }
          for (j = 0; j < n; j++) {
-            buff[indx++] = fRmax[i] * fCoTab[j];
-            buff[indx++] = fRmax[i] * fSiTab[j];
-            buff[indx++] = fDz[i];
+            points[indx++] = fRmax[i] * fCoTab[j];
+            points[indx++] = fRmax[i] * fSiTab[j];
+            points[indx++] = fDz[i];
          }
       }
    }
@@ -450,4 +253,207 @@ void TPCON::Streamer(TBuffer &b)
    } else {
       TPCON::Class()->WriteBuffer(b,this);
    }
+}
+
+//_______________________________________________________________________
+const TBuffer3D & TPCON::GetBuffer3D(Int_t reqSections) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TShape::FillBuffer3D(buffer, reqSections);
+
+   // No kShapeSpecific or kBoundingBox
+
+   if (reqSections & TBuffer3D::kRawSizes)
+   {
+      const Int_t n = GetNumberOfDivisions()+1;
+      Int_t NbPnts = fNz*2*n;
+      Bool_t specialCase = (fDphi1 == 360);
+      Int_t NbSegs = 4*(fNz*n-1+(specialCase == kTRUE));
+      Int_t NbPols = 2*(fNz*n-1+(specialCase == kTRUE));
+
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes))
+   {
+      // Points
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      // Segments and Polygons
+      if (SetSegsAndPols(buffer))
+      {
+         buffer.SetSectionsValid(TBuffer3D::kRaw);
+      }
+   }
+   return buffer;
+}
+
+//_______________________________________________________________________
+Bool_t TPCON::SetSegsAndPols(TBuffer3D & buffer) const
+{
+   if (fNz < 2) return kFALSE;
+   const Int_t n = GetNumberOfDivisions()+1;
+   Bool_t specialCase = (fDphi1 == 360);
+
+   Int_t c = GetBasicColor();
+
+   Int_t i, j, k;
+   Int_t indx = 0;
+   Int_t indx2 = 0;
+
+   //inside & outside circles, number of segments: 2*fNz*(n-1)
+   //             special case number of segments: 2*fNz*n
+   for (i = 0; i < fNz*2; i++) {
+      indx2 = i*n;
+      for (j = 1; j < n; j++) {
+         buffer.fSegs[indx++] = c;
+         buffer.fSegs[indx++] = indx2+j-1;
+         buffer.fSegs[indx++] = indx2+j;
+      }
+      if (specialCase) {
+         buffer.fSegs[indx++] = c;
+         buffer.fSegs[indx++] = indx2+j-1;
+         buffer.fSegs[indx++] = indx2;
+      }
+   }
+   
+   //bottom & top lines, number of segments: 2*n
+   for (i = 0; i < 2; i++) {
+      indx2 = i*(fNz-1)*2*n;
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[indx++] = c;
+         buffer.fSegs[indx++] = indx2+j;
+         buffer.fSegs[indx++] = indx2+n+j;
+      }
+   }
+   
+   //inside & outside cilindres, number of segments: 2*(fNz-1)*n
+   for (i = 0; i < (fNz-1); i++) {
+   
+      //inside cilinder
+      indx2 = i*n*2;
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[indx++] = c+2;
+         buffer.fSegs[indx++] = indx2+j;
+         buffer.fSegs[indx++] = indx2+n*2+j;
+      }
+      //outside cilinder
+      indx2 = i*n*2+n;
+      for (j = 0; j < n; j++) {
+         buffer.fSegs[indx++] = c+3;
+         buffer.fSegs[indx++] = indx2+j;
+         buffer.fSegs[indx++] = indx2+n*2+j;
+      }
+   }
+   
+   //left & right sections, number of segments: 2*(fNz-2)
+   //          special case number of segments: 0
+   if (!specialCase) {
+      for (i = 1; i < (fNz-1); i++) {
+         for (j = 0; j < 2; j++) {
+            buffer.fSegs[indx++] = c;
+            buffer.fSegs[indx++] =  2*i    * n + j*(n-1);
+            buffer.fSegs[indx++] = (2*i+1) * n + j*(n-1);
+         }
+      }
+   }
+
+   Int_t m = n - 1 + (specialCase == kTRUE);
+   indx = 0;
+
+   //bottom & top, number of polygons: 2*(n-1)
+   // special case number of polygons: 2*n
+   for (j = 0; j < n-1; j++) {
+      buffer.fPols[indx++] = c+3;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = 2*fNz*m+j;
+      buffer.fPols[indx++] = m+j;
+      buffer.fPols[indx++] = 2*fNz*m+j+1;
+      buffer.fPols[indx++] = j;
+   }
+   for (j = 0; j < n-1; j++) {
+      buffer.fPols[indx++] = c+3;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = 2*fNz*m+n+j;
+      buffer.fPols[indx++] = (fNz*2-2)*m+j;
+      buffer.fPols[indx++] = 2*fNz*m+n+j+1;
+      buffer.fPols[indx++] = (fNz*2-2)*m+m+j;
+   }
+   if (specialCase) {
+      buffer.fPols[indx++] = c+3;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = 2*fNz*m+j;
+      buffer.fPols[indx++] = m+j;
+      buffer.fPols[indx++] = 2*fNz*m;
+      buffer.fPols[indx++] = j;
+	 
+      buffer.fPols[indx++] = c+3;
+      buffer.fPols[indx++] = 4;
+      buffer.fPols[indx++] = 2*fNz*m+n+j;
+      buffer.fPols[indx++] = (fNz*2-2)*m+j;
+      buffer.fPols[indx++] = 2*fNz*m+n;
+      buffer.fPols[indx++] = (fNz*2-2)*m+m+j;
+   }
+   for (k = 0; k < (fNz-1); k++) {
+      for (j = 0; j < n-1; j++) {
+         buffer.fPols[indx++] = c;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*k*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n+j+1;
+         buffer.fPols[indx++] = (2*k+2)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
+      }
+      for (j = 0; j < n-1; j++) {
+         buffer.fPols[indx++] = c+1;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = (2*k+1)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
+         buffer.fPols[indx++] = (2*k+3)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+3)*n+j+1;
+      }
+
+      if (specialCase) {
+         buffer.fPols[indx++] = c;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = 2*k*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n;
+         buffer.fPols[indx++] = (2*k+2)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+2)*n+j;
+	    
+         buffer.fPols[indx++] = c+1;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = (2*k+1)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+3)*n+j;
+         buffer.fPols[indx++] = (2*k+3)*m+j;
+         buffer.fPols[indx++] = fNz*2*m+(2*k+3)*n;
+      }
+   }
+
+  if (!specialCase) {
+      indx2 = fNz*2*(n-1);
+      for (k = 0; k < (fNz-1); k++) {
+         buffer.fPols[indx++] = c+2;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = k==0 ? indx2 : indx2+2*fNz*n+2*(k-1);
+         buffer.fPols[indx++] = indx2+2*(k+1)*n;
+         buffer.fPols[indx++] = indx2+2*fNz*n+2*k;
+         buffer.fPols[indx++] = indx2+(2*k+3)*n;
+	    
+         buffer.fPols[indx++] = c+2;
+         buffer.fPols[indx++] = 4;
+         buffer.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*fNz*n+2*(k-1)+1;
+         buffer.fPols[indx++] = indx2+(2*k+3)*n+n-1;
+         buffer.fPols[indx++] = indx2+2*fNz*n+2*k+1;
+         buffer.fPols[indx++] = indx2+2*(k+1)*n+n-1;
+      }
+      buffer.fPols[indx-8] = indx2+n;
+      buffer.fPols[indx-2] = indx2+2*n-1;
+   }
+
+  return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.29 2004/09/15 20:47:15 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.30 2004/11/15 12:35:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -25,13 +25,8 @@
 #ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
 #endif
-#ifndef ROOT_TBuffer3D
-#include "TBuffer3D.h"
-#endif
-#ifndef ROOT_TVirtualViewer3D
-#include "TVirtualViewer3D.h"
-#endif
 
+class TVirtualViewer3D;
 class TBrowser;
 class TBox;
 
@@ -117,9 +112,10 @@ protected:
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
 
-   TBuffer3D        *fBuffer3D;    //!  Contains the current shape
-   TVirtualViewer3D *fViewer3D;    //!  3D viewer   
+   // 3D Viewer support
+   TVirtualViewer3D *fViewer3D;    // Current 3D viewer 
 
+   void          DestroyExternalViewer3D();
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  HideToolTip(Int_t event);
@@ -360,12 +356,11 @@ public:
    virtual void      ResetToolTip(TObject *tip);
    virtual void      CloseToolTip(TObject *tip);
 
-   virtual void      x3d(Option_t *option=""); // *MENU*
+   virtual void      x3d(Option_t *type=""); // Depreciated
 
-   TBuffer3D        *AllocateBuffer3D(Int_t n1, Int_t n2, Int_t n3); // Allocate the needed space in fBuffer3D
-   TBuffer3D        *GetBuffer3D(); // It return a pointer to fBuffer3D
-   TVirtualViewer3D *GetViewer3D() {return fViewer3D;}
-   void              SetViewer3D(TVirtualViewer3D *v) {fViewer3D = v;}
+   virtual TVirtualViewer3D *GetViewer3D(Option_t * type = ""); // *MENU*
+   virtual void              ReleaseViewer3D(Option_t * type = "");
+   // void SetViewer3D(TVirtualViewer3D *v) {fViewer3D = v;}
 
    ClassDef(TPad,8)  //A Graphics pad
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.28 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.29 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -657,33 +657,33 @@ void TGeoTrd2::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoTrd2::SetPoints(Double_t *buff) const
+void TGeoTrd2::SetPoints(Double_t *points) const
 {
 // create trd2 mesh points
-   if (!buff) return;
-   buff[ 0] = -fDx1; buff[ 1] = -fDy1; buff[ 2] = -fDz;
-   buff[ 3] = -fDx1; buff[ 4] =  fDy1; buff[ 5] = -fDz;
-   buff[ 6] =  fDx1; buff[ 7] =  fDy1; buff[ 8] = -fDz;
-   buff[ 9] =  fDx1; buff[10] = -fDy1; buff[11] = -fDz;
-   buff[12] = -fDx2; buff[13] = -fDy2; buff[14] =  fDz;
-   buff[15] = -fDx2; buff[16] =  fDy2; buff[17] =  fDz;
-   buff[18] =  fDx2; buff[19] =  fDy2; buff[20] =  fDz;
-   buff[21] =  fDx2; buff[22] = -fDy2; buff[23] =  fDz;
+   if (!points) return;
+   points[ 0] = -fDx1; points[ 1] = -fDy1; points[ 2] = -fDz;
+   points[ 3] = -fDx1; points[ 4] =  fDy1; points[ 5] = -fDz;
+   points[ 6] =  fDx1; points[ 7] =  fDy1; points[ 8] = -fDz;
+   points[ 9] =  fDx1; points[10] = -fDy1; points[11] = -fDz;
+   points[12] = -fDx2; points[13] = -fDy2; points[14] =  fDz;
+   points[15] = -fDx2; points[16] =  fDy2; points[17] =  fDz;
+   points[18] =  fDx2; points[19] =  fDy2; points[20] =  fDz;
+   points[21] =  fDx2; points[22] = -fDy2; points[23] =  fDz;
 }
 
 //_____________________________________________________________________________
-void TGeoTrd2::SetPoints(Float_t *buff) const
+void TGeoTrd2::SetPoints(Float_t *points) const
 {
 // create trd2 mesh points
-   if (!buff) return;
-   buff[ 0] = -fDx1; buff[ 1] = -fDy1; buff[ 2] = -fDz;
-   buff[ 3] = -fDx1; buff[ 4] =  fDy1; buff[ 5] = -fDz;
-   buff[ 6] =  fDx1; buff[ 7] =  fDy1; buff[ 8] = -fDz;
-   buff[ 9] =  fDx1; buff[10] = -fDy1; buff[11] = -fDz;
-   buff[12] = -fDx2; buff[13] = -fDy2; buff[14] =  fDz;
-   buff[15] = -fDx2; buff[16] =  fDy2; buff[17] =  fDz;
-   buff[18] =  fDx2; buff[19] =  fDy2; buff[20] =  fDz;
-   buff[21] =  fDx2; buff[22] = -fDy2; buff[23] =  fDz;
+   if (!points) return;
+   points[ 0] = -fDx1; points[ 1] = -fDy1; points[ 2] = -fDz;
+   points[ 3] = -fDx1; points[ 4] =  fDy1; points[ 5] = -fDz;
+   points[ 6] =  fDx1; points[ 7] =  fDy1; points[ 8] = -fDz;
+   points[ 9] =  fDx1; points[10] = -fDy1; points[11] = -fDz;
+   points[12] = -fDx2; points[13] = -fDy2; points[14] =  fDz;
+   points[15] = -fDx2; points[16] =  fDy2; points[17] =  fDz;
+   points[18] =  fDx2; points[19] =  fDy2; points[20] =  fDz;
+   points[21] =  fDx2; points[22] = -fDy2; points[23] =  fDz;
 }
 
 //_____________________________________________________________________________
@@ -719,3 +719,4 @@ void TGeoTrd2::Sizeof3D() const
 // fill size of this 3-D object
    TGeoBBox::Sizeof3D();
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name: v4-02-00 $:$Id: TViewerOpenGL.h,v 1.23 2004/12/01 16:57:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.24 2005/01/20 17:28:14 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -96,13 +96,21 @@ private:
    TGLSceneObject    *fSelectedObj;
    enum EAction{kNoAction, kRotating, kPicking, kZooming};
    EAction fAction;
+   Bool_t            fBuildingScene;
+   TVirtualPad      *fPad;
+   Bool_t            fFirstScene;
 
 public:
    TViewerOpenGL(TVirtualPad * pad);
    ~TViewerOpenGL();
-   //final overriders for TVirtualViewer3D
-   void UpdateScene(Option_t *);
-   void CreateScene(Option_t *);
+
+   // TVirtualViewer3D interface
+   virtual Bool_t PreferLocalFrame() const;
+   virtual void   BeginScene();
+   virtual Bool_t BuildingScene() const { return fBuildingScene; }
+   virtual void   EndScene();
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
 
    Bool_t HandleContainerButton(Event_t *ev);
    Bool_t HandleContainerConfigure(Event_t *ev);
@@ -112,6 +120,7 @@ public:
    void ModifyScene(Int_t id);
 
 private:
+   void AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren);
    void CreateViewer();
    void DrawObjects()const;
    void PrintObjects()const;

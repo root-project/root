@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.23 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.24 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -575,39 +575,39 @@ void TGeoPara::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoPara::SetPoints(Double_t *buff) const
+void TGeoPara::SetPoints(Double_t *points) const
 {
 // create sphere mesh points
-   if (!buff) return;
+   if (!points) return;
    Double_t TXY = fTxy;
    Double_t TXZ = fTxz;
    Double_t TYZ = fTyz;
-   *buff++ = -fZ*TXZ-TXY*fY-fX; *buff++ = -fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ+TXY*fY-fX; *buff++ = +fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ+TXY*fY+fX; *buff++ = +fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ-TXY*fY+fX; *buff++ = -fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = +fZ*TXZ-TXY*fY-fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ+TXY*fY-fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ+TXY*fY+fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ-TXY*fY+fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
+   *points++ = -fZ*TXZ-TXY*fY-fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ+TXY*fY-fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ+TXY*fY+fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ-TXY*fY+fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = +fZ*TXZ-TXY*fY-fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ+TXY*fY-fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ+TXY*fY+fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ-TXY*fY+fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
 }
 
 //_____________________________________________________________________________
-void TGeoPara::SetPoints(Float_t *buff) const
+void TGeoPara::SetPoints(Float_t *points) const
 {
 // create sphere mesh points
-   if (!buff) return;
+   if (!points) return;
    Double_t TXY = fTxy;
    Double_t TXZ = fTxz;
    Double_t TYZ = fTyz;
-   *buff++ = -fZ*TXZ-TXY*fY-fX; *buff++ = -fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ+TXY*fY-fX; *buff++ = +fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ+TXY*fY+fX; *buff++ = +fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = -fZ*TXZ-TXY*fY+fX; *buff++ = -fY-fZ*TYZ; *buff++ = -fZ;
-   *buff++ = +fZ*TXZ-TXY*fY-fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ+TXY*fY-fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ+TXY*fY+fX; *buff++ = +fY+fZ*TYZ; *buff++ = +fZ;
-   *buff++ = +fZ*TXZ-TXY*fY+fX; *buff++ = -fY+fZ*TYZ; *buff++ = +fZ;
+   *points++ = -fZ*TXZ-TXY*fY-fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ+TXY*fY-fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ+TXY*fY+fX; *points++ = +fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = -fZ*TXZ-TXY*fY+fX; *points++ = -fY-fZ*TYZ; *points++ = -fZ;
+   *points++ = +fZ*TXZ-TXY*fY-fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ+TXY*fY-fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ+TXY*fY+fX; *points++ = +fY+fZ*TYZ; *points++ = +fZ;
+   *points++ = +fZ*TXZ-TXY*fY+fX; *points++ = -fY+fZ*TYZ; *points++ = +fZ;
 }
 
 //_____________________________________________________________________________

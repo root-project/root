@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.4 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -33,11 +33,10 @@ const Int_t kDiv = 20;               //default number of divisions
 
 
 class TPCON : public TShape {
-
     protected:
-
-        Double_t   *fSiTab;       //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
-        Double_t   *fCoTab;       //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+        // Internal cache
+        mutable Double_t   *fSiTab;       //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
+        mutable Double_t   *fCoTab;       //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
         Float_t     fPhi1;        // lower phi limit
         Float_t     fDphi1;       // range in phi
@@ -47,8 +46,10 @@ class TPCON : public TShape {
         Float_t    *fRmax;        //[fNz] pointer to array of outside radiuses
         Float_t    *fDz;          //[fNz] pointer to array of half lengths in z
         
-        virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
-        virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n); // Fill the table of cosin
+        virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
+        virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n) const; // Fill the table of cosin
+        virtual void    SetPoints(Double_t *points) const;
+        virtual Bool_t  SetSegsAndPols(TBuffer3D & buffer) const;
 
     public:
         TPCON();
@@ -57,6 +58,7 @@ class TPCON : public TShape {
 
         virtual void     DefineSection(Int_t secNum, Float_t z, Float_t rmin, Float_t rmax);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
+        virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
         virtual Int_t    GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDiv;}
         virtual Float_t  GetPhi1() const  {return fPhi1;}
         virtual Float_t  GetDhi1() const  {return fDphi1;}
@@ -65,9 +67,7 @@ class TPCON : public TShape {
         virtual Float_t *GetRmax() const  {return fRmax;}
         virtual Float_t *GetDz() const    {return fDz;}
         virtual Int_t    GetNdiv() const  {return fNdiv;}
-        virtual void     Paint(Option_t *option);
         virtual void     SetNumberOfDivisions (Int_t p);
-        virtual void     SetPoints(Double_t *buff);
         virtual void     Sizeof3D() const;
 
         ClassDef(TPCON,2)  //PCON shape

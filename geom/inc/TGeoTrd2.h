@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.11 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.h,v 1.12 2005/02/03 11:40:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -33,7 +33,9 @@ protected:
    Double_t              fDy1; // half length in Y at lower Z surface (-dz)
    Double_t              fDy2; // half length in Y at higher Z surface (+dz)
    Double_t              fDz;  // half length in Z
-   
+ 
+   // methods
+
 public:
    // constructors
    TGeoTrd2();
@@ -71,8 +73,8 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
    void                  SetVertex(Double_t *vertex) const;
    virtual void          Sizeof3D() const;
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.49 2005/01/27 14:51:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.50 2005/01/31 14:23:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -34,7 +34,14 @@
 #include "TGLCamera.h"
 #include "TArcBall.h"
 
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+
+#include "TVirtualPad.h"
+
 #include "gl2ps.h"
+
+#include <assert.h>
 
 const char gHelpViewerOpenGL[] = "\
      PRESS \n\
@@ -134,11 +141,11 @@ int format = GL2PS_EPS;
 int sortgl = GL2PS_BSP_SORT;
 
 //______________________________________________________________________________
-TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
-                  :TVirtualViewer3D(vp),
+TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
                    TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
                    fCamera(), fViewVolume(), fZoom(),
-                   fActiveViewport()
+                   fActiveViewport(), fBuildingScene(kFALSE),
+                   fPad(pad), fFirstScene(kTRUE)
 {
    // Create OpenGL viewer.
 
@@ -186,6 +193,8 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
 //______________________________________________________________________________
 void TViewerOpenGL::CreateViewer()
 {
+   assert(!fBuildingScene);
+
    // Menus creation
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
    fFileMenu->AddEntry("&Print EPS", kGLPrintEPS_SIMPLE);
@@ -324,6 +333,7 @@ void TViewerOpenGL::MakeCurrent()const
 //______________________________________________________________________________
 void TViewerOpenGL::SwapBuffers()const
 {
+   assert(!fBuildingScene);
    fCanvasContainer->GetGLWindow()->Refresh();
 }
 
@@ -512,124 +522,23 @@ Bool_t TViewerOpenGL::HandleContainerExpose(Event_t *)
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::CreateScene(Option_t *)
-{
-   TBuffer3D * buff = fPad->GetBuffer3D();
-   TObjLink * lnk = fPad->GetListOfPrimitives()->FirstLink();
-
-   buff->fOption = TBuffer3D::kOGL;
-   while (lnk) {
-      TObject * obj  = lnk->GetObject();
-      if (obj->InheritsFrom(TAtt3D::Class()))
-         obj->Paint("ogl");
-      lnk = lnk->Next();
-   }
-
-   buff->fOption = TBuffer3D::kPAD;
-   CalculateViewvolumes();
-
-   //Calculate light sources positions
-   Double_t xdiff = fRangeX.second - fRangeX.first;
-   Double_t ydiff = fRangeY.second - fRangeY.first;
-   Double_t zdiff = fRangeZ.second - fRangeZ.first;
-
-   fXc = fRangeX.first + xdiff / 2;
-   fYc = fRangeY.first + ydiff / 2;
-   fZc = fRangeZ.first + zdiff / 2;
-   fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
-
-   Float_t pos1[] = {0., fRad + fYc, -fRad - fZc, 1.f};
-   Float_t pos2[] = {fRad + fXc, 0.f, -fRad - fZc, 1.f};
-   Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
-   Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
-   Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
-
-   Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
-
-   MakeCurrent();
-   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos1);
-   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
-   gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos2);
-   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
-   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos3);
-   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
-   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos4);
-   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
-   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos5);
-   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
-
-   if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
-   if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
-   if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
-   if (fLightMask & 8) gVirtualGL->EnableGL(kLIGHT3);
-   if (fLightMask & 16) gVirtualGL->EnableGL(kLIGHT0);
-
-   MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
-   SetWMPosition(fgInitX, fgInitY);
-   CreateCameras();
-   fRender->SetActive(kPERSP);
-
-   DrawObjects();
-}
-
-//______________________________________________________________________________
-void TViewerOpenGL::UpdateScene(Option_t *)
-{
-   TBuffer3D * buff = fPad->GetBuffer3D();
-
-   if (buff->fOption == buff->kOGL) {
-      ++fNbShapes;
-      TGLSceneObject *addObj = 0;
-
-      if (buff->fColor <= 1) buff->fColor = 42; //temporary
-
-      Float_t colorRGB[3] = {0.f};
-      TColor *rcol = gROOT->GetColor(buff->fColor);
-
-      if (rcol) {
-         rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
-      }
-
-      switch (buff->fType) {
-      case TBuffer3D::kLINE:
-         addObj = new TGLPolyLine(*buff, colorRGB, fNbShapes, buff->fId);
-         break;
-      case TBuffer3D::kMARKER:
-         addObj = new TGLPolyMarker(*buff, colorRGB, fNbShapes, buff->fId);
-         break;
-      case TBuffer3D::kSPHE:
-         addObj = new TGLSphere(*buff, colorRGB, fNbShapes, buff->fId);
-         break;
-      case TBuffer3D::kTUBE:
-      case TBuffer3D::kTUBS:
-         addObj = new TGLCylinder(*buff, colorRGB, fNbShapes, buff->fId);
-         break;
-      default:
-         addObj = new TGLFaceSet(*buff, colorRGB, fNbShapes, buff->fId);
-         break;
-      }
-
-      UpdateRange(addObj->GetBBox());
-      fRender->AddNewObject(addObj);
-   }
-}
-
-//______________________________________________________________________________
 void TViewerOpenGL::Show()
 {
+   assert(!fBuildingScene);
    MapRaised();
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::CloseWindow()
+void TViewerOpenGL::CloseWindow() 
 {
-   fPad->SetViewer3D(0);
+   fPad->ReleaseViewer3D();   
    TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::DrawObjects()const
 {
+   assert(!fBuildingScene);
    MakeCurrent();
    gVirtualGL->NewMVGL();
    gVirtualGL->TraverseGraph((TGLRender *)fRender);
@@ -651,6 +560,7 @@ void TViewerOpenGL::PrintObjects() const
 //______________________________________________________________________________
 void TViewerOpenGL::UpdateRange(const TGLSelection *box)
 {
+   assert(fBuildingScene);
    const Double_t *X = box->GetRangeX();
    const Double_t *Y = box->GetRangeY();
    const Double_t *Z = box->GetRangeZ();
@@ -926,3 +836,219 @@ void TViewerOpenGL::MoveCenter(Int_t key)
 
    DrawObjects();
 }
+
+//______________________________________________________________________________
+Bool_t TViewerOpenGL::PreferLocalFrame() const
+{
+   // Not at present - but in the future....
+   return kFALSE;
+}
+
+void TViewerOpenGL::BeginScene()
+{
+   // Scene builds can't be nested
+   if (fBuildingScene) {
+      assert(kFALSE);
+      return;
+   }
+   
+   // Clear any existing scene contents
+   fRender->RemoveAllObjects();
+   fBuildingScene = kTRUE;
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::EndScene()
+{
+   assert(fBuildingScene);
+  
+   // Only do this once
+   // TODO: Will all be cleaned up later 
+   if (fFirstScene) {
+      CalculateViewvolumes();
+   
+      // Calculate light sources positions
+      Double_t xdiff = fRangeX.second - fRangeX.first;
+      Double_t ydiff = fRangeY.second - fRangeY.first;
+      Double_t zdiff = fRangeZ.second - fRangeZ.first;
+   
+      fXc = fRangeX.first + xdiff / 2;
+      fYc = fRangeY.first + ydiff / 2;
+      fZc = fRangeZ.first + zdiff / 2;
+      fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
+   
+      Float_t pos1[] = {0., fRad + fYc, -fRad - fZc, 1.f};
+      Float_t pos2[] = {fRad + fXc, 0.f, -fRad - fZc, 1.f};
+      Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
+      Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
+      Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
+   
+      Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
+   
+      MakeCurrent();
+      gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos1);
+      gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
+      gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos2);
+      gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
+      gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos3);
+      gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
+      gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos4);
+      gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
+      gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos5);
+      gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
+   
+      if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
+      if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
+      if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
+      if (fLightMask & 8) gVirtualGL->EnableGL(kLIGHT3);
+      if (fLightMask & 16) gVirtualGL->EnableGL(kLIGHT0);
+   
+      MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+      SetWMPosition(fgInitX, fgInitY);
+      CreateCameras();
+      fRender->SetActive(kPERSP);
+      fFirstScene = kFALSE;
+   }
+   
+   fBuildingScene = kFALSE;
+
+   DrawObjects();
+}
+
+//______________________________________________________________________________
+Int_t TViewerOpenGL::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
+{
+   return AddObject(fNbShapes, buffer, addChildren);
+}
+
+//______________________________________________________________________________
+Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
+{
+   if (!fBuildingScene || !buffer.SectionsValid(TBuffer3D::kCore)) {
+      assert(kFALSE);
+      return TBuffer3D::kNone;
+   }
+
+   // Check buffer sections for valid state and request extra filling if required.
+
+   // kCore: Should always be filled
+   if (!buffer.SectionsValid(TBuffer3D::kCore)) {
+      assert(kFALSE);
+      return TBuffer3D::kNone;
+   }
+
+   // kBoundingBox / kShapeSpecific: Currently we expect producer to 
+   // fill these if they can automatically - no need to ask. 
+
+   // kRawSizes / kRaw: These are on demand based on shape type
+   Bool_t needRaw = kFALSE;
+
+   // We need raw tesselation in these cases:
+   //
+   // 1. Shape type is NOT kSPHE / kTUBE / kTUBS
+   if (buffer.Type() != TBuffer3DTypes::kSphere &&
+       buffer.Type() != TBuffer3DTypes::kTube   &&
+       buffer.Type() != TBuffer3DTypes::kTubeSeg) {
+      needRaw = kTRUE;
+   }
+   // 2. Sphere type is kSPHE, but the sphere is hollow and/or cut - we
+   //    do not support native drawing of these currently
+   else if (buffer.Type() == TBuffer3DTypes::kSphere) {
+      const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
+      if (sphereBuffer) {
+         if (!sphereBuffer->IsSolidUncut()) {
+            needRaw = kTRUE;
+         }
+      } else {
+         assert(kFALSE);
+         return TBuffer3D::kNone;
+      }
+   }
+   // 3. kBoundingBox/kShapeSpecific were not filled for some reason
+   if (!buffer.SectionsValid(TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific)) {
+      needRaw = kTRUE;
+   }
+
+   if (needRaw && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
+      return TBuffer3D::kRawSizes|TBuffer3D::kRaw;
+   }
+ 
+   // The buffer is now validated and ready to actually add
+   AddValidatedObject(placedID, buffer, addChildren);
+   return TBuffer3D::kNone;
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
+{
+   // Accept any children producer is willing to pass at present
+   if (addChildren) {
+      *addChildren = kTRUE;
+   }
+
+   // TODO: Still required?
+   Int_t colorIndex = buffer.fColor;
+   if (colorIndex <= 1) colorIndex = 42; //temporary
+
+   Float_t colorRGB[3] = {0.f};
+   TColor *rcol = gROOT->GetColor(colorIndex);
+
+   if (rcol) {
+      rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
+   }
+
+   TGLSceneObject *addObj = 0;
+
+   //TODO: We could cast refs - but need exception catching to be
+   // fully safe - do we use excep. in ROOT?
+   switch (buffer.Type()) {
+   case TBuffer3DTypes::kLine:
+      addObj = new TGLPolyLine(buffer, colorRGB, placedID, buffer.fID);
+      break;
+   case TBuffer3DTypes::kMarker:
+      addObj = new TGLPolyMarker(buffer, colorRGB, placedID, buffer.fID);
+      break;
+   case TBuffer3DTypes::kSphere: {
+      const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
+      if (sphereBuffer) {
+         // We can only draw solid uncut spheres natively at present
+         if (sphereBuffer->IsSolidUncut()) {
+            addObj = new TGLSphere(*sphereBuffer, colorRGB, placedID, buffer.fID);
+         } else {
+            addObj = new TGLFaceSet(buffer, colorRGB, placedID, buffer.fID);
+         }
+      }
+      else {
+         assert(kFALSE);
+      }
+      break;
+   }
+   case TBuffer3DTypes::kTube:
+   case TBuffer3DTypes::kTubeSeg: {
+      const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
+      if (tubeBuffer)
+      {
+         addObj = new TGLCylinder(*tubeBuffer, colorRGB, placedID, buffer.fID);
+      }
+      else {
+         assert(kFALSE);
+      }
+      break;
+   }
+   default:
+      addObj = new TGLFaceSet(buffer, colorRGB, placedID, buffer.fID);
+      break;
+   }
+
+   if (addObj)
+   {
+      UpdateRange(addObj->GetBBox());
+      fRender->AddNewObject(addObj);
+      fNbShapes++;
+   }
+   else
+   {
+      assert(kFALSE);
+   }
+}
+

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.7 2004/06/25 11:59:55 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.8 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -70,8 +70,8 @@ public:
    TGeoShape        *GetRightShape() const {return fRight;}
    virtual void      Paint(Option_t *option);
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
-   virtual void      SetPoints(Double_t *buff) const = 0;
-   virtual void      SetPoints(Float_t *buff)  const = 0;
+   virtual void      SetPoints(Double_t *points) const = 0;
+   virtual void      SetPoints(Float_t *points)  const = 0;
    virtual void      Sizeof3D() const;
 
   ClassDef(TGeoBoolNode, 1)              // a boolean node
@@ -105,8 +105,8 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SetPoints(Double_t *buff) const;
-   virtual void      SetPoints(Float_t *buff)  const;
+   virtual void      SetPoints(Double_t *points) const;
+   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
   ClassDef(TGeoUnion, 1)              // union node
@@ -140,8 +140,8 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SetPoints(Double_t *buff) const;
-   virtual void      SetPoints(Float_t *buff)  const;
+   virtual void      SetPoints(Double_t *points) const;
+   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
   ClassDef(TGeoIntersection, 1)              // intersection node
@@ -175,8 +175,8 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SetPoints(Double_t *buff) const;
-   virtual void      SetPoints(Float_t *buff)  const;
+   virtual void      SetPoints(Double_t *points) const;
+   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
   ClassDef(TGeoSubtraction, 1)              // subtraction node

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.11 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.h,v 1.12 2005/02/03 11:40:38 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -24,7 +24,6 @@
  *
  *************************************************************************/
 
-
 class TGeoEltu : public TGeoTube
 {
 public:
@@ -49,6 +48,7 @@ public:
    virtual Double_t      GetA() const    {return fRmin;}
    virtual Double_t      GetB() const    {return fRmax;}
    virtual void          GetBoundingCylinder(Double_t *param) const;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
@@ -57,8 +57,8 @@ public:
    virtual void          SavePrimitive(ofstream &out, Option_t *option);
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *buff) const;
-   virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetPoints(Double_t *points) const;
+   virtual void          SetPoints(Float_t *points) const;
 
   ClassDef(TGeoEltu, 1)         // elliptical tube class
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.31 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.32 2005/02/03 16:58:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -16,16 +16,13 @@
 #include "TNamed.h"
 #endif
 
-#ifndef ROOT_TBuffer3D
-#include "TBuffer3D.h"
-#endif
-
 // forward declarations
 class TGeoBoolCombinator;
 class TGeoBBox;
 class TGeoMatrix;
 class TGeoHMatrix;
 class TGeoVolume;
+class TBuffer3D;
 
 /*************************************************************************
  * TGeoShape - base class for geometric shapes. Provides virtual methods
@@ -79,7 +76,10 @@ protected :
    Int_t                 fShapeId;   // shape id
    UInt_t                fShapeBits; // shape bits
 // methods
+   virtual void          FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const;
+   Int_t                 GetBasicColor() const;
    void                  SetOnBoundary(Bool_t /*flag=kTRUE*/) {;}
+   void                  TransformPoints(Double_t *points, UInt_t NbPoints) const;
 
 public:
    // constructors
@@ -107,6 +107,7 @@ public:
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const = 0;
    virtual Int_t         GetByteCount() const                          = 0;
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const = 0;
    Int_t                 GetId() const  {return fShapeId;}
@@ -124,18 +125,16 @@ public:
    virtual void          InspectShape() const                    = 0;
    virtual TBuffer3D    *MakeBuffer3D() const {return 0;}
    static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
-   virtual void          Paint(Option_t *option)                 = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
-   virtual void          SetPoints(Double_t *buff) const         = 0;
-   virtual void          SetPoints(Float_t *buff) const          = 0;
-   virtual void          SetSegsAndPols(TBuffer3D *buff) const   = 0;
+   virtual void          SetPoints(Double_t *points) const         = 0;
+   virtual void          SetPoints(Float_t *points) const          = 0; // Why two - does this respect float limits?
+   virtual void          SetSegsAndPols(TBuffer3D &buff) const   = 0;
    void                  SetRuntime(Bool_t flag=kTRUE) {SetShapeBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
    virtual void          Sizeof3D() const                        = 0;
-   void                  TransformPoints(TBuffer3D *buff) const;
 
    //----- bit manipulation
    void     SetShapeBit(UInt_t f, Bool_t set);

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRD2.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRD2.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
 // Author: Nenad Buncic   13/09/95
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TTRD2::~TTRD2()
 
 
 //______________________________________________________________________________
-void TTRD2::SetPoints(Double_t *buff)
+void TTRD2::SetPoints(Double_t *points) const
 {
    // Create TRD2 points
 
@@ -67,14 +67,14 @@ void TTRD2::SetPoints(Double_t *buff)
    dy2 = fDy2;
    dz  = TBRIK::fDz;
 
-   if (buff) {
-      buff[ 0] = -dx1 ; buff[ 1] = -dy1 ; buff[ 2] = -dz;
-      buff[ 3] =  -dx1 ; buff[ 4] = dy1 ; buff[ 5] = -dz;
-      buff[ 6] =  dx1 ; buff[ 7] =  dy1 ; buff[ 8] = -dz;
-      buff[ 9] = dx1 ; buff[10] =  -dy1 ; buff[11] = -dz;
-      buff[12] = -dx2 ; buff[13] = -dy2 ; buff[14] =  dz;
-      buff[15] =  -dx2 ; buff[16] = dy2 ; buff[17] =  dz;
-      buff[18] =  dx2 ; buff[19] =  dy2 ; buff[20] =  dz;
-      buff[21] = dx2 ; buff[22] =  -dy2 ; buff[23] =  dz;
+   if (points) {
+      points[ 0] = -dx1 ; points[ 1] = -dy1 ; points[ 2] = -dz;
+      points[ 3] = -dx1 ; points[ 4] =  dy1 ; points[ 5] = -dz;
+      points[ 6] =  dx1 ; points[ 7] =  dy1 ; points[ 8] = -dz;
+      points[ 9] =  dx1 ; points[10] = -dy1 ; points[11] = -dz;
+      points[12] = -dx2 ; points[13] = -dy2 ; points[14] =  dz;
+      points[15] = -dx2 ; points[16] =  dy2 ; points[17] =  dz;
+      points[18] =  dx2 ; points[19] =  dy2 ; points[20] =  dz;
+      points[21] =  dx2 ; points[22] = -dy2 ; points[23] =  dz;
    }
 }

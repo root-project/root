@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.28 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.29 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -659,33 +659,33 @@ void TGeoTrd1::SetVertex(Double_t *vertex) const
 } 
 
 //_____________________________________________________________________________
-void TGeoTrd1::SetPoints(Double_t *buff) const
+void TGeoTrd1::SetPoints(Double_t *points) const
 {
 // create arb8 mesh points
-   if (!buff) return;
-   buff[ 0] = -fDx1; buff[ 1] = -fDy; buff[ 2] = -fDz;
-   buff[ 3] = -fDx1; buff[ 4] =  fDy; buff[ 5] = -fDz;
-   buff[ 6] =  fDx1; buff[ 7] =  fDy; buff[ 8] = -fDz;
-   buff[ 9] =  fDx1; buff[10] = -fDy; buff[11] = -fDz;
-   buff[12] = -fDx2; buff[13] = -fDy; buff[14] =  fDz;
-   buff[15] = -fDx2; buff[16] =  fDy; buff[17] =  fDz;
-   buff[18] =  fDx2; buff[19] =  fDy; buff[20] =  fDz;
-   buff[21] =  fDx2; buff[22] = -fDy; buff[23] =  fDz;
+   if (!points) return;
+   points[ 0] = -fDx1; points[ 1] = -fDy; points[ 2] = -fDz;
+   points[ 3] = -fDx1; points[ 4] =  fDy; points[ 5] = -fDz;
+   points[ 6] =  fDx1; points[ 7] =  fDy; points[ 8] = -fDz;
+   points[ 9] =  fDx1; points[10] = -fDy; points[11] = -fDz;
+   points[12] = -fDx2; points[13] = -fDy; points[14] =  fDz;
+   points[15] = -fDx2; points[16] =  fDy; points[17] =  fDz;
+   points[18] =  fDx2; points[19] =  fDy; points[20] =  fDz;
+   points[21] =  fDx2; points[22] = -fDy; points[23] =  fDz;
 }
 
 //_____________________________________________________________________________
-void TGeoTrd1::SetPoints(Float_t *buff) const
+void TGeoTrd1::SetPoints(Float_t *points) const
 {
 // create arb8 mesh points
-   if (!buff) return;
-   buff[ 0] = -fDx1; buff[ 1] = -fDy; buff[ 2] = -fDz;
-   buff[ 3] = -fDx1; buff[ 4] =  fDy; buff[ 5] = -fDz;
-   buff[ 6] =  fDx1; buff[ 7] =  fDy; buff[ 8] = -fDz;
-   buff[ 9] =  fDx1; buff[10] = -fDy; buff[11] = -fDz;
-   buff[12] = -fDx2; buff[13] = -fDy; buff[14] =  fDz;
-   buff[15] = -fDx2; buff[16] =  fDy; buff[17] =  fDz;
-   buff[18] =  fDx2; buff[19] =  fDy; buff[20] =  fDz;
-   buff[21] =  fDx2; buff[22] = -fDy; buff[23] =  fDz;
+   if (!points) return;
+   points[ 0] = -fDx1; points[ 1] = -fDy; points[ 2] = -fDz;
+   points[ 3] = -fDx1; points[ 4] =  fDy; points[ 5] = -fDz;
+   points[ 6] =  fDx1; points[ 7] =  fDy; points[ 8] = -fDz;
+   points[ 9] =  fDx1; points[10] = -fDy; points[11] = -fDz;
+   points[12] = -fDx2; points[13] = -fDy; points[14] =  fDz;
+   points[15] = -fDx2; points[16] =  fDy; points[17] =  fDz;
+   points[18] =  fDx2; points[19] =  fDy; points[20] =  fDz;
+   points[21] =  fDx2; points[22] = -fDy; points[23] =  fDz;
 }
 
 //_____________________________________________________________________________

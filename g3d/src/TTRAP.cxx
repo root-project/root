@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.2 2004/08/03 16:01:18 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRAP.cxx,v 1.3 2004/08/09 15:22:28 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -79,7 +79,7 @@ TTRAP::~TTRAP()
 }
 
 //______________________________________________________________________________
-void TTRAP::SetPoints(Double_t *buff)
+void TTRAP::SetPoints(Double_t *points) const
 {
    // Create TRAP points
 
@@ -94,15 +94,15 @@ void TTRAP::SetPoints(Double_t *buff)
    Float_t tth1   = TMath::Tan(alpha1);
    Float_t tth2   = TMath::Tan(alpha2);
 
-   if (buff) {
-      buff[ 0] = -fDz*tx-tth1*fH1-fBl1 ; buff[ 1] = -fH1-fDz*ty ; buff[ 2] = -fDz;
-      buff[ 3] = -fDz*tx+tth1*fH1-fTl1 ; buff[ 4] =  fH1-fDz*ty ; buff[ 5] = -fDz;
-      buff[ 6] = -fDz*tx+tth1*fH1+fTl1 ; buff[ 7] =  fH1-fDz*ty ; buff[ 8] = -fDz;
-      buff[ 9] = -fDz*tx-tth1*fH1+fBl1 ; buff[10] = -fH1-fDz*ty ; buff[11] = -fDz;
-      buff[12] =  fDz*tx-tth2*fH2-fBl2 ; buff[13] = -fH2+fDz*ty ; buff[14] = fDz;
-      buff[15] =  fDz*tx+tth2*fH2-fTl2 ; buff[16] =  fH2+fDz*ty ; buff[17] = fDz;
-      buff[18] =  fDz*tx+tth2*fH2+fTl2 ; buff[19] =  fH2+fDz*ty ; buff[20] = fDz;
-      buff[21] =  fDz*tx-tth2*fH2+fBl2 ; buff[22] = -fH2+fDz*ty ; buff[23] = fDz;
+   if (points) {
+      points[ 0] = -fDz*tx-tth1*fH1-fBl1 ; points[ 1] = -fH1-fDz*ty ; points[ 2] = -fDz;
+      points[ 3] = -fDz*tx+tth1*fH1-fTl1 ; points[ 4] =  fH1-fDz*ty ; points[ 5] = -fDz;
+      points[ 6] = -fDz*tx+tth1*fH1+fTl1 ; points[ 7] =  fH1-fDz*ty ; points[ 8] = -fDz;
+      points[ 9] = -fDz*tx-tth1*fH1+fBl1 ; points[10] = -fH1-fDz*ty ; points[11] = -fDz;
+      points[12] =  fDz*tx-tth2*fH2-fBl2 ; points[13] = -fH2+fDz*ty ; points[14] = fDz;
+      points[15] =  fDz*tx+tth2*fH2-fTl2 ; points[16] =  fH2+fDz*ty ; points[17] = fDz;
+      points[18] =  fDz*tx+tth2*fH2+fTl2 ; points[19] =  fH2+fDz*ty ; points[20] = fDz;
+      points[21] =  fDz*tx-tth2*fH2+fBl2 ; points[22] = -fH2+fDz*ty ; points[23] = fDz;
    }
    
 }

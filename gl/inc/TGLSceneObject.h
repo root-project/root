@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.20 2005/01/04 14:38:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.21 2005/01/19 13:19:34 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -23,6 +23,8 @@
 
 class TGLFrustum;
 class TBuffer3D;
+class TBuffer3DSphere;
+class TBuffer3DTube;
 
 /////////////////////////////////////////////////////////////
 class TGLSelection {
@@ -65,9 +67,9 @@ private:
    TObject               *fRealObject;
 
 public:
-   TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd, Int_t reserve,
+   TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve, 
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
-   TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd,
+   TGLSceneObject(const TBuffer3D &buffer,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
 
    virtual Bool_t IsTransparent()const;
@@ -95,8 +97,7 @@ private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);
 
-   //private, called only from ctor
-   void SetBBox(const Double_t *start, const Double_t *end);
+   void SetBBox(const TBuffer3D & buffer);
 
    ClassDef(TGLSceneObject,0)
 };
@@ -154,7 +155,7 @@ private:
    static void BuildList();
 
 public:
-   TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
+   TGLSphere(const TBuffer3DSphere &buffer, const Float_t *color, UInt_t glName, TObject *realObject);
 
    void GLDraw(const TGLFrustum *fr)const;
 
@@ -172,7 +173,7 @@ private:
    Bool_t   fInv;
 
 public:
-   TGLCylinder(const TBuffer3D &buff, const Float_t *color,
+   TGLCylinder(const TBuffer3DTube &buff, const Float_t *color,
                UInt_t glName, TObject *realObject);
    ~TGLCylinder();
 
@@ -182,7 +183,7 @@ public:
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
 private:
-   void CreateParts(const TBuffer3D &buff);
+   void CreateParts(const TBuffer3DTube & buffer);
 };
 
 #endif

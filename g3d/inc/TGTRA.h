@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.h,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.h,v 1.3 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TGTRA : public TBRIK {
         Float_t fTl2;       // half length in x at high z and y high edge
         Float_t fAlpha2;    // angle w.r.t. the y axis
 
+        virtual void    SetPoints(Double_t *points) const;
     public:
         TGTRA();
         TGTRA(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi, Float_t twist, Float_t h1,
@@ -55,8 +56,6 @@ class TGTRA : public TBRIK {
         Float_t         GetBl2() const    {return fBl2;}
         Float_t         GetTl2() const    {return fTl2;}
         Float_t         GetAlpha2() const {return fAlpha2;}
-
-        virtual void    SetPoints(Double_t *buff);
 
         ClassDef(TGTRA,1)  //GTRA shape
 };

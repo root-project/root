@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.6 2005/02/03 16:58:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.7 2005/02/28 20:52:43 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TGeoHype.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 //_____________________________________________________________________________
 // TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:
@@ -422,71 +423,22 @@ TBuffer3D *TGeoHype::MakeBuffer3D() const
    Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
    Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
+   if (buff)
+   {
+      SetPoints(buff->fPnts);
+      SetSegsAndPols(*buff);
+   }
 
-   buff->fType = TBuffer3D::kANY; // should be kHYPE
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   
-   SetSegsAndPols(buff);
-   
    return buff; 
 }
 
 //_____________________________________________________________________________
-void TGeoHype::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t n = gGeoManager->GetNsegments();
-   Bool_t hasRmin = HasInner();
-   Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
-   Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-   Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-
-   buff->fType = TBuffer3D::kANY; // should be kHYPE
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-   // Fill points
-   // Case hasRmin:
-   //   irin = 0 , n (per circle) * n (circles) starting with z = -fDz
-   //            icin(j) = irin + j*n  (j=0,n-1) = index of first pt. on circle j
-   //   irout = n*n , n (per circle) * n (circles) starting with z = -fDz
-   //            icout(j) = irout + j*n  (j=0,n-1) = index of first pt. on circle j
-   // Case !hasRmin:
-   //   irin = 0, 2 points (lower and upper centers)
-   //   irout = 2
-   SetPoints(buff->fPnts);
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);      
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
    Int_t i, j, n;
    n = gGeoManager->GetNsegments();
    Bool_t hasRmin = HasInner();
@@ -536,18 +488,18 @@ void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
       for (i=0; i<n; i++) {
          for (j=0; j<n; j++) {
             npt = 3*(isin+n*i+j);
-            buff->fSegs[npt]   = c;
-            buff->fSegs[npt+1] = irin+n*i+j;
-            buff->fSegs[npt+2] = irin+n*i+((j+1)%n);
+            buff.fSegs[npt]   = c;
+            buff.fSegs[npt+1] = irin+n*i+j;
+            buff.fSegs[npt+2] = irin+n*i+((j+1)%n);
          }
       }
       // Fill inner generators (n*(n-1))
       for (i=0; i<n-1; i++) {
          for (j=0; j<n; j++) {
             npt = 3*(isgenin+n*i+j);
-            buff->fSegs[npt]   = c;
-            buff->fSegs[npt+1] = irin+n*i+j;
-            buff->fSegs[npt+2] = irin+n*(i+1)+j;
+            buff.fSegs[npt]   = c;
+            buff.fSegs[npt+1] = irin+n*i+j;
+            buff.fSegs[npt+2] = irin+n*(i+1)+j;
          }
       }      
    }
@@ -555,35 +507,35 @@ void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
    for (i=0; i<n; i++) {   
       for (j=0; j<n; j++) { 
          npt = 3*(isout + n*i+j);     
-         buff->fSegs[npt]   = c;
-         buff->fSegs[npt+1] = irout+n*i+j;
-         buff->fSegs[npt+2] = irout+n*i+((j+1)%n);
+         buff.fSegs[npt]   = c;
+         buff.fSegs[npt+1] = irout+n*i+j;
+         buff.fSegs[npt+2] = irout+n*i+((j+1)%n);
       }
    }      
    // Fill outer generators (n*(n-1))
    for (i=0; i<n-1; i++) {
       for (j=0; j<n; j++) {
          npt = 3*(isgenout+n*i+j);
-         buff->fSegs[npt]   = c;
-         buff->fSegs[npt+1] = irout+n*i+j;
-         buff->fSegs[npt+2] = irout+n*(i+1)+j;
+         buff.fSegs[npt]   = c;
+         buff.fSegs[npt+1] = irout+n*i+j;
+         buff.fSegs[npt+2] = irout+n*(i+1)+j;
       }
    }      
    // Fill lower cap (n)
    for (j=0; j<n; j++) {
       npt = 3*(islo+j);
-      buff->fSegs[npt]   = c;
-      buff->fSegs[npt+1] = irin;
-      if (hasRmin) buff->fSegs[npt+1] += j;
-      buff->fSegs[npt+2] = irout + j;
+      buff.fSegs[npt]   = c;
+      buff.fSegs[npt+1] = irin;
+      if (hasRmin) buff.fSegs[npt+1] += j;
+      buff.fSegs[npt+2] = irout + j;
    }   
    // Fill upper cap (n)
    for (j=0; j<n; j++) {
       npt = 3*(ishi+j);
-      buff->fSegs[npt]   = c;
-      buff->fSegs[npt+1] = irin+1;
-      if (hasRmin) buff->fSegs[npt+1] += n*(n-1)+j-1;
-      buff->fSegs[npt+2] = irout + n*(n-1)+j;
+      buff.fSegs[npt]   = c;
+      buff.fSegs[npt+1] = irin+1;
+      if (hasRmin) buff.fSegs[npt+1] += n*(n-1)+j-1;
+      buff.fSegs[npt+2] = irout + n*(n-1)+j;
    }   
 
    // Fill polygons
@@ -617,12 +569,12 @@ void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
       for (i=0; i<n-1; i++) {
          for (j=0; j<n; j++) {
             npt = 6*(ipin+n*i+j);
-            buff->fPols[npt]   = c;
-            buff->fPols[npt+1] = 4;
-            buff->fPols[npt+2] = isin+n*i+j;
-            buff->fPols[npt+3] = isgenin+i*n+((j+1)%n);
-            buff->fPols[npt+4] = isin+n*(i+1)+j;
-            buff->fPols[npt+5] = isgenin+i*n+j;
+            buff.fPols[npt]   = c;
+            buff.fPols[npt+1] = 4;
+            buff.fPols[npt+2] = isin+n*i+j;
+            buff.fPols[npt+3] = isgenin+i*n+((j+1)%n);
+            buff.fPols[npt+4] = isin+n*(i+1)+j;
+            buff.fPols[npt+5] = isgenin+i*n+j;
          }
       }
    }
@@ -630,50 +582,50 @@ void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
    for (i=0; i<n-1; i++) {        
       for (j=0; j<n; j++) {
          npt = 6*(ipout+n*i+j);
-         buff->fPols[npt]   = c;
-         buff->fPols[npt+1] = 4;
-         buff->fPols[npt+2] = isout+n*i+j;
-         buff->fPols[npt+3] = isgenout+i*n+j;
-         buff->fPols[npt+4] = isout+n*(i+1)+j;
-         buff->fPols[npt+5] = isgenout+i*n+((j+1)%n);
+         buff.fPols[npt]   = c;
+         buff.fPols[npt+1] = 4;
+         buff.fPols[npt+2] = isout+n*i+j;
+         buff.fPols[npt+3] = isgenout+i*n+j;
+         buff.fPols[npt+4] = isout+n*(i+1)+j;
+         buff.fPols[npt+5] = isgenout+i*n+((j+1)%n);
       }
    }
    // End caps
    if (hasRmin) {
       for (j=0; j<n; j++) {  
          npt = 6*(iplo+j);
-         buff->fPols[npt]   = c+1;
-         buff->fPols[npt+1] = 4;
-         buff->fPols[npt+2] = isin+j;
-         buff->fPols[npt+3] = islo+j;
-         buff->fPols[npt+4] = isout+j;
-         buff->fPols[npt+5] = islo+((j+1)%n);
+         buff.fPols[npt]   = c+1;
+         buff.fPols[npt+1] = 4;
+         buff.fPols[npt+2] = isin+j;
+         buff.fPols[npt+3] = islo+j;
+         buff.fPols[npt+4] = isout+j;
+         buff.fPols[npt+5] = islo+((j+1)%n);
       }
       for (j=0; j<n; j++) {  
          npt = 6*(ipup+j);
-         buff->fPols[npt]   = c+2;
-         buff->fPols[npt+1] = 4;
-         buff->fPols[npt+2] = isin+n*(n-1)+j;
-         buff->fPols[npt+3] = ishi+((j+1)%n);
-         buff->fPols[npt+4] = isout+n*(n-1)+j;
-         buff->fPols[npt+5] = ishi+j;
+         buff.fPols[npt]   = c+2;
+         buff.fPols[npt+1] = 4;
+         buff.fPols[npt+2] = isin+n*(n-1)+j;
+         buff.fPols[npt+3] = ishi+((j+1)%n);
+         buff.fPols[npt+4] = isout+n*(n-1)+j;
+         buff.fPols[npt+5] = ishi+j;
       }
    } else {      
       for (j=0; j<n; j++) {  
          npt = 6*iplo+5*j;
-         buff->fPols[npt]   = c+1;
-         buff->fPols[npt+1] = 3;
-         buff->fPols[npt+2] = isout+j;
-         buff->fPols[npt+3] = islo+((j+1)%n);
-         buff->fPols[npt+4] = islo+j;
+         buff.fPols[npt]   = c+1;
+         buff.fPols[npt+1] = 3;
+         buff.fPols[npt+2] = isout+j;
+         buff.fPols[npt+3] = islo+((j+1)%n);
+         buff.fPols[npt+4] = islo+j;
       }
       for (j=0; j<n; j++) {  
          npt = 6*iplo+5*(n+j);
-         buff->fPols[npt]   = c+2;
-         buff->fPols[npt+1] = 3;
-         buff->fPols[npt+2] = isout+n*(n-1)+j;
-         buff->fPols[npt+3] = ishi+j;
-         buff->fPols[npt+4] = ishi+((j+1)%n);
+         buff.fPols[npt]   = c+2;
+         buff.fPols[npt+1] = 3;
+         buff.fPols[npt+2] = isout+n*(n-1)+j;
+         buff.fPols[npt+3] = ishi+j;
+         buff.fPols[npt+4] = ishi+((j+1)%n);
       }
    }   
 }
@@ -815,12 +767,12 @@ void TGeoHype::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoHype::SetPoints(Double_t *buff) const
+void TGeoHype::SetPoints(Double_t *points) const
 {
 // create tube mesh points
    Double_t z,dz,r;
    Int_t i,j, n;
-   if (!buff) return;
+   if (!points) return;
    n = gGeoManager->GetNsegments();
    Double_t dphi = 360./n;
    Double_t phi = 0;
@@ -835,18 +787,18 @@ void TGeoHype::SetPoints(Double_t *buff) const
          r = TMath::Sqrt(RadiusHypeSq(z, kTRUE));
          for (j=0; j<n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = r * TMath::Cos(phi);
-            buff[indx++] = r * TMath::Sin(phi);
-            buff[indx++] = z;
+            points[indx++] = r * TMath::Cos(phi);
+            points[indx++] = r * TMath::Sin(phi);
+            points[indx++] = z;
          }
       }
    } else {
-      buff[indx++] = 0.;
-      buff[indx++] = 0.;
-      buff[indx++] = -fDz;
-      buff[indx++] = 0.;         
-      buff[indx++] = 0.;
-      buff[indx++] = fDz;
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = -fDz;
+      points[indx++] = 0.;         
+      points[indx++] = 0.;
+      points[indx++] = fDz;
    }   
    // Outer surface points
    for (i=0; i<n; i++) {
@@ -854,20 +806,20 @@ void TGeoHype::SetPoints(Double_t *buff) const
       r = TMath::Sqrt(RadiusHypeSq(z, kFALSE));
       for (j=0; j<n; j++) {
          phi = j*dphi*TMath::DegToRad();
-         buff[indx++] = r * TMath::Cos(phi);
-         buff[indx++] = r * TMath::Sin(phi);
-         buff[indx++] = z;
+         points[indx++] = r * TMath::Cos(phi);
+         points[indx++] = r * TMath::Sin(phi);
+         points[indx++] = z;
       }
    }
 }
 
 //_____________________________________________________________________________
-void TGeoHype::SetPoints(Float_t *buff) const
+void TGeoHype::SetPoints(Float_t *points) const
 {
 // create tube mesh points
    Double_t z,dz,r;
    Int_t i,j, n;
-   if (!buff) return;
+   if (!points) return;
    n = gGeoManager->GetNsegments();
    Double_t dphi = 360./n;
    Double_t phi = 0;
@@ -882,18 +834,18 @@ void TGeoHype::SetPoints(Float_t *buff) const
          r = TMath::Sqrt(RadiusHypeSq(z, kTRUE));
          for (j=0; j<n; j++) {
             phi = j*dphi*TMath::DegToRad();
-            buff[indx++] = r * TMath::Cos(phi);
-            buff[indx++] = r * TMath::Sin(phi);
-            buff[indx++] = z;
+            points[indx++] = r * TMath::Cos(phi);
+            points[indx++] = r * TMath::Sin(phi);
+            points[indx++] = z;
          }
       }
    } else {
-      buff[indx++] = 0.;
-      buff[indx++] = 0.;
-      buff[indx++] = -fDz;
-      buff[indx++] = 0.;         
-      buff[indx++] = 0.;
-      buff[indx++] = fDz;
+      points[indx++] = 0.;
+      points[indx++] = 0.;
+      points[indx++] = -fDz;
+      points[indx++] = 0.;         
+      points[indx++] = 0.;
+      points[indx++] = fDz;
    }   
    // Outer surface points
    for (i=0; i<n; i++) {
@@ -901,9 +853,9 @@ void TGeoHype::SetPoints(Float_t *buff) const
       r = TMath::Sqrt(RadiusHypeSq(z, kFALSE));
       for (j=0; j<n; j++) {
          phi = j*dphi*TMath::DegToRad();
-         buff[indx++] = r * TMath::Cos(phi);
-         buff[indx++] = r * TMath::Sin(phi);
-         buff[indx++] = z;
+         points[indx++] = r * TMath::Cos(phi);
+         points[indx++] = r * TMath::Sin(phi);
+         points[indx++] = z;
       }
    }
 }
@@ -930,4 +882,32 @@ void TGeoHype::Sizeof3D() const
 ///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
+//_____________________________________________________________________________
+const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t n = gGeoManager->GetNsegments();
+      Bool_t hasRmin = HasInner();
+      Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
+      Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
+      Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);      
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
+}

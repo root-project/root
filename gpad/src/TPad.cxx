@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.163 2005/02/15 16:19:20 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.164 2005/02/23 11:47:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -62,6 +62,9 @@
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TImage.h"
+#include "TViewer3DPad.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -125,7 +128,7 @@ ClassImpQ(TPad)
 //
 
 //______________________________________________________________________________
-TPad::TPad(): TVirtualPad()
+TPad::TPad()
 {
 //*-*-*-*-*-*-*-*-*-*-*Pad default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
@@ -146,8 +149,6 @@ TPad::TPad(): TVirtualPad()
    fEditable   = kTRUE;
    fCrosshair  = 0;
    fCrosshairPos = 0;
-   fViewer3D   = 0;
-   fBuffer3D   = 0;
    fMother     = (TPad*)gPad;
 
    fFixedAspectRatio = kFALSE;
@@ -176,7 +177,10 @@ TPad::TPad(): TVirtualPad()
    fYlowNDC = 0;
    fWNDC    = 1;
    fHNDC    = 1;
-
+   
+   // Must always create a 3D viewer at present - to be revisited
+   fViewer3D = new TViewer3DPad(*this);
+   
    //the following line is temporarily disabled. It has side effects
    //when the pad is a TDrawPanelHist or a TFitPanel.
    //the line was supposed to fix a problem with DrawClonePad
@@ -232,13 +236,14 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fNumber     = 0;
    fAbsCoord   = kFALSE;
    fEditable   = kTRUE;
-   fViewer3D   = 0;
-   fBuffer3D   = 0;
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
+
+   // Must always create a 3D viewer at present - to be revisited
+   fViewer3D = new TViewer3DPad(*this);
 
 //*-*- Set default world coordinates to NDC [0,1]
    fX1 = 0;
@@ -295,7 +300,7 @@ TPad::~TPad()
    DeleteToolTip(fTip);
    SafeDelete(fPrimitives);
    SafeDelete(fExecs);
-   if (fViewer3D) delete fViewer3D;
+   delete fViewer3D;
 }
 
 //______________________________________________________________________________
@@ -2576,8 +2581,13 @@ void TPad::Paint(Option_t * /*option*/)
 
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    TObject *obj;
-
+   
+   Bool_t began3DScene = kFALSE;
    while (lnk) {
+      if (fViewer3D && !fViewer3D->BuildingScene()) {
+         fViewer3D->BeginScene();
+         began3DScene = kTRUE;
+      }
       obj = lnk->GetObject();
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
@@ -2586,6 +2596,13 @@ void TPad::Paint(Option_t * /*option*/)
    if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
+   
+   // This must be done after modified flag is cleared, as some 
+   // viewers will invoke another paint by marking pad modified again
+   if (began3DScene) {
+      fViewer3D->EndScene();
+   }
+
 }
 
 //______________________________________________________________________________
@@ -2786,11 +2803,17 @@ void TPad::PaintModified()
    if (pList) lnk = (TObjOptLink*)pList->FirstLink();
    TObject *obj;
 
+   Bool_t began3DScene = kFALSE;
+   
    while (lnk) {
       obj = lnk->GetObject();
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
+         if (fViewer3D && !fViewer3D->BuildingScene()) {
+            fViewer3D->BeginScene();
+            began3DScene = kTRUE;
+         }
          obj->Paint(lnk->GetOption());
       }
       lnk = (TObjOptLink*)lnk->Next();
@@ -2799,6 +2822,13 @@ void TPad::PaintModified()
    if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
+
+   // This must be done after modified flag is cleared, as some 
+   // viewers will invoke another paint by marking pad modified again
+   if (began3DScene) {
+      fViewer3D->EndScene();
+   }
+
    gVirtualPS = saveps;
 }
 
@@ -5378,41 +5408,72 @@ void TPad::CloseToolTip(TObject *tip)
 }
 
 //______________________________________________________________________________
-void TPad::x3d(Option_t *option)
+void TPad::x3d(Option_t *type)
 {
-   // Invokes a 3D viewer.
-
-   TView *view = GetView();
-   if (!view) {
-      Error("x3d", "3D view is not set");
-      return;
+   ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
+   
+   // Default on GetViewer3D is pad - for x3d
+   // it was x3d...
+   if (!type || !type[0]) {
+      type = "x3d";
    }
-
-   if (!option || !option[0])
-      option = "x3d";
-   if (fViewer3D) delete fViewer3D;
-   fViewer3D = TVirtualViewer3D::Viewer3D(option);
-   if (fViewer3D) {
-      fViewer3D->CreateScene(option);
-   } else {
-      Error("x3d", "cannot load 3D viewer with option: %s", option);
-   }
+   GetViewer3D(type);
 }
 
 //______________________________________________________________________________
-TBuffer3D *TPad::AllocateBuffer3D(Int_t n1, Int_t n2, Int_t n3)
+TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 {
-   if (!fBuffer3D) {
-      fBuffer3D = new TBuffer3D(n1, n2, n3);
-   } else {
-      fBuffer3D->ReAllocate(n1, n2, n3);
+   // No type specified?
+   if (!type || !type[0]) {
+      // Return current viewer if there is one
+      if (fViewer3D) {
+         return fViewer3D;
+      }
+      // otherwise default to the pad 
+      else {
+         type = "pad";
+      }
    }
-   return fBuffer3D;
+
+   // Ensure we can create the new viewer before removing any exisiting one
+   TVirtualViewer3D *newViewer = 0;
+   
+  // External viewers need to be created via plugin manager via interface...
+   if (!strstr(type,"pad"))
+   {
+      newViewer = TVirtualViewer3D::Viewer3D(this,type);
+      if (!newViewer) {
+         Error("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
+         
+         // Return the existing viewer
+         return fViewer3D;
+      }
+   }
+   else {
+      newViewer = new TViewer3DPad(*this);
+   }
+   
+   // If we had a previous viewer destroy it now
+   // In this case we do take responsibility for destorying viewer
+   // c.f. ReleaseViewer3D
+   delete fViewer3D;
+
+   // Set, paint and return new viewer
+   fViewer3D = newViewer;
+   Paint();
+   return fViewer3D;
 }
 
 //______________________________________________________________________________
-TBuffer3D *TPad::GetBuffer3D()
+void TPad::ReleaseViewer3D(Option_t * /*type*/ )
 {
-   if (!fBuffer3D) fBuffer3D = new TBuffer3D();
-   return fBuffer3D;
+   // Release current (external) viewer
+   // TODO: By type
+   fViewer3D = 0;
+   
+   // Create a pad viewer3D and repaint into this
+   // TODO: Remove when multiple 3D viewer support added
+   GetViewer3D();
+   Paint();
 }
+

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.5 2004/08/03 16:01:17 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
     virtual void    Paint(Option_t *option);
     static  void    PaintH3(TH1 *h, Option_t *option);
     virtual void    SavePrimitive(ofstream &out, Option_t *option);
-    virtual void    SetPoints(Double_t *buff);
+    virtual void    SetPoints(Double_t *buff) const;
     virtual void    SetDirection(Float_t theta, Float_t phi);
     virtual void    SetPosition(Float_t x, Float_t y, Float_t z);
     virtual void    SetSize(Float_t dx, Float_t dy, Float_t dz);

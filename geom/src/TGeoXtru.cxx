@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.21 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.22 2005/02/28 20:52:43 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TGeoXtru.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 ClassImp(TGeoXtru)
 
@@ -664,69 +665,24 @@ TBuffer3D *TGeoXtru::MakeBuffer3D() const
    Int_t NbSegs = nvert*(2*nz-1);
    Int_t NbPols = nvert*(nz-1)+2;
 
-   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
+                                   NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+nvert));
+   if (buff)
+   {
+      SetPoints(buff->fPnts);   
+      SetSegsAndPols(*buff);
+   }
 
-   buff->fType = TBuffer3D::kXTRU;
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-
-   SetPoints(buff->fPnts);
-   
-   SetSegsAndPols(buff);
-   
    return buff; 
 }
 
 //_____________________________________________________________________________
-void TGeoXtru::Paint(Option_t *option)
-{
-   // Paint this shape according to option
-
-   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t nz = GetNz();
-   Int_t nvert = GetNvert();
-   Int_t NbPnts = nz*nvert;
-   Int_t NbSegs = nvert*(2*nz-1);
-   Int_t NbPols = nvert*(nz-1)+2;
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs,
-                                            6*(NbPols-2)+2*(2+nvert));
-   if (!buff) return;
-
-   buff->fType = TBuffer3D::kXTRU;
-   TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   buff->fId   = vol;
-
-   // Fill gPad->fBuffer3D. Points coordinates are in Master space
-   buff->fNbPnts = NbPnts;
-   buff->fNbSegs = NbSegs;
-   buff->fNbPols = NbPols;
-   // In case of option "size" it is not necessary to fill the buffer
-   if (strstr(option,"size")) {
-      buff->Paint(option);
-      return;
-   }
-
-   SetPoints(buff->fPnts);
-
-   TransformPoints(buff);
-
-   // Basic colors: 0, 1, ... 7
-   buff->fColor = vol->GetLineColor();
-   SetSegsAndPols(buff);  
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
-//_____________________________________________________________________________
-void TGeoXtru::SetSegsAndPols(TBuffer3D *buff) const
+void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 {
 // Fill TBuffer3D structure for segments and polygons.
    Int_t nz = GetNz();
    Int_t nvert = GetNvert();
-   Int_t c = (((buff->fColor) %8) -1) * 4;
-   if (c < 0) c = 0;
+   Int_t c = GetBasicColor();
 
    Int_t i,j;
    Int_t indx, indx2, k;
@@ -737,9 +693,9 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D *buff) const
       // loop polygon segments
       for (j=0; j<nvert; j++) {
          k = (j+1)%nvert;
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+k;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = indx2+k;
       }
    } // total: nz*nvert polygon segments
    for (i=0; i<nz-1; i++) {
@@ -748,9 +704,9 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D *buff) const
       // loop polygon segments
       for (j=0; j<nvert; j++) {
          k = j + nvert;
-         buff->fSegs[indx++] = c;
-         buff->fSegs[indx++] = indx2+j;
-         buff->fSegs[indx++] = indx2+k;
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2+j;
+         buff.fSegs[indx++] = indx2+k;
       }
    } // total (nz-1)*nvert lateral segments
 
@@ -761,27 +717,27 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D *buff) const
       indx2 = i*nvert;
       for (j=0; j<nvert; j++) {
       k = (j+1)%nvert;
-      buff->fPols[indx++] = c+j%3;
-      buff->fPols[indx++] = 4;
-      buff->fPols[indx++] = indx2+j;
-      buff->fPols[indx++] = nz*nvert+indx2+k;
-      buff->fPols[indx++] = indx2+nvert+j;
-      buff->fPols[indx++] = nz*nvert+indx2+j;
+      buff.fPols[indx++] = c+j%3;
+      buff.fPols[indx++] = 4;
+      buff.fPols[indx++] = indx2+j;
+      buff.fPols[indx++] = nz*nvert+indx2+k;
+      buff.fPols[indx++] = indx2+nvert+j;
+      buff.fPols[indx++] = nz*nvert+indx2+j;
       }
    } // total (nz-1)*nvert polys
-   buff->fPols[indx++] = c+2;
-   buff->fPols[indx++] = nvert;
+   buff.fPols[indx++] = c+2;
+   buff.fPols[indx++] = nvert;
    indx2 = 0;
    for (j = nvert - 1; j >= 0; --j) {
-      buff->fPols[indx++] = indx2+j;
+      buff.fPols[indx++] = indx2+j;
    }
 
-   buff->fPols[indx++] = c;
-   buff->fPols[indx++] = nvert;
+   buff.fPols[indx++] = c;
+   buff.fPols[indx++] = nvert;
    indx2 = (nz-1)*nvert;
  
    for (j=0; j<nvert; j++) {
-      buff->fPols[indx++] = indx2+j;
+      buff.fPols[indx++] = indx2+j;
    }
 }
 
@@ -972,38 +928,38 @@ void TGeoXtru::SetDimensions(Double_t *param)
 }   
 
 //_____________________________________________________________________________
-void TGeoXtru::SetPoints(Double_t *buff) const
+void TGeoXtru::SetPoints(Double_t *points) const
 {
 // create polycone mesh points
    Int_t i, j;
    Int_t indx = 0;
    TGeoXtru *xtru = (TGeoXtru*)this;
-   if (buff) {
+   if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
          for (j = 0; j < fNvert; j++) {
-            buff[indx++] = fXc[j];
-            buff[indx++] = fYc[j];
-            buff[indx++] = fZ[i];
+            points[indx++] = fXc[j];
+            points[indx++] = fYc[j];
+            points[indx++] = fZ[i];
          }
       }
    }
 }
 
 //_____________________________________________________________________________
-void TGeoXtru::SetPoints(Float_t *buff) const
+void TGeoXtru::SetPoints(Float_t *points) const
 {
 // create polycone mesh points
    Int_t i, j;
    Int_t indx = 0;
    TGeoXtru *xtru = (TGeoXtru*)this;
-   if (buff) {
+   if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
          for (j = 0; j < fNvert; j++) {
-            buff[indx++] = fXc[j];
-            buff[indx++] = fYc[j];
-            buff[indx++] = fZ[i];
+            points[indx++] = fXc[j];
+            points[indx++] = fYc[j];
+            points[indx++] = fZ[i];
          }
       }
    }
@@ -1029,3 +985,33 @@ void TGeoXtru::Sizeof3D() const
 ///   painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
+//_____________________________________________________________________________
+const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+
+   if (reqSections & TBuffer3D::kRawSizes) {
+      Int_t nz = GetNz();
+      Int_t nvert = GetNvert();
+      Int_t NbPnts = nz*nvert;
+      Int_t NbSegs = nvert*(2*nz-1);
+      Int_t NbPols = nvert*(nz-1)+2;            
+      if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*(NbPols-2)+2*(2+nvert))) {
+         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+      }
+   }
+   // TODO: Push down to TGeoShape?
+   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      }
+
+      SetSegsAndPols(buffer);      
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+      
+   return buffer;
+}
