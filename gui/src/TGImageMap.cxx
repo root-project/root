@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.4 2003/07/15 14:25:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.5 2004/02/18 16:17:33 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -412,7 +412,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    fCursorMouseOut  = kPointer;
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
-   fCleanup         = new TList;
+   fTrash           = new TList;
    fMainTip         = 0;
    fNavMode = kNavRegions;
 
@@ -435,7 +435,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    fCursorMouseOut  = kPointer;
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
-   fCleanup         = new TList;
+   fTrash           = new TList;
    fMainTip         = 0;
    fNavMode = kNavRegions;
 
@@ -455,8 +455,8 @@ TGImageMap::~TGImageMap()
    // Cleanup image map widget.
 
    delete fMainTip;
-   fCleanup->Delete();
-   delete fCleanup;
+   fTrash->Delete();
+   delete fTrash;
    fListOfRegions->Delete();
    delete fListOfRegions;
 }
@@ -484,7 +484,7 @@ TGPopupMenu *TGImageMap::CreatePopup(Int_t id)
          popup = region->GetPopup();
          if (!popup && !newpopup) {
             newpopup = new TGPopupMenu(this);
-            fCleanup->Add(newpopup);
+            fTrash->Add(newpopup);
          }
          if (newpopup) region->SetPopup(newpopup);
       }

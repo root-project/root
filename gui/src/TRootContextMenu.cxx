@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.8 2004/03/12 00:31:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.9 2004/04/16 11:32:45 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
    // Create context menu.
 
    fDialog  = 0;
-   fCleanup = new TList;
+   fTrash = new TList;
 
    // Context menu handles its own messages
    Associate(this);
@@ -75,8 +75,8 @@ TRootContextMenu::~TRootContextMenu()
    // Delete a context menu.
 
    delete fDialog;
-   if (fCleanup) fCleanup->Delete();
-   delete fCleanup;
+   if (fTrash) fTrash->Delete();
+   delete fTrash;
 }
 
 //______________________________________________________________________________
@@ -86,7 +86,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    // delete menu items releated to previous object and reset menu size
    if (fEntryList) fEntryList->Delete();
-   if (fCleanup)   fCleanup->Delete();
+   if (fTrash)   fTrash->Delete();
    fMenuHeight = 6;
    fMenuWidth  = 8;
 
@@ -164,7 +164,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                            if (m->GetterMethod()) {
                               TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
                               AddPopup(method->GetName(), r);
-                              fCleanup->Add(r);
+                              fTrash->Add(r);
                               TIter nxt(m->GetOptions());
                               TOptionListItem *it;
                               while ((it = (TOptionListItem*) nxt())) {
@@ -174,7 +174,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                                  TToggle *t = new TToggle;
                                  t->SetToggledObject(object, method);
                                  t->SetOnValue(val);
-                                 fCleanup->Add(t);
+                                 fTrash->Add(t);
 
                                  r->AddSeparator();
                                  r->AddEntry(name, togglelist++, t);
@@ -192,7 +192,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                            TToggle *t = new TToggle;
                            t->SetToggledObject(object, method);
                            t->SetOnValue(1);
-                           fCleanup->Add(t);
+                           fTrash->Add(t);
 
                            AddEntry(method->GetName(), toggle++, t);
                            if (t->GetState()) CheckEntry(toggle-1);
@@ -215,7 +215,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                      TToggle *t = new TToggle;
                      t->SetToggledObject(object, method);
                      t->SetOnValue(1);
-                     fCleanup->Add(t);
+                     fTrash->Add(t);
 
                      AddEntry(method->GetName(), toggle++, t);
                      if (t->GetState()) CheckEntry(toggle-1);
