@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.15 2001/04/10 07:10:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.16 2001/04/11 07:21:33 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -85,6 +85,24 @@ ClassImp(TF1)
 //   Root > myfunc();
 //   Root > myfit();
 //
+//
+//  TF1 objects can reference other TF1 objects (thanks John Odonnell)
+//  However, there is a restriction. A function cannot reference a basic
+//  function if the basic function is a polynomial polN.
+//  Example:
+//{
+//  TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
+//  fcos->SetParNames( "cos");
+//  fcos->SetParameter( 0, 1.1);
+//
+//  TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
+//  fsin->SetParNames( "sin");
+//  fsin->SetParameter( 0, 2.1);
+//
+//  TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
+//
+//  TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
+//}
 
 //______________________________________________________________________________
 TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
