@@ -38,9 +38,15 @@ include/%.h:    $(EGDIRI)/%.h
 		cp $< $@
 
 $(EGLIB):       $(EGO) $(EGDO) $(MAINLIBS) $(EGLIBDEP)
+ifeq ($(PLATFORM),macosx)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libEG.$(SOEXT) $@ "$(EGO) $(EGDO)" \
+		   "$(EGLIBEXTRA) $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)"
+else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEG.$(SOEXT) $@ "$(EGO) $(EGDO)" \
 		   "$(EGLIBEXTRA)"
+endif
 
 $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
