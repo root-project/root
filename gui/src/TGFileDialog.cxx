@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.17 2004/12/01 17:25:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.18 2004/12/07 01:34:31 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -202,8 +202,14 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    }
    fTypes->Select(fFileInfo->fFileTypeIdx);
 
-   fTbfname->Clear();
-   //fTbfname->AddText(0, fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
+   // Show all items in combobox without scrollbar
+   //TGDimension fw = fTypes->GetListBox()->GetContainer()->GetDefaultSize();
+   //fTypes->GetListBox()->Resize(fw.fWidth, fw.fHeight);
+
+   if (fFileInfo->fFilename && fFileInfo->fFilename[0])
+      fTbfname->AddText(0, fFileInfo->fFilename);
+   else
+      fTbfname->Clear();
 
    fHftype->AddFrame(fLftypes, fLhl);
    fHftype->AddFrame(fTypes, fLht1);
