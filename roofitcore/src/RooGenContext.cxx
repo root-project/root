@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.10 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.9 2001/08/09 01:02:14 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.10 2001/08/22 00:50:25 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -51,7 +51,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Analyze the list of variables to generate...
   _isValid= kTRUE;
-  TIterator *iterator= vars.MakeIterator();
+  TIterator *iterator= vars.createIterator();
   TIterator *servers= _pdfClone->serverIterator();
   const RooAbsArg *tmp(0),*arg(0);
   while(_isValid && (tmp= (const RooAbsArg*)iterator->Next())) {
@@ -105,7 +105,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Analyze the prototype dataset, if one is specified
   if(_prototype) {
-    iterator= _prototype->get()->MakeIterator();
+    iterator= _prototype->get()->createIterator();
     const RooAbsArg *proto(0);
     while(proto= (const RooAbsArg*)iterator->Next()) {
       // is this variable being generated or taken from the prototype?
@@ -183,7 +183,7 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // (this is necessary since we never make a private clone for efficiency)
   if(_prototype) {
     const RooArgSet *vars= _prototype->get();
-    TIterator *iterator= _protoVars.MakeIterator();
+    TIterator *iterator= _protoVars.createIterator();
     const RooAbsArg *arg(0);
     Bool_t ok(kTRUE);
     while(arg= (const RooAbsArg*)iterator->Next()) {

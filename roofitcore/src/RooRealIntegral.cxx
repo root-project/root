@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.28 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.29 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -61,7 +61,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      dependents that the PDF doesn't explicitly depend on
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   
-  TIterator* depIter = depList.MakeIterator() ;
+  TIterator* depIter = depList.createIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if(!arg->isLValue()) {
       cout << ClassName() << "::" << GetName() << ": cannot integrate non-lvalue ";
@@ -81,7 +81,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntOKDepList ;
-  depIter = depList.MakeIterator() ;
+  depIter = depList.createIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
   }
@@ -108,7 +108,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooArgSet argLeafServers ;
       arg->leafNodeServerList(&argLeafServers) ;
 
-      TIterator* lIter = argLeafServers.MakeIterator() ;
+      TIterator* lIter = argLeafServers.createIterator() ;
       RooAbsArg* leaf ;
       while(leaf=(RooAbsArg*)lIter->Next()) {
 	if (depList.FindObject(leaf->GetName())) {
@@ -174,7 +174,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet numIntDepList ;
 
   // Loop over actually analytically integrated dependents
-  TIterator* aiIter = _anaList.MakeIterator() ;
+  TIterator* aiIter = _anaList.createIterator() ;
   while (arg=(RooAbsArg*)aiIter->Next()) {    
 
     // Process only derived RealLValues
@@ -186,7 +186,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       // Add category dependent of LValueReal used in integration
       RooAbsArg *argDep ;
       RooArgSet *argDepList = arg->getDependents(&depList) ;
-      TIterator *adIter = argDepList->MakeIterator() ;
+      TIterator *adIter = argDepList->createIterator() ;
       while (argDep=(RooAbsArg*)adIter->Next()) {
 	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
 	  numIntDepList.add(*argDep) ;
@@ -210,7 +210,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add final dependents, that are not forcibly integrated analytically, 
       // to numerical integration list      
-      TIterator* iter = argDeps->MakeIterator() ;
+      TIterator* iter = argDeps->createIterator() ;
       RooAbsArg* dep ;
       while(dep=(RooAbsArg*)iter->Next()) {
 	if (!function.forceAnalyticalInt(*dep))
@@ -226,7 +226,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   // Split numeric integration list in summation and integration lists
-  TIterator* numIter=numIntDepList.MakeIterator() ;
+  TIterator* numIter=numIntDepList.createIterator() ;
   while (arg=(RooAbsArg*)numIter->Next()) {
 
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
@@ -238,10 +238,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   delete numIter ;
 
   // Determine operating mode
-  if (numIntDepList.GetSize()>0) {
+  if (numIntDepList.getSize()>0) {
     // Numerical and optional Analytical integration
     _operMode = Hybrid ;
-  } else if (_anaList.GetSize()>0) {
+  } else if (_anaList.getSize()>0) {
     // Purely analytical integration
     _operMode = Analytic ;    
   } else {
@@ -265,7 +265,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   }
 
   // All done if there are no arguments to integrate numerically
-  if(0 == _intList.GetSize()) return kTRUE;
+  if(0 == _intList.getSize()) return kTRUE;
 
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
@@ -369,7 +369,7 @@ Double_t RooRealIntegral::evaluate() const
 
   // Multiply answer with integration ranges of factorized variables
   RooAbsArg *arg ;
-  TIterator* fIter = _facList.MakeIterator() ;
+  TIterator* fIter = _facList.createIterator() ;
   while(arg=(RooAbsArg*)fIter->Next()) {
     // Multiply by fit range for 'real' dependents
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
@@ -396,7 +396,7 @@ Double_t RooRealIntegral::jacobianProduct() const
   // Return product of jacobian terms originating from analytical integration
   Double_t jacProd(1) ;
 
-  TIterator *jIter = _jacList.MakeIterator() ;
+  TIterator *jIter = _jacList.createIterator() ;
   RooAbsRealLValue* arg ;
   while (arg=(RooAbsRealLValue*)jIter->Next()) {
     jacProd *= arg->jacobian() ;
@@ -410,7 +410,7 @@ Double_t RooRealIntegral::jacobianProduct() const
 Double_t RooRealIntegral::sum() const
 {
   // Perform summation of list of category dependents to be integrated
-  if (_sumList.GetSize()!=0) {
+  if (_sumList.getSize()!=0) {
  
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;

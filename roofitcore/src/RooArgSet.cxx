@@ -1,19 +1,25 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.30 2001/08/22 00:50:24 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.31 2001/08/22 01:01:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   23-Aug-2001 DK Enforce set semantics in the public interface
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION --
 // RooArgSet is a container object that can hold multiple RooAbsArg objects.
-// Every object in the set must have a unique name.
+// The container has set semantics which means that:
+//  - Every object it contains must have a unique name returned by GetName().
+//  - Contained objects are not ordered although the set can be traversed
+//    using an iterator returned by createIterator(). The iterator does not
+//    necessarily follow the object insertion order.
+//  - Objects can be retrieved by name only, and not by index.
 
 #include <iostream.h>
 #include <iomanip.h>
@@ -28,10 +34,10 @@
 #include "RooFitCore/RooTrace.hh"
 
 ClassImp(RooArgSet)
-
+  ;
 
 RooArgSet::RooArgSet() :
-  _name(), TList(), _isCopy(kFALSE)
+  _name(), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
 //   cout << "!!!!! RooArgSet default ctor called !!!!!" << endl ;
@@ -39,14 +45,14 @@ RooArgSet::RooArgSet() :
 }
 
 RooArgSet::RooArgSet(const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
 }
 
 RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1);
@@ -54,7 +60,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
 
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2);
@@ -63,7 +69,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3);
@@ -72,7 +78,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4);
@@ -82,7 +88,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
 		     const RooAbsArg& var2, const RooAbsArg& var3,
 		     const RooAbsArg& var4, const RooAbsArg& var5,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5);
@@ -92,7 +98,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
@@ -103,7 +109,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
 		     const RooAbsArg& var7,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
@@ -114,7 +120,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
 		     const RooAbsArg& var7, const RooAbsArg& var8,
 		     const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
@@ -126,7 +132,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
 		     const RooAbsArg& var7, const RooAbsArg& var8,
 		     const RooAbsArg& var9, const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
@@ -134,13 +140,13 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 
 
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
-  _name(name), TList(), _isCopy(kFALSE)
+  _name(name), _list(), _isCopy(kFALSE)
 {
   RooTrace::create(this) ;
-  if (!name) SetName(other.GetName()) ;
+  if (!name) setName(other.GetName()) ;
 
   // Transfer contents (not owned)
-  TIterator *iterator= other.MakeIterator();
+  TIterator *iterator= other.createIterator();
   RooAbsArg *arg(0);
   while(arg= (RooAbsArg*)iterator->Next()) {
     add(*arg);
@@ -168,7 +174,7 @@ RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const
   RooArgSet* snapshot = new RooArgSet(snapName.Data()) ;
 
   // Copy contents
-  TIterator *iterator= MakeIterator();
+  TIterator *iterator= createIterator();
   RooAbsArg *orig(0);
   while(0 != (orig= (RooAbsArg*)iterator->Next())) {
     RooAbsArg *copy= (RooAbsArg*)orig->Clone();
@@ -176,7 +182,7 @@ RooArgSet* RooArgSet::snapshot(Bool_t deepCopy) const
   }
   delete iterator;
 
-  TIterator* vIter = snapshot->MakeIterator() ;
+  TIterator* vIter = snapshot->createIterator() ;
   RooAbsArg* var ;
 
   // Add external dependents
@@ -222,9 +228,9 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
   // that also appears in the other set.
 
   RooAbsArg *elem, *theirs ;
-  Int_t index(GetSize());
+  Int_t index(getSize());
   while(--index >= 0) {
-    elem= (RooAbsArg*)At(index);
+    elem= (RooAbsArg*)_list.At(index);
     theirs= other.find(elem->GetName());
     if(!theirs) continue;
 
@@ -263,7 +269,8 @@ RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
   }
   // add a pointer to a clone of this variable to our list (we now own it!)
   RooAbsArg *clone= (RooAbsArg*)var.Clone();
-  Add((TObject*)clone);
+  if(0 != clone) add(*clone);
+
   return clone;
 }
 
@@ -293,7 +300,7 @@ Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
     return kFALSE;
   }
   // add a pointer to this variable to our list (we don't own it!)
-  Add((TObject*)&var);
+  add(var);
   return kTRUE;
 }
 
@@ -304,9 +311,9 @@ Bool_t RooArgSet::add(const RooArgSet& list)
 {
   Bool_t result(false) ;
 
-  Int_t n= list.GetSize() ;
+  Int_t n= list.getSize() ;
   for(Int_t index= 0; index < n; index++) {
-    result |= add((RooAbsArg&)*list.At(index)) ;
+    result |= add((RooAbsArg&)*list._list.At(index)) ;
   }
 
   return result;  
@@ -322,7 +329,7 @@ Bool_t RooArgSet::replace(const RooArgSet &other) {
     return kFALSE;
   }
   // loop over elements in the other list
-  TIterator *otherArgs= other.MakeIterator();
+  TIterator *otherArgs= other.createIterator();
   const RooAbsArg *arg(0);
   while(arg= (const RooAbsArg*)otherArgs->Next()) {
     // do we have an arg of the same name in our set?
@@ -361,8 +368,8 @@ Bool_t RooArgSet::replace(const RooAbsArg& var1, const RooAbsArg& var2)
     return kFALSE;
   }
   // replace var1 with var2
-  AddBefore((TObject*)&var1,(TObject*)&var2);
-  Remove((TObject*)&var1);
+  _list.AddBefore((TObject*)&var1,(TObject*)&var2);
+  _list.Remove((TObject*)&var1);
   return kTRUE;
 }
 
@@ -382,7 +389,7 @@ Bool_t RooArgSet::remove(const RooAbsArg& var, Bool_t silent) {
 		      << " and cannot be removed" << endl;
     return kFALSE;
   }
-  Remove(found);
+  _list.Remove(found);
   if(_isCopy) delete found;
 
   return kTRUE;
@@ -394,9 +401,9 @@ Bool_t RooArgSet::remove(const RooArgSet& list, Bool_t silent) {
 
   Bool_t result(false) ;
 
-  Int_t n= list.GetSize() ;
+  Int_t n= list.getSize() ;
   for(Int_t index= 0; index < n; index++) {
-    result |= remove((RooAbsArg&)*list.At(index),silent) ;
+    result |= remove((RooAbsArg&)*list._list.At(index),silent) ;
   }
 
   return result;
@@ -418,7 +425,7 @@ void RooArgSet::removeAll() {
 
 void RooArgSet::setAttribAll(const Text_t* name, Bool_t value) 
 {
-  TIterator* iter=MakeIterator() ;
+  TIterator* iter= createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     arg->setAttribute(name,value) ;
@@ -435,7 +442,7 @@ RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
   RooArgSet *sel = new RooArgSet(selName.Data()) ;
   
   // Scan set contents for matching attribute
-  TIterator* iter=MakeIterator() ;
+  TIterator* iter= createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     if (arg->getAttribute(name)==value)
@@ -458,7 +465,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
   if (compact) {
     
-    TIterator *iterator= MakeIterator();
+    TIterator *iterator= createIterator();
     RooStreamParser parser(is) ;
     RooAbsArg *next(0);
     while(0 != (next= (RooAbsArg*)iterator->Next())) {
@@ -644,7 +651,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 
 void RooArgSet::writeToStream(ostream& os, Bool_t compact) 
 {
-  TIterator *iterator= MakeIterator();
+  TIterator *iterator= createIterator();
   RooAbsArg *next(0);
   while(0 != (next= (RooAbsArg*)iterator->Next())) {
     if (compact) {
@@ -670,7 +677,7 @@ void RooArgSet::printToStream(ostream& os, PrintOption opt, TString indent) cons
   // we cannot use oneLinePrint() since we do not inherit from TNamed
   os << ClassName() << "::" << GetName() << ":" << (_isCopy?" COPY":"") << endl;
   if(opt >= Standard) {
-    TIterator *iterator= MakeIterator();
+    TIterator *iterator= createIterator();
     int index= 0;
     RooAbsArg *next(0);
     opt= lessVerbose(opt);

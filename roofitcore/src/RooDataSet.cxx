@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.38 2001/08/18 02:13:10 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.39 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -225,7 +225,7 @@ void RooDataSet::initCache(const RooArgSet& cachedVars)
   // to the corresponding TTree branches
 
   // iterate over the cache variables for this dataset
-  TIterator* iter = cachedVars.MakeIterator() ;
+  TIterator* iter = cachedVars.createIterator() ;
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)iter->Next())) {
     var->attachToTree(*_tree) ;
@@ -278,7 +278,7 @@ void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select)
   RooArgSet *sourceArgSet = _vars.snapshot(kFALSE) ;
   
   // Attach args in cloned list to cloned source tree
-  TIterator* sourceIter =  sourceArgSet->MakeIterator() ;
+  TIterator* sourceIter =  sourceArgSet->createIterator() ;
   RooAbsArg* sourceArg(0) ;
   while (sourceArg=(RooAbsArg*)sourceIter->Next()) {
     sourceArg->attachToTree(*tClone) ;
@@ -420,7 +420,7 @@ void RooDataSet::cacheArgs(RooArgSet& newVarSet)
 {
   // Call cacheArg for each argument in given list
 
-  TIterator *iter = newVarSet.MakeIterator() ;
+  TIterator *iter = newVarSet.createIterator() ;
   RooAbsArg* arg ;
 
   while (arg=(RooAbsArg*)iter->Next()) {
@@ -642,7 +642,7 @@ void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) con
       os << indent << "  Caches ";
       _cachedVars.printToStream(os,Standard,deeper);
       
-      if(_truth.GetSize() > 0) {
+      if(_truth.getSize() > 0) {
 	os << indent << "  Generated with ";
 	_truth.printToStream(os,Shape,deeper);
       }

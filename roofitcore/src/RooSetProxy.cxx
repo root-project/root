@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSetProxy.cc,v 1.7 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.8 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -96,7 +96,7 @@ Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent)
 
 void RooSetProxy::removeAll() 
 {
-  TIterator* iter = MakeIterator() ;
+  TIterator* iter = createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     _owner->removeServer(*arg) ;
@@ -120,27 +120,12 @@ RooSetProxy& RooSetProxy::operator=(const RooArgSet& other)
 
 Bool_t RooSetProxy::changePointer(const RooArgSet& newServerList, Bool_t nameChange) 
 {
-  TIterator* iter = MakeIterator() ;
+  TIterator* iter = createIterator() ;
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
   while (arg=(RooAbsArg*)iter->Next()) {
     
-    RooAbsArg* newArg ;
-    if (!nameChange) {
-      newArg = newServerList.find(arg->GetName()) ;
-    } else {
-      TString nameAttrib("ORIGNAME:") ; 
-      nameAttrib.Append(arg->GetName()) ;
-      RooArgSet* tmp = newServerList.selectByAttrib(nameAttrib,kTRUE) ;
-      if (tmp && tmp->GetSize()!=1) {
-	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
-	     << nameAttrib << " attribute" << endl ;
-	assert(0) ;
-      }
-      newArg = tmp ? ((RooAbsArg*)tmp->First()) : 0 ;
-      if (tmp) delete tmp ;
-    }
-
+    RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg) error |= !RooArgSet::replace(*arg,*newArg) ;
   }
   delete iter ;

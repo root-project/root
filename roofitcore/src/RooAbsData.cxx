@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.3 2001/08/23 01:21:45 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.4 2001/08/23 01:35:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -37,7 +37,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   // (RooRealVar,RooCategory etc) are stored as part of the dataset
 
   // clone the fundamentals of the given data set into internal buffer
-  TIterator* iter = vars.MakeIterator() ;
+  TIterator* iter = vars.createIterator() ;
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)iter->Next())) {
     if (!var->isFundamental()) {
@@ -51,8 +51,8 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   }
   delete iter ;
 
-  _iterator= _vars.MakeIterator();
-  _cacheIter = _cachedVars.MakeIterator() ;
+  _iterator= _vars.createIterator();
+  _cacheIter = _cachedVars.createIterator() ;
 }
 
 

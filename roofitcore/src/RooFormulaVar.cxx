@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.9 2001/08/03 22:07:25 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.10 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* fo
 {  
   Bool_t anyServers(kFALSE) ;
   // Constructor with formula expression and list of input variables
-  TIterator* depIter = _formula.actualDependents().MakeIterator() ;
+  TIterator* depIter = _formula.actualDependents().createIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
     addServer(*server,kTRUE,kFALSE) ;
@@ -47,7 +47,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgSe
 {  
   Bool_t anyServers(kFALSE) ;
   // Constructor with formula expression and list of input variables
-  TIterator* depIter = _formula.actualDependents().MakeIterator() ;
+  TIterator* depIter = _formula.actualDependents().createIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
     addServer(*server,kTRUE,kFALSE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.7 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.8 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgSe
   RooAbsPdf(name,title), _formula(name,title,dependents)
 {  
   // Constructor with formula expression and list of variables
-  TIterator* depIter = _formula.actualDependents().MakeIterator() ;
+  TIterator* depIter = _formula.actualDependents().createIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
     addServer(*server,kTRUE,kFALSE) ;

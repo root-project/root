@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.22 2001/08/03 22:07:25 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.23 2001/08/09 01:02:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -42,7 +42,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& l
   SetName(name) ;
   SetTitle(formula) ;
 
-  TIterator* iter = list.MakeIterator() ;
+  TIterator* iter = list.createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     _origList.Add(arg) ;

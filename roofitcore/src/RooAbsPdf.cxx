@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.26 2001/08/22 00:50:24 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.27 2001/08/23 01:21:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -334,7 +334,7 @@ Bool_t RooAbsPdf::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 {
   // Wrapper function for matchArgsByName()
   TList nameList ;
-  TIterator* iter = set.MakeIterator() ;
+  TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     nameList.Add(new TObjString(arg->GetName())) ;    

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.10 2001/08/15 23:38:43 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.11 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -28,7 +28,7 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
   RooAbsPdf(name,title), _isCopy(kFALSE),
   _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
   _convSet("convSet","Set of resModel X basisFunc convolutions",this),
-  _convNormSet(0), _convSetIter(_convSet.MakeIterator())
+  _convNormSet(0), _convSetIter(_convSet.createIterator())
 {
   // Constructor
   _convNormSet = new RooArgSet(convVar,"convNormSet") ;
@@ -39,7 +39,7 @@ RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* na
   RooAbsPdf(other,name), _model(0), _convVar(0), _isCopy(kTRUE),
   _convSet("convSet",this,other._convSet),
   _convNormSet(new RooArgSet(*other._convNormSet)),
-  _convSetIter(_convSet.MakeIterator())
+  _convSetIter(_convSet.createIterator())
 {
   // Copy constructor
 }
@@ -56,7 +56,7 @@ RooConvolutedPdf::~RooConvolutedPdf()
   delete _convSetIter ;
 
   if (!_isCopy) {
-    TIterator* iter = _convSet.MakeIterator() ;
+    TIterator* iter = _convSet.createIterator() ;
     RooAbsArg* arg ;
     while (arg = (RooAbsArg*)iter->Next()) {
       _convSet.remove(*arg) ;
@@ -138,8 +138,8 @@ Int_t RooConvolutedPdf::getAnalyticalIntegral(RooArgSet& allVars,
 					      RooArgSet& analVars) const 
 {
   // Make subset of allVars that excludes dependents of any convolution integral
-  TIterator* varIter  = allVars.MakeIterator() ;
-  TIterator* convIter = _convSet.MakeIterator() ;
+  TIterator* varIter  = allVars.createIterator() ;
+  TIterator* convIter = _convSet.createIterator() ;
   
   RooArgSet allVarsCoef("allVarsCoef") ;
   RooAbsArg* arg ;
@@ -176,7 +176,7 @@ Double_t RooConvolutedPdf::analyticalIntegral(Int_t code) const
     
     // Integration list includes convolution variable
     Double_t norm(0) ;
-    TIterator* iter = _convSet.MakeIterator() ;
+    TIterator* iter = _convSet.createIterator() ;
     RooAbsPdf* conv ;
     Int_t index(0) ;
     while(conv=(RooAbsPdf*)iter->Next()) {
@@ -197,7 +197,7 @@ Double_t RooConvolutedPdf::analyticalIntegral(Int_t code) const
 
     // Integration list doesn't include convolution variable
     Double_t norm(0) ;
-    TIterator* iter = _convSet.MakeIterator() ;
+    TIterator* iter = _convSet.createIterator() ;
     RooAbsPdf* conv ;
     Int_t index(0) ;
     while(conv=(RooAbsPdf*)iter->Next()) {
@@ -242,7 +242,7 @@ Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 
 void RooConvolutedPdf::dump(const RooArgSet* nset) const
 {
-  TIterator* iter = _convSet.MakeIterator() ;
+  TIterator* iter = _convSet.createIterator() ;
   RooAbsPdf* conv ;
   Int_t index(0) ;
   while(conv=(RooAbsPdf*)iter->Next()) {
@@ -264,11 +264,11 @@ Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
   RooArgSet convNormArgs("convNormArgs") ;
 
   // Make iterator over data set arguments
-  TIterator* dsIter = nset->MakeIterator() ;
+  TIterator* dsIter = nset->createIterator() ;
   RooAbsArg* dsArg ;
 
   // Make iterator over convolution integrals
-  TIterator* cvIter = _convSet.MakeIterator() ;
+  TIterator* cvIter = _convSet.createIterator() ;
   RooResolutionModel* conv ;
 
   // Build integration list for convolutions
@@ -290,7 +290,7 @@ Bool_t RooConvolutedPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
 
 void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const 
 {
-  TIterator* cvIter = _convSet.MakeIterator() ;
+  TIterator* cvIter = _convSet.createIterator() ;
   RooResolutionModel* conv ;
 
   // Make convolution normalizations servers of the convoluted pdf normalization
@@ -302,7 +302,7 @@ void RooConvolutedPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSe
 
     RooArgSet leafList("leafNodeServerList") ;
     conv->normLeafServerList(leafList) ;
-    TIterator* sIter = leafList.MakeIterator() ;
+    TIterator* sIter = leafList.createIterator() ;
 
     RooAbsArg* server ;
     while(server=(RooAbsArg*)sIter->Next()) {
@@ -329,7 +329,7 @@ void RooConvolutedPdf::printToStream(ostream& os, PrintOption opt, TString inden
   RooAbsPdf::printToStream(os,opt,indent);
   if(opt >= Verbose) {
     os << indent << "--- RooConvolutedPdf ---" << endl;
-    TIterator* iter = _convSet.MakeIterator() ;
+    TIterator* iter = _convSet.createIterator() ;
     RooResolutionModel* conv ;
     while (conv=(RooResolutionModel*)iter->Next()) {
       conv->printToStream(os,Verbose,"    ") ;

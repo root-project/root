@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.11 2001/07/31 05:54:17 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.12 2001/08/02 21:39:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,22 +59,8 @@ RooArgProxy::~RooArgProxy()
 Bool_t RooArgProxy::changePointer(const RooArgSet& newServerList, Bool_t nameChange) 
 {
   // Change proxied object to object of same name in given list
-  RooAbsArg* newArg ;
-  if (!nameChange) {
-    newArg = newServerList.find(_arg->GetName()) ;
-  } else {
-    TString nameAttrib("ORIGNAME:") ; 
-    nameAttrib.Append(_arg->GetName()) ;
-    RooArgSet* tmp = newServerList.selectByAttrib(nameAttrib,kTRUE) ;
-    if (tmp && tmp->GetSize()!=1) {
-      cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
-	   << nameAttrib << " attribute" << endl ;
-      assert(0) ;
-    }
-    newArg = tmp ? ((RooAbsArg*)tmp->First()) : 0 ;
-    if (tmp) delete tmp ;
-  }
 
+  RooAbsArg* newArg= _arg->findNewServer(newServerList, nameChange);
   if (newArg) _arg = newArg ;
 
   return newArg?kTRUE:kFALSE ;

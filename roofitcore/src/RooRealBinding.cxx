@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.1 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,10 +27,10 @@ ClassImp(RooRealBinding)
 ;
 
 static const char rcsid[] =
-"$Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $";
+"$Id: RooRealBinding.cc,v 1.1 2001/08/03 21:44:57 david Exp $";
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars) :
-  RooAbsFunc(vars.GetSize()), _func(&func), _vars(0)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];

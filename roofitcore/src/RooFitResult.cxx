@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.1 2001/08/18 02:13:11 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.2 2001/08/21 01:46:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -97,11 +97,11 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 
   Int_t i ;
   if (opt>=Verbose) {
-    if (_constPars->GetSize()>0) {
+    if (_constPars->getSize()>0) {
       os << "    Constant Parameter    Value     " << endl
 	 << "  --------------------  ------------" << endl ;
 
-      for (i=0 ; i<_constPars->GetSize() ; i++) {
+      for (i=0 ; i<_constPars->getSize() ; i++) {
 	os << "  " << setw(20) << ((RooAbsArg*)_constPars->At(i))->GetName()
 	   << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->At(i))->getVal())
 	   << endl ;
@@ -114,7 +114,7 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
     os << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
        << "  --------------------  ------------  --------------------------  --------" << endl ;
 
-    for (i=0 ; i<_finalPars->GetSize() ; i++) {
+    for (i=0 ; i<_finalPars->getSize() ; i++) {
       os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName() ;
       os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->At(i))->getVal())
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
@@ -127,7 +127,7 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
     os << "    Floating Parameter    FinalValue +/-  Error   " << endl
        << "  --------------------  --------------------------" << endl ;
 
-    for (i=0 ; i<_finalPars->GetSize() ; i++) {
+    for (i=0 ; i<_finalPars->getSize() ; i++) {
       os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->At(i))->GetName()
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->At(i))->getVal())
 	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->At(i))->getError())
@@ -168,7 +168,7 @@ void RooFitResult::fillCorrMatrix()
 
   // Build holding arrays for correlation coefficients
   _globalCorr = new RooArgSet("globalCorrelations") ;
-  TIterator* vIter = _initPars->MakeIterator() ;
+  TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
   Int_t idx(0) ;
   while(arg=(RooAbsArg*)vIter->Next()) {
@@ -186,7 +186,7 @@ void RooFitResult::fillCorrMatrix()
     name.Append(",*]") ;
     RooArgSet* corrMatrixRow = new RooArgSet(name.Data()) ;
     _corrMatrix.Add(corrMatrixRow) ;
-    TIterator* vIter2 = _initPars->MakeIterator() ;
+    TIterator* vIter2 = _initPars->createIterator() ;
     RooAbsArg* arg2 ;
     while(arg2=(RooAbsArg*)vIter2->Next()) {
 
@@ -206,7 +206,7 @@ void RooFitResult::fillCorrMatrix()
   }
   delete vIter ;
 
-  TIterator *gcIter = _globalCorr->MakeIterator() ;
+  TIterator *gcIter = _globalCorr->createIterator() ;
 
   // Extract correlation information for MINUIT (code taken from TMinuit::mnmatu() )
 
@@ -231,7 +231,7 @@ void RooFitResult::fillCorrMatrix()
 
     gcVal = (RooRealVar*) gcIter->Next() ;
     gcVal->setVal(gMinuit->fGlobcc[i-1]) ;
-    TIterator* cIter = ((RooArgSet*)_corrMatrix.At(i-1))->MakeIterator() ;
+    TIterator* cIter = ((RooArgSet*)_corrMatrix.At(i-1))->createIterator() ;
     for (it = 1; it <= nparm; ++it) {
       RooRealVar* cVal = (RooRealVar*) cIter->Next() ;
       cVal->setVal(gMinuit->fMATUvline[it-1]) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.7 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.8 2001/08/23 01:21:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -143,7 +143,7 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
   // Check if jacobian has no real-valued dependents
   RooAbsArg* arg ;
-  TIterator* dIter = depList.MakeIterator() ;
+  TIterator* dIter = depList.createIterator() ;
   while (arg=(RooAbsArg*)dIter->Next()) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope.arg().dependsOn(*arg)) {

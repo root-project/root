@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.19 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.20 2001/08/21 18:53:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -89,21 +89,21 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
   RooArgSet* paramList = _pdfClone->getParameters(_dataClone) ;
 
   _floatParamList = paramList->selectByAttrib("Constant",kFALSE) ; 
-  if (_floatParamList->GetSize()>1) {
+  if (_floatParamList->getSize()>1) {
     _floatParamList->Sort() ;
   }
-  _floatParamList->SetName("floatParamList") ;
+  _floatParamList->setName("floatParamList") ;
 
   _constParamList = paramList->selectByAttrib("Constant",kTRUE) ;
-  if (_constParamList->GetSize()>1) {
+  if (_constParamList->getSize()>1) {
     _constParamList->Sort() ;
   }
-  _constParamList->SetName("constParamList") ;
+  _constParamList->setName("constParamList") ;
 
   delete paramList ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
-  TIterator* pIter = _floatParamList->MakeIterator() ;
+  TIterator* pIter = _floatParamList->createIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)pIter->Next()) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
@@ -113,7 +113,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
     }
   }
 
-  _nPar      = _floatParamList->GetSize() ;  
+  _nPar      = _floatParamList->getSize() ;  
   delete pIter ;
 
   // Store the original leaf node list
@@ -209,7 +209,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     RooArgSet branchList("branchList") ;
     _pdfClone->setOperMode(RooAbsArg::ADirty) ;
     _pdfClone->branchNodeServerList(&branchList) ;
-    TIterator* bIter = branchList.MakeIterator() ;
+    TIterator* bIter = branchList.createIterator() ;
     RooAbsArg* branch ;
     while(branch=(RooAbsArg*)bIter->Next()) {
       branch->setOperMode(RooAbsArg::ADirty) ;
@@ -233,10 +233,10 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     if (doPdf)
       findRedundantCacheServers(_pdfClone,_dataClone,cacheList,pruneList) ;
     
-    if (pruneList.GetSize()!=0) {
+    if (pruneList.getSize()!=0) {
       // Created trimmed list of data variables
       RooArgSet newVarList(*_dataClone->get()) ;
-      TIterator* iter = pruneList.MakeIterator() ;
+      TIterator* iter = pruneList.createIterator() ;
       RooAbsArg* arg ;
       while (arg = (RooAbsArg*) iter->Next()) {
 	cout << "RooFitContext::optimizePDF: dropping variable " 
@@ -256,7 +256,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       _pdfClone->attachDataSet(*trimData) ;
       
       // Make sure PDF releases all handles to old data set before deleting it
-      TIterator* pcIter = _pdfCompList->MakeIterator() ;
+      TIterator* pcIter = _pdfCompList->createIterator() ;
       while(arg=(RooAbsArg*)pcIter->Next()){
 	if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
 	  ((RooAbsReal*)arg)->getVal(trimData->get()) ;
@@ -271,7 +271,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
       // Update _lastDataSet in cached variables to new trimmed dataset
       if (doCache) {
-	TIterator* cIter = cacheList.MakeIterator() ;
+	TIterator* cIter = cacheList.createIterator() ;
 	RooAbsArg *cacheArg ;
 	while(cacheArg=(RooAbsArg*)cIter->Next()){
 	  ((RooAbsReal*)cacheArg)->getVal(_dataClone->get()) ;
@@ -286,7 +286,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
   // This must be done last, otherwise the normalization of cached PDFs will not be calculated correctly
   if (doCache && doPdf) {
-    TIterator* cIter = cacheList.MakeIterator() ;
+    TIterator* cIter = cacheList.createIterator() ;
     RooAbsArg *cacheArg ;
     while(cacheArg=(RooAbsArg*)cIter->Next()){
       cacheArg->setOperMode(RooAbsArg::AClean) ;
@@ -316,7 +316,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
       Bool_t canOpt(kTRUE) ;
 
       RooArgSet* branchParamList = server->getParameters(dset) ;
-      TIterator* pIter = branchParamList->MakeIterator() ;
+      TIterator* pIter = branchParamList->createIterator() ;
       RooAbsArg* param ;
       while(param = (RooAbsArg*)pIter->Next()) {
 	if (!param->isConstant()) canOpt=kFALSE ;
@@ -345,7 +345,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
 
 void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& pruneList) 
 {
-  TIterator* vIter = dset->get()->MakeIterator() ;
+  TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*) vIter->Next()) {
     if (!pdf->dependsOn(*arg)) pruneList.add(*arg) ;
@@ -356,7 +356,7 @@ void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooA
 
 void RooFitContext::findRedundantCacheServers(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
 {
-  TIterator* vIter = dset->get()->MakeIterator() ;
+  TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg *var ;
   while (var=(RooAbsArg*) vIter->Next()) {
     if (allClientsCached(var,cacheList)) pruneList.add(*var) ;
@@ -463,7 +463,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
   if(profileTimer) timer.Start();
 
   // Initialize MINUIT
-  Int_t nPar= _floatParamList->GetSize();
+  Int_t nPar= _floatParamList->getSize();
   Double_t params[100], arglist[100];
 
   if (_theFitter) delete _theFitter ;

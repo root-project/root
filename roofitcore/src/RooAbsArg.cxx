@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.44 2001/08/15 23:38:43 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.45 2001/08/23 01:21:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -219,7 +219,7 @@ void RooAbsArg::addServerList(RooArgSet& serverList, Bool_t valueProp, Bool_t sh
   // Register a list of RooAbsArg as servers to us by calls addServer() for each
   // arg in the list
   RooAbsArg* arg ;
-  TIterator* iter = serverList.MakeIterator() ;
+  TIterator* iter = serverList.createIterator() ;
   while (arg=(RooAbsArg*)iter->Next()) {
     addServer(*arg,valueProp,shapeProp) ;
   }
@@ -358,7 +358,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
   leafNodeServerList(&leafList) ;
 
   // Copy non-dependent servers to parameter list
-  TIterator* sIter = leafList.MakeIterator() ;
+  TIterator* sIter = leafList.createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
 
@@ -398,7 +398,7 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
   leafNodeServerList(&leafList) ;    
-  TIterator *sIter = leafList.MakeIterator() ;
+  TIterator *sIter = leafList.createIterator() ;
 
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)sIter->Next()) {
@@ -428,7 +428,7 @@ Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
   Bool_t result(kFALSE);
-  TIterator* sIter = serverList.MakeIterator();
+  TIterator* sIter = serverList.createIterator();
   RooAbsArg* server ;
   while (!result && (server=(RooAbsArg*)sIter->Next())) {
     if (dependsOn(*server)) {
@@ -614,23 +614,7 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   Bool_t propValue, propShape ;
   while (oldServer=(RooAbsArg*)sIter->Next()) {
 
-    if (!nameChange) {
-      newServer = newSet.find(oldServer->GetName()) ;
-    } else {
-
-      // Name changing server redirect: 
-      // use 'ORIGNAME:<oldName>' attribute instead of name of new server
-      TString nameAttrib("ORIGNAME:") ; 
-      nameAttrib.Append(oldServer->GetName()) ;
-      RooArgSet* tmp = newSet.selectByAttrib(nameAttrib,kTRUE) ;
-      if (tmp && tmp->GetSize()!=1) {
-	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
-	     << nameAttrib << " attribute" << endl ;
-	assert(0) ;
-      }
-      newServer = tmp ? ((RooAbsArg*)tmp->First()) : 0 ;
-      if (tmp) delete tmp ;
-    }
+    newServer= oldServer->findNewServer(newSet, nameChange);
 
 //     if (newServer) {
 //       cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
@@ -675,7 +659,35 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
   return ret ;
 }
 
+RooAbsArg *RooAbsArg::findNewServer(const RooArgSet &newSet, Bool_t nameChange) const {
+  // Find the new server in the specified set that matches the old server.
+  // Allow a name change if nameChange is kTRUE, in which case the new
+  // server is selected by searching for a new server with an attribute
+  // of "ORIGNAME:<oldName>". Return zero if there is not a unique match.
 
+  RooAbsArg *newServer(0);
+  if (!nameChange) {
+    newServer = newSet.find(GetName()) ;
+  }
+  else {
+    // Name changing server redirect: 
+    // use 'ORIGNAME:<oldName>' attribute instead of name of new server
+    TString nameAttrib("ORIGNAME:") ; 
+    nameAttrib.Append(GetName()) ;
+    RooArgSet* tmp = newSet.selectByAttrib(nameAttrib,kTRUE) ;
+    if(0 != tmp) {
+      if(tmp->getSize()!=1) {
+	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
+	     << nameAttrib << " attribute" << endl ;
+	assert(0) ;
+      }
+      // use the unique element in the set
+      newServer= tmp->first();
+      delete tmp ;
+    }
+  }
+  return newServer;
+}
 
 Bool_t RooAbsArg::recursiveRedirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll) 
 {
@@ -974,7 +986,7 @@ void RooAbsArg::printDirty(Bool_t depth) const
 
     RooArgSet branchList ;
     branchNodeServerList(&branchList) ;
-    TIterator* bIter = branchList.MakeIterator() ;
+    TIterator* bIter = branchList.createIterator() ;
     RooAbsArg* branch ;
     while(branch=(RooAbsArg*)bIter->Next()) {
       branch->printDirty(kFALSE) ;

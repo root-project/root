@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.4 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.5 2001/08/15 23:38:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,8 +35,8 @@ RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLVa
   _masterPdf->leafNodeServerList(&_masterUnsplitLeafList) ;
   _masterPdf->branchNodeServerList(&_masterBranchList) ;
 
-  _masterLeafListIter = _masterLeafList.MakeIterator() ;
-  _masterBranchListIter = _masterBranchList.MakeIterator() ;
+  _masterLeafListIter = _masterLeafList.createIterator() ;
+  _masterBranchListIter = _masterBranchList.createIterator() ;
 
 }
 
@@ -55,7 +55,7 @@ RooPdfCustomizer::~RooPdfCustomizer()
   
 void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
 {
-  TIterator* iter = set.MakeIterator() ;
+  TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()){
     splitArg(*arg,splitCat) ;
@@ -80,7 +80,7 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
   list->add(_masterUnsplitLeafList) ;
   list->add(_cloneLeafList) ;
 
-  TIterator* iter = depList->MakeIterator() ;
+  TIterator* iter = depList->createIterator() ;
   RooAbsArg* dep ;
   while (dep=(RooAbsArg*)iter->Next()) {
     RooAbsArg* dep2 = list->find(dep->GetName()) ;
@@ -174,7 +174,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
   // Clone branches, changes their names 
   RooAbsPdf* cloneTopPdf(0) ;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
-  TIterator* iter = masterBranchesToBeCloned.MakeIterator() ;
+  TIterator* iter = masterBranchesToBeCloned.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
     TString newName(branch->GetName()) ;
     newName.Append("_") ;
@@ -196,7 +196,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 
 
   // Reconnect cloned branches to each other and to cloned leafs
-  iter = clonedMasterBranches.MakeIterator() ;
+  iter = clonedMasterBranches.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
     branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
     branch->redirectServers(clonedMasterLeafs,kFALSE,kTRUE) ;

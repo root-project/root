@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.9 2001/08/02 21:39:12 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.10 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -38,7 +38,7 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
   // Constructor from list of input categories
 
   // Copy category list
-  TIterator* iter = inputCatList.MakeIterator() ;
+  TIterator* iter = inputCatList.createIterator() ;
   RooAbsArg* arg ;
   while (arg=(RooAbsArg*)iter->Next()) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
@@ -103,7 +103,7 @@ TString RooSuperCategory::currentLabel() const
   // Return the name of the current state, 
   // constructed from the state names of the input categories
 
-  TIterator* lIter = _catSet.MakeIterator() ;
+  TIterator* lIter = _catSet.createIterator() ;
 
   // Construct composite label name
   TString label ;
@@ -159,7 +159,7 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   char buf[1024] ;
   strcpy(buf,type->GetName()) ;
 
-  TIterator* iter = _catSet.MakeIterator() ;
+  TIterator* iter = _catSet.createIterator() ;
   RooAbsCategoryLValue* arg ;
   Bool_t error(kFALSE) ;
 

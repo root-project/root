@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNameSet.cc,v 1.1 2001/08/01 01:27:55 verkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.2 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,7 +48,7 @@ RooNameSet::RooNameSet(const RooNameSet& other) : _nameList()
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   _nameList.Delete() ;
-  TIterator* iter = argSet.MakeIterator() ;
+  TIterator* iter = argSet.createIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()) {    
     _nameList.Add(new TObjString(arg->GetName())) ;

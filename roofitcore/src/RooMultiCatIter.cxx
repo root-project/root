@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.4 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.5 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,26 +41,27 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   // Build iterator array for given catList
 
   // Copy RooCategory list into internal argset
-  TIterator* catIter = catList.MakeIterator() ;
+  TIterator* catIter = catList.createIterator() ;
   TObject* obj ;
   while (obj = catIter->Next()) {
-    if (!obj->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
+    RooAbsCategoryLValue *lvalue= dynamic_cast<RooAbsCategoryLValue*>(obj);
+    if(0 == lvalue) {
       cout << "RooMultiCatIter:: list element " << obj->GetName() 
 	   << " is not a RooAbsCategoryLValue, ignored" << endl ;
       continue ;
     }
-    _catList.Add(obj) ;
+    _catList.add(*lvalue) ;
   }
   delete catIter ;
   
   // Allocate storage for component iterators
-  _nIter = catList.GetSize() ;
+  _nIter = catList.getSize() ;
   _iterList   = new pTIterator[_nIter] ;
   _catPtrList = new pRooCategory[_nIter] ;
 
   // Construct component iterators
   _curIter = 0 ;
-  TIterator* cIter = _catList.MakeIterator() ;
+  TIterator* cIter = _catList.createIterator() ;
   RooAbsCategoryLValue* cat ;
   while(cat=(RooAbsCategoryLValue*)cIter->Next()) {
     _catPtrList[_curIter] = cat ;
@@ -87,7 +88,7 @@ RooMultiCatIter::~RooMultiCatIter()
 const TCollection* RooMultiCatIter::GetCollection() const 
 {
   // Return set of categories iterated over
-  return &_catList ;
+  return &_catList.getCollection() ;
 }
 
 

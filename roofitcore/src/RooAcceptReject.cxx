@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.5 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.6 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.5 2001/08/01 21:30:15 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.6 2001/08/22 00:50:24 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -54,7 +54,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   // space is finite.
   _sampleDim= 0;
   _isValid= kTRUE;
-  TIterator *iterator= genVars.MakeIterator();
+  TIterator *iterator= genVars.createIterator();
   const RooAbsArg *found(0),*arg(0);
   while(arg= (const RooAbsArg*)iterator->Next()) {
     if(arg->isDerived()) {
@@ -167,8 +167,8 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
   RooRealVar *funcVal= (RooRealVar*)dataVars->find(_funcVal->GetName());
 
   // create iterators for the new sets
-  TIterator *nextCatVar= catVars.MakeIterator();
-  TIterator *nextRealVar= realVars.MakeIterator();
+  TIterator *nextCatVar= catVars.createIterator();
+  TIterator *nextRealVar= realVars.createIterator();
 
   // first generate enough events to get reasonable estimates for the integral and
   // maximum function value
