@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.79 2004/08/20 09:10:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.80 2004/08/20 10:35:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2603,8 +2603,16 @@ TString TFormula::GetExpFormula() const
             continue;
          }
 
-         //Simple name (paramteter,pol0,landau, etc)
+         //Simple name (parameter,pol0,landau, etc)
          if (kexpo<=optype && optype<=kzpol) { // >=0) {
+            tab[spos]=fExpr[i];
+            ismulti[spos]=kFALSE;
+            spos++;
+            continue;
+         }
+         
+         //constants, variables x,y,z,t, pi
+         if ((optype<=149 && optype>=140) || (optype == 40)) {
             tab[spos]=fExpr[i];
             ismulti[spos]=kFALSE;
             spos++;
@@ -2612,11 +2620,9 @@ TString TFormula::GetExpFormula() const
          }
 
          //Basic operators (+,-,*,/,==,^,etc)
-         if(((optype>0 && optype<6) ||
-             optype==20 ||
-             (optype>59 && optype<82))
-            && spos>=2) {
-          // if(optype==-20 && spos>=2){
+         if(((optype>0 && optype<6) || optype==20 ||
+             (optype>59 && optype<82)) && spos>=2) {
+             // if(optype==-20 && spos>=2){
             if(ismulti[spos-2]){
                tab[spos-2]="("+tab[spos-2]+")";
             }
@@ -2632,7 +2638,7 @@ TString TFormula::GetExpFormula() const
 
          //Functions
          int offset = 0;
-         if((optype>9 && optype<16) ||
+         if((optype>9  && optype<16) ||
             (optype>20 && optype<23) ||
             (optype>29 && optype<34) ||
             (optype>40 && optype<44) ||
@@ -2646,7 +2652,7 @@ TString TFormula::GetExpFormula() const
             //Functions with the format func(x,y)
             offset = -2;
          }
-         if (offset<0 && (spos+optype>=0)) {
+         if (offset<0 && (spos+offset>=0)) {
             tab[spos+offset]=fExpr[i]+("("+tab[spos+offset]);
             for (j=optype+1; j<0; j++){
                tab[spos+offset]+=","+tab[spos+j];
