@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.23 2002/02/18 23:09:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.24 2002/04/09 07:15:26 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -762,6 +762,13 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    }
    if (fErrorMode == kERRORMEAN) return eprim/TMath::Sqrt(sum);
    else if (fErrorMode == kERRORSPREAD) return eprim;
+   else if (fErrorMode == kERRORSPREADI) {
+      if (eprim != 0) return eprim/TMath::Sqrt(sum);
+      return 1/TMath::Sqrt(12*sum);
+   }
+   else if (fErrorMode == kERRORSPREADG) {
+      return eprim/TMath::Sqrt(sum);
+   }
    else return eprim;
 }
 
