@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 #include "TString.h"
 #include "TError.h"
 
-const unsigned TRegexp::fgMaxpat = 128;
+const unsigned TRegexp::fgMaxpat = 2048;
 
 
 ClassImp(TRegexp)
@@ -122,7 +122,7 @@ const char *TRegexp::MakeWildcard(const char *re)
    // "*"'s (closures) are assumed to be preceded by a "." (any character)
    // and all .'s are escaped (so *.ps is different from *.eps).
 
-   static char buf[100];
+   static char buf[fgMaxpat];
    char *s = buf;
    int   len = strlen(re);
 
