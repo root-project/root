@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.8 2000/11/21 20:32:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.9 2000/11/24 10:24:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -471,6 +471,9 @@ void TF1::Copy(TObject &obj)
    ((TF1&)obj).fNpfits = fNpfits;
    ((TF1&)obj).fMinimum = fMinimum;
    ((TF1&)obj).fMaximum = fMaximum;
+   if ( ((TF1&)obj).fParErrors ) delete [] ((TF1&)obj).fParErrors;
+   if ( ((TF1&)obj).fParMin    ) delete [] ((TF1&)obj).fParMin;
+   if ( ((TF1&)obj).fParMax    ) delete [] ((TF1&)obj).fParMax;
    if (fNpar) {
       ((TF1&)obj).fParErrors = new Double_t[fNpar];
       ((TF1&)obj).fParMin    = new Double_t[fNpar];
