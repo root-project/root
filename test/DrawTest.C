@@ -6,7 +6,7 @@
 int gHasLibrary = kFALSE;
 TList gSkipped;
 
-void DrawSkippable(TTree* tree, const char* what, const char* where, bool skip) {
+void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t skip) {
   //cerr << "Doing " << what << " which is " << skip << endl;
   if (skip) gSkipped.Add(new TNamed(where,where));
   else {
@@ -18,7 +18,7 @@ void DrawSkippable(TTree* tree, const char* what, const char* where, bool skip) 
 };
 
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
-                   const char* where, bool skip) {
+                   const char* where, Bool_t skip) {
   //cerr << "Doing " << what << " which is " << skip << endl;
   if (skip) gSkipped.Add(new TNamed(where,where));
   else {
