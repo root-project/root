@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHist.cc,v 1.20 2002/09/05 04:33:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,7 +42,7 @@ RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   initialize();
 }
 
-RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
+RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the contents of the specified TH1 object
@@ -72,7 +72,12 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
   for(Int_t bin= 1; bin <= nbin; bin++) {
     Axis_t x= data.GetBinCenter(bin);
     Stat_t y= data.GetBinContent(bin);
-    addBin(x,roundBin(y),data.GetBinWidth(bin));
+    Stat_t dy = data.GetBinError(bin) ;
+    if (etype==RooAbsData::Poisson) {
+      addBin(x,roundBin(y),data.GetBinWidth(bin));
+    } else {
+      addBinWithError(x,y,dy,dy,data.GetBinWidth(bin));
+    }
   }
   // add over/underflow bins to our event count
   _entries+= data.GetBinContent(0) + data.GetBinContent(nbin+1);
@@ -177,6 +182,32 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
+
+
+
+void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth) 
+{
+  // Add a bin to this histogram with the specified bin contents
+  // and error. The bin width is used to set the relative scale of 
+  // bins with different widths.
+
+  Double_t scale= 1;
+  if(binWidth > 0) {
+    scale= _nominalBinWidth/binWidth;
+  }  
+  _entries+= n;
+  Int_t index= GetN();
+
+  Double_t dx(0.5*binWidth) ;
+  SetPoint(index,binCenter,n*scale);
+  SetPointError(index,dx,dx,elow*scale,ehigh*scale);
+  updateYAxisLimits(scale*(n-elow));
+  updateYAxisLimits(scale*(n+ehigh));
+}
+
+
+
+
 
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth) {

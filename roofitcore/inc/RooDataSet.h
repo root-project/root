@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooDataSet.rdl,v 1.49 2002/09/05 04:33:23 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,6 +46,7 @@ public:
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0) const ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
+  virtual Double_t sumEntries() const ;
 
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.

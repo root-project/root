@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.22 2003/04/05 01:11:36 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.23 2003/04/07 21:39:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,6 +58,7 @@ public:
   virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual const RooArgSet* get(const RooArgSet& coord) const ;
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ; 
+  virtual Double_t sumEntries() const ;
   virtual Bool_t isWeighted() const { return kTRUE ; }
 
   Double_t sum(Bool_t correctForBinSize) const ;
@@ -68,15 +69,12 @@ public:
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
 
-  enum ErrorType { Poisson, SumW2 } ;
-
-  inline Double_t weightError(ErrorType etype=Poisson) const {
+  virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ;
+  virtual Double_t weightError(ErrorType etype=Poisson) const { 
     Double_t lo,hi ;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
   }
-
-  void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
@@ -87,9 +85,11 @@ public:
     return RooTreeData::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
   }
 
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
-
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
+  
   virtual void reset() ;
   void dump2() ;
 

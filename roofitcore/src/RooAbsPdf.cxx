@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.77 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.78 2003/01/14 00:07:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -908,7 +908,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   }
   
   if (stype != Raw) {    
-    
+
     if (frame->getFitRangeNEvt() && stype==Relative) {
       scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
     } else if (stype==RelativeExpected) {
@@ -1066,7 +1066,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scale
 
   // Adjust normalization, if so requested
   if (stype != Raw) {    
-    
+
     if (frame->getFitRangeNEvt() && stype==Relative) {
       scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
     } else if (stype==RelativeExpected) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.5 2002/10/25 16:28:01 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.6 2003/04/01 22:34:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -88,7 +88,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   
   // include the extended maximum likelihood term, if requested
   if(_extended && firstEvent==0) {
-    result+= _pdfClone->extendedTerm(_dataClone->numEntries(kTRUE));
+    result+= _pdfClone->extendedTerm(_dataClone->sumEntries());
   }    
 
   // If part of simultaneous PDF normalize probability over 

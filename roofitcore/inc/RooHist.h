@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHist.rdl,v 1.13 2002/09/05 04:33:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "TGraphAsymmErrors.h"
 #include "RooFitCore/RooPlotable.hh"
+#include "RooFitCore/RooAbsData.hh"
 
 class TH1;
 
@@ -25,12 +26,14 @@ class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:
   RooHist() {} ;
   RooHist(Double_t nominalBinWidth, Double_t nSigma= 1);
-  RooHist(const TH1 &data, Double_t nominalBinWidth= 0, Double_t nSigma= 1);
+  RooHist(const TH1 &data, Double_t nominalBinWidth= 0, Double_t nSigma= 1, RooAbsData::ErrorType=RooAbsData::Poisson);
   RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth= 0, Double_t nSigma= 1);
   virtual ~RooHist();
 
   // add a datapoint for a bin with n entries, using a Poisson error
   void addBin(Axis_t binCenter, Int_t n, Double_t binWidth= 0);
+  // add a datapoint for a bin with n entries, using a given error
+  void addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth= 0);
   // add a datapoint for the asymmetry (n1-n2)/(n1+n2), using a binomial error
   void addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth= 0);
 
@@ -42,7 +45,7 @@ public:
   Double_t getFitRangeNEvt() const;
   Double_t getFitRangeBinW() const;
   inline Double_t getNominalBinWidth() const { return _nominalBinWidth; }
-  inline void setRawEntries(Int_t n) { _rawEntries = n ; } 
+  inline void setRawEntries(Double_t n) { _rawEntries = n ; } 
 
 protected:
   void initialize();

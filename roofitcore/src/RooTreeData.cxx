@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.52 2002/09/17 06:39:35 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.53 2002/11/27 07:27:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -872,6 +872,8 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("markerColor","MarkerColor",0,-999) ;
   pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
   pc.defineInt("markerSize","MarkerSize",0,-999) ;
+  pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Poisson) ;
+  pc.defineMutex("DataError","Asymmetry") ;
 
   // Process & check varargs 
   pc.process(argList) ;
@@ -885,10 +887,11 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   const RooAbsReal* cutVar = (const RooAbsReal*) pc.getObject("cutVar") ;
   const RooAbsBinning* bins = (const RooAbsBinning*) pc.getObject("binning") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  RooAbsData::ErrorType etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;
   
   RooPlot* ret ;
   if (!asymCat) {
-    ret = plotOn(frame,cutSpec,drawOptions,bins) ;
+    ret = plotOn(frame,cutSpec,drawOptions,bins,etype) ;
   } else {
     ret = plotAsymOn(frame,*asymCat,cutSpec,drawOptions,bins) ;    
   }
@@ -910,7 +913,8 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
 }
 
 
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins) const 
+RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, 
+			     const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
 {
   // Implementation pending...
   return 0 ;
@@ -918,9 +922,9 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option
 
 
 
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
+RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, 
+			     const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
 {
-
   // Create and fill a histogram of the frame's variable and append it to the frame.
   // The frame variable must be one of the data sets dimensions.
   //
@@ -953,6 +957,10 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     hist= var->createHistogram(histName.Data(), "Events", 
 			       frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
   }
+
+  // Keep track of sum-of-weights error
+  hist->Sumw2() ;
+
   if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: createHistogram() failed" << endl;
@@ -960,7 +968,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist);
+  RooHist *graph= new RooHist(*hist,0,1,etype);
   if(0 == graph) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
@@ -971,15 +979,15 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   // If the dataset variable has a wide range than the plot variable,
   // calculate the number of entries in the dataset in the plot variable fit range
   RooAbsRealLValue* dataVar = (RooAbsRealLValue*) _vars.find(var->GetName()) ;
-  Int_t nEnt(numEntries(kTRUE)) ;
+  Double_t nEnt(sumEntries()) ;
   if (dataVar->getFitMin()<var->getFitMin() || dataVar->getFitMax()>var->getFitMax()) {
     RooAbsData* tmp = ((RooTreeData*)this)->reduce(*var) ;
-    nEnt = tmp->numEntries(kTRUE) ;
+    nEnt = tmp->sumEntries() ;
     delete tmp ;
   }
 
   // Store the number of entries before the cut, if any was made
-  if (cuts) graph->setRawEntries(nEnt) ;
+  if (cuts && strlen(cuts)) graph->setRawEntries(nEnt) ;
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
@@ -1192,7 +1200,10 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
       assert(hdim < 3);
       break;
     }
+    Double_t error2 = pow(hist->GetBinError(bin),2) ;
+    error2 += pow(weightError(RooAbsData::SumW2),2) ;
     hist->AddBinContent(bin,weight());
+    hist->SetBinError(bin,sqrt(error2)) ;
   }
 
   if(0 != select) delete select;
@@ -1287,7 +1298,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) c
   }
 
   // Check if dataset is not empty
-  if(numEntries(kTRUE) <= 0) {
+  if(sumEntries() == 0.) {
     cout << "RooDataSet::moment(" << GetName() << ") WARNING: empty dataset" << endl ;
     return 0;
   }
@@ -1298,7 +1309,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset) c
     get(index) ;
     sum+= weight() * pow(varPtr->getVal() - offset,order);
   }
-  return sum/numEntries(kTRUE);
+  return sum/sumEntries();
 }
 
 
@@ -1323,7 +1334,7 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var) const
 
   // fill in this variable's value and error
   Double_t meanVal=moment(var,1) ;
-  Double_t N(numEntries(kTRUE)) ;
+  Double_t N(sumEntries()) ;
 
   Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
   mean->setVal(meanVal) ;
@@ -1353,7 +1364,7 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var) const
 
   // Fill in this variable's value and error
   Double_t meanVal(moment(var,1)) ;
-  Double_t N(numEntries(kTRUE));
+  Double_t N(sumEntries());
   Double_t rmsVal= sqrt(moment(var,2,meanVal)*N/(N-1));
   rms->setVal(rmsVal) ;
   rms->setError(rmsVal/sqrt(2*N));
@@ -1394,7 +1405,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 
   // add formatted text for each statistic
   TText *text = 0;
-  RooRealVar N("N","Number of Events",numEntries(kTRUE));
+  RooRealVar N("N","Number of Events",sumEntries());
   RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar());
   RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar());
   TString *rmsText= rms->format(sigDigits,options);
@@ -1429,7 +1440,7 @@ void RooTreeData::printToStream(ostream& os, PrintOption opt, TString indent) co
   oneLinePrint(os,*this);
   if(opt >= Standard) {
     if (isWeighted()) {
-      os << indent << "  Contains " << numEntries(kFALSE) << " entries with a total weight of " << numEntries(kTRUE) << endl;
+      os << indent << "  Contains " << numEntries() << " entries with a total weight of " << sumEntries() << endl;
     } else {
       os << indent << "  Contains " << numEntries() << " entries" << endl;
     }

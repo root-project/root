@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsData.rdl,v 1.20 2002/09/05 04:33:04 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,16 +53,22 @@ public:
   // Load a given row of data
   virtual inline const RooArgSet* get() const { return &_vars ; } // last loaded row
   virtual Double_t weight() const = 0 ; 
+  enum ErrorType { Poisson, SumW2 } ;
+  virtual Double_t weightError(ErrorType etype=Poisson) const { return 0 ; } ;
+  virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const { lo=0 ; hi=0 ; } 
   virtual const RooArgSet* get(Int_t index) const = 0 ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;
+  virtual Double_t sumEntries() const = 0 ;
   virtual Bool_t isWeighted() const { return kFALSE ; }
   virtual void reset() = 0 ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const = 0 ;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const = 0 ;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
 			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooDataSet.cc,v 1.78 2002/09/05 04:33:23 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -301,13 +301,21 @@ Int_t RooDataSet::numEntries(Bool_t useWeights) const
   if (!useWeights || !_wgtVar) return (Int_t) GetEntries() ;
 
   // Otherwise sum the weights in the event
+  return (Int_t)sumEntries() ;
+}
+
+
+
+Double_t RooDataSet::sumEntries() const 
+{
+  // Otherwise sum the weights in the event
   Double_t sumw(0) ;
   Int_t i ;
   for (i=0 ; i<GetEntries() ; i++) {
     get(i) ;
     sumw += weight() ;
   }
-  return (Int_t) sumw ;
+  return sumw ;  
 }
 
 

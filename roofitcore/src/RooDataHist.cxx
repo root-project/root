@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.32 2003/04/07 21:39:17 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.33 2003/04/08 01:27:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -528,9 +528,9 @@ void RooDataHist::dump2()
 
 
 
-RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
+RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins, RooAbsData::ErrorType etype ) const 
 {
-  if (bins) return RooTreeData::plotOn(frame,cuts,drawOptions,bins) ;
+  if (bins) return RooTreeData::plotOn(frame,cuts,drawOptions,bins,etype) ;
 
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -550,12 +550,12 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     return 0;
   }
 
-  return RooTreeData::plotOn(frame,cuts,drawOptions,&dataVar->getBinning()) ;
+  return RooTreeData::plotOn(frame,cuts,drawOptions,&dataVar->getBinning(),etype) ;
 }
 
 
 
-RooPlot *RooDataHist::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins) const 
+RooPlot *RooDataHist::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
 {
   // Implementation pending...
   return 0 ;
@@ -912,14 +912,20 @@ Int_t RooDataHist::numEntries(Bool_t useWeights) const
   // the sum of the weights of all bins (useWeight=true)
 
   if (!useWeights) return RooTreeData::numEntries() ;
+  return Int_t(sumEntries()) ;
+}
 
+
+Double_t RooDataHist::sumEntries() const
+{
   Int_t i ;
   Double_t n(0) ;
   for (i=0 ; i<_arrSize ; i++) {
     n+= _wgt[i] ;
   }
-  return Int_t(n) ;
+  return n ;
 }
+
 
 
 void RooDataHist::reset() 

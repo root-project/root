@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.26 2002/09/05 04:34:03 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.27 2002/09/17 06:39:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,8 +71,10 @@ public:
 			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
 			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
 
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", 
+			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
 			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const ;
   virtual RooPlot* statOn(RooPlot* frame, const char *what, 

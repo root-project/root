@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.4 2003/04/07 21:39:14 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.5 2003/04/07 23:09:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -100,7 +100,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   if (_extended) {
     nDataTotal = _pdfClone->expectedEvents() ;
   } else {
-    nDataTotal = _dataClone->numEntries(kTRUE) ;
+    nDataTotal = _dataClone->sumEntries() ;
   }
 
   // Loop over bins of dataset
