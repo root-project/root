@@ -1,5 +1,5 @@
 {
-  TFile f("Event.root");
+  TFile *f = new TFile("Event.root");
   gSystem->Load("./libEvent_2"); 
   Event * e =0;
   T->SetBranchAddress("event",&e);

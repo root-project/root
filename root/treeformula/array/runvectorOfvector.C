@@ -1,5 +1,7 @@
 #include <vector>
 
+typedef std::vector<unsigned int> subUCollection;
+typedef std::vector<subUCollection> Ucollection;
 typedef std::vector<int> subCollection;
 typedef std::vector<subCollection> collection;
 #ifndef __CINT__
@@ -20,6 +22,7 @@ struct One : public TObject {
    int GetN1() { return fN+1; }
    int fN;
    subCollection *fVecPtr; //->
+   subUCollection fUVec;
    collection fVec1;
    ClassDef(One,1);
 };
@@ -100,6 +103,7 @@ TTree* generateTree_4(int sub = 10) {
       for(int j=0; j<3*(i+1); ++j) {
          a.push_back(j);
          p->fVecPtr->push_back(j+1);
+         p->fUVec.push_back(j+1);
          ++p->fN;
       }
       p->fVec1.push_back(a);
@@ -155,6 +159,7 @@ TTree* generateTree_6(int sub = 10) {
       for(int j=0; j<3*(i+1); ++j) {
          a.push_back(j);
          p->fVecPtr->push_back(j+1);
+         p->fUVec.push_back(j+1);
          ++p->fN;
       }
       p->fVec1.push_back(a);

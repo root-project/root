@@ -8,7 +8,7 @@ struct simPos {
 void runleaflist(int kase = 0) {
    simPos pos;
    TTree *vertexTree = new TTree;
-   vertexTree->Branch("simPos.",&pos,"X/F:Y/F:Z/F");
+   vertexTree->Branch("simPos.",&pos,"X/F:Y/F:Z/F:3A");
    vertexTree->Fill();
    //vertexTree->Print();
    vertexTree->Draw("simPosProxy.C+");

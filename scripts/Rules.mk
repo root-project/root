@@ -121,38 +121,35 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
 
 #                msvcirt.lib
 
-endif
+else 
 
-ifeq ($(ARCH),linux)
+# Non windows default:
 
 ROOT_LOC = $(ROOTSYS)
 
-# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
-CXX           = g++
-ifeq ($(ROOTBUILD),debug)
-CXXFLAGS      += -g -Wall -fPIC
-else
-CXXFLAGS      += -O -Wall -fPIC
-endif
-LD            = g++
-ifeq ($(ROOTBUILD),debug)
-LDFLAGS       = -g 
-else
-LDFLAGS       = -O
-endif
-SOFLAGS       = -shared
 ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
 OutPutOpt     = -o 
+
+endif
+
+ifeq ($(ARCH),linux)
+
+# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+CXX           = g++
+LD            = g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -Wall -fPIC
+else
+CXXFLAGS      += -O -Wall -fPIC
+endif
+SOFLAGS       = -shared
 endif
 
 
 ifeq ($(ARCH),linuxicc)
-
-ROOT_LOC = $(ROOTSYS)
-
 # Linux with linuxicc
 CXX = icc
 LD  = icc
@@ -162,15 +159,10 @@ else
 CXXFLAGS += -O -wd191 
 endif
 SOFLAGS  = -shared 
-DllSuf   = so
-ExeSuf   = 
-OutPutOpt= -o 
 endif
 
 
 ifeq ($(ARCH),macosx)
-
-ROOT_LOC = $(ROOTSYS)
 
 # MacOSX with cc/g++
 CXX           = g++
@@ -195,16 +187,7 @@ LD            = c++
 endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
-ifeq ($(ROOTBUILD),debug)
-LDFLAGS       = -g
-else
-LDFLAGS       = -O
-endif
-ObjSuf        = o
-SrcSuf        = cxx
-ExeSuf        =
-DllSuf        = so
-OutPutOpt     = -o 
+DllSuf   = so
 endif
 
 # Track the version of ROOT we are runing with

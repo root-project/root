@@ -1,5 +1,5 @@
 CLEAN_TARGETS += main *Dict* Event.root *~  *.log $(ALL_LIBRARIES)
-TEST_TARGETS += ArraySave
+TEST_TARGETS += ptrArr ArraySave
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -33,3 +33,6 @@ RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOTSYS)/l
 %Dict.C: %.h %Linkdef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
+
+ptrArr: ptrArr.log
+	$(TestDiff)
