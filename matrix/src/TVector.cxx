@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrix.h"
+#include "TROOT.h"
 
 
 ClassImp(TVector)
@@ -102,6 +103,17 @@ TVector::~TVector()
 
    Invalidate();
 }
+
+//______________________________________________________________________________
+void TVector::Draw(Option_t *option)
+{
+   // Draw this vector using an intermediate histogram
+   // The histogram is named "TVector" by default and no title
+   
+   gROOT->ProcessLine(Form("TH1F *R__TV = new TH1F((TVector&)((TVector*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+      (Long_t)this,option));
+}
+
 
 //______________________________________________________________________________
 void TVector::ResizeTo(Int_t lwb, Int_t upb)

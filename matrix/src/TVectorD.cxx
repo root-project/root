@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.1 2000/06/16 15:15:47 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixD.h"
+#include "TROOT.h"
 
 
 
@@ -102,6 +103,16 @@ TVectorD::~TVectorD()
       delete [] fElements;
 
    Invalidate();
+}
+
+//______________________________________________________________________________
+void TVectorD::Draw(Option_t *option)
+{
+   // Draw this vector using an intermediate histogram
+   // The histogram is named "TVectorD" by default and no title
+   
+   gROOT->ProcessLine(Form("TH1D *R__TV = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+      (Long_t)this,option));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.1 2000/06/16 15:15:47 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -86,6 +86,7 @@ public:
 
    virtual ~TVectorD();
 
+   void Draw(Option_t *option="");
    void ResizeTo(Int_t n);
    void ResizeTo(Int_t lwb, Int_t upb);
    void ResizeTo(const TVectorD &v);
