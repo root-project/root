@@ -1,0 +1,45 @@
+
+Processing checkLittle0.C...
+Warning in <TStreamerInfo::BuildCheck>: 
+        The StreamerInfo of class wrapper read from file little.root
+        has the same version (=1) as the active class but a different checksum.
+        You should update the version to ClassDef(wrapper,2).
+        Do not try to write objects with the current class definition,
+        the files will not be readable.
+
+
+StreamerInfo for class: little, version=1
+  int            var1            offset=  4 type= 3                     
+  float          var2            offset=  8 type= 5                     
+  int            var3            offset= 12 type= 3                     
+   i= 0, var1            type=  3, offset=  4, len=1, method=0
+   i= 1, var2            type=  5, offset=  8, len=1, method=0
+   i= 2, var3            type=  3, offset= 12, len=1, method=0
+
+StreamerInfo for class: little, version=1
+  int            var1            offset=  4 type= 3                     
+  float          var2            offset=  8 type= 5                     
+  int            var3            offset= 12 type= 3                     
+   i= 0, var1            type=  3, offset=  4, len=1, method=0
+   i= 1, var2            type=  5, offset=  8, len=1, method=0
+   i= 2, var3            type=  3, offset= 12, len=1, method=0
+
+StreamerInfo for class: little, version=2
+  int            var1            offset=  0 type= 3                     
+  float          var2            offset=  0 type= 5                     
+
+Reading the 'wrapper' object
+
+StreamerInfo for class: little, version=1
+  int            var1            offset=  4 type= 3                     
+  float          var2            offset=  8 type= 5                     
+  int            var3            offset= 12 type= 3                     
+   i= 0, var1            type=  3, offset=  4, len=1, method=0
+   i= 1, var2            type=  5, offset=  8, len=1, method=0
+   i= 2, var3            type=  3, offset= 12, len=1, method=0
+
+StreamerInfo for class: little, version=2
+  int            var1            offset=  4 type= 3                     
+  float          var2            offset=  8 type= 5                     
+   i= 0, var1            type=  3, offset=  4, len=1, method=0
+   i= 1, var2            type=  5, offset=  8, len=1, method=0
