@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.43 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.44 2001/03/02 17:07:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -494,6 +494,13 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
+}
+
+//______________________________________________________________________________
+Bool_t TH1::AddDirectoryStatus()
+{
+   //static function: cannot be inlined on Windows/NT
+   return fgAddDirectory;
 }
 
 //______________________________________________________________________________
