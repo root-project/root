@@ -10,10 +10,6 @@
 
 void sample_reader() 
 {
-#ifdef __CINT__
-  gROOT->ProcessLine(".L sample_bx_classes.C+");
-#endif
-
   TFile f("samplerootfile.root");
   TTree *bxtree; f.GetObject("bxtree",bxtree);
 
