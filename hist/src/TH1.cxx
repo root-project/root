@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.186 2004/06/19 15:57:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.187 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -411,7 +411,7 @@
 //      TH1::Smooth() smooths the bin contents of a 1-d histogram
 //      TH1::Integral() returns the integral of bin contents in a given bin range
 //      TH1::GetMean(int axis) returns the mean value along axis
-//      TH1::GetRMS(int axis)  returns the Root Mean Square along axis
+//      TH1::GetRMS(int axis)  returns the sigma distribution along axis
 //      TH1::GetEntries() returns the number of entries
 //      TH1::Reset() resets the bin contents and errors of an histogram
 //
@@ -4629,14 +4629,17 @@ Stat_t TH1::GetMean(Int_t axis) const
 //______________________________________________________________________________
 Stat_t TH1::GetRMS(Int_t axis) const
 {
-//   -*-*-*-*-*-*Return the Root Mean Square value of this histogram*-*-*-*-*
+//   -*-*-*-*-*-*Return the Sigma value of this histogram*-*-*-*-*
 //               ===================================================
-//  Note that the mean value/RMS is computed using the bins in the currently
+//  Note that the mean value/sigma is computed using the bins in the currently
 //  defined range (see TAxis::SetRange). By default the range includes
 //  all bins from 1 to nbins included, excluding underflows and overflows.
 //  To force the underflows and overflows in the computation, one must
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
+//  Note that this function returns the Sigma of the distribution (not RMS).
+//  The name "RMS" was introduced many years ago (Hbook/PAW times).
+//  We kept the name for continuity.
 
   if (axis <1 || axis > 3) return 0;
   Stat_t x, rms2, stats[11];
