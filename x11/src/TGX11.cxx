@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.12 2001/06/22 16:10:23 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.13 2001/08/03 14:07:07 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1284,9 +1284,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
 {
    // Remove a window created by Qt (like CloseWindow1()).
 
-   Int_t wid;
-
-   SelectWindow(qwid);
+   SelectWindow((int)qwid);
 
    if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
 
@@ -1300,7 +1298,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
    gCws->open = 0;
 
    // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
+   for (Int_t wid = 0; wid < fMaxNumberOfWindows; wid++)
       if (fWindows[wid].open) {
          gCws = &fWindows[wid];
          return;
