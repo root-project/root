@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.5 2000/12/13 12:03:52 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.6 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -761,7 +761,6 @@ void TVector::Streamer(TBuffer &R__b)
          return;
       }
       //====process old versions before automatic schema evolution
-      R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fRowLwb;
       fNrows = R__b.ReadArray(fElements);
