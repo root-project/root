@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.8 2000/10/30 10:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.9 2000/12/22 12:36:00 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1010,6 +1010,26 @@ void TGGroupFrame::DrawBorder()
    y = 1;
 
    fText->Draw(fId, fNormGC, x, y + max_ascent);
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::SetTitle(TGString *title)
+{
+   // Set or change title of the group frame. Titlte TGString is adopted
+   // by the TGGroupFrame.
+
+   delete fText;
+
+   fText = title;
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::SetTitle(const char *title)
+{
+   // Set or change title of the group frame.
+
+   SetTitle(new TGString(title));
 }
 
 //______________________________________________________________________________
