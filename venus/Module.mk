@@ -22,7 +22,7 @@ VENUSH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 VENUSS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 VENUSO       := $(VENUSS:.cxx=.o)
 
-VENUSDEP     := $(VENUSO:.o=.d)
+VENUSDEP     := $(VENUSO:.o=.d) $(VENUSDO:.o=.d)
 
 VENUSLIB     := $(LPATH)/libEGVenus.$(SOEXT)
 

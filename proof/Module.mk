@@ -21,7 +21,7 @@ PROOFH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PROOFS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PROOFO       := $(PROOFS:.cxx=.o)
 
-PROOFDEP     := $(PROOFO:.o=.d)
+PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 

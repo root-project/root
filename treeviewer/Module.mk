@@ -21,7 +21,7 @@ TREEVIEWERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEVIEWERO  := $(TREEVIEWERS:.cxx=.o)
 
-TREEVIEWERDEP := $(TREEVIEWERO:.o=.d)
+TREEVIEWERDEP := $(TREEVIEWERO:.o=.d) $(TREEVIEWERDO:.o=.d)
 
 TREEVIEWERLIB := $(LPATH)/libTreeViewer.$(SOEXT)
 

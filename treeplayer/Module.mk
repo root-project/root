@@ -21,7 +21,7 @@ TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEPLAYERO  := $(TREEPLAYERS:.cxx=.o)
 
-TREEPLAYERDEP := $(TREEPLAYERO:.o=.d)
+TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
 TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 

@@ -21,7 +21,7 @@ CONTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CONTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 CONTO        := $(CONTS:.cxx=.o)
 
-CONTDEP      := $(CONTO:.o=.d)
+CONTDEP      := $(CONTO:.o=.d) $(CONTDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CONTH))

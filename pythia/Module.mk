@@ -22,7 +22,7 @@ PYTHIAH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYTHIAS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PYTHIAO      := $(PYTHIAS:.cxx=.o)
 
-PYTHIADEP    := $(PYTHIAO:.o=.d)
+PYTHIADEP    := $(PYTHIAO:.o=.d) $(PYTHIADO:.o=.d)
 
 PYTHIALIB    := $(LPATH)/libEGPythia.$(SOEXT)
 

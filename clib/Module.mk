@@ -21,7 +21,7 @@ CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CLIBS        := $(wildcard $(MODDIRS)/*.c)
 CLIBO        := $(CLIBS:.c=.o)
 
-CLIBDEP      := $(CLIBO:.o=.d)
+CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CLIBH))

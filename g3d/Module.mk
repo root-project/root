@@ -25,7 +25,7 @@ G3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 G3DS2        := $(wildcard $(MODDIRS)/*.c)
 G3DO         := $(G3DS1:.cxx=.o) $(G3DS2:.c=.o)
 
-G3DDEP       := $(G3DO:.o=.d)
+G3DDEP       := $(G3DO:.o=.d) $(G3DDO:.o=.d)
 
 G3DLIB       := $(LPATH)/libGraf3d.$(SOEXT)
 

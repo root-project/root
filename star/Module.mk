@@ -21,7 +21,7 @@ STARH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 STARS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 STARO        := $(STARS:.cxx=.o)
 
-STARDEP      := $(STARO:.o=.d)
+STARDEP      := $(STARO:.o=.d) $(STARDO:.o=.d)
 
 STARLIB      := $(LPATH)/libStar.$(SOEXT)
 

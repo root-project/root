@@ -26,7 +26,7 @@ GRAFH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GRAFS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GRAFO        := $(GRAFS:.cxx=.o)
 
-GRAFDEP      := $(GRAFO:.o=.d)
+GRAFDEP      := $(GRAFO:.o=.d) $(GRAFDO:.o=.d)
 
 GRAFLIB      := $(LPATH)/libGraf.$(SOEXT)
 

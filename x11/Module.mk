@@ -23,7 +23,7 @@ X11S1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X11S2        := $(wildcard $(MODDIRS)/*.c)
 X11O         := $(X11S1:.cxx=.o) $(X11S2:.c=.o)
 
-X11DEP       := $(X11O:.o=.d)
+X11DEP       := $(X11O:.o=.d) $(X11DO:.o=.d)
 
 X11LIB       := $(LPATH)/libGX11.$(SOEXT)
 

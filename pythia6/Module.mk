@@ -21,7 +21,7 @@ PYTHIA6H     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PYTHIA6S     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PYTHIA6O     := $(PYTHIA6S:.cxx=.o)
 
-PYTHIA6DEP   := $(PYTHIA6O:.o=.d)
+PYTHIA6DEP   := $(PYTHIA6O:.o=.d) $(PYTHIA6DO:.o=.d)
 
 PYTHIA6LIB   := $(LPATH)/libEGPythia6.$(SOEXT)
 

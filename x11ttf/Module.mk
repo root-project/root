@@ -21,7 +21,7 @@ X11TTFH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 X11TTFS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X11TTFO      := $(X11TTFS:.cxx=.o)
 
-X11TTFDEP    := $(X11TTFO:.o=.d)
+X11TTFDEP    := $(X11TTFO:.o=.d) $(X11TTFDO:.o=.d)
 
 X11TTFLIB    := $(LPATH)/libGX11TTF.$(SOEXT)
 

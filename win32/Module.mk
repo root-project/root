@@ -22,7 +22,7 @@ WIN32H       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WIN32S       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WIN32O       := $(WIN32S:.cxx=.o)
 
-WIN32DEP     := $(WIN32O:.o=.d)
+WIN32DEP     := $(WIN32O:.o=.d) $(WIN32DO:.o=.d)
 
 WIN32LIB     := $(LPATH)/libWin32.$(SOEXT)
 

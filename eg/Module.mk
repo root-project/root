@@ -22,7 +22,7 @@ EGH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 EGS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 EGO          := $(EGS:.cxx=.o)
 
-EGDEP        := $(EGO:.o=.d)
+EGDEP        := $(EGO:.o=.d) $(EGDO:.o=.d)
 
 EGLIB        := $(LPATH)/libEG.$(SOEXT)
 

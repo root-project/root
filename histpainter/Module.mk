@@ -22,7 +22,7 @@ HISTPAINTERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTPAINTERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTPAINTERO  := $(HISTPAINTERS:.cxx=.o)
 
-HISTPAINTERDEP := $(HISTPAINTERO:.o=.d)
+HISTPAINTERDEP := $(HISTPAINTERO:.o=.d) $(HISTPAINTERDO:.o=.d)
 
 HISTPAINTERLIB := $(LPATH)/libHistPainter.$(SOEXT)
 

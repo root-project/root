@@ -21,7 +21,7 @@ RINTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 RINTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 RINTO        := $(RINTS:.cxx=.o)
 
-RINTDEP      := $(RINTO:.o=.d)
+RINTDEP      := $(RINTO:.o=.d) $(RINTDO:.o=.d)
 
 RINTLIB      := $(LPATH)/libRint.$(SOEXT)
 

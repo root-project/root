@@ -46,7 +46,7 @@ GUIH         := $(GUIH1) $(GUIH2) $(GUIH3) $(GUIH4)
 GUIS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GUIO         := $(GUIS:.cxx=.o)
 
-GUIDEP       := $(GUIO:.o=.d)
+GUIDEP       := $(GUIO:.o=.d) $(GUIDO:.o=.d)
 
 GUILIB       := $(LPATH)/libGui.$(SOEXT)
 

@@ -21,7 +21,7 @@ GPADH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GPADS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GPADO        := $(GPADS:.cxx=.o)
 
-GPADDEP      := $(GPADO:.o=.d)
+GPADDEP      := $(GPADO:.o=.d) $(GPADDO:.o=.d)
 
 GPADLIB      := $(LPATH)/libGpad.$(SOEXT)
 

@@ -24,7 +24,7 @@ X3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 X3DS2        := $(wildcard $(MODDIRS)/*.c)
 X3DO         := $(X3DS1:.cxx=.o) $(X3DS2:.c=.o)
 
-X3DDEP       := $(X3DO:.o=.d)
+X3DDEP       := $(X3DO:.o=.d) $(X3DDO:.o=.d)
 
 X3DLIB       := $(LPATH)/libX3d.$(SOEXT)
 
