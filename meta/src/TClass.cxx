@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.49 2001/05/24 16:32:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.50 2001/05/25 06:24:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -302,6 +302,7 @@ TClass::TClass(const char *name, Version_t cversion,
    //from the old dummy class.
    TStreamerInfo *info;
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   gROOT->GetListOfClasses()->Add(this);
    if (oldcl) {
       if (oldcl->CanIgnoreTObjectStreamer()) {
          IgnoreTObjectStreamer();
@@ -316,8 +317,7 @@ TClass::TClass(const char *name, Version_t cversion,
       gROOT->GetListOfClasses()->Remove(oldcl);
       delete oldcl;
    }
-   gROOT->GetListOfClasses()->Add(this);
-   
+      
    if (oldcl) {
       //we must update the class pointers pointing to oldcl in all TStreamerElements
       TIter nextClass(gROOT->GetListOfClasses());
