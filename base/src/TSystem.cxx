@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.5 2000/10/02 11:10:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.6 2000/10/10 10:22:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TProcessEventTimer::TProcessEventTimer(Long_t delay) : TTimer(delay, kFALSE)
    // Create async event processor timer. Delay is in milliseconds.
 
    gROOT->SetInterrupt(kFALSE);
-   gSystem->AddTimer(this);
+   TurnOn();
 }
 
 //______________________________________________________________________________
@@ -341,11 +341,12 @@ void TSystem::AddTimer(TTimer *ti)
 //______________________________________________________________________________
 TTimer *TSystem::RemoveTimer(TTimer *ti)
 {
-   // Remove timer from list of system timers.
+   // Remove timer from list of system timers. Returns removed timer or 0
+   // if timer was not active.
 
    if (fTimers) {
-      fTimers->Remove(ti);
-      return ti;
+      TTimer *tr = (TTimer*) fTimers->Remove(ti);
+      return tr;
    }
    return 0;
 }
