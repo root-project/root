@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.30 2003/11/07 21:01:12 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.31 2003/11/24 10:51:55 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -738,6 +738,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    MSG msg;
    Int_t erret;
    Bool_t endLoop = kFALSE;
+   Int_t last_message = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -745,6 +746,14 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    while (!endLoop) {
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
+
+      // disable resizing while updating
+      if ( (last_message==TGWin32ProxyBase::fgPostMessageId) &&
+           (msg.message>=WM_NCMOUSEMOVE) && 
+           (msg.message<WM_NCMBUTTONDBLCLK) ) {
+         ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
+         continue;
+      }
 
       if (msg.message==TGWin32ProxyBase::fgPostMessageId) {
          if (msg.wParam) {
@@ -759,6 +768,7 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
          DispatchMessage (&msg);
          TGWin32MainThread::UnlockMSG();
       }
+      last_message = msg.message;
    }
 
    if (TGWin32::Instance()) TGWin32::Instance()->CloseDisplay();
