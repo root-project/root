@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -237,12 +237,13 @@ void TMap::Streamer(TBuffer &b)
    // Stream all key/value pairs in the map to or from the I/O buffer.
 
    TObject *obj;
+   UInt_t R__s, R__c;
 
    if (b.IsReading()) {
       Int_t    nobjects;
       TObject *value;
 
-      Version_t v = b.ReadVersion();
+      Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 2)
          TObject::Streamer(b);
       if (v > 1)
@@ -253,8 +254,9 @@ void TMap::Streamer(TBuffer &b)
          b >> value;
          if (obj) Add(obj, value);
       }
+      b.CheckByteCount(R__s, R__c,TMap::IsA());
    } else {
-      b.WriteVersion(TMap::IsA());
+      R__c = b.WriteVersion(TMap::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
       b << GetSize();
@@ -263,6 +265,7 @@ void TMap::Streamer(TBuffer &b)
          b << obj;
          b << GetValue(obj);
       }
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
