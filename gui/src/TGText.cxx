@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.8 2000/07/12 17:58:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.9 2000/08/11 14:49:22 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -979,7 +979,7 @@ Bool_t TGText::Search(TGLongPosition *foundPos, TGLongPosition start,
    if (!SetCurrentRow(start.fY))
       return kFALSE;
 
-   Ssiz_t x;
+   Ssiz_t x = kNPOS;
 
    if (direction) {
       while(1) {
