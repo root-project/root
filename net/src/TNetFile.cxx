@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.17 2001/02/08 16:10:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.18 2001/02/13 17:20:12 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -69,7 +69,7 @@
 #include "Bytes.h"
 
 // Must match order of ERootdErrors enum defined in rootd.h
-const char *kRootdErrStr[] = {
+const char *gRootdErrStr[] = {
    "undefined error",
    "file not found",
    "error in file name",
@@ -90,7 +90,8 @@ const char *kRootdErrStr[] = {
    "can't get passwd info",
    "wrong passwd",
    "no SRP support in remote daemon",
-   "fatal error"
+   "fatal error",
+   "cannot seek to restart position"
 };
 
 
@@ -323,7 +324,7 @@ void TNetFile::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 
-   Error(where, kRootdErrStr[err]);
+   Error(where, gRootdErrStr[err]);
 }
 
 //______________________________________________________________________________

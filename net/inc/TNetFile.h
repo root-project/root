@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.6 2001/01/16 17:22:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.7 2001/01/26 16:39:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -65,5 +65,7 @@ public:
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
+
+R__EXTERN const char *gRootdErrStr[];
 
 #endif

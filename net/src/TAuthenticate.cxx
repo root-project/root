@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.6 2001/01/18 10:51:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.7 2001/01/25 14:06:04 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 #include "TError.h"
 #include "Getline.h"
 
-R__EXTERN const char *kRootdErrStr[];
 
 TString      TAuthenticate::fgUser;
 TString      TAuthenticate::fgPasswd;
@@ -311,7 +310,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   ::Error(where, kRootdErrStr[err]);
+   ::Error(where, gRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
