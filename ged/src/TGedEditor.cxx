@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.2 2004/02/19 15:36:45 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.3 2004/02/20 16:30:49 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -33,12 +33,13 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 {
 
    Build();
-   if (canvas)
-      ConnectToCanvas(canvas);
 
    MapSubwindows();
-   MapWindow();
    Resize(GetDefaultSize());
+   MapWindow();
+
+   if (canvas)
+      ConnectToCanvas(canvas);
 }
 
 //______________________________________________________________________________
