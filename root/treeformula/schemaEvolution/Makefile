@@ -43,7 +43,7 @@ endif
 
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
-	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F | sed -e 's/45[0-9],/45,/g' \
 	> schemaRun.ref
 
 SCRIPTS = $(wildcard schemaRun*.C)
@@ -54,7 +54,7 @@ LOGFILES_TEST = $(subst .log,.test,$(LOGFILES))
 
 $(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) 
 	$(CMDECHO) root.exe -q -b -l  $< 2>&1 \
-	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F | sed -e 's/45[0-9],/45,/g'  \
 	> $@
 
 $(LOGFILES_TEST) : %.test : %.log
@@ -90,7 +90,7 @@ else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT)  -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
@@ -121,8 +121,8 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENT2SO)
+		$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)

@@ -1,4 +1,4 @@
 Event Event.exe Event.root
 EventDict*.*
 *.log *.dll *.def *.exp *.lib *.pdb *.log *.d 
-*.sln *.suo
+*.sln *.suo *.dylib
