@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.10 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.11 2002/01/24 11:39:28 rdm Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -504,6 +504,19 @@ void TLegend::Print( Option_t* option ) const
   TPave::Print( option );
   if (fPrimitives) fPrimitives->Print();
 }
+
+//______________________________________________________________________________
+void TLegend::RecursiveRemove(TObject *obj)
+{
+//  Reset TLegendEntrys pointing to obj
+   
+  TIter next(fPrimitives);
+  TLegendEntry *entry;
+  while (( entry = (TLegendEntry *)next() )) {
+     if (entry->GetObject() == obj) entry->SetObject((TObject*)0);
+  }
+}
+
 
 //____________________________________________________________________________
 void TLegend::SavePrimitive( ofstream &out, Option_t* )
