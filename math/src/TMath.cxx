@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.2 2000/06/28 14:32:54 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -568,11 +568,32 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 //______________________________________________________________________________
 Double_t TMath::KolmogorovProb(Double_t z)
 {
-   // Calculates the probability of exceeding the value z=dn*N**2 
-   // for the Kolmogorov test, where dn=maximum distance between
-   // cumulative distribution function and N experimental values.
-   // Function holds only for large N, but is accurate to 10**-11
-   // Theta function inversion formula is used for Z <= 1
+   // Calculates the Kolmogorov distribution function,
+   //Begin_Html
+   /*
+   <img src="gif/kolmogorov.gif">
+   */
+   //End_Html
+   // which gives the probability that Kolmogorov's test statistic will exceed
+   // the value z assuming the null hypothesis. This gives a very powerful
+   // test for comparing two one-dimensional distributions.
+   // see, for example, Eadie et al, "statistocal Methods in Experimental
+   // Physics', pp 269-270).
+   //
+   // This function returns the confidence level for the null hypothesis, where:
+   //   z = dn*sqrt(n), and
+   //   dn  is the maximum deviation between a hypothetical distribution
+   //       function and an experimental distribution with
+   //   n    events
+   //
+   // NOTE: To compare two experimental distributions with m and n events,
+   //       use z = sqrt(m*n/(m+n))*dn
+   //
+   // Accuracy: The function is far too accurate for any imaginable application. 
+   //           Probabilities less than 10^-15 are returned as zero.
+   //           However, remember that the formula is only valid for "large" n.
+   // Theta function inversion formula is used for z <= 1
+   //
    // This function was translated by Rene Brun from PROBKL in CERNLIB
    
    // cons[j] = -0.5*(PI*2*j-1)/2(**2
