@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.37 2002/02/13 11:12:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.38 2002/03/13 01:55:02 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -428,6 +428,7 @@ void TObject::Dump() const
    //   fFillColor               19          fill area color
    //   fFillStyle               1001        fill area style
 
+   Printf("==>Dumping object at:%lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
    char parent[256];
    parent[0] = 0;
    TDumpMembers dm;
@@ -892,15 +893,24 @@ void TObject::Streamer(TBuffer &R__b)
       if (!TestBit(kIsReferenced)) return;
       R__b >> pidf;
       TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
-      if (pid) pid->PutObjectWithID(this);
+      if (pid) {
+         UInt_t gpid = pid->GetUniqueID();
+         fUniqueID = (fUniqueID & 0xffffff) + (gpid<<24);
+         pid->PutObjectWithID(this);
+      }
    } else {
       R__b.WriteVersion(TObject::IsA());
-      R__b << fUniqueID;
-      R__b << fBits;
-      //if the object is referenced, we must save its address/file_pid
-      if (!TestBit(kIsReferenced)) return;
-      pidf = 0;
-      R__b << pidf;
+      if (!TestBit(kIsReferenced)) {
+         R__b << fUniqueID;
+         R__b << fBits;
+      } else {
+         //if the object is referenced, we must save its address/file_pid
+         UInt_t uid = fUniqueID & 0xffffff;
+         R__b << uid;
+         R__b << fBits;
+         pidf = TProcessID::WriteProcessID(0,file);
+         R__b << pidf;
+      }
    }
 }
 

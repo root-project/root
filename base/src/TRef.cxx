@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.12 2002/02/03 16:14:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.13 2002/03/25 20:21:06 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -210,8 +210,13 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
-      if (!fPID) fPID = TProcessID::GetSessionProcessID();
-      uid = TProcessID::AssignID(obj);
+      if (obj->TestBit(kIsReferenced)) {
+         uid = obj->GetUniqueID();
+         fPID = TProcessID::GetProcessWithUID(uid);
+      } else {
+         fPID = TProcessID::GetSessionProcessID();
+         uid = TProcessID::AssignID(obj);
+      }
    }
    SetUniqueID(uid);
 }

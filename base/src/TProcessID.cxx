@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.10 2001/12/18 18:25:55 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.11 2002/02/03 16:13:40 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -109,8 +109,12 @@ UInt_t TProcessID::AssignID(TObject *obj)
 // If the object is not yet referenced, its kIsReferenced bit is set
 // and its fUniqueID set to the current number of referenced objects so far.
 
-   UInt_t uid = obj->GetUniqueID();
+   UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == fgPID->GetObjectWithID(uid)) return uid;
+   if (obj->TestBit(kIsReferenced)) {
+      fgPID->PutObjectWithID(obj,uid);
+      return uid;
+   }
    fgNumber++;
    obj->SetBit(kIsReferenced);
    uid = fgNumber;
@@ -149,6 +153,16 @@ TProcessID *TProcessID::GetProcessID(UShort_t pid)
 }
 
 //______________________________________________________________________________
+TProcessID *TProcessID::GetProcessWithUID(UInt_t uid)
+{
+// static function returning a pointer to TProcessID with its pid
+// encoded in the highest byte of uid
+
+   Int_t pid = (uid>>24)&0xff;
+   return (TProcessID*)fgPIDs->At(pid);
+}
+
+//______________________________________________________________________________
 TProcessID *TProcessID::GetSessionProcessID()
 {
 // static function returning the pointer to the session TProcessID
@@ -175,11 +189,14 @@ UInt_t TProcessID::GetObjectCount()
 }
 
 //______________________________________________________________________________
-TObject *TProcessID::GetObjectWithID(UInt_t uid)
+TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    //returns the TObject with unique identifier uid in the table of objects
    //if (!fObjects) fObjects = new TObjArray(100);
-   if ((Int_t)uid > fObjects->GetSize()) return 0;
+   
+   Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
+   
+   if (uid > fObjects->GetSize()) return 0;
    return fObjects->UncheckedAt(uid);
 }
 
@@ -190,7 +207,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
    //stores the object at the uid th slot in the table of objects
    //The object uniqueid is set as well as its kMustCleanup bit
    //if (!fObjects) fObjects = new TObjArray(100);
-   if (uid == 0) uid = obj->GetUniqueID();
+   if (uid == 0) uid = obj->GetUniqueID() & 0xffffff;
    fObjects->AddAtAndExpand(obj,uid);
    obj->SetBit(kMustCleanup);
 }
@@ -213,7 +230,13 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    //if not set, read the process uid from file
    char pidname[32];
    sprintf(pidname,"ProcessID%d",pidf);
+   TDirectory *dirsav = gDirectory;
+   file->cd();
    pid = (TProcessID *)file->Get(pidname);
+   if (dirsav) dirsav->cd();
+   if (gDebug > 0) {
+      printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,file->GetName(),(Long_t)pid);
+   }
    if (!pid) {
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
       return 0;
@@ -232,6 +255,8 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    pids->AddAtAndExpand(pid,pidf);
    pid->IncrementCount();
    fgPIDs->Add(pid);
+   Int_t ind = fgPIDs->IndexOf(pid);
+   pid->SetUniqueID((UInt_t)ind);
    return pid;
 }
 
@@ -242,7 +267,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
    // remove reference to obj from the current table if it is referenced
 
    if (!obj->TestBit(kIsReferenced)) return;
-   UInt_t uid = obj->GetUniqueID();
+   UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) fObjects->RemoveAt(uid);
 }
 
@@ -257,23 +282,30 @@ void TProcessID::SetObjectCount(UInt_t number)
 }
 
 //______________________________________________________________________________
-UShort_t TProcessID::WriteProcessID(TProcessID *pid, TFile *file)
+UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
 {
 // static function
 // Check if the ProcessID pid is already in the file.
 // if not, add it and return the index  number in the local file list
 
    if (!file) return 0;
+   TProcessID *pid = pidd;
+   if (!pid) pid = fgPID;
    TObjArray *pids = file->GetListOfProcessIDs();
-   Int_t pidf = 0;
-   if (pid) pidf = pids->IndexOf(pid);
-   if (pidf < 0) {
-      file->SetBit(TFile::kHasReferences);
-      pidf = (UShort_t)pids->GetEntriesFast();
-      pids->Add(pid);
-      char name[32];
-      sprintf(name,"ProcessID%d",pidf);
-      pid->Write(name);
+   Int_t npids = file->GetNProcessIDs();
+   if (npids > 0 && pids->At(npids-1) == pid) return (UShort_t)npids-1;
+    
+   TDirectory *dirsav = gDirectory;
+   file->cd();
+   file->SetBit(TFile::kHasReferences);
+   pids->Add(pid);
+   char name[32];
+   sprintf(name,"ProcessID%d",npids);
+   pid->Write(name);
+   file->IncrementProcessIDs();
+   if (gDebug > 0) {
+      printf("WriteProcessID, name=%s, file=%s\n",name,file->GetName());   
    }
-  return (UShort_t)pidf;
+   if (dirsav) dirsav->cd();
+   return (UShort_t)npids;
 }

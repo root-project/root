@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.3 2001/12/02 15:11:32 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.4 2002/02/03 16:13:40 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -59,6 +59,7 @@ protected:
    static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
    static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
    static TProcessID  *GetProcessID(UShort_t pid);
+   static TProcessID  *GetProcessWithUID(UInt_t uid);
    static TProcessID  *GetSessionProcessID();
    static  UInt_t      GetObjectCount();
    static  void        SetObjectCount(UInt_t number);
