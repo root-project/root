@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.rdl,v 1.2 2001/05/14 22:54:20 verkerke Exp $
+ *    File: $Id: RooGenCategory.rdl,v 1.3 2001/07/31 05:54:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -16,6 +16,7 @@
 #include "TMethodCall.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooSuperCategory.hh"
+#include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooCatType.hh"
 
 class RooGenCategory : public RooAbsCategory {
@@ -40,8 +41,9 @@ protected:
   TString evalUserFunc(RooArgSet *vars) ;
   void updateIndexList() ;
   
-  RooSuperCategory _superCat ; //  Super category of input categories
-  Int_t *_map ;                //! Super-index to generic-index map
+  RooSuperCategory _superCat ;    //  Super category of input categories
+  RooCategoryProxy _superCatProxy ; // Proxy for super category
+  Int_t *_map ;                   //! Super-index to generic-index map
 
   TString      _userFuncName ; // 
   TMethodCall* _userFunc;      // User function hook

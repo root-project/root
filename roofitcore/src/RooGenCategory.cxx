@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.6 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.7 2001/10/02 21:24:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -34,7 +34,10 @@ ClassImp(RooGenCategory)
 
 
 RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFunc, RooArgSet& catList) :
-  RooAbsCategory(name, title), _superCat("superCat","Super Category",catList), _map(0) 
+  RooAbsCategory(name, title), 
+  _superCat("superCat","Super Category",catList), 
+  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat), 
+  _map(0) 
 {
   // Constructor with pointer to user mapping function and list of input categories
   
@@ -51,7 +54,9 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
 
 
 RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
-  RooAbsCategory(other,name), _superCat(other._superCat), _map(0), _userFuncName(other._userFuncName)
+  RooAbsCategory(other,name), _superCat(other._superCat), 
+  _map(0), _userFuncName(other._userFuncName),
+  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat)
 {
   // Copy constructor
   removeServer((RooAbsArg&)other._superCat) ;
@@ -108,12 +113,12 @@ void RooGenCategory::updateIndexList()
 
   // Recreate super-index to gen-index map ;
   if (_map) delete[] _map ;
-  _map = new Int_t[_superCat.numTypes()] ;
+  _map = new Int_t[_superCatProxy.arg().numTypes()] ;
   clearTypes() ;
 
   // DeepClone super category for iteration
-  RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCat).snapshot(kTRUE) ;
-  RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCat.GetName()) ;
+  RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCatProxy.arg()).snapshot(kTRUE) ;
+  RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCatProxy.arg().GetName()) ;
 
   TIterator* sIter = superClone->MakeIterator() ;
   RooArgSet *catList ;
@@ -127,6 +132,7 @@ void RooGenCategory::updateIndexList()
 
     // Fill map for this super-state
     _map[superClone->getIndex()] = type->getVal() ;
+//     cout << "updateIndexList(" << GetName() << ") _map[" << superClone->getLabel() << "] = " << type->GetName() << endl ;
   }
 
   delete superClone ;
@@ -141,10 +147,9 @@ RooGenCategory::evaluate() const
     const_cast<RooGenCategory*>(this)->updateIndexList() ;
   }
 
-
-  const RooCatType* ret = lookupType(_map[_superCat.getIndex()]) ;
+  const RooCatType* ret = lookupType(_map[(Int_t)_superCatProxy]) ;
   if (!ret) {
-    cout << "RooGenCategory::evaluate(" << GetName() << ") ERROR: cannot lookup super index " << _superCat.getIndex() << endl ;
+    cout << "RooGenCategory::evaluate(" << GetName() << ") ERROR: cannot lookup super index " << (Int_t) _superCatProxy << endl ;
     assert(0) ;
   }
 
@@ -169,7 +174,7 @@ void RooGenCategory::printToStream(ostream& os, PrintOption opt, TString indent)
      os << indent << "  Input category list:" << endl ;
      TString moreIndent(indent) ;
      indent.Append("   ") ;
-     _superCat.inputCatList().printToStream(os,Standard,moreIndent.Data()) ;
+     ((RooSuperCategory&)_superCatProxy.arg()).inputCatList().printToStream(os,OneLine) ;
      os << indent << "  User mapping function is 'const char* " << _userFuncName << "(RooArgSet*)'" << endl ;
    }
 }
