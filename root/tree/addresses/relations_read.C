@@ -18,6 +18,7 @@ void Read(bool /*read*/=true) {
 
    Int_t nevent = Int_t(tree->GetEntries());
    if (gDebug>0) std::cout << "Address:" << &obj->m_direct.m_entries << std::endl;
+   printf("relations' read\n");
    for (Int_t i=0;i<nevent;i++) {
       Int_t val = tree->GetEntry(i);
       if (gDebug>0) printf("%d %p\n", val, obj); 

@@ -22,7 +22,8 @@ void Write(bool write=false)
 
    
    if (write) {
-
+      
+      printf("relations' write\n");
       for(int i=0; i < 10; ++i) {
          obj->m_direct.m_entries.push_back(std::pair<int,float>(10*i,i));
          printf("%d: %d\n",i,tree->Fill());
