@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.9 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.10 2004/02/16 12:45:42 brun Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -53,6 +53,7 @@ TGProgressBar::TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
    fPercent    = kTRUE;
    fNormGC     = norm;
    fFontStruct = font;
+   fBarColorGC.SetFillStyle(kFillSolid);
    fBarColorGC.SetForeground(barcolor);
    fBarWidth   = kProgressBarStandardWidth;
    fDrawBar    = kFALSE;
