@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.3 2001/10/02 16:49:56 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.1 2001/10/03 16:43:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -113,35 +113,35 @@ void TRef::operator=(TObject *obj)
 {
    // TRef assignment operator.
 
-   UInt_t uid;
+   Long_t uid;
    if (obj) {
       if (obj->IsA()->CanIgnoreTObjectStreamer()) {
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
       obj->SetBit(kIsReferenced);
-      uid = (char*)obj - (char*)gSystem;
+      uid = (Long_t)obj - (Long_t)gSystem;
    } else {
       uid = 0;
    }
-   SetUniqueID(uid);
+   SetUniqueID((UInt_t)uid);
 }
 
 //______________________________________________________________________________
-TObject *TRef::GetObject() 
+TObject *TRef::GetObject() const
 {
    // Return a pointer to the referenced object.
 
    TObject *obj = 0;
    Long_t uid = (Long_t)GetUniqueID();
    if (uid == 0) return obj;
-   if (!TestBit(1)) return (TObject*)(uid + (char*)gSystem);
+   if (!TestBit(1)) return (TObject*)(uid + (Long_t)gSystem);
    if (!fPID) return 0;
    obj = fPID->GetObjectWithID(uid);
    if (obj) {
-      ResetBit(1);
-      uid = (char*)obj - (char*)gSystem;
-      SetUniqueID((UInt_t)uid);
+      ((TRef*)this)->ResetBit(1);
+      uid = (Long_t)obj - (Long_t)gSystem;
+      ((TRef*)this)->SetUniqueID((UInt_t)uid);
    }
    return obj;
 }
@@ -166,7 +166,7 @@ void TRef::SaveRef(TObject *obj, TBuffer &R__b, TFile *file)
 {
 // static function
 
-   Long_t uid = (char*)obj - (char*)gSystem;
+   Long_t uid = (Long_t)obj - (Long_t)gSystem;
    Int_t pidf = 0;
    if (file) {
       pidf = file->GetProcessCount();
