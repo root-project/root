@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: $
+// @(#)root/mc:$Name:  $:$Id: TMCVerbose.cxx,v 1.1 2003/02/26 13:31:32 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 //
@@ -217,6 +217,7 @@ void TMCVerbose::Stepping()
 // Stepping info
 // ---
 
+#ifdef DOESNOTCOMPILE
   if (fLevel>2) {
   
     // Step number
@@ -268,6 +269,7 @@ void TMCVerbose::Stepping()
 
     cout << endl;
   }
+#endif
 }
 
 //_____________________________________________________________________________
