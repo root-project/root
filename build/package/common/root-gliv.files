@@ -1,0 +1,5 @@
+@prefix@/include/root/TGLKernel.h 
+@prefix@/include/root/TRootGL*  
+@prefix@/include/root/TWin32GL* 
+@prefix@/include/root/TRootWGL.h
+@prefix@/include/root/TRootOIViewer.h

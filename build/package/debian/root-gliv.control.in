@@ -1,0 +1,7 @@
+Package: root-gliv
+Architecture: any
+Depends: libroot (= ${Source-Version}), ${shlibs:Depends}
+Provides: root-glviewer
+Conflicts: root-gl
+Description: @short@
+@long@

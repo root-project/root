@@ -1,0 +1,18 @@
+######################################################################
+#
+# opengl Sub package 
+# 
+%package -n root-gliv
+Group: ROOT
+Summary: @short@
+%description -n root-gliv
+@long@
+
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files -n root-gliv -f @files@
+
+#---------------
+%post -n root-gliv
+    # Update /etc/ld.so.cache
+    ldconfig 
