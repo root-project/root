@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Script to create auxiliary CINT dll's.
-# Called by cint/Module.mk.
+# Called by main Makefile.
 #
 # Author: Fons Rademakers, 27/7/2000
 
