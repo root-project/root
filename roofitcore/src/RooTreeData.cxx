@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.24 2001/11/28 00:29:13 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.25 2001/11/28 01:20:45 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -767,11 +767,14 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
 				   frame->GetNbinsX());
   assert(0 != hist1 && 0 != hist2);
 
-  TString cuts1(Form("(%s)&&(%s>0)",cuts,asymCat.GetName()));
-  TString cuts2(Form("(%s)&&(%s<0)",cuts,asymCat.GetName()));
-
-  cout << "cuts1: " << cuts1 << endl;
-  cout << "cuts2: " << cuts2 << endl;
+  TString cuts1,cuts2 ;
+  if (cuts && strlen(cuts)) {
+    cuts1 = Form("(%s)&&(%s>0)",cuts,asymCat.GetName());
+    cuts2 = Form("(%s)&&(%s<0)",cuts,asymCat.GetName());
+  } else {
+    cuts1 = Form("(%s>0)",asymCat.GetName());
+    cuts2 = Form("(%s<0)",asymCat.GetName());
+  }
 
   if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data()) ||
      0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data())) {
@@ -889,7 +892,9 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     if (entryNumber<0) break;
     get(entryNumber);
 
-    if (select && select->eval()==0) continue ;
+    if (select && select->eval()==0) {
+      continue ;
+    }
 
     Int_t bin(0);
     switch(hdim) {

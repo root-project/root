@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.13 2001/11/16 02:23:56 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.14 2001/11/17 01:44:51 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.13 2001/11/16 02:23:56 verkerke Exp $";
+"$Id: RooHist.cc,v 1.14 2001/11/17 01:44:51 david Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
@@ -109,11 +109,11 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
   }
   for(Int_t bin= 1; bin <= nbin; bin++) {
     Axis_t x= data1.GetBinCenter(bin);
-    if(data2.GetBinCenter(bin) != x) {
+    if(fabs(data2.GetBinCenter(bin)-x)>1e-10) {
       cout << "RooHist::RooHist: histograms have different centers for bin " << bin << endl;
     }
     Stat_t y1= data1.GetBinContent(bin);
-    Stat_t y2= data1.GetBinContent(bin);
+    Stat_t y2= data2.GetBinContent(bin);
     addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin));
   }
   // we do not have a meaningful number of entries
