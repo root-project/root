@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.38 2003/03/05 16:07:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.39 2003/03/18 14:29:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -287,6 +287,15 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master",
                                  fSecurity, this);
       if (slave->IsValid()) {
+         // check protocol compatability
+         // protocol 1 is not supported anymore
+         if (fProtocol == 1) {
+            Error("Init", "client and remote protocols not compatible (%d and %d)",
+                  fProtocol, kPROOF_Protocol);
+            delete slave;
+            return 0;
+         }
+
          fSlaves->Add(slave);
          fAllMonitor->Add(slave->GetSocket());
          Collect(slave);
@@ -333,7 +342,7 @@ void TProof::Close(Option_t *)
          Interrupt(kShutdownInterrupt, kAll);
 
       fSlaves->Delete();
-      fActiveSlaves->Clear();
+      if (fActiveSlaves) fActiveSlaves->Clear(); // is 0 if Init() returned 0
       fUniqueSlaves->Clear();
       fBadSlaves->Clear();
    }

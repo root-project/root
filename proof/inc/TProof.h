@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.30 2003/03/05 16:07:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.31 2003/03/18 14:29:59 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -59,9 +59,11 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TPacketizer2;
 
+// protocol changes:
+// 1 -> 2: new arguments for Process() command, option added
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 1;             // protocol version number
+const Int_t       kPROOF_Protocol = 2;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
