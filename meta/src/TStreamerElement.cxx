@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.54 2003/02/22 13:24:22 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.55 2003/04/08 17:07:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -787,8 +787,11 @@ Int_t TStreamerObject::GetSize() const
 {
    //returns size of object class in bytes
    
-   if (fArrayLength) return fArrayLength*GetClassPointer()->Size();
-   return GetClassPointer()->Size();
+   TClass *cl = GetClassPointer();
+   Int_t classSize = 8;
+   if (cl) classSize = cl->Size();
+   if (fArrayLength) return fArrayLength*classSize;
+   return classSize;
 }
 
 //______________________________________________________________________________
@@ -866,8 +869,11 @@ Int_t TStreamerObjectAny::GetSize() const
 {
    //returns size of anyclass in bytes
    
-   if (fArrayLength) return fArrayLength*GetClassPointer()->Size();
-   return GetClassPointer()->Size();
+   TClass *cl = GetClassPointer();
+   Int_t classSize = 8;
+   if (cl) classSize = cl->Size();
+   if (fArrayLength) return fArrayLength*classSize;
+   return classSize;
 }
 
 //______________________________________________________________________________
