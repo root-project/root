@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.8 2004/03/17 17:35:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.9 2004/05/10 09:55:40 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
    fStream    = 0;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
-   fBuffer    = new char[fSizBuffer];
+   fBuffer    = new char[fSizBuffer+1];
 }
 
 //______________________________________________________________________________
