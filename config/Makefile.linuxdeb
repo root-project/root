@@ -8,7 +8,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 NOOPT         =
 else
-OPT           = -O2
+OPT           = -O1
 NOOPT         =
 endif
 
@@ -29,9 +29,9 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -rdynamic
+SYSLIBS       = -lm -ldl  $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        = -lm -lncurses -ldl -rdynamic
+CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:

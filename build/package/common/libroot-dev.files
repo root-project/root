@@ -1,2 +1,4 @@
+@prefix@/bin/root-config
+@prefix@/share/man/man1/root-config.1
 @prefix@/include/root/* 
 @prefix@/share/aclocal/root.m4 

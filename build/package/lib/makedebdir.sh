@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
+# $Id: makedebdir.sh,v 1.3 2002/01/22 10:53:28 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -48,6 +48,9 @@ sed -e "s,@prefix@,/${prefix},g" \
 ### echo %%% Copy watch file 
 cp ${debdir}/watch ${tgtdir}
 
+### echo %%% Copy mime file 
+cp ${debdir}/root-bin.mime ${tgtdir}
+
 ### echo %%% make the changelog 
 ${libdir}/makedebchangelog.sh $tgtdir $debdir $versi
 
@@ -70,7 +73,7 @@ for i in $pkgs; do
     # list, because it never is. Thank god for that. 
     root-gl)     bd="${bd}, libgl-dev" ;; 
     root-mysql)  bd="${bd}, libmysqlclient6-dev (>= 3.22.30)" ;;
-    root-pgsql)  bd="${bd}, libpostgresql-dev (>= 6.5.3-23)" ;;
+    root-pgsql)  bd="${bd}, libpostgresql-dev (>= 6.5.3-23) | postgresql-dev" ;;
     root-pythia) bd="${bd}, libpythia-dev" ;; 
     root-ttf)    bd="${bd}, freetype2-dev" ;; 
     *) ;;
@@ -78,7 +81,7 @@ for i in $pkgs; do
 done
 
 ### echo %%% Now insert the line 
-sed "s|@build-depends@|${bd}|" < ${debdir}/head.control.in \
+sed "s/@build-depends@/${bd},/" < ${debdir}/head.control.in \
     > ${tgtdir}/control
 echo "" >> ${tgtdir}/control
 
@@ -122,11 +125,15 @@ fi
 sed -e "s,@prefix@,/${prefix},g" \
     -e "s,@etcdir@,/${etcdir},g" \
     -e "s,@docdir@,/${docdir},g" \
+    -e "s,@pkgs@,${pkgs},g"      \
     < ${debdir}/rules.in > ${tgtdir}/rules
 chmod 755 ${tgtdir}/rules
 
 #
 # $Log: makedebdir.sh,v $
+# Revision 1.3  2002/01/22 10:53:28  rdm
+# port to Debian distribution of GNU/Hurd by Christian Holm.
+#
 # Revision 1.2  2002/01/20 14:23:52  rdm
 # Mega patch by Christian Holm concerning the configure, build and
 # Debian and RedHat packaging scripts. The configure script has been

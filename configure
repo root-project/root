@@ -1258,7 +1258,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_rfio" = "xyes" && pkglist="$pkglist root-shift"
     test "x$enable_srputil" = "xyes" && pkglist="$pkglist root-srp"
 
-    pkglist="$pkglist root-cint root-bin root-doc libroot-dev libroot"
+    pkglist="$pkglist root-cint root-doc libroot-dev root-bin libroot"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     echo "packages: $pkglist"
