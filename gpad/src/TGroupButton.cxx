@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.6 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 #include "TCanvas.h"
 #include "TText.h"
 #include "TInterpreter.h"
-
+#include "TTimer.h"
 #include <string.h>
 
 ClassImp(TGroupButton)
@@ -173,7 +173,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       //Clicked on APPLY button?
       if (!strcasecmp(GetName(),"APPLY")) {
          if (!strcasecmp(GetTitle(),"CLOSE")) {
-            gPad->GetCanvas()->Close();
+            TTimer::SingleShot(50, "TCanvas", gPad->GetCanvas(), "Close()");
             return;
          }
          canvas = (TDialogCanvas*)GetMother();
