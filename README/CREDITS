@@ -81,6 +81,10 @@ N: Robert Hatcher
 E: rhatcher@slac.stanford.edu
 D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
+N: Miroslav Helbich
+E: helbich@mail.desy.de
+D: Apply method in the TGraph classes
+
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
@@ -128,6 +132,11 @@ D: THtml improvements (namespace, header/footer)
 N: John Odonnell
 E: odonnell@lanl.gov
 D: contributed to TFormula: support for recursive functions definitions.
+
+N: Eddy Offermann
+E: eddy@rentec.com
+D: contributed to the TGraph Paint functions
+D: contributed to the TMatrix classes (InvertPosDef)
 
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
