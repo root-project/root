@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.39 2004/07/09 00:36:42 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.40 2004/08/22 01:47:06 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -2559,9 +2559,6 @@ void guitest()
 
 //---- Main program ------------------------------------------------------------
 #ifdef STANDALONE
-TROOT root("GUI", "GUI test environement");
-
-
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);

@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.3 2004/04/13 09:52:07 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.4 2004/07/08 14:40:28 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,12 @@
 #pragma link off all functions;
 
 #pragma link C++ nestedclass;
+
+#pragma link C++ enum EMdiResizerPlacement;
+#pragma link C++ enum EMdiResizingModes;
+#pragma link C++ enum EMdiHints;
+#pragma link C++ enum EMdiArrangementModes;
+#pragma link C++ enum EMdiGeometryMask;
 
 #pragma link C++ class TRootGuiFactory;
 #pragma link C++ class TRootApplication;
@@ -39,5 +45,19 @@
 #pragma link C++ class TGUndockedFrame;
 #pragma link C++ class TGDockButton;
 #pragma link C++ class TGDockHideButton;
+#pragma link C++ class TGMdiMenuBar;
+#pragma link C++ class TGMdiFrameList;
+#pragma link C++ class TGMdiGeometry;
+#pragma link C++ class TGMdiMainFrame;
+#pragma link C++ class TGMdiContainer;
+#pragma link C++ class TGMdiFrame;
+#pragma link C++ class TGMdiWinResizer;
+#pragma link C++ class TGMdiVerticalWinResizer;
+#pragma link C++ class TGMdiHorizontalWinResizer;
+#pragma link C++ class TGMdiCornerWinResizer;
+#pragma link C++ class TGMdiButtons;
+#pragma link C++ class TGMdiTitleIcon;
+#pragma link C++ class TGMdiTitleBar;
+#pragma link C++ class TGMdiDecorFrame;
 
 #endif

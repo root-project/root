@@ -1,0 +1,15 @@
+/* XPM */
+static char * minimizeButtonIconData[] = {
+"9 9 2 1",
+" 	c None s None",
+".	c #000000",
+"         ",
+"         ",
+"         ",
+"         ",
+"         ",
+"         ",
+"         ",
+" ......  ",
+" ......  "};
+
