@@ -1766,7 +1766,11 @@ FILE *hfp;
   }
   
   for(i=0;i<G__struct.alltag;i++) {
-    if(G__NOLINK > G__struct.globalcomp[i] &&
+    if((G__NOLINK > G__struct.globalcomp[i] 
+#ifndef G__OLDIMPLEMENTATION1730
+	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
+#endif
+   ) && 
        (
 #ifndef G__OLDIMPLEMENTATION1677
 	(G__struct.hash[i] || 0==G__struct.name[i][0])

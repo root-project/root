@@ -1,4 +1,4 @@
-static int G__ManualBase4_142_4_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__ManualBase4_134_5_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    // We need to emulate:
    //    return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
 
@@ -17,7 +17,7 @@ static int G__ManualBase4_142_4_8(G__value *result7,G__CONST char *funcname,stru
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualBase4_142_5_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__ManualBase4_134_6_8(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    // We need to emulate:
    //     ptr = (T*)GetObjectChecked(namecycle,TClass::GetClass(typeid(T)));
 

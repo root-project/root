@@ -1,4 +1,4 @@
-static int G__ManualTree2_165_5_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_165_6_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
   // We need to emulate
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -43,7 +43,7 @@ static int G__ManualTree2_165_5_17(G__value *result7,G__CONST char *funcname,str
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__ManualTree2_165_6_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_165_7_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
@@ -86,7 +86,7 @@ static int G__ManualTree2_165_6_17(G__value *result7,G__CONST char *funcname,str
 
 #include "TDataType.h"
 
-static int G__ManualTree2_165_8_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__ManualTree2_165_9_17(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__setnull(result7);
 
