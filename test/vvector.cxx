@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.10 2002/05/10 08:30:10 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.11 2002/06/28 23:02:22 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -348,7 +348,8 @@ void test_norms(int vsize)
    norm = n*( (ap_a0*ap_a0) + ap_a0*ap_step*(n-1) + (ap_step*ap_step)*(n-1)*(2*n-1)/6);
    cout << "  Square of the 2. norm has got to be "
            "n*[ a0^2 + a0*q*(n-1) + q^2/6*(n-1)*(2n-1) ], or " << norm << endl;
-   Assert( v.Norm2Sqr() == norm );
+   Assert( TMath::Abs( (v.Norm2Sqr()-norm)/norm ) < 1e-15 );
+
    norm = TMath::Max(TMath::Abs(v(v.GetLwb())),TMath::Abs(v(v.GetUpb())));
    cout << "  Inf norm should be max(abs(a0),abs(a0+(n-1)*q)), ie " << norm
         << endl;
