@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.2 2001/02/01 15:06:59 brun Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -14,55 +14,61 @@
 //                                                                            //
 // TPythia6                                                                   //
 //                                                                            //
-// TPythia is an interface class to F77 version of Pythia 6.1                 //
+// TPythia is an interface class to F77 version of Pythia 6.2                 //
 // CERNLIB event generators, written by T.Sjostrand.                          //
 // For the details about these generators look at Pythia/Jetset manual:       //
 //                                                                            //
-//******************************************************************************
-//**                                                                          **
-//**                                                                          **
-//**  PPP  Y   Y TTTTT H   H III   A        JJJJ EEEE TTTTT  SSS  EEEE TTTTT  **
-//**  P  P  Y Y    T   H   H  I   A A          J E      T   S     E      T    **
-//**  PPP    Y     T   HHHHH  I  AAAAA         J EEE    T    SSS  EEE    T    **
-//**  P      Y     T   H   H  I  A   A      J  J E      T       S E      T    **
-//**  P      Y     T   H   H III A   A       JJ  EEEE   T    SSS  EEEE   T    **
-//**                                                                          **
-//**                                                                          **
-//**              *......*                  Welcome to the Lund Monte Carlo!  **
-//**         *:::!!:::::::::::*                                               **
-//**      *::::::!!::::::::::::::*            This is PYTHIA version 5.720    **
-//**    *::::::::!!::::::::::::::::*        Last date of change: 29 Nov 1995  **
-//**   *:::::::::!!:::::::::::::::::*                                         **
-//**   *:::::::::!!:::::::::::::::::*         This is JETSET version 7.408    **
-//**    *::::::::!!::::::::::::::::*!       Last date of change: 23 Aug 1995  **
-//**      *::::::!!::::::::::::::* !!                                         **
-//**      !! *:::!!:::::::::::*    !!                 Main author:            **
-//**      !!     !* -><- *         !!              Torbjorn Sjostrand         **
-//**      !!     !!                !!        Dept. of theoretical physics 2   **
-//**      !!     !!                !!              University of Lund         **
-//**      !!                       !!                Solvegatan 14A           **
-//**      !!        ep             !!             S-223 62 Lund, Sweden       **
-//**      !!                       !!          phone: +46 - 46 - 222 48 16    **
-//**      !!                 pp    !!          E-mail: torbjorn@thep.lu.se    **
-//**      !!   e+e-                !!                                         **
-//**      !!                       !!         Copyright Torbjorn Sjostrand    **
-//**      !!                                     and CERN, Geneva 1993        **
-//**                                                                          **
-//**                                                                          **
-//** The latest program versions and documentation is found on WWW address    **
-//** http://thep.lu.se/tf2/staff/torbjorn/Welcome.html                        **
-//**                                                                          **
-//** When you cite these programs, priority should always be given to the     **
-//** latest published description. Currently this is                          **
-//** T. Sjostrand, Computer Physics Commun. 82 (1994) 74.                     **
-//** The most recent long description (unpublished) is                        **
-//** T. Sjostrand, LU TP 95-20 and CERN-TH.7112/93 (revised August 1995).     **
-//** Also remember that the programs, to a large extent, represent original   **
-//** physics research. Other publications of special relevance to your        **
-//** studies may therefore deserve separate mention.                          **
-//**                                                                          **
-//**                                                                          **
-//******************************************************************************
+// ******************************************************************************
+// ******************************************************************************
+// **                                                                          **
+// **                                                                          **
+// **              *......*                  Welcome to the Lund Monte Carlo!  **
+// **         *:::!!:::::::::::*                                               **
+// **      *::::::!!::::::::::::::*          PPP  Y   Y TTTTT H   H III   A    **
+// **    *::::::::!!::::::::::::::::*        P  P  Y Y    T   H   H  I   A A   **
+// **   *:::::::::!!:::::::::::::::::*       PPP    Y     T   HHHHH  I  AAAAA  **
+// **   *:::::::::!!:::::::::::::::::*       P      Y     T   H   H  I  A   A  **
+// **    *::::::::!!::::::::::::::::*!       P      Y     T   H   H III A   A  **
+// **      *::::::!!::::::::::::::* !!                                         **
+// **      !! *:::!!:::::::::::*    !!       This is PYTHIA version 6.205      **
+// **      !!     !* -><- *         !!       Last date of change:  1 Mar 2002  **
+// **      !!     !!                !!                                         **
+// **      !!     !!                !!       Now is  0 Jan 2000 at  0:00:00    **
+// **      !!                       !!                                         **
+// **      !!        lh             !!       Disclaimer: this program comes    **
+// **      !!                       !!       without any guarantees. Beware    **
+// **      !!                 hh    !!       of errors and use common sense    **
+// **      !!    ll                 !!       when interpreting results.        **
+// **      !!                       !!                                         **
+// **      !!                                Copyright T. Sjostrand (2001)     **
+// **                                                                          **
+// ** An archive of program versions and documentation is found on the web:    **
+// ** http://www.thep.lu.se/~torbjorn/Pythia.html                              **
+// **                                                                          **
+// ** When you cite this program, currently the official reference is          **
+// ** T. Sjostrand, P. Eden, C. Friberg, L. Lonnblad, G. Miu, S. Mrenna and    **
+// ** E. Norrbin, Computer Physics Commun. 135 (2001) 238.                     **
+// ** The large manual is                                                      **
+// ** T. Sjostrand, L. Lonnblad and S. Mrenna, LU TP 01-21 [hep-ph/0108264].   **
+// ** Also remember that the program, to a large extent, represents original   **
+// ** physics research. Other publications of special relevance to your        **
+// ** studies may therefore deserve separate mention.                          **
+// **                                                                          **
+// ** Main author: Torbjorn Sjostrand; Department of Theoretical Physics 2,    **
+// **   Lund University, Solvegatan 14A, S-223 62 Lund, Sweden;                **
+// **   phone: + 46 - 46 - 222 48 16; e-mail: torbjorn@thep.lu.se              **
+// ** Author: Leif Lonnblad; Department of Theoretical Physics 2,              **
+// **   Lund University, Solvegatan 14A, S-223 62 Lund, Sweden;                **
+// **   phone: + 46 - 46 - 222 77 80; e-mail: leif@thep.lu.se                  **
+// ** Author: Stephen Mrenna; Computing Division, Simulations Group,           **
+// **   Fermi National Accelerator Laboratory, MS 234, Batavia, IL 60510, USA; **
+// **   phone: + 1 - 630 - 840 - 2556; e-mail: mrenna@fnal.gov                 **
+// ** Author: Peter Skands; Department of Theoretical Physics 2,               **
+// **   Lund University, Solvegatan 14A, S-223 62 Lund, Sweden;                **
+// **   phone: + 46 - 46 - 222 31 92; e-mail: zeiler@thep.lu.se                **
+// **                                                                          **
+// **                                                                          **
+// ******************************************************************************
 //#ifdef __GNUG__
 //#pragma interface
 //#endif

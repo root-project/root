@@ -1,4 +1,4 @@
-/* @(#)root/pythia6:$Name:  $:$Id: TPythia6Calls.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $ */
+/* @(#)root/pythia6:$Name:  $:$Id: TPythia6Calls.h,v 1.2 2002/11/13 17:40:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -52,6 +52,7 @@
 int   const KSUSY1  =  1000000;
 int   const KSUSY2  =  2000000;
 int   const KEXCIT  =  4000000;
+int   const KNDCAY  =  8000; //should be 4000 for pythia61
 
 
 struct Pyjets_t {
@@ -78,9 +79,9 @@ struct Pydat2_t {
 
 struct Pydat3_t {
   int    MDCY[3][500];
-  int    MDME[2][4000];
-  double BRAT[4000];
-  int    KFDP[5][4000];
+  int    MDME[2][KNDCAY];
+  double BRAT[KNDCAY];
+  int    KFDP[5][KNDCAY];
 };
 
 struct Pydat4_t {
