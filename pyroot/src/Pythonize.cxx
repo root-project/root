@@ -623,7 +623,7 @@ namespace {
             return 0;              // reported as an overload failure
 
          PyObject* fcn = PyTuple_GetItem( aTuple, 2 );
-         if ( ! fcn or ! PyCallable_Check( fcn ) ) {
+         if ( ! fcn || ! PyCallable_Check( fcn ) ) {
             PyErr_SetString( PyExc_ValueError, "not a valid function" );
             return 0;
          }
