@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.8 2002/03/07 06:22:22 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.9 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,6 +32,7 @@
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooErrorVar.hh"
@@ -74,6 +75,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   genOpt.ToLower() ;
   Bool_t verboseGen = genOpt.Contains("v") ;
   _extendedGen = genOpt.Contains("e") ;
+  _binGenData = genOpt.Contains("b") ;
+
   if (_extendedGen && genProtoData) {
     cout << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << endl
 	 << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
@@ -150,13 +153,16 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
       if (_extendedGen) nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample) ;
 
       genSample = _genContext->generate(nEvt) ;
+
     } else if (asciiFilePat && &asciiFilePat) {
       // Load sample from ASCII file
       char asciiFile[1024] ;
       sprintf(asciiFile,asciiFilePat,nSamples) ;
       RooArgList depList(_dependents) ;
       genSample = RooDataSet::read(asciiFile,depList,"q") ;      
+
     } else {
+
       // Load sample from internal list
       genSample = (RooDataSet*) _genDataList.At(nSamples) ;
       if (!genSample) {
@@ -253,8 +259,8 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
 
   // Load list of data sets
   TIterator* iter = dataSetList.MakeIterator() ;
-  RooDataSet* gset ;
-  while(gset=(RooDataSet*)iter->Next()) {
+  RooAbsData* gset ;
+  while(gset=(RooAbsData*)iter->Next()) {
     _genDataList.Add(gset) ;
   }
   delete iter ;
@@ -265,7 +271,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
 
 
 
-Bool_t RooMCStudy::fitSample(RooDataSet* genSample) 
+Bool_t RooMCStudy::fitSample(RooAbsData* genSample) 
 {  
   // Fit given dataset with fit model. If fit
   // converges (TMinuit status code zero)
@@ -284,11 +290,19 @@ Bool_t RooMCStudy::fitSample(RooDataSet* genSample)
   // Fit model to data set
   TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
 
+  // Optionally bin dataset before fitting
+  RooAbsData* data ;
+  if (_binGenData) {    
+    data = new RooDataHist(genSample->GetName(),genSample->GetTitle(),*genSample->get(),*genSample) ;
+  } else {
+    data = genSample ;
+  }
+
   RooFitResult* fr ;
   if (_projDeps.getSize()>0) {
-    fr = (RooFitResult*) _fitModel->fitTo(*genSample,_projDeps,fitOpt2) ;
+    fr = (RooFitResult*) _fitModel->fitTo(*data,_projDeps,fitOpt2) ;
   } else {
-    fr = (RooFitResult*) _fitModel->fitTo(*genSample,fitOpt2) ;
+    fr = (RooFitResult*) _fitModel->fitTo(*data,fitOpt2) ;
   }
 
   // If fit converged, store parameters and NLL
@@ -306,6 +320,8 @@ Bool_t RooMCStudy::fitSample(RooDataSet* genSample)
   } else {
     delete fr ;
   }
+
+  if (_binGenData) delete data ;
   
   return !ok ;
 }

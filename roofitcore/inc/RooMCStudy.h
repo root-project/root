@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.5 2002/02/02 02:24:24 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.6 2002/02/04 18:10:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooArgSet.hh"
 class RooAbsPdf;
 class RooDataSet ;
+class RooAbsData ;
 class RooAbsGenContext ;
 class RooFitResult ;
 class RooPlot ;
@@ -53,7 +54,7 @@ public:
 protected:
 
   Bool_t run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPerSample, Bool_t keepGenData, const char* asciiFilePat) ;
-  Bool_t fitSample(RooDataSet* genSample) ;
+  Bool_t fitSample(RooAbsData* genSample) ;
   void calcPulls() ;
     
   RooAbsPdf*        _genModel ;    // Generator model 
@@ -73,6 +74,7 @@ protected:
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   TString     _fitOptions ;     // Fit options string
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
+  Bool_t      _binGenData ;     // Bin data between generating and fitting
 
 private:
   RooMCStudy(const RooMCStudy&) ;
