@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.7 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.8 2004/10/04 07:43:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -156,12 +156,9 @@ TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
 {
    if (color) {
       //diffuse and specular
-      //red
-      color[0] > 0.8f ? fColor[0] = color[0] - 0.3f : fColor[0] = color[0];
-      //green
-      color[1] > 0.8f ? fColor[1] = color[1] - 0.3f : fColor[1] = color[1];
-      //blue
-      color[2] > 0.8f ? fColor[2] = color[2] - 0.3f : fColor[2] = color[2];
+      fColor[0] = color[0];
+      fColor[1] = color[1];
+      fColor[2] = color[2];
    } else {
       for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
    }
@@ -174,7 +171,7 @@ TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
    //alpha
    fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
    //shininess
-   fColor[16] = 10.f;
+   fColor[16] = 60.f;
    SetBox();
 }
 

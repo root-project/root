@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.25 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.26 2004/10/04 08:11:20 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -483,8 +483,8 @@ void TViewerOpenGL::CreateScene(Option_t *)
    TBuffer3D * buff = fPad->GetBuffer3D();
    TObjLink * lnk = fPad->GetListOfPrimitives()->FirstLink();
   
-   Float_t col1[] = {0.9f, 0.7f, 0.f};
-   Float_t col2[] = {0.f, 0.9f, 0.f};
+   Float_t col1[] = {0.4f, 0.f, 0.f};
+   Float_t col2[] = {0.f, 0.4f, 0.f};
    const Double_t pos[3] = {0,0,0};
    TGLSimpleLight *light1 = new TGLSimpleLight(++fNbShapes, 2, col1, pos);
    TGLSelection *box1 = light1->GetBox();
