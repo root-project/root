@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += sprintfselect mytest staticConstTest
+TEST_TARGETS += fileClose sprintfselect mytest staticConstTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -30,4 +30,9 @@ staticConstTest: staticConstTest.log
 
 
 sprintfselect: sprintfselect.log
+	$(TestDiff)
+
+fileClose.log : fileClose_C.$(DllSuf)
+
+fileClose: fileClose.log
 	$(TestDiff)
