@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.2 2000/08/04 13:14:45 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TGListTree.h"
 #include "TGPicture.h"
 #include "TGCanvas.h"
+#include "TGToolTip.h"
 
 
 ClassImp(TGListTreeItem)
@@ -76,9 +77,7 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 {
    // Create list tree item.
 
-   fLength = strlen(name);
-   fText   = new char[fLength+1];
-   strcpy(fText, name);
+   fText = name;
 
    fOpenPic   = opened;
    fClosedPic = closed;
@@ -101,7 +100,6 @@ TGListTreeItem::~TGListTreeItem()
 {
    // Delete list tree item.
 
-   delete [] fText;
    fClient->FreePicture(fOpenPic);
    fClient->FreePicture(fClosedPic);
 }
@@ -111,10 +109,7 @@ void TGListTreeItem::Rename(const char *new_name)
 {
    // Rename a list tree item.
 
-   delete [] fText;
-   fLength = strlen(new_name);
-   fText = new char[fLength + 1];
-   strcpy(fText, new_name);
+   fText = new_name;
 }
 
 //___________________________________________________________________________
@@ -139,6 +134,9 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    GCValues_t gcv;
 
    fMsgWindow = p;
+   fTip       = 0;
+   fTipItem   = 0;
+   fAutoTips  = kFALSE;
 
    fFont = fgDefaultFontStruct;
 
@@ -179,6 +177,9 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask,
                     kNone, kNone);
+
+   gVirtualX->SelectInput(fId, kExposureMask | kPointerMotionMask |
+                               kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
@@ -187,6 +188,8 @@ TGListTree::~TGListTree()
    // Delete list tree widget.
 
    TGListTreeItem *item, *sibling;
+
+   delete fTip;
 
    gVirtualX->DeleteGC(fDrawGC);
    gVirtualX->DeleteGC(fLineGC);
@@ -247,6 +250,8 @@ Bool_t TGListTree::HandleButton(Event_t *event)
 
    TGListTreeItem *item;
 
+   if (fTip) fTip->Hide();
+
    if (event->fType == kButtonPress) {
       if ((item = FindItem(event->fY)) != 0) {
          if (fSelected) fSelected->fActive = kFALSE;
@@ -291,6 +296,54 @@ Bool_t TGListTree::HandleExpose(Event_t *event)
    // Handle expose event in the list tree.
 
    Draw(event->fY, (Int_t)event->fHeight);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGListTree::HandleCrossing(Event_t *event)
+{
+   // Handle mouse crossing event.
+
+   if (fTip) {
+      if (event->fType == kLeaveNotify) {
+         fTip->Hide();
+         fTipItem = 0;
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGListTree::HandleMotion(Event_t *event)
+{
+   // Handle mouse motion event. Only used to set tool tip.
+
+   TGListTreeItem *item;
+
+   if ((item = FindItem(event->fY)) != 0) {
+      if (fTipItem == item) return kTRUE;
+
+      if (fTip)
+         fTip->Hide();
+
+      if (item->fTipText.Length() > 0) {
+
+         UInt_t width = FontTextWidth(fFont, item->fText.Data());
+         SetToolTipText(item->fTipText.Data(), item->fXtext+width,
+                        item->fY+item->fHeight-4, 1000);
+
+      } else if (fAutoTips && item->GetUserData()) {
+         // must derive from TObject (in principle user can put pointer
+         // to anything in user data field). Add check.
+         TObject *obj = (TObject *)item->GetUserData();
+         if (obj->InheritsFrom(TNamed::Class())) {
+            UInt_t width = FontTextWidth(fFont, item->fText.Data());
+            SetToolTipText(obj->GetTitle(), item->fXtext+width,
+                           item->fY+item->fHeight-4, 1000);
+         }
+      }
+      fTipItem = item;
+   }
    return kTRUE;
 }
 
@@ -454,7 +507,7 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
    }
 
    *xroot = xbranch;
-   *retwidth = FontTextWidth(fFont, item->fText) + item->fPicWidth;
+   *retwidth = FontTextWidth(fFont, item->fText.Data()) + item->fPicWidth;
    *retheight = height;
 }
 
@@ -465,7 +518,7 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
 
    UInt_t width;
 
-   width = FontTextWidth(fFont, item->fText);
+   width = FontTextWidth(fFont, item->fText.Data());
    if (item->fActive || item == fSelected) {
       gVirtualX->SetForeground(fDrawGC, fgDefaultSelectedBackground);
       gVirtualX->FillRectangle(fId, fDrawGC,
@@ -473,13 +526,13 @@ void TGListTree::DrawItemName(TGListTreeItem *item)
       gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
       gVirtualX->DrawString(fId, fHighlightGC,
                        item->fXtext, item->fYtext + FontAscent(fFont),
-                       item->fText, item->fLength);
+                       item->fText.Data(), item->fText.Length());
    } else {
       gVirtualX->FillRectangle(fId, fHighlightGC,
                           item->fXtext, item->fYtext, width, FontHeight(fFont));
       gVirtualX->DrawString(fId, fDrawGC,
                        item->fXtext, item->fYtext + FontAscent(fFont),
-                       item->fText, item->fLength);
+                       item->fText.Data(), item->fText.Length());
    }
 }
 
@@ -501,6 +554,30 @@ void TGListTree::DrawNode(TGListTreeItem *item, Int_t x, Int_t y)
       gVirtualX->DrawLine(fId, fHighlightGC, x-4, y-4, x-4, y+4);
       gVirtualX->SetForeground(fHighlightGC, fgWhitePixel);
   }
+}
+
+//______________________________________________________________________________
+void TGListTree::SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms)
+{
+   // Set tool tip text associated with this item. The delay is in
+   // milliseconds (minimum 250). To remove tool tip call method with
+   // delayms = 0. To change delayms you first have to call this method
+   // with delayms=0.
+
+   if (delayms == 0) {
+      delete fTip;
+      fTip = 0;
+      return;
+   }
+
+   if (text && strlen(text)) {
+      if (!fTip)
+         fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+      else
+         fTip->SetText(text);
+      fTip->SetPosition(x, y);
+      fTip->Reset();
+   }
 }
 
 //______________________________________________________________________________
@@ -738,7 +815,9 @@ void TGListTree::RenameItem(TGListTreeItem *item, const char *string)
 {
    // Rename item in list tree.
 
-   item->Rename(string);
+   if (item)
+      item->Rename(string);
+
    //fClient->NeedRedraw(this);
 }
 
@@ -802,6 +881,17 @@ Int_t TGListTree::RecursiveDeleteItem(TGListTreeItem *item, void *ptr)
       }
    }
    return 1;
+}
+
+//______________________________________________________________________________
+void TGListTree::SetToolTipItem(TGListTreeItem *item, const char *string)
+{
+   // Set tooltip text for this item. By default an item for which the
+   // userData is a pointer to an TObject the TObject::GetTitle() will
+   // be used to get the tip text.
+
+   if (item)
+      item->fTipText = string;
 }
 
 //______________________________________________________________________________
@@ -952,7 +1042,7 @@ TGListTreeItem *TGListTree::FindSiblingByName(TGListTreeItem *item, const char *
          item = item->fPrevsibling;
 
       while (item) {
-         if (strcmp(item->fText, name) == 0)
+         if (item->fText == name)
             return item;
          item = item->fNextsibling;
       }
@@ -996,7 +1086,7 @@ TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *na
    }
 
    while (item) {
-      if (strcmp(item->fText, name) == 0)
+      if (item->fText == name)
          return item;
       item = item->fNextsibling;
    }
@@ -1084,7 +1174,7 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
 
    *path = '\0';
    while (item) {
-      sprintf(tmppath, "/%s%s", item->fText, path);
+      sprintf(tmppath, "/%s%s", item->fText.Data(), path);
       strcpy(path, tmppath);
       item = item->fParent;
       if (--depth == 0 && item) {
