@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.6 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.7 2002/06/12 17:56:25 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -48,8 +48,6 @@ friend class TGContainerKeyboardTimer;
 friend class TGContainerScrollTimer;
 
 protected:
-   Int_t              fDoubleBufferId;// Off-screen pixmap identifier
-   Bool_t             fDoubleBuffer;  // kTRUE - double buffer is ON
    TGViewPort        *fViewPort;      // container viewport
    TGCanvas          *fCanvas;        // pointer to canvas
    const TGWindow    *fMsgWindow;     // window handling container messages
@@ -67,7 +65,7 @@ protected:
    Bool_t             fLastDir;       // direction of last search
    Bool_t             fLastCase;      // case-sensetivity of last search
    TString            fLastName;      // the name of object of last search
-   TTimer*            fKeyTimer;      // keyboard timer
+   TTimer            *fKeyTimer;      // keyboard timer
    TString            fKeyInput;      // keyboard input (buffer)
    Bool_t             fKeyTimerActive;// kTRUE - keyboard timer is active
    Bool_t             fScrolling;     // kTRUE - when scrolling is ON
@@ -112,12 +110,10 @@ public:
    virtual void RemoveItem(TGFrame *item);
    virtual void Layout();
 
-   void SetDoubleBuffer(Bool_t on=kTRUE) { fDoubleBuffer=on; }
    const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
    TGPosition        GetPagePosition() const;
    TGDimension       GetPageDimension() const;
 
-   virtual Bool_t IsDoubleBufferOn() const { return fDoubleBuffer; }
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
    virtual Int_t NumSelected() const { return fSelected; }
    virtual Int_t NumItems() const { return fTotal; }
@@ -154,8 +150,6 @@ class TGViewPort : public TGCompositeFrame {
 protected:
    Int_t       fX0, fY0;     // position of container frame in viewport
    TGFrame         *fContainer;       // container frame
-   TGLongPosition   fStartDirtyArea;  // x,y coordinates of "dirty area"
-   TGLongPosition   fDirtyArea;       // width,height of "dirty area"
 
 public:
    TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
@@ -169,14 +163,12 @@ public:
    virtual void Layout() { }
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
-   void SetHPos(Int_t xpos);
-   void SetVPos(Int_t ypos);
+   virtual void SetHPos(Int_t xpos);
+   virtual void SetVPos(Int_t ypos);
    void SetPos(Int_t xpos, Int_t ypos);
 
    Int_t GetHPos() const { return fX0; }
    Int_t GetVPos() const { return fY0; }
-   TGLongPosition GetStartDirtyArea() const { return fStartDirtyArea; }
-   TGLongPosition GetDirtyArea() const { return fDirtyArea; }
    virtual Bool_t HandleConfigureNotify(Event_t *event);
 
    ClassDef(TGViewPort,0)  // Viewport through which to look at a container frame

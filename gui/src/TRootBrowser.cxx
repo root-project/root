@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.12 2001/07/05 16:50:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.14 2002/06/13 16:20:16 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -274,6 +274,7 @@ TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
    // Create iconbox containing ROOT objects in browser.
 
    fListView = lv;
+
    fCheckHeaders = kTRUE;
    fTotal = 0;
    fGarbage = new TList();
@@ -479,7 +480,8 @@ void TRootIconList::Browse(TBrowser *b)
 TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
                                        Bool_t caseSensitive,Bool_t beginWith)
 {
-   // find frame with name beginning with "name"
+
+   // Find a frame which assosiated object has a name containing a "name" string.
 
    if (!fGrouped) {
       return TGContainer::FindFrame(name,direction,caseSensitive,beginWith);
@@ -488,42 +490,42 @@ TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
    if (name.IsNull()) return 0;
    int idx = kNPOS;
 
-   TGFrameElement *el = 0;
+   TGFrameElement* el = 0;
    TString str;
    TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
-
+   
    fLastDir = direction;
    fLastCase = caseSensitive;
    fLastName = name;
 
    if (fLastActiveEl) {
       el = fLastActiveEl;
-   } else {
-      if (direction) el = (TGFrameElement *)fList->First();
-      else el  = (TGFrameElement *)fList->Last();
-   }
 
-   TGLVEntry *lv = 0;
-   TObject *obj = 0;
-   TList *li = 0;
-
-   while (el) {
       if (direction) {
          el = (TGFrameElement *)fList->After(el);
       } else {
          el = (TGFrameElement *)fList->Before(el);
       }
-      if (!el) break;
-      if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
+   } else {
+      if (direction) el = (TGFrameElement *)fList->First();
+      else el  = (TGFrameElement *)fList->Last();
+   }
 
-      lv = (TGLVEntry*) el->fFrame;
-      li = (TList*) lv->GetUserData();
+   TGLVEntry* lv = 0;
+   TObject* obj = 0; 
+   TList* li = 0; 
+
+   while (el) {
+      if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
+      
+      lv = (TGLVEntry*)el->fFrame;
+      li = (TList*)lv->GetUserData();
 
       TIter next(li);
 
       while ((obj=next())) {
          str = obj->GetName();
-
+      
          idx = str.Index(name,0,cmp);
 
          if (idx!=kNPOS) {
@@ -537,6 +539,11 @@ TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
                return el;
             }
          }
+      }
+      if (direction) {
+         el = (TGFrameElement *)fList->After(el);
+      } else {
+         el = (TGFrameElement *)fList->Before(el);
       }
    }
    fActiveObject = 0;
