@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.12 2003/09/25 14:50:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.13 2003/10/01 17:53:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -829,7 +829,7 @@ void TGeoRotation::GetInverse(Double_t *invmat) const
 void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
 {
    const Double_t *matleft, *matright;
-   Double_t  newmat[9];
+   Double_t  newmat[9] = {0};
    if (after) {
       matleft  = &fRotationMatrix[0];
       matright = rot->GetRotationMatrix();
@@ -840,7 +840,7 @@ void TGeoRotation::MultiplyBy(TGeoRotation *rot, Bool_t after)
    for (Int_t i=0; i<3; i++) {
       for (Int_t j=0; j<3; j++) { 
          for (Int_t k=0; k<3; k++) {
-            newmat[3*i+j] = matleft[3*i+k] * matright[3*k+j];
+            newmat[3*i+j] += matleft[3*i+k] * matright[3*k+j];
          }
       }
    }
