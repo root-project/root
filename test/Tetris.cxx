@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.16 2003/02/03 01:02:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.17 2003/04/28 10:37:08 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -866,7 +866,7 @@ Bool_t KeyHandler::HandleKey(Event_t *event)
 
    char tmp[2];
    UInt_t keysym;
-printf("QQQQ\n");
+
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
 
    if (event->fType == kGKeyPress) {
