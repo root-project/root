@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.13 2005/01/19 18:30:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.14 2005/02/25 19:13:24 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1397,35 +1397,35 @@ Bool_t TFormLeafInfoCollectionSize::Update()
 }
 
 //______________________________________________________________________________
-void *TFormLeafInfoCollectionSize::GetValuePointer(TLeaf *leaf, Int_t instance)
+void *TFormLeafInfoCollectionSize::GetValuePointer(TLeaf * /* leaf */, Int_t  /* instance */)
 {
    Error("GetValuePointer","This should never be called");
    return 0;
 }
 
 //______________________________________________________________________________
-void *TFormLeafInfoCollectionSize::GetValuePointer(char  *from, Int_t instance)
+void *TFormLeafInfoCollectionSize::GetValuePointer(char  * /* from */, Int_t  /* instance */)
 {
    Error("GetValuePointer","This should never be called");
    return 0;
 }
 
 //______________________________________________________________________________
-void *TFormLeafInfoCollectionSize::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
+void *TFormLeafInfoCollectionSize::GetLocalValuePointer(TLeaf * /* leaf */, Int_t  /* instance */)
 {
    Error("GetLocalValuePointer","This should never be called");
    return 0;
 }
 
 //______________________________________________________________________________
-void *TFormLeafInfoCollectionSize::GetLocalValuePointer( char *from, Int_t instance)
+void *TFormLeafInfoCollectionSize::GetLocalValuePointer( char * /* from */, Int_t  /* instance */)
 {
    Error("GetLocalValuePointer","This should never be called");
    return 0;
 }
 
 //______________________________________________________________________________
-Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t instance)
+Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t /* instance */)
 {
    Assert(fCollProxy);
    if (where==0) return 0;
@@ -2021,7 +2021,8 @@ TFormLeafInfo* TFormLeafInfoMultiVarDimCollection::DeepCopy() const
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoMultiVarDimCollection::GetValue(TLeaf *leaf, Int_t instance)
+Double_t TFormLeafInfoMultiVarDimCollection::GetValue(TLeaf * /* leaf */, 
+                                                      Int_t /* instance */)
 {
    /* The proper indexing and unwinding of index need to be done by prior leafinfo in the chain. */
    Error("GetValue","This should never be called");

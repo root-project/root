@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.164 2005/02/18 09:15:08 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.165 2005/02/25 19:13:24 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1390,7 +1390,6 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                         if (numberOfVarDim>1) {
                            leafinfo = new TFormLeafInfo(cl,coll_offset,curelem);
                         } else if (numberOfVarDim==1) {
-                           TClass *elemCl = element->GetClassPointer();
                            Assert(maininfo);
                            leafinfo = 
                               new TFormLeafInfoMultiVarDimCollection(cl,coll_offset,
@@ -1504,7 +1503,6 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                         if (numberOfVarDim>1) {
                            leafinfo = new TFormLeafInfo(cl,offset,element);
                         } else if (numberOfVarDim==1) {
-                           TClass *elemCl = element->GetClassPointer();
                            Assert(maininfo);
                            leafinfo = 
                               new TFormLeafInfoMultiVarDimCollection(cl,offset,element,maininfo);
