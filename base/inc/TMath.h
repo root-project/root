@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.19 2002/07/09 15:57:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.20 2002/07/23 11:12:18 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,8 +33,86 @@ private:
 
 public:
 
-   static Double_t Pi() { return 3.14159265358979323846; }
-   static Double_t E()  { return 2.7182818284590452354; }
+   // Fundamental constants
+   static Double_t Pi()       { return 3.14159265358979323846; }
+   static Double_t TwoPi()    { return 2.0 * Pi(); }
+   static Double_t PiOver2()  { return Pi() / 2.0; }
+   static Double_t PiOver4()  { return Pi() / 4.0; }
+   static Double_t InvPi()    { return 1.0 / Pi(); }
+   static Double_t RadToDeg() { return 180.0 / Pi(); }
+   static Double_t DegToRad() { return Pi() / 180.0; }
+
+   // e (base of natural log)
+   static Double_t E()        { return 2.71828182845904523536; }
+
+   // natural log of 10 (to convert log to ln)
+   static Double_t Ln10()     { return 2.30258509299404568402; }
+
+   // base-10 log of e  (to convert ln to log)
+   static Double_t LogE()     { return 0.43429448190325182765; }
+
+   // velocity of light
+   static Double_t C()        { return 2.99792458e8; }        // m s^-1
+   static Double_t Ccgs()     { return 100.0 * C(); }         // cm s^-1
+   static Double_t CUncertainty() { return 0.0; }             // exact
+
+   // gravitational constant
+   static Double_t G()        { return 6.673e-11; }           // m^3 kg^-1 s^-2
+   static Double_t Gcgs()     { return G() / 1000.0; }        // cm^3 g^-1 s^-2
+   static Double_t GUncertainty() { return 0.010e-11; }
+
+   // G over h-bar C
+   static Double_t GhbarC()   { return 6.707e-39; }           // (GeV/c^2)^-2
+   static Double_t GhbarCUncertainty() { return 0.010e-39; }
+
+   // standard acceleration of gravity
+   static Double_t Gn()       { return 9.80665; }             // m s^-2
+   static Double_t GnUncertainty() { return 0.0; }            // exact
+
+   // Planck's constant
+   static Double_t H()        { return 6.62606876e-34; }      // J s
+   static Double_t Hcgs()     { return 1.0e7 * H(); }         // erg s
+   static Double_t HUncertainty() { return 0.00000052e-34; }
+
+   // h-bar (h over 2 pi)
+   static Double_t Hbar()     { return 1.054571596e-34; }     // J s
+   static Double_t Hbarcgs()  { return 1.0e7 * Hbar(); }      // erg s
+   static Double_t HbarUncertainty() { return 0.000000082e-34; }
+
+   // hc (h * c)
+   static Double_t HC()       { return H() * C(); }           // J m
+   static Double_t HCcgs()    { return Hcgs() * Ccgs(); }     // erg cm
+
+   // Boltzmann's constant
+   static Double_t K()        { return 1.3806503e-23; }       // J K^-1
+   static Double_t Kcgs()     { return 1.0e7 * K(); }         // erg K^-1
+   static Double_t KUncertainty() { return 0.0000024e-23; }
+
+   // Stefan-Boltzmann constant
+   static Double_t Sigma()    { return 5.6704e-8; }           // W m^-2 K^-4
+   static Double_t SigmaUncertainty() { return 0.000040e-8; }
+
+   // Avogadro constant (Avogadro's Number)
+   static Double_t Na()       { return 6.02214199e+23; }      // mol^-1
+   static Double_t NaUncertainty() { return 0.00000047e+23; }
+
+   // universal gas constant (Na * K)
+   // http://scienceworld.wolfram.com/physics/UniversalGasConstant.html
+   static Double_t R()        { return K() * Na(); }          // J K^-1 mol^-1
+   static Double_t RUncertainty() { return R()*((KUncertainty()/K()) + (NaUncertainty()/Na())); }
+
+   // Molecular weight of dry air
+   // 1976 US Standard Atmosphere,
+   // also see http://atmos.nmsu.edu/jsdap/encyclopediawork.html
+   static Double_t MWair()    { return 28.9644; }             // kg kmol^-1 (or gm mol^-1)
+
+   // Dry Air Gas Constant (R / MWair)
+   // http://atmos.nmsu.edu/education_and_outreach/encyclopedia/gas_constant.htm
+   static Double_t Rgair()    { return (1000.0 * R()) / MWair(); }  // J kg^-1 K^-1
+
+   // Elementary charge
+   static Double_t Qe()       { return 1.602176462e-19; }     // C
+   static Double_t QeUncertainty() { return 0.000000063e-19; }
 
    // Trigo
    static Double_t Sin(Double_t);
