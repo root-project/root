@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.2 2000/05/19 08:33:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1175,6 +1175,15 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Float_t xx
 //*-*
 //*-*   Note that option "I" gives better results but is slower.
 //*-*
+//*-*
+//*-*   Changing the fitting function
+//*-*   =============================
+//*-*  By default the fitting function H1FitChisquare is used.
+//*-*  To specify a User defined fitting function, specify option "U" and
+//*-*  call the following functions:
+//*-*    TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
+//*-*  where MyFittingFunction is of type:
+//*-*  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i, npar,nvpar,nparx;
