@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.60 2001/08/08 06:29:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.61 2001/08/10 13:44:26 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -545,7 +545,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
 
    if (fNext==0) return 0;
    Int_t len,index,sub_instance;
-   len = fNext->fElement->GetArrayLength();
+   len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
    if (len) {
       index = instance / len;
       sub_instance = instance % len;
@@ -1266,6 +1266,37 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   cl = element->GetClassPointer();
                }
             }
+            if (cl == TClonesArray::Class()) {
+               // We might be try to call a method of the top class inside a
+               // TClonesArray.
+               TClonesArray * clones;
+               TBranch *branchcur = leafcur->GetBranch();
+               branchcur->GetEntry(readentry);
+               if (leafcur->InheritsFrom("TLeafObject") ) {
+                  clones = (TClonesArray*)((TLeafObject*)leafcur)->GetObject();
+               } else {
+                  if (branchcur==((TBranchElement*)branchcur)->GetMother() 
+                      || !leafcur->IsOnTerminalBranch() ) {
+                    clones = *(TClonesArray**)((TBranchElement*)branchcur)->GetAddress();
+                  } else {
+                    TBranch *branchcur = leafcur->GetBranch();
+                    branchcur->GetEntry(readentry);
+                    TClass * mother_cl;
+                    if (leafcur->IsA()==TLeafObject::Class()) {
+                      // in this case mother_cl is not really used
+                      mother_cl = cl;
+                    } else {
+                      mother_cl = ((TBranchElement*)branchcur)->GetInfo()->GetClass();
+                    }
+                    TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
+                    leafcur->GetBranch()->GetEntry(readentry);
+                    clones = (TClonesArray*)clonesinfo->GetValuePointer(leafcur,0);
+                    cl = clones->GetClass();
+                    delete clonesinfo;
+                  }
+               }
+               cl = clones->GetClass();
+            }
             if (cl && cl->GetClassInfo() && cl->GetMethodAllAny(work)) {
                // Let's try to see if the function we found belongs to the current
                // class.  Note that this implementation currently can not work if
@@ -1678,12 +1709,43 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                char *params = strchr(work,'(');
                if (params) {
                   *params = 0; params++;
-               } else params = (char *) ")";
-
+               } else params = (char *) ")";            
                if (cl->GetClassInfo()==0) {
                   Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
                   return -1;
                }
+               if (cl == TClonesArray::Class()) {
+                  // We are NEVER interested in the ClonesArray object but only
+                  // in its contents.
+                  // We need to retrieve the class of its content.
+
+                  TBranch *branch = leaf->GetBranch();
+                  branch->GetEntry(readentry);
+                  TClonesArray * clones;
+                  if (previnfo) clones = (TClonesArray*)previnfo->GetValuePointer(leaf,0);
+                  else {
+                     TClass *mother_cl;
+                     if (leaf->IsA()==TLeafObject::Class()) {
+                        // in this case mother_cl is not really used
+                        mother_cl = cl;
+                     } else {
+                        mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
+                     }
+
+                     TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
+                     // The dimension needs to be handled!
+                     DefineDimensions(code,clonesinfo,virt_dim);
+                     
+                     previnfo = clonesinfo;
+                     maininfo = clonesinfo;
+                     
+                     clones = (TClonesArray*)clonesinfo->GetValuePointer(leaf,0);
+                  }
+                  TClass * inside_cl = clones->GetClass();      
+                  if (1 || inside_cl) cl = inside_cl;
+                     
+               }
+
                TMethodCall *method = new TMethodCall(cl, work, params);
                if (!method->GetMethod()) {
                   Error("TTreeFormula","Unknown method:%s",right);
