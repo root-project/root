@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.57 2004/06/11 07:33:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.58 2004/06/16 08:23:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -223,6 +223,7 @@ void TAxis::Copy(TObject &obj) const
    ((TAxis&)obj).fXmax   = fXmax;
    ((TAxis&)obj).fFirst  = fFirst;
    ((TAxis&)obj).fLast   = fLast;
+   ((TAxis&)obj).fBits2  = fBits2;
    fXbins.Copy(((TAxis&)obj).fXbins);
    ((TAxis&)obj).fTimeFormat   = fTimeFormat;
    ((TAxis&)obj).fTimeDisplay  = fTimeDisplay;
@@ -667,6 +668,34 @@ Bool_t TAxis::GetRotateTitle() const
    // Return kTRUE if kRotateTitle bit is set, kFALSE otherwise.
 
    return TestBit(kRotateTitle) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+void TAxis::ImportAttributes(const TAxis *axis)
+{
+// Copy axis attributes to this 
+
+   SetTitle(axis->GetTitle());
+   SetNdivisions(axis->GetNdivisions());
+   SetAxisColor(axis->GetAxisColor());
+   SetLabelColor(axis->GetLabelColor());
+   SetLabelFont(axis->GetLabelFont());
+   SetLabelOffset(axis->GetLabelOffset());
+   SetLabelSize(axis->GetLabelSize());
+   SetTickLength(axis->GetTickLength());
+   SetTitleOffset(axis->GetTitleOffset());
+   SetTitleSize(axis->GetTitleSize());
+   SetTitleColor(axis->GetTitleColor());
+   SetTitleFont(axis->GetTitleFont());
+   SetBit(TAxis::kCenterTitle,   axis->TestBit(TAxis::kCenterTitle));
+   SetBit(TAxis::kCenterLabels,  axis->TestBit(TAxis::kCenterLabels));
+   SetBit(TAxis::kRotateTitle,   axis->TestBit(TAxis::kRotateTitle));
+   SetBit(TAxis::kNoExponent,    axis->TestBit(TAxis::kNoExponent));
+   SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
+   SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
+   SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
+   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2   
+   SetTimeFormat(axis->GetTimeFormat());
 }
 
 //___________________________________________________________________________

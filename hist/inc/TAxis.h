@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.29 2004/03/12 09:45:07 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.30 2004/06/16 08:23:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
                  Int_t   GetLast() const;
                 Axis_t   GetXmin() const {return fXmin;}
                 Axis_t   GetXmax() const {return fXmax;}
+        virtual void     ImportAttributes(const TAxis *axis);
         virtual void     LabelsOption(Option_t *option="h");  // *MENU*
         virtual void     RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
         virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
