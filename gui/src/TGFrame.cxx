@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.79 2004/09/13 12:49:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.80 2004/09/13 17:10:01 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2184,9 +2184,10 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete ilist;
    delete bc;
 
-   // Does not work when filename contains dots (RDM)
    // writes the macro entry point equal to the filename
-   char *sname = new char[lenfile];
+   fname = gSystem->BaseName(filename);
+   char *sname = new char[strlen(fname)];
+
    Int_t i=0;
    while (*fname != '.') {
        sname[i] = *fname;
@@ -2195,8 +2196,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    sname[i] = 0;
 
    out << endl;
-   out << "void " << gSystem->BaseName(sname) << "()" << endl;
+   out << "void " << sname << "()" << endl;
    delete [] sname;
+   //delete fname;
 
    out <<"{"<< endl;
 
@@ -2585,19 +2587,21 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    delete ilist;
    delete bc;
 
-   // Does not work when filename contains more dots (RDM)
    // writes the macro entry point equal to the filename
-   char *sname = new char[lenfile];
+   fname = gSystem->BaseName(filename);
+   char *sname = new char[strlen(fname)];
+
    Int_t i=0;
    while (*fname != '.') {
-      sname[i] = *fname;
-      i++; fname++;
+       sname[i] = *fname;
+       i++; fname++;
    }
    sname[i] = 0;
 
    out << endl;
-   out << "void " << gSystem->BaseName(sname) << "()" << endl;
+   out << "void " << sname << "()" << endl;
    delete [] sname;
+   //delete fname;
 
    //  Save GUI widgets as a C++ macro in a file
    out <<"{"<< endl;
