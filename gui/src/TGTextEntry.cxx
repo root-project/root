@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.6 2000/10/17 12:34:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.7 2000/10/20 15:51:03 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -463,6 +463,8 @@ void TGTextEntry::SetState(Bool_t state)
    } else {
       ClearFlags(kWidgetIsEnabled);
       SetBackgroundColor(fgDefaultFrameBackground);
+      fCursorOn = kFALSE;   // remove the cursor when disabling the widget
+      if (fCurBlink) fCurBlink->Remove();
    }
    fClient->NeedRedraw(this);
 }
