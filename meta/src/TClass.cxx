@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.111 2003/03/01 22:35:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.112 2003/03/03 18:50:54 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,11 +62,11 @@ TClass::ENewType TClass::fgCallingNew = kRealNew;
 class TBuildRealData : public TMemberInspector {
 
 private:
-   TObject *fRealDataObject;
+   void    *fRealDataObject;
    TClass  *fRealDataClass;
 
 public:
-   TBuildRealData(TObject *obj, TClass *cl)
+   TBuildRealData(void *obj, TClass *cl)
       { fRealDataObject = obj; fRealDataClass = cl; }
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
@@ -544,14 +544,14 @@ void TClass::BuildRealData(void *pointer)
       return;
    }
 
-   TObject *realDataObject = (TObject*)pointer;
+   void *realDataObject = pointer;
 
    if ((!pointer) && (Property() & kIsAbstract)) return;
 
    // Create an instance of this class
    if (!realDataObject) {
       if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
-      else                            realDataObject = (TObject*)New();
+      else                            realDataObject = New();
    }
 
    // The following statement will call recursively all the subclasses
@@ -628,9 +628,11 @@ void TClass::BuildRealData(void *pointer)
    }
 
    if( !pointer && realDataObject && realDataObject != gROOT) {
-      if (InheritsFrom(TObject::Class())) {
-         realDataObject->SetBit(kZombie); //this info useful in object destructor
-         delete realDataObject;
+      Int_t delta = GetBaseClassOffset(TObject::Class());
+      if (delta>=0) {
+         TObject *tobj = (TObject*) ( ( (char*)realDataObject ) + delta );
+         tobj->SetBit(kZombie); //this info useful in object destructor
+         delete tobj;
       } else {
          Destructor(realDataObject);
          //::operator delete(realDataObject);

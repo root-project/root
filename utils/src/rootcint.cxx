@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.131 2003/02/07 16:16:43 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.132 2003/02/27 18:40:38 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2664,11 +2664,17 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       } else {
          string baseclass = FixSTLName(b.Fullname());
+         // We used to use a dynamic_cast for cast to the parent class.  This
+         // was not necessary and actually crippling.  In this situations
+         // (casting from child to parent) the C-style cast is returning the
+         // same result as the dynamic_cast but has the advantage (for us) of
+         // being able to apply the case even if the parent is inherited from
+         // privately.
          if (outside) {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< ::%s *>( (::%s*) obj ), R__insp, R__parent, false);\n",
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", ( ::%s * )( (::%s*) obj ), R__insp, R__parent, false);\n",
                     baseclass.c_str(), baseclass.c_str(), cl.Fullname());
          } else {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< ::%s *>(this ), R__insp, R__parent, false);\n",
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", ( ::%s *) (this ), R__insp, R__parent, false);\n",
                      baseclass.c_str(),  baseclass.c_str());
          }
       }
