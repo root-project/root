@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.30 2002/11/20 09:11:06 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.31 2002/11/20 14:38:35 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -21,20 +21,23 @@
 #include "TError.h"
 #include "THtml.h"
 #include "TMethod.h"
+#include "TMethodArg.h"
 #include "TSystem.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "Riostream.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
+#include "TPaveText.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-
 THtml *gHtml = 0;
+THashList THtml::fgLocalTypes;
 
 const Int_t kSpaceNum = 1;
 const char *formatStr = "%12s %5s %s";
@@ -276,7 +279,8 @@ enum EFileType { kSource, kInclude, kTree };
 
 ClassImp(THtml)
 //______________________________________________________________________________
-    THtml::THtml()
+THtml::THtml():
+fMapDocElements(0)
 {
    // Create a THtml object.
    // In case output directory does not exist an error
@@ -324,6 +328,18 @@ ClassImp(THtml)
    // insert html object in the list of special ROOT objects
    gHtml = this;
    gROOT->GetListOfSpecials()->Add(gHtml);
+
+   // add CInt's types to out list of types
+   // to do: add decl pos
+   fgLocalTypes.Clear();
+//   G__ClassInfo clinfo;
+//   while (clinfo.Next())
+//      fgLocalTypes.Add(new TLocalType(clinfo.Fullname(), TLocalType::kClass, 0, -1));
+
+   G__TypedefInfo typeinfo;
+   while (typeinfo.Next()) 
+      fgLocalTypes.Add(new TLocalType(typeinfo.Name(), TLocalType::kTypedef,
+      0, -1, typeinfo.TrueName()));
 }
 
 
@@ -416,7 +432,7 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
    if (IsModified(classPtr, kSource) || force) {
 
       // open class file
-      ofstream classFile;
+ofstream classFile;
       classFile.open(filename, ios::out);
 
       Bool_t classFlag = kFALSE;
@@ -957,7 +973,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
       filename = StrDup(tmp1, 16);
       strcat(filename, ".cxx.html");
 
-      ofstream tempFile;
+ofstream tempFile;
       tempFile.open(filename, ios::out);
 
       if (dirname)
@@ -1584,7 +1600,7 @@ void THtml::Convert(const char *filename, const char *title,
                delete[]tmp1;
             tmp1 = 0;
 
-            ofstream tempFile;
+ofstream tempFile;
             tempFile.open(htmlFilename, ios::out);
 
             if (tempFile.good()) {
@@ -1774,7 +1790,7 @@ void THtml::CreateIndex(const char **classNames, Int_t numberOfClasses)
    tmp1 = 0;
 
    // open indexFile file
-   ofstream indexFile;
+ofstream indexFile;
    indexFile.open(filename, ios::out);
 
    for (i = 0; i < numberOfClasses; i++) {
@@ -1871,7 +1887,7 @@ void THtml::CreateIndexByTopic(char **fileNames, Int_t numberOfNames,
 //        maxLen        - maximum length of a single name
 //
 
-   ofstream outputFile;
+ofstream outputFile;
    char *filename = 0;
    Int_t i;
 
@@ -2022,7 +2038,7 @@ void THtml::CreateListOfTypes()
    Int_t len;
 
    // open file
-   ofstream typesList;
+ofstream typesList;
 
    char *outFile =
        gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
@@ -3687,4 +3703,1091 @@ void THtml::NameSpace2FileName(char *name)
       *namesp = '_';
    while ((namesp = strstr(name, ",")) != 0)
       *namesp = '_';
+}
+
+#define DEBUG_HELP
+#ifdef DEBUG_HELP
+#ifdef DEBUG_HELP_INFO
+#define DEBUG_CLASS
+#define DEBUG_TYPEDEF
+#define DEBUG_USING
+#define DEBUG_NAMESP
+#define DEBUG_DOC
+#define DEBUG_METH_ARGS
+#define DEBUG_METH
+#define DEBUG_METH_PARSE
+#endif
+#define DEBUG_TYPEDEF_WARN
+#define DEBUG_METH_NOTFOUND
+
+#endif
+
+//______________________________________________________________________________
+void THtml::ExtractClassDocumentation(const TClass* classPtr){
+   TList listClassesFound;
+   if (classPtr->GetDeclFileName() && strlen(classPtr->GetDeclFileName())) 
+      ExtractDocumentation(classPtr->GetDeclFileName(), &listClassesFound);
+   if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
+      ExtractDocumentation(classPtr->GetImplFileName(), &listClassesFound);
+}
+
+
+//______________________________________________________________________________
+void THtml::ExtractDocumentation(const char* cFileName, TList* listClassesFound)
+{
+// parse this source or header, collect classes and methods, and add their doc to 
+// fMapDocElemets
+// return the list of class definitions found in listClassesFound
+// search only for methods of classes that are in listClassesFound
+
+   const char* cClDescrTag = 
+      gEnv->GetValue("Root.Html.Description", "//____________________");
+   Int_t lenClDescrTag = strlen(cClDescrTag);
+   if (!cClDescrTag || !lenClDescrTag) {
+      Error("ExtractDocumentation","Root.Html.Description is unset.");
+      return;
+   }
+
+   fFilesParsed.Add(new TObjString(cFileName));
+
+   char* filename=GetSourceFileName(cFileName);
+   if (!filename) {
+//      Error("ExtractDocumentation", "Can't find file '%s'!", cFileName);
+      return;
+   }
+
+   // open source file
+   ifstream sourceFile;
+   sourceFile.open(filename);
+
+   if (!sourceFile.good()) {
+      Error("ExtractDocumentation", "Can't find source file '%s'!", filename);
+      return;
+   }
+
+//   Info("ExtractDocumentation", "Extracting documentation from file %s...", filename);
+   TParseStack parseStack;
+   TParseStack::TParseElement psNext(TParseStack::kUndefined);
+
+   TString strLastClassDoc;
+   TDocElement* lastMethodDocElement=0;
+   Bool_t inClassDoc=kFALSE;
+   Bool_t inMethodDoc=kFALSE;
+
+   // search positions
+   const char* cClassPos=0;
+   const char* cClassImpPos=0;
+   const char* cEnumPos=0;
+   const char* cStructPos=0;
+   const char* cMethodPos=0;
+   const char* cUsingPos=0;
+   const char* cNamespacePos=0;
+   const char* cTemplatePos=0;
+   const char* cTypeDefPos=0;
+
+   while (!sourceFile.eof()) {
+      char* cCommentEnd=0;
+      TParseStack::EContext ctx=parseStack.Context();
+      Int_t lenLine;
+
+      do {
+         cCommentEnd=0;
+         // get source line while in comment block
+         sourceFile.getline(fLine, fLen-1);
+
+         lenLine=strlen(fLine);
+         // rtrim
+         while (lenLine && fLine[lenLine-1]==' ')
+            fLine[--lenLine]=0;
+
+         // check if this line starts a class description
+         // with symmetric line (i.e. first==last character, first+1==last-1 etc)
+         // set minimum line length to 6 chars
+         if (!inClassDoc && lenLine>5) {
+            char* start=fLine;
+            char* end=fLine+lenLine-1;
+            do inClassDoc=(*start==*end);
+            while (inClassDoc && end-- - start++>1);
+            if (inClassDoc) 
+               strLastClassDoc="";
+         }
+
+         // skip while in /* ... */ comment
+         if (ctx==TParseStack::kComment) {
+            cCommentEnd=strstr(fLine, "*/");
+            if (cCommentEnd) {
+               // if we are in class comment block, add this line
+               *cCommentEnd=0;
+               if (inClassDoc && strlen(fLine) && !strLastClassDoc.EndsWith("*/")) {
+                  strLastClassDoc+=fLine;
+                  strLastClassDoc+="*/\n";
+                  inClassDoc=kFALSE;                  
+               }
+               *cCommentEnd='*';
+            } else 
+               if (inClassDoc) {
+                  strLastClassDoc+=fLine;
+                  strLastClassDoc+="\n";
+               }
+         }
+      } while (ctx==TParseStack::kComment && !cCommentEnd);
+
+      // search for defs and decls
+      cClassPos=strstr(fLine, "class ");
+      cClassImpPos=strstr(fLine, "ClassImp(");
+      cEnumPos=strstr(fLine, "enum ");
+      cStructPos=strstr(fLine, "struct ");
+      cUsingPos=strstr(fLine, "using ");
+      cNamespacePos=strstr(fLine, "namespace ");
+      cTemplatePos=strstr(fLine, "template");
+      cTypeDefPos=strstr(fLine, "typedef ");
+
+      cMethodPos=0;
+      if (listClassesFound && (listClassesFound->GetSize())) {
+         Bool_t bInClassDef=(ctx==TParseStack::kBlock && parseStack.BlockSpec()==TParseStack::kClassDecl);
+         TDictionary* dict;
+         TIter iClass(listClassesFound);
+         while (!cMethodPos && (dict=(TClass*) iClass())) {
+            if (dict->IsA()!=TClass::Class()) 
+               continue;
+            TClass *cl=(TClass*) dict; 
+            const char* clname=cl->GetName();
+            const char* col=strchr(clname,':');
+            while (col) {
+               clname=col+1;
+               col=strchr(clname,':');
+            }
+            UInt_t lenclname=strlen(clname);
+            // if we are in a class definition of a different class then ignore this class
+            if (bInClassDef && strcmp(parseStack.Top().GetName(), clname)!=0) continue;
+            // at least the class name has to be in this line
+            const char* cClassNamePos=strstr(fLine, clname);
+            if (!bInClassDef && !cClassNamePos 
+               || cClassNamePos && (cClassNamePos[lenclname]!=':' || cClassNamePos[lenclname+1]!=':') ) 
+               continue;
+
+            TList* listMeth=cl->GetListOfMethods();
+            if (!listMeth || !listMeth->GetSize()) continue;
+
+            TMethod* meth=0;
+            TIter iMeth(listMeth);
+            while ((meth=(TMethod*) iMeth()) && !cMethodPos)
+               if (bInClassDef)
+                  cMethodPos=strstr(fLine, meth->GetName());
+               else {
+                  TString strFQIMethodName(meth->GetClass()->GetName());
+                  strFQIMethodName+="::";
+                  strFQIMethodName+=meth->GetName();
+
+                  // if we have a using directive or are in a namespace block 
+                  // then maybe only part of the class is specified
+                  const char* cUsing=parseStack.IsUsing(strFQIMethodName);
+                  cMethodPos=strstr(fLine, cUsing);
+               }
+         } // while next known class
+
+         // little restriction here:
+         // the parameter list has to be on the same line as the method name
+         if (cMethodPos)
+            if (!strchr(cMethodPos,'(')) cMethodPos=0;
+
+      } // if we have known classes
+      
+
+      // iterate through characters
+      for(char* c=(cCommentEnd?cCommentEnd:fLine); *c && c-fLine<=fLen; c++) {
+         // skip leading spaces
+         while (*c==' ') c++;
+
+         // update parse back entry
+         ctx=parseStack.Context();
+
+         if (!inClassDoc && ctx!=TParseStack::kComment) {
+            // look for class descr tag right here
+            // this is option one for a class descr,
+            // option 2 see getline
+            inClassDoc=!strncmp(c, cClDescrTag, lenClDescrTag);
+            if (inClassDoc)
+               // overwrite old classdescr if still in there
+               strLastClassDoc="";
+         }
+
+         const char* tag=parseStack.Top().GetCloseTag();
+         if (tag && *c==tag[0] && (strlen(tag)==1 || c[1]==tag[1]) ) {
+            parseStack.PopAndDel();
+            // skip tag
+            c+=strlen(tag)-1;
+            continue;
+         };
+
+         switch (*c) {
+         case '\'':
+            if (c[1]=='\\') c+=3;
+            else c+=2;
+            break;
+         case '\\': 
+            c++; break; // skip the next char
+
+         case '/': 
+            if (ctx==TParseStack::kString) break;
+            // neither single nor multi line comment
+            if (ctx==TParseStack::kComment 
+               || ( c[1]!='/' && c[1]!='*')) break;
+            // multiline comment
+            if (c[1]=='*') {
+               parseStack.Push(TParseStack::kComment);
+               char* cCommentEnd=strstr(c, "*/");
+               if (cCommentEnd) {
+                  if (inClassDoc) {
+                     *cCommentEnd=0;
+                     strLastClassDoc+=c;
+                     strLastClassDoc+="\n";
+                     *cCommentEnd='*';
+                  }
+                  // let the end of comment tag be dealt with
+                  c=cCommentEnd-1;
+               } else {
+                  if (inClassDoc) {
+                     strLastClassDoc+=c;
+                     strLastClassDoc+="\n";
+                  } 
+                  // skip to eol
+                  c=fLine+lenLine-1;
+               }
+               break;
+            }
+
+         case '#':
+            if (ctx==TParseStack::kString) break;
+            // single line preproc statement (and single line comment, cont'd)
+            if (*c=='/')
+               if (inClassDoc) {
+                  strLastClassDoc+=c;
+                  strLastClassDoc+="\n";
+               } else if (inMethodDoc) {
+                  lastMethodDocElement->AddToDoc(c);
+                  lastMethodDocElement->AddToDoc("\n");
+               }
+            if (*c=='#') {
+               inClassDoc=kFALSE;
+               inMethodDoc=kFALSE;
+               char* d=c;
+               while (isspace(*(++d)));
+               if (!strncmp(d, "include", 7)) {
+                  d+=6;
+                  while (isspace(*(++d)));
+                  TString strIncludeFile;
+		  Int_t d_;
+                  if (strchr("<\"", *d))
+                     if (ParseWord(++d, d_, strIncludeFile, "/\\._-")) {
+			d+=d_;
+                        char* store_fLine=new char[fLen];
+                        strcpy(store_fLine, fLine);
+                        TObjString ostrIncludeFile(strIncludeFile);
+                        if (!fFilesParsed.FindObject(&ostrIncludeFile))
+                           ExtractDocumentation(strIncludeFile.Data(), NULL);
+                        c=++d; // skip the trailing " or >
+                        strcpy(fLine, store_fLine);
+                        delete[] store_fLine;
+                     } 
+		     else d+=d_;
+               }
+            }
+            // skip to eol
+            c=fLine+lenLine-1;
+
+            while (*c=='\\') {
+               // continuation char, get next line
+               sourceFile.getline(fLine, fLen-1);
+               lenLine=strlen(fLine);
+               c=fLine+strlen(fLine)-1;
+               if (*c=='/') 
+                  if (inClassDoc) {
+                     strLastClassDoc+=fLine;
+                     strLastClassDoc+="\n";
+                  } else if (inMethodDoc) {
+                     lastMethodDocElement->AddToDoc(fLine);
+                     lastMethodDocElement->AddToDoc("\n");
+                  }
+            }
+            break;
+
+         case '{': 
+            if (ctx==TParseStack::kString) break;
+            if (psNext.Context()==TParseStack::kBlock) {
+               parseStack.Push(new TParseStack::TParseElement(psNext));
+/*if (ctx==TParseStack::kTop) {
+static char line[1000];
+ifstream istr2(sourceFile);
+istr2.getline(line,1000);
+parseStack.Top().SetName(fLine);
+parseStack.Top().SetTitle(line);
+}*/
+               // invalidate old psNext
+               psNext.SetContext(TParseStack::kUndefined);
+               break;
+            } // else continue
+         case '(':
+//         case '<':
+         case '[':
+         case '"':
+            if (ctx==TParseStack::kString) break;
+            parseStack.Push(*c);
+            inClassDoc=kFALSE;
+            inMethodDoc=kFALSE;
+/*if (ctx==TParseStack::kTop&& *c=='{') {
+static char line[1000];
+ifstream istr2(sourceFile);
+istr2.getline(line,1000);
+parseStack.Top().SetName(fLine);
+parseStack.Top().SetTitle(line);
+}*/
+            break;
+
+         default:
+            if (ctx==TParseStack::kComment
+               || ctx==TParseStack::kString)
+               break;
+            inClassDoc=kFALSE;
+            inMethodDoc=kFALSE;
+            if (c==cTemplatePos) {
+               // some templated stuff here, ignore the template part
+
+               // first check that this is not "Int_t iContemplate" or something
+               TString strWord;
+               char* end;
+	       Int_t step;
+               ParseWord(c, step, strWord);
+	       end=c+step;
+               // if template isn't actually the full word then ignore
+               if (strcmp(strWord.Data(),"template")!=0) break;
+               c=end;
+               while (*c==0) {
+                  // eol
+                  sourceFile.getline(fLine, fLen-1);
+                  lenLine=strlen(fLine);
+                  c=fLine;
+                  while (*c==' ') c++;
+               }
+               if (*c!='<') break;
+               end=++c;
+               while (*end!='>' && ParseWord(end, step,",* "))
+		  end+=step;
+               if (*end!='>') {
+		  end+=step;
+                  Warning("ExtractClassDocumentation", 
+                     "Found a templated declaration with an illegal character '%c':%s",
+                     *end, fLine);
+                  break;
+               }
+               c=end;
+
+               // now c points to closing '>' of "template < class T, typename S,... >" 
+               break;
+            } // if "template" in line
+
+            if (c==cClassPos || c==cEnumPos || c==cStructPos) // class def starts here
+            {
+               TLocalType::ESpec spec=TLocalType::kUndefined;
+               if (c==cClassPos) spec=TLocalType::kClass; 
+               else if (c==cEnumPos) spec=TLocalType::kEnum;
+               else if (c==cStructPos) spec=TLocalType::kStruct; 
+
+	       Int_t step;
+               ParseWord(c,step); // skip "class" / "enum" / "struct"
+	       c+=step;
+
+               TString strClassName;
+               TClass* cldecl=ParseClassDecl(c, parseStack, strClassName);
+               if (!cldecl) {
+                  if (strClassName && strClassName.Length()) {
+                     // add this class to our list of classes 
+                     // - it is not linkdef'ed, but it might still be used later
+//                     parseStack.AddCustomType(strClassName);
+                     fgLocalTypes.Add(new TLocalType(strClassName, spec, filename, -1));
+                  }
+                  if (c!=&fLine[0]) c--; // just to make sure we don't skip a { or something
+                  break;
+               }
+
+               // only store the last :: part of the name, the rest is stack
+               const char* cClName=strClassName;
+               const char* cCol=strchr(cClName, ':');
+               while ((cCol=strchr(cClName, ':'))) 
+		  cClName=&cCol[1];
+
+               psNext=TParseStack::TParseElement(TParseStack::kBlock, 
+                  TParseStack::kClassDecl, cClName, 0, cldecl);
+               if (listClassesFound) 
+                  listClassesFound->Add(cldecl);
+#ifdef DEBUG_CLASS
+printf("FOUND CLASS: %s in \n%s\n", cClName, fLine);
+#endif
+
+               // if there's no documentation then we can't add it
+               if (!strLastClassDoc.Length()) break;
+               AddDocElement(cldecl, strLastClassDoc, filename);
+               break;
+            }; // if class / enum / struct def in line
+
+            if (c==cTypeDefPos) {
+	       Int_t step;
+               ParseWord(c,step); // skip "typedef"
+	       c+=step;
+               TString strOldType;
+               TString strNewType;
+               TString strWord;
+               while (ParseWord(c,step, strWord) && *(c+step)!=';' && *(c+step)) {
+		  c+=step;
+                  while (!IsWord(*c) && *c && *c!=';') {
+                     if (strWord.Length()) strWord+=' ';
+                     strWord+=*c;
+                     c++;
+                  }
+                  strOldType+=strNewType;
+                  strNewType=strWord;
+                  strWord="";
+               } 
+               if (strWord.Length()) {
+                  if (strOldType.Length()) strOldType+=' ';
+                  strOldType+=strNewType;
+                  strNewType=strWord;
+               }
+               Int_t iPosBracket=strOldType.Index('(');
+               if (iPosBracket!=kNPOS) {
+                  char* end;
+                  strOldType+=strNewType;
+                  strNewType="";
+                  iPosBracket++; // skip '('
+                  while (strOldType[iPosBracket]==' ' || strOldType[iPosBracket]=='*')
+                     iPosBracket++;
+		  Int_t step;
+                  ParseWord(&(strOldType.Data()[iPosBracket]), step, strNewType);
+		  end=c+step;
+                  strOldType="void*";
+               }
+               parseStack.GetFQI(strNewType);
+               if (strNewType.Length()+strOldType.Length()) {
+#ifdef DEBUG_TYPEDEF
+printf("FOUND Typedef %s -> %s\n", strOldType.Data(), strNewType.Data());
+#endif
+               fgLocalTypes.Add(new TLocalType(strNewType.Data(), 
+                  TLocalType::kTypedef, filename, -1, strOldType.Data()));
+               }
+#ifdef DEBUG_TYPEDEF_WARN
+else
+printf("WARNING Typedef %s -> %s in\n%s", strOldType.Data(), strNewType.Data(), fLine);
+#endif
+            }
+
+            if (c==cClassImpPos) // ClassImp starts here
+            {
+               c+=9;
+               while (*c==' ') c++;
+
+               // if there's no documentation then we can't add it
+               if (!strLastClassDoc.Length()) break;
+
+               TString clname(c);
+               char* endClassName=strchr(clname.Data(),')');
+               while (*(endClassName-1)==' ') endClassName--;
+               if (!endClassName) {
+                  Warning("ExtractClassDocumentation",
+                     "Found ClassImp macro call without closing ')': ClassImp('%s'\n%s", c,
+                     "Ignoring macro call for documentation generation.");
+                  break;
+               }
+               *endClassName=0;
+
+               TClass* climp=(TClass*)GetType(clname);
+               if (!climp) break;
+               AddDocElement(climp, strLastClassDoc, filename);
+               break;
+            }; // if ClassImp in line
+
+            if (c==cUsingPos) { 
+               c+=6;
+#ifdef DEBUG_USING
+printf("FOUND USING DECL: %s in \n%s\n", c, fLine);
+#endif
+               break;
+            } // if "using" in line
+            if (c==cNamespacePos) { 
+               // namespace decl
+               c+=9;
+               TString strNamesp;
+	       Int_t step;
+               ParseWord(c, step, strNamesp);
+	       c+=step;
+               char* d=c;
+               // now either ';' (forward decl) or '{'
+               if (*d==';') // ignore - this is just to make the namespace known
+                  break;
+               c=--d;
+#ifdef DEBUG_NAMESP
+printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
+#endif
+               psNext=TParseStack::TParseElement(TParseStack::kBlock, 
+                  TParseStack::kNamespace, strNamesp);
+               break;
+            } // if "namespace" in line
+
+            if (c==cMethodPos) {
+               // there is a method name in this line - but is it an impl?
+               // check that we don't find method "Meth" in "fMemberNameMeth(0)"
+               if (c!=fLine && IsName(c[-1])) break;
+
+               char* end;
+	       Int_t step;
+               TString strMethName;
+               while (ParseWord(c, step, strMethName)) {
+		  end=c+step;
+                  if (!strncmp(end,"::",2)) {
+                     strMethName+="::";
+                     end+=2;
+                  } else break;
+                  c=end;
+               }
+	       end=c+step;
+
+               if (*end!='(') break;
+
+               TString strClassName(strMethName);
+               TClass* cl=0;
+
+               // find the class name
+               if (ctx!=TParseStack::kBlock || parseStack.BlockSpec()!=TParseStack::kClassDecl) {
+                  // we don't do global functions
+                  if (!strstr(strMethName,"::")) break; // not in a class def, and no class given 
+                  strClassName.Remove(strClassName.Last(':')-1);
+
+                  // try to find strClassName - might have using directives added
+                  TDictionary* dict;
+                  if (!parseStack.FindType(strClassName, dict)) {
+                     Warning("ExtractClassDocumentation",
+                        "Found method candidate '%s', but no class it might belong to. Ignoring the method.",
+                        strMethName.Data());
+                     break;
+                  }
+                  // cl can still be NULL!
+                  cl=(TClass*)dict;
+
+                  // remove class name from method name
+                  Int_t iColPos=strMethName.Last(':');
+                  if (iColPos!=kNPOS)
+                     strMethName.Remove(0, iColPos+1);
+               } // if (outside a class def)
+               else {
+                  strClassName="";
+                  cl=(TClass*) parseStack.Dict();
+                  if (!cl) {
+                     parseStack.GetFQI(strClassName);
+                     // remove trailing "::"
+                     strClassName.Remove(strClassName.Length()-2);
+                     cl=(TClass*) GetType(strClassName);
+                  } else 
+                     strClassName=cl->GetName();
+               } // else if (outside class def)
+
+               if (!cl) {
+                  Warning("ExtractClassDocumentation",
+                     "Found method candidate '%s' in a class definition, but the class '%s' is unknown. Ignoring the method.",
+                     strMethName.Data(), strClassName.Data());
+                  break;
+               }
+
+               TString strMethFullName(strClassName);
+               strMethFullName+="::";
+               strMethFullName+=strMethName;
+
+               // now we need to find the argument types, to check 
+               // that this is a method decl and not just a call
+
+               end++;
+               TString strArg;
+               TString strWord;
+               TList listArgs;
+
+               // build list of methods with same name
+               TList listMeth; // list of methods with this name
+               TList* listAllMeth=cl->GetListOfMethods();
+               TIter iMeth(listAllMeth);
+               TMethod* meth;
+               TMethod* methFound=0;
+               while ((meth=(TMethod*)iMeth())) { //2do: sort. find, extract until name differs
+                  if (!strcmp(meth->GetName(), strMethName.Data()))
+                     listMeth.Add(meth);
+               }
+               if (!listMeth.GetSize()) {
+                  Warning("ExtractClassDocumentation",
+                     "Found method candidate '%s', but the class '%s' doesn't know it. Ignoring the method.",
+                     strMethName.Data(), strClassName.Data());
+                  break;
+               }
+
+               // parse arguments to
+               // * check this is a meth def / impl and not a call
+               // * identify the correct method (=entry in listMeth)
+
+               Bool_t bBreak=kFALSE;
+               while (*end!=')' && !bBreak && !methFound) {
+                  while (*end==0 && !sourceFile.eof()) {
+                     sourceFile.getline(fLine,fLen-1);
+                     lenLine=strlen(fLine);
+                     end=fLine;
+                  }
+                  if (*end==0 && sourceFile.eof()) {
+                     Warning("ExtractClassDocumentation",
+                        "Arguments for method '%s' seem not to end. Ignoring the method.",
+                        strMethFullName.Data());
+                     bBreak=kTRUE;
+                     break;
+                  }
+                  if (*end=='(' || *end=='"') {
+                     // type cast / string - this is a method call
+                     bBreak=kTRUE;
+                     break;
+                  }
+                  if (*end=='=') { 
+                     // default value, skip until ',' or ')'
+                     char* cEndDefArg=strchr(end, ',');
+                     if (!cEndDefArg) cEndDefArg=strchr(end, ')');
+
+                     while (!cEndDefArg && !sourceFile.eof() && !strchr(fLine, '{')) {
+                        sourceFile.getline(fLine, fLen-1);
+                        lenLine=strlen(fLine);
+                        end=fLine;
+                        cEndDefArg=strchr(end, ',');
+                        if (!cEndDefArg) cEndDefArg=strchr(end, ')');
+                     }
+                     if (!cEndDefArg) {
+                        Warning("ExtractClassDocumentation",
+                           "Found default argument in method '%s' which seems endless. Ignoring the method.",
+                           strMethFullName.Data());
+                        bBreak=kTRUE;
+                        break;
+                     }
+                     end=cEndDefArg;
+                     continue;
+                  }
+
+                  if (strchr("*&", *end)){
+                     do {
+                        if (!strArg.Length()) {
+                           // this is a call, (de)referencing some var
+                           bBreak=kTRUE;
+                           break;
+                        }
+                        strArg+=*end;
+                        strArg+=" ";
+                        do end++;
+                        while (*end==' ');
+                     } while (strchr("*&", *end));
+                     continue;
+                  }
+
+                  if (*end==',') {
+                     listArgs.Add(new TObjString(strArg));
+                     strArg="";
+                     end++;
+                     if (!FindMethodImpl(strMethFullName, listMeth, listArgs, 
+                        parseStack)) {
+                        bBreak=kTRUE;
+                        break;
+                     }
+                     if (listMeth.GetSize()==1) 
+                        methFound=(TMethod*)listMeth.First();
+                     continue;
+                  } else if (!strncmp(end,"::",2)) {
+                     strArg+="::";
+                     end+=2;
+                  };
+
+                  // now look for real words
+                  strWord="";
+		  Int_t step;
+                  if (!ParseWord(end, step, strWord))
+                  {
+		     end+=step;
+                     if (!strncmp(end,"/*",2)) {
+                        while (!(end=strstr(end,"*/")) && !sourceFile.eof()){
+                           sourceFile.getline(fLine, fLen-1);
+                           lenLine=strlen(fLine);
+                           end=fLine;
+                        }
+                        if (!end && sourceFile.eof())
+                           Warning("ExtractClassDocumentation",
+                              "Found opening '/*' comment without closing '*/' in method args of %s. Ignoring the method.",
+                              *end, strMethFullName.Data());
+                     } else
+                        Warning("ExtractClassDocumentation",
+                           "Found improper character '%c' in method args of %s. Ignoring the method.",
+                           *end, strMethFullName.Data());
+                     bBreak=kTRUE;
+                     break;
+                  }
+		  end+=step;
+                  while (!strcmp(strWord,"const") || !strcmp(strWord,"unsigned")) {
+                     if (strArg.Length()) 
+                        strArg+=" ";
+                     strArg+=strWord;
+                     strWord="";
+                     if (!*end) {
+                        sourceFile.getline(fLine, fLen-1);
+                        lenLine=strlen(fLine);
+                        end=fLine;
+                     }
+		     Int_t step;
+                     ParseWord(end, step, strWord);
+		     end+=step;
+                  };
+                  if (strArg.Length() && strArg[strArg.Length()-1]!=':') strArg+=" ";
+                  strArg+=strWord;
+               } // while (parsing arguments)
+
+               if (bBreak) {
+                  parseStack.PopAndDel();
+                  break;
+               }
+
+               if (strArg.Length())
+                  listArgs.Add(new TObjString(strArg));
+
+#ifdef DEBUG_METH_ARGS
+               printf("METHOD ARGS: ");
+               TIter iArg(&listArgs);
+               TObjString* str;
+               while(str=(TObjString*) iArg())
+                  printf("'%s', ", str->String().Data());
+               printf("\n");
+#endif
+               if (!methFound) {
+                  // last chance
+                  if (!FindMethodImpl(strMethFullName, listMeth, listArgs, parseStack, kTRUE)) {
+                     bBreak=kTRUE;
+                     break;
+                  }
+                  if (listMeth.GetSize()==1) 
+                     if (listArgs.GetSize() || 
+                        !parseStack.IsInStack(TParseStack::kBlock, TParseStack::kMethodDef))
+                        // for 0 arg methods we can't decide whether call of impl
+                        // look at surrounding block: must not be method
+                        methFound=(TMethod*)listMeth.First();
+               }
+               if (methFound) {
+#ifdef DEBUG_METH
+printf("FOUND A METH: %s%s in \n%s\n", methFound->GetName(), methFound->GetSignature(), fLine);
+if (strstr(methFound->GetName(), "Push"))
+printf("DEBUG");
+#endif
+                  psNext=TParseStack::TParseElement(TParseStack::kBlock, 
+                     TParseStack::kMethodDef, 
+                     strMethName, strMethFullName, methFound);
+                  TString strdummy;
+                  lastMethodDocElement=AddDocElement(methFound, strdummy, filename);
+                  inMethodDoc=kTRUE;
+                  // skip parameters
+                  c=end;
+                  // skip until { or ; (if we're in a in class def)
+                  while (!(end=strchr(c,'{')) && !(end=strchr(c,'{')) && !sourceFile.eof()) {
+                     sourceFile.getline(fLine, fLen-1);
+                     lenLine=strlen(fLine);
+                     end=fLine;
+                  }
+                  if (sourceFile.eof()) {
+#ifdef DEBUG_PARSE_WARN
+printf("Warning: Can't find ';' or '{' after method def of %s%s in\n%s\n", 
+       methFound->GetName(), methFound->GetSignature(), fLine);
+end=0;
+#endif
+                  }
+                  // allow '{' to be parsed
+                  if (!end) c=fLine;
+                  else c=--end;
+               }
+               else {
+                  printf("METH AMBIG: %s in \n%s\n", strMethFullName.Data(), fLine);
+                  TIter im(&listMeth);
+                  TMethod* m;
+                  while ((m=(TMethod*)im()))
+                     printf(">>> %s%s\n", m->GetName(), m->GetSignature());
+               }
+
+            } // if methodpos
+
+            char* cc;
+	    Int_t step;
+            ParseWord(c,step);
+	    cc=c+step;
+            if (cc!=c) c=--cc;
+            break;
+         }
+      }
+   }// while (!sourceFile.eof())
+
+// if there's still a lastClassDoc (i.e. it's not assigned to anything yet), 
+// and if we have a class given as input, then assign lastClassDoc to that class.
+}
+
+TClass* THtml::ParseClassDecl(char* &cfirstLinePos, 
+                              const TParseStack& parseStack, TString& strClassName) {
+   char* d;
+   Int_t step;
+   ParseWord(cfirstLinePos, step, strClassName);
+   d=cfirstLinePos+step;
+   if (!strClassName.Length()) return 0; // something is wrong here, let's just go on
+
+   // now comes either a '{' or a ';'
+   // if it's a forward def then there's nothing in between the class name and the ';'
+   if (*d==';') {
+      strClassName="";
+      // we don't want to document forward decls, so just go on
+      return 0;
+   }
+
+   // state that the next block belongs to a class, and store its name
+   // if we are in named blocks (class, namespace), then add the names to strClassName
+   parseStack.GetFQI(strClassName);
+   // handle documentation element
+   TClass* cl=(TClass*)THtml::GetType(strClassName);
+/*   if (!cl)
+      Warning("ParseClassDecl",
+         "No documentation generated for unknown class %s.",
+         strClassName.Data());
+*/   return cl;
+}
+
+THtml::TDocElement* THtml::AddDocElement(TDictionary* dict, TString& strDoc, const char* filename) {
+// strDoc will be set to "" if used
+   TDocElement* de=0;
+   if (strDoc.Length()) {
+      Int_t iLFPos = strDoc.Index('\n');
+      if (iLFPos==kNPOS || !strchr(&(strDoc.Data()[iLFPos+1]), '\n')) return 0;
+   }
+   if (!fMapDocElements) 
+      fMapDocElements = new TMap();
+   else
+      if ((de=(TDocElement*) fMapDocElements->GetValue(dict))) {
+         if (de->GetDoc().Length()<strDoc.Length()) {
+            de->SetDoc(strDoc);
+#ifdef DEBUG_DOC
+printf("UPDATED DOCELEMENT: %s, doc: \n%s\n", dict->GetName(), strDoc.Data());
+#endif
+         };
+         strDoc="";
+         return de;
+      }
+   de=new TDocElement(strDoc, filename);
+   fMapDocElements->Add(dict, de);
+
+if (strDoc.Length())
+#ifdef DEBUG_DOC
+printf("ADDED DOCELEMENT: %s, doc: \n%s\n", dict->GetName(), strDoc.Data());
+#endif
+   strDoc="";
+   return de;
+}
+
+Bool_t THtml::ParseWord(const char* begin, Int_t &step, 
+                        TString& strWord, const char* allowedChars /*=0*/) {
+   const char* end=begin;
+   while (isspace(*end)) end++;
+   step=end-begin;
+   begin=end;
+   const char* endAllowed=(allowedChars?&allowedChars[strlen(allowedChars)]:0);
+   const char* cFound;
+   while (IsName(*end) || allowedChars 
+      && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
+      strWord+=*(end++);
+   Bool_t bGotSomething=!(end==begin);
+   while (isspace(*end)) end++;
+   step+=end-begin;
+   return bGotSomething;
+}
+Bool_t THtml::ParseWord(const char* begin, Int_t &step, 
+                        const char* allowedChars /*=0*/) {
+   const char* end=begin;
+   while (isspace(*end))
+      end++;
+   step=end-begin;
+   begin=end;
+   const char* cFound;
+   const char* endAllowed=(allowedChars?&allowedChars[strlen(allowedChars)]:0);
+   while (IsName(*end) || allowedChars 
+      && 0!=(cFound=strchr(allowedChars, *end)) && cFound!=endAllowed)
+      end++;
+   Bool_t bGotSomething=!(end==begin);
+   while (isspace(*end)) end++;
+   step+=end-begin;
+   return bGotSomething;
+}
+
+Bool_t THtml::FindMethodImpl(TString strMethFullName, TList& listMethSameName, 
+                             TList& listArgs, TParseStack& parseStack, 
+                             Bool_t done) const {
+// find strArgs in all methods in listMethSameName
+// remove those from the list that don't fit
+// Return kFALSE if error
+
+   TString strArg(listArgs.GetSize()?((TObjString*)listArgs.Last())->String():"");
+   TString strArgPart;
+   Int_t iArgSize=listArgs.GetSize();
+#ifdef DEBUG_METH_PARSE
+printf("Parsing meth %s ... ",strMethFullName.Data());
+#endif
+   TMethod* meth=(TMethod*)listMethSameName.First();
+   TClass* clmeth=meth?(TClass*)meth->GetClass():0;
+   // args are in class's context, add "dummy" classdef ctx
+   Bool_t bAddedDummyClassDef=!(parseStack.Context()==TParseStack::kBlock
+      && parseStack.BlockSpec()==TParseStack::kClassDecl);
+   if (clmeth) {
+      if (bAddedDummyClassDef) 
+         parseStack.Push(TParseStack::kBlock, TParseStack::kClassDecl, clmeth->GetName());
+   }
+   else return kFALSE;
+
+   TIter iMethSameName(&listMethSameName);
+   while ((meth=(TMethod*)iMethSameName())) {
+      if (done && meth->GetListOfMethodArgs()->GetSize()!=iArgSize 
+         || meth->GetListOfMethodArgs()->GetSize()<iArgSize) {
+         // this method has the wrong num of args, remove it
+            listMethSameName.Remove(meth);
+         continue;
+      }
+
+      // iArgSize==0 only when parsing done (otherwise we're not called)
+      // if meth also has 0 params then it's a candidate
+      if(iArgSize==0) {
+         if(meth->GetListOfMethodArgs()->GetSize()>0) 
+            listMethSameName.Remove(meth);
+         continue;
+      }
+
+      // we could check on listMeth.GetSize()==1 here and just return,
+      // but we have to check the args first to see whether this is a call
+      // of an impl
+      TMethodArg* ma=(TMethodArg*)meth->GetListOfMethodArgs()->At(iArgSize-1);
+      const char* endArg=strArg;
+      TString strThisArg(ma->GetFullTypeName());
+      // parse part by part, as the arg parts may be reshuffled by cint
+      // e.g. "type* const*" becomes "type* * const"
+      while (*endArg) {
+         strArgPart="";
+	 Int_t step;
+         if (!ParseWord(endArg, step, strArgPart, ":")) {
+	    endArg+=step;
+            // we have a non-word char here, just simulate it being a word
+            strArgPart=*endArg;
+            endArg++;
+         }
+	 else
+ 	    endArg+=step;
+        // try and see if there is a FQI for this param type known to CInt
+         parseStack.FindType(strArgPart);
+         Int_t iPos=strThisArg.Index(strArgPart);
+         if (iPos==kNPOS) {
+            TDictionary* dict=GetType(strArgPart);
+            if (dict && dict->IsA()==TLocalType::Class()
+               && ((TLocalType*) dict)->Spec()==TLocalType::kTypedef)
+               iPos=strThisArg.Index(((TLocalType*) dict)->RealTypedefName());
+         }
+         if (iPos==kNPOS) {
+            if (*endArg) {
+               // this method doesn't have this argument, 
+               // and it's not the last word (i.e. can't be a parameter name)
+               // remove method from list of candidates
+               listMethSameName.Remove(meth);
+               meth=0;
+            }
+            break;
+         } else
+            strThisArg.Remove(iPos, strArgPart.Length());
+         while (isspace(*endArg)) endArg++;
+      }
+
+      // if the meth has already been removed go to next method in list
+      if (!meth) continue;
+
+      // there might be a param name left, skip it
+      Int_t step;
+      ParseWord(strThisArg.Data(), step);
+      endArg=strThisArg.Data()+step;
+      if (strlen(endArg)>0) {
+         listMethSameName.Remove(meth);
+         continue;
+      }
+   }
+
+   // remove dummy class def block
+   if (bAddedDummyClassDef) 
+      parseStack.PopAndDel();
+
+   if (listMethSameName.GetSize()==0) {
+#ifdef DEBUG_METH_NOTFOUND
+      printf("PARSE METHOD Can't find method named %s with correct number of params (%c=%d) in line\n%s\n", 
+         strMethFullName.Data(), (done?'=':'>'), iArgSize, fLine);
+#endif
+      return kFALSE;
+   }
+#ifdef DEBUG_METH_PARSE
+printf("success.\n");
+#endif
+   return kTRUE;
+}
+
+TPaveText* THtml::GetDocPave(TDictionary* dict){
+
+   TPaveText *pt = new TPaveText();
+   pt->SetName(dict->GetName());
+   pt->SetLabel("");
+   TDocElement* docel=GetDocElement(dict);
+   if (docel) {
+      Int_t len = strlen(docel->GetDoc());
+      char *tmpstr = new char[len+1];
+      strcpy(tmpstr, docel->GetDoc());
+      char* pos=tmpstr;
+      char* end;
+      while((end=strchr(pos,'\n'))) {
+         *end=0;
+         pt->AddText(pos);
+         *end='\n';
+         pos=end+1;
+      }
+      // some remaining string without newline?
+      if (strlen(pos)) 
+         pt->AddText(pos);
+      delete [] tmpstr;
+   }
+
+   return pt;
+}
+
+TMap* THtml::MakeHelp(TClass* cl)
+{
+   ExtractClassDocumentation(cl);
+   TMap* docmap=new TMap(); // map TDict* -> TPaveText
+
+   docmap->Add(cl, GetDocPave(cl));
+
+   TList* listMem=cl->GetListOfMethods();
+   if (listMem) {
+      TIter iMeth(listMem);
+      TMethod* meth=0;
+      while ((meth=(TMethod*) iMeth())) 
+         docmap->Add(meth, GetDocPave(meth));
+   } // if listMem
+            
+   listMem=cl->GetListOfDataMembers();
+   if (listMem) {
+      TIter iMem(listMem);
+      TDataMember* mem=0;
+      while ((mem=(TDataMember*) iMem())) {
+         TPaveText* pt=new TPaveText();
+         pt->SetName(mem->GetName());
+         pt->AddText(mem->GetTitle());
+         docmap->Add(mem, pt);
+      }
+   } // if listMem
+   
+   return docmap;
 }
