@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.2 2000/06/13 11:19:06 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -169,8 +169,8 @@ void TSpline::Paint(Option_t *option)
 
 
 //____________________________________________________________________________
-TSpline3::TSpline3(Text_t *title,
-		   Double_t x[], Double_t y[], Int_t n, Text_t *opt,
+TSpline3::TSpline3(const char *title,
+		   Double_t x[], Double_t y[], Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,x[0],x[n-1],n,kFALSE),
   fValBeg(valbeg), fValEnd(valend), fBegCond(0), fEndCond(0)
@@ -199,9 +199,9 @@ TSpline3::TSpline3(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(Text_t *title,
+TSpline3::TSpline3(const char *title,
 		   Double_t xmin, Double_t xmax,
-		   Double_t y[], Int_t n, Text_t *opt,
+		   Double_t y[], Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
@@ -231,8 +231,8 @@ TSpline3::TSpline3(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(Text_t *title,
-		   Double_t x[], TF1 *func, Int_t n, Text_t *opt,
+TSpline3::TSpline3(const char *title,
+		   Double_t x[], TF1 *func, Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -262,9 +262,9 @@ TSpline3::TSpline3(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(Text_t *title,
+TSpline3::TSpline3(const char *title,
 		   Double_t xmin, Double_t xmax,
-		   TF1 *func, Int_t n, Text_t *opt,
+		   TF1 *func, Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
@@ -295,8 +295,8 @@ TSpline3::TSpline3(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline3::TSpline3(Text_t *title,
-		   TGraph *g, Text_t *opt,
+TSpline3::TSpline3(const char *title,
+		   TGraph *g, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -330,7 +330,7 @@ TSpline3::TSpline3(Text_t *title,
 }
 
 //____________________________________________________________________________
-void TSpline3::SetCond(Text_t *opt)
+void TSpline3::SetCond(const char *opt)
 {
   //
   // Check the boundary conditions
@@ -738,9 +738,9 @@ void TSpline3::Streamer(TBuffer &R__b)
 
 
 //____________________________________________________________________________
-TSpline5::TSpline5(Text_t *title,
+TSpline5::TSpline5(const char *title,
 		   Double_t x[], Double_t y[], Int_t n,
-		   Text_t *opt, Double_t b1, Double_t e1,
+		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
@@ -772,10 +772,10 @@ TSpline5::TSpline5(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(Text_t *title,
+TSpline5::TSpline5(const char *title,
 		   Double_t xmin, Double_t xmax,
 		   Double_t y[], Int_t n,
-		   Text_t *opt, Double_t b1, Double_t e1,
+		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
@@ -807,9 +807,9 @@ TSpline5::TSpline5(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(Text_t *title,
+TSpline5::TSpline5(const char *title,
 		   Double_t x[], TF1 *func, Int_t n,
-		   Text_t *opt, Double_t b1, Double_t e1,
+		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
 {
@@ -841,10 +841,10 @@ TSpline5::TSpline5(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(Text_t *title,
+TSpline5::TSpline5(const char *title,
 		   Double_t xmin, Double_t xmax,
 		   TF1 *func, Int_t n,
-		   Text_t *opt, Double_t b1, Double_t e1,
+		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
 {
@@ -877,9 +877,9 @@ TSpline5::TSpline5(Text_t *title,
 }
 
 //____________________________________________________________________________
-TSpline5::TSpline5(Text_t *title,
+TSpline5::TSpline5(const char *title,
 		   TGraph *g,
-		   Text_t *opt, Double_t b1, Double_t e1,
+		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE)
 {
@@ -915,7 +915,7 @@ TSpline5::TSpline5(Text_t *title,
 }
 
 //____________________________________________________________________________
-void TSpline5::BoundaryConditions(Text_t *opt,Int_t &beg,Int_t&end,
+void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t&end,
 				  char *&cb1,char *&ce1,char *&cb2,char *&ce2)
 {
   //
