@@ -4394,7 +4394,7 @@ propagate(GdkWindow ** window,
 {
 	gboolean in_propagation = FALSE;
 
-   if (grab_window != NULL && !grab_owner_events) {
+   if (grab_window != NULL) {
       /* Event source is grabbed with owner_events FALSE */
       GDK_NOTE(EVENTS, g_print("...grabbed, owner_events FALSE, "));
       if ((*doesnt_want_it) (grab_mask, xevent)) {
