@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.53 2004/10/06 12:51:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.54 2004/10/11 16:25:10 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #endif
 
 #include "HelpText.h"
+
 
 // Canvas menu command ids
 enum ERootCanvasCommands {
