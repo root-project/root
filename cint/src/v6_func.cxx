@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+void G__display_tempobject G__P((char* action));
 
 #ifndef G__OLDIMPLEMENTATION863
 /* not ready yet
@@ -3908,6 +3909,13 @@ int hash;
     return(1);
   }
 #endif
+
+  if(strcmp(funcname,"G__display_tempobject")==0) {
+    if(G__no_exec_compile) return(1);
+    *result7 = G__null;
+    G__display_tempobject("");
+    return(1);
+  }
 
   if(strcmp(funcname,"G__cmparray")==0) {
     if(G__no_exec_compile) return(1);

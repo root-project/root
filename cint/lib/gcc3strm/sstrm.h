@@ -21,6 +21,10 @@ using namespace std;
 
 #else // __CINT__
 
+#if !(G__GNUC>=3)
+#error This header must be processed with a Cint compiled with gcc3.x
+#endif
+
 #include <string>
 //#include <memory>
 class allocator<char>;
@@ -39,7 +43,7 @@ class basic_stringbuf : public basic_streambuf<charT, traits>
   
   typedef basic_ios<charT, traits>                 ios_type;
 #ifdef __CINT__
-#if !(G__GNUC>=3)
+#if 0 && !(G__GNUC>=3)
   typedef string  string_type;
 #else
   typedef string  __string_type;
@@ -96,7 +100,7 @@ class basic_istringstream : public basic_istream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>       sb_type;
   typedef basic_ios<charT, traits>                        ios_type;
 #ifdef __CINT__
-#if !(G__GNUC>=3)
+#if 0 && !(G__GNUC>=3)
   typedef string         string_type;
 #else
   typedef string         __string_type;

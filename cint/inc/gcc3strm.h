@@ -34,7 +34,6 @@ extern void G__set_cpp_environmentG__stream();
 
 extern G__linked_taginfo G__G__streamLN_mbstate_t;
 extern G__linked_taginfo G__G__streamLN_fposlEmbstate_tgR;
-extern G__linked_taginfo G__G__streamLN_wstreampos;
 extern G__linked_taginfo G__G__streamLN_streamoff;
 extern G__linked_taginfo G__G__streamLN_ios_base;
 extern G__linked_taginfo G__G__streamLN_ios_basecLcLio_state;

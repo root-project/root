@@ -7,7 +7,7 @@
  * Description:
  *  Struct, class, enum, union handling
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -991,8 +991,13 @@ int envtagnum;
     envvar = G__struct.memvar[envtagnum];
     while(envvar->next) envvar=envvar->next;
     envvar=G__alloc_var_array(envvar,&envig15);
+#ifndef G__OLDIMPLEMENTATION1747
+    if(0==envig15) access=G__access;
+    else access=envvar->access[envig15-1];
+#else
     if(0==envig15) access=G__PUBLIC;
     else access=envvar->access[envig15-1];
+#endif
 
     offset=G__malloc(1,G__struct.size[tagnum],"");
     while(var) {

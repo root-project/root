@@ -170,7 +170,9 @@ class fpos {
 };
 typedef fpos<mbstate_t> 		streampos;
 
+#ifdef G__THIS_DOES_NOT_WORK_WITH_CYGWIN_GCC3
 class wstreampos { };
+#endif
 class streamoff { };
 
 

@@ -781,6 +781,9 @@ int lenbuf;
     G__no_exec_compile = store_no_exec_compile_and[0];                \
   }
 
+#define DBGCOM       \
+  G__fprinterr(G__serr,"pp_and=%d  G__templevel=%d  G__p_tepbuf->level=%d G__decl=%d\n",pp_and,G__templevel,G__p_tempbuf->level,G__decl);
+
 #define G__RESTORE_ANDOPR                                             \
   if(G__asm_noverflow) {                                              \
     while(pp_and) {                                                   \

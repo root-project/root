@@ -1438,6 +1438,7 @@ char *pipefile;
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
 #endif
 	  G__serr = freopen(filename,openmode,G__serr);
+	  /*DEBUG G__dumpfile = G__serr; */
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcerr(filename);
 #endif
@@ -1470,6 +1471,7 @@ char *pipefile;
 	  break;
 	case G__NUM_STDERR: /* stderr */
 	  *pserr = G__serr;
+	  /*DEBUG G__dumpfile = 0; */
 	  G__serr = fopen(filename,openmode);
 	  break;
 #ifndef G__OLDIMPLEMENTATION1722

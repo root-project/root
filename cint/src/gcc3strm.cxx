@@ -152,53 +152,6 @@ static int G__fposlEmbstate_tgR_wAfposlEmbstate_tgR_2_0(G__value *result7,G__CON
 }
 
 
-/* wstreampos */
-// automatic default constructor
-static int G__wstreampos_wstreampos_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   wstreampos *p;
-   if(G__getaryconstruct()) p=new wstreampos[G__getaryconstruct()];
-   else p=::new((G__gcc3strmdOcxx_tag*)G__getgvp()) wstreampos;
-   result7->obj.i = (long)p;
-   result7->ref = (long)p;
-   result7->type = 'u';
-   result7->tagnum = G__get_linked_tagnum(&G__G__streamLN_wstreampos);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-// automatic copy constructor
-static int G__wstreampos_wstreampos_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
-{
-   wstreampos *p;
-   p=new wstreampos(*(wstreampos*)G__int(libp->para[0]));
-   result7->obj.i = (long)p;
-   result7->ref = (long)p;
-   result7->type = 'u';
-   result7->tagnum = G__get_linked_tagnum(&G__G__streamLN_wstreampos);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-// automatic destructor
-typedef wstreampos G__Twstreampos;
-static int G__wstreampos_wAwstreampos_2_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   if(0==G__getstructoffset()) return(1);
-   if(G__getaryconstruct())
-     if(G__PVOID==G__getgvp())
-       delete[] (wstreampos *)(G__getstructoffset());
-     else
-       for(int i=G__getaryconstruct()-1;i>=0;i--)
-         ((wstreampos *)((G__getstructoffset())+sizeof(wstreampos)*i))->~G__Twstreampos();
-   else {
-     long G__Xtmp=G__getgvp();
-     G__setgvp(G__PVOID);
-     ((wstreampos *)(G__getstructoffset()))->~G__Twstreampos();
-     G__setgvp(G__Xtmp);
-     G__operator_delete((void*)G__getstructoffset());
-   }
-      G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-
 /* streamoff */
 // automatic default constructor
 static int G__streamoff_streamoff_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1898,8 +1851,6 @@ static int G___operatorgRgR_5_15(G__value *result7,G__CONST char *funcname,struc
 
 /* fpos<mbstate_t> */
 
-/* wstreampos */
-
 /* streamoff */
 
 /* ios_base */
@@ -2540,15 +2491,6 @@ static void G__setup_memvarfposlEmbstate_tgR(void) {
 }
 
 
-   /* wstreampos */
-static void G__setup_memvarwstreampos(void) {
-   G__tag_memvar_setup(G__get_linked_tagnum(&G__G__streamLN_wstreampos));
-   { wstreampos *p; p=(wstreampos*)0x1000; if (p) { }
-   }
-   G__tag_memvar_reset();
-}
-
-
    /* streamoff */
 static void G__setup_memvarstreamoff(void) {
    G__tag_memvar_setup(G__get_linked_tagnum(&G__G__streamLN_streamoff));
@@ -2789,18 +2731,6 @@ static void G__setup_memfuncfposlEmbstate_tgR(void) {
    G__memfunc_setup("fpos<mbstate_t>",1525,G__fposlEmbstate_tgR_fposlEmbstate_tgR_1_0,(int)('i'),G__get_linked_tagnum(&G__G__streamLN_fposlEmbstate_tgR),-1,0,1,1,1,0,"u 'fpos<mbstate_t>' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~fpos<mbstate_t>",1651,G__fposlEmbstate_tgR_wAfposlEmbstate_tgR_2_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__tag_memfunc_reset();
-}
-
-static void G__setup_memfuncwstreampos(void) {
-   /* wstreampos */
-   G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__streamLN_wstreampos));
-   // automatic default constructor
-   G__memfunc_setup("wstreampos",1109,G__wstreampos_wstreampos_0_0,(int)('i'),G__get_linked_tagnum(&G__G__streamLN_wstreampos),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   // automatic copy constructor
-   G__memfunc_setup("wstreampos",1109,G__wstreampos_wstreampos_1_0,(int)('i'),G__get_linked_tagnum(&G__G__streamLN_wstreampos),-1,0,1,1,1,0,"u 'wstreampos' - 11 - -",(char*)NULL,(void*)NULL,0);
-   // automatic destructor
-   G__memfunc_setup("~wstreampos",1235,G__wstreampos_wAwstreampos_2_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -3333,7 +3263,6 @@ extern "C" void G__cpp_setup_funcG__stream() {
 /* Setup class/struct taginfo */
 G__linked_taginfo G__G__streamLN_mbstate_t = { "mbstate_t" , 115 , -1 };
 G__linked_taginfo G__G__streamLN_fposlEmbstate_tgR = { "fpos<mbstate_t>" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_wstreampos = { "wstreampos" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_streamoff = { "streamoff" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_ios_base = { "ios_base" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_ios_basecLcLio_state = { "ios_base::io_state" , 101 , -1 };
@@ -3363,7 +3292,6 @@ G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR =
 extern "C" void G__cpp_reset_tagtableG__stream() {
   G__G__streamLN_mbstate_t.tagnum = -1 ;
   G__G__streamLN_fposlEmbstate_tgR.tagnum = -1 ;
-  G__G__streamLN_wstreampos.tagnum = -1 ;
   G__G__streamLN_streamoff.tagnum = -1 ;
   G__G__streamLN_ios_base.tagnum = -1 ;
   G__G__streamLN_ios_basecLcLio_state.tagnum = -1 ;
@@ -3396,7 +3324,6 @@ extern "C" void G__cpp_setup_tagtableG__stream() {
    /* Setting up class,struct,union tag entry */
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_mbstate_t),sizeof(mbstate_t),-1,0,(char*)NULL,G__setup_memvarmbstate_t,G__setup_memfuncmbstate_t);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_fposlEmbstate_tgR),sizeof(fpos<mbstate_t>),-1,0,(char*)NULL,G__setup_memvarfposlEmbstate_tgR,G__setup_memfuncfposlEmbstate_tgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_wstreampos),sizeof(wstreampos),-1,0,(char*)NULL,G__setup_memvarwstreampos,G__setup_memfuncwstreampos);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_streamoff),sizeof(streamoff),-1,0,(char*)NULL,G__setup_memvarstreamoff,G__setup_memfuncstreamoff);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_base),sizeof(ios_base),-1,3840,(char*)NULL,G__setup_memvarios_base,G__setup_memfuncios_base);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLio_state),sizeof(int),-1,0,(char*)NULL,NULL,NULL);

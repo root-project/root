@@ -1954,7 +1954,7 @@ void G__free_tempobject()
      ) return;
 #endif
 
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
   if(G__asm_dbg) G__display_tempobject("freetemp");
 #endif
 
@@ -1964,7 +1964,7 @@ void G__free_tempobject()
   while(G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
 
 
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"free_tempobject(%d)=0x%lx\n"
 	      ,G__p_tempbuf->obj.tagnum,G__p_tempbuf->obj.obj.i);

@@ -990,6 +990,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
     char *pt1;
 #ifndef G__OLDIMPLEMENTATION853
     if(strlen(funcheader)>G__MAXNAME-1) {
+      funcheader[G__MAXNAME-1]=0;
       G__fprinterr(G__serr,
 	      "Limitation: Function name length overflow strlen(%s)>%d"
 	      ,funcheader,G__MAXNAME-1);
@@ -5523,7 +5524,6 @@ int isrecursive;
   }
 #endif
 
-#define G__ASM_DBG2
 #ifdef G__ASM_DBG2
   if(G__dispsource) 
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
