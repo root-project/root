@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.23 2003/08/18 16:40:33 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.24 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -143,7 +143,7 @@ inline const Double_t &TVectorD::operator()(Int_t ind) const
 
   Assert(IsValid());
   const Int_t aind = ind-fRowLwb;
-  Assert(aind < fNrows && aind >= 0); 
+  Assert(aind < fNrows && aind >= 0);
 
   return fElements[aind];
 }
@@ -163,7 +163,7 @@ void       Compare      (const TVectorD    &source1,const TVectorD &source2);
 // Service functions (useful in the verification code).
 // They print some detail info if the validation condition fails
 
-Bool_t VerifyVectorValue   (const TVectorD &m,const Double_t val,
+Bool_t VerifyVectorValue   (const TVectorD &m,Double_t val,
                             Int_t verbose=1,Double_t maxDevAllow=DBL_EPSILON);
 Bool_t VerifyVectorIdentity(const TVectorD &m1,const TVectorD &m2,
                             Int_t verbose=1,Double_t maxDevAllow=DBL_EPSILON);

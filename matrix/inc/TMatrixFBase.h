@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
   virtual void Invalidate   ()       { fNrows = fNcols = fNelems = -1; }
   inline  Bool_t IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
           Bool_t IsSymmetric() const;
-   
+
   // Probably move this functionality to TMatrixFFlat
   virtual void GetMatrixElements(      Float_t *data, Option_t *option="") const;
   virtual void SetMatrixElements(const Float_t *data, Option_t *option="");
@@ -151,7 +151,7 @@ void   Compare      (const TMatrixFBase &m1,const TMatrixFBase &m2);
 // Service functions (useful in the verification code).
 // They print some detail info if the validation condition fails
 
-Bool_t VerifyMatrixValue   (const TMatrixFBase &m, const Float_t val,
+Bool_t VerifyMatrixValue   (const TMatrixFBase &m, Float_t val,
                             Int_t verbose=1,Float_t maxDevAllow=DBL_EPSILON);
 Bool_t VerifyMatrixIdentity(const TMatrixFBase &m1,const TMatrixFBase &m2,
                             Int_t verbose=1,Float_t maxDevAllow=DBL_EPSILON);

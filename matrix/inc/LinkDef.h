@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.8 2002/12/10 14:00:48 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.9 2004/01/25 20:33:32 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,14 +36,14 @@
 #pragma link C++ class TMatrixFDiag_const-;
 #pragma link C++ class TMatrixFFlat_const-;
 
-#pragma link C++ function operator==   (const TVectorF &,const TVectorF &);        
+#pragma link C++ function operator==   (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator+    (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator-    (const TVectorF &,const TVectorF &);
-#pragma link C++ function operator*    (const TVectorF &,const TVectorF &);        
+#pragma link C++ function operator*    (const TVectorF &,const TVectorF &);
 #pragma link C++ function Add          (      TVectorF &,      Float_t ,  const TVectorF &);
-#pragma link C++ function ElementMult  (      TVectorF &,const TVectorF &);      
-#pragma link C++ function ElementDiv   (      TVectorF &,const TVectorF &);      
-#pragma link C++ function AreCompatible(const TVectorF &,const TVectorF &,      Int_t);        
+#pragma link C++ function ElementMult  (      TVectorF &,const TVectorF &);
+#pragma link C++ function ElementDiv   (      TVectorF &,const TVectorF &);
+#pragma link C++ function AreCompatible(const TVectorF &,const TVectorF &,      Int_t);
 #pragma link C++ function Compare      (const TVectorF &,const TVectorF &);
 
 #pragma link C++ function AreCompatible(const TMatrixFBase &,const TMatrixFBase &,Int_t);
@@ -82,9 +82,9 @@
 #pragma link C++ function ElementMult  (      TMatrixFSym  &,const TMatrixFSym  &);
 #pragma link C++ function ElementDiv   (      TMatrixFSym  &,const TMatrixFSym  &);
 
-#pragma link C++ function VerifyVectorValue   (const TVectorF     &,const Float_t ,      Int_t,Float_t );
+#pragma link C++ function VerifyVectorValue   (const TVectorF     &,Float_t             ,Int_t,Float_t );
 #pragma link C++ function VerifyVectorIdentity(const TVectorF     &,const TVectorF     &,Int_t,Float_t );
-#pragma link C++ function VerifyMatrixValue   (const TMatrixFBase &,const Float_t       ,Int_t,Float_t );
+#pragma link C++ function VerifyMatrixValue   (const TMatrixFBase &,Float_t             ,Int_t,Float_t );
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixFBase &,const TMatrixFBase &,Int_t,Float_t );
 
 #pragma link C++ class TVectorD-;
@@ -116,14 +116,14 @@
 #pragma link C++ class TDecompQRH+;
 #pragma link C++ class TDecompSVD+;
 
-#pragma link C++ function operator==   (const TVectorD &,const TVectorD &);        
+#pragma link C++ function operator==   (const TVectorD &,const TVectorD &);
 #pragma link C++ function operator+    (const TVectorD &,const TVectorD &);
 #pragma link C++ function operator-    (const TVectorD &,const TVectorD &);
-#pragma link C++ function operator*    (const TVectorD &,const TVectorD &);        
+#pragma link C++ function operator*    (const TVectorD &,const TVectorD &);
 #pragma link C++ function Add          (      TVectorD &,      Double_t,  const TVectorD &);
-#pragma link C++ function ElementMult  (      TVectorD &,const TVectorD &);      
-#pragma link C++ function ElementDiv   (      TVectorD &,const TVectorD &);      
-#pragma link C++ function AreCompatible(const TVectorD &,const TVectorD &,      Int_t);        
+#pragma link C++ function ElementMult  (      TVectorD &,const TVectorD &);
+#pragma link C++ function ElementDiv   (      TVectorD &,const TVectorD &);
+#pragma link C++ function AreCompatible(const TVectorD &,const TVectorD &,      Int_t);
 #pragma link C++ function Compare      (const TVectorD &,const TVectorD &);
 
 #pragma link C++ function AreCompatible(const TMatrixDBase &,const TMatrixDBase &,Int_t);
@@ -162,9 +162,9 @@
 #pragma link C++ function ElementMult  (      TMatrixDSym  &,const TMatrixDSym  &);
 #pragma link C++ function ElementDiv   (      TMatrixDSym  &,const TMatrixDSym  &);
 
-#pragma link C++ function VerifyVectorValue   (const TVectorD     &,const Double_t,      Int_t,Double_t);
+#pragma link C++ function VerifyVectorValue   (const TVectorD     &,Double_t            ,Int_t,Double_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorD     &,const TVectorD     &,Int_t,Double_t);
-#pragma link C++ function VerifyMatrixValue   (const TMatrixDBase &,const Double_t      ,Int_t,Double_t);
+#pragma link C++ function VerifyMatrixValue   (const TMatrixDBase &,Double_t            ,Int_t,Double_t);
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixDBase &,const TMatrixDBase &,Int_t,Double_t);
 
 #endif

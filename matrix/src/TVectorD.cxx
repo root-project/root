@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.27 2003/07/12 19:43:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.30 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -62,7 +62,7 @@ Double_t* TVectorD::New_m(Int_t size)
       return heap;
     }
   }
-}   
+}
 
 //______________________________________________________________________________
 Int_t TVectorD::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
@@ -80,7 +80,7 @@ Int_t TVectorD::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
           newp[i] = oldp[i];
       }
     }
-    else { 
+    else {
       memcpy(newp,oldp,copySize*sizeof(Double_t));
     }
   }
@@ -94,16 +94,16 @@ void TVectorD::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
   // lowerbound (0 default).
 
   Invalidate();
-  Assert(nrows > 0); 
-  
+  Assert(nrows > 0);
+
   fNrows   = nrows;
   fRowLwb  = row_lwb;
   fIsOwner = kTRUE;
-  
+
   fElements = New_m(fNrows);
   if (init)
     memset(fElements,0,fNrows*sizeof(Double_t));
-} 
+}
 
 //______________________________________________________________________________
 TVectorD::TVectorD(Int_t n)
@@ -249,7 +249,7 @@ void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
 void TVectorD::Adopt(Int_t n,Double_t *data)
 {
   Assert(n > 0);
-  
+
   Clear();
   fNrows    = n;
   fRowLwb   = 0;
@@ -320,10 +320,10 @@ TVectorD TVectorD::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
 
 //______________________________________________________________________________
 void TVectorD::SetSub(Int_t row_lwb,const TVectorD &source)
-{   
+{
   // Insert vector source starting at [row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source];
-    
+
   Assert(IsValid());
   Assert(source.IsValid());
 
@@ -334,15 +334,15 @@ void TVectorD::SetSub(Int_t row_lwb,const TVectorD &source)
   const Int_t nRows_source = source.GetNrows();
   if (row_lwb+nRows_source > fRowLwb+fNrows) {
     Error("SetSub","source vector too large");
-    return; 
-  } 
-  
+    return;
+  }
+
   const Double_t *bp = source.GetElements();
         Double_t *ap = this->GetElements()+(row_lwb-fRowLwb);
-        
+
   for (Int_t irow = 0; irow < nRows_source; irow++)
-    *ap++ = *bp++; 
-} 
+    *ap++ = *bp++;
+}
 
 //______________________________________________________________________________
 TVectorD &TVectorD::Zero()
@@ -601,7 +601,7 @@ TVectorD &TVectorD::operator*=(Double_t val)
 {
   // Multiply every element of the vector with val.
 
-  Assert(IsValid()); 
+  Assert(IsValid());
 
         Double_t *ep = this->GetElements();
   const Double_t * const fp = ep+fNrows;
@@ -627,7 +627,7 @@ TVectorD &TVectorD::operator+=(const TVectorD &source)
   const Double_t * const tp_last = tp+fNrows;
   while (tp < tp_last)
     *tp++ += *sp++;
-  
+
   return *this;
 }
 
@@ -912,18 +912,18 @@ void TVectorD::Draw(Option_t *option)
 void TVectorD::Print(Option_t *) const
 {
   // Print the vector as a list of elements.
-  
+
   Assert(IsValid());
-  
+
   printf("\nVector %d is as follows",fNrows);
-  
+
   printf("\n\n     |   %6d  |", 1);
   printf("\n%s\n", "------------------");
   for (Int_t i = 0; i < fNrows; i++) {
-    printf("%4d |",i+fRowLwb); 
+    printf("%4d |",i+fRowLwb);
     //printf("%11.4g \n",(*this)(i+fRowLwb));
     printf("%g \n",(*this)(i+fRowLwb));
-  } 
+  }
   printf("\n");
 }
 
@@ -1126,7 +1126,7 @@ void Compare(const TVectorD &v1,const TVectorD &v2)
 
 //______________________________________________________________________________
 Bool_t VerifyVectorValue(const TVectorD &v,Double_t val,
-                          const Int_t verbose,const Double_t maxDevAllow)
+                         Int_t verbose,Double_t maxDevAllow)
 {
   // Validate that all elements of vector have value val within maxDevAllow .
 
@@ -1183,7 +1183,7 @@ Bool_t VerifyVectorIdentity(const TVectorD &v1,const TVectorD &v2,
     if(maxDevObs > maxDevAllow)
       Error("VerifyVectorIdentity","Deviation > %g\n",maxDevAllow);
   }
-  
+
   if(maxDevObs > maxDevAllow) {
     return kFALSE;
   }
