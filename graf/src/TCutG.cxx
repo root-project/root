@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.3 2000/08/10 14:03:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.4 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -191,7 +191,7 @@ Int_t TCutG::IsInside(Double_t x, Double_t y)
 //*.     intersects the horizontal line.
 //*.     In this case XINT is set to the X-coordinate of the
 //*.     intersection point.
-//*.     If inter is an odd number, then the point x,y is not within
+//*.     If inter is an odd number, then the point x,y is within
 //*.     the polygon.
 //*.
 //*.         This routine is based on an original algorithm
@@ -203,12 +203,12 @@ Int_t TCutG::IsInside(Double_t x, Double_t y)
    Int_t inter = 0;
    for (i=0;i<fNpoints-1;i++) {
       if (fY[i] == fY[i+1]) continue;
-      if (y < fY[i] && y < fY[i+1]) continue;
+      if (y <= fY[i] && y <= fY[i+1]) continue;
       if (fY[i] < y && fY[i+1] < y) continue;
       xint = fX[i] + (y-fY[i])*(fX[i+1]-fX[i])/(fY[i+1]-fY[i]);
       if (x < xint) inter++;
    }
-   if (inter != 2*(inter/2)) return 1;
+   if (inter%2) return 1;
    return 0;
 }
 
