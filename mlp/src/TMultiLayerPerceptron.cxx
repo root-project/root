@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.17 2004/05/26 12:30:31 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.18 2004/07/23 13:48:43 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1366,6 +1366,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
    // a function (TF1 or TF2).
    
    TString lg = language;
+   lg.ToUpper();
    Int_t i;
    if (lg == "C++") {
       TString classname = filename;
