@@ -213,7 +213,11 @@ $(TESTBITS):    $(TESTBITSO)
 		@echo "$@ done"
 
 $(QPRANDOM):    $(QPRANDOMO)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(GUITEST):     $(GUITESTO)
@@ -230,10 +234,9 @@ $(STRESS):      $(STRESSO) $(EVENT)
 
 $(STRESSGEOM):  $(STRESSGEOMO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib \
-		   $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
