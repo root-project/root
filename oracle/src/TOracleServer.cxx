@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name: v4-00-08 $:$Id: TOracleServer.cxx,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -47,13 +47,6 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
    if (strcmp(url.GetFile(), "/"))
       conn_str = url.GetFile()+1; 
    
-   if (conn_str == 0) {
-      Error("TOracleServer", "Host name or database name missing in url %s",
-            url.GetUrl());
-      MakeZombie();
-      return;
-   }
-
    try {
       fEnv = Environment::createEnvironment();
       fConn = fEnv->createConnection(uid, pw, conn_str);
@@ -132,28 +125,26 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char *wild)
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
    
-   // user must be granted priveledge to query object "sys"
+/* In Oracle 9 and above, table is accessed in schema.table format.
+ * GetTables returns tables in all schemas accessible for the user.
+ * Assumption: table ALL_OBJECTS is accessible for the user, which is true in Oracle 10g
+ * The returned TSQLResult has two columns: schema_name, table_name
+ * "dbname": if specified, return table list of this schema, or return all tables
+ * "wild" is not used in this implementation
+*/
 
    if (!IsConnected()) {
       Error("GetTables", "not connected");
       return 0;
    }
-
-   if (SelectDataBase(dbname) != 0) {
-      Error("GetTables", "no such database %s", dbname);
-      return 0;
-   }
    
+   TString sqlstr("SELECT owner, object_name FROM ALL_OBJECTS WHERE object_type='TABLE'");
+   if (dbname)
+      sqlstr = sqlstr + " AND owner='" + dbname + "'";
    TSQLResult *tabRs;
-   if (wild)
-   {
-      char sql[256];
-      sprintf(sql, "select TABLE_NAME FROM sys.user_tables where TABLE_NAME LIKE %s", wild);
-      tabRs = Query(sql);
-   }
-   else
-      tabRs = Query("select TABLE_NAME FROM sys.user_tables");
+   tabRs = Query(sqlstr.Data());
    return tabRs;
+
 }
 
 //______________________________________________________________________________
@@ -165,12 +156,6 @@ TSQLResult *TOracleServer::GetColumns(const char *dbname, const char *table,
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
    
-   // user must be granted priveledge to query object "sys"
-   // TODO: to take adv of OCCI, should use MetaData to get column names
-   //       + conn->getMetaData(table, MetaData::PTYPE_TABLE)
-   //       + getVector(ATTR_LIST_COLUMNS)
-   //       + getString(ATTR_NAME)
-   
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
@@ -180,15 +165,8 @@ TSQLResult *TOracleServer::GetColumns(const char *dbname, const char *table,
       Error("GetColumns", "no such database %s", dbname);
       return 0;
    }
-
-   char sql[256];
-   if (wild) {
-      sprintf(sql, "select column_name from sys.user_tab_columns where (table_name=%s) AND (column_name like %s)", table, wild);
-   } else {
-      sprintf(sql, "select column_name from sys.user_tab_columns where table_name=%s",table);
-   }
-   TSQLResult *tabRs = Query(sql);
-   return tabRs;
+   return new TOracleResult(fConn, table);
+   
 }
 
 //______________________________________________________________________________

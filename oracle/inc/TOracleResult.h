@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name: v4-00-08 $:$Id: TOracleResult.h,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -32,6 +32,7 @@ using namespace oracle::occi;
 namespace std {
    using vector:
 }*/
+class Connection;
 class Statement;
 class ResultSet;
 class MetaData;
@@ -53,6 +54,7 @@ private:
 
 public:
    TOracleResult(Statement *stmt);
+   TOracleResult(Connection *conn, const char *tableName);
    ~TOracleResult();
 
    void        Close(Option_t *opt="");
