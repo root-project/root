@@ -58,7 +58,7 @@ endif
 #  To run a diff and ignore whitespacing the -w options should be specified before the files are
 #  listed.
 
-testWithDiff: testWithDiff.log
-	$(TestDiff) testWithDiff.log testWithDiff.ref
+testWithDiff: testWithDiff.log testWithDiff.ref
+	$(TestDiff)
 
 
