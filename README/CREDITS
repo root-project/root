@@ -270,6 +270,10 @@ N: Sergey Linev
 E: S.Linev@gsi.de
 D: XML interface package
 
+N: Jose Lo
+E: Jose.Lo@cern.ch
+D: SAX and DOM XML parser interfaces
+
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
 D: Numerous contributions to the system
