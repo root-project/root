@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDMixDecay_Hadronic.cc,v 1.1 2002/03/28 02:29:38 mwilson Exp $
+ *    File: $Id: RooDMixDecayHadronic.cc,v 1.2 2002/03/28 15:08:25 mwilson Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -13,16 +13,16 @@
 // -- CLASS DESCRIPTION [PDF] --
 //
 
-#include "RooFitModels/RooDMixDecay_Hadronic.hh"
+#include "RooFitModels/RooDMixDecayHadronic.hh"
 
 #include <cmath>
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooRandom.hh"
 
-ClassImp(RooDMixDecay_Hadronic)
+ClassImp(RooDMixDecayHadronic)
 
 
-RooDMixDecay_Hadronic::RooDMixDecay_Hadronic(const char *name, const char *title,
+RooDMixDecayHadronic::RooDMixDecayHadronic(const char *name, const char *title,
 						     RooRealVar& t_, RooAbsReal& tau_,
 						     RooAbsCategory& flavor_, RooAbsReal& R_DCS_,
 						     RooAbsReal& yprime_, RooAbsReal& xprime_,
@@ -40,6 +40,9 @@ RooDMixDecay_Hadronic::RooDMixDecay_Hadronic(const char *name, const char *title
   phi("phi","phi Interference CP Violation",this,phi_),
   flavor("flavor","D0 flavor",this,flavor_)
 {
+  //
+  // Constructor
+  //
 
   // Define which basis functions to use in our model
 
@@ -50,7 +53,7 @@ RooDMixDecay_Hadronic::RooDMixDecay_Hadronic(const char *name, const char *title
 }
 
 
-RooDMixDecay_Hadronic::RooDMixDecay_Hadronic(const RooDMixDecay_Hadronic& other,
+RooDMixDecayHadronic::RooDMixDecayHadronic(const RooDMixDecayHadronic& other,
 						     const char *name) :
   RooConvolutedPdf(other,name),
   flavor("flavor",this,other.flavor),
@@ -66,19 +69,27 @@ RooDMixDecay_Hadronic::RooDMixDecay_Hadronic(const RooDMixDecay_Hadronic& other,
   basisLin(other.basisLin),
   basisQuad(other.basisQuad)
 {
+  //
   // Copy constructor
+  //
 }
 
 
-RooDMixDecay_Hadronic::~RooDMixDecay_Hadronic()
+RooDMixDecayHadronic::~RooDMixDecayHadronic()
 {
+  //
   // Destructor
+  //
 }
 
 
 
-Double_t RooDMixDecay_Hadronic::coefficient(Int_t basisIndex) const
+Double_t RooDMixDecayHadronic::coefficient(Int_t basisIndex) const
 {
+  //
+  // Returns the coefficients for the basis functions used in the PDF definition
+  //
+
   if(basisIndex==basisConst) {
     return 1.0;
   }
@@ -109,16 +120,25 @@ Double_t RooDMixDecay_Hadronic::coefficient(Int_t basisIndex) const
 }
 
 
-Int_t RooDMixDecay_Hadronic::getCoefAnalyticalIntegral(RooArgSet& allVars,
+Int_t RooDMixDecayHadronic::getCoefAnalyticalIntegral(RooArgSet& allVars,
 							   RooArgSet& analVars) const
 {
+  //
+  // Returns a code for the analytic integral of the coefficients:
+  //
+  //    returns 1 if we need to integrate over the D0 flavor
+  //    returns 0 otherwise (no integration)
+
   if (matchArgs(allVars,analVars,flavor)) return 1;
   
   return 0;
 }
 
-Double_t RooDMixDecay_Hadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) const
+Double_t RooDMixDecayHadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) const
 {
+  //
+  // Returns the analytic integral of the coefficient based on the code 
+  // from getCoefAnalyticalIntegral()
 
   switch(code) {
     //No integration
@@ -163,9 +183,16 @@ Double_t RooDMixDecay_Hadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) c
 }
 
 
-Int_t RooDMixDecay_Hadronic::getGenerator(const RooArgSet& directVars,
+Int_t RooDMixDecayHadronic::getGenerator(const RooArgSet& directVars,
 					      RooArgSet& generateVars) const
 {
+  //
+  // Returns a code for the ToyMC generator needed:
+  //
+  //    returns 2 if we need to generate t and flavor dependents
+  //    returns 1 if we need to generate t
+  //    returns 0 otherwise
+
   if (matchArgs(directVars,generateVars,t,flavor))  return 2;
   if (matchArgs(directVars,generateVars,t)) return 1;
 
@@ -173,8 +200,11 @@ Int_t RooDMixDecay_Hadronic::getGenerator(const RooArgSet& directVars,
 }
 
 
-void RooDMixDecay_Hadronic::initGenerator(Int_t code)
+void RooDMixDecayHadronic::initGenerator(Int_t code)
 {
+  //
+  // Called at the beginning of ToyMC generation to initialize the generator
+
   switch (code) {
   case 2:
 
@@ -259,8 +289,10 @@ void RooDMixDecay_Hadronic::initGenerator(Int_t code)
 }
 
 
-void RooDMixDecay_Hadronic::generateEvent(Int_t code)
+void RooDMixDecayHadronic::generateEvent(Int_t code)
 {
+  //
+  // The is the function which implements the ToyMC generator.
 
   // Generate D0 flavor
   switch(code) {

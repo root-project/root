@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: $
+ *    File: $Id: RooDMixDecayHadronic.rdl,v 1.1 2002/03/28 02:29:38 mwilson Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -19,20 +19,20 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 
-class RooDMixDecay_Hadronic : public RooConvolutedPdf {
+class RooDMixDecayHadronic : public RooConvolutedPdf {
 public:
 
   enum D0Flavor { D0bar = -1, D0 = 1 };
 
-  inline RooDMixDecay_Hadronic() { }
-  RooDMixDecay_Hadronic(const char *name, const char *title,
+  inline RooDMixDecayHadronic() { }
+  RooDMixDecayHadronic(const char *name, const char *title,
 			    RooRealVar& t_, RooAbsReal& tau_, RooAbsCategory& flavor_,
 			    RooAbsReal& R_DCS_, RooAbsReal& yprime_, RooAbsReal& xprime_,
 			    RooAbsReal& A_D_, RooAbsReal& A_M_, RooAbsReal& phi_,
 			    const RooResolutionModel& model_);
-  RooDMixDecay_Hadronic(const RooDMixDecay_Hadronic& other, const char *name=0);
-  virtual TObject* clone(const char *newname) const { return new RooDMixDecay_Hadronic(*this,newname); }
-  virtual ~RooDMixDecay_Hadronic();
+  RooDMixDecayHadronic(const RooDMixDecayHadronic& other, const char *name=0);
+  virtual TObject* clone(const char *newname) const { return new RooDMixDecayHadronic(*this,newname); }
+  virtual ~RooDMixDecayHadronic();
 
   Double_t coefficient(Int_t basisIndex) const ;
 
@@ -75,9 +75,7 @@ protected:
     { max = max_; accept = accept_; tval = tval_; }
   };
 
-private:
-
-  ClassDef(RooDMixDecay_Hadronic,1) // Hadronic D mixing wrong-sign decay PDF with CP violation
+  ClassDef(RooDMixDecayHadronic,1) // Hadronic D mixing wrong-sign decay PDF with CP violation
 };
 
 #endif
