@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.81 2004/10/26 09:38:59 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.82 2004/11/17 17:04:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1755,8 +1755,8 @@ void TCanvas::Streamer(TBuffer &b)
       b << fYsizeUser;
       b << fXsizeReal;
       b << fYsizeReal;
-      UInt_t w,h;
-      Int_t topx,topy;
+      UInt_t w   = fWindowWidth,  h    = fWindowHeight;
+      Int_t topx = fWindowTopX,   topy = fWindowTopY;
       UInt_t editorWidth = 0;
       if(fCanvasImp) editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
       b << topx;
