@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.8 2002/02/26 11:11:19 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.9 2002/07/18 13:53:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -122,6 +122,57 @@ inline void tobuf(char *&buf, ULong_t x)
       buf[1] = 0;
       buf[2] = 0;
       buf[3] = 0;
+      memcpy(buf+4, &x, 4);
+   }
+#endif
+   buf += 8;
+}
+
+inline void tobuf(char *&buf, Long_t x)
+{
+#ifdef R__BYTESWAP
+   char *sw = (char *)&x;
+   if (sizeof(Long_t) == 8) {
+      buf[0] = sw[7];
+      buf[1] = sw[6];
+      buf[2] = sw[5];
+      buf[3] = sw[4];
+      buf[4] = sw[3];
+      buf[5] = sw[2];
+      buf[6] = sw[1];
+      buf[7] = sw[0];
+   } else {
+      if (x < 0) {
+         buf[0] = -1;
+         buf[1] = -1;
+         buf[2] = -1;
+         buf[3] = -1;
+      } else {
+         buf[0] = 0;
+         buf[1] = 0;
+         buf[2] = 0;
+         buf[3] = 0;
+      }
+      buf[4] = sw[3];
+      buf[5] = sw[2];
+      buf[6] = sw[1];
+      buf[7] = sw[0];
+   }
+#else
+   if (sizeof(Long_t) == 8) {
+      memcpy(buf, &x, 8);
+   } else {
+      if (x < 0) {
+         buf[0] = -1;
+         buf[1] = -1;
+         buf[2] = -1;
+         buf[3] = -1;
+      } else {
+         buf[0] = 0;
+         buf[1] = 0;
+         buf[2] = 0;
+         buf[3] = 0;
+      }
       memcpy(buf+4, &x, 4);
    }
 #endif
@@ -346,7 +397,6 @@ inline void frombuf(char *&buf, Double_t *x)
 inline void tobuf(char *&buf, Char_t x)  { tobuf(buf, (UChar_t) x); }
 inline void tobuf(char *&buf, Short_t x) { tobuf(buf, (UShort_t) x); }
 inline void tobuf(char *&buf, Int_t x)   { tobuf(buf, (UInt_t) x); }
-inline void tobuf(char *&buf, Long_t x)  { tobuf(buf, (ULong_t) x); }
 
 inline void frombuf(char *&buf, Char_t *x)  { frombuf(buf, (UChar_t *) x); }
 inline void frombuf(char *&buf, Short_t *x) { frombuf(buf, (UShort_t *) x); }

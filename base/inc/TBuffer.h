@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.26 2003/02/04 22:04:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.27 2003/02/05 15:03:05 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -316,6 +316,15 @@ inline TBuffer &TBuffer::operator<<(Long_t l)
 }
 
 //______________________________________________________________________________
+inline TBuffer &TBuffer::operator<<(ULong_t l)
+{
+   if (fBufCur + sizeof(ULong_t) > fBufMax) Expand(2*fBufSize);
+
+   tobuf(fBufCur, l);
+   return *this;
+}
+
+//______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(Float_t f)
 {
    if (fBufCur + sizeof(Float_t) > fBufMax) Expand(2*fBufSize);
@@ -405,9 +414,6 @@ inline TBuffer &TBuffer::operator<<(UShort_t h)
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(UInt_t i)
    { return TBuffer::operator<<((Int_t)i); }
-//______________________________________________________________________________
-inline TBuffer &TBuffer::operator<<(ULong_t l)
-   { return TBuffer::operator<<((Long_t)l); }
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(UChar_t &c)
@@ -484,9 +490,6 @@ inline void TBuffer::WriteArray(const UShort_t *h, Int_t n)
 //______________________________________________________________________________
 inline void TBuffer::WriteArray(const UInt_t *i, Int_t n)
    { TBuffer::WriteArray((const Int_t *)i, n); }
-//______________________________________________________________________________
-inline void TBuffer::WriteArray(const ULong_t *l, Int_t n)
-   { TBuffer::WriteArray((const Long_t *)l, n); }
 
 //______________________________________________________________________________
 inline void TBuffer::WriteFastArray(const UChar_t *c, Int_t n)
@@ -497,8 +500,5 @@ inline void TBuffer::WriteFastArray(const UShort_t *h, Int_t n)
 //______________________________________________________________________________
 inline void TBuffer::WriteFastArray(const UInt_t *i, Int_t n)
    { TBuffer::WriteFastArray((const Int_t *)i, n); }
-//______________________________________________________________________________
-inline void TBuffer::WriteFastArray(const ULong_t *l, Int_t n)
-   { TBuffer::WriteFastArray((const Long_t *)l, n); }
 
 #endif

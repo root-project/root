@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.45 2003/02/04 22:04:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.46 2003/02/25 17:58:17 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1278,6 +1278,26 @@ void TBuffer::WriteArray(const Long_t *ll, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteArray(const ULong_t *ll, Int_t n)
+{
+   // Write array of n unsigned longs into the I/O buffer.
+   // This is an explicit case for unsigned longs since signed longs
+   // have a special tobuf().
+
+   Assert(IsWriting());
+
+   *this << n;
+
+   if (n <= 0) return;
+
+   Assert(ll);
+
+   Int_t l = 8*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+   for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
+}
+
+//______________________________________________________________________________
 void TBuffer::WriteArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
@@ -1427,6 +1447,21 @@ void TBuffer::WriteFastArray(const Long_t *ll, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteFastArray(const ULong_t *ll, Int_t n)
+{
+   // Write array of n unsigned longs into the I/O buffer.
+   // This is an explicit case for unsigned longs since signed longs
+   // have a special tobuf().
+
+   if (n <= 0) return;
+
+   Int_t l = 8*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
+}
+
+//______________________________________________________________________________
 void TBuffer::WriteFastArray(const Float_t *f, Int_t n)
 {
    // Write array of n floats into the I/O buffer.
@@ -1555,7 +1590,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       }
       obj = (char *) fMap->GetValue(tag);
       clRef = (TClass*) fClassMap->GetValue(tag);
-      
+
       if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
          //baseOffset will be -1 if clRef does not inherit from clCast.
          baseOffset = clRef->GetBaseClassOffset(clCast);
