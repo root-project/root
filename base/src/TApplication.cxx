@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.16 2001/07/04 11:19:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.17 2001/07/09 13:48:31 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -452,7 +452,7 @@ void TApplication::InitializeColors()
 
       for (i=0 ; i<MaxPretty ; i++) {
          hue = MaxHue-(i+1)*((MaxHue-MinHue)/MaxPretty);
-         c110->HLStoRGB(hue, lightness, saturation, r, g, b);
+         TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
          new TColor(i+51, r, g, b);
       }
 
@@ -464,14 +464,14 @@ void TApplication::InitializeColors()
          if (r == 1) r = 0.9; if (r == 0) r = 0.1;
          if (g == 1) g = 0.9; if (g == 0) g = 0.1;
          if (b == 1) b = 0.9; if (b == 0) b = 0.1;
-         s0->RGBtoHLS(r,g,b,h,l,s);
-         s0->HLStoRGB(h,0.6*l,s,r,g,b);
+         TColor::RGBtoHLS(r,g,b,h,l,s);
+         TColor::HLStoRGB(h,0.6*l,s,r,g,b);
          new TColor(200+4*i-3,r,g,b);
-         s0->HLStoRGB(h,0.8*l,s,r,g,b);
+         TColor::HLStoRGB(h,0.8*l,s,r,g,b);
          new TColor(200+4*i-2,r,g,b);
-         s0->HLStoRGB(h,1.2*l,s,r,g,b);
+         TColor::HLStoRGB(h,1.2*l,s,r,g,b);
          new TColor(200+4*i-1,r,g,b);
-         s0->HLStoRGB(h,1.4*l,s,r,g,b);
+         TColor::HLStoRGB(h,1.4*l,s,r,g,b);
          new TColor(200+4*i  ,r,g,b);
       }
    }

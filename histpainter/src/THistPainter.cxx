@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.41 2001/06/22 16:10:18 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.42 2001/07/10 16:59:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3779,11 +3779,11 @@ void THistPainter::PaintSurface()
       TColor *colref = gROOT->GetColor(fH->GetFillColor());
       Float_t r,g,b,hue,light,satur;
       colref->GetRGB(r,g,b);
-      colref->RGBtoHLS(r,g,b,hue,light,satur);
+      TColor::RGBtoHLS(r,g,b,hue,light,satur);
       TColor *acol;
       for (Int_t col=0;col<nbcol;col++) {
          acol = gROOT->GetColor(col+icol1);
-         acol->HLStoRGB(hue,.4+col*dcol,satur,r,g,b);
+         TColor::HLStoRGB(hue,.4+col*dcol,satur,r,g,b);
          acol->SetRGB(r,g,b);
       }
       fLego->Spectrum(nbcol, fmin, fmax, icol1, 1, irep);
