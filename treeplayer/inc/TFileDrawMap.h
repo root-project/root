@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.h,v 1.1 2003/01/16 18:45:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.h,v 1.1 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -29,6 +29,7 @@ class TH1;
 class TFile;
 class TDirectory;
 class TBox;
+class TBranch;
 
 class TFileDrawMap : public TNamed {
 
@@ -40,6 +41,7 @@ protected:
     Int_t          fXsize;          //size in bytes of X axis
     Int_t          fYsize;          //size in K/Mbytes of Y axis
            
+    virtual void     DrawMarker(Int_t marker, Seek_t eseek);
     virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char *info) const;
     virtual void     PaintBox(TBox &box, Seek_t bseek, Int_t nbytes);
     virtual void     PaintDir(TDirectory *dir, const char *keys);
@@ -50,6 +52,7 @@ public:
     TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
     virtual ~TFileDrawMap();
 
+    virtual void  AnimateTree(const char *branches=""); // *MENU*
     virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
     virtual void  DrawObject(); // *MENU*
     virtual void  DumpObject(); // *MENU*

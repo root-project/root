@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.1 2003/01/16 18:45:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.1 2003/01/17 17:48:57 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -79,6 +79,7 @@
 #include "TBox.h"
 #include "TKey.h"
 #include "TRegexp.h"
+#include "TSystem.h"
 
 ClassImp(TFileDrawMap)
 
@@ -123,8 +124,8 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    }
    fFrame->GetXaxis()->SetTitle("Bytes");
    fYsize = 1 + Int_t(file->GetEND()/fXsize);
-   fFrame->SetMaximum(fYsize+1);
-   fFrame->GetYaxis()->SetLimits(0,fYsize+1);
+   fFrame->SetMaximum(fYsize);
+   fFrame->GetYaxis()->SetLimits(0,fYsize);
    
    Bool_t show = kFALSE;
    if (gPad) {
@@ -148,6 +149,84 @@ TFileDrawMap::~TFileDrawMap()
 }
 
 //______________________________________________________________________________
+void  TFileDrawMap::AnimateTree(const char *branches)
+{
+// Show sequence of baskets reads for the list of baskets involved 
+// in the list of branches (separated by ",")
+// if branches="", the branch pointed by the mouse is taken.
+// if branches="*", all branches are taken
+// Example:
+//  AnimateTree("x,y,u");
+   
+   char info[512];
+   strcpy(info,GetName());
+   char *cbasket = strstr(info,", basket=");
+   if (!cbasket) return;
+   *cbasket = 0;
+   char *cbranch = strstr(info,", branch=");
+   if (!cbranch) return;
+   *cbranch = 0;
+   cbranch += 9;
+   TTree *tree = (TTree*)fFile->Get(info);
+   if (!tree) return;
+   if (strlen(branches) > 0) strcpy(info,branches);
+   else                      strcpy(info,cbranch);
+   printf("Animating tree, branches=%s\n",info);      
+   
+   // create list of branches
+   Int_t nzip = 0;
+   TBranch *branch;
+   TObjArray list;
+   char *comma;
+   while((comma = strrchr(info,','))) {
+      *comma = 0;
+      comma++;
+      while (*comma == ' ') comma++;
+      branch = tree->GetBranch(comma);
+      if (branch) {
+         nzip += (Int_t)branch->GetZipBytes(); 
+         branch->SetUniqueID(0);
+         list.Add(branch);
+      }
+   }
+   comma = info;
+   while (*comma == ' ') comma++;
+   branch = tree->GetBranch(comma);
+   if (branch) {
+      nzip += (Int_t)branch->GetZipBytes(); 
+      branch->SetUniqueID(0);
+      list.Add(branch);
+   }
+   Double_t fractionRead = Double_t(nzip)/Double_t(fFile->GetEND());
+   Int_t nbranches = list.GetEntries();
+   
+   // loop on all tree entries
+   Int_t nentries = (Int_t)tree->GetEntries();
+   Int_t sleep = 1;
+   Int_t stime = (Int_t)(100./(nentries*fractionRead));
+   if (stime < 10) {stime=1; sleep = nentries/400;}
+printf("sleep=%d, stime = %d, fractionRead=%g\n",sleep,stime,fractionRead);
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   for (Int_t entry=0;entry<nentries;entry++) {
+      for (Int_t ib=0;ib<nbranches;ib++) {
+         branch = (TBranch*)list.At(ib);
+         Int_t nbaskets = branch->GetListOfBaskets()->GetSize();
+         Int_t basket = TMath::BinarySearch(nbaskets,branch->GetBasketEntry(),entry);
+         Int_t nbytes = branch->GetBasketBytes()[basket];
+         Int_t bseek  = branch->GetBasketSeek(basket);
+         Int_t entry0 = branch->GetBasketEntry()[basket];
+         Int_t entryn = branch->GetBasketEntry()[basket+1];
+         Int_t eseek  = (Int_t)(bseek + nbytes*Double_t(entry-entry0)/Double_t(entryn-entry0));
+         DrawMarker(ib,branch->GetUniqueID());
+         DrawMarker(ib,eseek);
+         branch->SetUniqueID(eseek);
+         gSystem->ProcessEvents();
+         if (entry%sleep == 0) gSystem->Sleep(stime);
+      }
+   }
+}
+
+//______________________________________________________________________________
 Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // Compute distance from point px,py to this TreeFileMap
@@ -164,6 +243,40 @@ Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
    return fFrame->DistancetoPrimitive(px,py);
 }
 
+//______________________________________________________________________________
+void TFileDrawMap::DrawMarker(Int_t marker, Seek_t eseek)
+{
+// Draw marker
+   
+   Int_t iy = gPad->YtoAbsPixel(eseek/fXsize);
+   Int_t ix = gPad->XtoAbsPixel(eseek%fXsize);
+   Int_t d;
+   Int_t mark = marker%4;
+   switch (mark) {
+      case 0 : d = 6; //arrow
+              gVirtualX->DrawLine(ix-3*d,iy,ix,iy);
+              gVirtualX->DrawLine(ix-d,iy+d,ix,iy);
+              gVirtualX->DrawLine(ix-d,iy-d,ix,iy);
+              gVirtualX->DrawLine(ix-d,iy-d,ix-d,iy+d);
+              break;
+      case 1 : d = 5; //up triangle
+              gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
+              gVirtualX->DrawLine(ix+d,iy-d,ix,iy+d);
+              gVirtualX->DrawLine(ix,iy+d,ix-d,iy-d);
+              break;
+      case 2 : d = 5; //open square
+              gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
+              gVirtualX->DrawLine(ix+d,iy-d,ix+d,iy+d);
+              gVirtualX->DrawLine(ix+d,iy+d,ix-d,iy+d);
+              gVirtualX->DrawLine(ix-d,iy+d,ix-d,iy-d);
+              break;
+      case 3 : d = 8; //cross
+              gVirtualX->DrawLine(ix-d,iy,ix+d,iy);
+              gVirtualX->DrawLine(ix,iy-d,ix,iy+d);
+              break;
+   }
+}
+ 
 //______________________________________________________________________________
 void TFileDrawMap::DrawObject()
 {
@@ -412,6 +525,7 @@ void TFileDrawMap::PaintBox(TBox &box, Seek_t bseek, Int_t nbytes)
       if (ymin > gPad->GetUymax()) continue;
       if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
+      //box.TAttFill::Modify();
       box.PaintBox(xmin,ymin,xmax,ymax);
    }
 }
