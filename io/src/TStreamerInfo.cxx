@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.189 2004/01/23 22:00:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.190 2004/01/27 19:52:48 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TProcessID.h"
 #include "TVirtualCollectionProxy.h"
 #include "TStreamer.h"
+#include "TInterpreter.h"
 
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
@@ -578,7 +579,22 @@ void TStreamerInfo::BuildOld()
             TBaseClass *bc  = 0;
             TList *listOfBases = fClass->GetListOfBases();
             if (listOfBases) {
-               bc = (TBaseClass*)listOfBases->FindObject(element->GetTypeName());
+               TIter nextBC(fClass->GetListOfBases());
+               while ((bc=(TBaseClass*)nextBC())) {
+
+                  if (index(bc->GetName(),'<')!=0) {
+                     TString bcName(  TClassEdit::ShortType(bc->GetName(),TClassEdit::kDropStlDefault).c_str() );
+
+                     if (bcName==element->GetTypeName()) break;
+
+                  }
+               }
+
+            }
+            if (bc==0) {
+               Error("BuildOld","Could not find STL base class: %s for %s\n",
+                     element->GetName(),GetName());
+               continue;
             }
             int baseOffset = bc->GetDelta();
             if (baseOffset==-1) {
@@ -620,7 +636,7 @@ void TStreamerInfo::BuildOld()
 
          // in case, element is an array check array dimension(s)
          // check if data type has been changed
-         TString ts(TClassEdit::ShortType(dm->GetFullTypeName(),TClassEdit::kDropAlloc).c_str());
+         TString ts(TClassEdit::ResolveTypedef(TClassEdit::ShortType(dm->GetFullTypeName(),TClassEdit::kDropAlloc).c_str()).c_str());
          
          Bool_t need_conversion = false;
          if (strcmp(element->GetTypeName(),ts.Data())) need_conversion = true;

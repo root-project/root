@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.2 2004/01/16 21:29:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.3 2004/01/21 07:04:33 brun Exp $
 // Author: Victor Perev   10/04/2003
 
 #ifndef ROOT_TClassEdit
@@ -54,6 +54,7 @@ public:
    static int         GetSplit  (const char *type, std::vector<std::string> &output);
    static int         STLKind   (const char *type);    //Kind of stl container
    static int         STLArgs   (int kind);            //Min number of arguments without allocator
+   static std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    static std::string ShortType (const char *typeDesc, int mode);
 };
 

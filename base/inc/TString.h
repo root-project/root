@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.24 2003/09/12 15:54:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.25 2003/11/04 15:28:34 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -210,6 +210,7 @@ public:
 
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
+   TString(const std::string& s);              
    TString(char c) { InitChar(c); }
 
    TString(char c, Ssiz_t s);
@@ -239,6 +240,7 @@ public:
    TString&    operator=(char s);                // Replace string
    TString&    operator=(const char *s);
    TString&    operator=(const TString& s);
+   TString&    operator=(const std::string& s);
    TString&    operator=(const TSubString& s);
    TString&    operator+=(const char *s);        // Append string
    TString&    operator+=(const TString& s);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.2 2004/01/16 21:29:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.3 2004/01/21 07:04:33 brun Exp $
 // Author: Victor Perev   04/10/2003
 
 
@@ -7,6 +7,10 @@
 #include <assert.h>
 #include "TClassEdit.h"
 #include <ctype.h>
+#include "Rstrstream.h"
+
+// CINT's API.
+#include "Api.h"
 
 namespace std {} using namespace std;
 
@@ -436,6 +440,8 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
    //             like vector<deque<int>> has answer -1
    ////////////////////////////////////////////////////////////////////////////////
 
+   if (index(ty,'<')==0) return 0;
+
    int k = (testAlloc) ? 2:0;
    string full = ShortType(ty,k);
 
@@ -479,6 +485,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 }
 
 
+//______________________________________________________________________________
 bool TClassEdit::IsVectorBool(const char *name) {
    vector<string> splitName;
    TClassEdit::GetSplit(name,splitName);
@@ -486,3 +493,86 @@ bool TClassEdit::IsVectorBool(const char *name) {
    return ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector)
       && ( splitName[1] == "bool" || splitName[1]=="Bool_t");
 };
+
+//______________________________________________________________________________
+namespace {
+   static bool ShouldReplace(const char *name)
+   {
+      // This helper function indicates whether we really want to replace
+      // a type.
+
+      const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
+                                    "Int_t","Double_t","Double32_t",
+                                    "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
+                                    "Long64_t","ULong64_t"};
+
+      for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
+         if (strcmp(name,excludelist[i])==0) return false;
+      }
+
+      return true;
+   }
+}
+
+//______________________________________________________________________________
+string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
+{
+
+   // Return the name of type 'tname' with all its typedef components replaced
+   // by the actual type its points to
+   // For example for "typedef MyObj MyObjTypedef;"
+   //    vector<MyObjTypedef> return vector<MyObjTypedef>
+   //
+  
+   if ( ! index(tname,'<') && (tname[strlen(tname)-1]!='*') ) {
+
+      // We have a very simple type
+
+      if (resolveAll || ShouldReplace(tname)) {
+         G__TypedefInfo t;
+         t.Init(tname);
+         if (t.IsValid()) return t.TrueName();
+      }
+      return tname;      
+   }
+
+   int len = strlen(tname);
+   string input(tname);
+ #ifdef R__SSTREAM
+   stringstream answ;
+#else
+   strstream answ;
+#endif
+
+   int prev = 0;
+   for (int i=0; i<len; ++i) { 
+      switch (tname[i]) {
+         case '<':
+         case '>':
+         case '*':
+         case ' ':
+         case '&':
+         case ',':
+         {
+            char keep = input[i];
+            string temp( input, prev,i-prev );
+           
+            if (resolveAll || ShouldReplace(temp.c_str())) {
+               answ << ResolveTypedef( temp.c_str(), resolveAll);
+            } else {
+               answ << temp;
+            }
+            answ << keep;
+            prev = i+1;
+         }            
+      }
+   }
+   const char *last = &(input.c_str()[prev]);
+   if (resolveAll || ShouldReplace(last)) {
+      answ << ResolveTypedef( last, resolveAll);
+   } else {
+      answ << last;
+   }
+   return answ.str();
+
+} 
