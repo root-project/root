@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.31 2003/05/28 13:47:07 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.32 2003/12/16 16:22:56 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2060,7 +2060,12 @@ void TGX11::SetInputFocus(Window_t id)
 {
    // Set keyboard input focus to window id.
 
-   XSetInputFocus(fDisplay, (Window) id, RevertToParent, CurrentTime);
+   XWindowAttributes xattr;
+
+   XGetWindowAttributes(fDisplay, (Window) id, &xattr);
+
+   if (xattr.map_state == IsViewable)
+      XSetInputFocus(fDisplay, (Window) id, RevertToParent, CurrentTime);
 }
 
 //______________________________________________________________________________
