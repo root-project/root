@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.43 2003/11/07 08:59:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.44 2004/02/07 22:32:08 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -2292,7 +2292,7 @@ void TH3I::AddBinContent(Int_t bin, Stat_t w)
 //*-*                ==========================
 
    Int_t newval = fArray[bin] + Int_t(w);
-   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Short_t(newval); return;}
+   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
    if (newval >  2147483647) fArray[bin] =  2147483647;
 }
@@ -2347,7 +2347,7 @@ void TH3I::SetBinContent(Int_t bin, Stat_t content)
 // Set bin content
    if (bin < 0) return;
    if (bin >= fNcells) return;
-   fArray[bin] = Short_t (content);
+   fArray[bin] = Int_t (content);
    fEntries++;
 }
 
