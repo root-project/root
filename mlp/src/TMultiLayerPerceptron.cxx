@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.6 2003/09/03 06:08:34 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.7 2003/09/05 10:40:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -135,7 +135,7 @@ the direction is reset to the steepes descent.</P>
 <UL>
 	<LI><P><A NAME="use"></A><FONT COLOR="#5c8526">
 	<FONT SIZE=4 STYLE="font-size: 15pt">How
-	to use it...</FONT></FONT></P>
+	to use it...</FONT></FONT></P></LI>
 </UL>
 <P><FONT SIZE=3>TMLP is build from 3 classes: TNeuron, TSynapse and
 TMultiLayerPerceptron. Only TMultiLayerPerceptron sould be used
@@ -156,6 +156,19 @@ One defines the training and test datasets by TEventLists.</FONT></P>
 the constructor, or later with the suited setter method.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the
 TMultiLayerPerceptron::SetLearningMethod() . Learning methods are :</FONT></P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
 <P><FONT SIZE=3>TMultiLayerPerceptron::kStochastic, <BR>
 TMultiLayerPerceptron::kBatch,<BR>
 TMultiLayerPerceptron::kSteepestDescent,<BR>
@@ -164,6 +177,19 @@ TMultiLayerPerceptron::kFletcherReeves,<BR>
 TMultiLayerPerceptron::kBFGS<BR></FONT></P>
 <P><FONT SIZE=3>Finally, one starts the training with
 TMultiLayerPerceptron::Train(Int_t nepoch, Option_t* options). The
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
 first argument is the number of epochs while option is a string that
 can contain: &quot;text&quot; (simple text output) , &quot;graph&quot;
 (evoluting graphical training curves), &quot;update=X&quot; (step for
@@ -176,6 +202,17 @@ net.Train(100,&quot;text, graph, update=10&quot;).</SPAN></FONT></P>
 <P><FONT SIZE=3>When the neural net is trained, it can be used
 directly ( TMultiLayerPerceptron::Evaluate() ) or exported to a
 standalone C++ code ( TMultiLayerPerceptron::Export() ).</FONT></P>
+<P><FONT SIZE=3>Finaly, note that even if this implementation is inspired from the mlpfit code,
+the feature lists are not exactly matching: 
+<UL>
+        <LI><P>mlpfit hybrid learning method is not implemented</P></LI>
+	<LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
+	<LI><P>the neural net is exported in C++ (not in FORTRAN)</P></LI>
+	<LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
+	<LI><P>input and outputs must be in existing trees, and cannot be computed dynamically, as it is for the paw mlpfit implementation</P></LI>
+	<LI><P>mlpfit remains faster</P></LI>
+</UL>
+In addition, the paw version of mlpfit had additional limitations on the number of neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
 <!-- */
 // -->END_HTML
 
