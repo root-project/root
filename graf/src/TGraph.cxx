@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.127 2004/04/28 09:29:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.128 2004/05/06 12:58:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -220,7 +220,7 @@ TGraph::TGraph(const TGraph &gr)
    // Copy constructor for this graph
 
    fNpoints = gr.fNpoints;
-   if (fFunctions) fFunctions = (TList*)fFunctions->Clone();
+   if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
    fHistogram = 0;
    fMinimum = gr.fMinimum;
