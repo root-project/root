@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.7 2002/05/10 21:32:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.8 2002/07/01 22:56:38 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -16,14 +16,25 @@
 #error RtypesImp.h should only be included by ROOT dictionaries.
 #endif
 
+#include "Api.h"
+
 namespace ROOT {
    inline void GenericShowMembers(const char *topClassName,
                                   void *obj, TMemberInspector &R__insp,
-                                  char *R__parent)
+                                  char *R__parent,
+                                  bool transientMember)
    {
       // This could be faster if we implemented this either as a templated
       // function or by rootcint-generated code using the typeid (i.e. the
       // difference is a lookup a in TList instead of in a map).
+
+      // To avoid a spurrious error message in case the data member is transient
+      // and does not have a dictionary we check first.
+      if (transientMember) {
+         G__ClassInfo b(topClassName);
+         if (!b.IsLoaded()) return;
+      }
+
       TClass *top = gROOT->GetClass(topClassName);
       if (top) {
          ShowMembersFunc_t show = top->GetShowMembersWrapper();

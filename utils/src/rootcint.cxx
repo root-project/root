@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.88 2002/07/01 22:56:04 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.89 2002/07/05 17:29:52 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2122,8 +2122,9 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   if (strlen(m.Type()->Name()) &&
                       strcmp(compareName,m.Type()->Name())!=0 ) {
                      // Filter out the unamed type from with a the class.
-                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", &%s%s, R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
-                             m.Type()->Name(), prefix, m.Name(), m.Name());
+                     fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", &%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
+                                 "      R__parent[R__ncp] = 0;\n",
+                                 m.Type()->Name(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");
                   }
                   if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
 
@@ -2156,10 +2157,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       } else {
          if (outside) {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>( (::%s*) obj ), R__insp, R__parent);\n",
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>( (::%s*) obj ), R__insp, R__parent, false);\n",
                     b.Name(), b.Name(), cl.Fullname());
          } else {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>(this ), R__insp, R__parent);\n",
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>(this ), R__insp, R__parent, false);\n",
                     b.Name(), b.Name());
          }
       }
@@ -3002,7 +3003,7 @@ int main(int argc, char **argv)
    fprintf(fp, "// Do NOT change. Changes will be lost next time file is generated\n//\n\n");
 
    fprintf(fp, "#include \"RConfig.h\"\n");
-   fprintf(fp, "#if 1 && !defined(R__ACCESS_IN_SYMBOL)\n");
+   fprintf(fp, "#if !defined(R__ACCESS_IN_SYMBOL)\n");
    fprintf(fp, "//Break the privacy of classes -- Disabled for the moment\n");
    fprintf(fp, "#define private public\n");
    fprintf(fp, "#define protected public\n");
