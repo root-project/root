@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.10 2001/06/20 12:24:29 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.11 2001/08/07 12:27:51 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -7594,9 +7594,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
        ++fIcirc[ityp-1];
        if (fIcirc[ityp-1] > 10) 	fIcirc[ityp-1] = 1;
        ic = fIcirc[ityp-1];
-       fOrigin[ic + ityp*10 - 11] = corg;
-       fWarmes[ic + ityp*10 - 11] = cmes;
-       fNfcwar[ic + ityp*10 - 11] = fNfcn;
+       fOrigin[ic] = corg;
+       fWarmes[ic] = cmes;
+       fNfcwar[ic] = fNfcn;
        return;
    }
 
@@ -7624,9 +7624,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 	for (i = 1; i <= nm; ++i) {
 	    ++ic;
 	    if (ic > MAXMES) ic = 1;
-            Printf(" %6d %s %s", fNfcwar[ic + ityp*10 - 11],
-                               (const char*)fOrigin + (ic + ityp*10 - 11)*10,
-                               (const char*)fWarmes + (ic + ityp*10 - 11)*60);
+            Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
 	}
 	fNwrmes[ityp-1] = 0;
 	Printf(" ");
