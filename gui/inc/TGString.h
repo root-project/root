@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.4 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.5 2004/07/12 20:04:29 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -35,7 +35,6 @@ class TGString : public TString {
 
 public:
    TGString() : TString() { }
-   TGString(TString s) : TString(s.Data()) { }
    TGString(const char *s) : TString(s) { }
    TGString(Int_t number) : TString() { *this += number; }
    TGString(const TGString *s);
