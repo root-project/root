@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.11 2001/08/27 11:07:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.12 2001/08/31 17:49:44 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -332,8 +332,8 @@ void TGTextEntry::Init()
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
-                         kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask |
+                         kButtonMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
