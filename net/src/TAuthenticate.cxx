@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.43 2004/03/23 15:39:19 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.44 2004/03/24 17:26:15 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1984,33 +1984,25 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       }
 
+      // Store password for later use
+      fgUser = fUser;
+      fgPwHash = kFALSE;
+      fPwHash = kFALSE;
+      fgPasswd = Passwd;
+      fPasswd = Passwd;
+      fSRPPwd = kFALSE;
+      fgSRPPwd = kFALSE;
+
       // Send it to server
       if (Anon == 0 && Crypt == 1) {
 
-         // Store for later use
-         fgUser = fUser;
-         fgPasswd = PasHash;
-         fPasswd = PasHash;
-         fgPwHash = kTRUE;
-         fPwHash = kTRUE;
-         fSRPPwd = kFALSE;
-         fgSRPPwd = kFALSE;
-
-         fSocket->Send("\0", kROOTD_PASS);  // Needs this for consistency
+         // Needs to send this for consistency
+         fSocket->Send("\0", kROOTD_PASS);  
          if (SecureSend(fSocket, 1, PasHash) == -1) {
             Warning("ClearAuth", "problems secure-sending pass hash"
                     " - may result in authentication failure");
          }
       } else {
-
-         // Store for later use
-         fgUser = fUser;
-         fgPasswd = Passwd;
-         fPasswd = Passwd;
-         fgPwHash = kFALSE;
-         fPwHash = kFALSE;
-         fSRPPwd = kFALSE;
-         fgSRPPwd = kFALSE;
 
          // Standard technique: invert passwd
          if (Passwd != "") {
