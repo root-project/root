@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.6 2004/08/04 20:46:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.7 2004/08/11 04:42:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -9,12 +9,13 @@
 #include <stdio.h>
 
 
-//- protected class members -----------------------------------------------------
-void PyROOT::MethodDispatcher::destroy( void* pmd ) {
+//- destructor callback --------------------------------------------------------
+extern "C" void destroyMethodDispatcher( void* pmd ) {
    delete reinterpret_cast< PyROOT::MethodDispatcher* >( pmd );
 }
 
 
+//- protected class members -----------------------------------------------------
 PyObject* PyROOT::MethodDispatcher::invoke( PyObject* self, PyObject* args, PyObject* kws ) {
    return (*(reinterpret_cast< PyROOT::MethodDispatcher* >( PyCObject_AsVoidPtr( self ) )) )( args, kws );
 }
@@ -44,7 +45,7 @@ bool PyROOT::MethodDispatcher::addToClass( MethodDispatcher* pmd, PyObject* cls 
    pdef->ml_flags = METH_VARARGS | METH_KEYWORDS;
    pdef->ml_doc   = NULL;
 
-   PyObject* func = PyCFunction_New( pdef, PyCObject_FromVoidPtr( pmd, MethodDispatcher::destroy ) );
+   PyObject* func = PyCFunction_New( pdef, PyCObject_FromVoidPtr( pmd, &destroyMethodDispatcher ) );
    PyObject* method = 0;
    if ( pmd->m_isStatic == true )
       method = PyStaticMethod_New( func );

@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.12 2004/10/30 06:26:43 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.13 2004/11/02 10:13:06 rdm Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/01/04
+# Last: 11/02/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -140,6 +140,9 @@ def _excepthook( exctype, value, traceb ):
       elif cmd == '.x':
          import __main__
          execfile( arg, __main__.__dict__, __main__.__dict__ )
+         return
+      elif cmd == '.cd':
+         os.chdir( arg )
          return
 
  # normal exception processing

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.3 2004/07/30 06:31:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.4 2004/08/04 04:45:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,17 +12,6 @@
 #include "TClass.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
-
-
-//- helpers ---------------------------------------------------------------------
-namespace {
-
-// FIXME: this is a dupe
-   void destroyObjectHolder( void* oh ) {
-      delete reinterpret_cast< PyROOT::ObjectHolder* >( oh );
-   }
-
-}
 
 
 //- constructor -----------------------------------------------------------------
@@ -59,7 +48,7 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
    // and scopes between C++ and python are different. Thus, ROOT could hold on to
    // objects internally, even though objects have phased out on the python side.
       PyObject* cobj = PyCObject_FromVoidPtr(
-         new ObjectHolder( (void*)address, cls ), destroyObjectHolder );
+         new ObjectHolder( (void*)address, cls ), &destroyObjectHolder );
       PyObject_SetAttr( self, Utility::theObjectString_, cobj );
 
    // allow lookup upon destruction on the ROOT/CINT side

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.4 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.5 2004/07/30 06:31:18 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -108,6 +108,9 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
       if ( ! pyobj )
          return;
 
+   // clean up the weak reference.
+      Py_DECREF( ppo->second );
+
       if ( pyobj != Py_None ) {
          if ( ! PyROOT_NoneType.tp_traverse ) {
          // take a reference as we're copying its function pointers
@@ -126,14 +129,17 @@ void PyROOT::MemoryRegulator::RecursiveRemove( TObject* obj ) {
             return;
          }
 
+      // notify weak referents by playing dead
+         int refcnt = pyobj->ob_refcnt;
+         pyobj->ob_refcnt = 0;
+         PyObject_ClearWeakRefs( pyobj );
+         pyobj->ob_refcnt = refcnt;
+
       // reset type object
          Py_INCREF( &PyROOT_NoneType );
          Py_DECREF( pyobj->ob_type );
          pyobj->ob_type = &PyROOT_NoneType;
       }
-
-   // clean up the weak reference.
-      Py_DECREF( ppo->second );
 
    // erase the object from tracking
       s_objectTable.erase( ppo );

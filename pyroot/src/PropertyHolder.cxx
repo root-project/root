@@ -14,12 +14,13 @@
 #include <string>
 
 
-//- protected class members --------------------------------------------------
-void PyROOT::PropertyHolder::destroy( void* pp ) {
-   delete reinterpret_cast< PyROOT::PropertyHolder* >( pp );
+//- destructor callback --------------------------------------------------------
+extern "C" void destroyPropertyHolder( void* pph ) {
+   delete reinterpret_cast< PyROOT::PropertyHolder* >( pph );
 }
 
 
+//- protected class members --------------------------------------------------
 PyObject* PyROOT::PropertyHolder::invoke_get( PyObject* self, PyObject* args, PyObject* kws ) {
    return reinterpret_cast< PyROOT::PropertyHolder* >( PyCObject_AsVoidPtr( self ) )->get( args, kws );
 }

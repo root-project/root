@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.24 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.25 2004/11/02 10:13:06 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -210,7 +210,6 @@ namespace {
    #else
             if ( PyString_AS_STRING( tc )[0] != GetTct( (aType)0 ) )
    #endif
-              
                buf = 0;                      // no match
             Py_DECREF( tc );
          }
@@ -320,17 +319,22 @@ namespace {
 
 //- private helpers ------------------------------------------------------------
 inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
+   std::cout << "copying a method holder" << std::endl;
 // yes, these pointer copy semantics are proper
    m_class       = om.m_class;
    m_method      = om.m_method;
    m_methodCall  = 0;
+   m_returnType  = om.m_returnType;
+   m_rtShortName = om.m_rtShortName;
    m_offset      = 0;
    m_tagnum      = -1;
 
    m_argsConverters = om.m_argsConverters;
-   m_callString     = om.m_callString;
    m_isInitialized  = om.m_isInitialized;
-   m_lastObject     = 0;
+
+   Py_XINCREF( m_refSelf );
+   m_refSelf   = om.m_refSelf;
+   m_refHolder = om.m_refHolder;
 
 // the new args buffer is clean
    m_argsBuffer.resize( om.m_argsBuffer.size() );
@@ -349,9 +353,7 @@ inline void PyROOT::MethodHolder::destroy_() const {
 }
 
 
-bool PyROOT::MethodHolder::initDispatch_() {
-   assert( m_callString.length() == 0 );
-
+bool PyROOT::MethodHolder::initDispatch_( std::string& callString ) {
 // buffers for argument dispatching
    const int nArgs = m_method->GetNargs();
    if ( nArgs == 0 )
@@ -392,10 +394,10 @@ bool PyROOT::MethodHolder::initDispatch_() {
       }
 
    // setup call string
-      if ( m_callString.length() == 0 )
-         m_callString = fullType;
+      if ( callString.length() == 0 )
+         callString = fullType;
       else
-         m_callString += "," + fullType;
+         callString += "," + fullType;
 
    // advance argument counter
       iarg += 1;
@@ -406,11 +408,6 @@ bool PyROOT::MethodHolder::initDispatch_() {
 
 
 void PyROOT::MethodHolder::calcOffset_( void* obj, TClass* cls ) {
-// loop optimization
-   if ( obj == m_lastObject )
-      return;
-   m_lastObject = obj;
-
 // actual offset calculation, as needed
    long derivedtagnum = cls->GetClassInfo()->Tagnum();
 
@@ -423,11 +420,12 @@ void PyROOT::MethodHolder::calcOffset_( void* obj, TClass* cls ) {
 
 //- constructors and destructor ------------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
-      m_class( cls ), m_method( tm ), m_callString( "" ) {
+      m_class( cls ), m_method( tm ), m_rtShortName( "" ) {
    m_methodCall = 0;
    m_offset     = 0;
    m_tagnum     = -1;
-   m_lastObject = 0;
+   m_refSelf    = 0;
+   m_refHolder  = 0;
    m_returnType = Utility::kOther;
    m_isInitialized = false;
 }
@@ -507,7 +505,8 @@ bool PyROOT::MethodHolder::initialize() {
    if ( m_isInitialized == true )
       return true;
 
-   if ( ! initDispatch_() )
+   std::string callString = "";
+   if ( ! initDispatch_( callString ) )
       return false;
 
 // determine effective return type
@@ -520,7 +519,7 @@ bool PyROOT::MethodHolder::initialize() {
 
    m_methodCall = new G__CallFunc();
    m_methodCall->SetFuncProto(
-      m_class->GetClassInfo(), m_method->GetName(), m_callString.c_str(), &m_offset );
+      m_class->GetClassInfo(), m_method->GetName(), callString.c_str(), &m_offset );
 
 // init done
    m_isInitialized = true;
@@ -725,17 +724,27 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
       return 0;                              // important: 0, not PyNone
 
 // start actual method invocation
-   ObjectHolder* obh = Utility::getObjectHolder( PyTuple_GET_ITEM( aTuple, 0 ) );
-   if ( ! ( obh && obh->getObject() ) ) {
-      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-      return 0;
+   PyObject* self = PyTuple_GetItem( aTuple, 0 );
+   Py_INCREF( self );
+
+   if ( ! ( m_refHolder && self == PyWeakref_GET_OBJECT( m_refSelf ) ) ) {
+      ObjectHolder* obh = Utility::getObjectHolder( self );
+      if ( ! ( obh && obh->getObject() ) ) {
+         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+         return 0;
+      }
+
+   // reset offset
+      calcOffset_( obh->getObject(), obh->objectIsA() );
+
+   // loop optimization cache
+      Py_XDECREF( m_refSelf );
+      m_refSelf   = PyWeakref_NewRef( self, NULL );
+      m_refHolder = obh;
    }
 
-   void* obj = obh->getObject();
-
-// reset offset as appropriate
-   calcOffset_( obj, obh->objectIsA() );
+   Py_DECREF( self );
 
 // execute function
-   return callMethod( obj );
+   return callMethod( m_refHolder->getObject() );
 }

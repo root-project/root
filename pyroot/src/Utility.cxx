@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.10 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.11 2004/11/02 10:13:06 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -38,24 +38,25 @@ void PyROOT::Utility::addToClass(
 
 
 PyROOT::ObjectHolder* PyROOT::Utility::getObjectHolder( PyObject* self ) {
-   if ( self !=  0  ) {
-      PyObject* cobj = PyObject_GetAttr( self, theObjectString_ );
-      if ( cobj != 0 ) {
-         ObjectHolder* holder =
-            reinterpret_cast< PyROOT::ObjectHolder* >( PyCObject_AsVoidPtr( cobj ) );
-         Py_DECREF( cobj );
-         return holder;
-      }
-      else
-         PyErr_Clear();
+   if ( ! self )
+      return 0;
+
+   PyObject* cobj = PyObject_GetAttr( self, theObjectString_ );
+   if ( cobj != 0 ) {
+      ObjectHolder* holder =
+         reinterpret_cast< PyROOT::ObjectHolder* >( PyCObject_AsVoidPtr( cobj ) );
+      Py_DECREF( cobj );
+      return holder;
    }
+   else
+      PyErr_Clear();
 
    return 0;
 }
 
 
 void* PyROOT::Utility::getObjectFromHolderFromArgs( PyObject* argsTuple ) {
-   PyObject* self = PyTuple_GetItem( argsTuple, 0 );
+   PyObject* self = PyTuple_GET_ITEM( argsTuple, 0 );
    Py_INCREF( self );
 
    PyROOT::ObjectHolder* holder = getObjectHolder( self );

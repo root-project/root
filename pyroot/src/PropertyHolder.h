@@ -38,7 +38,6 @@ namespace PyROOT {
       virtual void set( PyObject* aTuple, PyObject* aDict );
 
    protected:
-      static void destroy( void* );
       static PyObject* invoke_get( PyObject*, PyObject*, PyObject* );
       static PyObject* invoke_set( PyObject*, PyObject*, PyObject* );
 
@@ -49,5 +48,7 @@ namespace PyROOT {
    };
 
 } // namespace PyROOT
+
+extern "C" void destroyPropertHolder( void* );
 
 #endif // !PYROOT_PROPERTYHOLDER_H

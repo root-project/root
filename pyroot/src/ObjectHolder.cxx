@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.7 2004/08/13 07:34:45 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.8 2004/08/13 08:05:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,6 +12,12 @@
 
 // Standard
 #include <stdio.h>
+
+
+//- destructor callback --------------------------------------------------------
+extern "C" void destroyObjectHolder( void* poh ) {
+   delete reinterpret_cast< PyROOT::ObjectHolder* >( poh );
+}
 
 
 //- private helpers ------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.4 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.5 2004/08/11 04:42:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODDISPATCHER_H
@@ -17,8 +17,8 @@ namespace PyROOT {
 
 /** Python side ROOT method
       @author  WLAV
-      @date    09/29/2003
-      @version 1.4
+      @date    11/04/2003
+      @version 1.5
  */
 
    class MethodDispatcher {
@@ -42,7 +42,6 @@ namespace PyROOT {
       virtual void addMethod( PyCallable* );
 
    protected:
-      static void destroy( void* );
       static PyObject* invoke( PyObject*, PyObject*, PyObject* );
 
    protected:
@@ -57,5 +56,7 @@ namespace PyROOT {
    };
 
 } // namespace PyROOT
+
+extern "C" void destroyMethodDispatcher( void* );
 
 #endif // !PYROOT_METHODDISPATCHER_H

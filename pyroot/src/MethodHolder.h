@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.7 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.8 2004/08/11 04:42:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -7,6 +7,7 @@
 // Bindings
 #include "Utility.h"
 #include "PyCallable.h"
+class ObjectHolder;
 
 // ROOT
 class TClass;
@@ -71,13 +72,11 @@ namespace PyROOT {
       void copy_( const MethodHolder& );
       void destroy_() const;
 
-      bool initDispatch_();
+      bool initDispatch_( std::string& );
       void calcOffset_( void* self, TClass* cls );
 
    private:
    // representation
-      std::string  m_name;
-
       TClass*      m_class;
       TMethod*     m_method;
       G__CallFunc* m_methodCall;
@@ -89,8 +88,8 @@ namespace PyROOT {
    // call dispatch buffers and cache
       std::vector< void* >    m_argsBuffer;
       std::vector< cnvfct_t > m_argsConverters;
-      std::string             m_callString;
-      void*                   m_lastObject;
+      PyObject*               m_refSelf;
+      ObjectHolder*           m_refHolder;
 
    // admin
       bool m_isInitialized;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.14 2004/10/08 05:21:52 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.15 2004/10/30 06:26:43 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -103,10 +103,6 @@ namespace {
          const_cast< char* >( label ),
          PyROOT::bindRootObject( new PyROOT::ObjectHolder( obj, cls, false ) )
       );
-   }
-
-   void destroyObjectHolder( void* oh ) {
-      delete reinterpret_cast< PyROOT::ObjectHolder* >( oh );
    }
 
 } // unnamed namespace
@@ -314,7 +310,7 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
       PyObject* pybases = buildRootClassBases( cls );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name and empty dictionary
-         pyclass = PyObject_CallFunction( (PyObject*)&PyType_Type, "OOO",
+         pyclass = PyObject_CallFunction( (PyObject*)&PyType_Type, const_cast< char* >( "OOO" ),
             PyString_FromString( className ), pybases, dct );
          Py_DECREF( pybases );
       }
@@ -401,7 +397,7 @@ PyObject* PyROOT::bindRootObject( ObjectHolder* obj, bool force ) {
       // bind, register and return if successful
          if ( newObject != 0 ) {
          // private to the object is the instance holder
-            PyObject* cobj = PyCObject_FromVoidPtr( obj, destroyObjectHolder );
+            PyObject* cobj = PyCObject_FromVoidPtr( obj, &destroyObjectHolder );
             PyObject_SetAttr( newObject, Utility::theObjectString_, cobj );
             Py_DECREF( cobj );
 

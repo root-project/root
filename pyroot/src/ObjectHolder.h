@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.6 2004/08/04 20:46:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.7 2004/08/12 20:55:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_OBJECTHOLDER_H
@@ -66,5 +66,7 @@ namespace PyROOT {
    };
 
 } // namespace PyROOT
+
+extern "C" void destroyObjectHolder( void* );
 
 #endif // !PYROOT_OBJECTHOLDER_H

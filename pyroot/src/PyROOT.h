@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.3 2004/08/11 20:12:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H
@@ -22,6 +22,10 @@
 
 #ifdef _POSIX_C_SOURCE
 #undef _POSIX_C_SOURCE
+#endif
+
+#ifdef _FILE_OFFSET_BITS
+#undef _FILE_OFFSET_BITS
 #endif
 
 #include "Python.h"
