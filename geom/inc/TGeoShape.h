@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.26 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.27 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -78,6 +78,7 @@ protected :
    Int_t                 fShapeId;   // shape id
    UInt_t                fShapeBits; // shape bits
 // methods
+   void                  SetOnBoundary(Bool_t /*flag=kTRUE*/) {;}
 
 public:
    // constructors
@@ -88,6 +89,7 @@ public:
    // methods
 
    static Double_t       Big() {return 1.E30;}
+   static Double_t       Tolerance() {return 1.E-10;}
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t        Contains(Double_t *point) const         = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.48 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.49 2004/11/26 11:08:05 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -841,11 +841,12 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    if (fOverlap != overlap) fOverlap = overlap;
    TGeoHMatrix *hmat = fGeom->GetGLMatrix();
    TGeoVolume *vol = overlap->GetVolume();
-   TGeoNode *node1, *node2;
+   TGeoNode *node1=0, *node2=0;
    fGeom->SetMatrixTransform(kTRUE);
    if (fOverlap->IsExtrusion()) {
       if (!fVisLock) fVisVolumes->Add(vol);
       *hmat = gGeoIdentity;
+      gGeoManager->SetMatrixReflection(kFALSE);
       gGeoManager->SetMatrixReflection(kFALSE);
       gGeoManager->SetPaintVolume(vol);
       color = vol->GetLineColor();
@@ -857,6 +858,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
       node1 = overlap->GetNode(0);
+      gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
       *hmat = node1->GetMatrix();
       gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
       vol = node1->GetVolume();
@@ -871,6 +873,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       node1 = overlap->GetNode(0);
       vol = node1->GetVolume();
       *hmat = node1->GetMatrix();
+      gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
       if (!fVisLock) fVisVolumes->Add(vol);
       gGeoManager->SetPaintVolume(vol);
       gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
@@ -882,6 +885,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->GetShape()->Paint(option);
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
+      gGeoManager->SetMatrixReflection(node2->GetMatrix()->IsReflection());
       node2 = overlap->GetNode(1);
       vol = node2->GetVolume();
       *hmat = node2->GetMatrix();

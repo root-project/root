@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.100 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.101 2004/12/01 16:56:28 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -451,7 +451,6 @@ TGeoManager::TGeoManager()
 {
 // Default constructor.
    if (TClass::IsCallingNew() == TClass::kDummyNew) {
-      printf("WARNING fBITS=-1 !!!\n");
       fTimeCut = kFALSE;
       fTmin = 0.;
       fTmax = 999.;
@@ -535,7 +534,7 @@ TGeoManager::TGeoManager()
       Init();
       gGeoIdentity = 0;
    }
-   BuildDefaultMaterials(); // not creating any data member
+//   BuildDefaultMaterials(); // not creating any data member
 }
 
 //_____________________________________________________________________________
@@ -546,6 +545,7 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    Init();
    gGeoIdentity = new TGeoIdentity("Identity");
    BuildDefaultMaterials();
+   printf("Geometry %s, %s created\n", GetName(), GetTitle());
 }
 
 //_____________________________________________________________________________
@@ -554,7 +554,7 @@ void TGeoManager::Init()
 // Initialize manager class.
 
    if (gGeoManager) {
-      Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
+//      Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
       delete gGeoManager;
    }
 
@@ -638,27 +638,20 @@ void TGeoManager::Init()
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
    fPaintVolume = 0;
-   printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
 //_____________________________________________________________________________
 TGeoManager::~TGeoManager()
 {
 // Destructor
+   if (!gGeoManager || !fVolumes) return;
 
-   if (!gGeoManager) return;
-
-   Warning("dtor", "deleting previous geometry: %s/%s",GetName(),GetTitle());
-//   gROOT->GetListOfGeometries()->Remove(this);
+   Warning("dtor", "deleting geometry: %s/%s",GetName(),GetTitle());
    gROOT->GetListOfBrowsables()->Remove(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
    TBrowser *browser = 0;
-   while ((browser=(TBrowser*)next())) {
-      browser->RecursiveRemove(this);
-//      browser->Refresh();
-      printf("browser refreshed\n");
-   }
+   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
    delete [] fBits;
    if (fCache) delete fCache;
    if (fNodes) delete fNodes;
@@ -1465,10 +1458,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
    TBrowser *browser = 0;
-   while ((browser=(TBrowser*)next())) {
-      browser->Refresh();
-      printf("%s added to browser\n", GetName());
-   }
+   while ((browser=(TBrowser*)next())) browser->Refresh();
    TString opt(option);
    opt.ToLower();
    Bool_t dummy = opt.Contains("d");
@@ -1531,12 +1521,19 @@ void TGeoManager::ClearShape(const TGeoShape *shape)
 void TGeoManager::CleanGarbage()
 {
 // Clean temporary volumes and shapes from garbage collection.
-   TIter nextv(fGVolumes);
-   TGeoVolume *vol = 0;
-   while ((vol=(TGeoVolume*)nextv()))
-      vol->SetFinder(0);
-   if (fGVolumes) fGVolumes->Delete();
-   if (fGShapes)  fGShapes->Delete();
+   if (!fGVolumes && !fGShapes) return;
+   if (fGVolumes) {
+      TIter nextv(fGVolumes);
+      TGeoVolume *vol = 0;
+      while ((vol=(TGeoVolume*)nextv()))
+         vol->SetFinder(0);
+      fGVolumes->Delete();
+      fGVolumes = 0;
+   }   
+   if (fGShapes) {
+      fGShapes->Delete();
+      fGShapes = 0;
+   }   
 }
 
 //_____________________________________________________________________________
