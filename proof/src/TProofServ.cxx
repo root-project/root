@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.22 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.23 2002/04/19 18:24:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -963,7 +963,7 @@ Int_t TProofServ::LockDir(const TString &lock)
 
    const char *lfile = lock;
 
-   if (access(lfile, F_OK) == -1)
+   if (gSystem->AccessPathName(lfile))
       *fid = open(lfile, O_CREAT|O_RDWR, 0644);
    else
       *fid = open(lfile, O_RDWR);
@@ -974,12 +974,14 @@ Int_t TProofServ::LockDir(const TString &lock)
    }
 
    // lock the file
-   if (lockf(*fid, F_LOCK, (off_t)1) == -1) {
+#ifndef R__WIN32
+   if (lockf(*fid, F_LOCK, (off_t) 1) == -1) {
       SysError("LockDir", "error locking %s", lfile);
       close(*fid);
       *fid = -1;
       return -1;
    }
+#endif
 
    if (fLogLevel > 2)
       Info("LockDir", "file %s locked", lfile);
@@ -1007,12 +1009,14 @@ Int_t TProofServ::UnlockDir(const TString &lock)
 
    // unlock the file
    lseek(*fid, 0, SEEK_SET);
+#ifndef R__WIN32
    if (lockf(*fid, F_ULOCK, (off_t)1) == -1) {
       SysError("UnlockDir", "error unlocking %s", lock.Data());
       close(*fid);
       *fid = -1;
       return -1;
    }
+#endif
 
    if (fLogLevel > 2)
       Info("UnlockDir", "file %s unlocked", lock.Data());
