@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name$:$Id$ */
+/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,12 +22,12 @@ extern "C" {
 typedef struct {
 	Int_t	 nevhep;
         Int_t    nhep;
-        Int_t    isthep[2000];
-        Int_t    idhep[2000];
-        Int_t    jmohep[2000][2];
-        Int_t    jdahep[2000][2];
-        Double_t phep[2000][5];
-        Double_t vhep[2000][4];
+        Int_t    isthep[4000];
+        Int_t    idhep[4000];
+        Int_t    jmohep[4000][2];
+        Int_t    jdahep[4000][2];
+        Double_t phep[4000][5];
+        Double_t vhep[4000][4];
 } HEPEVT_DEF;
 
 #define HEPEVT COMMON_BLOCK(HEPEVT,hepevt)
