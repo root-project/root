@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.110 2002/11/11 16:23:16 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.111 2002/11/27 21:54:56 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2639,6 +2639,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
    G__ClassInfo arg;
 
    int len = name.length();
+   name += '\0'; // assure that the actual length is >= len+1.
    int nesting = 0;
    const char *current, *next;
    current = next = 0;
