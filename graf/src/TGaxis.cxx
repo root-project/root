@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.64 2004/01/12 12:44:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.65 2004/01/12 12:58:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -863,7 +863,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionPlus && OptionMinus) {
       Lside = -1;
       if (OptionEqual) Lside=1;
-   }
+  }
    XLside = Lside;
 
 //*-*-              Tick marks size
@@ -1042,7 +1042,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
 //*-*-              Position of labels in Y
    if (X0 == X1) {
-      if (OptionPlus) {
+      if (OptionPlus && !OptionMinus) {
          if (OptionEqual) Ylabel =  fLabelOffset/2 + atick[0];
          else             Ylabel = -fLabelOffset;
       } else {
@@ -1257,6 +1257,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      FLEXE   = kTRUE;
                      NEXE    = int(AF);
                      IEXE    = TMath::Abs(NEXE);
+                     if (IEXE%3 == 1)     IEXE += 2;
+                     else if(IEXE%3 == 2) IEXE += 1;
+                     if (NEXE < 0) NEXE = -IEXE;
+                     else          NEXE =  IEXE;
                      Wlabel  = Wlabel*TMath::Power(10,IEXE);
                      DWlabel = DWlabel*TMath::Power(10,IEXE);
                      IF1     = fgMaxDigits;
@@ -1271,26 +1275,28 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (!noExponent && NF > fgMaxDigits)  FLEXPO = kTRUE;
                if (!noExponent && NF < -fgMaxDigits) FLEXNE = kTRUE;
 
-//*-*-              Use x 10 n format.
+//*-*-              Use x 10 n format. (only powers of 3 allowed)
 
                if (FLEXPO) {
                   FLEXE = kTRUE;
-                  while ( WW > TMath::Power(10,fgMaxDigits-1)) {
+                  while (1) {
                      NEXE++;
                      WW      /= 10;
                      Wlabel  /= 10;
                      DWlabel /= 10;
+                     if (NEXE%3 == 0 && WW <= TMath::Power(10,fgMaxDigits-1)) break;
                   }
                }
 
                if (FLEXNE) {
                   FLEXE = kTRUE;
                   RNE   = 1/TMath::Power(10,fgMaxDigits-2);
-                  while (WW < RNE) {
+                  while (1) {
                      NEXE--;
                      WW      *= 10;
                      Wlabel  *= 10;
                      DWlabel *= 10;
+                     if (NEXE%3 == 0 && WW >= RNE) break;
                   }
                }
 
