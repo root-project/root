@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.10 2001/02/28 07:53:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.11 2001/06/04 06:38:04 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -703,6 +703,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 //   The projection is always of the type TH1D.
 //   The projection is made from the cells along the X axis
 //   ranging from ixmin to ixmax and iymin to iymax included.
+//   By default, bins 1 to nx and 1 to ny  are included
 //
 //   if option "E" is specified, the errors are computed.
 //
@@ -713,10 +714,10 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
   Int_t nx = GetNbinsX();
   Int_t ny = GetNbinsY();
   Int_t nz = GetNbinsZ();
-  if (ixmin < 0)  ixmin = 0;
-  if (ixmax > nx) ixmax = nx+1;
-  if (iymin < 0)  iymin = 0;
-  if (iymax > ny) iymax = ny+1;
+  if (ixmin < 0)  ixmin = 1;
+  if (ixmax > nx) ixmax = nx;
+  if (iymin < 0)  iymin = 1;
+  if (iymax > ny) iymax = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -758,7 +759,8 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
         }
      }
   }
-  h1->SetEntries(entries);
+  if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h1->SetEntries(fEntries);
+  else h1->SetEntries(entries);
   return h1;
 }
 
