@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.39 2004/04/08 14:05:18 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.40 2004/07/27 23:02:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -712,9 +712,17 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 
    XPoint *xy = (XPoint*)xyt;
 
-   if (gMarker.n <= 0)
-      XDrawPoints(fDisplay, gCws->drawing, *gGCmark, xy, n, CoordModeOrigin);
-   else {
+   if (gMarker.n <= 0) {
+      const int kNMAX = 1000000;
+      int nt = n/kNMAX;
+      for (int it=0;it<nt;it++) {
+         if (it < nt-1) {
+            XDrawPoints(fDisplay, gCws->drawing, *gGCmark, &xy[it*kNMAX], kNMAX, CoordModeOrigin);
+         } else {
+            XDrawPoints(fDisplay, gCws->drawing, *gGCmark, &xy[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
+         }
+      }
+   } else {
      int r = gMarker.n / 2;
      int m;
 
