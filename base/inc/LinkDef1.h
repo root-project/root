@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.16 2002/09/14 16:20:14 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.17 2002/09/15 10:16:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -94,7 +94,16 @@
 #pragma link C++ function operator>(const TDatime&,const TDatime&);
 #pragma link C++ function operator>=(const TDatime&,const TDatime&);
 
+#pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
+#pragma link C++ typedef ROOT::DelArrFunc_t; 
+#pragma link C++ typedef ShowMembersFunc_t;
+#pragma link C++ typedef IsAFunc_t;
+#pragma link C++ typedef ROOT::NewFunc_t;
+#pragma link C++ typedef ROOT::NewArrFunc_t;
+#pragma link C++ typedef ROOT::DelFunc_t;
+#pragma link C++ typedef ROOT::DelArrFunc_t;
+#pragma link C++ typedef ROOT::DesFunc_t;
 
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;
