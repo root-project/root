@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.2 2000/09/06 14:15:14 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TStorage.h"
 #include "TMath.h"
+#include "TROOT.h"
 #include "TError.h"
 
 #if defined(__linux) && defined(__i386__)
@@ -1307,7 +1308,9 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    } else {
 
       // allocate a new object based on the class found
+      gROOT->SetReadingObject(kTRUE);
       obj = (TObject *)clRef->New();
+      gROOT->SetReadingObject(kFALSE);
       if (!obj) {
          Error("ReadObject", "could not create object of class %s", clRef->GetName());
          // exception
