@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -289,7 +289,8 @@ void TGLBContainer::RemoveEntry(Int_t id)
       if (e->EntryId() == id) {
          if (fLastActive == e) fLastActive = 0;
          e->DestroyWindow();
-         RemoveFrame(e);
+         fList->Remove(el);  // avoid calling RemoveFrame(e)
+         delete el;          // idem
          delete e;
          delete l;
          // Layout();
@@ -316,7 +317,8 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
       if ((e->EntryId() >= from_ID) && (e->EntryId() <= to_ID)) {
          if (fLastActive == e) fLastActive = 0;
          e->DestroyWindow();
-         RemoveFrame(e);
+         fList->Remove(el);  // avoid calling RemoveFrame(e)
+         delete el;          // idem
          delete e;
          delete l;
       }
