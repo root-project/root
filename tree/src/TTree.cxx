@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.185 2004/05/05 15:33:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.186 2004/05/10 15:08:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1742,7 +1742,7 @@ Int_t TTree::CopyEntries(TTree *tree, Int_t nentries)
    if (nentries < 0) nentries = treeEntries;
    if (nentries > treeEntries) nentries = treeEntries;
    for (Int_t i=0;i<nentries;i++) {
-      if (LoadTree(i) < 0) break;
+      if (tree->LoadTree(i) < 0) break;
       tree->GetEntry(i);
       nbytes += Fill();
    }
