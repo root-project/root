@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.65 2003/07/03 13:00:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.66 2003/07/15 21:50:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1560,10 +1560,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      pos = rel_inc.Index(includes,&len);
      while( len != 0 ) {
         TString sub = includes(pos,len);
-        sub.Remove(0,2);
+        sub.Remove(0,2); // Remove -I
         sub = ConcatFileName( WorkingDirectory(), sub );
-        sub.Prepend("-I");
-        sub.Append(" ");
+        sub.Prepend(" -I");
         includes.Replace(pos,len,sub);
         pos = rel_inc.Index(includes,&len);
      }
