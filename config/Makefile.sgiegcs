@@ -22,8 +22,10 @@ CFLAGS        = -fsigned-char -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -fsigned-char -Wall -fPIC -DG__REGEXP1 \
                 -DG__UNIX -DG__SIGNEDCHAR -DG__SHAREDLIB -DG__OSFDLL \
                 -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -fsigned-char -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CINTCFLAGS    = -fsigned-char -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
+                -DG__REDIRECTIO $(EXTRA_CFLAGS)
+COMPILER      = gnu
 
 # Linker:
 LD            = g++

@@ -151,7 +151,7 @@ endif
 
 ##### gcc version #####
 
-ifneq ($(findstring g++,$(CXX)),)
+ifneq ($(findstring gnu,$(COMPILER)),)
 GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
 GCC_MINOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
 endif

@@ -32,6 +32,7 @@ CINTCXXFLAGS  = -pipe -W -Wall -fsigned-char -fno-common \
 CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
+COMPILER      = gnu
 
 # Linker:
 LD            = g++

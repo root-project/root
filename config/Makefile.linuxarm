@@ -26,6 +26,7 @@ CINTCXXFLAGS  = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) \
 CINTCFLAGS    = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+COMPILER      = gnu
 
 # Linker:
 LD            = g++

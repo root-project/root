@@ -26,6 +26,7 @@ CINTCXXFLAGS  = -fsigned-char -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST \
 CINTCFLAGS    = -fsigned-char -DG__REGEXP -D_POSIX2_SOURCE \
                 -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 $(EXTRA_CFLAGS)
+COMPILER      = gnu
 
 # Linker:
 LD            = g++
