@@ -20,8 +20,8 @@ PROOFAEXE=bin/proofserva
 rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
 excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
-      hbook newdelete table utils srputils krb5auth dcache x11ttf \
-      alien asimage ldap pyroot qt qtroot quadp ruby vmc xml"
+      hbook newdelete table utils srputils krb5auth chirp dcache x11ttf \
+      alien asimage ldap pyroot qt qtroot quadp ruby vmc xml gl"
 
 objs=""
 gobjs=""
