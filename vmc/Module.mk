@@ -56,7 +56,7 @@ clean-vmc:
 
 clean::         clean-vmc
 
-distclean-mc:   clean-vmc
+distclean-vmc:   clean-vmc
 		@rm -f $(VMCDEP) $(VMCDS) $(VMCDH) $(VMCLIB)
 
 distclean::     distclean-vmc
