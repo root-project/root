@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.234 2005/02/10 13:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.235 2005/02/18 09:15:08 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3802,7 +3802,7 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    // Create or simply read branches from filename
    // if branchDescriptor = "" (default), it is assumed that the Tree descriptor
    //    is given in the first line of the file with a syntax like
-   //     A/D:Table[2]/F:Ntracks/I:astring/s
+   //     A/D:Table[2]/F:Ntracks/I:astring/C
    //  otherwise branchDescriptor must be specified with the above syntax.
    //
    // A TBranch object is created for each variable in the expression.
