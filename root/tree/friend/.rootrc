@@ -11,8 +11,6 @@ WinNT.*.Root.DynamicPath:   .;$(ROOTSYS)/bin;$(PATH)
 WinNT.*.Root.MacroPath:     .;$(ROOTSYS)/macros
 
 # Path where to look for TrueType fonts
-Unix.*.Root.UseTTFonts:     true
-Unix.*.Root.TTFontPath:     
 
 # Use thread library (if exists)
 Unix.*.Root.UseThreads:     false

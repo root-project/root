@@ -4,13 +4,19 @@ test: tests ChainFriend ChainFriendStatus
 
 override SUBDIRS =  
 
-CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out
-TEST_TARGETS += ChainFriend unevenFriend
+CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log 
+TEST_TARGETS += ChainFriend unevenFriend treeChainFriend
 
 include ../../Rules.mk
 
 
 files: Event.root Event2.root
+
+treeChainFriend.log: zmumuSelDrawmail_cpp.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l zmumuSelDrawmail.cpp+ </dev/null > treeChainFriend.log 2>&1
+
+treeChainFriend: treeChainFriend.log
+	$(CMDECHO) diff -b treeChainFriend.ref treeChainFriend.log 
 
 unevenFriend: unevenFriend.out
 	$(CMDECHO) diff -b unevenFriend.out unevenFriend.ref
