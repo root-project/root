@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.6 2000/06/08 08:01:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.7 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1462,13 +1462,13 @@ void TTree::Print(Option_t *option)
      TKey *key = fDirectory->GetKey(GetName());
      if (key) s = key->GetNbytes();
   }
-  Int_t total = Int_t(fTotBytes) + s;
-  Int_t file  = Int_t(fZipBytes) + s;
-  Float_t cx  = 1;
+  Double_t total = fTotBytes + s;
+  Int_t file     = Int_t(fZipBytes) + s;
+  Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
   Printf("******************************************************************************");
   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total  Size = %9d bytes  File  Size = %10d *",Int_t(fEntries),total,file);
+  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %10d *",Int_t(fEntries),total,file);
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
