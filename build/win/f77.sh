@@ -32,9 +32,6 @@ while [ "$1" != "" ]; do
 done
 
 if [ "$dolink" = "yes" ]; then
-   MSVC98Dir="$PROGRAMFILES\Microsoft Visual Studio\VC98"
-   PATH="$MSVC98Dir\BIN:$PATH"
-   LIB="$MSVC98Dir\LIB;$LIB"
    fl32 $args $link
    stat=$?
    if [ $stat -eq 1 ]; then
