@@ -444,7 +444,7 @@ int G__decl_obj=0;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1451
-char* G__SystemIncludeDir=0;
+struct G__ConstStringList* G__SystemIncludeDir=0;
 #endif
 
 /*

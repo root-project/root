@@ -155,6 +155,20 @@ long G__DataMemberInfo::Offset()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+#ifndef G__OLDIMPLEMENTATION1453
+int G__DataMemberInfo::Bitfield() 
+{
+  if(IsValid()) {
+    struct G__var_array *var;
+    var = (struct G__var_array*)handle;
+    return(var->bitfield[index]);
+  }
+  else {
+    return(-1);
+  }
+}
+#endif
+///////////////////////////////////////////////////////////////////////////
 int G__DataMemberInfo::ArrayDim()
 {
   if(IsValid()) {

@@ -2911,7 +2911,11 @@ int* pindex;
 G__value *pbuf;
 {
   /* increment memvar and index */
+#ifndef G__OLDIMPLEMENTATION1469
+  if(*pindex<memvar->allvar-1) {
+#else
   if(*pindex<memvar->allvar) {
+#endif
     ++(*pindex);
   }
   else {

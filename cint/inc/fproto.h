@@ -733,6 +733,11 @@ void G__specify_extra_include G__P((void)) ;
 void G__gen_extra_include G__P((void)) ;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1451
+struct G__ConstStringList* G__AddConstStringList G__P((struct G__ConstStringList* current,char* str,int islen));
+void G__DeleteConstStringList G__P((struct G__ConstStringList* current));
+#endif
+
 #ifdef __cplusplus
 }
 #endif

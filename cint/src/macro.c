@@ -150,6 +150,9 @@ void G__define()
 #endif
       strcmp(initvalue,"double")==0 ||
       strcmp(initvalue,"float")==0 ||
+#ifndef G__OLDIMPLEMENTATION1467
+      strcmp(initvalue,"longdouble")==0 ||
+#endif
       -1!=G__defined_typename(initvalue)||
       -1!=G__defined_tagname(initvalue,2)||
       G__defined_templateclass(initvalue))) {
@@ -229,6 +232,11 @@ char *oldtype,*newtype;
   else if(strcmp(oldtype,"double")==0) {
     type='d'+ispointer; /* bug fix */
   }
+#ifndef G__OLDIMPLEMENTATION1467
+  else if(strcmp(oldtype,"longdouble")==0) {
+    type='d'+ispointer; /* bug fix */
+  }
+#endif
   else if(strcmp(ptype,"short")==0) {
     type='s'+ispointer+isunsigned;
   }

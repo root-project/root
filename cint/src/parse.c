@@ -845,9 +845,6 @@ int *piout;
   int hash,temp;
   int i;
   int null_entry;
-#ifndef G__OLDIMPLEMENTATION1451
-  int lensysdir;
-#endif
 
   if(c!='\n' && c!='\r') {
     c=G__fgetname(statement+1,endofline);
@@ -867,20 +864,27 @@ int *piout;
 	  sprintf(sysstl,"%s%sstl%s",G__cintsysdir,G__psep,G__psep);
 	  len=strlen(sysinclude);
 	  lenstl=strlen(sysstl);
-#ifndef G__OLDIMPLEMENTATION1451
-	  if(G__SystemIncludeDir) lensysdir=strlen(G__SystemIncludeDir);
-	  else lensysdir=0;
-#endif
 	  if(strncmp(sysinclude,statement+1,(size_t)len)==0||
-	     strncmp(sysstl,statement+1,(size_t)lenstl)==0
-#ifndef G__OLDIMPLEMENTATION1451
-	     || (G__SystemIncludeDir && 
-		 strncmp(G__SystemIncludeDir,statement+1,lensysdir)==0)
-#endif
-	     )
+	     strncmp(sysstl,statement+1,(size_t)lenstl)==0) {
 	    G__globalcomp=G__NOLINK;
-	  else 
+	  }
+#ifndef G__OLDIMPLEMENTATION1451
+	  else if(G__ifile.fp==G__mfp) {
+	  }
+#endif
+	  else {
 	    G__globalcomp=G__store_globalcomp;
+#ifndef G__OLDIMPLEMENTATION1451
+	    {
+	      struct G__ConstStringList* sysdir = G__SystemIncludeDir;
+	      while(sysdir) {
+		if(strncmp(sysdir->string,statement+1,sysdir->hash)==0)
+		  G__globalcomp=G__NOLINK;
+		sysdir = sysdir->prev;
+	      }
+	    }
+#endif
+	  }
 	  statement[strlen(statement)-1]='\0';
 	  strcpy(G__ifile.name,statement+1);
 	  G__hash(G__ifile.name,hash,temp);
@@ -1208,6 +1212,26 @@ int elifskip;
 	    sprintf(temp ,"%s%s" ,condition ,arg[i]);
 	    strcpy(condition,temp);
 	  }
+#ifndef G__OLDIMPLEMENTATION1459
+          i = strlen (G__oneline) - 1;
+          while (i >= 0 && (G__oneline[i] == '\n' || G__oneline[i] == '\r'))
+            --i;
+          if (G__oneline[i] == '\\') {
+            int len = strlen (condition);
+            while (1) {
+              G__fgetstream (condition+len, "\n\r");
+              if (condition[len] == '\\' && (condition[len+1] == '\n' ||
+                                             condition[len+1] == '\r')) {
+                char* p = condition + len;
+                memmove (p, p+2, strlen (p+2) + 1);
+              }
+              len = strlen (condition) - 1;
+              while (len>0 && (condition[len]=='\n' || condition[len]=='\r'))
+                --len;
+              if (condition[len] != '\\') break;
+            }
+          }
+#endif
 	  G__noerr_defined=1;
 	  if(G__test(condition)) {
 	    nest=0;
@@ -1260,7 +1284,7 @@ int elifskip;
 ***********************************************************************/
 void G__pp_if()
 {
-  char condition[G__ONELINE];
+  char condition[G__LONGLINE];
   int c,len=0;
 #ifndef G__OLDIMPLEMENTATION878
   int store_no_exec_compile;

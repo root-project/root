@@ -53,7 +53,7 @@ char G__CPPHDRPOST[20];
 char G__DLLPOST[20];
 char G__OBJPOST[20];
 
-int G__isDLL=0;
+int G__isDLL=1;
 char G__object[G__MAXFILENAME];
 char G__makefile[G__MAXFILENAME];
 char G__DLLID[G__MAXNAME];
@@ -154,6 +154,12 @@ void G__displayhelp()
   printf("  -i [stub].h   :C STUB function parameter information file\n");
   printf("  -c [sut].c    :Same as '-h [sut].c -C [sut].c'\n");
   printf("  -l -l[lib]    :Compiled object, Library or linker options\n");
+#ifndef G__OLDIMPLEMENTATION1452
+  printf("  -u [file]     :Generate dummy class for undefined typename\n");
+  printf("  -U [dir]      :Directory to disable interface method generation\n");
+  printf("  -Y [0|1]      :Ignore std namespace (default=1:ignore)\n");
+  printf("  -Z [0|1]      :Automatic loading of standard header files\n");
+#endif
 #ifndef G__OLDIMPLEMENTATION783
   printf("  -cc   [opt]   :Compiler option\n");
   printf("  -cint [opt]   :Cint option\n");
@@ -686,6 +692,48 @@ char **argv;
       strcpy(G__preprocess,argv[i]);
       mode = G__IDLE;
     }
+#ifndef G__OLDIMPLEMENTATION1452
+    /*************************************************************************/
+    else if(strcmp(argv[i],"-u")==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
+      mode = G__IDLE;
+    }
+    else if(strncmp(argv[i],"-u",2)==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      mode = G__IDLE;
+    }
+    /*************************************************************************/
+    else if(strcmp(argv[i],"-U")==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
+      mode = G__IDLE;
+    }
+    else if(strncmp(argv[i],"-U",2)==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      mode = G__IDLE;
+    }
+    /*************************************************************************/
+    else if(strcmp(argv[i],"-Y")==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
+      mode = G__IDLE;
+    }
+    else if(strncmp(argv[i],"-Y",2)==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      mode = G__IDLE;
+    }
+    /*************************************************************************/
+    else if(strcmp(argv[i],"-Z")==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
+      mode = G__IDLE;
+    }
+    else if(strncmp(argv[i],"-Z",2)==0) {
+      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
+      mode = G__IDLE;
+    }
+#endif
     /*************************************************************************/
     else if(strcmp(argv[i],"-m")==0) {
       G__ismain = 1;

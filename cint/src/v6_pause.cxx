@@ -2629,11 +2629,11 @@ G__value *rslt;
 #ifdef G__ASM_DBG
       G__more(G__sout,"             asmstep   : bytecode step mode on/off\n");
       G__more(G__sout,"             status    : show bytecode exec flags\n");
+#endif
       G__more(G__sout,"             dasm      : disassembler\n");
 #endif
-#endif
-      G__more(G__sout,"Quit:        q         : quit cint execution\n");
-      G__more(G__sout,"             qqq       : quit anyway\n");
+      G__more(G__sout,"Quit:        q         : quit cint\n");
+      G__more(G__sout,"             qqq       : quit cint - mandatory\n");
     }
 
     else if(strncmp("/",com,1)==0) {

@@ -215,7 +215,7 @@ default :                                                                    \
 if(islower(G__var_type)) { /* type var; normal variable */       \
 	var->p[ig15] = G__malloc(p_inc,SIZE,item);               \
 	if(((G__def_struct_member==0&&G__ASM_FUNC_NOP==G__asm_wholefunction)\
-            ||G__static_alloc)&&                                 \
+ /*1454*/   ||G__static_alloc||var->statictype[ig15]==G__LOCALSTATIC)&&     \
 	   ((!G__static_alloc)||(G__prerun))&&                   \
 	   (G__globalvarpointer==G__PVOID||                      \
 	    result.type!='\0'))                                  \
@@ -229,7 +229,7 @@ else { /* type *var; pointer */                                  \
     else { /* pointer */                                         \
 	var->p[ig15] = G__malloc(p_inc,G__LONGALLOC,item);       \
 	if(((G__def_struct_member==0&&G__ASM_FUNC_NOP==G__asm_wholefunction)\
-           ||G__static_alloc)&&                                  \
+ /*1454*/  ||G__static_alloc||var->statictype[ig15]==G__LOCALSTATIC)&&      \
 	   ((!G__static_alloc)||(G__prerun))&&                   \
 	   (G__globalvarpointer==G__PVOID||                      \
 	    result.type!='\0'))                                  \
@@ -7050,6 +7050,9 @@ int tagnum;
   struct G__friendtag *friendtag;
   if(G__exec_memberfunc) {
     if(G__memberfunc_tagnum==tagnum) return(1);
+#ifndef G__OLDIMPLEMENTATION1458
+    if (G__memberfunc_tagnum < 0) return 0;
+#endif
     friendtag = G__struct.friendtag[G__memberfunc_tagnum];
     while(friendtag) {
       if(friendtag->tagnum==tagnum) return(1);

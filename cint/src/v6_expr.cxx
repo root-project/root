@@ -888,7 +888,7 @@ int lenbuf;
 * removed. 
 *
 ******************************************************************/
-#define G__STACKDEPTH 12
+#define G__STACKDEPTH 100 /* increased from 12 */
 G__value G__getexpr(expression)
 char *expression;
 {

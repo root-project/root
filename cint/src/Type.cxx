@@ -128,6 +128,9 @@ long G__TypeInfo::Property()
   if(-1==tagnum) property|=G__BIT_ISFUNDAMENTAL;
   if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
   if(isupper((int)type)) property|=G__BIT_ISPOINTER;
+#ifndef G__OLDIMPLEMENTATION1453
+  if (reftype) property |= G__BIT_ISREFERENCE;
+#endif
 #ifndef G__OLDIMPLEMENTATION401
   if(isconst&G__CONSTVAR)  property|=G__BIT_ISCONSTANT;
   if(isconst&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;

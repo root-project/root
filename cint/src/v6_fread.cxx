@@ -1673,6 +1673,12 @@ char *string,*endmark;
 	G__fignoreline();
 	--i;
 	ignoreflag=1;
+#ifndef G__OLDIMPLEMENTATION1457
+        if (strchr (endmark, '\n') != 0) {
+          c = '\n';
+          flag = 1;
+        }
+#endif
       }
 #ifndef G__OLDIMPLEMENTATION439
       else {

@@ -311,6 +311,9 @@ struct G__Templatearg *G__read_formal_templatearg()
     /*  template<class T,class E,int S> ...
      *           ^                            */
     c = G__fgetname(type,"<");
+#ifndef G__OLDIMPLEMENTATION1456
+    if (strcmp (type, "const") == 0 && c == ' ') c=G__fgetname(type,"<");
+#endif
     if(strcmp(type,"class")==0 || strcmp(type,"typename")==0) {
       p->type = G__TMPLT_CLASSARG;
     }
@@ -510,11 +513,31 @@ int isforwarddecl;
 #endif
 
   /* store template argument list */
-#ifndef G__OLDIMPLEMENTATION691
   if(!override || !deftmpclass->def_para) deftmpclass->def_para=targ;
-  else G__freetemplatearg(targ);
+#ifndef G__OLDIMPLEMENTATION1453
+  else {
+    struct G__Templatearg* t1 = deftmpclass->def_para;
+    struct G__Templatearg* t2 = targ;
+    while (t1 && t2) {
+      if (strcmp (t1->string, t2->string) != 0) {
+	char *tmp = t2->string;
+	t2->string = t1->string;
+	t1->string = tmp;
+      }
+      if(t1->default_parameter && t2->default_parameter) {
+	G__genericerror("Error: Redefinition of default template argument");
+      }
+      else if(!t1->default_parameter && t2->default_parameter) {
+	t1->default_parameter = t2->default_parameter;
+	t2->default_parameter = 0;
+      }
+      t1 = t1->next;
+      t2 = t2->next;
+    }
+    G__freetemplatearg (targ);
+  }
 #else
-  deftmpclass->def_para=targ;
+  else G__freetemplatearg(targ);
 #endif
 
   /* store file pointer, line number and position */
@@ -794,7 +817,11 @@ void G__declare_template()
 
   do {
     c=G__fgetname_template(temp,"(<");
-  } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0) ;
+  } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
+#ifndef G__OLDIMPLEMENTATION1463
+	  || strcmp(temp,"typename")==0
+#endif
+	  ) ;
 
   /* template class */
   if(strcmp(temp,"class")==0 || strcmp(temp,"struct")==0) {
@@ -949,15 +976,29 @@ void G__declare_template()
     if(G__dispsource) G__disp_mask=0;
     /* global function template */
     if(strcmp(temp,"operator")==0) {
+#ifdef G__OLDIMPLEMENTATION1461
 #ifndef G__OLDIMPLEMENTATION1117
       if('('==c) {
 	G__genericerror("Error: operator() overloading syntax error");
 	return;
       }
 #endif
+#endif
       /* in case of operator< operator<= operator<< */
       temp[8]=c; /* operator< */
       c=G__fgetstream(temp+9,"(");
+#ifndef G__OLDIMPLEMENTATION1461
+      if (temp[8] == '(') {
+        if (c == ')') {
+          temp[9] = c;
+          c=G__fgetstream(temp+10,"(");
+        }
+        else {
+          G__genericerror("Error: operator() overloading syntax error");
+          return;
+        }
+      }
+#endif
     }
     G__createtemplatefunc(temp,targ,store_line_number,&pos);
   }
@@ -1478,7 +1519,11 @@ char *tagnamein;
 #endif /* ON682 */
 
   /* if no such template, error */
+#ifndef G__OLDIMPLEMENTATION1466
+  if(!deftmpclass->next) {
+#else
   if(!deftmpclass) {
+#endif
     fprintf(G__serr,"Error: no such template %s",tagname);
     G__genericerror((char*)NULL);
     return(-1);
@@ -2883,7 +2928,16 @@ fpos_t *ppos;
     do { /* read typename */
       c = G__fgetname_template(paraname,",)<*&=");
     } while(strcmp(paraname,"class")==0 || strcmp(paraname,"struct")==0 ||
-	    strcmp(paraname,"const")==0 || strcmp(paraname,"volatile")==0);
+	    strcmp(paraname,"const")==0 || strcmp(paraname,"volatile")==0
+#ifndef G__OLDIMPLEMENTATION1462
+            || strcmp(paraname,"typename")==0
+#endif
+	      );
+
+#ifndef G__OLDIMPLEMENTATION1464
+    /* Don't barf on an empty arg list. */
+    if (paraname[0] == '\0' && c == ')' && tmp == 0) break;
+#endif
 
     /*  template<class T,template<class U> class E> type func(T a,E<T> b) {
      *                                                         ^   ^  */
@@ -2896,6 +2950,12 @@ fpos_t *ppos;
       unsigned_flag = -1;
       if('*'!=c && '&'!=c) c = G__fgetname(paraname,",)*&=");
     }
+#ifndef G__OLDIMPLEMENTATION1460
+    else if(strcmp(paraname,"signed")==0) {
+      unsigned_flag = 0;
+      if('*'!=c && '&'!=c) c = G__fgetname(paraname,",)*&=");
+    }
+#endif
     if(strcmp(paraname,"int")==0) {
       deftmpfunc->func_para.type[tmp] = 'i' + unsigned_flag;
     }

@@ -661,7 +661,7 @@ extern int G__decl_obj;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1451
-extern char* G__SystemIncludeDir;
+extern struct G__ConstStringList* G__SystemIncludeDir;
 #endif
 
 #ifndef __CINT__

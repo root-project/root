@@ -237,8 +237,8 @@ void G__scratch_all()
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1451
-  if(G__SystemIncludeDir) free(G__SystemIncludeDir);
-  G__SystemIncludeDir = (char*)NULL;
+  G__DeleteConstStringList(G__SystemIncludeDir);
+  G__SystemIncludeDir = (struct G__ConstStringList*)NULL;
 #endif
 
   /*************************************************************

@@ -841,9 +841,7 @@ char *argv[] ;
 
 #ifndef G__OLDIMPLEMENTATION1451
     case 'U':
-      if(G__SystemIncludeDir) free(G__SystemIncludeDir);
-      G__SystemIncludeDir = (char*)malloc(strlen(optarg)+1);
-      strcpy(G__SystemIncludeDir,optarg);
+      G__SystemIncludeDir=G__AddConstStringList(G__SystemIncludeDir,optarg,1);
       break;
 #endif
 
@@ -1048,14 +1046,14 @@ char *argv[] ;
 
       G__display_note();
 
-      G__more(G__sout,"options\n");
+      G__more(G__sout,"options     (* : used only with makecint or -c option)\n");
 #ifdef G__OLDIMPLEMENTATION418
       G__more(G__sout,"  -a [assertion] : set assertion for break condition\n");
 #endif
       G__more(G__sout,"  -A : ANSI C++ mode(default)\n");
       G__more(G__sout,"  -b [line] : set break line\n");
-      G__more(G__sout,"  -c -1: make C++ precompiled interface method files\n");
-      G__more(G__sout,"  -c -2: make C precompiled interface method files\n");
+      G__more(G__sout,"* -c -1: make C++ precompiled interface method files\n");
+      G__more(G__sout,"* -c -2: make C precompiled interface method files\n");
 #ifndef G__OLDIMPLEMENTATION970
       G__more(G__sout,"  -C : copy src to $TMPDIR so that src can be changed during cint run\n");
 #endif
@@ -1075,9 +1073,9 @@ char *argv[] ;
 #ifdef G__SHAREDLIB
       G__more(G__sout,"  -l [dynamiclinklib] : link dynamic link library\n");
 #endif
-      /* G__more(G__sout,"  -M [newdelmask] : link dynamic link library\n"); */
-      G__more(G__sout,"  -n [linkname] : Specify precompiled interface method filename\n");
-      G__more(G__sout,"  -N [DLL_name] : Specify DLL interface method name\n");
+      G__more(G__sout,"* -M [newdelmask] : operator new/delete mask for precompiled interface method\n");
+      G__more(G__sout,"* -n [linkname] : Specify precompiled interface method filename\n");
+      G__more(G__sout,"* -N [DLL_name] : Specify DLL interface method name\n");
       G__more(G__sout,"  -O [0~4] : Loop compiler on(1~5) off(0). Default on(4)\n");
       G__more(G__sout,"  -p : use preprocessor prior to interpretation\n");
       G__more(G__sout,"  -q [security] : Set security level(default 0)\n");
@@ -1088,23 +1086,26 @@ char *argv[] ;
       G__more(G__sout,"  -t : trace execution\n");
       G__more(G__sout,"  -T : trace from pre-run\n");
 #ifndef G__OLDIMPLEMENTATION411
-      G__more(G__sout,"  -u [undefout] : listup possible undefined typenames\n");
+      G__more(G__sout,"  -u [undefout] : listup undefined typenames\n");
 #endif
-      G__more(G__sout,"  -V : Generate symbols for non-public member with -c option\n");
+#ifndef G__OLDIMPLEMENTATION1451
+      G__more(G__sout,"* -U [dir] : directory to disable interface method generation\n");
+#endif
+      G__more(G__sout,"* -V : Generate symbols for non-public member with -c option\n");
       G__more(G__sout,"  -v : Bytecode compiler debug mode\n");
       G__more(G__sout,"  -X [readlinedumpfile] : Execute readline dumpfile\n");
       G__more(G__sout,"  -x 'main() {...}' : Execute argument as source code\n");
 #ifndef G__OLDIMPLEMENTATION1285
-      G__more(G__sout,"  -Y [0|1] : ignore(1) not ignore(0) std namespace (only experimental)\n"); 
+      G__more(G__sout,"  -Y [0|1]: ignore std namespace (default=1:ignore)\n"); 
 #endif
-      G__more(G__sout,"  -Z [0|1]: auto loading of std hdr files with DLL\n"); 
+      G__more(G__sout,"  -Z [0|1]: automatic loading of standard header files with DLL\n"); 
       G__more(G__sout,"suboptions\n");
       G__more(G__sout,"  +V : turn on class title comment mode for following source fies\n");
       G__more(G__sout,"  -V : turn off class title comment mode for following source fies\n");
       G__more(G__sout,"  +P : turn on preprocessor for following source files\n");
       G__more(G__sout,"  -P : turn off preprocessor for following source files\n");
-      G__more(G__sout,"  +STUB : stub function header begin\n");
-      G__more(G__sout,"  -STUB : stub function header end\n");
+      G__more(G__sout,"* +STUB : stub function header begin\n");
+      G__more(G__sout,"* -STUB : stub function header end\n");
       G__more(G__sout,"sourcefiles\n");
       G__more(G__sout,"  Any valid C/C++ source or header files\n");
       G__more(G__sout,"EXAMPLES\n");
@@ -2003,6 +2004,9 @@ void G__platformMacro()
 #ifdef _AIX
   sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
 #endif
+#ifdef __sgi
+  sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
+#endif
 #ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
@@ -2145,6 +2149,53 @@ FILE *fp;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1451
+/**************************************************************************
+* G__AddConstStringList()
+*
+**************************************************************************/
+struct G__ConstStringList* G__AddConstStringList(current,str,islen)
+struct G__ConstStringList* current;
+char* str;
+int islen;
+{
+  int itemp;
+  struct G__ConstStringList* next;
+
+  next=(struct G__ConstStringList*)malloc(sizeof(struct G__ConstStringList));
+
+  next->string = (char*)malloc(strlen(str)+1);
+  strcpy(next->string,str);
+
+  if(islen) {
+    next->hash = strlen(str);
+  }
+  else {
+    G__hash(str,next->hash,itemp);
+  }
+
+  next->prev = current;
+
+  return(next);
+}
+
+/**************************************************************************
+* G__DeleteConstStringList()
+*
+**************************************************************************/
+void G__DeleteConstStringList(current)
+struct G__ConstStringList* current;
+{
+  struct G__ConstStringList* tmp;
+  while(current) {
+    if(current->string) free((void*)current->string);
+    tmp = current->prev;
+    free((void*)current);
+    current = tmp;
+  }
+}
+
+#endif
 
 /*
  * Local Variables:

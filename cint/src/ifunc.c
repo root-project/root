@@ -1159,7 +1159,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 && strncmp(funcheader,"ClassDef",8)!=0
 #endif
 	 ) {
-	fprintf(G__serr,"Warning: Unknown type %s in function argyment"
+	fprintf(G__serr,"Warning: Unknown type %s in function argument"
 		,paraname);
 	G__printlinenum();
       }
@@ -1576,7 +1576,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	ifunc->para_p_typetable[iexist][iin]
 	  =G__p_ifunc->para_p_typetable[func_now][iin];
 	if(G__p_ifunc->para_default[func_now][iin]) {
-	  G__genericerror("Error: Duplicate default parameter definition");
+	  G__genericerror("Error: Redefinition of default argument");
 	  free((void*)G__p_ifunc->para_default[func_now][iin]);
 	  free((void*)G__p_ifunc->para_def[func_now][iin]);
 	}
@@ -2149,8 +2149,13 @@ int func_now;
 	if(paranamelen>5 && strcmp(")()",paraname+paranamelen-3)==0 &&
 	   strchr(paraname,'<')) {
 	  int ix;
+#ifndef G__OLDIMPLEMENTATION1465
+	  for(ix=1;ix<paranamelen-3;ix++) paraname[ix-1] = paraname[ix];
+	  strcpy(paraname+ix-1,"()");
+#else
 	  for(ix=1;ix<paranamelen-4;ix++) paraname[ix-1] = paraname[ix];
 	  strcpy(paraname+ix,"()");
+#endif
 	}
       }
 #endif
@@ -2169,7 +2174,12 @@ int func_now;
 	*ifunc->para_default[func_now][iin] = G__getexpr(paraname);
 #ifndef G__OLDIMPLEMENTATION1380
 	tmpx = ifunc->para_default[func_now][iin];
+#ifndef G__OLDIMPLEMENTATION1455
 	if(reftype && (tmpx->type!=type || tmpx->tagnum!=tagnum) &&
+#else
+	if(reftype && (toupper (tmpx->type)!=toupper(type) ||
+                       tmpx->tagnum!=tagnum) && 
+#endif
 	   0==pointlevel) {
 	  char tmpy[G__ONELINE];
 	  sprintf(tmpy,"%s(%s)"

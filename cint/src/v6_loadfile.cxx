@@ -1200,10 +1200,13 @@ char *filenamein;
 #endif
 	ipath = ipath->next;
 #ifndef G__OLDIMPLEMENTATION1451
-	if(G__SystemIncludeDir) {
-	  int lensysdir=strlen(G__SystemIncludeDir);
-	  if(strncmp(G__SystemIncludeDir,G__ifile.name,lensysdir)==0)
-	    G__globalcomp=G__NOLINK;
+	{
+	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
+	  while(sysdir) {
+	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0)
+	      G__globalcomp=G__NOLINK;
+	    sysdir = sysdir->prev;
+	  }
 	}
 #endif
       }
