@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.8 2000/10/02 15:46:19 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.9 2000/11/21 21:06:53 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -161,46 +161,6 @@ void Event::SetRandomVertex() {
    fClosestDistance = new Float_t[fNvertex];
    for (Int_t k = 0; k < fNvertex; k++ ) {
       fClosestDistance[k] = gRandom->Gaus(1,1);
-   }
-}
-
-//______________________________________________________________________________
-void Event::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class Event.
-
-   if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
-      TObject::Streamer(R__b);
-      R__b.ReadFastArray(fType,20);
-      R__b >> fNtrack;
-      R__b >> fNseg;
-      R__b >> fNvertex;
-      R__b >> fFlag;
-      R__b >> fTemperature;
-      fEvtHdr.Streamer(R__b);
-      fTracks->Clear();
-      fTracks->Streamer(R__b);
-      if (!fH) fH = new TH1F();
-      fH->Streamer(R__b);
-      //R__b >> fH;
-      R__b.ReadFastArray(fMeasures,10);
-      R__b.ReadFastArray((float*)fMatrix,16);
-   } else {
-      R__b.WriteVersion(Event::IsA());
-      TObject::Streamer(R__b);
-      R__b.WriteFastArray(fType,20);
-      R__b << fNtrack;
-      R__b << fNseg;
-      R__b << fNvertex;
-      R__b << fFlag;
-      R__b << fTemperature;
-      fEvtHdr.Streamer(R__b);
-      fTracks->Streamer(R__b);
-      fH->Streamer(R__b);
-      //R__b << (TObject*)fH;
-      R__b.WriteFastArray(fMeasures,10);
-      R__b.WriteFastArray((float*)fMatrix,16);
    }
 }
 

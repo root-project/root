@@ -49,11 +49,11 @@ private:
    UInt_t         fFlag;
    Float_t        fTemperature;
    EventHeader    fEvtHdr;
-   TClonesArray  *fTracks;
-   TH1F          *fH;
+   TClonesArray  *fTracks;            //->
+   TH1F          *fH;                 //->
    Int_t          fMeasures[10];
    Float_t        fMatrix[4][4];
-   Float_t       *fClosestDistance; //[fNvertex] 
+   Float_t       *fClosestDistance;   //[fNvertex] 
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
