@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.97 2002/08/16 10:54:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.98 2002/08/16 21:16:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4236,15 +4236,15 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       //get 3*3 under/overflows for 2d hist
       Stat_t unov[9];
 
-      unov[0] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetLast()+1);
-      unov[1] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetLast()+1);
-      unov[2] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetLast()+1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetLast()+1);
+      unov[0] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
+      unov[1] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
+      unov[2] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
       unov[3] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
       unov[4] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[5] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetLast()+1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
+      unov[5] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
       unov[6] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,0,h2->GetYaxis()->GetFirst()-1);
       unov[7] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),0,h2->GetYaxis()->GetFirst()-1);
-      unov[8] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetLast()+1,0,h2->GetYaxis()->GetFirst()-1);
+      unov[8] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,0,h2->GetYaxis()->GetFirst()-1);
 
       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
       stats->AddText(t);
