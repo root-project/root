@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.46 2001/05/08 20:30:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.47 2001/05/20 17:33:30 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -300,13 +300,13 @@ TClass::TClass(const char *name, Version_t cversion,
    //in case a class with the same name had been created by TStreamerInfo
    //we must delete the old class, importing only the StreamerInfo structure
    //from the old dummy class.
+   TStreamerInfo *info;
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (oldcl) {
       if (oldcl->CanIgnoreTObjectStreamer()) {
          IgnoreTObjectStreamer();
       }
 
-      TStreamerInfo *info;
       TIter next(oldcl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)next())) {
          info->SetClass(this);
@@ -317,6 +317,36 @@ TClass::TClass(const char *name, Version_t cversion,
       delete oldcl;
    }
    gROOT->GetListOfClasses()->Add(this);
+   
+   if (oldcl) {
+      //we must update the class pointers pointing to oldcl in all TStreamerElements
+      TIter nextClass(gROOT->GetListOfClasses());
+      TClass *acl;
+      while ((acl = (TClass*)nextClass())) {
+         TIter nextInfo(acl->GetStreamerInfos());
+         while ((info = (TStreamerInfo*)nextInfo())) {
+            TStreamerElement *element;
+            TIter nextElement(info->GetElements());
+            while ((element = (TStreamerElement*)nextElement())) {
+               element->Update(oldcl,this);
+            }
+         }
+      }
+                     
+      //we must notify all Trees in all files. In particular
+      //TLeafObjects must update pointers to the class.
+      TObject * obj;
+      TDirectory *cursav = gDirectory;
+      TFile *file;
+      TIter nextf(gROOT->GetListOfFiles());
+      while ((file = (TFile*)nextf())) {
+         TIter next(file->GetList()); //in principle we should scan all sub-directories
+         while ((obj = next())) {
+            if (obj->InheritsFrom("TTree")) obj->Notify();
+         }
+      }
+      if (cursav) cursav->cd();
+   }
 }
 
 //______________________________________________________________________________
