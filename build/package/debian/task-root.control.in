@@ -1,6 +1,0 @@
-Package: task-root
-Architecture: all
-Depends: root-cint, libroot, libroot-dev, root-bin, task-c++-dev
-Recommends: root-shift, root-star, root-pythia, root-mysql, root-pgsql, root-gl, root-zebra, root-ttf, root-daemon, root-doc
-Description: @short@
-@long@
