@@ -36,8 +36,6 @@
 #include "TStorage.h"
 #include "zlib.h"
 
-const Int_t  kMaxBuffer = 250;
-
 // To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
@@ -964,12 +962,10 @@ void TPDF::NewPage()
    PrintStr(" 0 R");
    PrintStr("@");
 
-   Double_t xlow=0, ylow=0, xup=1, yup=1;
+   Double_t xlow=0, ylow=0;
    if (gPad) {
       xlow = gPad->GetAbsXlowNDC();
-      xup  = xlow + gPad->GetAbsWNDC();
       ylow = gPad->GetAbsYlowNDC();
-      yup  = ylow + gPad->GetAbsHNDC();
    }
    PrintStr("/MediaBox [");
 
