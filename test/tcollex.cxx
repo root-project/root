@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: tcollex.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Fons Rademakers   19/08/96
 
 #include <stdlib.h>
@@ -32,11 +32,11 @@ public:
    ~TObjNum() { Printf("~TObjNum = %d", num); }
    void    SetNum(int i) { num = i; }
    int     GetNum() { return num; }
-   void    Print(Option_t *) { Printf("TObjNum = %d", num); }
-   ULong_t  Hash() { return num; }
-   Bool_t IsEqual(TObject *obj) { return num == ((TObjNum*)obj)->num; }
+   void    Print(Option_t *) const { Printf("TObjNum = %d", num); }
+   ULong_t  Hash() const { return num; }
+   Bool_t IsEqual(const TObject *obj) const { return num == ((TObjNum*)obj)->num; }
    Bool_t  IsSortable() const { return kTRUE; }
-   Int_t   Compare(TObject *obj) { if (num > ((TObjNum*)obj)->num)
+   Int_t   Compare(const TObject *obj) const { if (num > ((TObjNum*)obj)->num)
                                       return 1;
                                    else if (num < ((TObjNum*)obj)->num)
                                       return -1;
