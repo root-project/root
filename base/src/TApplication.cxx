@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.26 2002/02/23 16:04:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.27 2002/03/05 10:47:48 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -596,9 +596,10 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
          if (sync)
            gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
                                           (TInterpreter::EErrorCode*)&error);
-         else
+         else {
            gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)&error);
+                                     (TInterpreter::EErrorCode*)&err);
+         }
       }
 
       delete [] fn;
@@ -635,7 +636,7 @@ out:
       gInterpreter->ResetGlobals();
       Terminate(gInterpreter->GetExitCode());
    }
-   if (err)
+   if (sync && err)
       *err = error;
 }
 
