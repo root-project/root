@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.27 2001/03/21 16:45:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.28 2001/04/04 14:03:24 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -256,7 +256,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fVersionTime = ITIMQQ();
    fTimer       = 0;
    fApplication = 0;
-   fClasses     = new THashList(300,2);
+   fClasses     = new THashList(800,3);
    fColors      = new TObjArray(1000);
    fTypes       = 0;
    fGlobals     = 0;
