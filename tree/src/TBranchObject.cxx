@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.6 2000/12/10 17:14:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.7 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -292,7 +292,7 @@ void TBranchObject::SetAddress(void *add)
       if (dm->IsaPointer()) {
          TClass *clobj = 0;
          if (!dm->IsBasic()) clobj = gROOT->GetClass(dm->GetTypeName());
-         if (clobj && !strcmp("TClonesArray",clobj->GetName())) {
+         if (clobj && clobj->InheritsFrom("TClonesArray")) {
             if (isDot) sprintf(fullname,"%s%s",bname,&rdname[1]);
             else       sprintf(fullname,"%s",&rdname[1]);
             branch = (TBranch*)fBranches.FindObject(fullname);

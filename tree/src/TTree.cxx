@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.32 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.33 2000/12/13 16:45:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -495,7 +495,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       if (dm->IsaPointer()) {
          TClass *clobj = 0;
          if (!dm->IsBasic()) clobj = gROOT->GetClass(dm->GetTypeName());
-         if (clobj && !strcmp("TClonesArray",clobj->GetName())) {
+         if (clobj && clobj->InheritsFrom("TClonesArray")) {
             char *cpointer  =(char*)pointer;
             char **ppointer =(char**)cpointer;
             TClonesArray *list = (TClonesArray*)(*ppointer);
