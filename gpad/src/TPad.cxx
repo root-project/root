@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.70 2002/02/14 08:28:53 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.71 2002/03/05 16:59:08 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2415,6 +2415,17 @@ void TPad::HighLight(Color_t color, Bool_t set)
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
    if (GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+      //When doing a DrawClone from the GUI you would do
+      //  - select an empty pad -
+      //  - right click on object -
+      //     - select DrawClone on menu -
+      //
+      // Without the SetSelectedPad(); in the HighLight function, the
+      // above instruction lead to the clone to be drawn in the
+      // same canvas as the original object.  This is because the
+      // 'right clicking' (via TCanvas::HandleInput) changes gPad
+      // momentarily such that when DrawClone is called, it is
+      // not the right value (for DrawClone). Should be FIXED.
       gROOT->SetSelectedPad(this);
       if (set)
          PaintBorder(-color, kFALSE);
