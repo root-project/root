@@ -17,6 +17,11 @@
 #define Prop_B        5.26e-03        // in GeV/c pro 17.4 kGauss
 #define MAX_GAMMA     1000000000000.
 
+#define classic_electr_radius   2.8179409421853486e-12
+#define electron_Compton_length 3.861593288718701e-10
+#define fine_structure_const    0.00729735301337329
+#define hbarc                   1.9732705406375647e-10
+
 #define DEAD         -1
 #define ALIVE         0
 #define CREATED       1

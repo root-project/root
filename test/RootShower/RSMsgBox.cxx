@@ -62,7 +62,8 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
 
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
                            2, 2, 2, 2);
-   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 50, 50, 5, 20);
+   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 
+                           10, 10, 5, 10);
 
    fHFrame->AddFrame(fOkButton,     fL1);  
    fHFrame->AddFrame(fHelpButton,   fL1);

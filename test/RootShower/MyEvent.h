@@ -31,6 +31,8 @@
 #include "TGListTree.h"
 #include "TDatime.h"
 
+class TGeoMaterial;
+
 class EventHeader {
 
 private:
@@ -110,22 +112,22 @@ public :
     TPolyLine3D    *GetTrack(Int_t at) const {return (TPolyLine3D*)fTracks->At(at);}
     MyParticle     *GetParticle(Int_t at) const {return (MyParticle*)fParticles->At(at);}
 
-    void            DeleteParticle(Int_t);
-    void            Magnetic_field(Int_t);
-    Int_t           dE_dX(Int_t);
     Int_t           Action(Int_t);
-    Int_t           Bremsstrahlung(Int_t);
-    Int_t           Pair_production(Int_t);
-    Int_t           Move(Int_t, const TVector3 &);
-    Double_t        Pair_prob(Int_t);
     Double_t        Brems_prob(Int_t);
-    void            Define_decay(Int_t);
-    Int_t           FindFreeId(Int_t *);
-    void            ScatterAngle(Int_t);
-    Int_t           Particle_color(Int_t);
+    Int_t           Bremsstrahlung(Int_t);
     Int_t           CheckDecayTime(Int_t id);
-    Int_t           Decay(Int_t id);
     void            CheckMatter(Int_t id);
+    Int_t           Decay(Int_t id);
+    void            Define_decay(Int_t);
+    void            DeleteParticle(Int_t);
+    Int_t           dE_dX(Int_t);
+    Int_t           FindFreeId(Int_t *);
+    void            Magnetic_field(Int_t);
+    Int_t           Move(Int_t, TVector3 &);
+    Double_t        Pair_prob(Int_t);
+    Int_t           PairCreation(Int_t id);
+    Int_t           Particle_color(Int_t);
+    void            ScatterAngle(Int_t);
 
     ClassDef(MyEvent,1)  //Event structure
 };
