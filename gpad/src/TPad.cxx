@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.157 2004/12/07 16:38:20 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.158 2004/12/27 17:15:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3147,6 +3147,8 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t IAng2 = (Int_t)((fasi-100*IDSPA)/10);
    Int_t IAng1 = fasi%10;
    Double_t dy = 0.003*(Double_t)(IDSPA);
+   gVirtualX->SetLineStyle(1);
+   gVirtualX->SetLineWidth(1);
    if (Ang1[IAng1] != 5.) PaintHatches(dy, Ang1[IAng1], nn, xx, yy);
    if (Ang2[IAng2] != 5.) PaintHatches(dy, Ang2[IAng2], nn, xx, yy);
 }
