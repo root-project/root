@@ -180,13 +180,15 @@ void h1analysis::Begin(TTree *tree)
 //_____________________________________________________________________
 Bool_t h1analysis::ProcessCut(Int_t entry)
 {
+// entry is the entry number in the current Tree
 // Selection function to select D* and D0.
-      
+         
    //in case one event list is given in input, the selection has already been done.
    if (useList) return kTRUE;
 
    // Read only the necessary branches to select entries.
    // return as soon as a bad entry is detected
+   // to read complete event, call fChain->GetTree()->GetEntry(entry)
    b_md0_d->GetEntry(entry);   if (TMath::Abs(md0_d-1.8646) >= 0.04) return kFALSE;
    b_ptds_d->GetEntry(entry);  if (ptds_d <= 2.5) return kFALSE;
    b_etads_d->GetEntry(entry); if (TMath::Abs(etads_d) >= 1.5) return kFALSE;
@@ -213,8 +215,10 @@ Bool_t h1analysis::ProcessCut(Int_t entry)
 //_____________________________________________________________________
 void h1analysis::ProcessFill(Int_t entry)
 {
+// entry is the entry number in the current Tree
 // function called for selected entries only
 
+   // to read complete event, call fChain->GetTree()->GetEntry(entry)
    // read branches not processed in ProcessCut
    b_dm_d->GetEntry(entry);         //read branch holding dm_d
    b_rpd0_t->GetEntry(entry);       //read branch holding rpd0_t
