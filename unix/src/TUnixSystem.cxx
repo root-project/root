@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.94 2004/04/20 09:27:03 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.95 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -277,19 +277,47 @@ const char *kProtocolName   = "tcp";
 #   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
 #endif
 
-const Int_t kNFDBITS = (sizeof(Int_t) * 8);      // 8 bits per byte
+const Int_t kNFDBITS = (sizeof(Int_t) * 8);   // 8 bits per byte
+#ifdef FD_SETSIZE
+const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
+#else
+const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
+#endif
+
 
 class TFdSet {
 private:
-   Int_t fds_bits[HOWMANY(256, kNFDBITS)];     // upto 255 file descriptors
+   Int_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
    TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
    TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));} return *this; }
    void   Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void   Set(Int_t n) { fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS)); }
-   void   Clr(Int_t n) { fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS)); }
-   Int_t  IsSet(Int_t n) { return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS)); }
+   void   Set(Int_t n)
+   {
+      if (n >= 0 && n < kFDSETSIZE) {
+         fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS));
+      } else {
+         ::Fatal("TFdSet::Set","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
+      }
+   }
+   void   Clr(Int_t n)
+   {
+      if (n >= 0 && n < kFDSETSIZE) {
+         fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS));
+      } else {
+         ::Fatal("TFdSet::Clr","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
+      }
+   }
+   Int_t  IsSet(Int_t n)
+   {
+      if (n >= 0 && n < kFDSETSIZE) {
+         return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS));
+      } else {
+         ::Fatal("TFdSet::IsSet","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
+         return 0;
+      }
+   }
    Int_t *GetBits() { return (Int_t *)fds_bits; }
 };
 
