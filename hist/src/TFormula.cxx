@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.42 2003/06/21 10:47:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.43 2003/06/21 13:27:19 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -125,6 +125,11 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
    fNames  = 0;
    fNval   = 0;
 
+   if (!expression || !*expression) {
+      Error("TFormula", "expression may not be 0 or have 0 length");
+      return;
+   }
+
    //eliminate blanks in expression
    Int_t i,j,nch;
    nch = strlen(expression);
@@ -141,11 +146,11 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
    expr[j] = 0;
    if (j) SetTitle(expr);
    delete [] expr;
-   
+
    if (Compile()) return;
-   
+
 //*-*- Store formula in linked list of formula in ROOT
-                            
+
    TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
    if (old) {
       gROOT->GetListOfFunctions()->Remove(old);
@@ -182,15 +187,15 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 
@@ -201,7 +206,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
    Ssiz_t argStart = chaine.First('(');
    if (argStart<0) return false;
-   
+
    TString functionName = chaine(0,argStart);
 
    // This does not support template yet (where the scope operator might be in
@@ -214,11 +219,11 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    // Now we need to count and decompose the actual arguments, we could also check the type
-   // of the arguments   
+   // of the arguments
    if (chaine[chaine.Length()-1] != ')') {
       Error("We thought we had a function but we dont (in %s)\n",chaine.Data());
    }
-   
+
    TString args = chaine(argStart+1,chaine.Length()-2-argStart);
    TObjArray argArr;
    //fprintf(stderr,"args are '%s'\n",args.Data());
@@ -231,10 +236,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    for(i=0; i<args.Length(); i++) {
       if (args[i]=='"') inString = !inString;
       if (inString) continue;
-      
+
       bool foundArg = false;
       switch(args[i]) {
-         
+
          case '(': paran++; break;
          case ')': paran--; break;
          case '[': brack++; break;
@@ -247,20 +252,20 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
       }
       if (foundArg) {
          TString arg = args(prevComma,i-prevComma);
-            
-         // Here we could 
+
+         // Here we could
          //   a) check the type
          //fprintf(stderr,"found #%d arg %s\n",nargs,arg.Data());
-         
+
          // We register the arg for later usage
          argArr.Add(new TObjString(arg));
          nargs++;
-         
+
          prevComma = i+1;
       };
    }
 
-   if (nargs>999) { 
+   if (nargs>999) {
       err = 7;
       return false;
    }
@@ -282,10 +287,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    if (ns) {
       method->Init(ns,functionName,proto);
    } else {
-      method->Init(functionName,proto);      
+      method->Init(functionName,proto);
    }
-   
-   if (method->GetMethod()) {      
+
+   if (method->GetMethod()) {
 
       if (method->ReturnType() == TMethodCall::kOther) {
          /*
@@ -294,26 +299,26 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
                method->GetMethodName(), method->GetMethod()->GetReturnTypeName());
          */
          err=29;
-         
+
       } else {
 
          fFunctions.Add(method);
-         
+
          // Analyze the arguments
          TIter next(&argArr);
          TObjString *objstr;
          while ( (objstr=(TObjString*)next()) ) {
             Analyze(objstr->String(),err,offset);
-         }   
-         
-         fExpr[fNoper] = method->GetMethod()->GetPrototype();         
+         }
+
+         fExpr[fNoper] = method->GetMethod()->GetPrototype();
          fOper[fNoper] = kFunctionCall + fFunctions.GetLast()*1000 + nargs;
          fNoper++;
-         
+
          return true;
       }
-   } 
-   
+   }
+
    delete method;
 
    return false;
@@ -452,15 +457,15 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1595,7 +1600,7 @@ if (err==0) {
 }
 
 //______________________________________________________________________________
-void TFormula::Clear(Option_t * /*option*/ ) 
+void TFormula::Clear(Option_t * /*option*/ )
 {
 //*-*-*-*-*-*-*-*-*Resets the objects*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================
@@ -1607,7 +1612,7 @@ void TFormula::Clear(Option_t * /*option*/ )
 }
 
 //______________________________________________________________________________
-void TFormula::ClearFormula(Option_t * /*option*/ ) 
+void TFormula::ClearFormula(Option_t * /*option*/ )
 {
 //*-*-*-*-*-*-*-*-*Resets the objects*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================
@@ -1629,8 +1634,8 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fParams) { delete [] fParams; fParams = 0;}
    if (fNames)  { delete [] fNames;  fNames  = 0;}
    fFunctions.Delete();
-   
-   // should we also remove the object from the list? 
+
+   // should we also remove the object from the list?
    // gROOT->GetListOfFunctions()->Remove(this);
    // if we don't, what happens if it fails the new compilation?
 }
@@ -1648,15 +1653,15 @@ Int_t TFormula::Compile(const char *expression)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 //Begin_Html
@@ -1896,15 +1901,15 @@ char *TFormula::DefinedString(Int_t)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 ///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1925,15 +1930,15 @@ Double_t TFormula::DefinedValue(Int_t)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 ///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1953,15 +1958,15 @@ Int_t TFormula::DefinedVariable(TString &chaine)
 //*-*
 //*-*     TFormula::TFormula(const char *name,const char *expression)
 //*-*
-//*-*   and write your won constructor 
+//*-*   and write your own constructor
 //*-*
 //*-*     MyClass::MyClass(const char *name,const char *expression) : TFormula()
 //*-*
-//*-*   which has to call the TFormula default constructor and whose implementation 
+//*-*   which has to call the TFormula default constructor and whose implementation
 //*-*   should be similar to the implementation of the normal TFormula constructor
 //*-*
 //*-*   This is necessary because the normal TFormula constructor call indirectly
-//*-*   the virtual member functions Analyze, DefaultString, DefaultValue 
+//*-*   the virtual member functions Analyze, DefaultString, DefaultValue
 //*-*   and DefaultVariable.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -2044,14 +2049,14 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 
        // Retrieve the function
        TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
-       
+
        // Set the arguments
        TString args;
        if (nargs) {
           UInt_t argloc = pos-nargs;
           for(j=0;j<nargs;j++,argloc++,pos--) {
              if (TMath::IsNaN(tab[argloc])) {
-                // TString would add 'nan' this is not what we want 
+                // TString would add 'nan' this is not what we want
                 // so let's do somethign else
                 args += "(double)(0x8000000000000)";
              } else {
@@ -2352,7 +2357,7 @@ Int_t TFormula::GetOperType(Int_t oper) const
      oper>22 && oper<26) return -2;    //Functions with the format func(x,y)
 
   return 0;
-     
+
 }
 
 //______________________________________________________________________________
