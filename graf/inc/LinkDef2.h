@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.2 2001/02/07 20:54:01 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.3 2001/10/01 06:48:34 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,5 +26,9 @@
 #pragma link C++ class TSplinePoly+;
 #pragma link C++ class TSplinePoly5+;
 #pragma link C++ class TSplinePoly3+;
+#pragma link C++ class TImage;
+#pragma link C++ class TAttImage;
+#pragma link C++ class TImagePalette;
+#pragma link C++ class TPaletteEditor;
 
 #endif
