@@ -41,6 +41,14 @@ VC_MAJOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
 VC_MINOR     := $(shell $(CXX) 2>&1 | awk '{ if (NR==1) print $$8 }' | \
                 cut -d'.' -f2)
 
+# 1310 is VC++.NET
+ifeq ($(VC_MAJOR),13)
+ifeq ($(VC_MINOR),10)
+CINTCXXFLAGS += -DG__NEWSTDHEADER
+CINTCFLAGS   += -DG__NEWSTDHEADER
+endif
+endif
+
 # Linker:
 LD            = build/win/ld.sh
 LDFLAGS       = -nologo -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
