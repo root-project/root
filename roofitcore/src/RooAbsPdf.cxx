@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.50 2001/10/27 22:28:18 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.51 2001/10/30 07:29:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -182,7 +182,8 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // done in integration calls, there is no performance hit.
 
   if (!nset) {
-    Double_t val = traceEval(nset) ;
+    Double_t val = evaluate() ;
+    traceEvalPdf(val) ;
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
     return val ;
   }

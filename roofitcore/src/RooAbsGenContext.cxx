@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.cc,v 1.4 2001/10/19 21:32:21 david Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.5 2001/10/22 07:12:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -125,6 +125,8 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     delete iterator;
     if(!ok) return 0;
   }
+
+  if (_verbose) Print("v") ;
 
   // create a new dataset
   TString name(GetName()),title(GetTitle());

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.13 2001/10/08 05:20:12 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.14 2001/10/19 06:56:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,8 +32,8 @@ ClassImp(RooAbsString)
 ;
 
 
-RooAbsString::RooAbsString(const char *name, const char *title) : 
-  RooAbsArg(name,title)
+RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) : 
+  RooAbsArg(name,title), _value(new char[bufLen]), _len(bufLen)
 {
   // Constructor
   setValueDirty() ;
@@ -43,7 +43,7 @@ RooAbsString::RooAbsString(const char *name, const char *title) :
 
 
 RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
-  RooAbsArg(other, name)
+  RooAbsArg(other, name), _value(new char[other._len]), _len(other._len)
 {
   // Copy constructor
   strcpy(_value,other._value) ;
@@ -53,6 +53,7 @@ RooAbsString::RooAbsString(const RooAbsString& other, const char* name) :
 
 RooAbsString::~RooAbsString()
 {
+  delete[] _value ;
   // Destructor
 }
 
@@ -114,7 +115,7 @@ Bool_t RooAbsString::isValidString(TString value, Bool_t printError) const
   // Check if given value is valid
 
   // Protect against string overflows
-  if (value.Length()>1023) return kFALSE ;
+  if (value.Length()>_len) return kFALSE ;
 
   return kTRUE ;
 }
@@ -128,7 +129,7 @@ TString RooAbsString::traceEval() const
   
   //Standard tracing code goes here
   if (!isValidString(value)) {
-    cout << "RooAbsString::traceEval(" << GetName() << "): new output too long (>1023 chars): " << value << endl ;
+    cout << "RooAbsString::traceEval(" << GetName() << "): new output too long (>" << _len << " chars): " << value << endl ;
   }
 
   //Call optional subclass tracing code

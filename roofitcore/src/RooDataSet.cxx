@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.55 2001/10/21 22:57:01 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.56 2001/10/27 22:28:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -532,10 +532,9 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   strcpy(fileList2,fileList) ;
   
   // Loop over all names in comma separated list
-  char *filename = strtok(fileList2,",") ;
+  char *filename = strtok(fileList2,", ") ;
   Int_t fileSeqNum(0) ;
   while (filename) {
-
     // Determine index category number, if this option is active
     if (indexCat) {
 
@@ -578,8 +577,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     ifstream file(fullName) ;
 
     if(!file.good()) {
-      cout << "RooDataSet::read: unable to open "
-	   << filename << ", skipping" << endl;
+      cout << "RooDataSet::read: unable to open '"
+	   << filename << "', skipping" << endl;
     }
     
     Double_t value;
@@ -646,7 +645,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     file.close();
 
     // get next file name 
-    filename = strtok(0,",") ;
+    filename = strtok(0," ,") ;
     fileSeqNum++ ;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.rdl,v 1.5 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooStreamParser.rdl,v 1.6 2001/09/28 21:59:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,6 +40,7 @@ public:
   Bool_t convertToString(const TString& token, TString& string) ;
 
   inline Bool_t atEOL() { return (_is.peek()=='\n') ; }
+  inline Bool_t atEOF() { return _atEOF ; }
   void zapToEnd() ;
 
   Bool_t isPunctChar(char c) const ;
@@ -48,6 +49,7 @@ protected:
 
   istream& _is ;
   Bool_t _atEOL ;
+  Bool_t _atEOF ;
   TString _prefix ;
   TString _punct ;
 

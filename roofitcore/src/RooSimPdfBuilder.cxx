@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.1 2001/10/30 07:29:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -59,13 +59,13 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 {
   // Make RooArgSet of configuration objects
   RooArgSet* buildConfig = new RooArgSet ;
-  buildConfig->addOwned(* new RooStringVar("physModels","List and mapping of physics models to include in build","")) ;
-  buildConfig->addOwned(* new RooStringVar("splitCats","List of categories used for splitting","")) ;
+  buildConfig->addOwned(* new RooStringVar("physModels","List and mapping of physics models to include in build","",1024)) ;
+  buildConfig->addOwned(* new RooStringVar("splitCats","List of categories used for splitting","",1024)) ;
 
   TIterator* iter = _protoPdfSet.createIterator() ;
   RooAbsPdf* proto ;
   while (proto=(RooAbsPdf*)iter->Next()) {
-    buildConfig->addOwned(* new RooStringVar(proto->GetName(),proto->GetName(),"")) ;
+    buildConfig->addOwned(* new RooStringVar(proto->GetName(),proto->GetName(),"",2048)) ;
   }
   delete iter ;
 
@@ -331,7 +331,8 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
   // Add component PDFs to master PDF
   TIterator* fcIter = fitCat->typeIterator() ;
-  RooCatType* fcState ;
+
+  RooCatType* fcState ;  
   while(fcState=(RooCatType*)fcIter->Next()) {
     // Select fitCat state
     fitCat->setLabel(fcState->GetName()) ;

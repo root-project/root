@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.34 2001/10/27 22:28:21 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.35 2001/10/31 07:19:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -264,7 +264,25 @@ RooFormula::DefinedVariable(TString &name)
     arg= (RooAbsArg*) _origList.FindObject(argName) ;
   }
 
+  // Check that arg exists
   if (!arg) return -1 ;
+
+  // Check that optional label corresponds to actual category state
+  if (labelName) {
+    RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
+    if (!cat) {
+      cout << "RooFormula::DefinedVariable(" << GetName() << ") ERROR: " 
+	   << arg->GetName() << "' is not a RooAbsCategory" << endl ;
+      return -1 ;
+    }
+
+    if (!cat->lookupType(labelName)) {
+      cout << "RooFormula::DefinedVariable(" << GetName() << ") ERROR '" 
+	   << labelName << "' is not a state of " << arg->GetName() << endl ;
+      return -1 ;
+    }
+
+  }
 
   // Add variable to use list
   _useList.Add(arg) ;

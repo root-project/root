@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.3 2001/10/19 06:56:52 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.4 2001/10/27 22:28:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -317,7 +317,16 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       if (_cloneLeafList->find(newName)) {
 
 	// Copy instance to one-time use list for this build
-	clonedMasterLeafs.add(*_cloneLeafList->find(newName)) ;
+	RooAbsArg* specLeaf = _cloneLeafList->find(newName) ;
+	clonedMasterLeafs.add(*specLeaf) ;
+	if (verbose) {
+	  cout << "Adding existing leaf specialization " << newName << " to clonedMasterLeafs" << endl ;
+	}
+
+	// Affix attribute with old name to clone to support name changing server redirect
+	TString nameAttrib("ORIGNAME:") ;
+	nameAttrib.Append(leaf->GetName()) ;
+	specLeaf->setAttribute(nameAttrib) ;
 
       } else {
 

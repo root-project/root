@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.40 2001/10/30 07:29:14 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.41 2001/11/01 17:57:54 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -93,7 +93,7 @@ public:
   TH2F *createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel= 0) const;
   TH3F *createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
 			const char *tAxisLabel= 0) const;
-  static TH1* createHistogram(const char *name, const RooArgList &vars, const char *tAxisLabel= 0);
+  static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel= 0);
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.43 2001/10/19 06:56:52 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.44 2001/10/27 22:28:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -300,7 +300,7 @@ void RooArgSet::writeToFile(const char* fileName)
 
 
 
-Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt) 
+Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, const char* section) 
 {
   // Read contents of the argset from specified file.
   // See readFromStream() for details
@@ -309,12 +309,12 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt)
     cout << "RooArgSet::readFromFile(" << GetName() << ") error opening file " << fileName << endl ;
     return kTRUE ;
   }
-  return readFromStream(ifs,kFALSE,flagReadAtt) ;
+  return readFromStream(ifs,kFALSE,flagReadAtt,section,kTRUE) ;
 }
 
 
 
-void RooArgSet::writeToStream(ostream& os, Bool_t compact) 
+void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section) 
 {
   // Write the contents of the argset in ASCII form to given stream.
   // 
@@ -342,7 +342,7 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact)
 
 
 
-Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, Bool_t verbose) 
+Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose) 
 {
   // Read the contents of the argset in ASCII form from given stream.
   // 
@@ -400,14 +400,45 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
   Int_t condStackLevel=0 ;
   condStack[0]=kTRUE ;
   
+  // Prepare section processing
+  TString sectionHdr("[") ;
+  if (section) sectionHdr.Append(section) ;
+  sectionHdr.Append("]") ;
+  Bool_t inSection(section?kFALSE:kTRUE) ;
+
   while (1) {
+
+    if (is.eof() || is.fail() || parser.atEOF()) {
+      break ;
+    }
+    
     // Read next token until end of file
     token = parser.readToken() ;
-    if (is.eof() || is.bad()) break ;
-    
+
     // Skip empty lines 
-    if (token.IsNull()) continue ;
-    
+    if (token.IsNull()) {
+      continue ;
+    }
+
+    // Process section headers if requested
+    if (*token.Data()=='[') {
+      TString hdr(token) ;
+      hdr.Append(" ") ;
+      hdr.Append(parser.readLine()) ;
+//       parser.putBackToken(token) ;
+//       token = parser.readLine() ;
+      if (section) {
+	inSection = !sectionHdr.CompareTo(hdr) ;
+      }
+      continue ;
+    }
+
+    // If section is specified, ignore all data outside specified section
+    if (!inSection) {
+      parser.zapToEnd() ;
+      continue ;
+    }
+
     // Process include directives
     if (!token.CompareTo("include")) {
       if (parser.atEOL()) {
@@ -516,6 +547,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       
       // Interpret the rest as <arg> = <value_expr> 
       RooAbsArg *arg ;
+
       if ((arg = find(token)) && !arg->getAttribute("Dynamic")) {
 	if (parser.expectToken("=",kTRUE)) {
 	  parser.zapToEnd() ;

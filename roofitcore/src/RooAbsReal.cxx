@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.57 2001/10/30 07:29:14 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.58 2001/11/01 17:57:54 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -290,7 +290,8 @@ TH1F *RooAbsReal::createHistogram(const char *name, const char *yAxisLabel) cons
   // changed with setPlotBins(). The caller takes ownership of the returned
   // object and is responsible for deleting it.
 
-  return (TH1F*)createHistogram(name, RooArgList(*this), yAxisLabel);
+  RooArgList list(*this) ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel);
 }
 
 TH2F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel) const {
@@ -300,7 +301,8 @@ TH2F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, cons
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
-  return (TH2F*)createHistogram(name, RooArgList(*this,yvar), zAxisLabel);
+  RooArgList list(*this,yvar) ;
+  return (TH2F*)createHistogram(name, list, zAxisLabel);
 }
 
 TH3F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
@@ -311,10 +313,11 @@ TH3F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, cons
   // can be changed with setPlotBins(). The caller takes ownership of the returned object
   // and is responsible for deleting it.
 
-  return (TH3F*)createHistogram(name, RooArgList(*this,yvar,zvar), tAxisLabel);
+  RooArgList list(*this,yvar,zvar) ;
+  return (TH3F*)createHistogram(name, list, tAxisLabel);
 }
 
-TH1 *RooAbsReal::createHistogram(const char *name, const RooArgList &vars, const char *tAxisLabel)
+TH1 *RooAbsReal::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel)
 {
   // Create a 1,2, or 3D-histogram with appropriate scale and labels.
   // Binning and ranges are taken from the variables themselves and can be changed by
@@ -773,6 +776,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
 				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+    cout << endl ;
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
@@ -896,21 +900,22 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 	 << " projects variables " ; projectedVars.Print("1") ;
   }  
 
-  // Create projection integral 
-  RooArgSet* projectionCompList ;
-  const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
-
   // Customize two copies of projection with fixed negative and positive asymmetry
   RooAbsCategoryLValue* asymPos = (RooAbsCategoryLValue*) asymCat.Clone("asym_pos") ;
   RooAbsCategoryLValue* asymNeg = (RooAbsCategoryLValue*) asymCat.Clone("asym_neg") ;
   asymPos->setIndex(1) ;
   asymNeg->setIndex(-1) ;
-  RooCustomizer custPos(*projection,"pos") ;
-  RooCustomizer custNeg(*projection,"neg") ;
+  RooCustomizer custPos(*this,"pos") ;
+  RooCustomizer custNeg(*this,"neg") ;
   custPos.replaceArg(asymCat,*asymPos) ;
   custNeg.replaceArg(asymCat,*asymNeg) ;
   RooAbsReal* funcPos = (RooAbsReal*) custPos.build() ;
   RooAbsReal* funcNeg = (RooAbsReal*) custNeg.build() ;
+
+  // Create projection integral 
+  RooArgSet *posProjCompList, *negProjCompList ;
+  const RooAbsReal *posProj = funcPos->createProjection(RooArgSet(*plotVar,*asymPos), &projectedVars, posProjCompList) ;
+  const RooAbsReal *negProj = funcNeg->createProjection(RooArgSet(*plotVar,*asymNeg), &projectedVars, negProjCompList) ;
 
   // Create a RooFormulaVar representing the asymmetry
   TString asymName(GetName()) ;
@@ -919,25 +924,23 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   asymName.Append("]") ;
   TString asymTitle(asymCat.GetName()) ;
   asymTitle.Append(" Asymmetry of ") ;
-  asymTitle.Append(projection->GetTitle()) ;
-  RooFormulaVar* funcAsym = new RooFormulaVar(asymName,asymTitle,"(@0-@1)/(@0+@1)",RooArgSet(*funcPos,*funcNeg)) ;
-
+  asymTitle.Append(GetTitle()) ;
+  RooFormulaVar* funcAsym = new RooFormulaVar(asymName,asymTitle,"(@0-@1)/(@0+@1)",RooArgSet(*posProj,*negProj)) ;
 
   if (projData) {
     
     RooDataProjBinding projBind(*funcAsym,*projData,*plotVar) ;
-    ((RooAbsReal*)projection)->attachDataSet(*projData) ;
+    ((RooAbsReal*)posProj)->attachDataSet(*projData) ;
+    ((RooAbsReal*)negProj)->attachDataSet(*projData) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
 				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
-
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
        
   } else {
 
-    // create a new curve of our function using the clone to do the evaluations
     RooCurve* curve= new RooCurve(*funcAsym,*plotVar,scaleFactor);
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     
@@ -948,14 +951,14 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
   // Cleanup
-  delete projectionCompList ;
+  delete posProjCompList ;
+  delete negProjCompList ;
   delete asymPos ;
   delete asymNeg ;
   delete funcAsym ;
 
   return frame;
 }
-
 
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.12 2001/10/13 21:53:22 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.13 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,8 +27,8 @@ ClassImp(RooStringVar)
 
 
               
-RooStringVar::RooStringVar(const char *name, const char *title, const char* value) :
-  RooAbsString(name, title)
+RooStringVar::RooStringVar(const char *name, const char *title, const char* value, Int_t size) :
+  RooAbsString(name, title, size)
 {
   // Constructor with initial value
   if(!isValidString(value)) {
@@ -87,14 +87,6 @@ RooStringVar& RooStringVar::operator=(const char* newValue)
 
 
 
-
-Bool_t RooStringVar::isValidString(TString value, Bool_t verbose) const {
-  // Test if given TString is valid
-  return kTRUE ;
-}
-
-
-
 Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
@@ -114,7 +106,7 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   
   if (!isValidString(newValue)) {
     if (verbose) 
-      cout << "RooStringVar::readFromStreeam(" << GetName() 
+      cout << "RooStringVar::readFromStream(" << GetName() 
 	   << "): new string too long and ignored" << endl ;
   } else {
     strcpy(_value,newValue) ;

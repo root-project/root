@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.12 2001/10/08 05:20:22 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.13 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,13 +40,13 @@ ClassImp(RooStreamParser)
 
 
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(is), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(is), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~"), _atEOF(kFALSE)
 {
   // Constructor
 }
 
 RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
-  _is(is), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(is), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~"), _atEOF(kFALSE)
 {
   // Constructor with error message prefix
 }
@@ -83,8 +83,14 @@ TString RooStreamParser::readToken()
 
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
   Bool_t first(kTRUE), quotedString(kFALSE), lineCont(kFALSE) ;
-  char buffer[1024], c, cnext, cprev=' ' ;
+  char buffer[10240], c, cnext, cprev=' ' ;
   Int_t bufptr(0) ;
+
+  // Check for end of file 
+   if (_is.eof() || _is.fail()) {
+     _atEOF = kTRUE ;
+     return TString("") ;
+   }
 
   //Ignore leading newline
   if (_is.peek()=='\n') {
@@ -99,7 +105,7 @@ TString RooStreamParser::readToken()
 
   while(1) {
     // Buffer overflow protection
-    if (bufptr>=1020) {
+    if (bufptr>=10239) {
       cout << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
       break ;
     }
@@ -108,7 +114,7 @@ TString RooStreamParser::readToken()
     _is.get(c) ;
     
     // Terminate at EOF, EOL or trouble
-    if (!_is.good() || c=='\n') break ;
+    if (_is.eof() || _is.fail() || c=='\n') break ;
 
     // Terminate as SPACE, unless we haven't seen any non-SPACE yet
     if (isspace(c)) {
@@ -183,6 +189,10 @@ TString RooStreamParser::readToken()
     cprev=c ;
   }
 
+  if (_is.eof() || _is.bad()) {
+    _atEOF = kTRUE ;
+  }
+
   // Check if closing quote was encountered
   if (quotedString) {
     cout << "RooStreamParser::readToken: closing quote (\") missing" << endl ;
@@ -227,8 +237,8 @@ TString RooStreamParser::readLine()
 {
   // Read an entire line
 
-  char c,buffer[1024] ;
-  Int_t nfree(1023) ; 
+  char c,buffer[10240] ;
+  Int_t nfree(10239) ; 
   
   if (_is.peek()=='\n') _is.get(c) ;
 
@@ -237,10 +247,13 @@ TString RooStreamParser::readLine()
 
   // Look for eventual continuation line sequence  
   char *pcontseq = strstr(buffer,"\\\\") ;
+  if (pcontseq) nfree -= (pcontseq-buffer) ;
   while(pcontseq) {
-    nfree -= (pcontseq-buffer) ;
     _is.getline(pcontseq,nfree,'\n') ;
-    pcontseq = strstr(pcontseq,"\\\\") ;
+
+    char* nextpcontseq = strstr(pcontseq,"\\\\") ;
+    if (nextpcontseq) nfree -= (nextpcontseq-pcontseq) ;
+    pcontseq = nextpcontseq ;
   }    
 
   // Chop eventual comments
@@ -255,7 +268,11 @@ TString RooStreamParser::readLine()
   char *pend=buffer+strlen(buffer)-1 ;
   if (pend>pstart)
     while (isspace(*pend)) { *pend--=0 ; }
-  
+
+  if (_is.eof() || _is.fail()) {
+    _atEOF = kTRUE ;
+  }
+
   // Convert to TString
   return TString(pstart) ;
 }
@@ -375,11 +392,11 @@ Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
   // Convert given token to a string (i.e. remove eventual quotation marks)
 
   // Transport to buffer 
-  char buffer[1024],*ptr ;
-  strncpy(buffer,token.Data(),1023) ;
-  if (token.Length()>=1023) {
+  char buffer[10240],*ptr ;
+  strncpy(buffer,token.Data(),10239) ;
+  if (token.Length()>=10239) {
     cout << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
-    buffer[1023]=0 ;
+    buffer[10239]=0 ;
   }
   int len = strlen(buffer) ;
 
