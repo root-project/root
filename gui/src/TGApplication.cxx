@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.4 2002/10/25 10:40:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.5 2003/01/22 11:23:03 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -129,7 +129,7 @@ TGApplication::~TGApplication()
 //_____________________________________________________________________________
 void TGApplication::LoadGraphicsLibs()
 {
-   // Load shared libs neccesary for GUI.
+   // Load shared libs necessary for GUI.
 
    TString name;
    TString title1 = "ROOT interface to ";

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.22 2003/01/14 15:44:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.23 2003/03/17 16:38:38 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 //  - a frame container (TList *)                                       //
 //                                                                      //
 // The TGVerticalFrame and TGHorizontalFrame are composite frame that   //
-// layout their cildren in vertical or horizontal way.                  //
+// layout their children in vertical or horizontal way.                 //
 //                                                                      //
 // The TGMainFrame class defines top level windows that interact with   //
 // the system Window Manager.                                           //
@@ -583,7 +583,7 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // If no hints are specified default hints TGLayoutHints(kLHintsNormal,0,0,0,0)
    // will be used. Most of the time, however, you will want to provide
    // specific hints. User specified hints can be reused many times
-   // and need to be destoyed by the user. The added frames cannot not be
+   // and need to be destroyed by the user. The added frames cannot not be
    // added to different composite frames but still need to be deleted by
    // the user.
 

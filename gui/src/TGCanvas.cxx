@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.14 2002/11/18 23:04:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.15 2002/11/19 23:37:49 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 // A TGContainer frame manages a content area. It can display and       //
 // control a hierarchy of multi-column items, and provides the ability  //
 // to add new items at any time. By default it doesn't map subwindows   //
-// which are itmes of the container. In this case subwindow must        //
+// which are items of the container. In this case subwindow must        //
 // provide DrawCopy method, see for example TGLVEntry class.            //
 // It is also possible to use option which allow to map subwindows.     //
 // This option has much slower drawing speed in case of more than 1000  //

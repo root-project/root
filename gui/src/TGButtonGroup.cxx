@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.11 2002/12/05 15:55:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.12 2003/01/12 11:06:34 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // The TGButtonGroup widget organizes TGButton widgets in a group.      //
 //                                                                      //
 // A button group widget makes it easier to deal with groups of buttons.//
-// A button in a button group is associated with a unique identifer.    //
+// A button in a button group is associated with a unique identifier.   //
 // The button group emits a Clicked() signal with this identifier when  //
 // the button is clicked. Thus, a button group is an ideal solution     //
 // when you have several similar buttons and want to connect all their  //

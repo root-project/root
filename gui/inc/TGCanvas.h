@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.10 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.12 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -63,7 +63,7 @@ protected:
    Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
    TGSearchType      *fSearch;        // structure used by search dialog
    Bool_t             fLastDir;       // direction of last search
-   Bool_t             fLastCase;      // case-sensetivity of last search
+   Bool_t             fLastCase;      // case sensetivity of last search
    TString            fLastName;      // the name of object of last search
    TTimer            *fKeyTimer;      // keyboard timer
    TString            fKeyInput;      // keyboard input (buffer)
@@ -184,7 +184,7 @@ protected:
    TGViewPort      *fVport;        // viewport through which we look at contents
    TGHScrollBar    *fHScrollbar;   // horizontal scrollbar
    TGVScrollBar    *fVScrollbar;   // vertical scrollbar
-   Int_t            fScrolling;    // flag which srolling modes are allowed
+   Int_t            fScrolling;    // flag which scrolling modes are allowed
 
 public:
    enum { kCanvasNoScroll         = 0,
