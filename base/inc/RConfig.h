@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.13 2001/02/28 17:30:05 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.12 2000/12/10 17:57:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,14 +43,12 @@
 #if defined(__alpha) && !defined(linux)
 #   define R__ALPHA
 #   define ANSICPP
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define NEED_SNPRINTF
 #   ifndef __VMS
 #      define R__UNIX
 #      define R__B64
 #      define R__BYTESWAP
 #      if __DECCXX_VER >= 60060002
-#         define __USE_STD_IOSTREAM
 #         define R__VECNEWDELETE /* supports overloading of new[] and delete[] */
 #         define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      endif
@@ -87,7 +85,6 @@
 #endif
 
 #if defined(__sgi) && !defined(linux)
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__SGI
 #   define R__UNIX
 #   define ANSICPP
@@ -215,7 +212,6 @@
 
 #ifdef R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #ifdef _WIN32
@@ -226,7 +222,7 @@
 #endif
 
 #ifdef BORLAND
-#   define MSDOS 
+#   define MSDOS        /* Windows will always stay MSDOS */
 #   define ANSICPP
 #   define R__INT16
 #   define R__BYTESWAP
@@ -250,7 +246,6 @@
 #endif
 
 #ifdef R__WIN32
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define NEED_SNPRINTF
