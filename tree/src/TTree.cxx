@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.92 2001/09/25 07:10:48 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.93 2001/10/15 06:59:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2674,12 +2674,31 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //*-*-*-*-*-*-*-*-*Set branch status Process or DoNotProcess*-*-*-*-*-*-*-*
 //*-*              =========================================
 //
+//  When reading a Tree, by default, all branches are read.
+//  One can speed up considerably the analysis phase by activating
+//  only the branches that hold variables involved in a query.
+//
 //     bname is the name of a branch.
 //     if bname="*", apply to all branches.
 //     if bname="xxx*", apply to all branches with name starting with xxx
 //     see TRegexp for wildcarding options
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
+//    Example:
+//  Assume a tree T with sub-branches a,b,c,d,e,f,g,etc..
+//  when doing T.GetEntry(i) all branches are read for entry i.
+//  to read only the branches c and e, one can do
+//    T.SetBranchStatus("*",0); //disable all branches
+//    T.SetBranchStatus("c",1);
+//    T.setBranchStatus("e",1);
+//    T.GetEntry(i);
+//
+//  An alternative to this function is to read directly and only
+//  the interesting branches. Example:
+//    TBranch *brc = T.GetBranch("c");
+//    TBranch *bre = T.GetBranch("e");
+//    brc->GetEntry(i);
+//    bre->GetEntry(i);
 
 
    TBranch *branch, *bcount, *bson;
