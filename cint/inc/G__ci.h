@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter header file
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150112
-#define G__CINTVERSIONSTR  "5.15.112, Nov 19 2003"
+#define G__CINTVERSION      50150114
+#define G__CINTVERSIONSTR  "5.15.114, Dec 1 2003"
 
 
 /**********************************************************************
@@ -35,9 +35,9 @@
 #endif
 
 /* &a, avoid uninitialized memory access */
-#define G__AVOID_PTR_UNINITACCESS
+/* #define G__AVOID_PTR_UNINITACCESS */  /* Turned out this fix was wrong */
 #ifndef G__AVOID_PTR_UNINITACCESS
-#define G__OLDIMPLEMENTATION1910
+#define G__OLDIMPLEMENTATION1942
 #endif
 
 /* Define G__FIX1 if you have problem defining variable argument functions

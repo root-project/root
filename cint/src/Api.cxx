@@ -496,6 +496,12 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
   }
 #endif /* 1791 */
   catch(...) {
+#ifndef G__OLDIMPLEMENTATION1947
+    if(2==G__catchexception) {
+      G__fprinterr(G__serr,"Error: Exception caught in compiled code\n");
+      exit(EXIT_FAILURE);
+    }
+#endif
     G__genericerror("Error: C++ exception caught");
   }
   return 0;

@@ -273,6 +273,23 @@ int signame;
   G__errorprompt("Error: Bus error");
 }
 
+#ifndef G__OLDIMPLEMENTATION1946
+/******************************************************************
+* G__errorexit()
+******************************************************************/
+#ifdef _AIX
+void G__errorexit(int signame)
+#else
+void G__errorexit(signame)
+int signame;
+#endif
+{
+  G__fprinterr(G__serr,"Error: caught signal(%d)\n",signame); 
+  signal(signame,(void (*)())SIG_DFL);
+  exit(EXIT_FAILURE);
+}
+#endif
+
 
 /************************************************************************
 * End of Interrupt routines
@@ -312,7 +329,12 @@ void G__fsigabrt()
   char temp[G__ONELINE];
   signal(SIGABRT,(void (*)())SIG_DFL);
   if(G__SIGABRT) {
+#define G__OLDIMPLEMENTATION1945
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGABRT,SIGABRT);
+#else
     sprintf(temp,"%s()",G__SIGABRT);
+#endif
     G__SIGABRT = NULL;
     G__call_interruptfunc(temp);
   }
@@ -326,7 +348,11 @@ void G__fsigfpe()
   char temp[G__ONELINE];
   signal(SIGFPE,G__floatexception);
   if(G__SIGFPE) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGFPE,SIGFPE);
+#else
     sprintf(temp,"%s()",G__SIGFPE);
+#endif
     G__SIGFPE = NULL;
     G__call_interruptfunc(temp);
   }
@@ -340,7 +366,11 @@ void G__fsigill()
   char temp[G__ONELINE];
   signal(SIGILL,(void (*)())SIG_DFL);
   if(G__SIGILL) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGILL,SIGILL);
+#else
     sprintf(temp,"%s()",G__SIGILL);
+#endif
     G__SIGILL = NULL;
     G__call_interruptfunc(temp);
   }
@@ -354,7 +384,11 @@ void G__fsigint()
   char temp[G__ONELINE];
   signal(SIGINT,G__breakkey);
   if(G__SIGINT) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGINT,SIGINT);
+#else
     sprintf(temp,"%s()",G__SIGINT);
+#endif
     G__SIGINT = NULL;
     G__call_interruptfunc(temp);
   }
@@ -368,7 +402,11 @@ void G__fsigsegv()
   char temp[G__ONELINE];
   signal(SIGSEGV,G__segmentviolation);
   if(G__SIGSEGV) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGSEGV,SIGSEGV);
+#else
     sprintf(temp,"%s()",G__SIGSEGV);
+#endif
     G__SIGSEGV = NULL;
     G__call_interruptfunc(temp);
   }
@@ -382,7 +420,11 @@ void G__fsigterm()
   char temp[G__ONELINE];
   signal(SIGTERM,(void (*)())SIG_DFL);
   if(G__SIGTERM) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGTERM,SIGTERM);
+#else
     sprintf(temp,"%s()",G__SIGTERM);
+#endif
     G__SIGTERM = NULL;
     G__call_interruptfunc(temp);
   }
@@ -397,7 +439,11 @@ void G__fsighup()
   char temp[G__ONELINE];
   signal(SIGHUP,(void (*)())SIG_DFL);
   if(G__SIGHUP) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGHUP,SIGHUP);
+#else
     sprintf(temp,"%s()",G__SIGHUP);
+#endif
     G__SIGHUP = NULL;
     G__call_interruptfunc(temp);
   }
@@ -413,7 +459,11 @@ void G__fsigquit()
   char temp[G__ONELINE];
   signal(SIGQUIT,(void (*)())SIG_DFL);
   if(G__SIGQUIT) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGQUIT,SIGQUIT);
+#else
     sprintf(temp,"%s()",G__SIGQUIT);
+#endif
     G__SIGQUIT = NULL;
     G__call_interruptfunc(temp);
   }
@@ -429,7 +479,11 @@ void G__fsigtstp()
   char temp[G__ONELINE];
   signal(SIGTSTP,(void (*)())SIG_DFL);
   if(G__SIGTSTP) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGTSTP,SIGTSTP);
+#else
     sprintf(temp,"%s()",G__SIGTSTP);
+#endif
     G__SIGTSTP = NULL;
     G__call_interruptfunc(temp);
   }
@@ -445,7 +499,11 @@ void G__fsigttin()
   char temp[G__ONELINE];
   signal(SIGTTIN,(void (*)())SIG_DFL);
   if(G__SIGTTIN) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGTTIN,SIGTTIN);
+#else
     sprintf(temp,"%s()",G__SIGTTIN);
+#endif
     G__SIGTTIN = NULL;
     G__call_interruptfunc(temp);
   }
@@ -461,7 +519,11 @@ void G__fsigttou()
   char temp[G__ONELINE];
   signal(SIGTTOU,(void (*)())SIG_DFL);
   if(G__SIGTTOU) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGTTOU,SIGTTOU);
+#else
     sprintf(temp,"%s()",G__SIGTTOU);
+#endif
     G__SIGTTOU = NULL;
     G__call_interruptfunc(temp);
   }
@@ -477,7 +539,11 @@ void G__fsigalrm()
   char temp[G__ONELINE];
   signal(SIGALRM,(void (*)())SIG_DFL);
   if(G__SIGALRM) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGALRM,SIGALRM);
+#else
     sprintf(temp,"%s()",G__SIGALRM);
+#endif
     G__SIGALRM = NULL;
     G__call_interruptfunc(temp);
   }
@@ -493,7 +559,11 @@ void G__fsigusr1()
   char temp[G__ONELINE];
   signal(SIGUSR1,(void (*)())SIG_DFL);
   if(G__SIGUSR1) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGUSR1,SIGUSR1);
+#else
     sprintf(temp,"%s()",G__SIGUSR1);
+#endif
     G__SIGUSR1 = NULL;
     G__call_interruptfunc(temp);
   }
@@ -509,7 +579,11 @@ void G__fsigusr2()
   char temp[G__ONELINE];
   signal(SIGUSR2,(void (*)())SIG_DFL);
   if(G__SIGUSR2) {
+#ifndef G__OLDIMPLEMENTATION1945
+    sprintf(temp,"%s(%d)",G__SIGUSR2,SIGUSR2);
+#else
     sprintf(temp,"%s()",G__SIGUSR2);
+#endif
     G__SIGUSR2 = NULL;
     G__call_interruptfunc(temp);
   }

@@ -246,6 +246,9 @@ void G__floatexception G__P((int signame));
 void G__segmentviolation G__P((int signame));
 void G__outofmemory G__P((int signame));
 void G__buserror G__P((int signame));
+#ifndef G__OLDIMPLEMENTATION1946
+void G__errorexit G__P((int signame));
+#endif
 
 void G__killproc G__P((int signame));
 void G__timeout G__P((int signame));

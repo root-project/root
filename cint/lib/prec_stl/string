@@ -15,13 +15,12 @@
 // Template is on purposely avoided.
 
 #include <stddef.h>
+#include <iostream>
 
 //////////////////////////////////////////////////////////////////////////
 class string {
  public:
   typedef char value_type;
-  typedef char* iterator;
-  typedef const char* const_iterator;
   typedef char* pointer;
   typedef const char* const_pointer;
   typedef char& reference;
@@ -29,6 +28,49 @@ class string {
   typedef ptrdiff_t difference_type;
   typedef size_t size_type;
   typedef int traits_type;
+
+#if defined(G__KCC) 
+  typedef typename Allocator::pointer		   iterator;
+  typedef const iterator const_iterator;
+#elif defined(G__AIX)
+  typedef _Ptrit<value_type, difference_type, pointer,
+                  reference, pointer, reference> iterator;
+  typedef _Ptrit<value_type, difference_type, const_pointer,
+                  const_reference, pointer, reference> const_iterator;
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+  class iterator {
+   public:
+      iterator();
+      explicit iterator(const pointer& __i) ;
+      // Allow iterator to const_iterator conversion
+      template<typename _Iter> inline iterator(const iterator& __i);
+
+      // Forward iterator requirements
+      reference operator*() const ;
+      pointer operator->() const ;
+      iterator& operator++();
+      iterator operator++(int) ;
+      
+      // Bidirectional iterator requirements
+      iterator& operator--() ;
+      iterator operator--(int) ;
+      
+      // Random access iterator requirements
+      reference operator[](const difference_type& __n) const;
+      iterator& operator+=(const difference_type& __n);
+      iterator operator+(const difference_type& __n) const;
+      iterator& operator-=(const difference_type& __n);
+      iterator operator-(const difference_type& __n) const;
+      const pointer& base() const ;
+  };
+  typedef const iterator const_iterator;
+#elif (G__GNUC>=3 && G__GNUC_MINOR==0)
+  typedef char* iterator;
+  typedef const char* const_iterator;
+#else
+  typedef char* iterator;
+  typedef const char* const_iterator;
+#endif
 
   enum { npos=-1 };
   string() ;
@@ -110,6 +152,17 @@ class string {
   int compare(const char* s) const ;
   //int compare(size_type pos1,size_type n1,const char* s,size_type n2=npos)const;
   //operator char*() ;
+
+#ifdef G__TMPLTIOS
+  iterator begin();
+  const_iterator begin() const;
+  iterator end();
+  const_iterator end() const;
+  size_type capacity() const;
+  void clear();
+  bool empty() const;
+  size_t max_size() const;
+#endif
 };
 
 bool operator==(const string& a,const string& b) ;

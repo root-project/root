@@ -992,7 +992,16 @@ char *argv[] ;
       G__add_macro(optarg);
       break;
     case 'E': /* Dump core at error */
+#ifndef G__OLDIMPLEMENTATION1947
+      if(1==G__catchexception) G__catchexception = 0;
+      else if(0==G__catchexception) G__catchexception=2;
+      else ++G__catchexception;
+#endif
+#ifndef G__OLDIMPLEMENTATION1946
+      ++G__coredump;
+#else
       G__coredump = 1;
+#endif
       break;
     case 'X': /* readline dumpfile execution */
       G__dumpreadline[0]=fopen(optarg,"r");
@@ -1150,6 +1159,9 @@ char *argv[] ;
       G__more(G__sout,"  -D [macro] : define macro symbol for #ifdef\n");
       G__more(G__sout,"  -e : Not ignore extern declarations\n");
       G__more(G__sout,"  -E : Dump core at error\n");
+#ifndef G__OLDIMPLEMENTATION1946
+      G__more(G__sout,"  -E -E : Exit process at error and uncaught exception\n");
+#endif
       G__more(G__sout,"  -f [file] : set break file\n");
       G__more(G__sout,"  -F [assignement] : set global variable\n");
       G__more(G__sout,"  -G [tracedmp] : dump exec trace into file\n");
@@ -1229,6 +1241,18 @@ char *argv[] ;
     signal(SIGBUS,G__buserror);
 #endif
   }
+#ifndef G__OLDIMPLEMENTATION1946
+  else if(G__coredump>=2) {
+    signal(SIGFPE,G__errorexit);
+    signal(SIGSEGV,G__errorexit);
+#ifdef SIGEMT
+    signal(SIGEMT,G__errorexit);
+#endif
+#ifdef SIGBUS
+    signal(SIGBUS,G__errorexit);
+#endif
+  }
+#endif
 #endif /* G__ROOT */
 
 

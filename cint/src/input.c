@@ -38,7 +38,7 @@ int s;
     G__history_size_max = s+20;
   }
   else {
-    G__fprinterr(G__serr,"!!! %s ignored. You must set positive number\n",s);
+    G__fprinterr(G__serr,"!!! %d ignored. You must set positive number\n",s);
   }
 }
 #endif

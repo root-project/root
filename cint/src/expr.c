@@ -527,8 +527,8 @@ int lenbuf;
 #define G__ASSIGN_CNDJMP
 #endif
 
-#define G__OLDIMPLEMENTATION1910
-#ifndef G__OLDIMPLEMENTATION1910
+
+#ifndef G__OLDIMPLEMENTATION1942
 /******************************************************************
 * G__exec_evalall
 *
@@ -626,7 +626,7 @@ int lenbuf;
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
 
-#else /* 1910 */
+#else /* 1942 */
 /******************************************************************
 * G__exec_evalall
 *
@@ -707,7 +707,7 @@ int lenbuf;
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
 
-#endif /* 1910 */
+#endif /* 1942 */
 
 
 /******************************************************************

@@ -1308,6 +1308,10 @@ void G__define_type()
 * G__defined_typename(typename)
 *
 * Search already defined typedef names, -1 is returned if not found
+* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+* Note that this modify G__var_type, you may need to reset it after
+* calling this function
+* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ******************************************************************/
 int G__defined_typename(typename)
 char *typename;

@@ -8,7 +8,7 @@
  *  Create standard include files at cint installation
  ************************************************************************
  * Author                  Masaharu Goto
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for non-commercial purpose is hereby granted without fee,

@@ -235,11 +235,22 @@ void G__CallFunc::SetArgs(const char* args)
 {
   int isrc=0;
   char *endmark=(char*)",";
+#ifndef G__OLDIMPLEMENTATION1941
+  char tmp[G__LONGLINE];
+#endif
 
   // separate and evaluate argument list
   para.paran=0;
   int c;
   do {
+#ifndef G__OLDIMPLEMENTATION1941
+    c=G__getstream((char*)args,&isrc,tmp,endmark);
+    if (tmp[0]) {
+      // evaluate arg
+      para.para[para.paran] = G__calc(tmp);
+      if(strlen(tmp)<G__ONELINE-1) strcpy(para.parameter[para.paran],tmp);
+      else para.parameter[para.paran][0]=0;
+#else /* 1941 */
     c=G__getstream((char*)args,&isrc,para.parameter[para.paran],endmark);
     if (para.parameter[para.paran][0]) {
       // evaluate arg
@@ -248,6 +259,7 @@ void G__CallFunc::SetArgs(const char* args)
 #else
       para.para[para.paran] = G__getexpr(para.parameter[para.paran]);
 #endif
+#endif /* 1941 */
       ++para.paran; // increment argument count
     }
   } while (','==c);

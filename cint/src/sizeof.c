@@ -310,6 +310,19 @@ char *typename;
   G__hash(typename,hash,ig15)
   var = G__getvarentry(typename,hash,&ig15,&G__global,G__p_local);
 #endif
+#ifndef G__OLDIMPLEMENTATION1948
+  if(!var) {
+    char temp[G__ONELINE];
+    if(-1!=G__memberfunc_tagnum) /* questionable */
+      sprintf(temp,"%s\\%x\\%x\\%x",namebody,G__func_page,G__func_now
+	      ,G__memberfunc_tagnum);
+    else
+      sprintf(temp,"%s\\%x\\%x" ,namebody,G__func_page,G__func_now);
+    
+    G__hash(temp,hash,i)
+    var = G__getvarentry(temp,hash,&ig15,&G__global,G__p_local);
+  }
+#endif
   if(var) {
     if(INT_MAX==var->varlabel[ig15][1]) {
 #ifndef G__OLDIMPLEMENTATION1634
