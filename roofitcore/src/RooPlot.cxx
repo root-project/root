@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.19 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.20 2001/10/08 05:20:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,19 +42,19 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.19 2001/09/27 18:22:30 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.20 2001/10/08 05:20:19 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
-  TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
-  _plotVarSet(0), _items()
+  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
+  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with the specified x-axis limits.
   initialize();
 }
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
-  TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
-  _plotVarSet(0), _items()
+  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
+  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits.
   SetMinimum(ymin);
@@ -63,8 +63,8 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
 }
 
 RooPlot::RooPlot(const RooAbsReal &var) :
-  TH1(histName(),"RooPlot",0,var.getPlotMin(),var.getPlotMax()),
-  _plotVarClone(0), _plotVarSet(0), _items()
+  TH1(histName(),"RooPlot",var.getPlotBins(),var.getPlotMin(),var.getPlotMax()),
+  _plotVarClone(0), _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
@@ -257,8 +257,14 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
   if(ymin < 0) ymin-= ypad;
 
   // update our limits if necessary
-  if(GetMaximum() < ymax) SetMaximum(ymax);
-  if(GetMinimum() > ymin) SetMinimum(ymin);
+  if(GetMaximum() < ymax) {
+    _defYmax = ymax ;
+    SetMaximum(ymax);
+  }
+  if(GetMinimum() > ymin) {
+    _defYmin = ymin ;
+    SetMinimum(ymin);
+  }
 
   // use the specified y-axis label if we don't have one already
   if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(label);
@@ -404,3 +410,17 @@ TString RooPlot::caller(const char *method) const {
   }
   return name;
 }
+
+
+void RooPlot::SetMaximum(Double_t maximum) 
+{
+  TH1::SetMaximum(maximum==-1111?_defYmax:maximum) ;
+}
+
+
+void RooPlot::SetMinimum(Double_t minimum) 
+{
+  TH1::SetMinimum(minimum==-1111?_defYmin:minimum) ;
+}
+
+

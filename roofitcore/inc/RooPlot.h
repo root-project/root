@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.14 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.15 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -72,6 +72,9 @@ public:
   // get/set drawing options for contained objects
   TString getDrawOptions(const char *name) const;
   Bool_t setDrawOptions(const char *name, TString options);
+ 
+  virtual void SetMaximum(Double_t maximum = -1111) ;
+  virtual void SetMinimum(Double_t minimum = -1111) ;
 
 protected:
   void initialize();
@@ -90,6 +93,9 @@ protected:
   Double_t _normBinWidth;    // Histogram bin width (for normalization)
   //Double_t _normValue;       // Fit-range normalization to use for plotting PDFs
   TIterator *_iterator;      //! non-persistent
+
+  Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
+  Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
   RooPlot(const RooPlot& other); // object cannot be copied
 
