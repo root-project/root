@@ -496,11 +496,15 @@ int noerror;
 
   /* Search for old tagname */
   len=strlen(atom_tagname);
+#ifndef G__OLDIMPLEMENTATION1786
+ try_again:
+#else
 #ifndef G__OLDIMPLEMENTATION1109
   if(0==len) {
     strcpy(atom_tagname,"$");
     len=1;
   }
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1697
@@ -510,6 +514,14 @@ int noerror;
 	env_tagnum==G__struct.parent_tagnum[i])) {
       return(i);
     }
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1786
+  if(0==len) {
+    strcpy(atom_tagname,"$");
+    len=1;
+    goto try_again;
   }
 #endif
 
@@ -793,6 +805,9 @@ int type;
      * Allocate and initialize member variable table 
      ************************************************************/
     G__struct.memvar[i] = (struct G__var_array *)malloc(sizeof(struct G__var_array));
+#ifdef G__OLDIMPLEMENTATION1776_YET
+    memset(G__struct.memvar[i],0,sizeof(struct G__var_array));
+#endif
     G__struct.memvar[i]->varlabel[0][0]=0;
     G__struct.memvar[i]->paran[0]=0;
     G__struct.memvar[i]->allvar=0;
@@ -801,8 +816,12 @@ int type;
 #ifndef G__OLDIMPLEMENTATION1543
     { 
       int ix;
-      for(ix=0;ix<G__MEMDEPTH;ix++) 
+      for(ix=0;ix<G__MEMDEPTH;ix++) {
 	G__struct.memvar[i]->varnamebuf[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1776
+	G__struct.memvar[i]->p[ix] = 0;
+#endif
+      }
     }
 #endif
     
@@ -913,6 +932,9 @@ int *pig15;
   }
   else {
     var->next = (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
+#ifdef G__OLDIMPLEMENTATION1776_YET
+    memset(var->next,0,sizeof(struct G__var_array));
+#endif
     var->next->tagnum=var->tagnum;
     var = var->next;
     var->varlabel[0][0]=0;
@@ -922,7 +944,12 @@ int *pig15;
 #ifndef G__OLDIMPLEMENTATION1543
     { 
       int ix;
-      for(ix=0;ix<G__MEMDEPTH;ix++) var->varnamebuf[ix]=(char*)NULL;
+      for(ix=0;ix<G__MEMDEPTH;ix++) {
+	var->varnamebuf[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1776
+	var->p[ix] = 0;
+#endif
+      }
     }
 #endif
     *pig15=0;
@@ -1784,6 +1811,25 @@ char type;
 	 * If struct size can not be divided by G__DOUBLEALLOC
 	 * the size is aligned.
 	 ********************************************/
+#ifndef G__OLDIMPLEMENTATION1777
+	if(1==G__struct.memvar[G__tagnum]->allvar) {
+	  /* this is still questionable, inherit0.c */
+	  struct G__var_array *v=G__struct.memvar[G__tagnum];
+	  if('c'==v->type[0]) { 
+	    if(isupper(v->type[0])) {
+	      G__struct.size[G__tagnum] = G__LONGALLOC*(v->varlabel[0][1]+1);
+	    }
+	    else {
+	      G__value buf;
+	      buf.type = v->type[0];
+	      buf.tagnum = v->p_tagtable[0];
+	      buf.typenum = v->p_typetable[0];
+	      G__struct.size[G__tagnum]
+		=G__sizeof(&buf)*(v->varlabel[0][1]+1);
+	    }
+	  }
+	} else
+#endif
 	if(G__struct.size[G__tagnum]%G__DOUBLEALLOC) {
 	  G__struct.size[G__tagnum]
 	    += G__DOUBLEALLOC - G__struct.size[G__tagnum]%G__DOUBLEALLOC;

@@ -465,6 +465,9 @@ char *unnamedmacro;
   char tname[G__MAXFILENAME], sname[G__MAXFILENAME];
 #endif
   int nest=0,single_quote=0,double_quote=0;
+#ifndef G__OLDIMPLEMENTATION1783
+  int ccomment=0,cppcomment=0;
+#endif
   G__value buf;
   FILE *fp;
   int i,len;
@@ -484,12 +487,45 @@ char *unnamedmacro;
   len = (int)strlen(unnamedmacro);
   for(i=0;i<len;i++) {
     switch(unnamedmacro[i]) {
+#ifndef G__OLDIMPLEMENTATION1783
+    case '(': 
+    case '[': 
+    case '{':
+      if(!single_quote&&!double_quote&&!ccomment&&!cppcomment) ++nest; 
+      break;
+    case ')': 
+    case ']': 
+    case '}':
+      if(!single_quote&&!double_quote&&!ccomment&&!cppcomment) --nest; 
+      break;
+    case '\'': 
+      if(!double_quote&&!ccomment&&!cppcomment) single_quote^=1;
+      break;
+    case '"': 
+      if(!single_quote&&!ccomment&&!cppcomment) double_quote^=1;
+      break;
+    case '/': 
+      switch(unnamedmacro[i+1]) {
+      case '/': cppcomment=1; ++i; break;
+      case '*': ccomment=1; ++i; break;
+      default: break;
+      }
+      break;
+    case '\n': 
+    case '\r': 
+      if(cppcomment) {cppcomment=0;++i;}
+      break;
+    case '*': 
+      if(ccomment && unnamedmacro[i+1]=='/') {ccomment=0;++i;}
+      break;
+#else
     case '(': case '[': case '{':
       if(!single_quote && !double_quote) ++nest; break;
     case ')': case ']': case '}':
       if(!single_quote && !double_quote) --nest; break;
     case '\'': if(!double_quote) single_quote ^= 1; break;
     case '"': if(!single_quote) double_quote ^= 1; break;
+#endif
     case '\\': ++i; break;
     default: break;
     }

@@ -691,6 +691,9 @@ int G__CodingSystem G__P((int c));
 #ifndef G__OLDIMPLEMENTATION472
 extern int G__SetGlobalcomp G__P((char *funcname,char *param,int globalcomp));
 #endif
+#ifndef G__OLDIMPLEMENTATION1781
+extern int G__ForceBytecodecompilation G__P((char *funcname,char *param));
+#endif
 
 #ifndef G__OLDIMPLEMENTATION640
 extern void G__more_col G__P((int len));

@@ -5047,6 +5047,38 @@ FILE *hfp;
 #ifndef G__OLDIMPLEMENTATION1677
 	else if(0==G__struct.name[i][0]) {
 	  strcpy(mappedtagname,G__map_cpp_name(tagname));
+#ifndef G__OLDIMPLEMENTATION1786
+	  if(G__CPPLINK==G__globalcomp) {
+	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
+		    ,G__mark_linked_tagnum(i)
+		    ,"0" /* G__type2string('u',i,-1,0,0) */
+		    ,G__globalcomp 
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		    ,G__struct.isabstract[i]
+#endif
+		    ,buf ,mappedtagname,mappedtagname);
+	  }
+	  else {
+	    fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,NULL);\n"
+		    ,G__mark_linked_tagnum(i)
+		    ,"0" /* G__type2string('u',i,-1,0,0) */
+		    ,G__globalcomp 
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		    ,G__struct.isabstract[i]
+#endif
+		    ,buf ,mappedtagname);
+	  }
+#else /* 1786 */
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
 		  ,G__mark_linked_tagnum(i)
 		  ,"0" /* G__type2string('u',i,-1,0,0) */
@@ -5060,8 +5092,9 @@ FILE *hfp;
 		  ,G__struct.isabstract[i]
 #endif
 		  ,buf ,mappedtagname,mappedtagname);
+#endif /* 1786 */
 	}
-#endif
+#endif /* 1677 */
 	else {
 	  strcpy(mappedtagname,G__map_cpp_name(tagname));
 	  if(G__CPPLINK==G__globalcomp && '$'!=G__struct.name[i][0]) {
@@ -6884,6 +6917,7 @@ G__incsetup setup_memfunc;
     else
       G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
 
+#ifdef G__OLDIMPLEMENTATION1784
     if(G__struct.incsetup_memvar[tagnum])
       (*G__struct.incsetup_memvar[tagnum])();
     if(G__struct.incsetup_memfunc[tagnum])
@@ -6891,7 +6925,8 @@ G__incsetup setup_memfunc;
 
     G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
     G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
-#endif
+#endif /* 1784 */
+#endif /* 1656 */
     if(G__asm_dbg ) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: Try to reload %s from DLL\n"

@@ -6204,7 +6204,9 @@ int parameter00;
      ****************************************/
     var->next = 
       (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
+#ifdef G__OLDIMPLEMENTATION1776_YET
     memset(var->next,0,sizeof(struct G__var_array));
+#endif
     
     /***************************************
      * assign local variable var to new array
@@ -6225,7 +6227,12 @@ int parameter00;
 #ifndef G__OLDIMPLEMENTATION1543
     { 
       int ix;
-      for(ix=0;ix<G__MEMDEPTH;ix++) var->varnamebuf[ix]=(char*)NULL;
+      for(ix=0;ix<G__MEMDEPTH;ix++) {
+	var->varnamebuf[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1776
+	var->p[ix] = 0;
+#endif
+      }
     }
 #endif
     ig15=0;

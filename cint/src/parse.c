@@ -544,6 +544,41 @@ G__value *presult;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1785
+/***********************************************************************
+ * G__IsFundamentalDecl()
+ ***********************************************************************/
+int G__IsFundamentalDecl()
+{
+  char typename[G__ONELINE];
+  int c;
+  fpos_t pos;
+  int result=1;
+  int tagnum;
+
+  /* store file position */
+  int linenum = G__ifile.line_number;
+  fgetpos(G__ifile.fp,&pos);
+  G__disp_mask = 1000;
+
+  c=G__fgetname_template(typename,"(");
+  if(strcmp(typename,"struct")==0 || strcmp(typename,"class")==0 ||
+     strcmp(typename,"union")==0) {
+    result=0;
+  }
+  else {
+    tagnum = G__defined_tagname(typename,1);
+    if(-1!=tagnum) result = 0;
+  }
+
+  /* restore file position */
+  G__ifile.line_number = linenum;
+  fsetpos(G__ifile.fp,&pos);
+  G__disp_mask = 0;
+  return result;
+}
+#endif
+
 /***********************************************************************
 * G__keyword_anytime_5()
 *
@@ -566,7 +601,11 @@ char *statement;
 #else
      && G__func_now>=0 
 #endif
-     && strcmp(statement,"const")==0) {
+     && strcmp(statement,"const")==0
+#ifndef G__OLDIMPLEMENTATION1785
+     && G__IsFundamentalDecl()
+#endif
+     ) {
 #ifndef G__OLDIMPLEMENTATION1103
     int rslt;
     G__constvar = G__CONSTVAR;

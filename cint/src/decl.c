@@ -2583,8 +2583,20 @@ int tagnum,typenum;      /* overrides global variables */
 		}
 		else {
 		  char tttt[G__ONELINE];
+#define G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1780
+		  if(reg.type) {
+		    G__valuemonitor(reg,tttt);
+		    sprintf(temp,"%s(%s)",G__struct.name[tagnum],tttt);
+		  }
+		  else {
+		    strcpy(tttt,temp);
+		    sprintf(temp,"%s(%s)",G__struct.name[tagnum],tttt);
+		  }
+#else
 		  G__valuemonitor(reg,tttt);
 		  sprintf(temp,"%s(%s)",G__struct.name[tagnum],tttt);
+#endif
 		}
 #ifndef G__OLDIMPLEMENTATION1073
 		if(G__asm_wholefunction) {

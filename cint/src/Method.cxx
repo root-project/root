@@ -700,3 +700,54 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
+
+#ifndef G__OLDIMPLEMENTATION1781
+///////////////////////////////////////////////////////////////////////////
+// Global function to set precompiled library linkage
+///////////////////////////////////////////////////////////////////////////
+extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
+{
+  G__ClassInfo globalscope;
+  G__MethodInfo method;
+  long dummy=0;
+  char classname[G__LONGLINE];
+
+  // Actually find the last :: to get the full classname, including
+  // namespace and/or containing classes.
+  strcpy(classname,funcname);
+  char *fname = 0;
+  char * tmp = classname;
+  while ( (tmp = strstr(tmp,"::")) ) {
+    fname = tmp;
+    tmp += 2;
+  }
+  if(fname) {
+    *fname=0;
+    fname+=2;
+    globalscope.Init(classname);
+  }
+  else {
+    fname = funcname;
+  }
+
+  method=globalscope.GetMethod(fname,param,&dummy);
+
+  if(method.IsValid()) {
+    struct G__ifunc_table *ifunc = method.ifunc();
+    int ifn = method.Index();
+    int stat = G__compile_bytecode(ifunc,ifn);
+    if(stat) return 0;
+    else return 1;
+  }
+  else {
+    G__fprinterr(G__serr,"Warning: function %s(%s) not found"
+#ifndef G__OLDIMPLEMENTATION912
+	    ,fname,param);
+#else
+	    ,funcname,param);
+#endif
+    G__printlinenum();
+    return(1);
+  }
+}
+#endif

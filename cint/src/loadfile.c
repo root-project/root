@@ -2454,10 +2454,11 @@ char *name;
   tmpnam(name);
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   return(name);
-#elif ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
+#elif defined(G__NEVER) && ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
+  /* After all, mkstemp creates more problem than a solution. */
   const char *appendix="_cint";
   strcpy(name,"/tmp/XXXXXX");
-  mkstemp(name);
+  mkstemp(name);/*mkstemp not only generate file name but also opens the file*/
   remove(name); /* mkstemp creates this file anyway. Delete it. questionable */
   if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   return(name);

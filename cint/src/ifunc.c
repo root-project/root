@@ -2041,7 +2041,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
   }
   
   if(dobody) {
-/*#define G__OLDIMPLEMENTATION1770*/ /* comment this out to activate the change*/
+#define G__OLDIMPLEMENTATION1770 /* comment this out to activate the change*/
 #ifndef G__OLDIMPLEMENTATION1770
     if(G__NOLINK>G__globalcomp) {
       G__fignorestream("{");
@@ -5740,7 +5740,6 @@ int memfunc_flag;
   store_asm_noverflow = G__asm_noverflow;
 #endif
   
-  memset(&G_local,0,sizeof(struct G__var_array));    
 #ifdef G__ASM_IFUNC
   if(G__asm_exec) {
     ifn = G__asm_index;
@@ -6578,6 +6577,9 @@ asm_ifunc_start:   /* loop compilation execution label */
     store_no_exec_compile = G__no_exec_compile;
     G__no_exec_compile = 1;
     localvar = (struct G__var_array*)malloc(sizeof(struct G__var_array));
+#ifdef G__OLDIMPLEMENTATION1776_YET
+    memset(localvar,0,sizeof(struct G__var_array));
+#endif
 
     localvar->prev_local = G__p_local;
     localvar->ifunc = p_ifunc;
@@ -6596,7 +6598,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1543
     { 
       int ix;
-      for(ix=0;ix<G__MEMDEPTH;ix++) localvar->varnamebuf[ix]=(char*)NULL;
+      for(ix=0;ix<G__MEMDEPTH;ix++) {
+	localvar->varnamebuf[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1776
+	localvar->p[ix] = 0;
+#endif
+      }
     }
 #endif
   }
@@ -6726,6 +6733,9 @@ asm_ifunc_start:   /* loop compilation execution label */
   G__func_page=p_ifunc->page;
   
   /* store old local to prev buffer and allocate new local variable */
+#ifdef G__OLDIMPLEMENTATION1776_YET
+  memset(&G_local,0,sizeof(struct G__var_array));    
+#endif
   G_local.prev_local = G__p_local;
   G_local.ifunc = p_ifunc;
   G_local.ifn = ifn;
@@ -6738,7 +6748,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1543
   {
     int ix;
-    for(ix=0;ix<G__MEMDEPTH;ix++) G_local.varnamebuf[ix] = (char*)NULL;
+    for(ix=0;ix<G__MEMDEPTH;ix++) {
+      G_local.varnamebuf[ix] = (char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1776
+      G_local.p[ix] = 0;
+#endif
+    }
   }
 #endif
 #ifdef G__ASM_WHOLEFUNC

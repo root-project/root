@@ -3918,6 +3918,17 @@ int hash;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1781
+  if(strcmp(funcname,"G__ForceBytecodecompilation")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i'
+	      ,(long)G__ForceBytecodecompilation((char*)G__int(libp->para[0])
+						 ,(char*)G__int(libp->para[1])
+						 ));
+    return(1);
+  }
+#endif
+
 #ifndef G__SMALLOBJECT
   
 

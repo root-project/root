@@ -1729,6 +1729,28 @@ G__value *presult;
 }
 #endif
 
+#define G__OLDIMPLEMENTATION1779
+#ifndef G__OLDIMPLEMENTATION1779
+/******************************************************************
+ * G__value G__getstaticobject
+ ******************************************************************/
+G__value G__getstaticobject(item,pknown)
+char *item;
+int* pknown;
+{
+  G__value result3;
+  char temp[G__ONELINE];
+  if(-1!=G__tagnum) /* questionable */
+    sprintf(temp,"%s\\%x\\%x\\%x",item,G__func_page,G__func_now
+	    ,G__memberfunc_tagnum);
+  else
+    sprintf(temp,"%s\\%x\\%x" ,item,G__func_page,G__func_now);
+
+  result3=G__getvariable(item,pknown,&G__global,G__p_local);
+
+  return(result3);
+}
+#endif
 
 /******************************************************************
 * G__value G__getitem(item)
@@ -1935,6 +1957,11 @@ char *item;
 #endif
       G__var_typeB = 'p';
     }
+#ifndef G__OLDIMPLEMENTATION1779
+    if(known==0 && G__decl && 0==G__p_local && -1!=G__func_now) {
+      result3=G__getstaticobject(item,&known);
+    }
+#endif
     /* undefined */
     if(known==0) {
 #ifndef G__OLDIMPLEMENTATION1173

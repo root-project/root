@@ -86,12 +86,8 @@ class __malloc_alloc_template {
 #endif
 };
 
-#ifndef __MAKECINT__
 
-typedef __malloc_alloc_template<0> malloc_alloc;
-typedef malloc_alloc alloc;
-
-#else 
+#ifndef G__OLDIMPLEMENTATION1782
 
 # ifdef __USE_MALLOC
 
@@ -106,7 +102,14 @@ class single_client_alloc;
 //typedef __default_alloc_template<false, 0> single_client_alloc;
 
 # endif
-#endif 
+
+#else /* 1782 */
+
+typedef __malloc_alloc_template<0> malloc_alloc;
+typedef malloc_alloc alloc;
+
+#endif  /* 1782 */
+
 
 //////////////////////////////////////////////////////////////////////
 #elif defined(G__HPUX)

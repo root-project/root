@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015070
-#define G__CINTVERSIONSTR  "5.15.70, Jan 4 2003"
+#define G__CINTVERSION      5015071
+#define G__CINTVERSIONSTR  "5.15.71, Jan 13 2003"
 
 
 /**********************************************************************
@@ -56,9 +56,6 @@
 #ifndef G__PTR2MEMFUNC
 #define G__PTR2MEMFUNC
 #endif
-
-/* Forward declaration of template does not work yet */
-#define G__OLDIMPLEMENTATION1760
 
 /* 1649 is not ready yet */
 /* #define G__OLDIMPLEMENTATION1649 */

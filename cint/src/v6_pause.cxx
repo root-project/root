@@ -160,6 +160,7 @@ static int G__rootmode=0;
 #endif
 
 
+
 #ifndef G__OLDIMPLEMENTATION1035
 /************************************************************************
 * Thread Safe protection for ROOT
@@ -679,6 +680,8 @@ void G__storerewindposition()
    errorifile = G__ifile;
 #endif
 }
+
+
 
 /************************************************************************
 * G__rewinddictionary

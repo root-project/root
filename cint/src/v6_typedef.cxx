@@ -1075,11 +1075,35 @@ void G__define_type()
 	   * If struct size can not be divided by G__DOUBLEALLOC
 	   * the size is aligned.
 	   ********************************************/
+#ifndef G__OLDIMPLEMENTATION1777
+	  if(1==G__struct.memvar[G__tagnum]->allvar) {
+	    /* this is still questionable, inherit0.c */
+	    struct G__var_array *v=G__struct.memvar[G__tagnum];
+	    if('c'==v->type[0]) {
+	      if(isupper(v->type[0])) {
+		G__struct.size[G__tagnum] = G__LONGALLOC*(v->varlabel[0][1]+1);
+	      }
+	      else {
+		G__value buf;
+		buf.type = v->type[0];
+		buf.tagnum = v->p_tagtable[0];
+		buf.typenum = v->p_typetable[0];
+		G__struct.size[G__tagnum]
+		  =G__sizeof(&buf)*(v->varlabel[0][1]+1);
+	      }
+	    }
+	  } else
+#endif
 	  if(G__struct.size[G__tagnum]%G__DOUBLEALLOC) {
 	    G__struct.size[G__tagnum]
 	      += G__DOUBLEALLOC
 		- G__struct.size[G__tagnum]%G__DOUBLEALLOC;
 	  }
+#ifndef G__OLDIMPLEMENTATION591
+	  else if(0==G__struct.size[G__tagnum]) {
+	    G__struct.size[G__tagnum] = G__CHARALLOC;
+	  }
+#endif
 	
 	  G__tagdefining = store_tagdefining;
 	

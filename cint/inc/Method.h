@@ -101,5 +101,7 @@ G__MethodInfo {
 
 extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp);
 
+extern "C" int G__ForceBytecodecompilation(char *funcname,char *param);
+
 #endif
 

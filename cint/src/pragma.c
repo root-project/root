@@ -199,6 +199,15 @@ static void G__do_not_include()
 }
 #endif
 
+#ifdef G__OLDIMPLEMENTATION1781_YET
+/**************************************************************************
+* G__force_bytecode_compilation();
+**************************************************************************/
+void G__force_bytecode_compilation()
+{
+}
+#endif
+
 /**************************************************************************
 * G__pragma()
 **************************************************************************/
@@ -308,6 +317,9 @@ int G__pragma()
     /* if('\n'!=c&&'\r'!=c) G__fignoreline(); */
   }
   else if(strcmp(command,"bytecode")==0) {
+#ifdef G__OLDIMPLEMENTATION1781_YET
+    G__force_bytecode_compilation();
+#else
     if(G__asm_dbg) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
@@ -326,6 +338,7 @@ int G__pragma()
     store_asm_loopcompile=G__asm_loopcompile;
     G__asm_loopcompile = 10;
     */
+#endif
   }
   else if(strcmp(command,"endbytecode")==0) {
     /*

@@ -2312,16 +2312,26 @@ char *tagnamein;
   }
 #endif /* G__TEMPLATEFUNC */
 
-#ifdef G__OLDIMPLEMENTATION1760
 #ifndef G__OLDIMPLEMENTATION1587
   if(tagnum<G__struct.alltag && G__struct.name[tagnum] &&
      strcmp(tagname,G__struct.name[tagnum])!=0) {
+#ifndef G__OLDIMPLEMENTATION1760 /* side effect t987.h,fixed */
+    char *p1 = strchr(tagname,'<');
+    char *p2 = strchr(G__struct.name[tagnum],'<');
+    if(p1 && p2 && (p1-tagname)==(p2-G__struct.name[tagnum]) &&
+       0==strncmp(tagname,G__struct.name[tagnum],p1-tagname)) {
+      free((void*)G__struct.name[tagnum]);
+      G__struct.name[tagnum] = (char*)malloc(strlen(tagname)+1);
+      strcpy(G__struct.name[tagnum],tagname);
+      G__struct.hash[tagnum] = strlen(tagname);
+    }
+#else
     free((void*)G__struct.name[tagnum]);
     G__struct.name[tagnum] = (char*)malloc(strlen(tagname)+1);
     strcpy(G__struct.name[tagnum],tagname);
     G__struct.hash[tagnum] = strlen(tagname);
-  }
 #endif
+  }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION691
