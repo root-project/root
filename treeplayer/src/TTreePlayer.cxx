@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.93 2002/03/26 07:05:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.94 2002/04/12 19:19:53 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1748,7 +1748,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"//Declaration of leaves types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
-   TBranchElement *bre;
+   TBranchElement *bre=0;
    const char *headOK  = "   ";
    const char *headcom = " //";
    const char *head;
