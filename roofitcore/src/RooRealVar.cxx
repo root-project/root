@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.37 2002/03/11 07:41:02 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.38 2002/03/11 19:12:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -597,7 +597,8 @@ void RooRealVar::Streamer(TBuffer &R__b)
       RooAbsRealLValue::Streamer(R__b);
       if (R__v==1) {
 	cout << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
-	Double_t fitMin, fitMax, fitBins ; 
+	Double_t fitMin, fitMax ;
+	Int_t fitBins ; 
 	R__b >> fitMin;
 	R__b >> fitMax;
 	R__b >> fitBins;
