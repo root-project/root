@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.45 2004/08/19 10:17:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.46 2004/09/10 09:40:56 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -960,6 +960,10 @@ Int_t TKey::WriteFile(Int_t cycle)
 {
 //*-*-*-*-*-*-*-*-*-*-*Write the encoded object supported by this key*-*-*-*
 //*-*                  ==============================================
+//
+// The function returns the number of bytes committed to the file.
+// If a write error occurs, the number of bytes returned is -1.
+//
 
   Int_t nsize  = fNbytes;
   char *buffer = fBuffer;
@@ -979,7 +983,7 @@ Int_t TKey::WriteFile(Int_t cycle)
      buffer += nb;
   }
 #else
-   gFile->WriteBuffer(buffer,nsize);
+   Bool_t result = gFile->WriteBuffer(buffer,nsize);
 #endif
 //  gFile->Flush(); Flushing takes too much time.
 //                  Let user flush the file when he wants.
@@ -989,5 +993,5 @@ Int_t TKey::WriteFile(Int_t cycle)
   }
 
   DeleteBuffer();
-  return nsize;
+  return result==kTRUE ? -1 : nsize;
 }

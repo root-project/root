@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.242 2005/03/17 00:30:27 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.243 2005/04/07 10:57:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2472,13 +2472,18 @@ Int_t TTree::Fill()
 //   If a leaf is a simple data type, a simple conversion to a machine
 //   independent format has to be done.
 //
-   Int_t i;
-   Int_t nbytes = 0;
+//   The function returns the number of bytes committed to the 
+//   individual branch(es).
+//   If a write error occurs, the number of bytes returned is -1.
+//   If no data are written, because e.g. the branch is disabled,
+//   the number of bytes returned is 0.
+//
+   Int_t i, nbytes = 0, nwrite = 0, nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
-   TBranch *branch;
+   TBranch *branch = 0;
 
-    //case of one single super branch. Automatically update
-    // all the branch addresses if a new object was created
+   //case of one single super branch. Automatically update
+   // all the branch addresses if a new object was created
    if (nb == 1) {
       branch = (TBranch*)fBranches.UncheckedAt(0);
       branch->UpdateAddress();
@@ -2487,8 +2492,12 @@ Int_t TTree::Fill()
 
    for (i=0;i<nb;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
-      if (branch->TestBit(kDoNotProcess)) continue;
-      nbytes += branch->Fill();
+      if ( branch->TestBit(kDoNotProcess) ) continue;
+      nbytes += (nwrite = branch->Fill());
+      if ( nwrite < 0 )  {
+        Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
+        nerror++;
+      }
    }
    if (fBranchRef) fBranchRef->Fill();
 
@@ -2507,7 +2516,7 @@ Int_t TTree::Fill()
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
 
-   return nbytes;
+   return nerror==0 ? nbytes : -1;
 }
 
 //______________________________________________________________________________

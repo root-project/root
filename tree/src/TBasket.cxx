@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.29 2004/09/10 09:40:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.30 2005/03/06 07:29:05 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -475,7 +475,12 @@ void TBasket::Update(Int_t offset, Int_t skipped)
 //_______________________________________________________________________
 Int_t TBasket::WriteBuffer()
 {
-//    Write buffer of this basket on the current file
+// Write buffer of this basket on the current file
+//
+// The function returns the number of bytes committed to the memory.
+// If a write error occurs, the number of bytes returned is -1.
+// If no data are written, the number of bytes returned is 0.
+//
 
    const Int_t kWrite = 1;
    TDirectory *cursav = gDirectory;
@@ -483,7 +488,10 @@ Int_t TBasket::WriteBuffer()
    if (!file) return 0;
 
    fBranch->GetDirectory()->cd();
-   if (!file->IsWritable()) { cursav->cd(); return 0;}
+   if (!file->IsWritable()) { 
+     cursav->cd(); 
+     return -1;
+   }
 
    if (fBufferRef->TestBit(TBuffer::kNotDecompressed)) {
       // Read the basket information that was saved inside the buffer.
@@ -500,11 +508,10 @@ Int_t TBasket::WriteBuffer()
       fBufferRef->SetBufferOffset(0);
       fHeaderOnly = kTRUE;
       Streamer(*fBufferRef);         //write key itself again
-      TKey::WriteFile(0);
+      int nBytes = TKey::WriteFile(0);
       fHeaderOnly = kFALSE;
-      
       cursav->cd();
-      return fKeylen+nout;
+      return nBytes>0 ? fKeylen+nout : -1;
    }
 
 //*-*- Transfer fEntryOffset table at the end of fBuffer. Offsets to fBuffer
@@ -569,9 +576,8 @@ Int_t TBasket::WriteBuffer()
 //  TKey::WriteFile calls FillBuffer. TBasket inherits from TKey, hence
 //  TBasket::FillBuffer is called.
 WriteFile:
-   TKey::WriteFile(0);
+   int nBytes = TKey::WriteFile(0);
    fHeaderOnly = kFALSE;
-
    cursav->cd();
-   return fKeylen+nout;
+   return nBytes>0 ? fKeylen+nout : -1;
 }
