@@ -65,20 +65,16 @@ private:
     Int_t           fTotalParticles;    // Total number of particles
     Int_t           fLast;              // Index of last particle
     Int_t           fAliveParticles;    // Number of still alive particles
-    Int_t           fNtrack;            // Number of tracks
     Int_t           fNparticles;        // Number of particles
     Int_t           fNseg;              // Number of track segments
     Int_t           fMatter;            // Material index
     EventHeader     fEvtHdr;            // Event header
     Double_t        fB;                 // Magnetic field
-    Double_t        fEThreshold[10];    // Energy threshold for coloring tracks
-    TObjArray      *fTracks;            // ->array with all tracks
+    Double_t        fEThreshold[16];    // Energy threshold for coloring tracks
     TClonesArray   *fParticles;         // ->array with all particles
-    TRef            fLastTrack;         // Reference pointer to last track
     TRef            fLastParticle;      // Reference pointer to last particle
     MyDetector      fDetector;          // Detector
 
-    static TObjArray    *fgTracks;      // Pointer on tracks array
     static TClonesArray *fgParticles;   // Pointer on particles array
 
 public :
@@ -90,14 +86,10 @@ public :
     void            Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0);
     void            SetB(Double_t newB) { fB = newB; }
     void            SetNseg(Int_t n) { fNseg = n; }
-    void            SetNtrack(Int_t n) { fNtrack = n; }
     void            SetHeader(Int_t, Int_t, TDatime, Int_t, Double_t);
-    TPolyLine3D    *AddTrack(const TVector3 &, Int_t);
-    TPolyLine3D    *AddTrack(Double_t, Double_t, Double_t, Int_t);
     MyParticle     *AddParticle(Int_t, Int_t, const TVector3 &, const TVector3 &);
 
     Int_t           Id() { return fId; }
-    Int_t           GetNtrack() const { return fNtrack; }
     Int_t           GetNparticles() const { return fNparticles; }
     Int_t           GetNseg() const { return fNseg; }
     Int_t           GetNAlives() { return fAliveParticles; }
@@ -106,10 +98,8 @@ public :
     Double_t        GetB() { return fB; }
     MyDetector     *GetDetector() { return &fDetector; }
     EventHeader    *GetHeader() { return &fEvtHdr; }
-    TObjArray      *GetTracks() const {return fTracks;}
     TClonesArray   *GetParticles() { return fParticles; }
     MyParticle     *GetLastParticle() const {return (MyParticle*)fLastParticle.GetObject();}
-    TPolyLine3D    *GetTrack(Int_t at) const {return (TPolyLine3D*)fTracks->At(at);}
     MyParticle     *GetParticle(Int_t at) const {return (MyParticle*)fParticles->At(at);}
 
     Int_t           Action(Int_t);

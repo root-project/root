@@ -43,6 +43,8 @@ MyParticle::MyParticle() : TParticle()
     fChild[4] = 0;
     fChild[5] = 0;
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -69,6 +71,8 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     fChild[4] = 0;
     fChild[5] = 0;
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -102,6 +106,8 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
                  +  (GetMass() * GetMass()));
     TParticle::SetMomentum(pMomentum.x(),pMomentum.y(),pMomentum.z(),energy);
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -112,6 +118,7 @@ char *MyParticle::GetObjectInfo(Int_t, Int_t) const
    return info;
 }
 
+//______________________________________________________________________________
 void MyParticle::SetMoment(const TVector3 &mom)
 {
     // Set particle momentum with TVector3 members
@@ -123,6 +130,7 @@ void MyParticle::SetMoment(const TVector3 &mom)
     SetMomentum(mom.x(), mom.y(), mom.z(), energy);
 }
 
+//______________________________________________________________________________
 void MyParticle::GenerateTimeOfDecay()
 {
     // Generates time of decay for this type of particle.
@@ -169,9 +177,50 @@ const Char_t *MyParticle::GetName() const
 }
 
 //______________________________________________________________________________
+TPolyLine3D *MyParticle::AddTrack(const TVector3 &pos, Int_t color)
+{
+   // Add a new track to the list of tracks for this particle.
+   TPolyLine3D *poly;
+   fTracks->Add(new TPolyLine3D());
+   fNtrack = fTracks->GetLast();
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   poly->SetPoint(0, pos.x(), pos.y(), pos.z());
+   poly->SetLineColor(color);
+   return poly;
+}
+
+//______________________________________________________________________________
+TPolyLine3D *MyParticle::AddTrack(Double_t x, Double_t y, Double_t z, Int_t col)
+{
+   // Add a new track to the list of tracks for this particle.
+   TPolyLine3D *poly;
+   fTracks->Add(new TPolyLine3D());
+   fNtrack = fTracks->GetLast();
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   poly->SetPoint(0, x, y, z);
+   poly->SetLineColor(col);
+   return poly;
+}
+
+//______________________________________________________________________________
+void MyParticle::SetNextPoint(Int_t color)
+{
+   // Set next polyline point for the current track if the color did not change
+   // or add a new polyline with the new color.
+   TPolyLine3D *poly;
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   if(color == poly->GetLineColor())
+      poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
+   else
+      AddTrack(fLocation->x(), fLocation->y(), fLocation->z(), color);
+}
+
+//______________________________________________________________________________
 MyParticle::~MyParticle()
 {
     // destructor
-    delete   fLocation;
+    fTracks->Clear();
+    delete fTracks;
+    delete fLocation;
 }
 
