@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.4 2001/11/16 02:36:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.5 2002/11/15 13:26:29 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -43,6 +43,8 @@ private:
    static Bool_t         fgHasCustomNewDelete; // true if using ROOT's new/delete
 
 public:
+   virtual ~TStorage() { }
+
    static ULong_t       GetHeapBegin();
    static ULong_t       GetHeapEnd();
    static FreeHookFun_t GetFreeHook();

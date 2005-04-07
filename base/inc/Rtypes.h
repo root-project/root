@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.47 2004/11/17 18:04:41 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.48 2005/01/23 22:11:38 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -194,6 +194,7 @@ namespace ROOT {
       // inherit from this class and overload ROOT::DefineBehavior().
       // See TQObject.h and table/inc/Ttypes.h for examples.
    public:
+      virtual ~TInitBehavior() { }
       virtual void Register(const char *cname, Version_t id, const type_info &info,
                             VoidFuncPtr_t dict, Int_t pragmabits) const = 0;
       virtual void Unregister(const char *classname) const = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.76 2005/03/22 18:02:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.77 2005/03/26 09:48:08 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -872,8 +872,9 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
 
    Int_t n;
    *this >> n;
+   Int_t l = sizeof(Long_t)*n;
 
-   if (n <= 0 || n*sizeof(Long_t) > fBufSize) return 0;
+   if (l <= 0 || l > fBufSize) return 0;
 
    if (!ll) ll = new Long_t[n];
 
@@ -1123,8 +1124,9 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
 
    Int_t n;
    *this >> n;
+   Int_t l = sizeof(Long_t)*n;
 
-   if (n <= 0 || n*sizeof(Long_t) > fBufSize) return 0;
+   if (l <= 0 || l > fBufSize) return 0;
 
    if (!ll) return 0;
 
@@ -1325,7 +1327,8 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 {
    // Read array of n longs from the I/O buffer.
 
-   if (n <= 0 || n*sizeof(Long_t) > fBufSize) return;
+   Int_t l = sizeof(Long_t)*n;
+   if (l <= 0 || l > fBufSize) return;
 
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
@@ -2404,9 +2407,9 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
-         if ((!cl->IsLoaded() || cl->IsForeign()) && 
+         if ((!cl->IsLoaded() || cl->IsForeign()) &&
             cl->GetStreamerInfos()->GetLast()>1 ) {
-            
+
             TList *list = ((TFile*)fParent)->GetStreamerInfoList();
             TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
             UInt_t checksum = local->GetCheckSum();

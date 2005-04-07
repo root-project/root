@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.2 2001/10/01 09:45:22 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -35,6 +35,7 @@ public:
    TTime() { fMilliSec = 0; }
    TTime(Long_t msec) { fMilliSec = msec; }
    TTime(const TTime &t) { fMilliSec = t.fMilliSec; }
+   virtual ~TTime() { }
 
    TTime operator=(const TTime &t);
 

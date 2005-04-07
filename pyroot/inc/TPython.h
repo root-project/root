@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.6 2004/10/30 06:26:43 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.7 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython
@@ -40,6 +40,7 @@ public:
 // enter an interactive python session (exit with ^D)
    static void Prompt();
 
+   virtual ~TPython() { }
    ClassDef(TPython,0)   //Access to the python interpreter
 };
 

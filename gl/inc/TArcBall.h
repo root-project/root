@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.6 2004/09/17 19:33:31 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.7 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -35,6 +35,7 @@ protected:
    void MapToSphere(const TPoint &NewPt, Double_t *NewVec)const;
 public:
    TArcBall(UInt_t NewWidth, UInt_t NewHeight);
+   virtual ~TArcBall() { }
 
    void SetBounds(UInt_t NewWidth, UInt_t NewHeight)
    {
@@ -83,11 +84,11 @@ TEqRow operator + (const TEqRow &row1, const TEqRow &row2);
 class TToySolver {
 private:
    TEqRow fMatrix[3];
-   Int_t fBase[3];   
+   Int_t fBase[3];
 public:
    TToySolver(const Double_t *source);
    void GetSolution(Double_t *sink);
-private:   
+private:
    void AddNewBV(UInt_t i, UInt_t j);
 };
 

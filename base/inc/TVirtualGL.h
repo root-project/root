@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.14 2004/09/29 06:55:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.15 2005/01/27 14:51:49 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@ class TGLWindow;
 class TVirtualGLImp {
 
 public:
+   virtual ~TVirtualGLImp() { }
    virtual Window_t CreateGLWindow(Window_t wind) = 0;
    virtual ULong_t  CreateContext(Window_t wind) = 0;
    virtual void     DeleteContext(ULong_t ctx) = 0;
@@ -160,7 +161,7 @@ public:
    virtual void EndMovement(TGLRender *render) = 0;
    virtual void Invalidate(TGLRender *render) = 0;
    virtual void DrawSphere(const Float_t *rgba) = 0;
-   virtual void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
+   virtual void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin,
                              Float_t rad, Float_t yc, Float_t zc) = 0;
 
    static TVirtualGL *&Instance();

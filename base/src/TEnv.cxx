@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.17 2004/06/02 14:06:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.18 2004/12/01 13:11:01 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -105,6 +105,7 @@ protected:
 
 public:
    TEnvParser(TEnv *e, FILE *f) : fIfp(f), fEnv(e) { }
+   virtual ~TEnvParser() { }
    virtual void KeyValue(const TString&, const TString&, const TString&) { }
    virtual void Char(Int_t) { }
    void Parse();

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.32 2005/03/18 08:03:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.33 2005/04/01 13:53:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -334,7 +334,7 @@ void TGLSceneObject::SetBBox()
 			zmin = TMath::Min(zmin, fVertices[nv + 2]);
 			zmax = TMath::Max(zmax, fVertices[nv + 2]);
 		}
-		
+
 		fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
 	}
 }
@@ -415,12 +415,12 @@ TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, T
 	UInt_t nv = m->NumberOfVertices();
 	fVertices.reserve(3 * nv);
 	fNormals.resize(m->NumberOfPolys() * 3);
-	
+
 	for (UInt_t i = 0; i < nv; ++i) {
 		const Double_t *v = m->GetVertex(i);
 		fVertices.insert(fVertices.end(), v, v + 3);
 	}
-	
+
 	fNbPols = m->NumberOfPolys();
 
    UInt_t descSize = 0;
@@ -877,6 +877,7 @@ public:
    TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
                    const Vertex3d &center, const Vertex3d &l = lowNormal,
                    const Vertex3d &h = highNormal);
+   virtual ~TGLMesh() { }
 
    void Shift(Double_t xs, Double_t ys, Double_t zs)
    {
