@@ -7,7 +7,8 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += Toplevel mytest
+TEST_TARGETS +=  Toplevel mytest
+#currentFileKey
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -65,4 +66,9 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 Toplevel.log: Toplevel_C.$(DllSuf) ToplevelClass_C.$(DllSuf)
 
 Toplevel: Toplevel.log
+	$(TestDiff)
+
+currentFileKey.log: Toplevel.log
+
+currentFileKey: currentFileKey.log
 	$(TestDiff)
