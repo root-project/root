@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.71 2005/03/20 21:36:51 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.72 2005/03/21 15:01:14 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2635,7 +2635,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             while (IsName(*endNameSpace) && *endNameSpace)
                endNameSpace++;
             *endNameSpace = 0;
-            if (GetClass((const char *) keywordTmp) != 0,forceLoad)
+            if (GetClass((const char *) keywordTmp, forceLoad) != 0)
                end = keyword + (endNameSpace - keywordTmp);
             if (keywordTmp != 0)
                delete[]keywordTmp;
