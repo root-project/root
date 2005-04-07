@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.8 2004/07/01 21:27:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.9 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -31,6 +31,8 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "Riostream.h"
+
+#include <string>
 
 ClassImp(TNtuple)
 
@@ -176,15 +178,19 @@ Long64_t TNtuple::ReadFile(const char *filename, const char * /*branchDescriptor
    // Read from filename as many columns as variables in the ntuple
    // the function returns the number of rows found in the file
    // The second argument "branchDescriptor" is currently not used.
-
+   // Lines in the input file starting with "#" are ignored.
+   
    Long64_t nlines = 0;
    ifstream in;
    in.open(filename);
    while (1) {
-      for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
-      if (!in.good()) break;
-      TTree::Fill();
-      nlines++;
+     if ( in.peek() != '#' ) {
+       for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
+       if (!in.good()) break;
+       TTree::Fill();
+       nlines++;
+     }
+     in.ignore(8192,'\n');
    }
    in.close();
    return nlines;

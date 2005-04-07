@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.241 2005/03/14 17:09:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.242 2005/03/17 00:30:27 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3941,6 +3941,8 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    //     A/D:Table[2]/F:Ntracks/I:astring/C
    //  otherwise branchDescriptor must be specified with the above syntax.
    //
+   // Lines in the input file starting with "#" are ignored.
+   //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
 
@@ -3996,18 +3998,22 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    Int_t status = 1;
    Long64_t nlines = 0;
    while(status > 0) {
-      //loop on branches and read the branch values into their buffer
-      for (Int_t i=0;i<nbranches;i++) {
+
+     if ( in.peek() != '#' ) {
+       //loop on branches and read the branch values into their buffer
+       for (Int_t i=0;i<nbranches;i++) {
          branch = (TBranch*)fBranches.At(i);
          TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
          leaf->ReadValue(in);
          status = in.good();
          if (status <= 0) break;
-      }
-      if (status <= 0) break;
+       }
+       if (status <= 0) break;
       //we are now ready to fill the tree
-      Fill();
-      nlines++;
+       Fill();
+       nlines++;
+     }
+     in.ignore(8192,'\n');
    }
 
    delete [] bdname;
