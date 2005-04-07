@@ -209,9 +209,8 @@ void MyParticle::SetNextPoint(Int_t color)
    // or add a new polyline with the new color.
    TPolyLine3D *poly;
    poly = (TPolyLine3D *)fTracks->At(fNtrack);
-   if(color == poly->GetLineColor())
-      poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
-   else
+   poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
+   if(color != poly->GetLineColor())
       AddTrack(fLocation->x(), fLocation->y(), fLocation->z(), color);
 }
 
