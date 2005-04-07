@@ -110,3 +110,6 @@ operator>>(basic_istream<charT, traits>&, complex<T>&);
 template<class T, class charT, class traits>
 basic_ostream<charT, traits>&
 operator<<(basic_ostream<charT, traits>&, const complex<T>&);
+
+
+#pragma endif
