@@ -173,5 +173,7 @@ NETXLIBDEP          = $(THREADLIB)
 NETXLIBEXTRA        = -Llib -lThread
 GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = -Llib -lGui
+FOAMLIBDEP          = $(HISTLIB)
+FOAMLIBEXTRA        = -Llib -lHist
 
 endif
