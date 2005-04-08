@@ -1,5 +1,5 @@
 
-// $Id: TFoamVect.h,v 1.2 2005/04/04 10:59:34 psawicki Exp $
+// $Id: TFoamVect.h,v 1.1 2005/04/08 14:27:08 brun Exp $
 
 #ifndef ROOT_TFoamVect
 #define ROOT_TFoamVect
@@ -18,8 +18,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 class TFoamVect : public TObject {
   // constructor
-  private:
-    static const Int_t fchat =0;          // chatability (for debug)
   private:
     Int_t       fDim;                     // Dimension
     Double_t   *fCoords;                  // [fDim] Coordinates

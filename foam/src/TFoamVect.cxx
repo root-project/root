@@ -1,4 +1,4 @@
-// $Id: TFoamVect.cxx,v 1.2 2005/04/04 10:59:34 psawicki Exp $
+// $Id: TFoamVect.cxx,v 1.1 2005/04/08 14:27:09 brun Exp $
 
 /////////////////////////////////////////////////////////////////////////////
 //                                                                         //
@@ -8,6 +8,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include"Riostream.h"
+#include "TSystem.h"
 #include "TFoamVect.h"
 
 #define SW2 setprecision(7) << setw(12)
@@ -36,13 +37,13 @@ TFoamVect::TFoamVect(const Int_t n){
   fCoords = NULL;
   if (n>0){
     fCoords = new Double_t[fDim];
-    if(fchat) {
+    if(gDebug) {
       if(fCoords == NULL)
 	Error("TFoamVect", "Constructor failed to allocate\n");
     }
     for (i=0; i<n; i++) *(fCoords+i)=0.0;
   }
-  if(fchat) Info("TFoamVect", "USER CONSTRUCTOR TFoamVect(const Int_t)\n ");
+  if(gDebug) Info("TFoamVect", "USER CONSTRUCTOR TFoamVect(const Int_t)\n ");
 }
 
 //___________________________________________________________________________
@@ -55,7 +56,7 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
   fDim=Vect.fDim;
   fCoords = NULL;
   if(fDim>0)  fCoords = new Double_t[fDim];
-  if(fchat) {
+  if(gDebug) {
     if(fCoords == NULL){ 
       Error("TFoamVect", "Constructor failed to allocate fCoords\n"); 
     }
@@ -69,7 +70,7 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 //___________________________________________________________________________
 TFoamVect::~TFoamVect(){
 // Destructor
-  if(fchat) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
+  if(gDebug) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
   delete [] fCoords; //  free(fCoords)
   fCoords=NULL;
 }
@@ -96,7 +97,7 @@ TFoamVect& TFoamVect::operator =(const TFoamVect& Vect){
     fCoords[i] = Vect.fCoords[i];
   fNext=Vect.fNext;
   fPrev=Vect.fPrev;
-  if(fchat)  Info("TFoamVect", "SUBSITUTE operator =\n ");
+  if(gDebug)  Info("TFoamVect", "SUBSITUTE operator =\n ");
   return *this;
 }
 
