@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.58 2004/11/16 17:15:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.59 2004/12/16 18:08:03 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -356,6 +356,7 @@ namespace TMath {
           Double_t Gamma(Double_t a,Double_t x);
           Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
           Double_t KolmogorovProb(Double_t z);
+          Double_t LandauI(Double_t x); 
           Double_t LaplaceDist(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LaplaceDistI(Double_t x, Double_t alpha=0, Double_t beta=1);
           Double_t LnGamma(Double_t z);
@@ -368,6 +369,8 @@ namespace TMath {
           Double_t Student(Double_t T, Double_t ndf);
           Double_t StudentI(Double_t T, Double_t ndf);
           Double_t StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail=kTRUE);
+          Double_t Vavilov(Double_t x, Double_t kappa, Double_t beta2);
+          Double_t VavilovI(Double_t x, Double_t kappa, Double_t beta2);
 }
 
 
