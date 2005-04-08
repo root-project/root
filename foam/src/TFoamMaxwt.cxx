@@ -1,4 +1,4 @@
-// $Id: TFoamMaxwt.cxx,v 1.2 2005/04/04 10:59:34 psawicki Exp $
+// $Id: TFoamMaxwt.cxx,v 1.1 2005/04/08 14:27:09 brun Exp $
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -15,6 +15,7 @@
 
 
 #include"Riostream.h"
+#include"TMath.h"
 #include"TFoamMaxwt.h"
 
 ClassImp(TFoamMaxwt);
@@ -137,7 +138,7 @@ void TFoamMaxwt::GetMCeff(const Double_t eps, Double_t &MCeff, Double_t &WtLim){
       sumWt += Bin1;
     }
     AveWt1 = sumWt/sum;
-    if( fabs(1.0-AveWt1/AveWt) > eps ) break;
+    if( TMath::Abs(1.0-AveWt1/AveWt) > eps ) break;
   }
   //---------------------------
   if(ibX == (fnBin+1) ){

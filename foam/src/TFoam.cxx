@@ -1,4 +1,4 @@
-// $Id: TFoam.cxx,v 1.3 2005/04/05 11:56:00 psawicki Exp $
+// $Id: TFoam.cxx,v 1.1 2005/04/08 14:27:08 brun Exp $
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -118,6 +118,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #include"Riostream.h"
+#include"TMath.h"
 #include"TFoam.h"
 
 ClassImp(TFoam);
@@ -863,7 +864,7 @@ Long_t  TFoam::PeekMax(void){
    {
       if( fCells[i]->GetStat() == 1 )
       {
-         Driv =  fabs( fCells[i]->GetDriv());
+         Driv =  TMath::Abs( fCells[i]->GetDriv());
 	 //cout<<"PeekMax: Driv = "<<Driv<<endl;
          if(Driv > DrivMax)
          {
