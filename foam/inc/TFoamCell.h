@@ -1,4 +1,5 @@
-// $Id: TFoamCell.h,v 1.2 2005/04/04 10:59:34 psawicki Exp $
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 #ifndef ROOT_TFoamCell
 #define ROOT_TFoamCell
@@ -11,10 +12,12 @@
 // saves total memory allocaction needed for the system of cells.                 //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
+#ifndef ROOT_TRef
 #include "TRef.h"
+#endif
 
-#include "TFoamVect.h"
+class TFoamVect;
+
 
 class TFoamCell : public TObject {
   //   static, the same for all cells!
@@ -48,31 +51,31 @@ class TFoamCell : public TObject {
   void  Fill(Int_t, TFoamCell*, TFoamCell*, TFoamCell*);    // Assigns values of attributes
   TFoamCell&  operator=(TFoamCell&);       // Substitution operator (never used)
   //--------------- Geometry ----------------------------------
-  Double_t  GetXdiv(void){  return fXdiv;};           // Pointer to Xdiv
-  Int_t     GetBest(void){  return fBest;};           // Pointer to Best
-  void      SetBest(Int_t    Best){ fBest =Best;};    // Set Best edge candidate
-  void      SetXdiv(Double_t Xdiv){ fXdiv =Xdiv;};    // Set x-division for best edge cand.
+  Double_t  GetXdiv() const { return fXdiv;}          // Pointer to Xdiv
+  Int_t     GetBest() const { return fBest;}          // Pointer to Best
+  void      SetBest(Int_t    Best){ fBest =Best;}     // Set Best edge candidate
+  void      SetXdiv(Double_t Xdiv){ fXdiv =Xdiv;}     // Set x-division for best edge cand.
   void      GetHcub(  TFoamVect&, TFoamVect&);        // Get position and size vectors (h-cubical subspace)
   void      GetHSize( TFoamVect& );                   // Get size only of cell vector  (h-cubical subspace)
   //--------------- Integrals/Volumes -------------------------
-  void      CalcVolume(void);                         // Calculates volume of cell
-  Double_t  GetVolume(void){ return fVolume;};        // Volume of cell
-  Double_t  GetIntg(void){  return fIntegral;};       // Get Integral
-  Double_t  GetDriv(void){  return fDrive;};          // Get Drive
-  Double_t  GetPrim(void){  return fPrimary;};        // Get Primary
-  void      SetIntg(Double_t Intg){ fIntegral=Intg;}; // Set true integral
-  void      SetDriv(Double_t Driv){ fDrive   =Driv;}; // Set driver integral
-  void      SetPrim(Double_t Prim){ fPrimary =Prim;}; // Set primary integral
+  void      CalcVolume();                             // Calculates volume of cell
+  Double_t  GetVolume() const { return fVolume;}      // Volume of cell
+  Double_t  GetIntg() const { return fIntegral;}      // Get Integral
+  Double_t  GetDriv() const { return fDrive;}         // Get Drive
+  Double_t  GetPrim() const { return fPrimary;}       // Get Primary
+  void      SetIntg(Double_t Intg){ fIntegral=Intg;}  // Set true integral
+  void      SetDriv(Double_t Driv){ fDrive   =Driv;}  // Set driver integral
+  void      SetPrim(Double_t Prim){ fPrimary =Prim;}  // Set primary integral
   //--------------- linked tree organization ------------------
-  Int_t     GetStat(void){ return fStatus;};          // Get Status
-  void      SetStat(Int_t Stat){ fStatus=Stat;};      // Set Status
-  TFoamCell* GetPare(void){ return  (TFoamCell*) fParent.GetObject();  } // Get Pointer to parent cell
-  TFoamCell* GetDau0(void){ return  (TFoamCell*) fDaught0.GetObject(); } // Get Pointer to 1-st daughter vertex
-  TFoamCell* GetDau1(void){ return (TFoamCell*)fDaught1.GetObject(); }   // Get Pointer to 2-nd daughter vertex
-  void      SetDau0(TFoamCell* Daug){ fDaught0 = Daug;}; // Set pointer to 1-st daughter
-  void      SetDau1(TFoamCell* Daug){ fDaught1 = Daug;}; // Set pointer to 2-nd daughter
-  void      SetSerial(Int_t Serial){ fSerial=Serial;};   // Set serial number
-  Int_t     GetSerial(void){ return fSerial;};           // Get serial number
+  Int_t     GetStat() const { return fStatus;}        // Get Status
+  void      SetStat(Int_t Stat){ fStatus=Stat;}       // Set Status
+  TFoamCell* GetPare() const { return (TFoamCell*) fParent.GetObject(); }  // Get Pointer to parent cell
+  TFoamCell* GetDau0() const { return (TFoamCell*) fDaught0.GetObject(); } // Get Pointer to 1-st daughter vertex
+  TFoamCell* GetDau1() const { return (TFoamCell*) fDaught1.GetObject(); } // Get Pointer to 2-nd daughter vertex
+  void      SetDau0(TFoamCell* Daug){ fDaught0 = Daug;}  // Set pointer to 1-st daughter
+  void      SetDau1(TFoamCell* Daug){ fDaught1 = Daug;}  // Set pointer to 2-nd daughter
+  void      SetSerial(Int_t Serial){ fSerial=Serial;}    // Set serial number
+  Int_t     GetSerial() const { return fSerial;}         // Get serial number
   //--- other ---
   void PrintContent();                                   // Prints cell content
 ////////////////////////////////////////////////////////////////////////////

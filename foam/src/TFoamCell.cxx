@@ -1,7 +1,5 @@
-// $Id: TFoamCell.cxx,v 1.2 2005/04/04 10:59:34 psawicki Exp $
-
-#include"Riostream.h"
-#include"TFoamCell.h"
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -13,27 +11,34 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////
 
+#include "Riostream.h"
+#include "TFoamCell.h"
+#include "TFoamVect.h"
+
+
 ClassImp(TFoamCell);
 
 //________________________________________________________________________________
-TFoamCell::TFoamCell(){
+TFoamCell::TFoamCell()
+{
 // Default constructor for streamer
 
-  fParent  = NULL;
-  fDaught0 = NULL;
-  fDaught1 = NULL;
+  fParent  = 0;
+  fDaught0 = 0;
+  fDaught1 = 0;
 }
 
 //_________________________________________________________________________________
-TFoamCell::TFoamCell(Int_t kDim){
+TFoamCell::TFoamCell(Int_t kDim)
+{
 // User constructor allocating single empty Cell
   if (  kDim >0){
     //---------=========----------
     fkDim     = kDim;
     fStatus   = 1;
-    fParent   = NULL;
-    fDaught0  = NULL;
-    fDaught1  = NULL;
+    fParent   = 0;
+    fDaught0  = 0;
+    fDaught1  = 0;
     fXdiv     = 0.0;
     fBest     = 0;
     fVolume   = 0.0;
@@ -52,8 +57,8 @@ TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
   Error("TFoamCell", "+++++ NEVER USE Copy constructor for TFoamCell \n");
   fStatus      = From.fStatus;
   fParent      = From.fParent;
-  fDaught0   = From.fDaught0;
-  fDaught1   = From.fDaught1;
+  fDaught0     = From.fDaught0;
+  fDaught1     = From.fDaught1;
   fXdiv        = From.fXdiv;
   fBest        = From.fBest;
   fVolume      = From.fVolume;
@@ -63,12 +68,14 @@ TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
 }
 
 //___________________________________________________________________________________
-TFoamCell::~TFoamCell(){
+TFoamCell::~TFoamCell()
+{
 // Destructor
 }
 
 //___________________________________________________________________________________
-TFoamCell& TFoamCell::operator=(TFoamCell &From){
+TFoamCell& TFoamCell::operator=(TFoamCell &From)
+{
 // Substitution operator = (never used)
 
   Info("TFoamCell", "operator=\n ");
@@ -103,7 +110,8 @@ void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCe
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________________
-void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size){
+void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)
+{
 // Provides size and position of the cell
 // These parameter are calculated by analysing information in all parents
 // cells up to the root cell. It takes time but saves memory.
@@ -111,27 +119,27 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size){
     TFoamCell *pCell,*dCell;
     Posi = 0.0; Size=1.0; // load all components
     dCell = this;
-    while(dCell != NULL){
+    while(dCell != 0){
       pCell = dCell->GetPare();
-      if( pCell== NULL) break;
+      if( pCell== 0) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
-	if(         dCell == pCell->GetDau0()  ){
-	  Size[kDiv]=Size[kDiv]*xDivi;
-	  Posi[kDiv]=Posi[kDiv]*xDivi;
-	}else if(   dCell == pCell->GetDau1()  ){
-	  Size[kDiv]=Size[kDiv]*(1.0-xDivi);
-	  Posi[kDiv]=Posi[kDiv]*(1.0-xDivi)+xDivi;
-	}else{
-	  Error("GetHcub ","Something wrong with linked tree \n");
-	}
+        if(         dCell == pCell->GetDau0()  ){
+          Size[kDiv]=Size[kDiv]*xDivi;
+          Posi[kDiv]=Posi[kDiv]*xDivi;
+        }else if(   dCell == pCell->GetDau1()  ){
+          Size[kDiv]=Size[kDiv]*(1.0-xDivi);
+          Posi[kDiv]=Posi[kDiv]*(1.0-xDivi)+xDivi;
+        }else{
+          Error("GetHcub ","Something wrong with linked tree \n");
+        }
       dCell=pCell;
     }//while
 }//GetHcub
 
-
 //______________________________________________________________________________________
-void    TFoamCell::GetHSize( TFoamVect &Size){
+void    TFoamCell::GetHSize( TFoamVect &Size)
+{
 // Provides size of the cell
 // Size parameters are calculated by analysing information in all parents
 // cells up to the root cell. It takes time but saves memory.
@@ -139,24 +147,25 @@ void    TFoamCell::GetHSize( TFoamVect &Size){
     TFoamCell *pCell,*dCell;
     Size=1.0; // load all components
     dCell = this;
-    while(dCell != NULL){
+    while(dCell != 0){
       pCell = dCell->GetPare();
-      if( pCell== NULL) break;
+      if( pCell== 0) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
-	if(        dCell == pCell->GetDau0() ){
-	  Size[kDiv]=Size[kDiv]*xDivi;
-	}else if(  dCell == pCell->GetDau1()  ){
-	  Size[kDiv]=Size[kDiv]*(1.0-xDivi);
-	}else{
-	  Error("GetHSize ","Something wrong with linked tree \n");
-	}
+        if(        dCell == pCell->GetDau0() ){
+          Size[kDiv]=Size[kDiv]*xDivi;
+        }else if(  dCell == pCell->GetDau1()  ){
+          Size[kDiv]=Size[kDiv]*(1.0-xDivi);
+        }else{
+          Error("GetHSize ","Something wrong with linked tree \n");
+        }
       dCell=pCell;
     }//while
 }//GetHSize
 
 //_________________________________________________________________________________________
-void TFoamCell::CalcVolume(void){
+void TFoamCell::CalcVolume(void)
+{
 // Calculates volume of the cell using size params which are calculated
 
   Int_t k;
@@ -170,7 +179,8 @@ void TFoamCell::CalcVolume(void){
 }
 
 //__________________________________________________________________________________________
-void TFoamCell::PrintContent(){
+void TFoamCell::PrintContent()
+{
 // Printout of the cell geometry parameters for the debug purpose
 
   cout <<  " Status= "<<     fStatus   <<",";

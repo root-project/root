@@ -1,4 +1,5 @@
-// $Id: TFoam.cxx,v 1.1 2005/04/08 14:27:08 brun Exp $
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -11,7 +12,7 @@
 //
 // What is FOAM for?
 // =================
-// * Suppose you want to generate randomly points (vectors) according to 
+// * Suppose you want to generate randomly points (vectors) according to
 //   an arbitrary probability distribution  in n dimensions,
 //   for which you supply your own subprogram. FOAM can do it for you!
 //   Even if your distributions has quite strong peaks and is discontinuous!
@@ -117,9 +118,17 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#include"Riostream.h"
-#include"TMath.h"
-#include"TFoam.h"
+#include "TFoam.h"
+#include "TFoamIntegrand.h"
+#include "TFoamMaxwt.h"
+#include "TFoamVect.h"
+#include "TFoamCell.h"
+#include "Riostream.h"
+#include "TH1.h"
+#include "TRefArray.h"
+#include "TMethodCall.h"
+#include "TRandom.h"
+#include "TMath.h"
 
 ClassImp(TFoam);
 
@@ -147,31 +156,33 @@ static const Double_t kVlow=-1.0e150;
 #define SW2 setprecision(7) << setw(12)
 
 //________________________________________________________________________________________________
-TFoam::TFoam(){
+TFoam::TFoam()
+{
   // Default constructor for streamer, user should not use it.
   fkDim     = 0;
   fNoAct    = 0;
   fnCells   = 0;
   fRNmax    = 0;
-  fMaskDiv  = NULL;
-  fInhiDiv  = NULL;
-  fXdivPRD  = NULL;
-  fCells    = NULL;
-  fAlpha    = NULL;
-  fCellsAct = NULL;
-  fPrimAcu  = NULL;
-  fHistEdg  = NULL;
-  fHistWt   = NULL;
-  fHistDbg  = NULL;
-  fMCMonit    = NULL;
-  fRho        = NULL;  // Integrand function
-  fMCvect     = NULL;
-  fRvec       = NULL;
-  fPseRan     = NULL;  // generator of pseudorandom numbers
-  
+  fMaskDiv  = 0;
+  fInhiDiv  = 0;
+  fXdivPRD  = 0;
+  fCells    = 0;
+  fAlpha    = 0;
+  fCellsAct = 0;
+  fPrimAcu  = 0;
+  fHistEdg  = 0;
+  fHistWt   = 0;
+  fHistDbg  = 0;
+  fMCMonit  = 0;
+  fRho      = 0;  // Integrand function
+  fMCvect   = 0;
+  fRvec     = 0;
+  fPseRan   = 0;  // generator of pseudorandom numbers
+
 }
 //_________________________________________________________________________________________________
-TFoam::TFoam(const Char_t* Name){
+TFoam::TFoam(const Char_t* Name)
+{
 // User constructor, to be employed by the user
 
   if(strlen(Name)  >129) {
@@ -180,16 +191,16 @@ TFoam::TFoam(const Char_t* Name){
   sprintf(fName,"%s",Name);         // Class name
   sprintf(fDate,"%s","  Release date:  2005.01.16    "); // Release date
   sprintf(fVersion,"%s","1.01M");                        // Release version
-  fMaskDiv  = NULL;             // Dynamic Mask for  cell division, h-cubic 
-  fInhiDiv  = NULL;             // Flag alowing to inhibit cell division in certain projection/edge
-  fXdivPRD  = NULL;             // Lists of division values encoded in one verctor per direction
-  fCells    = NULL;
-  fAlpha    = NULL;
-  fCellsAct = NULL;
-  fPrimAcu  = NULL;
-  fHistEdg  = NULL;
-  fHistWt   = NULL;
-  fHistDbg  = NULL;
+  fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
+  fInhiDiv  = 0;             // Flag alowing to inhibit cell division in certain projection/edge
+  fXdivPRD  = 0;             // Lists of division values encoded in one verctor per direction
+  fCells    = 0;
+  fAlpha    = 0;
+  fCellsAct = 0;
+  fPrimAcu  = 0;
+  fHistEdg  = 0;
+  fHistWt   = 0;
+  fHistDbg  = 0;
   fkDim     = 0;                // dimension of hyp-cubical space
   fnCells   = 1000;             // Maximum number of Cells,    is usually re-set
   fnSampl   = 200;              // No of sampling when dividing cell
@@ -205,22 +216,23 @@ TFoam::TFoam(const Char_t* Name){
   fnEffev = 0;                  // Total no of eff. wt=1 events in build=up
   fLastCe =-1;                  // Index of the last cell
   fNoAct  = 0;                  // No of active cells (used in MC generation)
-  fWtMin = kHigh;                // Minimal weight
-  fWtMax = kVlow;                // Maximal weight
+  fWtMin = kHigh;               // Minimal weight
+  fWtMax = kVlow;               // Maximal weight
   fMaxWtRej =1.10;              // Maximum weight in rejection for getting wt=1 events
-  fPseRan   = NULL;             // Initialize private copy of random number generator
-  fMCMonit  = NULL;             // MC efficiency monitoring
-  fRho = NULL;                  // pointer to abstract class providing function to integrate
-  fMethodCall=NULL;             // ROOT's pointer to global distribution function
+  fPseRan   = 0;                // Initialize private copy of random number generator
+  fMCMonit  = 0;                // MC efficiency monitoring
+  fRho = 0;                     // pointer to abstract class providing function to integrate
+  fMethodCall=0;                // ROOT's pointer to global distribution function
 }
 
 //_______________________________________________________________________________________________
-TFoam::~TFoam(){
+TFoam::~TFoam()
+{
 // Default destructor
 //  cout<<" DESTRUCTOR entered "<<endl;
   Int_t i;
- 
-  if(fCells!= NULL) {
+
+  if(fCells!= 0) {
     for(i=0; i<fnCells; i++) delete fCells[i]; // TFoamCell*[]
     delete [] fCells;
   }
@@ -232,7 +244,7 @@ TFoam::~TFoam(){
   delete [] fInhiDiv; //int[]
   //
   //
-  if( fXdivPRD!= NULL) {
+  if( fXdivPRD!= 0) {
     for(i=0; i<fkDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
     delete [] fXdivPRD;
   }
@@ -266,20 +278,20 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // -->END_HTML
 //
 // This method invokes several other methods:
-// ========================================== 
+// ==========================================
 // InitCells initializes memory storage for cells and begins exploration process
 // from the root cell. The empty cells are allocated/filled using  CellFill.
-// The procedure Grow which loops over cells, picks up the cell with the biggest 
+// The procedure Grow which loops over cells, picks up the cell with the biggest
 // ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
 // with the help of PeekMax procedure. The chosen cell is split using Divide.
 // Subsequently, the procedure Explore called by the Divide
-// (and by InitCells for the root cell) does the most important 
-// job in the mFOAM object build-up: it performs a small MC run for each 
+// (and by InitCells for the root cell) does the most important
+// job in the mFOAM object build-up: it performs a small MC run for each
 // newly allocated daughter cell.
 // Explore calculates how profitable the future split of the cell will be
 // and defines the optimal cell division geometry with the help of Carver or Varedu
 // procedures, for maximum weight or variance optimization respectively.
-// All essential results of the exploration are written into 
+// All essential results of the exploration are written into
 // the explored cell object. At the very end of the foam build-up,
 // Finally, MakeActiveList is invoked to create a list of pointers to
 // all active cells, for the purpose of the quick access during the MC generation.
@@ -295,14 +307,15 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
  SetPseRan(PseRan);
  SetRho(fun);
  Initialize();
- 
+
 }
 
 //_______________________________________________________________________________________
-void TFoam::Initialize(){
+void TFoam::Initialize()
+{
 // Basic initialization of FOAM invoked by the user.
 // IMPORTANT: Random number generator and the ditribution object has to be
-// provided using SetPseRan and SetRho prior to invoking this initializator! 
+// provided using SetPseRan and SetRho prior to invoking this initializator!
 
   Int_t i;
 
@@ -334,29 +347,29 @@ void TFoam::Initialize(){
   /////////////////////////////////////////////////////////////////////////
   fRNmax= fkDim+1;
   fRvec = new Double_t[fRNmax];   // Vector of random numbers
-  if(fRvec==NULL)  Error("Initialize", "Cannot initialize buffer fRvec \n");
+  if(fRvec==0)  Error("Initialize", "Cannot initialize buffer fRvec \n");
 
   if(fkDim>0){
     fAlpha = new Double_t[fkDim];    // sum<1 for internal parametrization of the simplex
-    if(fAlpha==NULL)  Error("Initialize", "Cannot initialize buffer fAlpha \n" );
+    if(fAlpha==0)  Error("Initialize", "Cannot initialize buffer fAlpha \n" );
   }
   fMCvect = new Double_t[fkDim]; // vector generated in the MC run
-  if(fMCvect==NULL)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
+  if(fMCvect==0)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
 
   //====== List of directions inhibited for division
-  if(fInhiDiv == NULL){
+  if(fInhiDiv == 0){
     fInhiDiv = new Int_t[fkDim];
-    for(i=0; i<fkDim; i++) fInhiDiv[i]=0;    
+    for(i=0; i<fkDim; i++) fInhiDiv[i]=0;
   }
   //====== Dynamic mask used in Explore for edge determination
-  if(fMaskDiv == NULL){
+  if(fMaskDiv == 0){
     fMaskDiv = new Int_t[fkDim];
-    for(i=0; i<fkDim; i++) fMaskDiv[i]=1;    
+    for(i=0; i<fkDim; i++) fMaskDiv[i]=1;
   }
   //====== List of predefined division values in all directions (initialized as empty)
-  if(fXdivPRD == NULL){
+  if(fXdivPRD == 0){
     fXdivPRD = new TFoamVect*[fkDim];
-    for(i=0; i<fkDim; i++)  fXdivPRD[i]=NULL; // Artificialy extended beyond fkDim
+    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // Artificialy extended beyond fkDim
   }
   //====== Initialize list of histograms
   fHistWt  = new TH1D("HistWt","Histogram of MC weight",100,0.0, 1.5*fMaxWtRej); // MC weight
@@ -416,14 +429,15 @@ void TFoam::Initialize(){
 } // Initialize
 
 //_______________________________________________________________________________________
-void TFoam::InitCells(void){
+void TFoam::InitCells()
+{
 // Internal subprogram used by Initialize.
 // It initializes "root part" of the FOAM of the tree of cells.
 
   Int_t i;
-  
+
   fLastCe =-1;                             // Index of the last cell
-  if(fCells!= NULL) {
+  if(fCells!= 0) {
     for(i=0; i<fnCells; i++) delete fCells[i];
     delete [] fCells;
   }
@@ -433,12 +447,12 @@ void TFoam::InitCells(void){
     fCells[i]= new TFoamCell(fkDim); // Allocate BIG list of cells
     fCells[i]->SetSerial(i);
   }
-  if(fCells==NULL) Error("InitCells", "Cannot initialize CELLS \n"  );
+  if(fCells==0) Error("InitCells", "Cannot initialize CELLS \n"  );
 
     /////////////////////////////////////////////////////////////////////////////
     //              Single Root Hypercube                                      //
     /////////////////////////////////////////////////////////////////////////////
-    CellFill(1,   NULL);  //  0-th cell ACTIVE
+    CellFill(1,   0);  //  0-th cell ACTIVE
 
   // Exploration of the root cell(s)
   for(Long_t iCell=0; iCell<=fLastCe; iCell++){
@@ -447,7 +461,8 @@ void TFoam::InitCells(void){
 }//InitCells
 
 //_______________________________________________________________________________________
-Int_t TFoam::CellFill(Int_t Status, TFoamCell *Parent){
+Int_t TFoam::CellFill(Int_t Status, TFoamCell *Parent)
+{
 // Internal subprogram used by Initialize.
 // It initializes content of the newly allocated active cell.
 
@@ -460,12 +475,12 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *Parent){
 
   Cell = fCells[fLastCe];
 
-  Cell->Fill(Status, Parent, NULL, NULL);
+  Cell->Fill(Status, Parent, 0, 0);
 
   Cell->SetBest( -1);         // pointer for planning division of the cell
   Cell->SetXdiv(0.5);         // factor for division
   Double_t xInt2,xDri2;
-  if(Parent!=NULL){
+  if(Parent!=0){
     xInt2  = 0.5*Parent->GetIntg();
     xDri2  = 0.5*Parent->GetDriv();
     Cell->SetIntg(xInt2);
@@ -478,14 +493,15 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *Parent){
 }
 
 //______________________________________________________________________________________
-void TFoam::Explore(TFoamCell *Cell){
+void TFoam::Explore(TFoamCell *Cell)
+{
 // Internal subprogram used by Initialize.
 // It explores newly defined cell with help of special short MC sampling.
 // As a result, estimates of true and drive volume is defined/determined
 // Average and dispersion of the weight distribution will is found along
 // each edge and the best edge (minimum dispersion, best maximum weight)
 // is memorized for future use.
-// The optimal division point for eventual future cell division is 
+// The optimal division point for eventual future cell division is
 // determined/recorded. Recorded are also minimum and maximu weight etc.
 // The volume estimate in all (inactive) parent cells is updated.
 // Note that links to parents and initial volume = 1/2 parent has to be
@@ -509,10 +525,10 @@ void TFoam::Explore(TFoamCell *Cell){
 
   Double_t *xRand = new Double_t[fkDim];
 
-  Double_t *VolPart=NULL;
+  Double_t *VolPart=0;
 
   Cell->CalcVolume();
-  Dx = Cell->GetVolume();  
+  Dx = Cell->GetVolume();
   IntOld = Cell->GetIntg(); //memorize old values,
   DriOld = Cell->GetDriv(); //will be needed for correcting parent cells
 
@@ -536,17 +552,17 @@ void TFoam::Explore(TFoamCell *Cell){
 
     if(fkDim>0){
       for(j=0; j<fkDim; j++)
-	xRand[j]= Posi[j] +fAlpha[j]*(Size[j]);
+        xRand[j]= Posi[j] +fAlpha[j]*(Size[j]);
     }
-    
+
     Wt=Dx*Eval(xRand);
 
     nProj = 0;
     if(fkDim>0){
       for(k=0; k<fkDim; k++){
-	Xproj =fAlpha[k];
-	((TH1D *)(*fHistEdg)[nProj])->Fill(Xproj,Wt);
-	nProj++;
+        Xproj =fAlpha[k];
+        ((TH1D *)(*fHistEdg)[nProj])->Fill(Xproj,Wt);
+        nProj++;
       }
     }
     //
@@ -573,17 +589,17 @@ void TFoam::Explore(TFoamCell *Cell){
     for(k=0; k<fkDim; k++){
       rmin= Posi[k];
       rmax= Posi[k] +Size[k];
-      if( fXdivPRD[k] != NULL){
-	Int_t N= (fXdivPRD[k])->GetDim();
-	for(j=0; j<N; j++){
-	  rdiv=(*fXdivPRD[k])[j];
-	  // check predefined divisions is available in this cell
-	  if( (rmin +1e-99 <rdiv) && (rdiv< rmax -1e-99)){
-	    kBest=k;
-	    xBest= (rdiv-Posi[k])/Size[k] ;
-	    goto ee05;
-	  }
-	}
+      if( fXdivPRD[k] != 0){
+        Int_t N= (fXdivPRD[k])->GetDim();
+        for(j=0; j<N; j++){
+          rdiv=(*fXdivPRD[k])[j];
+          // check predefined divisions is available in this cell
+          if( (rmin +1e-99 <rdiv) && (rdiv< rmax -1e-99)){
+            kBest=k;
+            xBest= (rdiv-Posi[k])/Size[k] ;
+            goto ee05;
+          }
+        }
       }
     }//k
   }
@@ -611,9 +627,9 @@ void TFoam::Explore(TFoamCell *Cell){
     Error("Explore", "Wrong fOptDrive = \n" );
   }//switch
   //=================================================================================
-  //hist_Neff_distrib.Fill( fLastCe/2.0+0.01, NevEff+0.01);  // 
-  //hist_kBest_distrib.Fill( kBest+0.50, 1.0 ); //  debug 
-  //hist_xBest_distrib.Fill( xBest+0.01, 1.0 ); //  debug 
+  //hist_Neff_distrib.Fill( fLastCe/2.0+0.01, NevEff+0.01);  //
+  //hist_kBest_distrib.Fill( kBest+0.50, 1.0 ); //  debug
+  //hist_xBest_distrib.Fill( xBest+0.01, 1.0 ); //  debug
   //=================================================================================
   Cell->SetBest(kBest);
   Cell->SetXdiv(xBest);
@@ -622,9 +638,9 @@ void TFoam::Explore(TFoamCell *Cell){
   Cell->SetPrim(IntPrim);
   // correct/update integrals in all parent cells to the top of the tree
   Double_t  ParIntg, ParDriv;
-  for(Parent = Cell->GetPare(); Parent!=NULL; Parent = Parent->GetPare()){
-    ParIntg = Parent->GetIntg();  
-    ParDriv = Parent->GetDriv();  
+  for(Parent = Cell->GetPare(); Parent!=0; Parent = Parent->GetPare()){
+    ParIntg = Parent->GetIntg();
+    ParDriv = Parent->GetDriv();
     Parent->SetIntg( ParIntg   +IntTrue -IntOld );
     Parent->SetDriv( ParDriv   +IntDriv -DriOld );
   }
@@ -634,7 +650,8 @@ void TFoam::Explore(TFoamCell *Cell){
 } // TFoam::Explore
 
 //______________________________________________________________________________________
-void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &yBest){
+void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &yBest)
+{
 // Internal subrogram used by Initialize.
 // In determines the best edge candidate and the position of the cell division plane
 // in case of the variance reduction for future cell division,
@@ -657,27 +674,27 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
     Double_t SigmIn =0.0; Double_t SigmOut =0.0;
     Double_t SSwtBest = kHigh;
     Double_t Gain =0.0;
-    Double_t xMin=0.0; Double_t xMax=0.0; 
+    Double_t xMin=0.0; Double_t xMax=0.0;
     // Double loop over all pairs jLo<jUp
     for(Int_t jLo=1; jLo<=fnBin; jLo++){
       Double_t swIn=0;  Double_t sswIn=0;
       for(Int_t jUp=jLo; jUp<=fnBin;jUp++){
-	swIn  +=     ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(jUp);
-	sswIn += Sqr(((TH1D *)(*fHistEdg)[kProj])->GetBinError(  jUp));
-	xLo=(jLo-1.0)/fnBin;
-	xUp=(jUp*1.0)/fnBin;
-	SwIn  =        swIn/Nent;
-	SwOut = (swAll-swIn)/Nent;
-	SSwIn = sqrt(sswIn)       /sqrt(Nent*(xUp-xLo))     *(xUp-xLo);
-	SSwOut= sqrt(sswAll-sswIn)/sqrt(Nent*(1.0-xUp+xLo)) *(1.0-xUp+xLo);
-	if( (SSwIn+SSwOut) < SSwtBest){
-	  SSwtBest = SSwIn+SSwOut;
-	  Gain     = SSw-SSwtBest;
-	  SigmIn   = SSwIn -SwIn;  // Debug
-	  SigmOut  = SSwOut-SwOut; // Debug
-	  xMin    = xLo;
-	  xMax    = xUp;
-	}
+        swIn  +=     ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(jUp);
+        sswIn += Sqr(((TH1D *)(*fHistEdg)[kProj])->GetBinError(  jUp));
+        xLo=(jLo-1.0)/fnBin;
+        xUp=(jUp*1.0)/fnBin;
+        SwIn  =        swIn/Nent;
+        SwOut = (swAll-swIn)/Nent;
+        SSwIn = sqrt(sswIn)       /sqrt(Nent*(xUp-xLo))     *(xUp-xLo);
+        SSwOut= sqrt(sswAll-sswIn)/sqrt(Nent*(1.0-xUp+xLo)) *(1.0-xUp+xLo);
+        if( (SSwIn+SSwOut) < SSwtBest){
+          SSwtBest = SSwIn+SSwOut;
+          Gain     = SSw-SSwtBest;
+          SigmIn   = SSwIn -SwIn;  // Debug
+          SigmOut  = SSwOut-SwOut; // Debug
+          xMin    = xLo;
+          xMax    = xUp;
+        }
       }//jUp
     }//jLo
     Int_t iLo = (Int_t) (fnBin*xMin);
@@ -687,11 +704,11 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
     //cout<<"  SSwtBest/SSw= "<<SSwtBest/SSw<<"  Gain/SSw= "<< Gain/SSw<<endl;
     //----------DEBUG auxilairy Plot
       for(Int_t iBin=1;iBin<=fnBin;iBin++)
-	if( ((iBin-0.5)/fnBin > xMin) && ((iBin-0.5)/fnBin < xMax) ){
-	  ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmIn/(xMax-xMin));
-	}else{
-	  ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmOut/(1-xMax+xMin));
-	}
+        if( ((iBin-0.5)/fnBin > xMin) && ((iBin-0.5)/fnBin < xMax) ){
+          ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmIn/(xMax-xMin));
+        }else{
+          ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmOut/(1-xMax+xMin));
+        }
 
     if(Gain>=MaxGain){
       MaxGain=Gain;
@@ -708,7 +725,8 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
 }          //TFoam::Varedu
 
 //________________________________________________________________________________________
-void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest){
+void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
+{
 // Internal subrogram used by Initialize.
 // Determines the best edge-candidate and the position of the division plane
 // for the future cell division, in the case of the optimization of the maximum weight.
@@ -721,8 +739,8 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest){
   Int_t    jDivi; // TEST
 
   Double_t *Bins  = new Double_t[fnBin];      // bins of histogram for single  PROJECTION
-  if(Bins==NULL)    Error("Carver", "Cannot initialize buffer Bins \n" );
-  
+  if(Bins==0)    Error("Carver", "Cannot initialize buffer Bins \n" );
+
   kBest =-1;
   xBest =0.5;
   yBest =1.0;
@@ -759,26 +777,26 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest){
       //-----  walk to the left and find first bin > TheBin
       iLow = iBin;
       for(Int_t j=iBin; j>-1; j-- ) {
-	if(TheBin< Bins[j]) break;
-	iLow = j;
+        if(TheBin< Bins[j]) break;
+        iLow = j;
       }
       //iLow = iBin;
       //if(iLow>0)     while( (TheBin >= Bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
       //------ walk to the right and find first bin > TheBin
       iUp  = iBin;
       for(Int_t j=iBin; j<fnBin; j++){
-	if(TheBin< Bins[j]) break;
-	iUp = j;
+        if(TheBin< Bins[j]) break;
+        iUp = j;
       }
       //iUp  = iBin;
       //if(iUp<fnBin-1) while( (TheBin >= Bins[iUp+1])&&( iUp<fnBin-1 ) ){iUp++;} // horror!!!
       //
       Carve = (iUp-iLow+1)*(BinMax-TheBin);
       if( Carve > CarvOne){
-	CarvOne = Carve;
-	jLow = iLow;
-	jUp  = iUp;
-	Ylevel = TheBin;
+        CarvOne = Carve;
+        jLow = iLow;
+        jUp  = iUp;
+        Ylevel = TheBin;
       }
     }//iBin
     if( CarvTot > CarvMax){
@@ -797,17 +815,17 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest){
     //======  extra histograms for debug purposes
     //cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<endl;
       for(iBin=0;    iBin<fnBin;  iBin++)
-	((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,BinMax);
+        ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,BinMax);
       for(iBin=jLow; iBin<jUp+1;   iBin++)
-	((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,Ylevel);
+        ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,Ylevel);
   }//kProj
   if( (kBest >= fkDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest \n" );
   delete [] Bins;
 }          //TFoam::Carver
 
-
 //______________________________________________________________________________________________
-void TFoam::MakeAlpha(void){
+void TFoam::MakeAlpha()
+{
 // Internal subrogram used by Initialize.
 // Provides random vector Alpha  0< Alpha(i) < 1
   Int_t k;
@@ -820,7 +838,8 @@ void TFoam::MakeAlpha(void){
 
 
 //_____________________________________________________________________________________________
-void TFoam::Grow(void){
+void TFoam::Grow()
+{
 // Internal subrogram used by Initialize.
 // It grow new cells by the binary division process.
 
@@ -831,16 +850,16 @@ void TFoam::Grow(void){
       iCell   = PeekMax();        // peek up cell with maximum driver integral
       if( (iCell<0) || (iCell>fLastCe) ) Error("Grow", "Wrong iCell \n");
       newCell = fCells[iCell];
-    
+
     if(fLastCe !=0){
       Int_t kEcho=10;
       if(fLastCe>=10000) kEcho=100;
       if( (fLastCe%kEcho)==0){
-	if(fkDim<10)
-	  cout<<fkDim<<flush;
-	else
-	  cout<<"."<<flush;
-	if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
+        if(fkDim<10)
+          cout<<fkDim<<flush;
+        else
+          cout<<"."<<flush;
+        if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
       }
     }
     //
@@ -851,7 +870,8 @@ void TFoam::Grow(void){
 }// Grow
 
 //_____________________________________________________________________________________________
-Long_t  TFoam::PeekMax(void){
+Long_t  TFoam::PeekMax()
+{
 // Internal subrogram used by Initialize.
 // It finds cell with maximal Driver integral for the purpose of the division.
 
@@ -865,7 +885,7 @@ Long_t  TFoam::PeekMax(void){
       if( fCells[i]->GetStat() == 1 )
       {
          Driv =  TMath::Abs( fCells[i]->GetDriv());
-	 //cout<<"PeekMax: Driv = "<<Driv<<endl;
+         //cout<<"PeekMax: Driv = "<<Driv<<endl;
          if(Driv > DrivMax)
          {
             DrivMax = Driv;
@@ -879,9 +899,9 @@ Long_t  TFoam::PeekMax(void){
    return(iCell);
 }                 // TFoam_PeekMax
 
-
 //_____________________________________________________________________________________________
-Int_t TFoam::Divide(TFoamCell *Cell){
+Int_t TFoam::Divide(TFoamCell *Cell)
+{
 // Internal subrogram used by Initialize.
 // It divides cell iCell into two daughter cells.
 // The iCell is retained and taged as inactive, daughter cells are appended
@@ -918,7 +938,8 @@ Int_t TFoam::Divide(TFoamCell *Cell){
 
 
 //_________________________________________________________________________________________
-void TFoam::MakeActiveList(void){
+void TFoam::MakeActiveList()
+{
 // Internal subrogram used by Initialize.
 // It finds out number of active cells fNoAct,
 // creates list of active cell fCellsAct and primary cumulative fPrimAcu.
@@ -927,11 +948,11 @@ void TFoam::MakeActiveList(void){
   Long_t n, iCell;
   Double_t sum;
   // fush previous result
-  if(fPrimAcu  != NULL) delete [] fPrimAcu;
-  if(fCellsAct != NULL) delete fCellsAct;
- 
+  if(fPrimAcu  != 0) delete [] fPrimAcu;
+  if(fCellsAct != 0) delete fCellsAct;
+
  // Allocate tables of active cells
-  fCellsAct = new TRefArray(); 
+  fCellsAct = new TRefArray();
 
   // Count Active cells and find total Primary
   // Fill-in tables of active cells
@@ -940,23 +961,23 @@ void TFoam::MakeActiveList(void){
   for(iCell=0; iCell<=fLastCe; iCell++){
     if (fCells[iCell]->GetStat()==1){
       fPrime += fCells[iCell]->GetPrim();
-      fCellsAct->Add(fCells[iCell]); 
+      fCellsAct->Add(fCells[iCell]);
       n++;
     }
   }
 
   if(fNoAct != n)  Error("MakeActiveList", "Wrong fNoAct               \n"  );
   if(fPrime == 0.) Error("MakeActiveList", "Integrand function is zero  \n"  );
-    
+
   fPrimAcu  = new  Double_t[fNoAct]; // cumulative primary for MC generation
-  if( fCellsAct==NULL || fPrimAcu==NULL ) Error("MakeActiveList", "Cant allocate fCellsAct or fPrimAcu \n");
+  if( fCellsAct==0 || fPrimAcu==0 ) Error("MakeActiveList", "Cant allocate fCellsAct or fPrimAcu \n");
 
   sum =0.0;
   for(iCell=0; iCell<fNoAct; iCell++){
     sum = sum + ( (TFoamCell *) (fCellsAct->At(iCell)) )->GetPrim()/fPrime;
     fPrimAcu[iCell]=sum;
   }
-  
+
 } //MakeActiveList
 
 //__________________________________________________________________________________________
@@ -967,13 +988,11 @@ void TFoam::ResetPseRan(TRandom *PseRan)
 // IMPORTANT: this method deletes existing  random number generator registered in the mFOAM object.
 // In particular such an object is created by the streamer diring the disk-read operation.
 
-if(fPseRan)
-   {
-   Info("ResetPseRan", "Resetting random number generator  \n");
-   delete fPseRan;
+   if(fPseRan) {
+      Info("ResetPseRan", "Resetting random number generator  \n");
+      delete fPseRan;
    }
    SetPseRan(PseRan);
-
 }
 
 //__________________________________________________________________________________________
@@ -983,10 +1002,10 @@ void TFoam::SetRho(TFoamIntegrand *fun)
 // the given instance of the mFOAM event generator. Note that single r.n. generator
 // may serve several mFOAM objects.
 
-  if(fun)
-    fRho=fun;
-    else 
-    Error("SetRho", "Bad function \n" );
+   if (fun)
+      fRho=fun;
+   else
+      Error("SetRho", "Bad function \n" );
 }
 
 //__________________________________________________________________________________________
@@ -996,33 +1015,31 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
 // Usually it is done when mFOAM object is restored from the disk.
 // IMPORTANT: this method deletes existing  distribution object registered in the mFOAM object.
 // In particular such an object is created by the streamer diring the disk-read operation.
-// This method is used only in very special cases, because the distribution in most cases 
+// This method is used only in very special cases, because the distribution in most cases
 // should be "owned" by the mFOAM object and should not be replaced by another one after initialization.
 
-  if(fRho)
-    {
-    Info("ResetRho", "!!! Resetting distribution function  !!!\n");
-    delete fRho;
-    }
-    SetRho(fun);
+   if(fRho) {
+     Info("ResetRho", "!!! Resetting distribution function  !!!\n");
+     delete fRho;
+   }
+   SetRho(fun);
 }
 
 //__________________________________________________________________________________________
 void TFoam::SetRhoInt(void *fun)
 {
-// User may use this to set pointer to the global function (not descending 
+// User may use this to set pointer to the global function (not descending
 // from TFoamIntegrand) serving as a distribution for mFOAM.
 // It is usefull for simple interactive applications.
 // Note that persistency for mFOAM object will not work in the case of such
 // a distribution.
 
-  const Char_t *namefcn = G__p2f2funcname(fun); //name of integrand function
-  if(namefcn)
-    {
+   const Char_t *namefcn = G__p2f2funcname(fun); //name of integrand function
+   if(namefcn) {
       fMethodCall=new TMethodCall();
       fMethodCall->InitWithPrototype(namefcn, "Int_t, Double_t *");
-    }
-  fRho=0;
+   }
+   fRho=0;
 }
 
 //__________________________________________________________________________________________
@@ -1032,7 +1049,7 @@ Double_t TFoam::Eval(Double_t *xRand)
 // Evaluates distribution to be generated.
 
   Double_t result;
-  
+
   if(!fRho)    //interactive mode
     {
     Long_t paramArr[3];
@@ -1049,7 +1066,8 @@ Double_t TFoam::Eval(Double_t *xRand)
 }
 
 //___________________________________________________________________________________________
-void TFoam::GenerCel2(TFoamCell *&pCell){
+void TFoam::GenerCel2(TFoamCell *&pCell)
+{
 // Internal subprogram.
 // Return randomly chosen active cell with probability equal to its
 // contribution into total driver integral using interpolation search.
@@ -1084,7 +1102,8 @@ void TFoam::GenerCel2(TFoamCell *&pCell){
 
 
 //___________________________________________________________________________________________
-void TFoam::MakeEvent(void){
+void TFoam::MakeEvent(void)
+{
 // User subprogram.
 // It generates randomly point/vector according to user-defined distribution.
 // Prior initialization with help of Initialize() is mandatory.
@@ -1125,7 +1144,7 @@ void TFoam::MakeEvent(void){
   if(fOptRej == 1){
     Double_t Random;
     Random=fPseRan->Rndm();
-    if( fMaxWtRej*Random > fMCwt) goto ee0;  // Wt=1 events, internal rejection 
+    if( fMaxWtRej*Random > fMCwt) goto ee0;  // Wt=1 events, internal rejection
     if( fMCwt<fMaxWtRej ){
       fMCwt = 1.0;                  // normal Wt=1 event
     }else{
@@ -1137,28 +1156,31 @@ void TFoam::MakeEvent(void){
 } // MakeEvent
 
 //_________________________________________________________________________________
-void TFoam::GetMCvect(Double_t *MCvect){
+void TFoam::GetMCvect(Double_t *MCvect)
+{
 // User may get generated MC point/vector with help of this method
 
   for ( Int_t k=0 ; k<fkDim ; k++) *(MCvect +k) = fMCvect[k];
 }//GetMCvect
 
 //___________________________________________________________________________________
-Double_t TFoam::GetMCwt(void){
+Double_t TFoam::GetMCwt(void)
+{
 // User may get weight MC weight using this method
-
 
   return(fMCwt);
 }
 //___________________________________________________________________________________
-void TFoam::GetMCwt(Double_t &MCwt){
+void TFoam::GetMCwt(Double_t &MCwt)
+{
 // User may get weight MC weight using this method
 
   MCwt=fMCwt;
 }
 
 //___________________________________________________________________________________
-Double_t TFoam::MCgenerate(Double_t *MCvect){
+Double_t TFoam::MCgenerate(Double_t *MCvect)
+{
 // User subprogram which generates MC event and returns MC weight
 
    MakeEvent();
@@ -1167,7 +1189,8 @@ Double_t TFoam::MCgenerate(Double_t *MCvect){
 }//MCgenerate
 
 //___________________________________________________________________________________
-void TFoam::GetIntegMC(Double_t &MCresult, Double_t &MCerror){
+void TFoam::GetIntegMC(Double_t &MCresult, Double_t &MCerror)
+{
 // User subprogram.
 // It provides the value of the integral calculated from the averages of the MC run
 // May be called after (or during) the MC run.
@@ -1183,7 +1206,8 @@ void TFoam::GetIntegMC(Double_t &MCresult, Double_t &MCerror){
 }//GetIntegMC
 
 //____________________________________________________________________________________
-void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel ){
+void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel )
+{
 // User subprogram.
 // It returns NORMALIZATION integral to be combined with the average weights
 // and content of the histograms in order to get proper absolute normaizadion
@@ -1202,7 +1226,8 @@ void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel ){
 }//GetIntNorm
 
 //______________________________________________________________________________________
-void  TFoam::GetWtParams(const Double_t eps, Double_t &AveWt, Double_t &WtMax, Double_t &Sigma){
+void  TFoam::GetWtParams(Double_t eps, Double_t &AveWt, Double_t &WtMax, Double_t &Sigma)
+{
 // May be called optionally after the MC run.
 // Returns various parameters of the MC weight for efficiency evaluation
 
@@ -1214,7 +1239,8 @@ void  TFoam::GetWtParams(const Double_t eps, Double_t &AveWt, Double_t &WtMax, D
 }//GetMCeff
 
 //_______________________________________________________________________________________
-void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel ){
+void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
+{
 // May be called optionally by the user after the MC run.
 // It provides normalization and also prints some information/statistics on the MC run.
 
@@ -1261,7 +1287,8 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel ){
 }  // Finalize
 
 //_____________________________________________________________________________________
-void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv){
+void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
+{
 // This can be called before Initialize, after setting kDim
 // It defines which variables are excluded in the process of the cell division.
 // For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-viarible.
@@ -1272,9 +1299,8 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv){
 <!--*/
 // -->END_HTML
 
-
   if(fkDim==0) Error("TFoam","SetInhiDiv: fkDim=0 \n");
-  if(fInhiDiv == NULL){
+  if(fInhiDiv == 0){
     fInhiDiv = new Int_t[ fkDim ];
     for(Int_t i=0; i<fkDim; i++) fInhiDiv[i]=0;
   }
@@ -1286,10 +1312,11 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv){
 }//SetInhiDiv
 
 //______________________________________________________________________________________
-void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[]){
+void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
+{
 // This should be called before Initialize, after setting  kDim
 // It predefines values of the cell division for certain variable iDim.
-// For example setting 3 predefined division lines using: 
+// For example setting 3 predefined division lines using:
 //     xDiv[0]=0.30; xDiv[1]=0.40; xDiv[2]=0.65;
 //     FoamX->SetXdivPRD(0,3,xDiv);
 // results in the following 2-dim. pattern of the cells:
@@ -1304,14 +1331,14 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[]){
   if(fkDim<=0)  Error("SetXdivPRD", "fkDim=0 \n");
   if(   len<1 )  Error("SetXdivPRD", "len<1 \n");
   // allocate list of pointers, if it was not done before
-  if(fXdivPRD == NULL){
+  if(fXdivPRD == 0){
     fXdivPRD = new TFoamVect*[fkDim];
-    for(i=0; i<fkDim; i++)  fXdivPRD[i]=NULL; // only for hcubic subspace.
+    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // only for hcubic subspace.
   }
   // set division list for direction iDim in H-cubic subspace!!!
   if( ( 0<=iDim) && (iDim<fkDim)){
     fOptPRD =1;      // !!!!
-    if( fXdivPRD[iDim] != NULL)
+    if( fXdivPRD[iDim] != 0)
       Error("SetXdivPRD", "Second alocation of XdivPRD not allowed \n");
     fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division
     for(i=0; i<len; i++){
@@ -1331,7 +1358,8 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[]){
 }//SetXdivPRD
 
 //_______________________________________________________________________________________
-void TFoam::CheckAll(const Int_t level){
+void TFoam::CheckAll(Int_t level)
+{
 //  User utility, miscelaneous and debug.
 //  Checks all pointers in the tree of cells. This is useful autodiagnostic.
 //  level=0, no printout, failures causes STOP
@@ -1343,19 +1371,19 @@ void TFoam::CheckAll(const Int_t level){
 
   Errors = 0; Warnings = 0;
   if (level==1) cout << "///////////////////////////// FOAM_Checks /////////////////////////////////" << endl;
-  for(iCell=1; iCell<=fLastCe; iCell++){ 
+  for(iCell=1; iCell<=fLastCe; iCell++){
     Cell = fCells[iCell];
 //  checking general rules
-    if( ((Cell->GetDau0()==NULL) && (Cell->GetDau1()!=NULL) ) ||
-        ((Cell->GetDau1()==NULL) && (Cell->GetDau0()!=NULL) ) ){
+    if( ((Cell->GetDau0()==0) && (Cell->GetDau1()!=0) ) ||
+        ((Cell->GetDau1()==0) && (Cell->GetDau0()!=0) ) ){
       Errors++;
       if (level==1) Error("CheckAll","ERROR: Cell's no %d has only one daughter \n",iCell);
     }
-    if( (Cell->GetDau0()==NULL) && (Cell->GetDau1()==NULL) && (Cell->GetStat()==0) ){
+    if( (Cell->GetDau0()==0) && (Cell->GetDau1()==0) && (Cell->GetStat()==0) ){
       Errors++;
       if (level==1) Error("CheckAll","ERROR: Cell's no %d  has no daugter and is inactive \n",iCell);
     }
-    if( (Cell->GetDau0()!=NULL) && (Cell->GetDau1()!=NULL) && (Cell->GetStat()==1) ){
+    if( (Cell->GetDau0()!=0) && (Cell->GetDau1()!=0) && (Cell->GetStat()==1) ){
       Errors++;
       if (level==1) Error("CheckAll","ERROR: Cell's no %d has two dougters and is active \n",iCell);
     }
@@ -1369,13 +1397,13 @@ void TFoam::CheckAll(const Int_t level){
     }
 
 // checking doughters
-    if(Cell->GetDau0()!=NULL){
+    if(Cell->GetDau0()!=0){
       if(Cell != (Cell->GetDau0())->GetPare()){
         Errors++;
         if (level==1)  Error("CheckAll","ERROR: Cell's no %d daughter 0 not pointing to this cell \n",iCell);
-      } 
+      }
     }
-    if(Cell->GetDau1()!=NULL){
+    if(Cell->GetDau1()!=0){
       if(Cell != (Cell->GetDau1())->GetPare()){
         Errors++;
         if (level==1) Error("CheckAll","ERROR: Cell's no %d daughter 1 not pointing to this cell \n",iCell);
@@ -1401,9 +1429,10 @@ void TFoam::CheckAll(const Int_t level){
 } // Check
 
 //________________________________________________________________________________________
-void TFoam::PrintCells(void){
+void TFoam::PrintCells(void)
+{
 // Prints geometry of ALL cells of the FOAM
-  
+
   Long_t iCell;
 
   for(iCell=0; iCell<=fLastCe; iCell++){
@@ -1416,9 +1445,10 @@ void TFoam::PrintCells(void){
 }
 
 //_________________________________________________________________________________________
-void TFoam::RootPlot2dim(Char_t *filename){
+void TFoam::RootPlot2dim(Char_t *filename)
+{
 // Debugging tool which plots 2-dimensional cells as rectangles
-// in C++ format readible for root 
+// in C++ format readible for root
 
   ofstream outfile(filename, ios::out);
   Double_t   x1,y1,x2,y2,x,y;
@@ -1451,17 +1481,17 @@ void TFoam::RootPlot2dim(Char_t *filename){
     outfile << "// =========== Rectangular cells  ==========="<< endl;
     for(iCell=1; iCell<=fLastCe; iCell++){
       if( fCells[iCell]->GetStat() == 1){
-	fCells[iCell]->GetHcub(Posi,Size);
-	x1 = offs+lpag*(        Posi[0]); y1 = offs+lpag*(        Posi[1]);
-	x2 = offs+lpag*(Posi[0]+Size[0]); y2 = offs+lpag*(Posi[1]+Size[1]);
-	//     cell rectangle
-	if(fLastCe<=2000)
-	  outfile<<"b->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<endl;
-	//     cell number
-	if(fLastCe<=250){
-	  x = offs+lpag*(Posi[0]+0.5*Size[0]); y = offs+lpag*(Posi[1]+0.5*Size[1]);
-	  outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<endl;
-	}
+        fCells[iCell]->GetHcub(Posi,Size);
+        x1 = offs+lpag*(        Posi[0]); y1 = offs+lpag*(        Posi[1]);
+        x2 = offs+lpag*(Posi[0]+Size[0]); y2 = offs+lpag*(Posi[1]+Size[1]);
+        //     cell rectangle
+        if(fLastCe<=2000)
+          outfile<<"b->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<endl;
+        //     cell number
+        if(fLastCe<=250){
+          x = offs+lpag*(Posi[0]+0.5*Size[0]); y = offs+lpag*(Posi[1]+0.5*Size[1]);
+          outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<endl;
+        }
       }
     }
     outfile<<"// ============== End Rectangles ==========="<< endl;

@@ -1,5 +1,5 @@
-
-// $Id: TFoamVect.h,v 1.1 2005/04/08 14:27:08 brun Exp $
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 #ifndef ROOT_TFoamVect
 #define ROOT_TFoamVect
@@ -11,9 +11,10 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
-#include "TNamed.h"
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 class TFoamVect : public TObject {
@@ -25,7 +26,7 @@ class TFoamVect : public TObject {
     TFoamVect  *fPrev;                    // pointer for tree construction
   public:
     TFoamVect();                          // Constructor
-    TFoamVect(const Int_t );              // USER Constructor
+    TFoamVect(Int_t);                     // USER Constructor
     TFoamVect(const TFoamVect &);         // Copy constructor
     virtual ~TFoamVect();                 // Destructor
 //////////////////////////////////////////////////////////////////////////////
@@ -41,13 +42,13 @@ class TFoamVect : public TObject {
     TFoamVect& operator*=(const Double_t&);   // *=; mult. by scalar v*=x (FAST)
     TFoamVect  operator+( const  TFoamVect&); // +;  u=v+s, NEVER USE IT, SLOW!!!
     TFoamVect  operator-( const  TFoamVect&); // -;  u=v-s, NEVER USE IT, SLOW!!!
-    void PrintCoord(void);                    // Prints vector
-    void PrintList(void);                     // Prints vector and the following linked list
-    const int &GetDim(void);                  // Returns dimension
-    Double_t GetCoord(Int_t i){return fCoords[i];};   // Returns coordinate
-/////////////////////////////////////////////////////////////////////////////
+    void PrintCoord();                        // Prints vector
+    void PrintList();                         // Prints vector and the following linked list
+    const int &GetDim() const;                // Returns dimension
+    Double_t GetCoord(Int_t i) const {return fCoords[i];};   // Returns coordinate
+
     ClassDef(TFoamVect,1); //n-dimensional vector with dynamical allocation
 };
-/////////////////////////////////////////////////////////////////////////////
+
 #endif
 

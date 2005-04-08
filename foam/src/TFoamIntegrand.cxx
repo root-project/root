@@ -1,3 +1,6 @@
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
+
 #include "TFoamIntegrand.h"
 
 ClassImp(TFoamIntegrand);

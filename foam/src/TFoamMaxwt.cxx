@@ -1,4 +1,5 @@
-// $Id: TFoamMaxwt.cxx,v 1.1 2005/04/08 14:27:09 brun Exp $
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -14,23 +15,26 @@
 ////////////////////////////////////////////////////////////////////////
 
 
-#include"Riostream.h"
-#include"TMath.h"
-#include"TFoamMaxwt.h"
+#include "Riostream.h"
+#include "TMath.h"
+#include "TH1.h"
+#include "TFoamMaxwt.h"
 
 ClassImp(TFoamMaxwt);
 
 //____________________________________________________________________________
-TFoamMaxwt::TFoamMaxwt(){
+TFoamMaxwt::TFoamMaxwt()
+{
 // Constructor for streamer
   fNent = 0;
   fnBin = 0;
-  fWtHst1 = NULL;
-  fWtHst2 = NULL;
+  fWtHst1 = 0;
+  fWtHst2 = 0;
 }
 
 //____________________________________________________________________________
-TFoamMaxwt::TFoamMaxwt(const Double_t wmax, const Int_t nBin){
+TFoamMaxwt::TFoamMaxwt(Double_t wmax, const Int_t nBin)
+{
 // Principal user constructor
   fNent = 0;
   fnBin = nBin;
@@ -53,15 +57,17 @@ TFoamMaxwt::TFoamMaxwt(TFoamMaxwt &From): TObject(From)
 }
 
 //_______________________________________________________________________________
-TFoamMaxwt::~TFoamMaxwt(){
+TFoamMaxwt::~TFoamMaxwt()
+{
 // Destructor
   delete fWtHst1; // For this SetDirectory(0) is needed!
   delete fWtHst2; //
-  fWtHst1=NULL;
-  fWtHst2=NULL;
+  fWtHst1=0;
+  fWtHst2=0;
 }
 //_______________________________________________________________________________
-void TFoamMaxwt::Reset(){
+void TFoamMaxwt::Reset()
+{
 // Reseting weight analysis
   fNent = 0;
   fWtHst1->Reset();
@@ -69,8 +75,9 @@ void TFoamMaxwt::Reset(){
 }
 
 //_______________________________________________________________________________
-TFoamMaxwt& TFoamMaxwt::operator =(TFoamMaxwt &From){
-// substitution = 
+TFoamMaxwt& TFoamMaxwt::operator =(TFoamMaxwt &From)
+{
+// substitution =
   if (&From == this) return *this;
   fnBin = From.fnBin;
   fwmax = From.fwmax;
@@ -80,15 +87,17 @@ TFoamMaxwt& TFoamMaxwt::operator =(TFoamMaxwt &From){
 }
 
 //________________________________________________________________________________
-void TFoamMaxwt::Fill(Double_t wt){
+void TFoamMaxwt::Fill(Double_t wt)
+{
 // Filling analysed weight
-  fNent =  fNent+1.0; 
+  fNent =  fNent+1.0;
   fWtHst1->Fill(wt,1.0);
   fWtHst2->Fill(wt,wt);
 }
 
 //________________________________________________________________________________
-void TFoamMaxwt::Make(const Double_t eps, Double_t &MCeff){
+void TFoamMaxwt::Make(Double_t eps, Double_t &MCeff)
+{
 // Calculates Efficiency= AveWt/WtLim for a given tolerance level epsilon<<1
 // To be called at the end of the MC run.
 
@@ -102,7 +111,8 @@ void TFoamMaxwt::Make(const Double_t eps, Double_t &MCeff){
 }
 
 //_________________________________________________________________________________
-void TFoamMaxwt::GetMCeff(const Double_t eps, Double_t &MCeff, Double_t &WtLim){
+void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &WtLim)
+{
 // Calculates Efficiency= AveWt/WtLim for a given tolerance level epsilon<<1
 // using information stored in two histograms.
 // To be called at the end of the MC run.
@@ -156,6 +166,6 @@ void TFoamMaxwt::GetMCeff(const Double_t eps, Double_t &MCeff, Double_t &WtLim){
 }
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//      End of    Class  TFoamMaxwt                                             //
+//      End of    Class  TFoamMaxwt                                          //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////

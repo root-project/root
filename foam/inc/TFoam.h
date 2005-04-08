@@ -1,4 +1,5 @@
-// $Id: TFoam.h,v 1.3 2005/04/05 11:56:00 psawicki Exp $
+// @(#)root/foam:$Name:$:$Id:$
+// Authors: S. Jadach and P.Sawicki
 
 #ifndef ROOT_TFoam
 #define ROOT_TFoam
@@ -10,23 +11,27 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "TH1.h"
-#include "TRefArray.h"
-#include "TMethodCall.h"
-#include "TRandom.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
-#include "TFoamIntegrand.h"
-#include "TFoamMaxwt.h"
-#include "TFoamVect.h"
-#include "TFoamCell.h"
+class TH1D;
+class TRefArray;
+class TMethodCall;
+class TRandom;
+class TFoamIntegrand;
+class TFoamMaxwt;
+class TFoamVect;
+class TFoamCell;
+
 
 class TFoam : public TObject {
  private:
   // COMPONENTS //
   //-------------- Input parameters
-  Char_t  fName[128];        // Name of a given instance of the mFOAM class
-  Char_t  fVersion[10];      // Actual version of the mFOAM like (1.01m)
-  Char_t  fDate[40];         // Release date of mFOAM
+  Char_t  fName[128];        // Name of a given instance of the FOAM class
+  Char_t  fVersion[10];      // Actual version of the FOAM like (1.01m)
+  Char_t  fDate[40];         // Release date of FOAM
   Int_t   fkDim;             // Dimension of the integration/simulation space
   Int_t   fnCells;           // Maximum number of cells
   Int_t   fRNmax;            // Maximum No. of the rand. numb. requested at once
@@ -53,14 +58,14 @@ class TFoam : public TObject {
   TRefArray *fCellsAct;      // Array of pointers to active cells, constructed at the end of foam build-up
   Double_t  *fPrimAcu;       // [fNoAct] Array of cumulative probability of all active cells
   TObjArray *fHistEdg;       // Histograms of wt, one for each cell edge
-  TObjArray *fHistDbg;       // Histograms of wt, for debug 
+  TObjArray *fHistDbg;       // Histograms of wt, for debug
   TH1D      *fHistWt;        // Histogram of the MC wt
 
   Double_t  *fMCvect;        // [fkDim] Generated MC vector for the outside user
   Double_t  fMCwt;           // MC weight
   Double_t *fRvec;           // [fRNmax] random number vector from r.n. generator fkDim+1 maximum elements
-  //----------- Procedures 
-  TFoamIntegrand *fRho;      // Pointer to the user-defined integrand function/distribution 
+  //----------- Procedures
+  TFoamIntegrand *fRho;      // Pointer to the user-defined integrand function/distribution
   TMethodCall *fMethodCall;  //! ROOT's pointer to user-defined global distribution function
   TRandom         *fPseRan;  // Pointer to user-defined generator of pseudorandom numbers
   //----------- Statistics and MC results
@@ -85,64 +90,65 @@ class TFoam : public TObject {
   TFoam(const TFoam&);              // Copy Constructor  NOT USED
   // Initialization
   void Initialize();                // Initialization of the mFOAM (grid, cells, etc), mandatory!
-  void Initialize(TRandom *, TFoamIntegrand *); // Alternative initialization method, backward compatibility 
-  void InitCells(void);             // Initializes first cells inside original cube
+  void Initialize(TRandom *, TFoamIntegrand *); // Alternative initialization method, backward compatibility
+  void InitCells();                 // Initializes first cells inside original cube
   Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
   void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
   void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
   void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
-  void MakeAlpha(void);             // Provides random point inside hyperrectangle
-  void Grow(void);                  // Adds new cells to mFOAM object until buffer is full
-  Long_t PeekMax(void);             // Choose one active cell, used by Grow and also in MC generation
+  void MakeAlpha();                 // Provides random point inside hyperrectangle
+  void Grow();                      // Adds new cells to mFOAM object until buffer is full
+  Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
   Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
-  void MakeActiveList(void);        // Creates table of active cells
+  void MakeActiveList();            // Creates table of active cells
   void GenerCel2(TFoamCell *&);     // Chose an active cell the with probability ~ Primary integral
   // Generation
   Double_t Eval(Double_t *);        // Evaluates value of the distribution function
-  void     MakeEvent(void);         // Makes (generates) single MC event
+  void     MakeEvent();             // Makes (generates) single MC event
   void     GetMCvect(Double_t *);   // Provides generated randomly MC vector
   void     GetMCwt(Double_t &);     // Provides generated MC weight
-  Double_t GetMCwt(void);           // Provides generates MC weight
+  Double_t GetMCwt();               // Provides generates MC weight
   Double_t MCgenerate(Double_t *MCvect);// All three above function in one
   // Finalization
   void GetIntegMC(Double_t&, Double_t&);// Provides Integrand and abs. error from MC run
   void GetIntNorm(Double_t&, Double_t&);// Provides normalization Inegrand
-  void GetWtParams(const Double_t, Double_t&, Double_t&, Double_t&);// Provides MC weight parameters
+  void GetWtParams(Double_t, Double_t&, Double_t&, Double_t&);// Provides MC weight parameters
   void Finalize(  Double_t&, Double_t&);  // Prints summary of MC integration
-  TFoamIntegrand  *GetRho(){return fRho;};// Gets pointer of the distribut. (after restoring from disk)
-  TRandom *GetPseRan(){return fPseRan;};  // Gets pointer of r.n. generator (after restoring from disk)
+  TFoamIntegrand  *GetRho(){return fRho;} // Gets pointer of the distribut. (after restoring from disk)
+  TRandom *GetPseRan() const {return fPseRan;}   // Gets pointer of r.n. generator (after restoring from disk)
   void SetRhoInt(void *Rho);              // Set new integrand distr. in interactive mode
   void SetRho(TFoamIntegrand *Rho);       // Set new integrand distr. in compiled mode
   void ResetRho(TFoamIntegrand *Rho);                // Set new distribution, delete old
-  void SetPseRan(TRandom *PseRan){fPseRan=PseRan;};  // Set new r.n. generator
-  void ResetPseRan(TRandom *PseRan);                 // Set new r.n.g, delete old 
+  void SetPseRan(TRandom *PseRan){fPseRan=PseRan;}   // Set new r.n. generator
+  void ResetPseRan(TRandom *PseRan);                 // Set new r.n.g, delete old
   // Getters and Setters
-  void SetkDim(Int_t kDim){fkDim = kDim;};         // Sets dimension of cubical space
-  void SetnCells(Long_t nCells){fnCells =nCells;}; // Sets maximum number of cells
-  void SetnSampl(Long_t nSampl){fnSampl =nSampl;}; // Sets no of MC events in cell exploration
-  void SetnBin(Int_t nBin){fnBin = nBin;};         // Sets no of bins in histogs in cell exploration
-  void SetChat(Int_t Chat){fChat = Chat;};         // Sets option Chat, chat level
-  void SetOptRej(Int_t OptRej){fOptRej =OptRej;};  // Sets option for MC rejection 
-  void SetOptDrive(Int_t OptDrive){fOptDrive =OptDrive;}; // Sets optimization switch
-  void SetEvPerBin(Int_t EvPerBin){fEvPerBin =EvPerBin;}; // Sets max. no. of effective events per bin
-  void SetMaxWtRej(const Double_t MaxWtRej){fMaxWtRej=MaxWtRej;}; // Sets max. weight for rejection
+  void SetkDim(Int_t kDim){fkDim = kDim;}          // Sets dimension of cubical space
+  void SetnCells(Long_t nCells){fnCells =nCells;}  // Sets maximum number of cells
+  void SetnSampl(Long_t nSampl){fnSampl =nSampl;}  // Sets no of MC events in cell exploration
+  void SetnBin(Int_t nBin){fnBin = nBin;}          // Sets no of bins in histogs in cell exploration
+  void SetChat(Int_t Chat){fChat = Chat;}          // Sets option Chat, chat level
+  void SetOptRej(Int_t OptRej){fOptRej =OptRej;}   // Sets option for MC rejection
+  void SetOptDrive(Int_t OptDrive){fOptDrive =OptDrive;}  // Sets optimization switch
+  void SetEvPerBin(Int_t EvPerBin){fEvPerBin =EvPerBin;}  // Sets max. no. of effective events per bin
+  void SetMaxWtRej(Double_t MaxWtRej){fMaxWtRej=MaxWtRej;}  // Sets max. weight for rejection
   void SetInhiDiv(Int_t, Int_t );            // Set inhibition of cell division along certain edge
   void SetXdivPRD(Int_t, Int_t, Double_t[]); // Set predefined division points
   // Getters and Setters
-  Char_t * GetVersion(void ){return fVersion;};      // Get version of the mFOAM
-  Int_t    GetTotDim(void ){ return fkDim;};         // Get total dimension
-  Double_t GetPrimary(void ){return fPrime;};        // Get value of primary integral R'
-  void GetPrimary(Double_t &Prime){Prime = fPrime;}; // Get value of primary integral R'
-  Long_t GetnCalls(void){return fnCalls;};           // Get total no. of the function calls
-  Long_t GetnEffev(void){return fnEffev;};           // Get total no. of effective wt=1 events
+  const char *GetVersion() const {return fVersion;}       // Get version of the mFOAM
+  Int_t    GetTotDim() const { return fkDim;}          // Get total dimension
+  Double_t GetPrimary() const {return fPrime;}         // Get value of primary integral R'
+  void GetPrimary(Double_t &prime) {prime = fPrime;}  // Get value of primary integral R'
+  Long_t GetnCalls() const {return fnCalls;}            // Get total no. of the function calls
+  Long_t GetnEffev() const {return fnEffev;}            // Get total no. of effective wt=1 events
   // Debug
-  void CheckAll(const Int_t);   // Checks correctness of the entire data structure in the mFOAM object
-  void PrintCells(void);        // Prints content of all cells
+  void CheckAll(Int_t);     // Checks correctness of the entire data structure in the mFOAM object
+  void PrintCells();        // Prints content of all cells
   void RootPlot2dim(Char_t*);   // Generates C++ code for drawing foam
   // Inline
  private:
-  Double_t Sqr( const Double_t x ){ return x*x;};     // Square function
+  Double_t Sqr(Double_t x) const { return x*x;}      // Square function
   //////////////////////////////////////////////////////////////////////////////////////////////
   ClassDef(TFoam,1);   // General purpose self-adapting Monte Carlo event generator
 };
+
 #endif

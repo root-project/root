@@ -7,11 +7,11 @@ MODDIR       := foam
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-FOAMDIR    := $(MODDIR)
-FOAMDIRS   := $(FOAMDIR)/src
-FOAMDIRI   := $(FOAMDIR)/inc
+FOAMDIR      := $(MODDIR)
+FOAMDIRS     := $(FOAMDIR)/src
+FOAMDIRI     := $(FOAMDIR)/inc
 
-##### libmFOAM.so #####
+##### libFoam.so #####
 FOAML      := $(MODDIRI)/LinkDef.h
 FOAMDS     := $(MODDIRS)/G__Foam.cxx
 FOAMDO     := $(FOAMDS:.cxx=.o)
