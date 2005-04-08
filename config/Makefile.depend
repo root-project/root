@@ -90,6 +90,8 @@ RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = lib/libHist.lib
 GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = lib/libGui.lib
+FOAMLIBDEP          = $(HISTLIB)
+FOAMLIBEXTRA        = lib/libHist.lib
 
 else
 
