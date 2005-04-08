@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.4 2004/02/16 22:49:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.5 2004/11/22 16:41:56 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -49,8 +49,6 @@ private:
 
    TUrl() { fPort = -1; }
 
-   static TObjArray *GetSpecialProtocols();
-
 public:
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
@@ -78,6 +76,8 @@ public:
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
 
    void        Print(Option_t *option="") const;
+
+   static TObjArray *GetSpecialProtocols();
 
    ClassDef(TUrl,1)  //Represents an URL
 };
