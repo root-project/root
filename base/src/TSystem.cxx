@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.118 2005/03/29 12:51:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.119 2005/03/31 16:10:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -912,7 +912,10 @@ again:
          b = c+1;
          if (c[1] == '(') b++;
          if (c[1] == '{') b++;
-         for (e = b; isalnum(e[0]) || e[0] == '_'; e++) ;
+         if (b[0] == '$')
+            e = b+1;
+         else
+            for (e = b; isalnum(e[0]) || e[0] == '_'; e++) ;
          buff[0] = 0; strncat(buff, b, e-b);
          p = Getenv(buff);
          if (!p) {                      // too bad, try UPPER case
@@ -925,6 +928,10 @@ again:
          }
          if (!p && !strcmp(buff, "cwd")) { // it is $cwd
             p = strcpy(buff, WorkingDirectory());
+         }
+         if (!p && !strcmp(buff, "$")) { // it is $$ (replace by GetPid())
+            sprintf(buff, "%d", GetPid());
+            p = buff;
          }
          if (!p) {                      // too bad, nothing can help
            ier++; x++[0] = c[0];
