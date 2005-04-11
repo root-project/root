@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.3 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
 /////////////////////////////////////////////////////////////////////////////
@@ -226,12 +226,6 @@ void TFoamVect::PrintList(void)
   }
 }
 
-//______________________________________________________________________________
-const Int_t &TFoamVect::GetDim(void) const
-{
-// Getter returning vector dimension
-  return fDim;
-}
 ///////////////////////////////////////////////////////////////////////////////
 //                End of Class TFoamVect                                        //
 ///////////////////////////////////////////////////////////////////////////////

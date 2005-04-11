@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.3 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
 #ifndef ROOT_TFoamVect
@@ -44,7 +44,7 @@ class TFoamVect : public TObject {
     TFoamVect  operator-( const  TFoamVect&); // -;  u=v-s, NEVER USE IT, SLOW!!!
     void PrintCoord();                        // Prints vector
     void PrintList();                         // Prints vector and the following linked list
-    const int &GetDim() const;                // Returns dimension
+    Int_t    GetDim() const { return fDim; }  // Returns dimension
     Double_t GetCoord(Int_t i) const {return fCoords[i];};   // Returns coordinate
 
     ClassDef(TFoamVect,1); //n-dimensional vector with dynamical allocation
