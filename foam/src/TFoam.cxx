@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.3 2005/04/08 16:29:48 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.4 2005/04/11 06:02:34 brun Exp $
 // Authors: S. Jadach and P.Sawicki
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@
 // See the following 2-dim. example of the map of 1000 cells for doubly peaked distribution:
 //BEGIN_HTML <!--
 /* -->
-<img src="../MapCamel1000.gif">
+<img src="gif/foam_MapCamel1000.gif">
 <!--*/
 // -->END_HTML
 // FOAM is now fully integrated with the ROOT package.
@@ -83,7 +83,7 @@
 // Two-dim. histogram of the MC points generated with the above program looks as follows:
 //BEGIN_HTML <!--
 /* -->
-<img src="../cKanwa.gif">
+<img src="gif/foam_cKanwa.gif">
 <!--*/
 // -->END_HTML
 // Canonical nine steering parameters of mFOAM
@@ -273,7 +273,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // The overall oprerational scheme of the FOAM is the following:
 //BEGIN_HTML <!--
 /* -->
-<img src="../Foam_schema2.gif">
+<img src="gif/foam_schema2.gif">
 <!--*/
 // -->END_HTML
 //
@@ -300,7 +300,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // The above sequence of the procedure calls is depicted in the following figure:
 //BEGIN_HTML <!--
 /* -->
-<img src="../Initialize_schema.gif">
+<img src="gif/foam_Initialize_schema.gif">
 <!--*/
 // -->END_HTML
 
@@ -1295,7 +1295,7 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 // The resulting map of cells in 2-dim. case will look as follows:
 //BEGIN_HTML <!--
 /* -->
-<img src="../Map2.gif">
+<img src="gif/foam_Map2.gif">
 <!--*/
 // -->END_HTML
 
@@ -1322,7 +1322,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
 // results in the following 2-dim. pattern of the cells:
 //BEGIN_HTML <!--
 /* -->
-<img src="../Map3.gif">
+<img src="gif/foam_Map3.gif">
 <!--*/
 // -->END_HTML
 
