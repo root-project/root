@@ -1,4 +1,4 @@
-/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.4 2002/03/20 10:27:14 rdm Exp $ */
+/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.5 2002/09/15 19:49:09 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,5 +40,6 @@
 #pragma link C++ class TSlider+;
 #pragma link C++ class TSliderBox+;
 #pragma link C++ class TUtilPad;
+#pragma link C++ class TViewer3DPad;
 
 #endif

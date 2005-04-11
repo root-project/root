@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.6 2005/03/18 16:19:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.7 2005/04/04 07:06:32 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -16,6 +16,17 @@
 #include "TBuffer3DTypes.h"
 
 #include <assert.h>
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TViewer3DPad                                                         //
+//                                                                      //
+// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.    //
+// Will be merged with TView / TView3D eventually.                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TViewer3DPad)
 
 //______________________________________________________________________________
 Bool_t TViewer3DPad::PreferLocalFrame() const

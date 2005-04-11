@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.4 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.5 2005/04/04 07:06:31 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -29,8 +29,8 @@ class TVirtualPad;
 
 class TViewer3DPad : public TVirtualViewer3D {
 private:
-   TVirtualPad &  fPad;
-   Bool_t         fBuilding;
+   TVirtualPad &  fPad; // the pad we paint into.
+   Bool_t         fBuilding; // is scene being built?
 
    // Non-copyable
    TViewer3DPad(const TViewer3DPad &);
@@ -52,6 +52,8 @@ public:
    virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
+
+   ClassDef(TViewer3DPad,0)  //A 3D Viewer painter for TPads
 };
 
 #endif
