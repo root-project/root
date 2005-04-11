@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.2 2005/03/03 08:06:16 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.3 2005/03/03 11:45:06 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -119,7 +119,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
 }
 
 //______________________________________________________________________________
-TSQLResult *TOracleServer::GetTables(const char *dbname, const char *wild)
+TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 {
    // List all tables in the specified database. Wild is for wildcarding
    // "t%" list all tables starting with "t".
@@ -151,7 +151,7 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char *wild)
 
 //______________________________________________________________________________
 TSQLResult *TOracleServer::GetColumns(const char *dbname, const char *table,
-                                      const char *wild)
+                                      const char * /*wild*/)
 {
    // List all columns in specified table in the specified database.
    // Wild is for wildcarding "t%" list all columns starting with "t".
