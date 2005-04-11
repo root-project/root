@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.119 2005/03/31 16:10:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.120 2005/04/11 10:15:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2017,7 +2017,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString includes = GetIncludePath();
    {
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-      TRegexp rel_inc("-I[^/\\$%-][^:-]+");
+      TRegexp rel_inc("-I[^\"/\\$%-][^:-]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
@@ -2025,6 +2025,20 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          sub.Remove(0,2); // Remove -I
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I");
+         includes.Replace(pos,len,sub);
+         pos = rel_inc.Index(includes,&len);
+      }
+   }
+   {
+       // I need to replace the -I"somerelativepath" by -I"../ (or -I"..\ on NT)
+      TRegexp rel_inc("-I\"[^/\\$%-][^:-]+");
+      Int_t len,pos;
+      pos = rel_inc.Index(includes,&len);
+      while( len != 0 ) {
+         TString sub = includes(pos,len);
+         sub.Remove(0,3); // Remove -I
+         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
+         sub.Prepend(" -I\"");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
