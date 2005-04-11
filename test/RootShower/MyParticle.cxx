@@ -218,7 +218,7 @@ void MyParticle::SetNextPoint(Int_t color)
 MyParticle::~MyParticle()
 {
     // destructor
-    fTracks->Clear();
+    fTracks->Delete();
     delete fTracks;
     delete fLocation;
 }

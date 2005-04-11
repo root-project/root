@@ -99,7 +99,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
 void MyEvent::Clear(Option_t *option)
 {
    // Clear tracks and particles arrays
-   fParticles->Clear(option);
+   fgParticles->Delete(option);
    fMatter = 0;
 }
 
