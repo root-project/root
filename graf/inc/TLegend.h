@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.5 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.h,v 1.6 2004/09/04 17:51:44 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -45,10 +45,10 @@ class TLegend : public TPave , public TAttText {
   virtual void    Copy( TObject &obj ) const;
   virtual void    DeleteEntry(); // *MENU*
   virtual void    Draw( Option_t* option = "" );
-  virtual void    EditEntryAttFill(); // *MENU*
-  virtual void    EditEntryAttLine(); // *MENU*
-  virtual void    EditEntryAttMarker(); // *MENU*
-  virtual void    EditEntryAttText(); // *MENU*
+  virtual void    EditEntryAttFill();
+  virtual void    EditEntryAttLine();
+  virtual void    EditEntryAttMarker();
+  virtual void    EditEntryAttText();
   TLegendEntry   *GetEntry() const;
   Float_t         GetEntrySeparation() const { return fEntrySeparation; }
   virtual const char *GetHeader() const;
