@@ -3268,7 +3268,6 @@ echo "done"
 #
 message "Writing $HTMLOUT"
 sed_args=
-i=0
 for opt in $options; do
    sed_args="${sed_args} -e s/@$opt@/"
    if eval "test x$`eval echo $opt` = xyes"; then
@@ -3277,8 +3276,6 @@ for opt in $options; do
       sed_args="${sed_args}kFALSE"
    fi
    sed_args="${sed_args}/g"
-   # if test $i -eq 0 ; then break ; fi
-   let i=$i+1
 done
 sed $sed_args < $HTMLIN > $HTMLOUT
 echo done
