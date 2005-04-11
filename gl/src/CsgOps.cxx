@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.3 2005/04/06 09:43:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.4 2005/04/06 10:12:34 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1332,7 +1332,7 @@ namespace RootCsg {
 				if ((newClassification != lastClassification) && newClassification && lastClassification)
 				{
 					Int_t newVertexIndex = fMesh.Verts().size();
-               #ifdef R__SOLARIS // Solaris CC objects to portability correct typename use
+               #if defined(R__SOLARIS) || (WIN32 && _MSC_VER<=0x0700) // Solaris CC objects to portability correct typename use
 					fMesh.Verts().push_back(TMesh::Vertex());
                #else
 					fMesh.Verts().push_back(typename TMesh::Vertex());
@@ -1832,7 +1832,7 @@ namespace RootCsg {
 		// typename keywords required to be correctly portable
 		// between gcc and VC7 (though VC7 doesn't demand them)
 		// Solaris CC doesn't cope with them however...
-#ifdef R__SOLARIS
+#if defined(R__SOLARIS) || (WIN32 && _MSC_VER<=0x0700)
 		output.Verts() = MeshB::VLIST(vertexNum);
 		output.Polys() = MeshB::PLIST(polyNum);
 #else
