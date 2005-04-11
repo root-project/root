@@ -2,13 +2,14 @@
 //  To run this macro type from CINT command line
 //
 //  root [0] gSystem->Load("libFoam.so")
-//  root [1] .x demo.C+
+//  root [1] .x foam_demo.C+
 //
 //____________________________________________________________________________
 
 #include "Riostream.h"
 #include "TFile.h"
 #include "TFoam.h"
+#include "TH1.h"
 #include "TFoamIntegrand.h"
 #include "TRandom3.h"
 

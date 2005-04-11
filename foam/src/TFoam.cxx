@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.3 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -189,8 +189,8 @@ TFoam::TFoam(const Char_t* Name)
     Error("TFoam","Name too long %s \n",Name);
   }
   sprintf(fName,"%s",Name);         // Class name
-  sprintf(fDate,"%s","  Release date:  2005.01.16    "); // Release date
-  sprintf(fVersion,"%s","1.01M");                        // Release version
+  sprintf(fDate,"%s","  Release date:  2005.04.10    "); // Release date
+  sprintf(fVersion,"%s","1.02M");                        // Release version
   fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
   fInhiDiv  = 0;             // Flag alowing to inhibit cell division in certain projection/edge
   fXdivPRD  = 0;             // Lists of division values encoded in one verctor per direction
