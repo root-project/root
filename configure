@@ -423,28 +423,62 @@ check_symbol() {
     # Check if we got a specific argument as to where the library
     # is to be found
     symbolfile=$symbollib
-    if test ! "x$symboldir" = "x" ; then
-        symbolfile=$symboldir/$symbollib
-        if test ! -r $symbolfile ; then
-            for i in .a .so .lib ; do
-                if test -r $symbolfile$i ; then
-                    symbolfile=$symbolfile$i
-                    break
+    exts=".so .lib"
+    if test ! "x$shared" = "xno" ; then
+	exts="$exts .a"
+    else
+	exts=".a $exts"
+    fi
+    for d in "$symboldir" /usr/lib ; do
+	if test ! -r $d/$symbollib ; then
+	    for i in $exts ; do
+		if test -r $d/$symbollib$i ; then
+		    symbolfile=$d/$symbollib$i
+		    break 2
                 fi
              done
         fi
-    fi
+    done
 
     if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
        found_symbol=0
        return 1
     fi
 
+    checking_msg "$symbol in $symbolfile"
     symbol_in_lib=`nm $symbolfile 2> /dev/stdout | grep $symbol > /dev/null 2>&1`
     if test $? -eq 0 ; then
         found_symbol=1
     else
+	nm $symbolfile 2> /dev/stdout | grep "no symbols" > /dev/null 2>&1
+	if test $? -eq 0 ; then
+	    # stripped library - only safe test is to link against the
+	    # library!  However, we do not know what compiler to use
+	    # so we can not do the test.  Assume the symbol is in
+	    cat <<EOF > conftest.mk
+include config/Makefile.${arch}
+conftest:conftest.c $symbolfile
+	\$(CC) \$(CFLAGS) \$(LDFLAGS) $symbolfile \$< -o \$@
+
+conftest.c:
+	echo "extern int $symbol (); " > \$@
+	echo "int main() { $symbol (); return 0; }" >> \$@
+EOF
+	    $gnumake -f conftest.mk > /dev/null 2>&1
+	    rm -rf conftest.c conftest.mk conftest
+	    if test $? -eq 0 ; then
+		found_symbol=1
+	    else
         found_symbol=0
+    fi
+	else
+	    found_symbol=0
+	fi
+    fi
+    if test $found_symbol -eq 1 ; then
+	echo "ok"
+    else
+	echo "no"
     fi
 }
 
@@ -517,6 +551,10 @@ MIMEWIN32IN=config/mimes.win32.in
 MIMEOUT=etc/root.mimes
 ROOTDIN=config/rootd.in
 ROOTDOUT=etc/rootd
+ROOTHELPIN=config/root-help.el.in
+ROOTHELPOUT=build/misc/root-help.el
+HTMLIN=config/html.C.in
+HTMLOUT=macros/html.C
 
 ######################################################################
 #
@@ -726,6 +764,13 @@ hpuxia64acc)
    checkhpux64="yes" ;;
 esac
 
+case $platform in
+win32|linux|macosx)
+   gnumake="make" ;;
+*)
+   gnumake="gmake" ;;
+esac
+
 if test "x$platform" = "xmacosx" ; then
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
 fi
@@ -736,7 +781,7 @@ fi
 #
 trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
       rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
-      conftest.c conftest; exit 1" 1 2 3 15
+      conftest.mk conftest.c conftest; exit 1" 1 2 3 15
 
 ######################################################################
 #
@@ -2640,7 +2685,7 @@ if test ! "x$enable_clarens" = "xno" ; then
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
 	if test "x$clarensincdir" = "x" ; then
 	    clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
-	    clarenslibdir=`xmlrpc-c-config --ldadd 2> /dev/null`
+	    clarenslibs=`xmlrpc-c-config --ldadd 2> /dev/null`
 	fi
     else
         clarensincdir=""
@@ -2714,9 +2759,9 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
     test "x$enable_venus"   = "xyes" && pkglist="$pkglist root-plugin-venus"
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
-    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd"
+    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd root-plugin-netx"
 
-    pkglist="$pkglist root-plugin-fumili root-plugin-minuit root-plugin-mlp root-plugin-netx root-plugin-proof root-proofd root-plugin-quadp root-rootd root-cint root-doc libroot-dev root-bin libroot ttf-root ttf-root-installer"
+    pkglist="$pkglist root-plugin-fumili root-plugin-minuit root-plugin-mlp root-plugin-proof root-proofd root-plugin-quadp root-rootd root-cint root-doc libroot-dev root-bin libroot ttf-root ttf-root-installer"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     echo "packages: $pkglist"
@@ -3212,11 +3257,31 @@ echo "done"
 #---------------------------------------------------------------------
 # build/misc/root-help.el
 #
-message "Writing build/misc/root-help.el"
+message "Writing $ROOTHELPOUT"
 sed -e "s|@bindir@|$bindir|"           \
     -e "s|@incdir@|$incdir|"           \
-    < config/root-help.el.in > build/misc/root-help.el
+    < $ROOTHELPIN > $ROOTHELPOUT
 echo "done"
+
+#---------------------------------------------------------------------
+# macros/html.C
+#
+message "Writing $HTMLOUT"
+sed_args=
+i=0
+for opt in $options; do
+   sed_args="${sed_args} -e s/@$opt@/"
+   if eval "test x$`eval echo $opt` = xyes"; then
+      sed_args="${sed_args}kTRUE"
+   else
+      sed_args="${sed_args}kFALSE"
+   fi
+   sed_args="${sed_args}/g"
+   # if test $i -eq 0 ; then break ; fi
+   let i=$i+1
+done
+sed $sed_args < $HTMLIN > $HTMLOUT
+echo done
 
 #---------------------------------------------------------------------
 # config.status
@@ -3293,17 +3358,9 @@ fi
 
 echo "To build ROOT type:"
 echo ""
-if test "x$platform" = "xwin32" || test "x$platform" = "xlinux" ||
-   test "x$platform" = "xmacosx" ; then
-    echo "   make"
-    if test ! "x$haveconfig" = "x" ; then
-        echo "   make install"
-    fi
-else
-    echo "   gmake"
-    if test ! "x$haveconfig" = "x" ; then
-        echo "   gmake install"
-    fi
+echo "   $gnumake"
+if test ! "x$haveconfig" = "x" ; then
+    echo "   $gnumake install"
 fi
 echo ""
 
