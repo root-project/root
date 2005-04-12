@@ -1,7 +1,7 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.23 2004/12/15 10:55:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.24 2005/01/26 10:51:25 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
-/////////////////////////////////////////////////////////////////////////////
+//__________________________________________________________________________
 //   THIS CLASS CONTAINS ADVANCED SPECTRA PROCESSING FUNCTIONS.            //
 //                                                                         //
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                       //
@@ -20,7 +20,7 @@
 //                                                                         //
 //   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
 //                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //                        //
+//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -38,15 +38,17 @@
 //   coincidence gamma-ray spectra. Submitted for publication in           //
 //   Nuclear Instruments and Methods in Physics Research A.                //
 //                                                                         //
-//   These NIM papers are also available as Postscript files from:         //
+//   These NIM papers are also available as doc or ps files from:          //
+//BEGIN_HTML <!--
+/* -->
+   <A href="ftp://root.cern.ch/root/Spectrum.doc">Spectrum.doc</A><br>
+   <A href="ftp://root.cern.ch/root/SpectrumDec.ps.gz">SpectrumDec.ps.gz</A><br>
+   <A href="ftp://root.cern.ch/root/SpectrumSrc.ps.gz">SpectrumSrc.ps.gz</A><br>
+   <A href="ftp://root.cern.ch/root/SpectrumBck.ps.gz">SpectrumBck.ps.gz</A><br>
+<!--*/
+// -->END_HTML
 //
-/*
-   ftp://root.cern.ch/root/SpectrumDec.ps.gz
-   ftp://root.cern.ch/root/SpectrumSrc.ps.gz
-   ftp://root.cern.ch/root/SpectrumBck.ps.gz
-*/ 
-//
-/////////////////////////////////////////////////////////////////////////////
+//____________________________________________________________________________
     
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
