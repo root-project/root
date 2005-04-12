@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.69 2005/04/12 13:45:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -418,7 +418,7 @@ Option_t *TObject::GetDrawOption() const
 {
    // Get option used by the graphics system to draw this object.
    // Note that before calling object.GetDrawOption(), you must
-   // have called object.Draw(..) before.
+   // have called object.Draw(..) before in the current pad.
    
    if (!gPad) return "";
 
