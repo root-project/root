@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.38 2005/01/04 10:25:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.39 2005/02/14 15:07:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1232,6 +1232,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //  The color parameters can be changed via TColor::SetRGB.
 
    Int_t i;
+   static Int_t PaletteType = 0;
    Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
                         21,22,23,24,25,26,27,28,29,30, 8,
                         31,32,33,34,35,36,37,38,39,40, 9,
@@ -1242,6 +1243,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
+      PaletteType = 1;
       return;
    }
 
@@ -1250,17 +1252,20 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
+      PaletteType = 2;
       return;
    }
 
    // set DeepSea palette
    if (colors == 0 && ncolors > 50) {
+      if (ncolors == fPalette.fN && PaletteType == 3) return; 
       const Int_t NRGBs = 5;
       Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t Red[NRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t Green[NRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
       Double_t Blue[NRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
       CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
+      PaletteType = 3;
       return;
    }
 
@@ -1268,6 +1273,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
+   PaletteType = 4;
 }
 
 //______________________________________________________________________________
