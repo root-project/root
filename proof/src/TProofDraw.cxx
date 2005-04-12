@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.17 2005/04/06 11:03:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.18 2005/04/06 15:56:14 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -85,14 +85,8 @@ Bool_t TProofDraw::Notify()
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
       Assert(fStatus);
    }
-
    if (!fStatus->IsOk()) return kFALSE;
-
-   if (fVar[0]) fVar[0]->UpdateFormulaLeaves();
-   if (fVar[1]) fVar[1]->UpdateFormulaLeaves();
-   if (fVar[2]) fVar[2]->UpdateFormulaLeaves();
-   if (fVar[3]) fVar[3]->UpdateFormulaLeaves();
-   if (fSelect) fSelect->UpdateFormulaLeaves();
+   fManager->UpdateFormulaLeaves();
    return kTRUE;
 }
 
@@ -206,12 +200,11 @@ void TProofDraw::ClearFormula()
    // Delete internal buffers.
 
    ResetBit(kWarn);
-   SafeDelete(fVar[0]);
-   SafeDelete(fVar[1]);
-   SafeDelete(fVar[2]);
-   SafeDelete(fVar[3]);
+   for (Int_t i = 0; i < 4; i++)
+      SafeDelete(fVar[i]);
    SafeDelete(fSelect);
-   fManager = 0;
+   fManager = 0;  // This is intentional. The manager is deleted when the last formula it manages
+                  // is deleted. This is unusual but was usefull for backward compatibility.
    fMultiplicity = 0;
 }
 

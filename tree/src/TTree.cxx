@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.243 2005/04/07 10:57:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.244 2005/04/07 13:28:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3021,14 +3021,8 @@ Long64_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 //______________________________________________________________________________
 Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 {
-// Return entry  corresponding to major and minor number
-// For example:
-//     Int_t run   = 1234;
-//     Int_t event = 345;
-//     Long64_t serial= tree.GetEntryNumberWithIndex(run,event);
-//    now the variable serial is in the range [0,nentries] and one can do
-//    tree.GetEntry(serial);
-//
+//  Read entry  corresponding to major and minor number
+//  The function returns the total number of bytes read.
 //  If the Tree has friend trees, the corresponding entry with
 //  the index values (major,minor) is read. Note that the master Tree
 //  and its friend may have different entry serial numbers corresponding
