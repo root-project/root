@@ -1,5 +1,5 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.2 2005/04/08 16:29:48 rdm Exp $
-// Authors: S. Jadach and P.Sawicki
+// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.3 2005/04/12 10:01:56 brun Exp $
+// Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoam
 #define ROOT_TFoam

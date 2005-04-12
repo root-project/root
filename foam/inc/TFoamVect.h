@@ -1,5 +1,5 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.3 2005/04/08 16:29:48 rdm Exp $
-// Authors: S. Jadach and P.Sawicki
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.4 2005/04/11 10:31:48 rdm Exp $
+// Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamVect
 #define ROOT_TFoamVect
