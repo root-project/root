@@ -1,7 +1,7 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.2 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
-///////////////////////////////////////////////////////////////////////////////////
+//_________________________________________________________________________________
 //
 // Class TFoamCell  used in TFoam
 // ==============================
@@ -9,7 +9,7 @@
 // Special algoritm for encoding relative positioning of the cells
 // allow to save total memory allocaction needed for the system of cells.
 //
-///////////////////////////////////////////////////////////////////////////////////
+//_________________________________________________________________________________
 
 #include "Riostream.h"
 #include "TFoamCell.h"

@@ -1,7 +1,7 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.3 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
-///////////////////////////////////////////////////////////////////////
+//____________________________________________________________________________
 //
 // Class  TFoamMaxwt
 // =================
@@ -12,7 +12,7 @@
 // User defines no. of bins nBin,  nBin=1000 is  recommended
 // wmax defines weight range (1,wmax), it is adjusted "manually"
 //
-////////////////////////////////////////////////////////////////////////
+//____________________________________________________________________________
 
 
 #include "Riostream.h"

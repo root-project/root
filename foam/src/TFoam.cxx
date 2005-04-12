@@ -1,7 +1,7 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.4 2005/04/11 06:02:34 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.5 2005/04/11 21:57:46 brun Exp $
 // Authors: S. Jadach and P.Sawicki
 
-////////////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 //
 // FOAM  Version 1.01m
 // ===================
@@ -39,7 +39,7 @@
   See <A HREF="http://jadach.home.cern.ch/jadach/Foam/Index.html"> full version of FOAM</A>
 <!--*/
 // -->END_HTML
-// Simple example od the use of FOAM:
+// Simple example of the use of FOAM:
 // ==================================
 // Int_t kanwa(){
 //   gSystem->Load("libFoam.so");
@@ -86,7 +86,7 @@
 <img src="gif/foam_cKanwa.gif">
 <!--*/
 // -->END_HTML
-// Canonical nine steering parameters of mFOAM
+// Canonical nine steering parameters of FOAM
 // ===========================================
 //------------------------------------------------------------------------------
 //  Name     | default  | Desciption
@@ -110,13 +110,13 @@
 // MaxWtRej may need to be increased for wild a distribution, while using OptRej=0.
 //
 // --------------------------------------------------------------------
-// Past versions of mFOAM: August 2003, v.1.00; September 2003 v.1.01
+// Past versions of FOAM: August 2003, v.1.00; September 2003 v.1.01
 // Adopted starting from FOAM-2.06 by P. Sawicki
 // --------------------------------------------------------------------
-// Users of mFOAM are kindly requested to cite the following work:
+// Users of FOAM are kindly requested to cite the following work:
 // S. Jadach, Computer Physics Communications 152 (2003) 55.
 //
-/////////////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 
 #include "TFoam.h"
 #include "TFoamIntegrand.h"
@@ -268,7 +268,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // ============================================================
 // This method starts the process of the cell build-up.
 // User must invoke Initialize with two arguments or Initialize without arguments.
-// This is done BEFORE generating first MC event and AFTER allocating mFOAM object
+// This is done BEFORE generating first MC event and AFTER allocating FOAM object
 // and reseting (optionaly) its internal parameters/switches.
 // The overall oprerational scheme of the FOAM is the following:
 //BEGIN_HTML <!--
@@ -286,7 +286,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // with the help of PeekMax procedure. The chosen cell is split using Divide.
 // Subsequently, the procedure Explore called by the Divide
 // (and by InitCells for the root cell) does the most important
-// job in the mFOAM object build-up: it performs a small MC run for each
+// job in the FOAM object build-up: it performs a small MC run for each
 // newly allocated daughter cell.
 // Explore calculates how profitable the future split of the cell will be
 // and defines the optimal cell division geometry with the help of Carver or Varedu
@@ -984,8 +984,8 @@ void TFoam::MakeActiveList()
 void TFoam::ResetPseRan(TRandom *PseRan)
 {
 // User may optionally reset random number generator using this method
-// Usually it is done when mFOAM object is restored from the disk.
-// IMPORTANT: this method deletes existing  random number generator registered in the mFOAM object.
+// Usually it is done when FOAM object is restored from the disk.
+// IMPORTANT: this method deletes existing  random number generator registered in the FOAM object.
 // In particular such an object is created by the streamer diring the disk-read operation.
 
    if(fPseRan) {
@@ -999,8 +999,8 @@ void TFoam::ResetPseRan(TRandom *PseRan)
 void TFoam::SetRho(TFoamIntegrand *fun)
 {
 // User may use this method to set (register) random number generator used by
-// the given instance of the mFOAM event generator. Note that single r.n. generator
-// may serve several mFOAM objects.
+// the given instance of the FOAM event generator. Note that single r.n. generator
+// may serve several FOAM objects.
 
    if (fun)
       fRho=fun;
@@ -1012,11 +1012,11 @@ void TFoam::SetRho(TFoamIntegrand *fun)
 void TFoam::ResetRho(TFoamIntegrand *fun)
 {
 // User may optionally reset the distribution using this method
-// Usually it is done when mFOAM object is restored from the disk.
-// IMPORTANT: this method deletes existing  distribution object registered in the mFOAM object.
+// Usually it is done when FOAM object is restored from the disk.
+// IMPORTANT: this method deletes existing  distribution object registered in the FOAM object.
 // In particular such an object is created by the streamer diring the disk-read operation.
 // This method is used only in very special cases, because the distribution in most cases
-// should be "owned" by the mFOAM object and should not be replaced by another one after initialization.
+// should be "owned" by the FOAM object and should not be replaced by another one after initialization.
 
    if(fRho) {
      Info("ResetRho", "!!! Resetting distribution function  !!!\n");
@@ -1029,9 +1029,9 @@ void TFoam::ResetRho(TFoamIntegrand *fun)
 void TFoam::SetRhoInt(void *fun)
 {
 // User may use this to set pointer to the global function (not descending
-// from TFoamIntegrand) serving as a distribution for mFOAM.
+// from TFoamIntegrand) serving as a distribution for FOAM.
 // It is usefull for simple interactive applications.
-// Note that persistency for mFOAM object will not work in the case of such
+// Note that persistency for FOAM object will not work in the case of such
 // a distribution.
 
    const Char_t *namefcn = G__p2f2funcname(fun); //name of integrand function

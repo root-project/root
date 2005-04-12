@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:$:$Id:$
+// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.2 2005/04/08 16:29:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
 #ifndef ROOT_TFoam
@@ -89,7 +89,7 @@ class TFoam : public TObject {
   virtual ~TFoam();                 // Default destructor
   TFoam(const TFoam&);              // Copy Constructor  NOT USED
   // Initialization
-  void Initialize();                // Initialization of the mFOAM (grid, cells, etc), mandatory!
+  void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!
   void Initialize(TRandom *, TFoamIntegrand *); // Alternative initialization method, backward compatibility
   void InitCells();                 // Initializes first cells inside original cube
   Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
@@ -97,7 +97,7 @@ class TFoam : public TObject {
   void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
   void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
   void MakeAlpha();                 // Provides random point inside hyperrectangle
-  void Grow();                      // Adds new cells to mFOAM object until buffer is full
+  void Grow();                      // Adds new cells to FOAM object until buffer is full
   Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
   Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
   void MakeActiveList();            // Creates table of active cells
@@ -134,14 +134,14 @@ class TFoam : public TObject {
   void SetInhiDiv(Int_t, Int_t );            // Set inhibition of cell division along certain edge
   void SetXdivPRD(Int_t, Int_t, Double_t[]); // Set predefined division points
   // Getters and Setters
-  const char *GetVersion() const {return fVersion;}       // Get version of the mFOAM
+  const char *GetVersion() const {return fVersion;}       // Get version of the FOAM
   Int_t    GetTotDim() const { return fkDim;}          // Get total dimension
   Double_t GetPrimary() const {return fPrime;}         // Get value of primary integral R'
   void GetPrimary(Double_t &prime) {prime = fPrime;}  // Get value of primary integral R'
   Long_t GetnCalls() const {return fnCalls;}            // Get total no. of the function calls
   Long_t GetnEffev() const {return fnEffev;}            // Get total no. of effective wt=1 events
   // Debug
-  void CheckAll(Int_t);     // Checks correctness of the entire data structure in the mFOAM object
+  void CheckAll(Int_t);     // Checks correctness of the entire data structure in the FOAM object
   void PrintCells();        // Prints content of all cells
   void RootPlot2dim(Char_t*);   // Generates C++ code for drawing foam
   // Inline

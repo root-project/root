@@ -1,12 +1,12 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.3 2005/04/08 16:29:48 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.4 2005/04/11 10:31:48 rdm Exp $
 // Authors: S. Jadach and P.Sawicki
 
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
+//_____________________________________________________________________________
+//                                                                            //
 // Auxiliary class TFoamVect of n-dimensional vector, with dynamic allocation //
-// used for the cartesian geometry of the TFoam  cells                     //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
+// used for the cartesian geometry of the TFoam  cells                        //
+//                                                                            //
+//_____________________________________________________________________________
 
 #include "Riostream.h"
 #include "TSystem.h"
