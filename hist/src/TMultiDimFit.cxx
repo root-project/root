@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.16 2005/03/08 21:53:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.17 2005/03/11 10:21:03 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -1139,7 +1139,7 @@ of functions allowed in the final expression of the fit (defined by
 user).
 
 <P>
-From this we see, that by restricting <IMG
+>From this we see, that by restricting <IMG
  WIDTH="41" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> -- the number of
@@ -2691,16 +2691,18 @@ void TMultiDimFit::MakeCorrelation()
   fCorrelationMatrix.ResizeTo(fNVariables,fNVariables+1);
 
   Double_t d2      = 0;
-  Double_t DdotXi  = 0;
-  Double_t XiNorm  = 0;
-  Double_t XidotXj = 0;
-  Double_t XjNorm  = 0;
+  Double_t DdotXi  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
+  Double_t XiNorm  = 0; // G.Q. needs to be reinitialized in the loop over i fNVariables
+  Double_t XidotXj = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
+  Double_t XjNorm  = 0; // G.Q. needs to be reinitialized in the loop over j fNVariables
 
-  Int_t i, j, k, l;
+  Int_t i, j, k, l, m;  // G.Q. added m variable
   for (i = 0; i < fSampleSize; i++)
     d2 += fQuantity(i) * fQuantity(i);
 
   for (i = 0; i < fNVariables; i++) {
+    DdotXi = 0.; // G.Q. reinitialisation
+    XiNorm = 0.; // G.Q. reinitialisation
     for (j = 0; j< fSampleSize; j++) {
       // Index of sample j of variable i
       k =  j * fNVariables + i;
@@ -2711,11 +2713,17 @@ void TMultiDimFit::MakeCorrelation()
     fCorrelationMatrix(i,0) = DdotXi / TMath::Sqrt(d2 * XiNorm);
 
     for (j = 0; j < i; j++) {
+      XidotXj = 0.; // G.Q. reinitialisation
+      XjNorm = 0.; // G.Q. reinitialisation
       for (k = 0; k < fSampleSize; k++) {
 	// Index of sample j of variable i
-	l =  j * fNVariables + k;
-	XidotXj += (fVariables(i) - fMeanVariables(i))
-	  * (fVariables(l) - fMeanVariables(j));
+	// l =  j * fNVariables + k;  // G.Q.
+	l =  k * fNVariables + j; // G.Q.
+	m =  k * fNVariables + i; // G.Q.
+	// G.Q.	XidotXj += (fVariables(i) - fMeanVariables(i))
+	// G.Q.	  * (fVariables(l) - fMeanVariables(j));
+	XidotXj += (fVariables(m) - fMeanVariables(i))
+	  * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
 	XjNorm  += (fVariables(l) - fMeanVariables(j))
 	  * (fVariables(l) - fMeanVariables(j));
       }
