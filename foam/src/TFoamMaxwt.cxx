@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.4 2005/04/12 10:01:56 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.5 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //____________________________________________________________________________
@@ -33,7 +33,7 @@ TFoamMaxwt::TFoamMaxwt()
 }
 
 //____________________________________________________________________________
-TFoamMaxwt::TFoamMaxwt(Double_t wmax, const Int_t nBin)
+TFoamMaxwt::TFoamMaxwt(Double_t wmax, Int_t nBin)
 {
 // Principal user constructor
   fNent = 0;
