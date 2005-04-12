@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.4 2005/04/06 10:12:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.5 2005/04/11 17:48:41 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -71,7 +71,6 @@
 */
 
 #include <algorithm>
-//#include <cassert>
 #include <vector>
 
 #include "TBuffer3D.h"
@@ -149,7 +148,7 @@ namespace RootCsg {
    Vector2 &Vector2::operator *= (Double_t s)
    {fCo[0] *= s; fCo[1] *= s; return *this;}
    Vector2 &Vector2::operator /= (Double_t s)
-   {/*assert(!fuzzy_zero(s));*/ return *this *= 1. / s;}
+   {return *this *= 1. / s;}
    Vector2 operator + (const Vector2 &v1, const Vector2 &v2)
    {return Vector2(v1[0] + v2[0], v1[1] + v2[1]);}
    Vector2 operator - (const Vector2 &v1, const Vector2 &v2)
@@ -160,7 +159,7 @@ namespace RootCsg {
    {return Vector2(v[0] * s, v[1] * s);}
    Vector2 operator * (Double_t s, const Vector2 &v){return v * s;}
    Vector2 operator / (const Vector2 & v, Double_t s)
-   {/*assert(!fuzzy_zero(s));*/ return v * (1.0 / s);}
+   {return v * (1.0 / s);}
    Double_t Vector2::Dot(const Vector2 &vv)const
    {return fCo[0] * vv[0] + fCo[1] * vv[1];}
    Double_t Vector2::Length2()const{ return Dot(*this); }
@@ -175,9 +174,7 @@ namespace RootCsg {
    Vector2 Vector2::Scaled(Double_t xx, Double_t yy)const
    {return Vector2(fCo[0] * xx, fCo[1] * yy);}
    Double_t Vector2::Angle(const Vector2 &vv)const
-   {Double_t s = TMath::Sqrt(Length2() * vv.Length2());
-    //assert(!fuzzy_zero(s));
-    return TMath::ACos(Dot(vv) / s);}
+   {Double_t s = TMath::Sqrt(Length2() * vv.Length2()); return TMath::ACos(Dot(vv) / s);}
    Double_t  dot(const Vector2 &v1, const Vector2 &v2)
    {return v1.Dot(v2);}
    Double_t length2(const Vector2 &v){return v.Length2();}
@@ -188,43 +185,43 @@ namespace RootCsg {
    Double_t Angle(const Vector2 &v1, const Vector2 &v2)
    {return v1.Angle(v2);}
 
-   class PoInt_t2 : public Vector2 {
+   class Point2 : public Vector2 {
    public:
-      PoInt_t2(){}
-      PoInt_t2(const Double_t *v) : Vector2(v){}
-      PoInt_t2(Double_t x, Double_t y) : Vector2(x, y) {}
-      PoInt_t2 &operator += (const Vector2 &v);
-      PoInt_t2 &operator -= (const Vector2 &v);
-      PoInt_t2 &operator = (const Vector2 &v);
-      Double_t Distance(const PoInt_t2 &p)const;
-      Double_t Distance2(const PoInt_t2 &p)const;
-      PoInt_t2 Lerp(const PoInt_t2 &p, Double_t t)const;
+      Point2(){}
+      Point2(const Double_t *v) : Vector2(v){}
+      Point2(Double_t x, Double_t y) : Vector2(x, y) {}
+      Point2 &operator += (const Vector2 &v);
+      Point2 &operator -= (const Vector2 &v);
+      Point2 &operator = (const Vector2 &v);
+      Double_t Distance(const Point2 &p)const;
+      Double_t Distance2(const Point2 &p)const;
+      Point2 Lerp(const Point2 &p, Double_t t)const;
    };
 
-   PoInt_t2 &PoInt_t2::operator += (const Vector2 &v)
+   Point2 &Point2::operator += (const Vector2 &v)
    {fCo[0] += v[0]; fCo[1] += v[1];return *this;}
-   PoInt_t2 &PoInt_t2::operator-=(const Vector2& v)
+   Point2 &Point2::operator-=(const Vector2& v)
    {fCo[0] -= v[0]; fCo[1] -= v[1];return *this;}
-   PoInt_t2 &PoInt_t2::operator=(const Vector2& v)
+   Point2 &Point2::operator=(const Vector2& v)
    {fCo[0] = v[0]; fCo[1] = v[1];return *this;}
-   Double_t PoInt_t2::Distance(const PoInt_t2& p)const
+   Double_t Point2::Distance(const Point2& p)const
    {return (p - *this).Length();}
-   Double_t PoInt_t2::Distance2(const PoInt_t2& p)const
+   Double_t Point2::Distance2(const Point2& p)const
    {return (p - *this).Length2();}
-   PoInt_t2 PoInt_t2::Lerp(const PoInt_t2 &p, Double_t t)const
-   {return PoInt_t2(fCo[0] + (p[0] - fCo[0]) * t,
+   Point2 Point2::Lerp(const Point2 &p, Double_t t)const
+   {return Point2(fCo[0] + (p[0] - fCo[0]) * t,
                   fCo[1] + (p[1] - fCo[1]) * t);}
-   PoInt_t2 operator + (const PoInt_t2 &p, const Vector2 &v)
-   {return PoInt_t2(p[0] + v[0], p[1] + v[1]);}
-   PoInt_t2 operator - (const PoInt_t2 &p, const Vector2 &v)
-   {return PoInt_t2(p[0] - v[0], p[1] - v[1]);}
-   Vector2 operator - (const PoInt_t2 &p1, const PoInt_t2 &p2)
+   Point2 operator + (const Point2 &p, const Vector2 &v)
+   {return Point2(p[0] + v[0], p[1] + v[1]);}
+   Point2 operator - (const Point2 &p, const Vector2 &v)
+   {return Point2(p[0] - v[0], p[1] - v[1]);}
+   Vector2 operator - (const Point2 &p1, const Point2 &p2)
    {return Vector2(p1[0] - p2[0], p1[1] - p2[1]);}
-   Double_t distance(const PoInt_t2 &p1, const PoInt_t2 &p2)
+   Double_t distance(const Point2 &p1, const Point2 &p2)
    {return p1.Distance(p2);}
-   Double_t distance2(const PoInt_t2 &p1, const PoInt_t2 &p2)
+   Double_t distance2(const Point2 &p1, const Point2 &p2)
    {return p1.Distance2(p2);}
-   PoInt_t2 lerp(const PoInt_t2 &p1, const PoInt_t2 &p2, Double_t t)
+   Point2 lerp(const Point2 &p1, const Point2 &p2, Double_t t)
    {return p1.Lerp(p2, t);}
 
    class Tuple3 {
@@ -289,7 +286,7 @@ namespace RootCsg {
    Vector3 &Vector3::operator *= (Double_t s)
    {fCo[0] *= s; fCo[1] *= s; fCo[2] *= s; return *this;}
    Vector3 &Vector3::operator /= (Double_t s)
-   {/*assert(!fuzzy_zero(s));*/return *this *= Double_t(1.0) / s;}
+   {return *this *= Double_t(1.0) / s;}
    Double_t Vector3::Dot(const Vector3 &v)const
    {return fCo[0] * v[0] + fCo[1] * v[1] + fCo[2] * v[2];}
    Double_t Vector3::Length2()const
@@ -307,7 +304,7 @@ namespace RootCsg {
    Vector3 operator * (const Vector3 &v, Double_t s)
    {return Vector3(v[0] * s, v[1] * s, v[2] * s);}
    Vector3 operator / (const Vector3 &v, Double_t s)
-   {/*assert(!fuzzy_zero(s));*/ return v * (1. / s);}
+   {return v * (1. / s);}
    Vector3 Vector3::Normalized()const{ return *this / Length(); }
    Vector3 Vector3::SafeNormalized()const
    {Double_t len = Length(); return fuzzy_zero(len) ? Vector3(1., 0., 0.):*this / len;}
@@ -316,8 +313,7 @@ namespace RootCsg {
    Vector3 Vector3::Scaled(Double_t xx, Double_t yy, Double_t zz)const
    {return Vector3(fCo[0] * xx, fCo[1] * yy, fCo[2] * zz);}
    Double_t Vector3::Angle(const Vector3 &v)const
-   {Double_t s = TMath::Sqrt(Length2() * v.Length2()); 
-    /*assert(!fuzzy_zero(s)); */return TMath::ACos(Dot(v) / s);}
+   {Double_t s = TMath::Sqrt(Length2() * v.Length2()); return TMath::ACos(Dot(v) / s);}
    Vector3 Vector3::Cross(const Vector3 &v)const
    {return Vector3(fCo[1] * v[2] - fCo[2] * v[1],
                    fCo[2] * v[0] - fCo[0] * v[2],
@@ -423,177 +419,12 @@ namespace RootCsg {
 
    Bool_t operator == (const Tuple4 &t1, const Tuple4 &t2)
    {return t1[0] == t2[0] && t1[1] == t2[1] && t1[2] == t2[2] && t1[3] == t2[3];}
-
-   class Vector4 : public Tuple4 {
-   public:
-      Vector4(){}
-      Vector4(const Double_t *v) : Tuple4(v){}
-      Vector4(Double_t xx, Double_t yy, Double_t zz, Double_t ww) 
-         : Tuple4(xx, yy, zz, ww) {}
-      Vector4 &operator += (const Vector4 &v);
-      Vector4 &operator -= (const Vector4 &v);
-      Vector4 &operator *= (Double_t s);
-      Vector4 &operator /= (Double_t s);
-      Double_t Dot(const Vector4 &v)const; 
-      Double_t Length2() const;
-      Double_t Length() const;
-      Vector4 Absolute() const;
-      void Normalize();
-      Vector4 Normalized() const;
-      void Scale(Double_t x, Double_t y, Double_t z, Double_t w); 
-      Vector4 Scaled(Double_t x, Double_t y, Double_t z, Double_t w) const; 
-      Bool_t FuzzyZero() const;
-   };
-
-   Vector4 &Vector4::operator += (const Vector4 &v)
-   {fCo[0] += v[0]; fCo[1] += v[1]; fCo[2] += v[2]; fCo[3] += v[3];return *this;}
-   Vector4 &Vector4::operator -= (const Vector4 &v)
-   {fCo[0] -= v[0]; fCo[1] -= v[1]; fCo[2] -= v[2]; fCo[3] -= v[3];return *this;}
-   Vector4 &Vector4::operator *= (Double_t s)
-   {fCo[0] *= s; fCo[1] *= s; fCo[2] *= s; fCo[3] *= s;return *this;}
-   Vector4 &Vector4::operator /= (Double_t s)
-   {/*assert(!fuzzy_zero(s))*/; return *this *= 1. / s;}
-   Vector4 operator + (const Vector4 &v1, const Vector4 &v2)
-   {return Vector4(v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2], v1[3] + v2[3]);}
-   Vector4 operator - (const Vector4 &v1, const Vector4 &v2)
-   {return Vector4(v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]);}
-   Vector4 operator - (const Vector4 &v)
-   {return Vector4(-v[0], -v[1], -v[2], -v[3]);}
-   Vector4 operator * (const Vector4 &v, Double_t s)
-   {return Vector4(v[0] * s, v[1] * s, v[2] * s, v[3] * s);}
-   Vector4 operator * (Double_t s, const Vector4 &v){return v * s;}
-   Vector4 operator / (const Vector4 &v, Double_t s)
-   {/*assert(!fuzzy_zero(s));*/ return v * (Double_t(1.0) / s);}
-   Double_t Vector4::Dot(const Vector4 &v)const
-   {return fCo[0] * v[0] + fCo[1] * v[1] + fCo[2] * v[2] + fCo[3] * v[3];}
-   Double_t dot(const Vector4 &v1, const Vector4 &v2)
-   {return v1.Dot(v2);}
-   Double_t Vector4::Length2()const{return dot(*this, *this);}
-   Double_t Vector4::Length()const{return TMath::Sqrt(Length2());}
-   Vector4 Vector4::Absolute()const
-   {return Vector4(TMath::Abs(fCo[0]), TMath::Abs(fCo[1]),
-                   TMath::Abs(fCo[2]), TMath::Abs(fCo[3]));
-   }
-   void Vector4::Scale(Double_t xx, Double_t yy, Double_t zz, Double_t ww)
-   {fCo[0] *= xx; fCo[1] *= yy; fCo[2] *= zz; fCo[3] *= ww;}
-   Vector4 Vector4::Scaled(Double_t xx, Double_t yy, Double_t zz, Double_t ww)const
-   {return Vector4(fCo[0] * xx, fCo[1] * yy, fCo[2] * zz, fCo[3] * ww);}
-   Bool_t Vector4::FuzzyZero() const { return fuzzy_zero2(Length2());}
-   void Vector4::Normalize(){*this /= Length();}
-   Vector4 Vector4::Normalized()const{return *this / Length();}
-   Double_t length2(const Vector4 &v){return v.Length2();}
-   Double_t length(const Vector4& v){return v.Length();}
-   Bool_t fuzzy_zero(const Vector4 &v) { return v.FuzzyZero(); }
-   Bool_t fuzzy_equal(const Vector4& v1, const Vector4& v2)
-   {return fuzzy_zero(v1 - v2);}
-
-   class Quaternion : public Vector4 {
-   public:
-      Quaternion(){}
-      Quaternion(const Vector4 &v) : Vector4(v){}
-      Quaternion(const Double_t *v) : Vector4(v){}
-      Quaternion(Double_t xx, Double_t yy, Double_t zz, Double_t ww)
-         : Vector4(xx, yy, zz, ww){}
-      Quaternion(const Vector3 &axis, Double_t Angle)
-      {SetRotation(axis, Angle);}
-      Quaternion(Double_t yaw, Double_t pitch, Double_t roll)
-      {SetEuler(yaw, pitch, roll);}
-
-      void SetRotation(const Vector3 &axis, Double_t Angle)
-      {
-         Double_t d = axis.Length();
-      //   assert(!fuzzy_zero(d));
-         Double_t s = TMath::Sin(Angle * .5) / d;
-         SetValue(axis[0] * s, axis[1] * s, axis[2] * s, TMath::Cos(Angle * .5));
-      }
-      void SetEuler(Double_t yaw, Double_t pitch, Double_t roll)
-      {
-         Double_t cosYaw = TMath::Cos(yaw * .5);
-         Double_t sinYaw = TMath::Sin(yaw * .5);
-         Double_t cosPitch = TMath::Cos(pitch * .5);
-         Double_t sinPitch = TMath::Sin(pitch * .5);
-         Double_t cosRoll = TMath::Cos(roll * .5);
-         Double_t sinRoll = TMath::Sin(roll * .5);
-         SetValue(cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw,
-                  cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw,
-                  sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw,
-                  cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw);
-      }
-
-      Quaternion &operator *= (const Quaternion &q);
-      void Conjugate();
-      Quaternion Conjugate() const;
-      void Invert();
-      Quaternion Inverse() const;
-      Double_t Angle(const Quaternion &q) const;
-      Quaternion Slerp(const Quaternion &q, Double_t t) const;
-   };
-
-   Quaternion& Quaternion::operator*=(const Quaternion& q)
-   {
-      SetValue(fCo[3] * q[0] + fCo[0] * q[3] + fCo[1] * q[2] - fCo[2] * q[1],
-               fCo[3] * q[1] + fCo[1] * q[3] + fCo[2] * q[0] - fCo[0] * q[2],
-               fCo[3] * q[2] + fCo[2] * q[3] + fCo[0] * q[1] - fCo[1] * q[0],
-               fCo[3] * q[3] - fCo[0] * q[0] - fCo[1] * q[1] - fCo[2] * q[2]);
-      return *this;
-   }
-
-   void Quaternion::Conjugate()
-   {fCo[0] = -fCo[0]; fCo[1] = -fCo[1]; fCo[2] = -fCo[2];}
-   Quaternion Quaternion::Conjugate()const
-   {return Quaternion(-fCo[0], -fCo[1], -fCo[2], fCo[3]);}
-   void Quaternion::Invert()
-   {Conjugate();*this /= Length2();}
-   Quaternion Quaternion::Inverse()const
-   {return Conjugate() / Length2();}
-
-   Quaternion operator * (const Quaternion &q1, const Quaternion &q2)
-   {return Quaternion(q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1],
-                      q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2],
-                      q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0],
-                      q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2]); 
-   }
-
-   Quaternion operator * (const Quaternion &q, const Vector3 &w)
-   {return Quaternion(q[3] * w[0] + q[1] * w[2] - q[2] * w[1],
-                      q[3] * w[1] + q[2] * w[0] - q[0] * w[2],
-                      q[3] * w[2] + q[0] * w[1] - q[1] * w[0],
-                      -q[0] * w[0] - q[1] * w[1] - q[2] * w[2]); 
-   }
-
-   Quaternion operator * (const Vector3 &w, const Quaternion &q)
-   {return Quaternion(w[0] * q[3] + w[1] * q[2] - w[2] * q[1],
-                      w[1] * q[3] + w[2] * q[0] - w[0] * q[2],
-                      w[2] * q[3] + w[0] * q[1] - w[1] * q[0],
-                      -w[0] * q[0] - w[1] * q[1] - w[2] * q[2]); 
-   }
-
-   Double_t Quaternion::Angle(const Quaternion &q)const
-   {Double_t s = TMath::Sqrt(Length2() * q.Length2());
-  //  assert(s != .0);
-    return TMath::ACos(Dot(q) / s);
-   }
-
-   Quaternion Quaternion::Slerp(const Quaternion& q, Double_t t)const
-   {  
-      Double_t theta = Angle(q);
-      if (theta != Double_t(0.0)) {
-       Double_t d = Double_t(1.0) / TMath::Sin(theta);
-       Double_t s0 = TMath::Sin((Double_t(1.0) - t) * theta);
-		 Double_t s1 = TMath::Sin(t * theta);
-       return d*(*this * s0 + q * s1);
-      } else {return *this;}
-   }
-
    class Matrix3x3 {
    protected:
       Vector3 fEl[3];
    public:
       Matrix3x3(){}
       Matrix3x3(const Double_t *m){SetValue(m);}
-      Matrix3x3(const Quaternion &q){SetRotation(q);}
-      Matrix3x3(const Quaternion &q, const Vector3 &s)
-      {SetRotation(q); Scale(s[0], s[1], s[2]);}
       Matrix3x3(const Vector3 &euler){SetEuler(euler);}
       Matrix3x3(const Vector3 &euler, const Vector3 &s)
       {SetEuler(euler); Scale(s[0], s[1], s[2]);}
@@ -614,16 +445,6 @@ namespace RootCsg {
       {fEl[0][0] = xx; fEl[0][1] = xy; fEl[0][2] = xz;
        fEl[1][0] = yx; fEl[1][1] = yy; fEl[1][2] = yz;
        fEl[2][0] = zx; fEl[2][1] = zy; fEl[2][2] = zz;}
-      void SetRotation(const Quaternion &q)
-      {Double_t d = q.Length2();
-     //  assert(!fuzzy_zero2(d));
-       Double_t s = 2. / d;
-       Double_t xs = q[0] * s,   ys = q[1] * s,   zs = q[2] * s;
-       Double_t wx = q[3] * xs,  wy = q[3] * ys,  wz = q[3] * zs;
-       Double_t xx = q[0] * xs,  xy = q[0] * ys,  xz = q[0] * zs;
-       Double_t yy = q[1] * ys,  yz = q[1] * zs,  zz = q[2] * zs;
-       SetValue(1. - (yy + zz), xy - wz, xz + wy, xy + wz, 
-                1. - (xx + zz), yz - wx, xz - wy, yz + wx, 1. - (xx + yy));}
 	   void SetEuler(const Vector3 &euler)
       {Double_t ci = TMath::Cos(euler[0]);
        Double_t cj = TMath::Cos(euler[1]);
@@ -652,7 +473,6 @@ namespace RootCsg {
       {*m++ = fEl[0][0]; *m++ = fEl[1][0]; *m++ = fEl[2][0]; *m++ = 0.0;
        *m++ = fEl[0][1]; *m++ = fEl[1][1]; *m++ = fEl[2][1]; *m++ = 0.0;
        *m++ = fEl[0][2]; *m++ = fEl[1][2]; *m++ = fEl[2][2]; *m   = 0.0;}
-      Quaternion GetRotation() const;
       Matrix3x3 &operator *= (const Matrix3x3 &m); 
       Double_t Tdot(Int_t c, const Vector3 &v)const
       {return fEl[0][c] * v[0] + fEl[1][c] * v[1] + fEl[2][c] * v[2];}
@@ -667,33 +487,6 @@ namespace RootCsg {
       void Invert();
    };
 
-   Quaternion Matrix3x3::GetRotation()const
-   {
-      static Int_t next[3] = {1, 2, 0};
-      Quaternion result;
-      Double_t trace = fEl[0][0] + fEl[1][1] + fEl[2][2];
-      if (trace > 0.0) {
-         Double_t s = TMath::Sqrt(trace + 1.);
-         result[3] = s * .5;
-         s = .5 / s;
-         result[0] = (fEl[2][1] - fEl[1][2]) * s;
-         result[1] = (fEl[0][2] - fEl[2][0]) * s;
-         result[2] = (fEl[1][0] - fEl[0][1]) * s;
-      } else {
-         Int_t i = 0;
-         if (fEl[1][1] > fEl[0][0]) i = 1;
-         if (fEl[2][2] > fEl[i][i]) i = 2;
-         Int_t j = next[i];  
-         Int_t k = next[j];
-         Double_t s = TMath::Sqrt(fEl[i][i] - fEl[j][j] - fEl[k][k] + Double_t(1.0));
-         result[i] = s * .5;
-         s = .5 / s;
-         result[3] = (fEl[k][j] - fEl[j][k]) * s;
-         result[j] = (fEl[j][i] + fEl[i][j]) * s;
-         result[k] = (fEl[k][i] + fEl[i][k]) * s;
-      }
-      return result;
-   }
    Matrix3x3 &Matrix3x3::operator *= (const Matrix3x3 &m)
    {SetValue(m.Tdot(0, fEl[0]), m.Tdot(1, fEl[0]), m.Tdot(2, fEl[0]),
              m.Tdot(0, fEl[1]), m.Tdot(1, fEl[1]), m.Tdot(2, fEl[1]),
@@ -719,7 +512,6 @@ namespace RootCsg {
    Matrix3x3 Matrix3x3::Inverse()const
    {Vector3 co(Cofac(1, 1, 2, 2), Cofac(1, 2, 2, 0), Cofac(1, 0, 2, 1));
     Double_t det = dot((*this)[0], co);
-   // assert(!fuzzy_zero2(det));
     Double_t s = 1. / det;
     return Matrix3x3(co[0] * s, Cofac(0, 2, 2, 1) * s, Cofac(0, 1, 1, 2) * s,
                      co[1] * s, Cofac(0, 0, 2, 2) * s, Cofac(0, 2, 1, 0) * s,
@@ -832,98 +624,6 @@ namespace RootCsg {
    {fCo[0] = rhs.fCo[0]; fCo[1] = rhs.fCo[1]; fCo[2] = rhs.fCo[2]; fCo[3] = rhs.fCo[3]; return *this;}
 	Double_t Plane3::SignedDistance(const Vector3 &v)const
    {return Normal().Dot(v) + fCo[3];}
-
-   class Transform {
-      friend Transform operator * (const Transform &t1, const Transform &t2);
-   private:
-      Matrix3x3 fBasis;
-      Point3    fOrigin;
-      UInt_t    fType;
-   public:
-      enum {kIdentity = 0x00, kTranslation = 0x01,
-            kRotation = 0x02, kRigid = kTranslation | kRotation,  
-            kScaling = 0x04, kLinear = kRotation | kScaling,
-            kAffine = kTranslation | kLinear};
-      Transform(){}
-      Transform(const Double_t *m){SetValue(m);}
-      Transform(const Point3 &p, const Quaternion &q):fType(kIdentity)
-      {SetOrigin(p);	SetRotation(q);}
-      Transform(const Point3 &p, const Matrix3x3 &m):fType(kIdentity)
-      {SetOrigin(p);	setBasis(m);}
-      Point3 operator()(const Point3 &p)const
-      {return Point3(dot(fBasis[0], p) + fOrigin[0], 
-                     dot(fBasis[1], p) + fOrigin[1], 
-                     dot(fBasis[2], p) + fOrigin[2]);}
-      Point3 operator * (const Point3 &p)const
-      {return (*this)(p);}
-      Matrix3x3 &GetBasis(){return fBasis;}
-      const Matrix3x3 &GetBasis()const{return fBasis;}
-      Point3 &GetOrigin(){return fOrigin;}
-      const Point3 &GetOrigin()const{return fOrigin;}
-      Quaternion GetRotation()const{return fBasis.GetRotation();}
-      void SetValue(const Double_t *m);
-      void SetOrigin(const Point3 &origin)
-      {fOrigin = origin; fType |= kTranslation;}
-      void setBasis(const Matrix3x3 &basis)
-      {fBasis = basis; fType |= kLinear;}
-      void SetRotation(const Quaternion &q)
-      {fBasis.SetRotation(q);	fType &= ~kScaling; fType |= kRotation;}
-      void GetValue(Double_t *m) const;
-      void SetIdentity();
-      Transform &operator *= (const Transform &t);
-      void Translate(const Vector3 &v);
-      void Rotate(const Quaternion &q);
-      void Scale(Double_t x, Double_t y, Double_t z);
-      void Invert(const Transform &t);
-      void Mult(const Transform &t1, const Transform &t2);
-      void MultInverseLeft(const Transform &t1, const Transform &t2); 
-   private:
-      Transform(const Matrix3x3 &basis, const Point3 &origin, UInt_t type)
-      {SetValue(basis, origin, type);}
-      void SetValue(const Matrix3x3 &basis, const Point3 &origin, UInt_t type)
-      {fBasis = basis; fOrigin = origin; fType = type;}
-   };
-
-   Transform operator * (const Transform &t1, const Transform &t2)
-   {return Transform(t1.fBasis * t2.fBasis, t1(t2.fOrigin), t1.fType | t2.fType);}
-   void Transform::SetValue(const Double_t *m)
-   {fBasis.SetValue(m); fOrigin.SetValue(&m[12]); fType = kAffine;}
-   void Transform::GetValue(Double_t *m)const
-   {fBasis.GetValue(m); fOrigin.GetValue(&m[12]); m[15] = 1.0;}
-   Transform &Transform::operator *= (const Transform &t)
-   {fOrigin += fBasis * t.fOrigin; fBasis *= t.fBasis; fType |= t.fType; return *this;}
-   void Transform::Translate(const Vector3 &v)
-   {fOrigin += fBasis * v; fType |= kTranslation;}
-   void Transform::Rotate(const Quaternion &q)
-   {fBasis *= Matrix3x3(q); fType |= kRotation;}
-   void Transform::Scale(Double_t x, Double_t y, Double_t z)
-   {fBasis.Scale(x, y, z); fType |= kScaling;}
-   void Transform::SetIdentity()
-   {fBasis.SetIdentity();
-    fOrigin.SetValue(Double_t(0.0), Double_t(0.0), Double_t(0.0));
-    fType = kIdentity;}
-   void Transform::Invert(const Transform &t)
-   {fBasis = t.fType & kScaling ? 
-    t.fBasis.Inverse() : 
-    t.fBasis.Transposed();
-    fOrigin.SetValue(-dot(fBasis[0], t.fOrigin), -dot(fBasis[1], t.fOrigin), 
-                     -dot(fBasis[2], t.fOrigin));  
-    fType = t.fType;}
-   void Transform::Mult(const Transform &t1, const Transform &t2)
-   {fBasis = t1.fBasis * t2.fBasis;
-    fOrigin = t1(t2.fOrigin);
-    fType = t1.fType | t2.fType;}
-   void Transform::MultInverseLeft(const Transform &t1, const Transform &t2)
-   {Vector3 v = t2.fOrigin - t1.fOrigin;
-    if (t1.fType & kScaling) {
-       Matrix3x3 inv = t1.fBasis.Inverse();
-       fBasis = inv * t2.fBasis;
-       fOrigin = inv * v;
-    } else {
-       fBasis = mmult_transpose_left(t1.fBasis, t2.fBasis);
-       fOrigin = v * t1.fBasis;
-    }
-    fType = t1.fType | t2.fType;}
 
    class BBox {
       friend Bool_t intersect(const BBox &a, const BBox &b);
@@ -1162,8 +862,6 @@ namespace RootCsg {
 	 if (mat[2].FuzzyZero()) return kFALSE;
 	 Vector3 aPoint(-p1.Scalar(),-p2.Scalar(),0);
 	 output = Line3(Point3(0., 0., 0.) + mat.Inverse() * aPoint ,mat[2]);
-//	 assert(fuzzy_zero(p1.SignedDistance(output.Origin())));
-//	 assert(fuzzy_zero(p2.SignedDistance(output.Origin())));
 	 return kTRUE;}
 	Bool_t intersect_2d_no_bounds_check(const Line3 &l1, const Line3 &l2, Int_t majAxis,
 													Double_t& l1Param, Double_t& l2Param)
@@ -1217,7 +915,6 @@ namespace RootCsg {
 	 if (a <= 0 ) return kFALSE;
 	 if (!l.IsParameterOnLine(a)) return kFALSE;
 	 Point3 pointOnPlane = l.Origin() + l.Direction() * a;
-//	 assert(fuzzy_zero(plane.SignedDistance(pointOnPlane)));
 	 return point_in_polygon_test_3d(p1, plane, l.Origin(), pointOnPlane);}
 
 	template<typename TGBinder>
@@ -1260,7 +957,6 @@ namespace RootCsg {
 	template <typename TGBinder>
 	Plane3 compute_plane(const TGBinder &poly)
 	{
-	 //assert(poly.Size() >= 3);
 	 Point3 plast(poly[poly.Size()-1]);	
 	 Point3 pivot;
 	 Vector3 edge;
@@ -1332,11 +1028,8 @@ namespace RootCsg {
 				if ((newClassification != lastClassification) && newClassification && lastClassification)
 				{
 					Int_t newVertexIndex = fMesh.Verts().size();
-               #if defined(R__SOLARIS) || (WIN32 && _MSC_VER<=0x0700) // Solaris CC objects to portability correct typename use
-					fMesh.Verts().push_back(TMesh::Vertex());
-               #else
-					fMesh.Verts().push_back(typename TMesh::Vertex());
-               #endif
+               typedef typename TMesh::Vertex VERTEX_t;
+					fMesh.Verts().push_back(VERTEX_t());
                Vector3 v = aVertex - lastVertex;
 					Double_t sideA = plane.SignedDistance(lastVertex);
 					Double_t epsilon = -sideA / plane.Normal().Dot(v);
@@ -1421,7 +1114,6 @@ namespace RootCsg {
 		const PLIST& Polys() const {return fMesh.Polys();}
 		MeshWrapper(TMesh &mesh):fMesh(mesh){}
 		void ComputePlanes();
-		void BurnTransform(const Transform& t);
 		BBox ComputeBBox()const;
 		//void Triangulate();
 		void SplitPolygon(Int_t p1Index,	const Plane3 &plane,
@@ -1436,12 +1128,6 @@ namespace RootCsg {
 		TGBinder binder(fMesh,i);
 		polyList[i].SetPlane(compute_plane(binder));
 	 }}
-	template <typename TMesh>
-	void MeshWrapper<TMesh>::BurnTransform(const Transform &t)
-	{VLIST &vertexList = Verts();
-    Int_t i;
-	 for (i=0;i<vertexList.size(); i++) vertexList[i].Pos() = t * vertexList[i].Pos();
-	 ComputePlanes();}
 	template <typename TMesh>
 	BBox MeshWrapper<TMesh>::ComputeBBox()const
 	{const VLIST &vertexList = Verts();
@@ -1829,16 +1515,12 @@ namespace RootCsg {
 		Int_t vertexNum = source.Verts().size();
 		Int_t polyNum = source.Polys().size();
 		
-		// typename keywords required to be correctly portable
-		// between gcc and VC7 (though VC7 doesn't demand them)
-		// Solaris CC doesn't cope with them however...
-#if defined(R__SOLARIS) || (WIN32 && _MSC_VER<=0x0700)
-		output.Verts() = MeshB::VLIST(vertexNum);
-		output.Polys() = MeshB::PLIST(polyNum);
-#else
-		output.Verts() = typename MeshB::VLIST(vertexNum);
-		output.Polys() = typename MeshB::PLIST(polyNum);
-#endif
+      typedef typename MeshB::VLIST VLIST_t;
+      typedef typename MeshB::PLIST PLIST_t;
+
+		output.Verts() = VLIST_t(vertexNum);
+		output.Polys() = PLIST_t(polyNum);
+
 		std::copy(source.Verts().begin(), source.Verts().end(), output.Verts().begin());
 		std::copy(source.Polys().begin(), source.Polys().end(), output.Polys().begin());
 	}
