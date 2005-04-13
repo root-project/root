@@ -6,52 +6,91 @@
 MODDIR     := xrootd
 MODDIRS    := $(MODDIR)/src
 
-XROOTDVERS := xrootd-20041124-0752
+XROOTDVERS := xrootd-20050328-0656
 XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
+XROOTDETAG := $(MODDIRS)/$(XROOTDVERS).extraction.tag
 
 ##### Xrootd libs for use in netx #####
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 XRDDBG      = "--build=debug"
-else	    
+else
 XRDDBG      =
-endif	    
+endif
 XRDLIBDIR   = $(XROOTDDIRD)/lib
-XRDPLUGINS  = $(wildcard $(XRDLIBDIR)/libXrd*.$(SOEXT))
 XRDSECLIB   = -Llib -lXrdSec
 
 ##### Xrootd executables #####
-XOLBDA     := $(XROOTDDIRD)/bin/olbd
-XROOTDA    := $(XROOTDDIRD)/bin/xrootd
-XOLBD      := bin/olbd
-XROOTD     := bin/xrootd
+XRDEXEC     = xrootd olbd
+XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
 
-ALLEXECS   += $(XROOTD) $(XOLBD)
+##### Xrootd plugins #####
+XRDPLUGINSA = $(XRDLIBDIR)/libXrdSec.$(SOEXT)
+XRDPLUGINS := $(LPATH)/libXrdSec.$(SOEXT)
+ifeq ($(ARCH),win32gcc)
+XRDPLUGINS := $(patsubst $(LPATH)/%.$(SOEXT),bin/%.$(SOEXT),$(XRDPLUGINS))
+endif
+
+# used in the main Makefile
+ALLLIBS    += $(XRDPLUGINS)
+ALLEXECS   += $(XRDEXECS)
 
 ##### local rules #####
-$(XROOTD): $(XROOTDA)
-		cp $< $@
-		cp $(XOLBDA) $(XOLBD)
-		cp $(XRDPLUGINS) $(LPATH)/
-
-$(XROOTDA): $(XROOTDSRCS)
+$(XROOTDETAG): $(XROOTDSRCS)
 		@(if [ -d $(XROOTDDIRD) ]; then \
-			rm -rf $(XROOTDDIRD); \
+		   rm -rf $(XROOTDDIRD); \
 		fi; \
-		echo "*** Building $@..."; \
 		cd $(XROOTDDIRS); \
 		if [ ! -d xrootd ]; then \
-			if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
-				gtar zxf $(XROOTDVERS).src.tgz; \
-			else \
-				gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
-			fi; \
-		fi; \
+		   echo "*** Extracting xrootd source ..."; \
+		   if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]; then \
+		      gtar zxf $(XROOTDVERS).src.tgz; \
+		   else \
+		      gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
+		   fi; \
+		   etag=`basename $(XROOTDETAG)` ; \
+		   if [ -f $$etag ]; then \
+		      rm -f $$etag; \
+		   fi; \
+		   touch $$etag ; \
+		fi)
+
+$(XRDPLUGINS): $(XRDPLUGINSA)
+		@(if [ -d $(XRDLIBDIR) ]; then \
+		    lsplug=`find $(XRDLIBDIR) -name "libXrd*.$(SOEXT)"` ; \
+		    for i in $$lsplug ; do \
+		       echo "Copying $$i ..." ; \
+		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
+		          cp $$i bin ; \
+		          lname=`basename $$i` ; \
+		          ln -sf bin/$$lname $(LPATH)/$$lname ; \
+		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
+		       else \
+		          cp $$i $(LPATH)/ ; \
+		       fi; \
+		    done ; \
+		  fi)
+
+$(XRDEXECS): $(XRDPLUGINSA)
+		@(for i in $(XRDEXEC); do \
+		     fopt="" ; \
+		     if [ -f bin/$$i ] ; then \
+		        fopt="-newer bin/$$i" ; \
+		     fi ; \
+		     bexe=`find $(XROOTDDIRD)/bin $$fopt -name $$i 2>/dev/null` ; \
+		     if test "x$$bexe" != "x" ; then \
+		        echo "Copying $$bexe executables ..." ; \
+		        cp $$bexe bin/$$i ; \
+		     fi ; \
+		  done)
+
+$(XRDPLUGINSA): $(XROOTDETAG)
+		@(cd $(XROOTDDIRS); \
 		RELE=`uname -r`; \
-                case "$(ARCH):$$RELE" in \
+		case "$(ARCH):$$RELE" in \
 		freebsd*:*)      xopt="--ccflavour=gcc";; \
 		linuxicc:*)      xopt="--ccflavour=icc --use-xrd-strlcpy";; \
 		linuxia64ecc:*)  xopt="--ccflavour=icc --use-xrd-strlcpy";; \
@@ -65,18 +104,26 @@ $(XROOTDA): $(XROOTDSRCS)
 		solaris*:5.9)    xopt="--ccflavour=sunCC";; \
 		solarisgcc:*)    xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		solaris*:*)      xopt="--ccflavour=sunCC  --use-xrd-strlcpy";; \
-                *)               xopt="";; \
+		win32gcc:*)      xopt="win32gcc";; \
+		*)               xopt="";; \
 		esac; \
 		if [ "x$(KRB5LIB)" = "x" ] ; then \
 		   xopt="$$xopt --disable-krb4 --disable-krb5"; \
 		fi; \
-		xopt="$$xopt --enable-echo --no-arch-subdirs"; \
+		xopt="$$xopt --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
-		echo "Options to Xrootd-configure:$(XRDDBG) $$xopt"; \
-		GNUMAKE=$(MAKE) ./configure $(XRDDBG) $$xopt; \
-		$(MAKE) -j1)
+		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \
+		GNUMAKE=$(MAKE) ./configure $$xopt $(XRDDBG); \
+		rc=$$? ; \
+		if [ $$rc = "0" ] ; then \
+		   echo "*** Building xrootd ..." ; \
+		   $(MAKE) -j1; \
+		else \
+		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
+			" building only the client ... " ; \
+		fi)
 
-all-xrootd:   $(XROOTD)
+all-xrootd:   $(XRDPLUGINS)
 
 clean-xrootd:
 		-@(if [ -d $(XROOTDDIRD)/config ]; then \
@@ -87,6 +134,7 @@ clean-xrootd:
 clean::         clean-xrootd
 
 distclean-xrootd: clean-xrootd
-		@rm -rf $(XROOTD) $(XOLBD) $(XROOTDDIRD) $(LPATH)/libXrd*
+		@rm -rf $(XRDEXECS) $(XROOTDDIRD) $(XROOTDETAG) \
+			$(LPATH)/libXrd* bin/libXrd*
 
 distclean::     distclean-xrootd
