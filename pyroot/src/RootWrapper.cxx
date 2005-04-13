@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.22 2005/03/30 19:20:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.23 2005/04/05 05:20:44 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -353,6 +353,11 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
       }
    }
 
+// still here ... try functions
+   TFunction* func = gROOT->GetGlobalFunction( name.c_str(), 0, kTRUE );
+   if ( func )
+      return BindRootObject( func, TFunction::Class() );
+
 // nothing found
    Py_INCREF( Py_None );
    return Py_None;
@@ -441,6 +446,13 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
+// should return "null pointer" ... for now, None will do
+   if ( ! gbl ) {
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+// determine type and cast as appropriate
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
    if ( ! klass ) {
       switch ( Utility::effectiveType( gbl->GetFullTypeName() ) ) {

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.12 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -10,12 +10,14 @@
 #include "Utility.h"
 #include "PyCallable.h"
 #include "PyBufferFactory.h"
+#include "FunctionHolder.h"
 
 // ROOT
 #include "TClass.h"
 #include "TCollection.h"
 #include "TSeqCollection.h"
 #include "TObject.h"
+#include "TFunction.h"
 
 // CINT
 #include "Api.h"
@@ -26,6 +28,7 @@
 #include <stdio.h>
 #include <map>
 #include <utility>
+#include <vector>
 
 
 namespace {
@@ -839,6 +842,19 @@ namespace {
 
    int TF1InitWithPyFunc::fgCount = 0;
 
+
+//- TFunction behaviour --------------------------------------------------------
+   PyObject* functionCall( PyObject*, PyObject* args ) {
+      if ( PyTuple_GET_SIZE( args ) < 1 || ! ObjectProxy_Check( PyTuple_GET_ITEM( args, 0 ) ) ) {
+         PyErr_SetString( PyExc_TypeError,
+            "unbound method __call__ requires TFunction instance as first argument" );
+         return 0;
+      }
+
+      return FunctionHolder(
+         (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, args, 0 );
+   }
+
 } // unnamed namespace
 
 
@@ -935,6 +951,11 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Py_DECREF( method );
       return true;
+   }
+
+   if ( name == "TFunction" ) {
+   // allow direct call
+      Utility::AddToClass( pyclass, "__call__", (PyCFunction) functionCall );
    }
 
    return true;

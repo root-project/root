@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.18 2005/03/16 06:15:06 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.19 2005/03/22 05:58:59 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 01/04/05
+# Last: 04/12/05
 
 """PyROOT user module.
 
@@ -84,12 +84,13 @@ class _TVirtualPad( object ):
 gPad = _TVirtualPad()
 
 
-### exeption hook replacement ---------------------------------------------------
+### RINT command emulation ------------------------------------------------------
 def _excepthook( exctype, value, traceb ):
- # catch syntax errors to mimic ROOT/CINT commands
+ # catch syntax errors only (they contain the full line)
    if isinstance( value, exceptions.SyntaxError ):
       cmd, arg = split( value.text[:-1] )
 
+    # mimic ROOT/CINT commands
       if cmd == '.q':
          sys.exit( 0 )
       elif cmd == '.!':

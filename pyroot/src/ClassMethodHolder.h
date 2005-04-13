@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.2 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_CLASSMETHODHOLDER_H
@@ -14,7 +14,7 @@ class TMethod;
 
 namespace PyROOT {
 
-/** Python side ROOT global/static function
+/** Python side ROOT static function
       @author  WLAV
       @date    08/03/2004
       @version 2.0
