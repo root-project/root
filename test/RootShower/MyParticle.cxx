@@ -163,17 +163,13 @@ const Char_t *MyParticle::GetName() const
     // get name of particle with its PDG number, or Unknown if
     // particle name is not defined into ParticlesDef.h
     Int_t i;
-    Char_t *pdg_name = new Char_t[40];
     Int_t my_code = GetPdgCode();
 
-    sprintf(pdg_name,"Unknown");
     for(i=0;i<total_defs;i++) {
-        if(particle_def[i].code == my_code) {
-            sprintf(pdg_name,"%s", particle_def[i].name);
-            break;
-        }
+        if(particle_def[i].code == my_code)
+            return(particle_def[i].name);
     }
-    return pdg_name;
+    return ("Unknown");
 }
 
 //______________________________________________________________________________
