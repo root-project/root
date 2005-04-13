@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.115 2005/03/16 06:22:37 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.116 2005/04/06 09:51:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -491,7 +491,7 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             delete gSplash;
             gSplash = 0;
          }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), 
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
                           ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
          if (gConsoleEvent) {
             ::ResetEvent(gConsoleEvent);
@@ -849,7 +849,7 @@ void TWinNTSystem::SetProgname(const char *name)
          gProgPath = StrDup(dirname);
       } else {
          Warning("SetProgname",
-            "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)", 
+            "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)",
             fullname);
          gProgPath = WorkingDirectory();
       }
@@ -858,7 +858,7 @@ void TWinNTSystem::SetProgname(const char *name)
       progname[idot] = '\0';
       gProgName = StrDup(progname);
       if (which) delete [] which;
-      delete[] fullname; 
+      delete[] fullname;
    }
 }
 
@@ -1062,6 +1062,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
+   Bool_t pollOnce = pendingOnly;
+
    while (1) {
       if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          if (!pendingOnly) {
@@ -1078,17 +1080,17 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
       }
 
-     // check for file descriptors ready for reading/writing
+      // check for file descriptors ready for reading/writing
       if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
          if (CheckDescriptors()) {
             if (!pendingOnly) {
                return;
             }
          }
-         fNfd = 0;
-         fReadready->Zero();
-         fWriteready->Zero();
       }
+      fNfd = 0;
+      fReadready->Zero();
+      fWriteready->Zero();
 
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
@@ -1112,7 +1114,15 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
       }
 
-      if (pendingOnly) return;
+      // if in pendingOnly mode poll once file descriptor activity
+      Long_t nextto = NextTimeOut(kTRUE);
+      if (pendingOnly) {
+         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
+            nextto = 0;
+            pollOnce = kFALSE;
+         } else
+            return;
+      }
 
       if (fReadmask && !fReadmask->GetBits() &&
           fWritemask && !fWritemask->GetBits()) {
@@ -1120,10 +1130,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          return;
       }
 
-      *fReadready = *fReadmask;
+      *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
+      fNfd = WinNTSelect(fReadready, fWriteready, nextto);
 
       // serious error has happened -> reset all file descrptors
       if ((fNfd < 0) && (fNfd != -2)) {
@@ -2128,7 +2138,7 @@ Bool_t TWinNTSystem::InitUsersGroups()
    // Collect local users and groups accounts informations
 
    // Net* API functions allowed and OS is Windows NT/2000/XP
-   if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) { 
+   if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) {
       fActUser = -1;
       fNbGroups = fNbUsers = 0;
       HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.123 2005/03/22 16:23:51 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.124 2005/03/31 20:13:52 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -680,6 +680,8 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event.
 
+   Bool_t pollOnce = pendingOnly;
+
    while (1) {
       // first handle any X11 events
       if (gXDisplay && gXDisplay->Notify()) {
@@ -714,14 +716,22 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
                return;
          }
 
-      if (pendingOnly) return;
+      // if in pendingOnly mode poll once file descriptor activity
+      Long_t nextto = NextTimeOut(kTRUE);
+      if (pendingOnly) {
+         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
+            nextto = 0;
+            pollOnce = kFALSE;
+         } else
+            return;
+      }
 
       // nothing ready, so setup select call
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
       int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
-      fNfd = UnixSelect(mxfd, fReadready, fWriteready, NextTimeOut(kTRUE));
+      fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
       if (fNfd < 0 && fNfd != -2) {
          int fd, rc;
          TFdSet t;
@@ -908,8 +918,8 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
                   sigdone = sig;
                   fSigcnt--;
                }
-              if (sh->IsActive())
-                 sh->Notify();
+               if (sh->IsActive())
+                  sh->Notify();
             }
          }
       }
