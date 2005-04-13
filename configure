@@ -429,7 +429,22 @@ check_symbol() {
     else
 	exts=".a $exts"
     fi
-    for d in "$symboldir" /usr/lib ; do
+
+    usrlib="/usr/lib"
+    # look first in the lib32 directories
+    if test "x$checklib32" = "xyes" ; then
+        usrlib="/usr/lib32 $usrlib"
+    fi
+    # look first in the lib64 directories
+    if test "x$checklib64" = "xyes" ; then
+        usrlib="/usr/lib64 $usrlib"
+    fi
+    # look first in the hpux64 directories
+    if test "x$checkhpux64" = "xyes" ; then
+        usrlib="/usr/lib/hpux64 $usrlib"
+    fi
+
+    for d in "$symboldir" $usrlib ; do
 	if test ! -r $d/$symbollib ; then
 	    for i in $exts ; do
 		if test -r $d/$symbollib$i ; then
