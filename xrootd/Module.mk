@@ -11,27 +11,31 @@ XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
+XROOTDDIRL := $(MODDIRS)/xrootd/lib
 XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
 XROOTDETAG := $(MODDIRS)/$(XROOTDVERS).extraction.tag
 
-##### Xrootd libs for use in netx #####
+##### Xrootd config options #####
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 XRDDBG      = "--build=debug"
 else
 XRDDBG      =
 endif
-XRDLIBDIR   = $(XROOTDDIRD)/lib
-XRDSECLIB   = -Llib -lXrdSec
+ifeq ($(PLATFORM),macosx)
+XRDSOEXT    = so
+else
+XRDSOEXT    = $(SOEXT)
+endif
 
 ##### Xrootd executables #####
 XRDEXEC     = xrootd olbd
 XRDEXECS   := $(patsubst %,bin/%,$(XRDEXEC))
 
 ##### Xrootd plugins #####
-XRDPLUGINSA = $(XRDLIBDIR)/libXrdSec.$(SOEXT)
-XRDPLUGINS := $(LPATH)/libXrdSec.$(SOEXT)
+XRDPLUGINSA:= $(XROOTDDIRL)/libXrdSec.$(XRDSOEXT)
+XRDPLUGINS := $(LPATH)/libXrdSec.$(XRDSOEXT)
 ifeq ($(ARCH),win32gcc)
-XRDPLUGINS := $(patsubst $(LPATH)/%.$(SOEXT),bin/%.$(SOEXT),$(XRDPLUGINS))
+XRDPLUGINS := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDPLUGINS))
 endif
 
 # used in the main Makefile
@@ -52,15 +56,12 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		      gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
 		   fi; \
 		   etag=`basename $(XROOTDETAG)` ; \
-		   if [ -f $$etag ]; then \
-		      rm -f $$etag; \
-		   fi; \
-		   touch $$etag ; \
+		   touch $$etag ; \ 
 		fi)
 
 $(XRDPLUGINS): $(XRDPLUGINSA)
-		@(if [ -d $(XRDLIBDIR) ]; then \
-		    lsplug=`find $(XRDLIBDIR) -name "libXrd*.$(SOEXT)"` ; \
+		@(if [ -d $(XROOTDDIRL) ]; then \
+		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ; \
 		    for i in $$lsplug ; do \
 		       echo "Copying $$i ..." ; \
 		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
@@ -123,7 +124,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 			" building only the client ... " ; \
 		fi)
 
-all-xrootd:   $(XRDPLUGINS)
+all-xrootd:   $(XRDPLUGINS) $(XRDEXECS)
 
 clean-xrootd:
 		-@(if [ -d $(XROOTDDIRD)/config ]; then \
