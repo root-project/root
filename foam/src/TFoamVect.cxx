@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.5 2005/04/12 10:01:56 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.cxx,v 1.6 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_____________________________________________________________________________
@@ -30,8 +30,8 @@ TFoamVect::TFoamVect()
 //______________________________________________________________________________
 TFoamVect::TFoamVect(Int_t n)
 {
-// User constructor creating n-densional vector
-// and allocating dynamicaly array of components
+// User constructor creating n-dimensional vector
+// and allocating dynamically array of components
 
   Int_t i;
   fNext=0;
@@ -201,9 +201,10 @@ TFoamVect& TFoamVect::operator =(Double_t x)
 //////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________
-void TFoamVect::PrintCoord()
+void TFoamVect::Print(Option_t *option) const
 {
 // Printout of all vector components on "cout"
+  if(!option) Error("Print ", "No option set \n");
   Int_t i;
   cout << "(";
   for(i=0; i<fDim-1; i++) cout  << SW2 << *(fCoords+i) << ",";
@@ -219,7 +220,7 @@ void TFoamVect::PrintList(void)
   TFoamVect *current=this;
   while(current != 0){
     cout<<"vec["<<i<<"]=";
-    current->PrintCoord();
+    current->Print("1");
     cout<<endl;
     current = current->fNext;
     i++;

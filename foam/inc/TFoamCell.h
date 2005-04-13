@@ -1,11 +1,11 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.2 2005/04/08 16:29:48 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.3 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamCell
 #define ROOT_TFoamCell
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Class TFoamCell  used in TFoam                                                    //
+// Class TFoamCell  used in TFoam                                                 //
 //                                                                                //
 // Objects of this class are hyperrectangular cells organized in the binary tree. //
 // Special algoritm for encoding relalive positioning of the cells                //
@@ -55,8 +55,8 @@ class TFoamCell : public TObject {
   Int_t     GetBest() const { return fBest;}          // Pointer to Best
   void      SetBest(Int_t    Best){ fBest =Best;}     // Set Best edge candidate
   void      SetXdiv(Double_t Xdiv){ fXdiv =Xdiv;}     // Set x-division for best edge cand.
-  void      GetHcub(  TFoamVect&, TFoamVect&);        // Get position and size vectors (h-cubical subspace)
-  void      GetHSize( TFoamVect& );                   // Get size only of cell vector  (h-cubical subspace)
+  void      GetHcub(  TFoamVect&, TFoamVect&) const;  // Get position and size vectors (h-cubical subspace)
+  void      GetHSize( TFoamVect& ) const;             // Get size only of cell vector  (h-cubical subspace)
   //--------------- Integrals/Volumes -------------------------
   void      CalcVolume();                             // Calculates volume of cell
   Double_t  GetVolume() const { return fVolume;}      // Volume of cell
@@ -77,7 +77,7 @@ class TFoamCell : public TObject {
   void      SetSerial(Int_t Serial){ fSerial=Serial;}    // Set serial number
   Int_t     GetSerial() const { return fSerial;}         // Get serial number
   //--- other ---
-  void PrintContent();                                   // Prints cell content
+  void Print(Option_t *option) const ;                   // Prints cell content
 ////////////////////////////////////////////////////////////////////////////
  ClassDef(TFoamCell,1); //Single cell of FOAM
 };

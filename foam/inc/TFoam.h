@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.3 2005/04/12 10:01:56 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.4 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoam
@@ -144,6 +144,7 @@ class TFoam : public TObject {
   void CheckAll(Int_t);     // Checks correctness of the entire data structure in the FOAM object
   void PrintCells();        // Prints content of all cells
   void RootPlot2dim(Char_t*);   // Generates C++ code for drawing foam
+  void LinkCells(void);         // Void function for backward compatibility
   // Inline
  private:
   Double_t Sqr(Double_t x) const { return x*x;}      // Square function

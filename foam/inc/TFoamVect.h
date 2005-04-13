@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.4 2005/04/11 10:31:48 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.5 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamVect
@@ -42,7 +42,7 @@ class TFoamVect : public TObject {
     TFoamVect& operator*=(const Double_t&);   // *=; mult. by scalar v*=x (FAST)
     TFoamVect  operator+( const  TFoamVect&); // +;  u=v+s, NEVER USE IT, SLOW!!!
     TFoamVect  operator-( const  TFoamVect&); // -;  u=v-s, NEVER USE IT, SLOW!!!
-    void PrintCoord();                        // Prints vector
+    void Print(Option_t *option) const;   // Prints vector
     void PrintList();                         // Prints vector and the following linked list
     Int_t    GetDim() const { return fDim; }  // Returns dimension
     Double_t GetCoord(Int_t i) const {return fCoords[i];};   // Returns coordinate

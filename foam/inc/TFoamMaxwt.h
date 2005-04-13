@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.h,v 1.2 2005/04/08 16:29:48 rdm Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.h,v 1.3 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamMaxwt
@@ -21,7 +21,7 @@ class TFoamMaxwt : public TObject {
 private:
    Double_t  fNent;      // No. of MC events
    Int_t     fnBin;      // No. of bins on the weight distribution
-   Double_t  fwmax;      // Maximum analysed weight
+   Double_t  fwmax;      // Maximum analyzed weight
 public:
    TH1D   *fWtHst1;      // Histogram of the weight wt
    TH1D   *fWtHst2;      // Histogram of wt filled with wt
@@ -37,6 +37,6 @@ public:
    void Make(Double_t, Double_t&);
    void GetMCeff(Double_t, Double_t&, Double_t&);  // get MC efficiency= <w>/wmax
 
-   ClassDef(TFoamMaxwt,1); //Controling of the MC weight (maximum weight)
+   ClassDef(TFoamMaxwt,1); //Controlling of the MC weight (maximum weight)
 };
 #endif

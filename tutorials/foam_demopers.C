@@ -25,7 +25,7 @@ Int_t foam_demopers()
   //*******************************************
   TFoam  *FoamX = (TFoam*)fileA.Get("FoamX");
   //*******************************************
-  //FoamX->PrintCells();
+  FoamX->PrintCells();
   FoamX->CheckAll(1);
 
  Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run

@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.5 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.6 2005/04/12 17:16:13 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //____________________________________________________________________________
@@ -124,7 +124,7 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &WtLim)
   fWtHst1->Print();
   fWtHst2->Print();
 
-// Convention on bin-numbering: nb=1 for 1-st bin, undeflow nb=0, overflow nb=Nb+1
+// Convention on bin-numbering: nb=1 for 1-st bin, underflow nb=0, overflow nb=Nb+1
   Double_t sum   = 0.0;
   Double_t sumWt = 0.0;
   for(ib=0;ib<=fnBin+1;ib++){

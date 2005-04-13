@@ -1,9 +1,9 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.6 2005/04/12 10:01:56 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.7 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
 //
-// FOAM  Version 1.01m
+// FOAM  Version 1.02M
 // ===================
 // Authors:
 //   S. Jadach and P.Sawicki
@@ -89,7 +89,7 @@
 // Canonical nine steering parameters of FOAM
 // ===========================================
 //------------------------------------------------------------------------------
-//  Name     | default  | Desciption
+//  Name     | default  | Description
 //------------------------------------------------------------------------------
 //  kDim     | 0        | Dimension of the integration space. Must be redefined!
 //  nCells   | 1000     | No of allocated number of cells,
@@ -98,14 +98,14 @@
 //  OptRej   | 1        | OptRej = 0, weighted; OptRej=1, wt=1 MC events
 //  OptDrive | 2        | Maximum weight reduction, =1 for variance reduction
 //  EvPerBin | 25       | Maximum number of the effective wt=1 events/bin,
-//           |          | EvPerBin=0 desactivates this option
+//           |          | EvPerBin=0 deactivates this option
 //  Chat     | 1        | =0,1,2 is the ``chat level'' in the standard output
 //  MaxWtRej | 1.1      | Maximum weight used to get w=1 MC events
 //------------------------------------------------------------------------------
 // The above can be redefined before calling 'Initialize()' method,
-// for istance FoamObject->SetkDim(15) sets dimension of the distribution to 15.
-// Only kDim HAS TO BE redefined, the other parametes may be left at their defaults.
-// nCell may be increased up to about milion cells for wildly peaked distributions.
+// for instance FoamObject->SetkDim(15) sets dimension of the distribution to 15.
+// Only kDim HAS TO BE redefined, the other parameters may be left at their defaults.
+// nCell may be increased up to about million cells for wildly peaked distributions.
 // Increasing nSampl sometimes helps, but it may cost CPU time.
 // MaxWtRej may need to be increased for wild a distribution, while using OptRej=0.
 //
@@ -192,8 +192,8 @@ TFoam::TFoam(const Char_t* Name)
   sprintf(fDate,"%s","  Release date:  2005.04.10    "); // Release date
   sprintf(fVersion,"%s","1.02M");                        // Release version
   fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
-  fInhiDiv  = 0;             // Flag alowing to inhibit cell division in certain projection/edge
-  fXdivPRD  = 0;             // Lists of division values encoded in one verctor per direction
+  fInhiDiv  = 0;             // Flag allowing to inhibit cell division in certain projection/edge
+  fXdivPRD  = 0;             // Lists of division values encoded in one vector per direction
   fCells    = 0;
   fAlpha    = 0;
   fCellsAct = 0;
@@ -269,7 +269,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // This method starts the process of the cell build-up.
 // User must invoke Initialize with two arguments or Initialize without arguments.
 // This is done BEFORE generating first MC event and AFTER allocating FOAM object
-// and reseting (optionaly) its internal parameters/switches.
+// and reseting (optionally) its internal parameters/switches.
 // The overall oprerational scheme of the FOAM is the following:
 //BEGIN_HTML <!--
 /* -->
@@ -314,7 +314,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 void TFoam::Initialize()
 {
 // Basic initialization of FOAM invoked by the user.
-// IMPORTANT: Random number generator and the ditribution object has to be
+// IMPORTANT: Random number generator and the distribution object has to be
 // provided using SetPseRan and SetRho prior to invoking this initializator!
 
   Int_t i;
@@ -343,7 +343,7 @@ void TFoam::Initialize()
 
   /////////////////////////////////////////////////////////////////////////
   //                   ALLOCATE SMALL LISTS                              //
-  //   it is done globaly, not for each cell, to save on allocation time //
+  //  it is done globally, not for each cell, to save on allocation time //
   /////////////////////////////////////////////////////////////////////////
   fRNmax= fkDim+1;
   fRvec = new Double_t[fRNmax];   // Vector of random numbers
@@ -369,7 +369,7 @@ void TFoam::Initialize()
   //====== List of predefined division values in all directions (initialized as empty)
   if(fXdivPRD == 0){
     fXdivPRD = new TFoamVect*[fkDim];
-    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // Artificialy extended beyond fkDim
+    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // Artificially extended beyond fkDim
   }
   //====== Initialize list of histograms
   fHistWt  = new TH1D("HistWt","Histogram of MC weight",100,0.0, 1.5*fMaxWtRej); // MC weight
@@ -410,9 +410,9 @@ void TFoam::Initialize()
   fNevGen = 0.0;               // M.C. generation sum of 1d0
   fWtMax  = kVlow;               // M.C. generation maximum wt
   fWtMin  = kHigh;               // M.C. generation minimum wt
-  fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary asignment
-  fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary asignment
-  fMCerror =fCells[0]->GetIntg(); // M.C. Value of ERROR   ,temporary asignment
+  fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
+  fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
+  fMCerror =fCells[0]->GetIntg(); // M.C. Value of ERROR   ,temporary assignment
   fMCMonit = new TFoamMaxwt(5.0,1000);  // monitoring M.C. efficiency
   //
   if(fChat>0){
@@ -502,7 +502,7 @@ void TFoam::Explore(TFoamCell *Cell)
 // each edge and the best edge (minimum dispersion, best maximum weight)
 // is memorized for future use.
 // The optimal division point for eventual future cell division is
-// determined/recorded. Recorded are also minimum and maximu weight etc.
+// determined/recorded. Recorded are also minimum and maximum weight etc.
 // The volume estimate in all (inactive) parent cells is updated.
 // Note that links to parents and initial volume = 1/2 parent has to be
 // already defined prior to calling this routine.
@@ -702,7 +702,7 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
     //----------DEBUG printout
     //cout<<"@@@@@  xMin xMax = "<<xMin   <<" "<<xMax<<"  iLo= "<<iLo<<"  iUp= "<<iUp;
     //cout<<"  SSwtBest/SSw= "<<SSwtBest/SSw<<"  Gain/SSw= "<< Gain/SSw<<endl;
-    //----------DEBUG auxilairy Plot
+    //----------DEBUG auxilary Plot
       for(Int_t iBin=1;iBin<=fnBin;iBin++)
         if( ((iBin-0.5)/fnBin > xMin) && ((iBin-0.5)/fnBin < xMax) ){
           ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmIn/(xMax-xMin));
@@ -716,7 +716,7 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
       xBest=xMin;
       yBest=xMax;
       if(iLo == 0   ) xBest=yBest; // The best division point
-      if(iUp == fnBin) yBest=xBest; // this is not realy used
+      if(iUp == fnBin) yBest=xBest; // this is not really used
     }
   }
   //----------DEBUG printout
@@ -872,14 +872,14 @@ void TFoam::Grow()
 //_____________________________________________________________________________________________
 Long_t  TFoam::PeekMax()
 {
-// Internal subrogram used by Initialize.
+// Internal subprogram used by Initialize.
 // It finds cell with maximal Driver integral for the purpose of the division.
 
    Long_t  i;
    Long_t iCell = -1;
    Double_t  DrivMax, Driv;
 
-   DrivMax = -1E+150;
+   DrivMax = kVlow;
    for(i=0; i<=fLastCe; i++) //without root
    {
       if( fCells[i]->GetStat() == 1 )
@@ -904,10 +904,10 @@ Int_t TFoam::Divide(TFoamCell *Cell)
 {
 // Internal subrogram used by Initialize.
 // It divides cell iCell into two daughter cells.
-// The iCell is retained and taged as inactive, daughter cells are appended
+// The iCell is retained and tagged as inactive, daughter cells are appended
 // at the end of the buffer.
 // New vertex is added to list of vertices.
-// List of active cells is updated, iCell remooved, two daughters added
+// List of active cells is updated, iCell removed, two daughters added
 // and their properties set with help of MC sampling (TFoam_Explore)
 // Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
 
@@ -947,7 +947,7 @@ void TFoam::MakeActiveList()
 
   Long_t n, iCell;
   Double_t sum;
-  // fush previous result
+  // flush previous result
   if(fPrimAcu  != 0) delete [] fPrimAcu;
   if(fCellsAct != 0) delete fCellsAct;
 
@@ -1030,7 +1030,7 @@ void TFoam::SetRhoInt(void *fun)
 {
 // User may use this to set pointer to the global function (not descending
 // from TFoamIntegrand) serving as a distribution for FOAM.
-// It is usefull for simple interactive applications.
+// It is useful for simple interactive applications.
 // Note that persistency for FOAM object will not work in the case of such
 // a distribution.
 
@@ -1125,7 +1125,7 @@ void TFoam::MakeEvent(void)
   for(j=0; j<fkDim; j++)
     fMCvect[j]= Posi[j] +fAlpha[j]*Size[j];
   Dx = rCell->GetVolume();      // Cartesian volume of the Cell
-  //  weight average normalised to PRIMARY integral over the cell
+  //  weight average normalized to PRIMARY integral over the cell
 
   Wt=Dx*Eval(fMCvect);
 
@@ -1291,7 +1291,7 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 {
 // This can be called before Initialize, after setting kDim
 // It defines which variables are excluded in the process of the cell division.
-// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-viarible.
+// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
 // The resulting map of cells in 2-dim. case will look as follows:
 //BEGIN_HTML <!--
 /* -->
@@ -1308,7 +1308,7 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
   if( ( 0<=iDim) && (iDim<fkDim)){
     fInhiDiv[iDim] = InhiDiv;
   }else
-    Error("TFoam::SetInhiDiv: wrong iDim", "%s \n");
+    Error("SetInhiDiv:","Wrong iDim \n");
 }//SetInhiDiv
 
 //______________________________________________________________________________________
@@ -1339,7 +1339,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
   if( ( 0<=iDim) && (iDim<fkDim)){
     fOptPRD =1;      // !!!!
     if( fXdivPRD[iDim] != 0)
-      Error("SetXdivPRD", "Second alocation of XdivPRD not allowed \n");
+      Error("SetXdivPRD", "Second allocation of XdivPRD not allowed \n");
     fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division
     for(i=0; i<len; i++){
       (*fXdivPRD[iDim])[i]=xDiv[i]; // set list of division points
@@ -1360,7 +1360,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
 //_______________________________________________________________________________________
 void TFoam::CheckAll(Int_t level)
 {
-//  User utility, miscelaneous and debug.
+//  User utility, miscellaneous and debug.
 //  Checks all pointers in the tree of cells. This is useful autodiagnostic.
 //  level=0, no printout, failures causes STOP
 //  level=1, printout, failures lead to WARNINGS only
@@ -1381,11 +1381,11 @@ void TFoam::CheckAll(Int_t level)
     }
     if( (Cell->GetDau0()==0) && (Cell->GetDau1()==0) && (Cell->GetStat()==0) ){
       Errors++;
-      if (level==1) Error("CheckAll","ERROR: Cell's no %d  has no daugter and is inactive \n",iCell);
+      if (level==1) Error("CheckAll","ERROR: Cell's no %d  has no daughter and is inactive \n",iCell);
     }
     if( (Cell->GetDau0()!=0) && (Cell->GetDau1()!=0) && (Cell->GetStat()==1) ){
       Errors++;
-      if (level==1) Error("CheckAll","ERROR: Cell's no %d has two dougters and is active \n",iCell);
+      if (level==1) Error("CheckAll","ERROR: Cell's no %d has two daughters and is active \n",iCell);
     }
 
 // checking parents
@@ -1396,7 +1396,7 @@ void TFoam::CheckAll(Int_t level)
       }
     }
 
-// checking doughters
+// checking daughters
     if(Cell->GetDau0()!=0){
       if(Cell != (Cell->GetDau0())->GetPare()){
         Errors++;
@@ -1439,7 +1439,7 @@ void TFoam::PrintCells(void)
     cout<<"Cell["<<iCell<<"]={ ";
     //cout<<"  "<< fCells[iCell]<<"  ";  // extra DEBUG
     cout<<endl;
-    fCells[iCell]->PrintContent();
+    fCells[iCell]->Print("1");
     cout<<"}"<<endl;
   }
 }
@@ -1448,7 +1448,7 @@ void TFoam::PrintCells(void)
 void TFoam::RootPlot2dim(Char_t *filename)
 {
 // Debugging tool which plots 2-dimensional cells as rectangles
-// in C++ format readible for root
+// in C++ format readable for root
 
   ofstream outfile(filename, ios::out);
   Double_t   x1,y1,x2,y2,x,y;
@@ -1502,6 +1502,11 @@ void TFoam::RootPlot2dim(Char_t *filename)
   outfile.close();
 }
 
+void TFoam::LinkCells()
+{
+  Info("LinkCells", "VOID function for backward compatibility \n");
+  return;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //       End of Class TFoam                                                   //

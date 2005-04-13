@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.3 2005/04/12 10:01:56 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.4 2005/04/12 12:31:39 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_________________________________________________________________________________
@@ -6,8 +6,8 @@
 // Class TFoamCell  used in TFoam
 // ==============================
 // Objects of this class are hyper-rectangular cells organized in the binary tree.
-// Special algoritm for encoding relative positioning of the cells
-// allow to save total memory allocaction needed for the system of cells.
+// Special algorithm for encoding relative positioning of the cells
+// allow to save total memory allocation needed for the system of cells.
 //
 //_________________________________________________________________________________
 
@@ -110,13 +110,13 @@ void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCe
 ////////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________________________
-void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)
+void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
 {
 // Provides size and position of the cell
-// These parameter are calculated by analysing information in all parents
+// These parameter are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
   if(fkDim<1) return;
-    TFoamCell *pCell,*dCell;
+    const TFoamCell *pCell,*dCell;
     Posi = 0.0; Size=1.0; // load all components
     dCell = this;
     while(dCell != 0){
@@ -138,13 +138,13 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)
 }//GetHcub
 
 //______________________________________________________________________________________
-void    TFoamCell::GetHSize( TFoamVect &Size)
+void    TFoamCell::GetHSize( TFoamVect &Size)  const
 {
 // Provides size of the cell
 // Size parameters are calculated by analysing information in all parents
 // cells up to the root cell. It takes time but saves memory.
   if(fkDim<1) return;
-    TFoamCell *pCell,*dCell;
+    const TFoamCell *pCell,*dCell;
     Size=1.0; // load all components
     dCell = this;
     while(dCell != 0){
@@ -179,9 +179,11 @@ void TFoamCell::CalcVolume(void)
 }
 
 //__________________________________________________________________________________________
-void TFoamCell::PrintContent()
+void TFoamCell::Print(Option_t *option) const
 {
 // Printout of the cell geometry parameters for the debug purpose
+
+  if(!option) Error("Print", "No option set\n");
 
   cout <<  " Status= "<<     fStatus   <<",";
   cout <<  " Volume= "<<     fVolume   <<",";
@@ -199,11 +201,11 @@ void TFoamCell::PrintContent()
   //
   if(fkDim>0 ){
     TFoamVect Posi(fkDim); TFoamVect Size(fkDim);
-    (this)->GetHcub(Posi,Size);
-    cout <<"   Posi= "; Posi.PrintCoord(); cout<<","<< endl;
-    cout <<"   Size= "; Size.PrintCoord(); cout<<","<< endl;
+    GetHcub(Posi,Size);
+    cout <<"   Posi= "; Posi.Print("1"); cout<<","<< endl;
+    cout <<"   Size= "; Size.Print("1"); cout<<","<< endl;
   }
 }
 ///////////////////////////////////////////////////////////////////
-//        End of  class  TFoamCell                                  //
+//        End of  class  TFoamCell                               //
 ///////////////////////////////////////////////////////////////////
