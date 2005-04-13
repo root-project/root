@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.85 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.86 2005/03/11 08:28:57 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -680,6 +680,7 @@ void TProofServ::HandleSocketInput()
             if (IsMaster() && IsParallel()) {
                p = fProof->MakePlayer(); // NOTE: fProof->SetPlayer(0) should be called after Process()
             } else {
+               // slave or sequential mode
                p = new TProofPlayerSlave(fSocket);
                if (IsMaster()) fProof->SetPlayer(p);
             }

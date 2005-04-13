@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.54 2005/03/18 22:41:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.55 2005/03/30 04:07:29 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1247,7 +1247,7 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 //______________________________________________________________________________
 void TProofPlayerSuperMaster::SetupFeedback()
 {
-   // Setup reporting of feedback objects and progress.
+   // Setup reporting of feedback objects and progress messages.
 
    if (IsClient()) return; // Client does not need timer
 
