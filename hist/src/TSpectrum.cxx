@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.24 2005/01/26 10:51:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.25 2005/04/12 21:24:56 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -1650,7 +1650,12 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
 //   source:  pointer to the vector of source spectrum                     //
 //   res:     pointer to the vector of response spectrum                   //
 //   size:    length of source and response spectra                        //
-//   number_of_iterations, for details we refer to manual                  //
+//   number_of_iterations, for details we refer to this reference:         //
+//                                                                         //
+//    M. Morhac, J. Kliman, V. Matousek, M. Veselský, I. Turzo.:           //
+//    Efficient one- and two-dimensional Gold deconvolution and its        //
+//    application to gamma-ray spectra decomposition.                      //
+//    NIM, A401 (1997) 385-408.                                            //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
        if (size <= 0)
