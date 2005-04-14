@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.4 2002/11/06 21:16:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.5 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -46,29 +46,30 @@ class TMultiGraph : public TNamed {
   TMultiGraph();
   TMultiGraph(const char *name, const char *title);
   virtual ~TMultiGraph();
-  virtual void     Add(TGraph *graph, Option_t *chopt="");
-  virtual void     Browse(TBrowser *b);
-  virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-  virtual void     Draw(Option_t *chopt="");
-  virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); 
-  virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t rxmin=0, Axis_t rxmax=0); 
-  virtual void     LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin, Double_t xmax);
-  virtual void     LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax);
-  virtual void     InitPolynom(Double_t xmin, Double_t xmax);
-  virtual void     InitExpo(Double_t xmin, Double_t xmax);
-  virtual void     InitGaus(Double_t xmin, Double_t xmax);
-  TH1F            *GetHistogram() const;
-  TF1             *GetFunction(const char *name) const;
-  TList           *GetListOfGraphs() const { return fGraphs; }
-  TList           *GetListOfFunctions() const { return fFunctions; } 
-  TAxis           *GetXaxis() const;
-  TAxis           *GetYaxis() const;
-  virtual void     Paint(Option_t *chopt="");
-  virtual void     Print(Option_t *chopt="") const;
-  virtual void     RecursiveRemove(TObject *obj);
-  virtual void     SavePrimitive(ofstream &out, Option_t *option);
-  virtual void     SetMaximum(Double_t maximum=-1111);
-  virtual void     SetMinimum(Double_t minimum=-1111);
+  virtual void      Add(TGraph *graph, Option_t *chopt="");
+  virtual void      Browse(TBrowser *b);
+  virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
+  virtual void      Draw(Option_t *chopt="");
+  virtual Int_t     Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); 
+  virtual Int_t     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t rxmin=0, Axis_t rxmax=0); 
+  virtual Option_t *GetGraphDrawOption(const TGraph *gr) const;
+  virtual void      LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin, Double_t xmax);
+  virtual void      LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax);
+  virtual void      InitPolynom(Double_t xmin, Double_t xmax);
+  virtual void      InitExpo(Double_t xmin, Double_t xmax);
+  virtual void      InitGaus(Double_t xmin, Double_t xmax);
+  TH1F             *GetHistogram() const;
+  TF1              *GetFunction(const char *name) const;
+  TList            *GetListOfGraphs() const { return fGraphs; }
+  TList            *GetListOfFunctions() const { return fFunctions; } 
+  TAxis            *GetXaxis() const;
+  TAxis            *GetYaxis() const;
+  virtual void      Paint(Option_t *chopt="");
+  virtual void      Print(Option_t *chopt="") const;
+  virtual void      RecursiveRemove(TObject *obj);
+  virtual void      SavePrimitive(ofstream &out, Option_t *option);
+  virtual void      SetMaximum(Double_t maximum=-1111);
+  virtual void      SetMinimum(Double_t minimum=-1111);
   
   ClassDef(TMultiGraph,2)  //A collection of TGraph objects
 };

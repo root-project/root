@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.16 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.17 2005/03/04 09:29:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -155,10 +155,12 @@ void TMultiGraph::Draw(Option_t *option)
 //   Options to draw a graph are described in TGraph::PainGraph
 //
 //  The drawing option for each TGraph may be specified as an optional
-//  second argument of the Add function.
+//  second argument of the Add function. You can use GetGraphDrawOption
+//  to return this option.
 //  If a draw option is specified, it will be used to draw the graph,
 //  otherwise the graph will be drawn with the option specified in
-//  TMultiGraph::Draw
+//  TMultiGraph::Draw. Use GetDrawOption to return the option specified
+//  when drawin the TMultiGraph.
 
   AppendPad(option);
 }
@@ -618,6 +620,21 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
 }
 
+
+//______________________________________________________________________________
+Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
+{
+// Return the draw option for the TGraph gr in this TMultiGraph
+// The return option is the one specified when calling TMultiGraph::Add(gr,option).
+   
+   if (!fGraphs || !gr) return "";
+   TListIter next(fGraphs);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj == gr) return next.GetOption();
+   }
+   return "";
+}
 
 //______________________________________________________________________________
 void TMultiGraph::InitGaus(Double_t xmin, Double_t xmax)
