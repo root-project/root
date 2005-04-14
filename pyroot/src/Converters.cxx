@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.2 2005/03/16 06:15:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.3 2005/04/05 05:20:44 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -198,6 +198,25 @@ bool PyROOT::TStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 // set the value and declare success
    func->SetArg( reinterpret_cast< long >( &fBuffer ) );
    return true;
+}
+
+//____________________________________________________________________________
+bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   if ( ! ObjectProxy_Check( pyobject ) )
+      return false;
+
+   if ( ((ObjectProxy*)pyobject)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
+   // if non-const, object can no longer be held, as pointer to it may get copied
+      if ( ! IsConst() )
+         ((ObjectProxy*)pyobject)->Release();
+
+   // set pointer (may be null) and declare success
+      func->SetArg( reinterpret_cast< long >( ((ObjectProxy*)pyobject)->GetObject() ) );
+      return true;
+   }
+
+   return false;
 }
 
 //____________________________________________________________________________

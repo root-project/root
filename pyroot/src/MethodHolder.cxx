@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.29 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.30 2005/04/13 05:04:49 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -105,12 +105,16 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
       if ( Utility::isPointer( fullType ) ) {
          ConvFactories_t::iterator h = gConvFactories.find( realType + "*" );
          if ( h == gConvFactories.end() ) {
-            if ( fullType.find( "const" ) != std::string::npos )
-               h = gConvFactories.find( "const void*" );
-            else
-               h = gConvFactories.find( "void*" );
+            bool isConst = fullType.find( "const" ) != std::string::npos;
+            if ( TClass* klass = gROOT->GetClass( realType.c_str() ) )
+               fConverters[ iarg ] = new KnownClassConverter( klass, isConst );
+            else {
+               h = isConst ? gConvFactories.find( "const void*" ) : gConvFactories.find( "void*" );
+               fConverters[ iarg ] = (h->second)();
+            }
          }
-         fConverters[ iarg ] = (h->second)();
+         else
+            fConverters[ iarg ] = (h->second)();
       } else if ( argType.Property() & G__BIT_ISENUM ) {
          fConverters[ iarg ] = (gConvFactories.find( "UInt_t" )->second)();
       } else {
