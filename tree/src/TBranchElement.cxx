@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.166 2005/03/31 17:52:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.167 2005/04/07 13:28:31 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -998,9 +998,9 @@ Int_t TBranchElement::Fill()
      }
    }
    if (fTree->Debug() > 0) {
-      Int_t entry = (Int_t)fEntries;
+      Long64_t entry = fEntries;
       if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
-         printf("Fill: %d, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
+         printf("Fill: %lld, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
       }
    }
    return nerror==0 ? nbytes : -1;

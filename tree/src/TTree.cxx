@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.244 2005/04/07 13:28:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.245 2005/04/12 09:26:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2748,7 +2748,7 @@ TBranch *TTree::GetBranch(const char *name)
          }
       }
    }
-   TObjArray *leaves = ((TTree*)this)->GetListOfLeaves();
+   TObjArray *leaves = GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    for (i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
@@ -2794,7 +2794,7 @@ Bool_t TTree::GetBranchStatus(const char *branchname) const
    // 0 if branch is not activated
    // 1 if branch is activated
 
-   TBranch *br = ((TTree*)this)->GetBranch(branchname);
+   TBranch *br = const_cast<TTree*>(this)->GetBranch(branchname);
    if (br) return (br->TestBit(kDoNotProcess) == 0);
    return 0;
 }
@@ -3639,7 +3639,7 @@ TTree *TTree::MergeTrees(TList *list)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
-      Long64_t nentries = (Long64_t)tree->GetEntries();
+      Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
@@ -3679,7 +3679,7 @@ Long64_t TTree::Merge(TCollection *list)
          return -1;
       }
 
-      Long64_t nentries = (Long64_t)tree->GetEntries();
+      Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
 
       CopyAddresses(tree);
@@ -3771,7 +3771,7 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+  Int_t nl = const_cast<TTree*>(this)->GetListOfLeaves()->GetEntries();
   Int_t l;
   TBranch *br;
   TLeaf *leaf;
@@ -3779,7 +3779,7 @@ void TTree::Print(Option_t *option) const
      Long64_t *count = new Long64_t[nl];
      Int_t keep =0;
      for (l=0;l<nl;l++) {
-        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
         if (strchr(br->GetName(),'.')) {
            count[l] = -1;
@@ -3791,7 +3791,7 @@ void TTree::Print(Option_t *option) const
      }
      for (l=0;l<nl;l++) {
         if (count[l] < 0) continue;
-        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
         printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
      }
@@ -3800,7 +3800,7 @@ void TTree::Print(Option_t *option) const
      TString reg = "*";
      if (strlen(option) && strchr(option,'*')) reg = option;
      TRegexp re(reg,kTRUE);
-     TIter next(((TTree*)this)->GetListOfBranches());
+     TIter next(const_cast<TTree*>(this)->GetListOfBranches());
      TBranch::ResetCount();
      while ((br= (TBranch*)next())) {
         TString s = br->GetName();
@@ -4756,7 +4756,7 @@ ClassImp(TTreeFriendLeafIter)
 
 //______________________________________________________________________________
 TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
-  : fTree((TTree*)tree),fLeafIter(0),fTreeIter(0),fDirection(dir)
+   : fTree(const_cast<TTree*>(tree)),fLeafIter(0),fTreeIter(0),fDirection(dir)
 {
    // Create a new iterator. By default the iteration direction
    // is kIterForward. To go backward use kIterBackward.
@@ -4819,7 +4819,7 @@ TObject *TTreeFriendLeafIter::Next()
       TFriendElement * nextFriend = (TFriendElement*) fTreeIter->Next();
       ///nextTree = (TTree*)fTreeIter->Next();
       if (nextFriend) {
-         nextTree = (TTree*)nextFriend->GetTree();
+         nextTree = const_cast<TTree*>(nextFriend->GetTree());
          if (!nextTree) return Next();
          SafeDelete(fLeafIter);
          fLeafIter = nextTree->GetListOfLeaves()->MakeIterator(fDirection);

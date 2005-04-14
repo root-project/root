@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.102 2005/03/21 16:20:56 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.103 2005/04/14 16:42:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -597,7 +597,7 @@ Long64_t TChain::GetEntries() const
    if (fChainProof)
       return fChainProof->GetEntries();
    if (fEntries >= kBigNumber) {
-      ((TChain*)this)->LoadTree(fEntries-1);
+      const_cast<TChain*>(this)->LoadTree(fEntries-1);
    }
    return fEntries;
 }
@@ -643,7 +643,7 @@ TFile *TChain::GetFile() const
 //  if no file is connected, the first file is automatically loaded.
 
    if (fFile) return fFile;
-   ((TChain*)this)->LoadTree(0); //force reading first entry
+   const_cast<TChain*>(this)->LoadTree(0); //force reading first entry
    return fFile;
 }
 
@@ -759,7 +759,7 @@ Double_t TChain::GetWeight() const
    if (TestBit(kGlobalWeight)) return fWeight;
    else {
       if (fTree) return fTree->GetWeight();
-      ((TChain*)this)->LoadTree(0);
+      const_cast<TChain*>(this)->LoadTree(0);
       if (fTree) return fTree->GetWeight();
       return 0;
    }

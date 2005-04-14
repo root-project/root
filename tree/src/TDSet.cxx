@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.15 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.16 2005/03/21 16:20:56 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -746,7 +746,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
          delete file;
          return -1;
       }
-      entries = (Long64_t) tree->GetEntries();
+      entries = tree->GetEntries();
       delete tree;
 
    } else {
