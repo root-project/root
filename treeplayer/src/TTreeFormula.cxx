@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.174 2005/03/28 21:06:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.175 2005/03/30 21:09:19 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3328,7 +3328,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kIndexOfEntry: tab[pos++] = fTree->GetReadEntry(); continue;
                case kEntries:      tab[pos++] = fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
-               case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata();
+               case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
 
                case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
