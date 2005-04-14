@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.101 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.102 2005/03/21 16:20:56 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -596,7 +596,7 @@ Long64_t TChain::GetEntries() const
 
    if (fChainProof)
       return fChainProof->GetEntries();
-   if (fEntries >= (Stat_t)kBigNumber) {
+   if (fEntries >= kBigNumber) {
       ((TChain*)this)->LoadTree(fEntries-1);
    }
    return fEntries;
