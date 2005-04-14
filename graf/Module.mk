@@ -44,7 +44,7 @@ INCLUDEFILES += $(GRAFDEP)
 include/%.h:    $(GRAFDIRI)/%.h
 		cp $< $@
 
-$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPELIB) $(MAINLIBS) $(GRAFLIBDEP)
+$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPEDEP) $(MAINLIBS) $(GRAFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
 		   "$(GRAFO) $(GRAFDO)" \
@@ -59,7 +59,7 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
+$(GRAFDO2):     $(GRAFDS2) $(FREETYPEDEP)
 		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-graf:       $(GRAFLIB)
@@ -81,13 +81,13 @@ distclean-graf: clean-graf
 distclean::     distclean-graf
 
 ##### extra rules ######
-graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPELIB)
+graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPEDEP)
 		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 
-graf/src/TText.o: graf/src/TText.cxx $(FREETYPELIB)
+graf/src/TText.o: graf/src/TText.cxx $(FREETYPEDEP)
 		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 
-graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPELIB)
+graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPEDEP)
 ifneq ($(PLATFORM),win32)
 		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 else

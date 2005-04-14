@@ -76,7 +76,7 @@ $(GDKLIBA):     $(GDKSRC)
 		  cd ..; \
 		  nmake -nologo -f makefile.msc)
 
-$(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPELIB) $(GDKLIB) $(GDKDLL) \
+$(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPEDEP) $(GDKLIB) $(GDKDLL) \
                 $(MAINLIBS) $(WIN32GDKLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libWin32gdk.$(SOEXT) $@ \
@@ -87,7 +87,7 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
-$(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPELIB)
+$(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPEDEP)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(FREETYPEINC) \
 		   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
 		   -o $@ -c $<
@@ -116,7 +116,7 @@ endif
 distclean::     distclean-win32gdk
 
 ##### extra rules #####
-$(WIN32GDKO1): %.o: %.cxx $(FREETYPELIB)
+$(WIN32GDKO1): %.o: %.cxx $(FREETYPEDEP)
 	$(CXX) $(OPT) $(CXXFLAGS) $(FREETYPEINC) \
 	   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
 	   -o $@ -c $<

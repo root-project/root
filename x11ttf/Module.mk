@@ -36,7 +36,7 @@ INCLUDEFILES += $(X11TTFDEP)
 include/%.h:    $(X11TTFDIRI)/%.h
 		cp $< $@
 
-$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPELIB) $(MAINLIBS) $(X11TTFLIBDEP)
+$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(MAINLIBS) $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
 		   "$(X11TTFO) $(X11TTFDO)" \
@@ -46,7 +46,7 @@ $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
 
-$(X11TTFDO):    $(X11TTFDS) $(FREETYPELIB)
+$(X11TTFDO):    $(X11TTFDS) $(FREETYPEDEP)
 		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-x11ttf:     $(X11TTFLIB)
@@ -68,5 +68,5 @@ distclean-x11ttf: clean-x11ttf
 distclean::     distclean-x11ttf
 
 ##### extra rules ######
-$(X11TTFO): %.o: %.cxx $(FREETYPELIB)
+$(X11TTFO): %.o: %.cxx $(FREETYPEDEP)
 	$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<

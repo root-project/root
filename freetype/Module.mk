@@ -8,6 +8,7 @@ FREETYPELIBF    := $(shell freetype-config --libs)
 FREETYPEINC     := $(shell freetype-config --cflags)
 FREETYPELIB     := $(filter -l%,$(FREETYPELIBF))
 FREETYPELDFLAGS := $(filter-out -l%,$(FREETYPELIBF))
+FREETYPEDEP     :=
 else
 
 MODDIR       := freetype
@@ -32,6 +33,7 @@ FREETYPELIB  := $(LPATH)/libfreetype.a
 endif
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
+FREETYPEDEP  := $(FREETYPELIB)
 FREETYPELDFLAGS :=
 
 ##### local rules #####
