@@ -56,7 +56,7 @@ $(XROOTDETAG): $(XROOTDSRCS)
 		      gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
 		   fi; \
 		   etag=`basename $(XROOTDETAG)` ; \
-		   touch $$etag ; \ 
+		   touch $$etag ; \
 		fi)
 
 $(XRDPLUGINS): $(XRDPLUGINSA)
