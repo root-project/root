@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.4 2005/02/23 15:08:51 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.5 2005/02/25 14:22:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -268,7 +268,7 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
     return kTRUE ;
   }
 
-  return kFALSE ;
+  return RooAbsPdf::isDirectGenSafe(arg) ;
 }
 
 
