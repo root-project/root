@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.54 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.55 2005/03/22 13:05:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,6 +58,10 @@ using std::ifstream;
 using std::istream;
 using std::ofstream;
 using std::ostream;
+
+#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
+char* operator+( std::streampos&, char* );
+#endif
 
 ClassImp(RooArgSet)
   ;

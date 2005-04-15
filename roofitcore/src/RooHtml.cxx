@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.13 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.14 2005/02/28 21:48:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,6 +37,10 @@ using std::endl;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
+#endif
+
+#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
+char* operator+( std::streampos&, char* );
 #endif
 
 const Int_t   kSpaceNum      = 1;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.16 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.17 2005/04/04 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,6 +59,11 @@ using std::flush;
 using std::fstream;
 using std::ofstream;
 using std::setprecision;
+
+
+#if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
+char* operator+( std::streampos&, char* );
+#endif
 
 ClassImp(RooMinuit) 
 ;
