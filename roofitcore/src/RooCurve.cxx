@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.42 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.43 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -362,8 +362,15 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 
   // Find starting and ending bin of histogram based on range of RooCurve
   Double_t xstart,xstop ;
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,0,1)
   GetPoint(0,xstart,y) ;
   GetPoint(GetN()-1,xstop,y) ;
+#else
+  const_cast<RooCurve*>(this)->GetPoint(0,xstart,y) ;
+  const_cast<RooCurve*>(this)->GetPoint(GetN()-1,xstop,y) ;
+#endif
+
   Int_t nbin(0) ;
 
   Double_t chisq(0) ;
