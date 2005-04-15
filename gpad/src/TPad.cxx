@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.170 2005/04/01 17:42:02 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.171 2005/04/13 16:52:34 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3633,10 +3633,10 @@ void TPad::Print(const char *filenam, Option_t *option)
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen   = strstr(psname,"("); if (copen)  *copen  = 0;
-   char *cclose  = strstr(psname,")"); if (cclose) *cclose = 0;
-   char *copenb  = strstr(psname,"["); if (copenb)  *copenb  = 0;
-   char *ccloseb = strstr(psname,"]"); if (ccloseb) *ccloseb = 0;
+   char *copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
+   char *cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
+   char *copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
+   char *ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
    if (copen  || copenb)  mustClose = kFALSE;
