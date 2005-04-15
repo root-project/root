@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.3 2005/04/05 05:20:44 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.4 2005/04/14 21:53:47 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -162,15 +162,39 @@ namespace {
 } // unnamed namespace
 
 //____________________________________________________________________________
+bool PyROOT::ShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'h', sizeof(int) );
+}
+
+//____________________________________________________________________________
+bool PyROOT::UShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'H', sizeof(int) );
+}
+
+//____________________________________________________________________________
 bool PyROOT::IntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    return CArraySetArg( pyobject, func, 'i', sizeof(int) );
 }
 
 //____________________________________________________________________________
+bool PyROOT::UIntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'I', sizeof(int) );
+}
+
+//____________________________________________________________________________
 bool PyROOT::LongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
    return CArraySetArg( pyobject, func, 'l', sizeof(long) );
+}
+
+//____________________________________________________________________________
+bool PyROOT::ULongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'L', sizeof(int) );
 }
 
 //____________________________________________________________________________
@@ -246,8 +270,12 @@ namespace {
    PYROOT_CONVERTER_FACTORY( LongLongConverter )
    PYROOT_CONVERTER_FACTORY( CStringConverter )
    PYROOT_CONVERTER_FACTORY( VoidArrayConverter )
+   PYROOT_CONVERTER_FACTORY( ShortArrayConverter )
+   PYROOT_CONVERTER_FACTORY( UShortArrayConverter )
    PYROOT_CONVERTER_FACTORY( IntArrayConverter )
+   PYROOT_CONVERTER_FACTORY( UIntArrayConverter )
    PYROOT_CONVERTER_FACTORY( LongArrayConverter )
+   PYROOT_CONVERTER_FACTORY( ULongArrayConverter )
    PYROOT_CONVERTER_FACTORY( FloatArrayConverter )
    PYROOT_CONVERTER_FACTORY( DoubleArrayConverter )
    PYROOT_CONVERTER_FACTORY( TStringConverter )
@@ -283,8 +311,12 @@ namespace {
    // pointer/array factories
       ncp_t( "void*",              &CreateVoidArrayConverter          ),
       ncp_t( "const void*",        &CreateConstVoidArrayConverter     ),
+      ncp_t( "short*",             &CreateShortArrayConverter         ),
+      ncp_t( "unsigned short*",    &CreateUShortArrayConverter        ),
       ncp_t( "int*",               &CreateIntArrayConverter           ),
+      ncp_t( "unsigned int*",      &CreateUIntArrayConverter          ),
       ncp_t( "long*",              &CreateLongArrayConverter          ),
+      ncp_t( "unsigned long*",     &CreateULongArrayConverter         ),
       ncp_t( "float*",             &CreateFloatArrayConverter         ),
       ncp_t( "double*",            &CreateDoubleArrayConverter        ),
 

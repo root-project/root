@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.2 2005/03/16 06:15:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.3 2005/04/14 21:53:47 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -66,8 +66,12 @@ namespace PyROOT {
       bool fIsConst;
    };
 
+   PYROOT_BASIC_CONVERTER( ShortArrayConverter );
+   PYROOT_BASIC_CONVERTER( UShortArrayConverter );
    PYROOT_BASIC_CONVERTER( IntArrayConverter );
+   PYROOT_BASIC_CONVERTER( UIntArrayConverter );
    PYROOT_BASIC_CONVERTER( LongArrayConverter );
+   PYROOT_BASIC_CONVERTER( ULongArrayConverter );
    PYROOT_BASIC_CONVERTER( FloatArrayConverter );
    PYROOT_BASIC_CONVERTER( DoubleArrayConverter );
 
