@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.7 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.8 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -91,7 +91,7 @@
 //------------------------------------------------------------------------------
 //  Name     | default  | Description
 //------------------------------------------------------------------------------
-//  kDim     | 0        | Dimension of the integration space. Must be redefined!
+//  Dim      | 0        | Dimension of the integration space. Must be redefined!
 //  nCells   | 1000     | No of allocated number of cells,
 //  nSampl   | 200      | No. of MC events in the cell MC exploration
 //  nBin     | 8        | No. of bins in edge-histogram in cell exploration
@@ -159,9 +159,9 @@ static const Double_t kVlow=-1.0e150;
 TFoam::TFoam()
 {
   // Default constructor for streamer, user should not use it.
-  fkDim     = 0;
+  fDim      = 0;
   fNoAct    = 0;
-  fnCells   = 0;
+  fNCells   = 0;
   fRNmax    = 0;
   fMaskDiv  = 0;
   fInhiDiv  = 0;
@@ -188,9 +188,9 @@ TFoam::TFoam(const Char_t* Name)
   if(strlen(Name)  >129) {
     Error("TFoam","Name too long %s \n",Name);
   }
-  sprintf(fName,"%s",Name);         // Class name
-  sprintf(fDate,"%s","  Release date:  2005.04.10    "); // Release date
-  sprintf(fVersion,"%s","1.02M");                        // Release version
+  fName=Name;                                            // Class name
+  fDate="  Release date:  2005.04.10";                   // Release date
+  fVersion= "1.02M";                                     // Release version
   fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
   fInhiDiv  = 0;             // Flag allowing to inhibit cell division in certain projection/edge
   fXdivPRD  = 0;             // Lists of division values encoded in one vector per direction
@@ -201,19 +201,19 @@ TFoam::TFoam(const Char_t* Name)
   fHistEdg  = 0;
   fHistWt   = 0;
   fHistDbg  = 0;
-  fkDim     = 0;                // dimension of hyp-cubical space
-  fnCells   = 1000;             // Maximum number of Cells,    is usually re-set
-  fnSampl   = 200;              // No of sampling when dividing cell
+  fDim     = 0;                // dimension of hyp-cubical space
+  fNCells   = 1000;             // Maximum number of Cells,    is usually re-set
+  fNSampl   = 200;              // No of sampling when dividing cell
   fOptPRD   = 0;                // General Option switch for PRedefined Division, for quick check
   fOptDrive = 2;                // type of Drive =1,2 for TrueVol,Sigma,WtMax
   fChat     = 1;                // Chat=0,1,2 chat level in output, Chat=1 normal level
   fOptRej   = 1;                // OptRej=0, wted events; OptRej=1, wt=1 events
   //------------------------------------------------------
-  fnBin     = 8;                // binning of edge-histogram in cell exploration
+  fNBin     = 8;                // binning of edge-histogram in cell exploration
   fEvPerBin =25;                // maximum no. of EFFECTIVE event per bin, =0 option is inactive
   //------------------------------------------------------
-  fnCalls = 0;                  // No of function calls
-  fnEffev = 0;                  // Total no of eff. wt=1 events in build=up
+  fNCalls = 0;                  // No of function calls
+  fNEffev = 0;                  // Total no of eff. wt=1 events in build=up
   fLastCe =-1;                  // Index of the last cell
   fNoAct  = 0;                  // No of active cells (used in MC generation)
   fWtMin = kHigh;               // Minimal weight
@@ -233,7 +233,7 @@ TFoam::~TFoam()
   Int_t i;
 
   if(fCells!= 0) {
-    for(i=0; i<fnCells; i++) delete fCells[i]; // TFoamCell*[]
+    for(i=0; i<fNCells; i++) delete fCells[i]; // TFoamCell*[]
     delete [] fCells;
   }
   delete [] fRvec;    //double[]
@@ -245,7 +245,7 @@ TFoam::~TFoam()
   //
   //
   if( fXdivPRD!= 0) {
-    for(i=0; i<fkDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
+    for(i=0; i<fDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
     delete [] fXdivPRD;
   }
   delete fMCMonit;
@@ -326,10 +326,10 @@ void TFoam::Initialize()
     BXTXT("****************************************");
     BXTXT(fName);
     BX1F("  Version",fVersion,  fDate);
-    BX1I("     kDim",fkDim,     " Dimension of the hyper-cubical space             ");
-    BX1I("   nCells",fnCells,   " Requested number of Cells (half of them active)  ");
-    BX1I("   nSampl",fnSampl,   " No of MC events in exploration of a cell         ");
-    BX1I("     nBin",fnBin,     " No of bins in histograms, MC exploration of cell ");
+    BX1I("     kDim",fDim,     " Dimension of the hyper-cubical space             ");
+    BX1I("   nCells",fNCells,   " Requested number of Cells (half of them active)  ");
+    BX1I("   nSampl",fNSampl,   " No of MC events in exploration of a cell         ");
+    BX1I("     nBin",fNBin,     " No of bins in histograms, MC exploration of cell ");
     BX1I(" EvPerBin",fEvPerBin, " Maximum No effective_events/bin, MC exploration  ");
     BX1I(" OptDrive",fOptDrive, " Type of Driver   =1,2 for Sigma,WtMax            ");
     BX1I("   OptRej",fOptRej,   " MC rejection on/off for OptRej=0,1               ");
@@ -339,56 +339,60 @@ void TFoam::Initialize()
 
   if(fPseRan==0) Error("Initialize", "Random number generator not set \n");
   if(fRho==0 && fMethodCall==0 ) Error("Initialize", "Distribution function not set \n");
-  if(fkDim==0) Error("Initialize", "Zero dimension not alowed \n");
+  if(fDim==0) Error("Initialize", "Zero dimension not alowed \n");
 
   /////////////////////////////////////////////////////////////////////////
   //                   ALLOCATE SMALL LISTS                              //
   //  it is done globally, not for each cell, to save on allocation time //
   /////////////////////////////////////////////////////////////////////////
-  fRNmax= fkDim+1;
+  fRNmax= fDim+1;
   fRvec = new Double_t[fRNmax];   // Vector of random numbers
   if(fRvec==0)  Error("Initialize", "Cannot initialize buffer fRvec \n");
 
-  if(fkDim>0){
-    fAlpha = new Double_t[fkDim];    // sum<1 for internal parametrization of the simplex
+  if(fDim>0){
+    fAlpha = new Double_t[fDim];    // sum<1 for internal parametrization of the simplex
     if(fAlpha==0)  Error("Initialize", "Cannot initialize buffer fAlpha \n" );
   }
-  fMCvect = new Double_t[fkDim]; // vector generated in the MC run
+  fMCvect = new Double_t[fDim]; // vector generated in the MC run
   if(fMCvect==0)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
 
   //====== List of directions inhibited for division
   if(fInhiDiv == 0){
-    fInhiDiv = new Int_t[fkDim];
-    for(i=0; i<fkDim; i++) fInhiDiv[i]=0;
+    fInhiDiv = new Int_t[fDim];
+    for(i=0; i<fDim; i++) fInhiDiv[i]=0;
   }
   //====== Dynamic mask used in Explore for edge determination
   if(fMaskDiv == 0){
-    fMaskDiv = new Int_t[fkDim];
-    for(i=0; i<fkDim; i++) fMaskDiv[i]=1;
+    fMaskDiv = new Int_t[fDim];
+    for(i=0; i<fDim; i++) fMaskDiv[i]=1;
   }
   //====== List of predefined division values in all directions (initialized as empty)
   if(fXdivPRD == 0){
-    fXdivPRD = new TFoamVect*[fkDim];
-    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // Artificially extended beyond fkDim
+    fXdivPRD = new TFoamVect*[fDim];
+    for(i=0; i<fDim; i++)  fXdivPRD[i]=0; // Artificially extended beyond fDim
   }
   //====== Initialize list of histograms
   fHistWt  = new TH1D("HistWt","Histogram of MC weight",100,0.0, 1.5*fMaxWtRej); // MC weight
-  fHistEdg = new TObjArray(fkDim);           // Initialize list of histograms
-  Char_t hname[100];
-  Char_t htitle[100];
-  for(i=0;i<fkDim;i++){
-    sprintf(hname,"%s_HistEdge_%1i",fName,i);
-    sprintf(htitle,"Edge Histogram No. %1i",i);
+  fHistEdg = new TObjArray(fDim);           // Initialize list of histograms
+  TString hname;
+  TString htitle;
+  for(i=0;i<fDim;i++){
+    hname=fName+TString("_HistEdge_");
+    hname+=i;
+    htitle=TString("Edge Histogram No. ");
+    htitle+=i;
     //cout<<"i= "<<i<<"  hname= "<<hname<<"  htitle= "<<htitle<<endl;
-    (*fHistEdg)[i] = new TH1D(hname,htitle,fnBin,0.0, 1.0); // Initialize histogram for each edge
+    (*fHistEdg)[i] = new TH1D(hname.Data(),htitle.Data(),fNBin,0.0, 1.0); // Initialize histogram for each edge
     ((TH1D*)(*fHistEdg)[i])->Sumw2();
   }
   //======  extra histograms for debug purposes
-  fHistDbg = new TObjArray(fkDim);         // Initialize list of histograms
-    for(i=0;i<fkDim;i++){
-      sprintf(hname,"%s_HistDebug_%1i",fName,i);
-      sprintf(htitle,"Debug Histogram %1i",i);
-      (*fHistDbg)[i] = new TH1D(hname,htitle,fnBin,0.0, 1.0); // Initialize histogram for each edge
+  fHistDbg = new TObjArray(fDim);         // Initialize list of histograms
+    for(i=0;i<fDim;i++){
+      hname=fName+TString("_HistDebug_");
+      hname+=i;
+      htitle=TString("Debug Histogram ");
+      htitle+=i;
+      (*fHistDbg)[i] = new TH1D(hname.Data(),htitle.Data(),fNBin,0.0, 1.0); // Initialize histogram for each edge
     }
 
   // ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| //
@@ -419,7 +423,7 @@ void TFoam::Initialize()
     Double_t Driver = fCells[0]->GetDriv();
     BXOPE;
     BXTXT("***  TFoam::Initialize FINISHED!!!  ***");
-    BX1I("    nCalls",fnCalls,  "Total number of function calls         ");
+    BX1I("    nCalls",fNCalls,  "Total number of function calls         ");
     BX1F("    XPrime",fPrime,   "Primary total integral                 ");
     BX1F("    XDiver",Driver,    "Driver  total integral                 ");
     BX1F("  MCresult",fMCresult,"Estimate of the true MC Integral       ");
@@ -438,13 +442,13 @@ void TFoam::InitCells()
 
   fLastCe =-1;                             // Index of the last cell
   if(fCells!= 0) {
-    for(i=0; i<fnCells; i++) delete fCells[i];
+    for(i=0; i<fNCells; i++) delete fCells[i];
     delete [] fCells;
   }
   //
-  fCells = new TFoamCell*[fnCells];
-  for(i=0;i<fnCells;i++){
-    fCells[i]= new TFoamCell(fkDim); // Allocate BIG list of cells
+  fCells = new TFoamCell*[fNCells];
+  for(i=0;i<fNCells;i++){
+    fCells[i]= new TFoamCell(fDim); // Allocate BIG list of cells
     fCells[i]->SetSerial(i);
   }
   if(fCells==0) Error("InitCells", "Cannot initialize CELLS \n"  );
@@ -467,7 +471,7 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *Parent)
 // It initializes content of the newly allocated active cell.
 
   TFoamCell *Cell;
-  if (fLastCe==fnCells){
+  if (fLastCe==fNCells){
     Error( "CellFill", "Too many cells\n");
   }
   fLastCe++;   // 0-th cell is the first
@@ -516,14 +520,14 @@ void TFoam::Explore(TFoamCell *Cell)
   Int_t nProj, kBest;
   Double_t CeSum[5], Xproj;
 
-  TFoamVect  Size(fkDim);
-  TFoamVect  Posi(fkDim);
+  TFoamVect  Size(fDim);
+  TFoamVect  Posi(fDim);
 
   Cell->GetHcub(Posi,Size);
 
   TFoamCell  *Parent;
 
-  Double_t *xRand = new Double_t[fkDim];
+  Double_t *xRand = new Double_t[fDim];
 
   Double_t *VolPart=0;
 
@@ -542,31 +546,31 @@ void TFoam::Explore(TFoamCell *Cell)
   CeSum[3]=kHigh;  //wtmin
   CeSum[4]=kVlow;  //wtmax
   //
-  for(i=0;i<fkDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
+  for(i=0;i<fDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
   fHistWt->Reset();
   //
   // ||||||||||||||||||||||||||BEGIN MC LOOP|||||||||||||||||||||||||||||
   Double_t NevEff=0.;
-  for(iev=0;iev<fnSampl;iev++){
+  for(iev=0;iev<fNSampl;iev++){
     MakeAlpha();               // generate uniformly vector inside hypercube
 
-    if(fkDim>0){
-      for(j=0; j<fkDim; j++)
+    if(fDim>0){
+      for(j=0; j<fDim; j++)
         xRand[j]= Posi[j] +fAlpha[j]*(Size[j]);
     }
 
     Wt=Dx*Eval(xRand);
 
     nProj = 0;
-    if(fkDim>0){
-      for(k=0; k<fkDim; k++){
+    if(fDim>0){
+      for(k=0; k<fDim; k++){
         Xproj =fAlpha[k];
         ((TH1D *)(*fHistEdg)[nProj])->Fill(Xproj,Wt);
         nProj++;
       }
     }
     //
-    fnCalls++;
+    fNCalls++;
     CeSum[0] += Wt;    // sum of weights
     CeSum[1] += Wt*Wt; // sum of weights squared
     CeSum[2]++;        // sum of 1
@@ -574,11 +578,11 @@ void TFoam::Explore(TFoamCell *Cell)
     if (CeSum[4]<Wt) CeSum[4]=Wt;  // maximum weight
     // test MC loop exit condition
     NevEff = CeSum[0]*CeSum[0]/CeSum[1];
-    if( NevEff >= fnBin*fEvPerBin) break;
+    if( NevEff >= fNBin*fEvPerBin) break;
   }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
   //------------------------------------------------------------------
   //---  predefine logics of searching for the best division edge ---
-  for(k=0; k<fkDim;k++){
+  for(k=0; k<fDim;k++){
     fMaskDiv[k] =1;                       // default is all
     if( fInhiDiv[k]==1) fMaskDiv[k] =0; // inhibit some...
   }
@@ -586,7 +590,7 @@ void TFoam::Explore(TFoamCell *Cell)
   kBest=-1;
   Double_t rmin,rmax,rdiv;
   if(fOptPRD){          // quick check
-    for(k=0; k<fkDim; k++){
+    for(k=0; k<fDim; k++){
       rmin= Posi[k];
       rmax= Posi[k] +Size[k];
       if( fXdivPRD[k] != 0){
@@ -605,7 +609,7 @@ void TFoam::Explore(TFoamCell *Cell)
   }
   ee05:
   //------------------------------------------------------------------
-  fnEffev += (Long_t)NevEff;
+  fNEffev += (Long_t)NevEff;
   NevMC          = CeSum[2];
   Double_t IntTrue = CeSum[0]/(NevMC+0.000001);
   Double_t IntDriv=0.;
@@ -668,7 +672,7 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
   yBest =1.0;
   Double_t MaxGain=0.0;
   // Now go over all projections kProj
-  for(Int_t kProj=0; kProj<fkDim; kProj++)
+  for(Int_t kProj=0; kProj<fDim; kProj++)
     if( fMaskDiv[kProj]){
     // initialize search over bins
     Double_t SigmIn =0.0; Double_t SigmOut =0.0;
@@ -676,13 +680,13 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
     Double_t Gain =0.0;
     Double_t xMin=0.0; Double_t xMax=0.0;
     // Double loop over all pairs jLo<jUp
-    for(Int_t jLo=1; jLo<=fnBin; jLo++){
+    for(Int_t jLo=1; jLo<=fNBin; jLo++){
       Double_t swIn=0;  Double_t sswIn=0;
-      for(Int_t jUp=jLo; jUp<=fnBin;jUp++){
+      for(Int_t jUp=jLo; jUp<=fNBin;jUp++){
         swIn  +=     ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(jUp);
         sswIn += Sqr(((TH1D *)(*fHistEdg)[kProj])->GetBinError(  jUp));
-        xLo=(jLo-1.0)/fnBin;
-        xUp=(jUp*1.0)/fnBin;
+        xLo=(jLo-1.0)/fNBin;
+        xUp=(jUp*1.0)/fNBin;
         SwIn  =        swIn/Nent;
         SwOut = (swAll-swIn)/Nent;
         SSwIn = sqrt(sswIn)       /sqrt(Nent*(xUp-xLo))     *(xUp-xLo);
@@ -697,14 +701,14 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
         }
       }//jUp
     }//jLo
-    Int_t iLo = (Int_t) (fnBin*xMin);
-    Int_t iUp = (Int_t) (fnBin*xMax);
+    Int_t iLo = (Int_t) (fNBin*xMin);
+    Int_t iUp = (Int_t) (fNBin*xMax);
     //----------DEBUG printout
     //cout<<"@@@@@  xMin xMax = "<<xMin   <<" "<<xMax<<"  iLo= "<<iLo<<"  iUp= "<<iUp;
     //cout<<"  SSwtBest/SSw= "<<SSwtBest/SSw<<"  Gain/SSw= "<< Gain/SSw<<endl;
     //----------DEBUG auxilary Plot
-      for(Int_t iBin=1;iBin<=fnBin;iBin++)
-        if( ((iBin-0.5)/fnBin > xMin) && ((iBin-0.5)/fnBin < xMax) ){
+      for(Int_t iBin=1;iBin<=fNBin;iBin++)
+        if( ((iBin-0.5)/fNBin > xMin) && ((iBin-0.5)/fNBin < xMax) ){
           ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmIn/(xMax-xMin));
         }else{
           ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin,SigmOut/(1-xMax+xMin));
@@ -716,12 +720,12 @@ void TFoam::Varedu(Double_t CeSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
       xBest=xMin;
       yBest=xMax;
       if(iLo == 0   ) xBest=yBest; // The best division point
-      if(iUp == fnBin) yBest=xBest; // this is not really used
+      if(iUp == fNBin) yBest=xBest; // this is not really used
     }
   }
   //----------DEBUG printout
   //cout<<"@@@@@@@>>>>> kBest= "<<kBest<<"  MaxGain/SSw= "<< MaxGain/SSw<<endl;
-  if( (kBest >= fkDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest \n" );
+  if( (kBest >= fDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest \n" );
 }          //TFoam::Varedu
 
 //________________________________________________________________________________________
@@ -738,7 +742,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
   Double_t TheBin;
   Int_t    jDivi; // TEST
 
-  Double_t *Bins  = new Double_t[fnBin];      // bins of histogram for single  PROJECTION
+  Double_t *Bins  = new Double_t[fNBin];      // bins of histogram for single  PROJECTION
   if(Bins==0)    Error("Carver", "Cannot initialize buffer Bins \n" );
 
   kBest =-1;
@@ -746,13 +750,13 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
   yBest =1.0;
   CarvMax = kVlow;
   PrimMax = kVlow;
-  for(kProj=0; kProj<fkDim; kProj++)
+  for(kProj=0; kProj<fDim; kProj++)
     if( fMaskDiv[kProj] ){
     //if( kProj==1 ){
     //cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<endl;
     //((TH1D *)(*fHistEdg)[kProj])->Print("all");
     BinMax = kVlow;
-    for(iBin=0; iBin<fnBin;iBin++){
+    for(iBin=0; iBin<fNBin;iBin++){
       Bins[iBin]= ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(iBin+1);
       BinMax = TMath::Max( BinMax, Bins[iBin]);       // Maximum content/bin
     }
@@ -762,17 +766,17 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
     }
     CarvTot = 0.0;
     BinTot  = 0.0;
-    for(iBin=0;iBin<fnBin;iBin++){
+    for(iBin=0;iBin<fNBin;iBin++){
       CarvTot = CarvTot + (BinMax-Bins[iBin]);     // Total Carve (more stable)
       BinTot  +=Bins[iBin];
     }
-    PrimTot = BinMax*fnBin;
+    PrimTot = BinMax*fNBin;
      //cout <<"Carver:  CarvTot "<<CarvTot<< "    PrimTot "<<PrimTot<<endl;
     jLow =0;
-    jUp  =fnBin-1;
+    jUp  =fNBin-1;
     CarvOne = kVlow;
     Double_t Ylevel = kVlow;
-    for(iBin=0; iBin<fnBin;iBin++){
+    for(iBin=0; iBin<fNBin;iBin++){
       TheBin = Bins[iBin];
       //-----  walk to the left and find first bin > TheBin
       iLow = iBin;
@@ -784,12 +788,12 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
       //if(iLow>0)     while( (TheBin >= Bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
       //------ walk to the right and find first bin > TheBin
       iUp  = iBin;
-      for(Int_t j=iBin; j<fnBin; j++){
+      for(Int_t j=iBin; j<fNBin; j++){
         if(TheBin< Bins[j]) break;
         iUp = j;
       }
       //iUp  = iBin;
-      //if(iUp<fnBin-1) while( (TheBin >= Bins[iUp+1])&&( iUp<fnBin-1 ) ){iUp++;} // horror!!!
+      //if(iUp<fNBin-1) while( (TheBin >= Bins[iUp+1])&&( iUp<fNBin-1 ) ){iUp++;} // horror!!!
       //
       Carve = (iUp-iLow+1)*(BinMax-TheBin);
       if( Carve > CarvOne){
@@ -804,22 +808,22 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
       PrimMax   = PrimTot;
       //cout <<"Carver:   PrimMax "<<PrimMax<<endl;
       kBest = kProj;    // Best edge
-      xBest = ((Double_t)(jLow))/fnBin;
-      yBest = ((Double_t)(jUp+1))/fnBin;
+      xBest = ((Double_t)(jLow))/fNBin;
+      yBest = ((Double_t)(jUp+1))/fNBin;
       if(jLow == 0 )       xBest = yBest;
-      if(jUp  == fnBin-1) yBest = xBest;
-      // division ratio in units of 1/fnBin, testing
+      if(jUp  == fNBin-1) yBest = xBest;
+      // division ratio in units of 1/fNBin, testing
       jDivi = jLow;
       if(jLow == 0 )     jDivi=jUp+1;
     }
     //======  extra histograms for debug purposes
     //cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<endl;
-      for(iBin=0;    iBin<fnBin;  iBin++)
+      for(iBin=0;    iBin<fNBin;  iBin++)
         ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,BinMax);
       for(iBin=jLow; iBin<jUp+1;   iBin++)
         ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,Ylevel);
   }//kProj
-  if( (kBest >= fkDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest \n" );
+  if( (kBest >= fDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest \n" );
   delete [] Bins;
 }          //TFoam::Carver
 
@@ -829,11 +833,11 @@ void TFoam::MakeAlpha()
 // Internal subrogram used by Initialize.
 // Provides random vector Alpha  0< Alpha(i) < 1
   Int_t k;
-  if(fkDim<1) return;
+  if(fDim<1) return;
 
   // simply generate and load kDim uniform random numbers
-  fPseRan->RndmArray(fkDim,fRvec);   // kDim random numbers needed
-  for(k=0; k<fkDim; k++) fAlpha[k] = fRvec[k];
+  fPseRan->RndmArray(fDim,fRvec);   // kDim random numbers needed
+  for(k=0; k<fDim; k++) fAlpha[k] = fRvec[k];
 } //MakeAlpha
 
 
@@ -846,7 +850,7 @@ void TFoam::Grow()
   Long_t iCell;
   TFoamCell* newCell;
 
-  while ( (fLastCe+2) < fnCells ){  // this condition also checked inside Divide
+  while ( (fLastCe+2) < fNCells ){  // this condition also checked inside Divide
       iCell   = PeekMax();        // peek up cell with maximum driver integral
       if( (iCell<0) || (iCell>fLastCe) ) Error("Grow", "Wrong iCell \n");
       newCell = fCells[iCell];
@@ -855,8 +859,8 @@ void TFoam::Grow()
       Int_t kEcho=10;
       if(fLastCe>=10000) kEcho=100;
       if( (fLastCe%kEcho)==0){
-        if(fkDim<10)
-          cout<<fkDim<<flush;
+        if(fDim<10)
+          cout<<fDim<<flush;
         else
           cout<<"."<<flush;
         if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
@@ -914,14 +918,14 @@ Int_t TFoam::Divide(TFoamCell *Cell)
   Double_t Xdiv;
   Int_t   kBest;
 
-  if(fLastCe+1 >= fnCells) Error("Divide", "Buffer limit is reached, fLastCe=fnBuf \n");
+  if(fLastCe+1 >= fNCells) Error("Divide", "Buffer limit is reached, fLastCe=fnBuf \n");
 
   Cell->SetStat(0); // reset Cell as inactive
   fNoAct--;
 
   Xdiv  = Cell->GetXdiv();
   kBest = Cell->GetBest();
-  if( kBest<0 || kBest>=fkDim ) Error("Divide", "Wrong kBest \n");
+  if( kBest<0 || kBest>=fDim ) Error("Divide", "Wrong kBest \n");
 
   //////////////////////////////////////////////////////////////////
   //           define two daughter cells (active)                 //
@@ -1053,13 +1057,13 @@ Double_t TFoam::Eval(Double_t *xRand)
   if(!fRho)    //interactive mode
     {
     Long_t paramArr[3];
-    paramArr[0]=(Long_t)fkDim;
+    paramArr[0]=(Long_t)fDim;
     paramArr[1]=(Long_t)xRand;
     fMethodCall->SetParamPtrs(paramArr);
     fMethodCall->Execute(result);
     }
   else {       //compiled mode
-    result=fRho->Density(fkDim,xRand);
+    result=fRho->Density(fDim,xRand);
   }
 
   return result;
@@ -1120,9 +1124,9 @@ void TFoam::MakeEvent(void)
 
   MakeAlpha();
 
-  TFoamVect  Posi(fkDim); TFoamVect  Size(fkDim);
+  TFoamVect  Posi(fDim); TFoamVect  Size(fDim);
   rCell->GetHcub(Posi,Size);
-  for(j=0; j<fkDim; j++)
+  for(j=0; j<fDim; j++)
     fMCvect[j]= Posi[j] +fAlpha[j]*Size[j];
   Dx = rCell->GetVolume();      // Cartesian volume of the Cell
   //  weight average normalized to PRIMARY integral over the cell
@@ -1130,7 +1134,7 @@ void TFoam::MakeEvent(void)
   Wt=Dx*Eval(fMCvect);
 
   MCwt = Wt / rCell->GetPrim();  // PRIMARY controls normalization
-  fnCalls++;
+  fNCalls++;
   fMCwt   =  MCwt;
   // accumulation of statistics for the main MC weight
   fSumWt  += MCwt;           // sum of Wt
@@ -1160,7 +1164,7 @@ void TFoam::GetMCvect(Double_t *MCvect)
 {
 // User may get generated MC point/vector with help of this method
 
-  for ( Int_t k=0 ; k<fkDim ; k++) *(MCvect +k) = fMCvect[k];
+  for ( Int_t k=0 ; k<fDim ; k++) *(MCvect +k) = fMCvect[k];
 }//GetMCvect
 
 //___________________________________________________________________________________
@@ -1263,7 +1267,7 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
     BXTXT("******     TFoam::Finalize       ******");
     BXTXT("****************************************");
     BX1I("    NevGen",fNevGen, "Number of generated events in the MC generation   ");
-    BX1I("    nCalls",fnCalls, "Total number of function calls                    ");
+    BX1I("    nCalls",fNCalls, "Total number of function calls                    ");
     BXTXT("----------------------------------------");
     BX1F("     AveWt",AveWt,    "Average MC weight                      ");
     BX1F("     WtMin",fWtMin,  "Minimum MC weight (absolute)           ");
@@ -1299,13 +1303,13 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 <!--*/
 // -->END_HTML
 
-  if(fkDim==0) Error("TFoam","SetInhiDiv: fkDim=0 \n");
+  if(fDim==0) Error("TFoam","SetInhiDiv: fDim=0 \n");
   if(fInhiDiv == 0){
-    fInhiDiv = new Int_t[ fkDim ];
-    for(Int_t i=0; i<fkDim; i++) fInhiDiv[i]=0;
+    fInhiDiv = new Int_t[ fDim ];
+    for(Int_t i=0; i<fDim; i++) fInhiDiv[i]=0;
   }
   //
-  if( ( 0<=iDim) && (iDim<fkDim)){
+  if( ( 0<=iDim) && (iDim<fDim)){
     fInhiDiv[iDim] = InhiDiv;
   }else
     Error("SetInhiDiv:","Wrong iDim \n");
@@ -1328,25 +1332,26 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
 
   Int_t i;
 
-  if(fkDim<=0)  Error("SetXdivPRD", "fkDim=0 \n");
+  if(fDim<=0)  Error("SetXdivPRD", "fDim=0 \n");
   if(   len<1 )  Error("SetXdivPRD", "len<1 \n");
   // allocate list of pointers, if it was not done before
   if(fXdivPRD == 0){
-    fXdivPRD = new TFoamVect*[fkDim];
-    for(i=0; i<fkDim; i++)  fXdivPRD[i]=0; // only for hcubic subspace.
+    fXdivPRD = new TFoamVect*[fDim];
+    for(i=0; i<fDim; i++)  fXdivPRD[i]=0; 
   }
-  // set division list for direction iDim in H-cubic subspace!!!
-  if( ( 0<=iDim) && (iDim<fkDim)){
+  // set division list for direction iDim in H-cubic space!!!
+  if( ( 0<=iDim) && (iDim<fDim)){
     fOptPRD =1;      // !!!!
     if( fXdivPRD[iDim] != 0)
       Error("SetXdivPRD", "Second allocation of XdivPRD not allowed \n");
-    fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division
+    fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division points
     for(i=0; i<len; i++){
       (*fXdivPRD[iDim])[i]=xDiv[i]; // set list of division points
     }
   }else
     Error("SetXdivPRD", "Wrong iDim  \n");
-  //[[[[[[[[[[[[[[[[[[[[[
+
+  // Priting predefined division points 
   cout<<" SetXdivPRD, idim= "<<iDim<<"  len= "<<len<<"   "<<endl;
   for(i=0; i<len; i++){
     cout<< (*fXdivPRD[iDim])[i] <<"  ";
@@ -1354,7 +1359,7 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
   cout<<endl;
   for(i=0; i<len; i++)  cout<< xDiv[i] <<"   ";
   cout<<endl;
-  //]]]]]]]]]]]]]]]]]]]]]
+  //
 }//SetXdivPRD
 
 //_______________________________________________________________________________________
@@ -1476,8 +1481,8 @@ void TFoam::RootPlot2dim(Char_t *filename)
   outfile<<"TBox*b=new TBox();"<<endl;  // single cell
   outfile <<"b->SetFillStyle(0);"<<endl;
   //
-  if(fkDim==2 && fLastCe<=2000){
-    TFoamVect  Posi(fkDim); TFoamVect  Size(fkDim);
+  if(fDim==2 && fLastCe<=2000){
+    TFoamVect  Posi(fDim); TFoamVect  Size(fDim);
     outfile << "// =========== Rectangular cells  ==========="<< endl;
     for(iCell=1; iCell<=fLastCe; iCell++){
       if( fCells[iCell]->GetStat() == 1){
@@ -1504,6 +1509,8 @@ void TFoam::RootPlot2dim(Char_t *filename)
 
 void TFoam::LinkCells()
 {
+// Void function for backward compatibility
+
   Info("LinkCells", "VOID function for backward compatibility \n");
   return;
 }

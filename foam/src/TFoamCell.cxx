@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.4 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.5 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_________________________________________________________________________________
@@ -141,7 +141,7 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
 void    TFoamCell::GetHSize( TFoamVect &Size)  const
 {
 // Provides size of the cell
-// Size parameters are calculated by analysing information in all parents
+// Size parameters are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
   if(fkDim<1) return;
     const TFoamCell *pCell,*dCell;

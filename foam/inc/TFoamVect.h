@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.5 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamVect.h,v 1.6 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamVect
@@ -35,7 +35,7 @@ class TFoamVect : public TObject {
     TFoamVect& operator =(const TFoamVect&);  // = operator; Substitution
     Double_t &operator[](Int_t);              // [] provides POINTER to coordinate
     TFoamVect& operator =(Double_t []);       // LOAD IN entire double vector
-    TFoamVect& operator =(Double_t);          // LOAD IN double numer
+    TFoamVect& operator =(Double_t);          // LOAD IN double number
 //////////////////////////   OTHER METHODS    //////////////////////////////////
     TFoamVect& operator+=(const  TFoamVect&); // +=; add vector u+=v  (FAST)
     TFoamVect& operator-=(const  TFoamVect&); // +=; add vector u+=v  (FAST)

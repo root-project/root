@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.3 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.4 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamCell
@@ -9,7 +9,7 @@
 //                                                                                //
 // Objects of this class are hyperrectangular cells organized in the binary tree. //
 // Special algoritm for encoding relalive positioning of the cells                //
-// saves total memory allocaction needed for the system of cells.                 //
+// saves total memory allocation needed for the system of cells.                  //
 ////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TRef

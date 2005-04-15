@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.4 2005/04/12 12:31:39 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.h,v 1.5 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoam
@@ -15,6 +15,8 @@
 #include "TObject.h"
 #endif
 
+#include "TString.h"
+
 class TH1D;
 class TRefArray;
 class TMethodCall;
@@ -29,29 +31,29 @@ class TFoam : public TObject {
  private:
   // COMPONENTS //
   //-------------- Input parameters
-  Char_t  fName[128];        // Name of a given instance of the FOAM class
-  Char_t  fVersion[10];      // Actual version of the FOAM like (1.01m)
-  Char_t  fDate[40];         // Release date of FOAM
-  Int_t   fkDim;             // Dimension of the integration/simulation space
-  Int_t   fnCells;           // Maximum number of cells
+  TString fName;             // Name of a given instance of the FOAM class
+  TString fVersion;          // Actual version of the FOAM like (1.01m)
+  TString fDate;             // Release date of FOAM
+  Int_t   fDim;              // Dimension of the integration/simulation space
+  Int_t   fNCells;           // Maximum number of cells
   Int_t   fRNmax;            // Maximum No. of the rand. numb. requested at once
   //-------------------
   Int_t   fOptDrive;         // Optimization switch =1,2 for variance or maximum weight optimization
   Int_t   fChat;             // Chat=0,1,2 chat level in output, Chat=1 normal level
   Int_t   fOptRej;           // Switch =0 for weighted events; =1 for unweighted events in MC
   //-------------------
-  Int_t   fnBin;             // No. of bins in the edge histogram for cell MC exploration
-  Int_t   fnSampl;           // No. of MC events, when dividing (exploring) cell
+  Int_t   fNBin;             // No. of bins in the edge histogram for cell MC exploration
+  Int_t   fNSampl;           // No. of MC events, when dividing (exploring) cell
   Int_t   fEvPerBin;         // Maximum number of effective (wt=1) events per bin
   //-------------------  MULTI-BRANCHING ---------------------
-  Int_t  *fMaskDiv;          //! [fkDim] Dynamic Mask for  cell division
-  Int_t  *fInhiDiv;          //! [fkDim] Flags for inhibiting cell division
+  Int_t  *fMaskDiv;          //! [fDim] Dynamic Mask for  cell division
+  Int_t  *fInhiDiv;          //! [fDim] Flags for inhibiting cell division
   Int_t   fOptPRD;           //  Option switch for predefined division, for quick check
   TFoamVect **fXdivPRD;      //! Lists of division values encoded in one vector per direction
   //-------------------  GEOMETRY ----------------------------
   Int_t   fNoAct;            // Number of active cells
   Int_t   fLastCe;           // Index of the last cell
-  TFoamCell **fCells;           // [fnCells] Array of ALL cells
+  TFoamCell **fCells;           // [fNCells] Array of ALL cells
   //------------------ M.C. generation----------------------------
   TFoamMaxwt   *fMCMonit;    // Monitor of the MC weight for measuring MC efficiency
   Double_t   fMaxWtRej;      // Maximum weight in rejection for getting wt=1 events
@@ -61,16 +63,16 @@ class TFoam : public TObject {
   TObjArray *fHistDbg;       // Histograms of wt, for debug
   TH1D      *fHistWt;        // Histogram of the MC wt
 
-  Double_t  *fMCvect;        // [fkDim] Generated MC vector for the outside user
+  Double_t *fMCvect;         // [fDim] Generated MC vector for the outside user
   Double_t  fMCwt;           // MC weight
-  Double_t *fRvec;           // [fRNmax] random number vector from r.n. generator fkDim+1 maximum elements
+  Double_t *fRvec;           // [fRNmax] random number vector from r.n. generator fDim+1 maximum elements
   //----------- Procedures
   TFoamIntegrand *fRho;      // Pointer to the user-defined integrand function/distribution
   TMethodCall *fMethodCall;  //! ROOT's pointer to user-defined global distribution function
   TRandom         *fPseRan;  // Pointer to user-defined generator of pseudorandom numbers
   //----------- Statistics and MC results
-  Long_t   fnCalls;          // Total number of the function calls
-  Long_t   fnEffev;          // Total number of effective events (wt=1) in the foam buildup
+  Long_t   fNCalls;          // Total number of the function calls
+  Long_t   fNEffev;          // Total number of effective events (wt=1) in the foam buildup
   Double_t fSumWt, fSumWt2;  // Total sum of wt and wt^2
   Double_t fSumOve;          // Total Sum of overveighted events
   Double_t fNevGen;          // Total number of the generated MC events
@@ -79,7 +81,7 @@ class TFoam : public TObject {
   Double_t fMCresult;        // True Integral R from MC series
   Double_t fMCerror;         // and its error
   //----------  working space for CELL exploration -------------
-  Double_t *fAlpha;          // [fkDim] Internal parameters of the hyperrectangle
+  Double_t *fAlpha;          // [fDim] Internal parameters of the hyperrectangle
   //////////////////////////////////////////////////////////////////////////////////////////////
   //                                     METHODS                                              //
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,10 +124,10 @@ class TFoam : public TObject {
   void SetPseRan(TRandom *PseRan){fPseRan=PseRan;}   // Set new r.n. generator
   void ResetPseRan(TRandom *PseRan);                 // Set new r.n.g, delete old
   // Getters and Setters
-  void SetkDim(Int_t kDim){fkDim = kDim;}          // Sets dimension of cubical space
-  void SetnCells(Long_t nCells){fnCells =nCells;}  // Sets maximum number of cells
-  void SetnSampl(Long_t nSampl){fnSampl =nSampl;}  // Sets no of MC events in cell exploration
-  void SetnBin(Int_t nBin){fnBin = nBin;}          // Sets no of bins in histogs in cell exploration
+  void SetkDim(Int_t kDim){fDim = kDim;}            // Sets dimension of cubical space
+  void SetnCells(Long_t nCells){fNCells =nCells;}  // Sets maximum number of cells
+  void SetnSampl(Long_t nSampl){fNSampl =nSampl;}  // Sets no of MC events in cell exploration
+  void SetnBin(Int_t nBin){fNBin = nBin;}          // Sets no of bins in histogs in cell exploration
   void SetChat(Int_t Chat){fChat = Chat;}          // Sets option Chat, chat level
   void SetOptRej(Int_t OptRej){fOptRej =OptRej;}   // Sets option for MC rejection
   void SetOptDrive(Int_t OptDrive){fOptDrive =OptDrive;}  // Sets optimization switch
@@ -134,12 +136,12 @@ class TFoam : public TObject {
   void SetInhiDiv(Int_t, Int_t );            // Set inhibition of cell division along certain edge
   void SetXdivPRD(Int_t, Int_t, Double_t[]); // Set predefined division points
   // Getters and Setters
-  const char *GetVersion() const {return fVersion;}       // Get version of the FOAM
-  Int_t    GetTotDim() const { return fkDim;}          // Get total dimension
-  Double_t GetPrimary() const {return fPrime;}         // Get value of primary integral R'
-  void GetPrimary(Double_t &prime) {prime = fPrime;}  // Get value of primary integral R'
-  Long_t GetnCalls() const {return fnCalls;}            // Get total no. of the function calls
-  Long_t GetnEffev() const {return fnEffev;}            // Get total no. of effective wt=1 events
+  const char *GetVersion() const {return fVersion.Data();}// Get version of the FOAM
+  Int_t    GetTotDim() const { return fDim;}              // Get total dimension
+  Double_t GetPrimary() const {return fPrime;}            // Get value of primary integral R'
+  void GetPrimary(Double_t &prime) {prime = fPrime;}      // Get value of primary integral R'
+  Long_t GetnCalls() const {return fNCalls;}            // Get total no. of the function calls
+  Long_t GetnEffev() const {return fNEffev;}            // Get total no. of effective wt=1 events
   // Debug
   void CheckAll(Int_t);     // Checks correctness of the entire data structure in the FOAM object
   void PrintCells();        // Prints content of all cells

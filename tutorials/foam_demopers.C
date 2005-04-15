@@ -7,7 +7,6 @@
 
 Int_t foam_demopers()
 {
-  gSystem->Load("libFoam.so");
   gROOT->ProcessLine(".L foam_demo.C+");
   //******************************************
   cout<<"====================== TestVector ================================"<<endl;
@@ -25,7 +24,7 @@ Int_t foam_demopers()
   //*******************************************
   TFoam  *FoamX = (TFoam*)fileA.Get("FoamX");
   //*******************************************
-  FoamX->PrintCells();
+//  FoamX->PrintCells();
   FoamX->CheckAll(1);
 
  Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
@@ -38,11 +37,11 @@ Int_t foam_demopers()
     if(loop<10) cout<<"(x,y) =  ( "<< x <<", "<< y <<" )"<<endl;
     }// loop
   //
+  Double_t IntNorm, Errel;
+  FoamX->Finalize(   IntNorm, Errel);     // final printout
   Double_t MCresult, MCerror;
   FoamX->GetIntegMC( MCresult, MCerror);  // get MC integral, should be one
   cout << " MCresult= " << MCresult << " +- " << MCerror <<endl;
-  Double_t IntNorm, Errel;
-  FoamX->Finalize(   IntNorm, Errel);     // final printout
   cout<<"===================== TestPers FINISHED ======================="<<endl;
   return 0;
 }
