@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.124 2005/03/31 20:13:52 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.125 2005/04/13 18:04:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3739,20 +3739,16 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
    int ext = 0, len = strlen(lib);
    if (len > 3 && (!strcmp(lib+len-3, ".sl") ||
                    !strcmp(lib+len-3, ".dl") ||
-#ifdef R__WINGCC
                    !strcmp(lib+len-4, ".dll")||
                    !strcmp(lib+len-4, ".DLL")||
-#endif
                    !strcmp(lib+len-3, ".so") ||
                    !strcmp(lib+len-2, ".a"))) {
       name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
       ext  = 1;
    } else {
-#ifdef R__WINGCC
       name = Form("%s.dll", lib);
       name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
       if (!name) {
-#endif
          name = Form("%s.so", lib);
          name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
          if (!name) {
@@ -3766,9 +3762,7 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
                    name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
                 }
             }
-#ifdef R__WINGCC
          }
-#endif
       }
    }
 
@@ -3777,13 +3771,8 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
          Error("DynamicPathName",
                "%s does not exist in %s", lib, GetDynamicPath());
       else
-#ifdef R__WINGCC
          Error("DynamicPathName",
                "%s[.so | .sl | .dl | .a | .dll] does not exist in %s", lib, GetDynamicPath());
-#else
-         Error("DynamicPathName",
-               "%s[.so | .sl | .dl | .a] does not exist in %s", lib, GetDynamicPath());
-#endif
    }
 
    return name;
