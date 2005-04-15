@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.103 2005/03/08 17:28:15 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.104 2005/03/11 00:49:46 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -258,9 +258,6 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))

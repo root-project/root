@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.11 2005/03/01 17:05:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.12 2005/03/11 18:33:48 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -38,7 +38,8 @@
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4 || \
+      (defined(R__SUNGCC3) && defined(__arch64__)) || \
+      defined(MAC_OS_X_VERSION_10_4) || \
       (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.125 2005/04/13 18:04:44 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.126 2005/04/15 13:21:24 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -170,7 +170,8 @@
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4 || \
+      (defined(R__SUNGCC3) && defined(__arch64__)) || \
+      defined(MAC_OS_X_VERSION_10_4) || \
       (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif

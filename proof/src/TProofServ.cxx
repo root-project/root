@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.86 2005/03/11 08:28:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.87 2005/04/13 16:56:52 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include "RConfig.h"
+
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;
@@ -34,9 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.79 2005/03/11 18:36:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.80 2005/03/31 23:57:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -296,12 +296,16 @@
 #endif
 
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
+#   include <AvailabilityMacros.h>
 #   define R__MACOSX
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
 #      define R__ANSISTREAM
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   endif
+#   if defined(__ppc64__)
+#      define R__B64      /* enable when 64 bit machine */
 #   endif
 #endif
 
