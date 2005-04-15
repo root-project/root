@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.17 2005/03/04 09:29:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.18 2005/04/14 06:52:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -631,7 +631,7 @@ Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
    TListIter next(fGraphs);
    TObject *obj;
    while ((obj = next())) {
-      if (obj == gr) return next.GetOption();
+      if (obj == (TObject*)gr) return next.GetOption();
    }
    return "";
 }
