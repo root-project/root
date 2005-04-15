@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.5 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.6 2005/03/07 07:44:12 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -33,6 +33,17 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TGClient.h"
+
+#include "qmessagebox.h"
+
+//________________________________________________________________
+static int QVersion(const char *ver) {
+   // convert the Qversion string into the interger
+    QString version = QString::fromLatin1(ver);
+    return   (version.section('.',0,0).toInt()<<16)
+          +  (version.section('.',1,1).toInt()<<8 )
+          +  (version.section('.',2,2).toInt()    );
+}
 
 TQtApplication *TQtApplication::fgQtApplication = 0;
 
@@ -69,7 +80,7 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
        QString display = gSystem->Getenv("DISPLAY");
        // check the QT_BATCH option
        if (display.contains("QT_BATCH")) GUIenabled = false;
-       qApp = new QApplication (argc, argv, GUIenabled );
+       qApp = new QApplication(argc,argv,GUIenabled);
        // The string must be one of the QStyleFactory::keys(),
        // typically one of
        //      "windows", "motif",     "cde",    "motifplus", "platinum", "sgi"
@@ -83,6 +94,26 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
       TTimer *idle = new TTimer(240); idle->TurnOn();
 #endif
    }
+   // Check the compatibility
+   Int_t validQtVersion = QVersion(ROOT_VALID_QT_VERSION);
+   Int_t thisQtVersion  = QVersion(qVersion());
+   if (thisQtVersion < validQtVersion) {
+       QString s = QApplication::tr("Executable '%1' was compiled with Qt %2 and requires Qt %3 at least, found Qt %4.")
+            .arg(QString::fromLatin1(qAppName()))
+            .arg(QString::fromLatin1(QT_VERSION_STR))
+            .arg(QString::fromLatin1(ROOT_VALID_QT_VERSION))
+            .arg(QString::fromLatin1(qVersion()) ); 
+      QMessageBox::critical( 0, QApplication::tr("Incompatible Qt Library Error" ), s, QMessageBox::Abort,0 );
+      qFatal(s.ascii());
+   } else if (thisQtVersion < QtVersion()) {
+       QString s = QApplication::tr("Executable '%1' was compiled with Qt %2, found Qt %3.")
+            .arg(QString::fromLatin1(qAppName()))
+            .arg(QString::fromLatin1(QT_VERSION_STR))
+            .arg(QString::fromLatin1(qVersion()) ); 
+      QMessageBox::warning( 0, QApplication::tr("Upgrade Qt Library Warning" ), s, QMessageBox::Abort,0 );
+      qWarning(s.ascii());
+   }
+  
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)
    char *qtPluginPath = gSystem->ConcatFileName(gSystem->Getenv("ROOTSYS"),"/Qt/plugins");
    if (!gSystem->AccessPathName(qtPluginPath))
@@ -120,6 +151,11 @@ bool TQtApplication::Terminate()
     delete  app;
   }
   return TRUE;
+}
+//______________________________________________________________________________
+Int_t TQtApplication::QtVersion(){
+     // The Qt version the package was compiled with
+   return  QVersion(QT_VERSION_STR);
 }
 //______________________________________________________________________________
 bool TQtApplication::IsThisGuiThread()

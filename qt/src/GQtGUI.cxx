@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.10 2005/03/25 19:41:03 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.11 2005/04/06 09:32:11 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -122,7 +122,7 @@ QColor &TGQt::QtColor(ULong_t pixel)
       QColor *c =  (*colorIterator).second;
       return *c;
    } else {
-      // this is a new color reg x green x blue
+      // this is a new color (red x green x blue)
       ColorStruct_t newColor;
       newColor.fRed  =  (pixel & 255);
       pixel = pixel >> 8;
@@ -615,7 +615,7 @@ Bool_t TGQt::AllocColor(Colormap_t /*cmap*/, ColorStruct_t &color)
 
    // Fons thinks they must be 65535  (see TColor::RGB2Pixel and TColor::RGB2Pixel)
    int cFactor=1;
-   if (color.fRed>255 || color.fGreen>255 || color.fBlue>255 ){
+   if (color.fRed>256 || color.fGreen>256 || color.fBlue>256 ){
       cFactor = 257;
    }
    QColor *thisColor = new QColor(color.fRed/cFactor,color.fGreen/cFactor,color.fBlue/cFactor);
@@ -1526,6 +1526,8 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
     if (id == kNone) return;
             // fprintf(stderr,"TQt::GrabKey has no QT-based implementation yet: %p %d %c %x \n",((TQtClientWidget*)wid(id)), keycode,keycode,modifier);
     if (grab ) {
+       wid(id)->setActiveWindow();
+       SetInputFocus(id);
       ((TQtClientWidget*)wid(id))->SetKeyMask(keycode,modifier);
       // wid(id)->grabKeyboard();
     } else {
@@ -1885,13 +1887,13 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Tab,       kKey_Tab},
    {Qt::Key_Enter,     kKey_Enter},
    {Qt::Key_Equal,     kKey_Equal},
-   {Qt::Key_Asterisk,  kKey_Asterisk},
-   {Qt::Key_Plus,      kKey_Plus},
-   {Qt::Key_Comma,     kKey_Comma},
-   {Qt::Key_Minus,     kKey_Minus},
-   {Qt::Key_Period,    kKey_Period},
-   {Qt::Key_Slash,     kKey_Slash},
-   {Qt::Key(0), (EKeySym) 0}
+   {Qt::Key_F1,        kKey_F1 },
+   {Qt::Key_F2,        kKey_F2 },
+   {Qt::Key_F3,        kKey_F3 },
+   {Qt::Key_F4,        kKey_F4 },
+   {Qt::Key_PageUp,    kKey_PageUp },
+   {Qt::Key_PageDown,  kKey_PageDown },
+   {Qt::Key(0), (EKeySym) 0}   
 };
 //______________________________________________________________________________________
 static inline Int_t MapKeySym(int key, bool toQt=true)
@@ -2049,6 +2051,10 @@ void         TGQt::LookupString(Event_t *ev, char *tmp, Int_t /*n*/, UInt_t &key
     // representing the string that is currently mapped to the key code.
 
     keysym = ev->fCode;
+    // we have to accomodate the new ROOT GUI logic.
+    // the information about the "ctrl" key should provided TWICE nowadays 12.04.2005 vf.
+    if (ev->fState & kKeyControlMask) keysym -= keysym > 'Z' ? 96 :64;
+//    if (ev->fState & kKeyControlMask) if (isupper(keysym)) keysym += 32;
     *tmp = keysym; tmp++;
     *tmp = '\0';
 }

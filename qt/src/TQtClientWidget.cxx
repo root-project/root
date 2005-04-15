@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.3 2004/08/13 06:05:17 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.4 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TQtWidget.h"
 #include "TQtClientWidget.h"
 #include "TQtClientFilter.h"
@@ -19,6 +18,7 @@
 #include <qkeysequence.h>
 #include <qaccel.h>
 #include <qevent.h>
+#include <qobjectlist.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -100,22 +100,36 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
 
    return grab;
 }
-#if 0
 //______________________________________________________________________________
-bool TQtClientWidget::IsKeyGrabbed(Event_t &ev)
+TQtClientWidget *TQtClientWidget::IsKeyGrabbed(const Event_t &ev)
 {
    // Check ROOT Event_t ev structure for the KeyGrab mask
 
-   // fprintf(stderr,"Do we grab ? %p <%c> event= %p <%c> mask = %x\n",Window_t((QPaintDevice *)this), fKeyCode, ev.fWindow, ev.fCode,fGrabKeyMask);
-   if (ev.fCode == UInt_t(fKeyCode) && ((ev.fState & fGrabKeyMask) || fGrabKeyMask == kAnyModifier) )
-   {
-      ev.fWindow = Window_t((QPaintDevice *)this);
-      fprintf(stderr,"Yes we do %c\n", fKeyCode);
-      return true;
+   // fprintf(stderr,"Do we grab ? current window %p; event window = %p  code <%c>, grabber = %p\n",TGQt::wid(this), TGQt::rootwid(TGQt::wid(ev.fWindow)), ev.fCode,fGrabbedKey);
+   TQtClientWidget *grabbed = 0;
+   UInt_t modifier = ev.fState;
+    
+   if (SetKeyMask(ev.fCode,  modifier, kTestKey)) grabbed = this;
+   if (grabbed && ( ev.fType == kKeyRelease)) {
+      SetKeyMask(ev.fCode,  modifier, kRemove);
    }
-   return false;
+   TQtClientWidget *wg = this;
+   if (!grabbed) {
+      // check parent 
+      do {
+          wg = (TQtClientWidget *)wg->parentWidget();
+      }  while ( wg && (grabbed = wg->IsKeyGrabbed(ev)) );
+   }
+   if (!grabbed) {
+      // Check children
+      const QObjectList *childList = children();
+      if (childList) {
+         QObjectListIterator next(*childList);
+         while((wg = dynamic_cast<TQtClientWidget *>(next.current())) && !(grabbed=wg->IsKeyGrabbed(ev)) ) ++next;
+      }
+   }
+   return grabbed;
 }
-#endif
 //______________________________________________________________________________
 void TQtClientWidget::GrabEvent(Event_t &ev, bool own)
 {
@@ -131,8 +145,7 @@ void TQtClientWidget::GrabEvent(Event_t &ev, bool own)
          ev.fY      = mapped.y();
       } else {
         // replace the original Windows_t  with the grabbing id
-        QPaintDevice *paintDev = (QPaintDevice *)this;
-        ev.fWindow          = Window_t(paintDev);
+         ev.fWindow          = TGQt::wid(this);
         // fprintf(stderr,"---- TQtClientWidget::GrabEvent\n");
       }
       // TGQt::PrintEvent(ev);
@@ -197,10 +210,13 @@ void TQtClientWidget::UnSetPointerMask(bool dtor)
    }
 }
 //______________________________________________________________________________
-void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
+Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
 {
    // Set the key button mask
-
+   // insert   = -1 - remove
+   //             0 - test
+   //            +1 - insert
+   Bool_t found = kTRUE;
    int key[5]= {0,0,0,0,0};
    int index = 0;
    if (keycode) {
@@ -211,33 +227,55 @@ void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
          if (modifier & kKeyControlMask) key[index++] = CTRL;
          if (modifier & kKeyMod1Mask)    key[index++] = ALT;
      }
-                                         key[index++] = keycode;
+                                         key[index++] = UNICODE_ACCEL + keycode;
    }
    assert(index<=4);
-   if (insert && keycode) {
-      if (!fGrabbedKey)  {
-         fGrabbedKey = new QAccel(this);
-         connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
-      }
-      QKeySequence keys(key[0],key[1],key[2],key[3]);
-      if (fGrabbedKey->findKey(keys) == -1)  {
-         fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
-         // fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,fGrabbedKey->count()+1);
-      }
-   } else {
-      if (fGrabbedKey)  {
+   switch (insert) {
+      case kInsert:
          if (keycode) {
-           int id = fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3]));
-           // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,id);
-           if (id != -1) fGrabbedKey->removeItem(id);
-           if (fGrabbedKey->count() ==  0) {  delete fGrabbedKey; fGrabbedKey = 0; }
-        } else {
+           if (!fGrabbedKey)  {
+              fGrabbedKey = new QAccel(this);
+     //         connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
+            }
+            QKeySequence keys(key[0],key[1],key[2],key[3]);
+            if (fGrabbedKey->findKey(keys) == -1)  {
+              int itemId = fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
+           //      fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d, evail=%d \n", TGQt::wid(this), modifier, keycode ,fGrabbedKey->count()
+           //   , fGrabbedKey->isEnabled() );
+            }
+            TQtClientFilter *f = gQt->QClientFilter();
+            f->SetKeyGrabber(this);
+        }
+         break;
+      case kRemove:
+         if (!fGrabbedKey)  break;
+         if (keycode) {
+              int id = fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3]));
+            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,id);
+            if (id != -1) fGrabbedKey->removeItem(id);
+            if (fGrabbedKey->count() ==  0) { 
+                delete fGrabbedKey; fGrabbedKey = 0; 
+                TQtClientFilter *f = gQt->QClientFilter();
+                f->UnSetKeyGrabber(this);
+            }
+         } else {
            // keycode ==0 - means delete all accelerators
            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' \n", this, modifier, keycode);
-           delete fGrabbedKey; fGrabbedKey = 0;
-        }
-     }
+             delete fGrabbedKey; fGrabbedKey = 0;
+             TQtClientFilter *f = gQt->QClientFilter();
+             f->UnSetKeyGrabber(this);
+         }
+         break;
+      case kTestKey:
+         if (fGrabbedKey) {
+            found = (fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3])) != -1);
+           // fprintf(stderr,"\n+%p:testing  TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' found=%d \n", TGQt::wid(this), modifier, keycode ,found);
+         }
+
+         break;
+      default: break;
   }
+  return found;
 }
 //______________________________________________________________________________
 void TQtClientWidget::SetCanvasWidget(TQtWidget *widget)
@@ -259,12 +297,12 @@ void TQtClientWidget::UnSetKeyMask(Int_t keycode, UInt_t modifier)
 {
   // Unset the key button mask
 
-  SetKeyMask(keycode, modifier, false);
+  SetKeyMask(keycode, modifier, kRemove);
 }
 //_____slot _________________________________________________________________________
 void TQtClientWidget::Accelerate(int id)
 {
-  // Qt slot to responcd to the "Keyboard accelerator signal"
+  // Qt slot to respond to the "Keyboard accelerator signal"
   QKeySequence key = fGrabbedKey->key(id);
   int l = key.count();
   int keycode = key[l-1];
@@ -278,6 +316,7 @@ void TQtClientWidget::Accelerate(int id)
      };
   }
   QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);
+  fprintf(stderr,"TQtClientWidget::Accelerate %c\n", keycode);
   QApplication::sendEvent( this, &ac );
 }
 //______________________________________________________________________________

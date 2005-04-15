@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.35 2005/03/01 00:40:53 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.36 2005/04/14 01:10:28 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -65,13 +65,16 @@ protected:
           { }
        void SetCanvasWidget(TQtWidget *widget);
 public:
+    enum {kRemove = -1, kTestKey = 0, kInsert = 1};
     virtual ~TQtClientWidget();
     virtual void closeEvent(QCloseEvent *ev);
     bool   DeleteNotify();
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
+    QAccel *HasAccel() const ;
     bool   IsClosing();
     bool   IsGrabbed       (Event_t &ev);
+    TQtClientWidget *IsKeyGrabbed(const Event_t &ev);
     bool   IsPointerGrabbed(Event_t &ev);
     UInt_t IsEventSelected (UInt_t evmask);
     bool   IsGrabOwner()   { return fPointerOwner;}
@@ -84,7 +87,7 @@ public:
     void   SetEventMask    (UInt_t evmask);
     void   SelectInput     (UInt_t evmask);
     void   SetPointerMask  (UInt_t modifier, Cursor_t cursor, Bool_t owner_events);
-    void   SetKeyMask      (Int_t keycode = 0, UInt_t modifier=kAnyModifier,bool insert=true);
+    Bool_t SetKeyMask      (Int_t keycode = 0, UInt_t modifier=kAnyModifier,int insert=kInsert);
     void   UnSetButtonMask (bool dtor=false);
     void   UnSetPointerMask(bool dtor=false);
     void   UnSetKeyMask(Int_t keycode = 0, UInt_t modifier=kAnyModifier);
@@ -130,6 +133,9 @@ inline bool TQtClientWidget::DeleteNotify(){return fDeleteNotify; }
 //______________________________________________________________________________
 inline TQtWidget *TQtClientWidget::GetCanvasWidget() const
 { return fCanvasWidget;}
+ //______________________________________________________________________________
+inline QAccel *TQtClientWidget::HasAccel() const 
+{  return fGrabbedKey; }
 
 //______________________________________________________________________________
 inline bool  TQtClientWidget::IsClosing(){ return fIsClosing; }
