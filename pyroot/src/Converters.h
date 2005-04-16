@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.3 2005/04/14 21:53:47 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.4 2005/04/15 17:37:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -94,6 +94,11 @@ namespace PyROOT {
 
    private:
       TClassRef fClass;
+   };
+
+   class LongLongArrayConverter : public VoidArrayConverter {
+   public:
+      virtual bool SetArg( PyObject*, G__CallFunc* );
    };
 
    PYROOT_BASIC_CONVERTER( PyObjectConverter );

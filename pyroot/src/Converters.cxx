@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.4 2005/04/14 21:53:47 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.5 2005/04/15 17:37:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -244,6 +244,18 @@ bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
 }
 
 //____________________________________________________________________________
+bool PyROOT::LongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+   if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
+      Py_DECREF( pytc );           // such thing for long long in module array
+      return false;
+   }
+   
+   return VoidArrayConverter::SetArg( pyobject, func );
+}
+
+//____________________________________________________________________________
 bool PyROOT::PyObjectConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
 // by definition: set and declare success
@@ -279,6 +291,7 @@ namespace {
    PYROOT_CONVERTER_FACTORY( FloatArrayConverter )
    PYROOT_CONVERTER_FACTORY( DoubleArrayConverter )
    PYROOT_CONVERTER_FACTORY( TStringConverter )
+   PYROOT_CONVERTER_FACTORY( LongLongArrayConverter )
    PYROOT_CONVERTER_FACTORY( PyObjectConverter )
 
    Converter* CreateConstVoidArrayConverter()
@@ -322,6 +335,7 @@ namespace {
 
    // factories for special cases
       ncp_t( "TString",            &CreateTStringConverter            ),
+      ncp_t( "long long*",         &CreateLongLongArrayConverter      ),
       ncp_t( "PyObject*",          &CreatePyObjectConverter           ),
       ncp_t( "_object*",           &CreatePyObjectConverter           )
    };

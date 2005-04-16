@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.3 2005/03/07 21:46:25 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -93,6 +93,7 @@ namespace {
             return result;
 
       // fall through: python is dynamic, and so, the hashing isn't infallible
+         PyErr_Clear();
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
