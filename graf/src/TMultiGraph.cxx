@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.18 2005/04/14 06:52:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.19 2005/04/15 14:49:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -212,6 +212,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 //                   (by default, any previous function is deleted)
 //             = "C" In case of linear fitting, not calculate the chisquare
 //                    (saves time)
+//             = "F" If fitting a polN, switch to minuit fitter
 //
 //   When the fit is drawn (by default), the parameter goption may be used
 //   to specify a list of graphics options. See TGraph::Paint for a complete
@@ -376,6 +377,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    fitOption.Plus    = 0;
    fitOption.User    = 0;
    fitOption.Nochisq = 0;
+   fitOption.Minuit  = 0;
    TString opt = option;
    opt.ToUpper();
 
@@ -390,7 +392,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-
+   if (opt.Contains("F"))fitOption.Minuit   = 1;
 
    if (rxmax > rxmin) {
       xmin = rxmin;
@@ -431,12 +433,13 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    ///////////////
    //set the fitter
    //////////////
-   //TClass *cl=gROOT->GetClass("TLinearFitter");
-   //
+
    Int_t special=f1->GetNumber();
    Bool_t linear = f1->IsLinear();
    if (special==299+npar)
       linear=kTRUE;
+   if (fitOption.Bound || fitOption.User || fitOption.Errors || fitOption.Minuit)
+      linear = kFALSE;
 
    char l[]="TLinearFitter";
    Int_t strdiff = 0;
@@ -447,14 +450,12 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
-      //
       TClass *cl = gROOT->GetClass("TLinearFitter");
       if (IsSet && strdiff!=0) {
 	 delete TVirtualFitter::GetFitter();
 	 IsSet=kFALSE;
       }
       if (!IsSet) {
-	//TLinearFitter *lf=(TLinearFitter *)cl->New();
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
@@ -480,7 +481,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       f1->SetRange(xmin, xmax);
    }
 
-   if (linear && !fitOption.Bound && !fitOption.Like && !fitOption.Errors){
+   if (linear){
       grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
      
    } else {
@@ -714,6 +715,7 @@ void TMultiGraph::InitPolynom(Double_t xmin, Double_t xmax)
    LeastSquareFit(npar, fitpar, xmin, xmax);
 
    for (Int_t i=0;i<npar;i++) f1->SetParameter(i, fitpar[i]);
+
 }
 
 //______________________________________________________________________________

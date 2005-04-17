@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.5 2005/03/04 15:32:26 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.6 2005/03/15 12:13:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -254,6 +254,7 @@ TLinearFitter::~TLinearFitter()
 
    if (fFormula)
       delete [] fFormula;
+  
    fFormula = 0;
    delete [] fFixedParams;
    fFixedParams = 0;
@@ -396,21 +397,21 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       fDesignTemp2+=fDesignTemp3;
       fDesignTemp3.Zero();
       fAtbTemp2+=fAtbTemp3;
-      fAtbTemp3.Zero();
-   }
-   if (fNpoints % 10000 == 0 && fNpoints>10000){
-      fDesignTemp+=fDesignTemp2;
-      fDesignTemp2.Zero();
-      fAtbTemp+=fAtbTemp2;
-      fAtbTemp2.Zero();
-      fY2+=fY2Temp;
-      fY2Temp=0;
-   }
-   if (fNpoints % 1000000 == 0 && fNpoints>1000000){
-      fDesign+=fDesignTemp;
-      fDesignTemp.Zero();
-      fAtb+=fAtbTemp;
-      fAtbTemp.Zero();
+      fAtbTemp3.Zero();   
+      if (fNpoints % 10000 == 0 && fNpoints>10000){
+         fDesignTemp+=fDesignTemp2;
+         fDesignTemp2.Zero();
+         fAtbTemp+=fAtbTemp2;
+         fAtbTemp2.Zero();
+         fY2+=fY2Temp;
+         fY2Temp=0;	 
+	 if (fNpoints % 1000000 == 0 && fNpoints>1000000){
+            fDesign+=fDesignTemp;
+            fDesignTemp.Zero();
+            fAtb+=fAtbTemp;
+            fAtbTemp.Zero();
+	 }
+      }
    }
 }
 
@@ -488,10 +489,11 @@ void TLinearFitter::Chisquare()
    Double_t temp, temp2;
 
    if (fEcorsum/fEsum > 1e3) {
-      Warning("Chisquare", "Some values of Y are very large compared to the weights\n.");
-      printf(" The chisquare might be calculated incorrectly. \n");
+      Warning("Chisquare", "Some values of Y are very large compared to the weights\n");
+      printf("The chisquare might be calculated incorrectly. \n");
       printf("It doesn't mean that parameters  or parameter errors are not correct\n");
    }
+
 
    if (!fStoreData){
       sumtotal2 = 0;
@@ -620,21 +622,20 @@ void TLinearFitter::Eval()
 
    TDecompChol chol(fDesign);
    Bool_t ok;
-   fParams=chol.Solve(fAtb, ok);
+   TVectorD coef(fNfunctions);
+   coef=chol.Solve(fAtb, ok);
    if (!ok){
-      printf("Can't solve. Design matrix:\n");
-      fDesign.Print();
+      fParams.Zero();
+      fParCovar.Zero();
       return;
    }
+   fParams=coef;
    fParCovar=chol.Invert();
 
    for (i=0; i<fNfunctions; i++){
      fTValues(i) = fParams(i)/(TMath::Sqrt(fParCovar(i, i)));
      fParSign(i) = 2*(1-TMath::StudentI(TMath::Abs(fTValues(i)),fNpoints-fNfunctions));
    }
-
-   //fDesign.Print();
-
 
    if (fInputFunction){
       fInputFunction->SetParameters(fParams.GetMatrixArray());
@@ -1016,7 +1017,7 @@ void TLinearFitter::PrintResults(Int_t level, Double_t /*amin*/) const
    if (level==3){
       printf("Fitting results:\nParameters:\nNO.\t\tVALUE\t\tERROR\n");
       for (Int_t i=0; i<fNfunctions; i++){
-         printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
+	printf("%d\t%f\t%f\n", i, fParams(i), TMath::Sqrt(fParCovar(i, i)));
       }
    }
 }
@@ -1050,7 +1051,7 @@ void TLinearFitter::GraphLinearFitter()
       AddPoint(&x[i], y[i], e);
    }
 
-
+   
    Eval();
 
    //calculate the precise chisquare

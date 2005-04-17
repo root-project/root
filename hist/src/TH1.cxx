@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.232 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.233 2005/04/02 07:50:17 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1994,6 +1994,7 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
+
    char *linear;
    linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
@@ -2048,6 +2049,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //                      is drawn unless the option"N" above is specified.
 //                = "+" Add this new fitted function to the list of fitted functions
 //                      (by default, any previous function is deleted)
+//                = "C" In case of linear fitting, don't calculate the chisquare
+//                      (saves time) 
+//                = "F" If fitting a polN, switch to minuit fitter
 //
 //      When the fit is drawn (by default), the parameter goption may be used
 //      to specify a list of graphics options. See TH1::Draw for a complete
@@ -2246,6 +2250,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    zmin    = fZaxis.GetBinLowEdge(hzfirst);
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
 
+//   - Decode list of options into Foption
+   Foption_t Foption;
+   if (!FitOptionsMake(option,Foption)) return 0;
+   if (xxmin != xxmax) {
+      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
+      Foption.Range = 1;
+   }
+
 //   - Check if Minuit is initialized and create special functions
 
 
@@ -2253,6 +2265,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    Bool_t linear = f1->IsLinear();
    if (special==299+npar)
       linear = kTRUE;
+   if (Foption.Bound || Foption.Like || Foption.Errors || Foption.Gradient || Foption.More || Foption.User|| Foption.Integral || Foption.Minuit)
+      linear = kFALSE;
+
    char l[] ="TLinearFitter";
    Int_t strdiff = 0;
    Bool_t IsSet = kFALSE;
@@ -2269,7 +2284,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 	 IsSet=kFALSE;
       }
       if (!IsSet) {
-	 //TLinearFitter *lf=(TLinearFitter *)cl->New();
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
@@ -2290,13 +2304,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
    if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
-//   - Decode list of options into Foption
-   Foption_t Foption;
-   if (!FitOptionsMake(option,Foption)) return 0;
-   if (xxmin != xxmax) {
-      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
-      Foption.Range = 1;
-   }
    hFitter->SetFitOption(Foption);
 
 //   - Is a Fit range specified?
@@ -2322,19 +2329,15 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
    hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
 
-
-   //Int_t special = f1->GetNumber();
-
-   if (linear && !Foption.Bound && !Foption.Like && !Foption.Errors && !Foption.Gradient && !Foption.More){
+   if (linear){
       hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
       //   - If case of a predefined function, then compute initial values of parameters
-      //Int_t special = f1->GetNumber();
       if (Foption.Bound) special = 0;
       if      (special == 100)      H1InitGaus();
       else if (special == 400)      H1InitGaus();
       else if (special == 200)      H1InitExpo();
-      //else if (special == 299+npar) H1InitPolynom();
+      else if (special == 299+npar) H1InitPolynom();
 
       //   - Some initialisations
       if (!Foption.Verbose) {
@@ -2740,6 +2743,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
    Foption.Nostore = 0;
    Foption.Plus    = 0;
    Foption.Integral= 0;
+   Foption.Minuit  = 0;
 
    Int_t nch = strlen(choptin);
    if (!nch) return 1;
@@ -2764,6 +2768,8 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
    if (strstr(chopt,"I"))  Foption.Integral= 1;
    if (strstr(chopt,"B"))  Foption.Bound   = 1;
    if (strstr(chopt,"U")) {Foption.User    = 1; Foption.Like = 0;}
+   if (strstr(chopt,"F"))  Foption.Minuit = 1;
+   if (strstr(chopt,"C"))  Foption.Nochisq = 1;
    return 1;
 }
 

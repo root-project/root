@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.154 2005/03/18 22:41:26 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.155 2005/03/26 06:57:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -991,6 +991,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //                   is drawn unless the option"N" above is specified.
 //             = "+" Add this new fitted function to the list of fitted functions
 //                   (by default, any previous function is deleted)
+//             = "C" In case of linear fitting, not calculate the chisquare
+//                    (saves time)
+//             = "F" If fitting a polN, switch to minuit fitter
 //
 //   When the fit is drawn (by default), the parameter goption may be used
 //   to specify a list of graphics options. See TGraph::Paint for a complete
@@ -1150,6 +1153,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    fitOption.Plus    = 0;
    fitOption.User    = 0;
    fitOption.Nochisq = 0;
+   fitOption.Minuit  = 0;
    TString opt = option;
    opt.ToUpper();
 
@@ -1164,6 +1168,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
+   if (opt.Contains("F")) fitOption.Minuit = 1;
+
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
    ymin    = fY[0];
@@ -1191,6 +1197,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    Bool_t linear = f1->IsLinear();
    if (special == 299 + npar)
       linear = kTRUE;
+   if (fitOption.Bound || fitOption.User || fitOption.Errors || fitOption.Minuit)
+      linear = kFALSE;
 
    char l[] = "TLinearFitter";
    Int_t strdiff = 0;
@@ -1238,7 +1246,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
 //*-*- If case of a predefined function, then compute initial values of parameters
 ///////
-   if (linear && !fitOption.Bound && !fitOption.Like && !fitOption.Errors){
+   if (linear){
      grFitter->ExecuteCommand("FitGraph", 0, 0);
 
    } else {
@@ -1304,6 +1312,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 if (ex > 0 || ey > 0) hasErrors = kTRUE;
 	 sumw2 += ey*ey;
       }
+
       //*-*- Perform minimization
 
       arglist[0] = TVirtualFitter::GetMaxIterations();
@@ -1312,6 +1321,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (fitOption.Errors) {
 	 grFitter->ExecuteCommand("HESSE",arglist,0);
 	 grFitter->ExecuteCommand("MINOS",arglist,0);
+
       }
 
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
@@ -1336,6 +1346,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 f1->SetParError(i,werr);
       }
    }
+
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);

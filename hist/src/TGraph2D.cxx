@@ -16,7 +16,6 @@
 #include "TGraphDelaunay.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
-//#include "TLinearFitter.h"
 
 ClassImp(TGraph2D)
 
@@ -509,6 +508,7 @@ Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 {
    // Fits this graph with function with name fname
 
+
    char *linear;
    linear= (char*)strstr(fname, "++");
    TF2 *f2=0;
@@ -639,10 +639,6 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
       return 0;
    }
 
-
-   //char *linear;
-   //linear=strchr(f2->GetName(), '|');
-   //if (!linear){
    npar = f2->GetNpar();
    if (npar <= 0) {
      Error("Fit", "function %s has illegal number of parameters = %d", f2->GetName(), npar);
@@ -687,7 +683,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-///xmin    = fX[0];
+ ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
 ///ymin    = fY[0];
 ///ymax    = fY[fNpoints-1];
@@ -709,6 +705,9 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    // Check if Minuit is initialized and create special functions
 
    Bool_t linear = f2->IsLinear();
+
+   if (fitOption.Bound || fitOption.User || fitOption.Errors)
+      linear = kFALSE;
 
    char l[]="TLinearFitter";
    Int_t strdiff = 0;

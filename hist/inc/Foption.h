@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.2 2005/03/04 09:06:37 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,7 +40,8 @@ struct Foption_t {
    int Nograph;     // "0"  If set, do not display the function graph
    int Plus;        // "+"  Add new function (default is replace)
    int Integral;    // "I"  Use function integral instead of function in center of bin
-  int  Nochisq;     // "C"  In case of linear fitting, don't calculate the chisquare
+   int Nochisq;     // "C"  In case of linear fitting, don't calculate the chisquare
+   int Minuit;      // "F" If fitting a polN, switch to minuit fitter
 };
 
 #endif
