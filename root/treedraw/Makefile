@@ -7,23 +7,11 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.ps
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += simple 
-
-# Search for Rules.mk in roottest/scripts
-# Algorithm:  Find the current working directory and remove everything after
-#  '*roottest/'.  Append the path for Rules.mk from within roottest, which 
-#  should be 'scripts/Rules.mk'.  The roottest path is saved in the
-#  ROOTTEST_HOME variable for use by the SUBDIRECTORIES variable and is 
-#  exported to eliminate the overhead of findding the path again during 
-#  recursive calls of gmake.
-# Since all makefiles should be under roottest or one of its
-#  subdirectories and all recursions of gmake are called by 
-#    'cd [DIR]; gmake ...'
-#  this algorithm should not fail in finding /roottest/ in the
-#  current working directory.  
-# Issues:  This algorithm will fail if a makefile is called from outside the 
-#  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
-#  the home directory.
+TEST_TARGETS += 
+#The test
+#   simple
+# does not work because the poscript generated on windows and on linux
+# are slightly different due to font differences.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
