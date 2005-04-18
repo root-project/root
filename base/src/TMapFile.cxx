@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.13 2005/01/19 20:18:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.14 2005/02/28 17:28:11 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -103,7 +103,7 @@
 #include <sys/sem.h>
 #if defined(R__HPUX) || (defined (R__ALPHA) && !defined(R__FBSD)) || \
     defined (R__SOLARIS) || defined(R__AIX) || defined(R__HIUX) || \
-    defined (R__MKLINUX) || __GLIBC_MINOR__ > 0
+    __GLIBC_MINOR__ > 0
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET

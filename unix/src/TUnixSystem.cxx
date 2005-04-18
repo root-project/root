@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.127 2005/04/15 17:26:09 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.128 2005/04/18 15:15:31 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) || defined(R__HURD)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
@@ -187,9 +187,6 @@ extern "C" {
 #include <utmpx.h>
 #define STRUCT_UTMP struct utmpx
 #else
-#if defined(R__MKLINUX) && !defined(R__PPCEGCS)
-        extern "C" {
-#endif
 #include <utmp.h>
 #define STRUCT_UTMP struct utmp
 #endif
@@ -211,7 +208,7 @@ extern "C" {
 #if defined(R__AIX)
 // #   define HAVE_XL_TRBK   // does not work as expected
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) || defined(R__HURD)
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #   endif

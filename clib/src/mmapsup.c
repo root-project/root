@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name$:$Id$ */
+/* @(#)root/clib:$Name:  $:$Id: mmapsup.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
 /* Author: */
 
 /* Support for an sbrk-like function that uses mmap.
@@ -38,7 +38,7 @@ typedef char* caddr_t;
 #  include <sys/mman.h>
 #endif
 
-#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(R__GLIBC)
+#if defined(R__LINUX) && !defined(R__GLIBC)
 extern size_t getpagesize PARAMS ((void));
 #else
 extern int getpagesize PARAMS ((void));
