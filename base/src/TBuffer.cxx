@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.78 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.79 2005/04/15 14:41:30 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TObjArray.h"
 #include "TStreamer.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 
 #if defined(__linux) && defined(__i386__)
 #define USE_BSWAPCPY
@@ -745,6 +746,60 @@ void TBuffer::WriteString(const Text_t *s)
 }
 
 //______________________________________________________________________________
+void TBuffer::ReadDouble32 (Double_t *d, TStreamerElement *ele)
+{
+   // read a Double32_t from the buffer
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
+   
+   if (ele && ele->GetFactor() != 0) {
+      UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
+   } else {
+      Float_t afloat; *this >> afloat; d[0] = (Double_t)afloat;
+   }
+}
+
+
+//______________________________________________________________________________
+void TBuffer::WriteDouble32 (Double_t *d, TStreamerElement *ele)
+{
+   // write a Double32_t to the buffer
+   // The following cases are supported for streaming a Double32_t type
+   // depending on the range declaration in the comment field of the data member:
+   //  A-    Double32_t     fNormal;
+   //  B-    Double32_t     fTemperature; //[0,100]
+   //  C-    Double32_t     fCharge;      //[-1,1,2]
+   //  D-    Double32_t     fVertex[3];   //[-30,30,10]
+   //  E     Int_t          fNsp;
+   //        Double32_t*    fPointValue;   //[fNsp][0,3]
+   //
+   // In case A fNormal is converted from a Double_t to a Float_t
+   // In case B fTemperature is converted to a 32 bit unsigned integer
+   // In case C fCharge is converted to a 2 bits unsigned integer
+   // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
+   // In case E the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+   //           Note that the range specifier must follow the dimension specifier.
+   // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+   //
+   // The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
+   //  [0,1]
+   //  [-10,100];
+   //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+   //  [-10,100,16]
+   // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
+      
+      if (ele && ele->GetFactor() != 0) {
+      Double_t x = d[0];
+      Double_t xmin = ele->GetXmin();
+      Double_t xmax = ele->GetXmax();
+      if (x < xmin) x = xmin;
+      if (x > xmax) x = xmax;
+      UInt_t aint = UInt_t(0.5+ele->GetFactor()*(x-xmin)); *this << aint;
+   } else {
+      Float_t afloat = (Float_t)d[0]; *this << afloat;
+   }
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadArray(Bool_t *&b)
 {
    // Read array of bools from the I/O buffer. Returns the number of
@@ -977,11 +1032,12 @@ Int_t TBuffer::ReadArray(Double_t *&d)
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::ReadArrayDouble32(Double_t *&d)
+Int_t TBuffer::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
 {
    // Read array of doubles (written as float) from the I/O buffer.
    // Returns the number of doubles read.
    // If argument is a 0 pointer then space will be allocated for the array.
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
    Assert(IsReading());
 
@@ -992,11 +1048,7 @@ Int_t TBuffer::ReadArrayDouble32(Double_t *&d)
 
    if (!d) d = new Double_t[n];
 
-   Float_t afloat;
-   for (int i = 0; i < n; i++) {
-      frombuf(fBufCur, &afloat);
-	  d[i] = Double_t(afloat);
-   }
+   ReadFastArrayDouble32(d,n,ele);
 
    return n;
 }
@@ -1226,10 +1278,11 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d)
+Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
 {
    // Read array of doubles (written as float) from the I/O buffer.
    // Returns the number of doubles read.
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
    Assert(IsReading());
 
@@ -1240,11 +1293,7 @@ Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d)
 
    if (!d) return 0;
 
-   Float_t afloat;
-   for (int i = 0; i < n; i++) {
-      frombuf(fBufCur, &afloat);
-	  d[i] = afloat;
-   }
+   ReadFastArrayDouble32(d,n,ele);
 
    return n;
 }
@@ -1395,16 +1444,25 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n)
+void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele)
 {
    // Read array of n doubles (written as float) from the I/O buffer.
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
    if (n <= 0 || 4*n > fBufSize) return;
 
-   Float_t afloat;
-   for (int i = 0; i < n; i++) {
-      frombuf(fBufCur, &afloat);
-	  d[i]=afloat;
+   if (ele && ele->GetFactor() != 0) {
+      Double_t xmin = ele->GetXmin();
+      Double_t factor = ele->GetFactor();
+      for (int j=0;j < n; j++) {
+         UInt_t aint; *this >> aint; d[j] = (Double_t)(aint/factor + xmin);
+      }
+   } else {
+      Float_t afloat;
+      for (int i = 0; i < n; i++) {
+         frombuf(fBufCur, &afloat);
+	     d[i]=afloat;
+      }
    }
 }
 
@@ -1692,9 +1750,10 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n)
+void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
 {
    // Write array of n doubles (as float) into the I/O buffer.
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
    Assert(IsWriting());
 
@@ -1707,8 +1766,7 @@ void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n)
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, Float_t(d[i]));
+   WriteFastArrayDouble32(d,n,ele);
 }
 
 //______________________________________________________________________________
@@ -1883,17 +1941,30 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n)
+void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
 {
    // Write array of n doubles (as float) into the I/O buffer.
+   // see comments about Double32_t encoding at TBuffer::WriteDouble32
 
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
-   for (int i = 0; i < n; i++)
-      tobuf(fBufCur, Float_t(d[i]));
+   if (ele && ele->GetFactor()) {
+      Double_t factor = ele->GetFactor();
+      Double_t xmin = ele->GetXmin();
+      Double_t xmax = ele->GetXmax();
+      for (int j = 0; j < n; j++) {
+         Double_t x = d[j];
+         if (x < xmin) x = xmin;
+         if (x > xmax) x = xmax;
+         UInt_t aint = UInt_t(0.5+factor*(x-xmin)); *this << aint;
+      }
+   } else {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, Float_t(d[i]));
+   }
 }
 
 //______________________________________________________________________________

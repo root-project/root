@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.9 2005/03/11 21:25:11 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.10 2005/03/24 14:27:06 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -319,6 +319,7 @@ void TEmulatedCollectionProxy::Commit(void* /* env */ )  {
 void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
   bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
   StreamHelper* itm = (StreamHelper*)At(0);
+  TStreamerElement *aElement=0;
   switch (fVal->fCase) {
     case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way
     case G__BIT_ISENUM:
@@ -337,7 +338,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
         case kUInt_t:    b.ReadFastArray(&itm->u_int     , nElements); break;
         case kULong_t:   b.ReadFastArray(&itm->u_long    , nElements); break;
         case kULong64_t: b.ReadFastArray(&itm->u_longlong, nElements); break;
-        case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements); break;
+        case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements,aElement); break;
         case kchar:
         case kNoType_t:
         case kOther_t:
@@ -362,6 +363,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
 /// Object output streamer
 void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
   StreamHelper* itm = (StreamHelper*)At(0);
+  TStreamerElement *aElement = 0;
   switch (fVal->fCase) {
     case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
     case G__BIT_ISENUM:
@@ -381,7 +383,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
         case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
         case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
         case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
-        case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
+        case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements,aElement); break;
         case kchar:
         case kNoType_t:
         case kOther_t:

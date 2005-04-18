@@ -150,7 +150,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kULong64:             WriteBasicType(ULong64_t); continue;
          case TStreamerInfo::kDouble32: {
             Double_t *x=(Double_t*)(arr[0]+ioffset);
-            b << Float_t(*x);
+            b.WriteDouble32(x,aElement);
             continue;
          }
 
@@ -170,7 +170,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kDouble32+ kHaveLoop: {
             for(int k=0; k<narr; ++k) {
                Double_t *x=(Double_t*)(arr[k]+ioffset);
-               b << Float_t(*x);
+               b.WriteDouble32(x,aElement);
             }
             continue;
          }
@@ -190,7 +190,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:  WriteBasicArray(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:WriteBasicArray(ULong64_t); continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
-            b.WriteFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i]);
+            b.WriteFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i],aElement);
             continue;
          }
 
@@ -209,7 +209,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64 + kHaveLoop: WriteBasicArrayLoop(ULong64_t); continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32+ kHaveLoop: {
             for(int k=0; k<narr; ++k) {
-               b.WriteFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i]);
+               b.WriteFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i],aElement);
             }
             continue;
          }
@@ -237,7 +237,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             else          {b << Char_t(0); continue;}
             int j;
             for(j=0;j<fLength[i];j++) {
-               b.WriteFastArrayDouble32(f[j],*l);
+               b.WriteFastArrayDouble32(f[j],*l,aElement);
             }
             continue;
          }
@@ -265,7 +265,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                else          {b << Char_t(0); continue;}
                int j;
                for(j=0;j<fLength[i];j++) {
-                  b.WriteFastArrayDouble32(f[j],*l);
+                  b.WriteFastArrayDouble32(f[j],*l,aElement);
                }
             }
             continue;

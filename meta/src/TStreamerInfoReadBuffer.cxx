@@ -608,7 +608,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kULong64:            ReadBasicType(ULong64_t); continue;
          case TStreamerInfo::kDouble32: {
             Double_t *x=(Double_t*)(arr[0]+ioffset);
-            Float_t afloat; b >> afloat; *x = (Double_t)afloat;
+            b.ReadDouble32(x,aElement);
             continue;
          }
 
@@ -628,7 +628,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kDouble32 + kHaveLoop: {
             for(Int_t k=0; k<narr; ++k) {
                Double_t *x=(Double_t*)(arr[k]+ioffset);
-               Float_t afloat; b >> afloat; *x = (Double_t)afloat;
+               b.ReadDouble32(x,aElement);
             }
             continue;
          }
@@ -648,7 +648,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:  ReadBasicArray(ULong_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:ReadBasicArray(ULong64_t); continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
-            b.ReadFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i]);
+            b.ReadFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i],aElement);
             continue;
          }
 
@@ -667,7 +667,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64 + kHaveLoop: ReadBasicArrayLoop(ULong64_t); continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32+ kHaveLoop: {
             for(Int_t k=0; k<narr; ++k) {
-               b.ReadFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i]);
+               b.ReadFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i],aElement);
             }
             continue;
          }
@@ -697,7 +697,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                delete [] f[j];
                f[j] = 0; if (*l <=0) continue;
                f[j] = new Double_t[*l];
-               b.ReadFastArrayDouble32(f[j],*l);
+               b.ReadFastArrayDouble32(f[j],*l,aElement);
            }
             continue;
          }
@@ -727,7 +727,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   delete [] f[j];
                   f[j] = 0; if (*l <=0) continue;
                   f[j] = new Double_t[*l];
-                  b.ReadFastArrayDouble32(f[j],*l);
+                  b.ReadFastArrayDouble32(f[j],*l,aElement);
                }
             }
             continue;

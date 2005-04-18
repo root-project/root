@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.34 2004/05/05 06:13:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.35 2004/12/10 07:42:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -44,6 +44,9 @@ protected:
    TClass          *fClassObject;     //!pointer to class of object
    TMemberStreamer *fStreamer;        //!pointer to element Streamer
    TMethodCall     *fMethod;          //!pointer to TMethodCall
+   Double_t         fXmin;            //Minimum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fXmax;            //Maximum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fFactor;          //Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
 
 public:
 
@@ -74,6 +77,9 @@ public:
    Int_t            GetTObjectOffset() const { return fTObjectOffset; }
    const char      *GetTypeName() const {return fTypeName.Data();}
    const char      *GetTypeNameBasic() const;
+   Double_t         GetFactor() const {return fFactor;}
+   Double_t         GetXmin()   const {return fXmin;}
+   Double_t         GetXmax()   const {return fXmax;}
    virtual void     Init(TObject *obj=0);
    virtual Bool_t   IsaPointer() const {return kFALSE;}
    virtual Bool_t   IsOldFormat(const char *newTypeName);
@@ -90,7 +96,7 @@ public:
    virtual void     SetTypeName(const char *name) {fTypeName = name;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
 
-   ClassDef(TStreamerElement,2)  //Base class for one element (data member) to be Streamed
+   ClassDef(TStreamerElement,3)  //Base class for one element (data member) to be Streamed
 };
 
 //________________________________________________________________________

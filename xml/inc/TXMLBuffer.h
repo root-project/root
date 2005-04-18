@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.6 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.7 2004/12/09 07:22:40 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -79,6 +79,9 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
 
       virtual void     WriteObject(const TObject *obj);
 
+      virtual void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
+      virtual void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);
+
       virtual Int_t    ReadArray(Bool_t    *&b);
       virtual Int_t    ReadArray(Char_t    *&c);
       virtual Int_t    ReadArray(UChar_t   *&c);
@@ -92,7 +95,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual Int_t    ReadArray(ULong64_t *&l);
       virtual Int_t    ReadArray(Float_t   *&f);
       virtual Int_t    ReadArray(Double_t  *&d);
-      virtual Int_t    ReadArrayDouble32(Double_t  *&d);
+      virtual Int_t    ReadArrayDouble32(Double_t  *&d, TStreamerElement *ele=0);
 
       virtual Int_t    ReadStaticArray(Bool_t    *b);
       virtual Int_t    ReadStaticArray(Char_t    *c);
@@ -107,7 +110,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual Int_t    ReadStaticArray(ULong64_t *l);
       virtual Int_t    ReadStaticArray(Float_t   *f);
       virtual Int_t    ReadStaticArray(Double_t  *d);
-      virtual Int_t    ReadStaticArrayDouble32(Double_t  *d);
+      virtual Int_t    ReadStaticArrayDouble32(Double_t  *d, TStreamerElement *ele=0);
 
       virtual void     ReadFastArray(Bool_t    *b, Int_t n);
       virtual void     ReadFastArray(Char_t    *c, Int_t n);
@@ -122,7 +125,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual void     ReadFastArray(ULong64_t *l, Int_t n);
       virtual void     ReadFastArray(Float_t   *f, Int_t n);
       virtual void     ReadFastArray(Double_t  *d, Int_t n);
-      virtual void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
+      virtual void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
 
       virtual void     WriteArray(const Bool_t    *b, Int_t n);
       virtual void     WriteArray(const Char_t    *c, Int_t n);
@@ -137,7 +140,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual void     WriteArray(const ULong64_t *l, Int_t n);
       virtual void     WriteArray(const Float_t   *f, Int_t n);
       virtual void     WriteArray(const Double_t  *d, Int_t n);
-      virtual void     WriteArrayDouble32(const Double_t  *d, Int_t n);
+      virtual void     WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele=0);
       virtual void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
       virtual void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
@@ -154,7 +157,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       virtual void     WriteFastArray(const ULong64_t *l, Int_t n);
       virtual void     WriteFastArray(const Float_t   *f, Int_t n);
       virtual void     WriteFastArray(const Double_t  *d, Int_t n);
-      virtual void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
+      virtual void     WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele=0);
       virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
       virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
