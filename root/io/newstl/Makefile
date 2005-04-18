@@ -117,11 +117,17 @@ $(HELPER_DLL) : TestHelpers.C
 
 #	$(CMDECHO)touch $@
 
+ifneq ($(ARCH),macosx)
+  DllKeep=$(DllSuf)
+else
+  DllKeep=dylib
+endif
+
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C 
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
