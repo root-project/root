@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.5 2005/03/10 22:26:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.6 2005/04/18 10:54:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -59,7 +59,6 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
   bool   feed = false;
   void*  memory = 0;
   StreamHelper* itm = 0;
-  TStreamerElement *aElement = 0;
   fEnv->size = nElements;
   switch ( fSTL_type )  {
     case TClassEdit::kVector:
@@ -88,7 +87,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
     case kUInt_t:    b.ReadFastArray(&itm->u_int     , nElements); break;
     case kULong_t:   b.ReadFastArray(&itm->u_long    , nElements); break;
     case kULong64_t: b.ReadFastArray(&itm->u_longlong, nElements); break;
-    case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements,aElement); break;
+    case kDouble32_t:b.ReadFastArrayDouble32(&itm->dbl,nElements); break;
     case kchar:
     case kNoType_t:
     case kOther_t:
@@ -270,7 +269,6 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
   char   buffer[8192];
   void*  memory  = 0;
   StreamHelper* itm = 0;
-  TStreamerElement *aElement = 0;
   switch ( fSTL_type )  {
     case TClassEdit::kVector:
       if ( fVal->fKind != EDataType(kBOOL_t) )  {
@@ -297,7 +295,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
     case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;
     case kULong_t:   b.WriteFastArray(&itm->u_long    , nElements); break;
     case kULong64_t: b.WriteFastArray(&itm->u_longlong, nElements); break;
-    case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements,aElement); break;
+    case kDouble32_t:b.WriteFastArrayDouble32(&itm->dbl,nElements); break;
     case kchar:
     case kNoType_t:
     case kOther_t:
