@@ -10,6 +10,7 @@ A::A() {
   for(int k=0;k<3;k++) {
     aa[k]=0;
   }
+  aaa = 0;
 }
 
 
@@ -120,4 +121,9 @@ void tscan(const char *input) {
    tree->Scan("aa");
 
 }
- 
+
+void ss() {
+   A a;
+   fprintf(stdout,"A::aa=%d A::aaa=%d\n",
+           sizeof(a.aa),sizeof(a.aaa));
+}

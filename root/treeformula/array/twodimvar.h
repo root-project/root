@@ -17,7 +17,7 @@ public:
   int    n;
   int    *a;      //[n]
   int    *aa[3];  //[n]
-  int    (*aaa)[3];  //[n]
+  int    (*aaa)[3];  //![n]
 
   ClassDef(A,1)
 };
