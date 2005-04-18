@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.126 2005/04/15 13:21:24 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.127 2005/04/15 17:26:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -292,7 +292,7 @@ const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
 
 class TFdSet {
 private:
-   Int_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
+   Long_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
    TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
