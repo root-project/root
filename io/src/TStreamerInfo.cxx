@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.221 2005/03/31 17:52:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.222 2005/03/31 18:56:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -822,9 +822,9 @@ void TStreamerInfo::BuildOld()
             if (newInfo && newInfo != this) {
                TStreamerElement *newElems = (TStreamerElement*)
                   newInfo->GetElements()->FindObject(element->GetName());
-               newClass = newElems->GetClassPointer();
+               newClass = newElems ?  newElems->GetClassPointer() : 0;
                if (newClass==0) {
-                  newType = newElems->GetType();
+                  newType = newElems ? newElems->GetType() : kNoType_t;
                   if (! (newType<kObject) ) newType = kNoType_t; // sanity check. 
                }
             } else {
