@@ -8,14 +8,14 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-$(ROOTSYS)/test/Event$(ExeSuf):
-	(cd $(ROOTSYS)/test; $(MAKE) Event$(ExeSuf))
+$(ROOT_LOC)/test/Event$(ExeSuf):
+	(cd $(ROOT_LOC)/test; $(MAKE) Event$(ExeSuf))
 
-libEvent.$(DllSuf): $(ROOTSYS)/test/libEvent.$(DllSuf)
-	$(CMDECHO) cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.* $(ROOTSYS)/test/Event.h .
+libEvent.$(DllSuf): $(ROOT_LOC)/test/libEvent.$(DllSuf)
+	$(CMDECHO) cp $(ROOT_LOC)/test/Event$(ExeSuf) $(ROOT_LOC)/test/libEvent.* $(ROOT_LOC)/test/Event.h .
 
-Event$(ExeSuf): $(ROOTSYS)/test/Event$(ExeSuf)
-	$(CMDECHO)cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.* $(ROOTSYS)/test/Event.h .
+Event$(ExeSuf): $(ROOT_LOC)/test/Event$(ExeSuf)
+	$(CMDECHO)cp $(ROOT_LOC)/test/Event$(ExeSuf) $(ROOT_LOC)/test/libEvent.* $(ROOT_LOC)/test/Event.h .
 
 Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out
