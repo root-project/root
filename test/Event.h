@@ -37,7 +37,7 @@ private:
    Float_t      fZfirst;       //Z coordinate of the first point
    Float_t      fZlast;        //Z coordinate of the last point
    Double32_t   fCharge;       //[-1,1,2] Charge of this track
-   Double32_t   fVertex[3];    //[-30,30,10] Track vertex position
+   Double32_t   fVertex[3];    //[-30,30,16] Track vertex position
    Int_t        fNpoint;       //Number of points for this track
    Short_t      fValid;        //Validity criterion
    Int_t        fNsp;          //Number of points for this track with a special value
