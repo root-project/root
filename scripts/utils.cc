@@ -104,18 +104,23 @@ Bool_t CompareLines(const char*left,const char*right,UInt_t maxlen)
    while (i<maxlen && left[i] && right[i]) {
       if (left[i]!=right[i]) {
          if (left[i]==0x0a && left[i+1]==0) {
-            if ((right[i]==0x0a&&right[i+1]==0) || right[i]==0) {
+            if ((right[i]==0x0d && right[i+1]==0x0a && right[i+2] == 0) || 
+                (right[i]==0x0a && right[i+1]==0) || right[i]==0) {
                return kTRUE;
             }
          }
          if (right[i]==0x0a && right[i+1]==0) {
-            if ((left[i]==0x0a&&left[i+1]==0) || left[i]==0) {
+            if ((left[i]==0x0d && left[i+1]==0x0a && left[i+2] == 0) || 
+                (left[i]==0x0a && left[i+1]==0) || left[i]==0) {
                return kTRUE;
             }
+            
          }
+         return kFALSE;
      }
      ++i;
    }
+   return result;
 }
 
 Bool_t ComparePostscript(const char *from, const char *to)
@@ -138,7 +143,8 @@ Bool_t ComparePostscript(const char *from, const char *to)
       rvalue = fgets(rightbuffer, sizeof(rightbuffer), right);
       
       if (lvalue&&rvalue) {
-         if (strstr(lvalue,"%%CreationDate")) {
+         if (strstr(lvalue,"%%CreationDate")
+             || strstr(lvalue,"%%Creator")) {
             // skip the comment line with the time and date
          } else {
             areEqual = areEqual && (CompareLines(lvalue,rvalue,sizeof(leftbuffer)));
