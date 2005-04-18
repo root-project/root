@@ -39,7 +39,7 @@ FILE *FOpenAndSleep(const char *filename, const char *mode) {
    FILE *ret=0;
    while (!ret && ++tries<51)
       if (!(ret=fopen(filename, mode)) && tries<50)
-         if (errno!=EACCES) return 0;
+         if (errno!=EACCES && errno!=EEXIST) return 0;
          else Sleep(200);
    if (tries>1)  printf("fopen slept for %g seconds until it succeeeded.\n", (tries-1)/5.);
    return ret;
