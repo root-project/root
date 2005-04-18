@@ -98,6 +98,11 @@ elif [ $PLATFORM = "macosx" ]; then
       unset LD_PREBIND
       export MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor
    fi
+   # check if in 64 bit mode
+   m64=
+   if [ "x`echo $LDFLAGS | grep -- '-m64'`" != "x" ]; then
+      m64=-m64
+   fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    # Add versioning information to shared library if available
@@ -106,7 +111,7 @@ elif [ $PLATFORM = "macosx" ]; then
        SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
        LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
    fi
-   cmd="$LD $SOFLAGS$SONAME -o $LIB $OBJS \
+   cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
         `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
         -ldl $EXTRA $EXPLLNKCORE $VERSION"
    echo $cmd
@@ -117,7 +122,7 @@ elif [ $PLATFORM = "macosx" ]; then
       opt=-O
    fi
    if [ $macosx_minor -ge 3 ]; then
-      cmd="$LD $opt -bundle -undefined dynamic_lookup -o \
+      cmd="$LD $opt $m64 -bundle -undefined dynamic_lookup -o \
           $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
           -ldl $EXTRA $EXPLLNKCORE"
       echo $cmd

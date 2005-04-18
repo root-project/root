@@ -1,0 +1,69 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for MacOS X, using cc (Based on gcc version 2.95.2)
+
+PLATFORM      = macosx
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O2
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+                -fsigned-char -fno-common \
+                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
+CFLAGS        = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
+CINTCXXFLAGS  = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+                -fsigned-char -fno-common \
+                -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+		-DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
+CINTCFLAGS    = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
+COMPILER      = gnu
+
+# OS version
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) -m64 -bind_at_load
+FORCELINK     = yes
+ifeq ($(MACOSX_MINOR),4)
+MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
+SOFLAGS       = $(OPT) -dynamiclib -single_module \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
+FORCELINK     = no
+endif
+SOEXT         = dylib
+
+# System libraries:
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
+                $(OSTHREADLIB) -ldl
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+
+# Fortran:
+F77           = g77
+F77LIBS       = -lg2c
+
+# Override default in Makefile.config
+INSTALL      := cp -pPR
+INSTALLDATA  := cp -pPR
+
+# Extras
+FINK_DIR      = $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
+FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
