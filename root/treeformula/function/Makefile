@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += testFormulaFuncCall.log
+CLEAN_TARGETS += testFormulaFuncCall.log prova.root *.log $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
 TEST_TARGETS += testFormulaFuncCall testNestedFunc nestedHists
@@ -29,7 +29,9 @@ endif
 prova.root: lista_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l lista.C+ > prova_root.log
 
-nestedHists: nestedHists.log prova.root
+nestedHists.log: prova.root
+
+nestedHists: nestedHists.log 
 	$(TestDiff)
 
 testNestedFunc: NestedFunc.log
