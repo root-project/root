@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.128 2005/04/18 15:15:31 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.129 2005/04/18 16:05:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -320,7 +320,7 @@ public:
          return 0;
       }
    }
-   Int_t *GetBits() { return (Int_t *)fds_bits; }
+   Long_t *GetBits() { return (Long_t *)fds_bits; }
 };
 
 //______________________________________________________________________________
