@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id: RooParametricStepFunction.cc,v 1.3 2004/11/29 21:15:51 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.cc,v 1.4 2005/02/14 20:48:03 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -72,7 +72,7 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
 
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
-  while(coef = (RooAbsArg*)coefIter->Next()) {
+  while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
@@ -108,7 +108,7 @@ RooParametricStepFunction::~RooParametricStepFunction()
 }
 
 
-Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
@@ -116,7 +116,7 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 
 
-Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
   assert(code==1) ;
 

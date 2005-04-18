@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.11 2005/02/16 21:53:30 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.12 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.11 2005/02/16 21:53:30 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.12 2005/02/25 14:25:04 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,
@@ -79,7 +79,7 @@ Double_t RooCBShape::evaluate() const {
   }
 }
 
-Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if( matchArgs(allVars,analVars,m) )
     return 1 ;

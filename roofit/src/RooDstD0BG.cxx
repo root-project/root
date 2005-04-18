@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.13 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -30,7 +30,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.13 2005/02/14 20:48:03 wverkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
@@ -60,7 +60,7 @@ Double_t RooDstD0BG::evaluate() const
   return (val > 0 ? val : 0) ;
 }
 
-Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const 
 {
   // if (matchArgs(allVars,analVars,dm)) return 1 ;
   return 0 ;

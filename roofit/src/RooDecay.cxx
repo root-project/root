@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDecay.cc,v 1.12 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.13 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -67,14 +67,14 @@ RooDecay::~RooDecay()
 }
 
 
-Double_t RooDecay::coefficient(Int_t basisIndex) const 
+Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const 
 {
   return 1 ;
 }
 
 
 
-Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;  
   return 0 ;

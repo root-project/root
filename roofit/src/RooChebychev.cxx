@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.7 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooChebychev.cc,v 1.8 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -41,7 +41,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   // Constructor
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
-  while(coef = (RooAbsArg*)coefIter->Next()) {
+  while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooChebychev::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
@@ -86,7 +86,7 @@ Double_t RooChebychev::evaluate() const
   return sum;
 }
 
-Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;

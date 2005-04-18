@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.7 2004/11/29 21:15:48 wverkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.8 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -112,7 +112,7 @@ Double_t RooBDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars, generateVars, _t)) return 1;
   return 0;
