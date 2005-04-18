@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.cc,v 1.10 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.cc,v 1.11 2005/04/04 14:25:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,7 +47,7 @@ void RooAbsBinning::printToStream(ostream &os, PrintOption opt, TString indent) 
     Int_t i ;
     for (i=0 ; i<n ; i++) {
       if (!first) {
-	os << " : " ;
+	os << indent << " : " ;
       } else {
 	first = kFALSE ;
       }

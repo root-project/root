@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.rdl,v 1.10 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.11 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,6 +39,9 @@ public:
   virtual void Reset() ;
 
 protected:
+  
+  TIterator& operator=(const TIterator&) { return *this ; } // forbidden for now
+
   void initialize(const RooArgSet& catList) ;
   TObjString* compositeLabel() ;
 

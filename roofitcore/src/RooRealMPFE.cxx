@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.cc,v 1.9 2004/11/29 20:24:20 wverkerke Exp $
+ *    File: $Id: RooRealMPFE.cc,v 1.10 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -304,7 +304,7 @@ void RooRealMPFE::calculate() const
 
 
 
-Double_t RooRealMPFE::getVal(const RooArgSet* nset) const 
+Double_t RooRealMPFE::getVal(const RooArgSet* /*nset*/) const 
 {
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet

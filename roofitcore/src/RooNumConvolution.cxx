@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvolution.cc,v 1.1 2004/12/02 14:10:27 wverkerke Exp $
+ *    File: $Id: RooNumConvolution.cc,v 1.2 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -227,7 +227,8 @@ Double_t RooNumConvolution::evaluate() const
 }
 
 
-Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
+					      Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
   // Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
   _init = kFALSE ;

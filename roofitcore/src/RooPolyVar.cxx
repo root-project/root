@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.7 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.8 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,7 +53,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
 
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
-  while(coef = (RooAbsArg*)coefIter->Next()) {
+  while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
@@ -99,7 +99,7 @@ Double_t RooPolyVar::evaluate() const
 
   RooAbsReal* coef ;
   const RooArgSet* nset = _coefList.nset() ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     sum += coef->getVal(nset)*pow(_x,order++) ;
   }
 
@@ -107,7 +107,7 @@ Double_t RooPolyVar::evaluate() const
 }
 
 
-Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
@@ -127,7 +127,7 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
   RooAbsReal* coef ;
 
   // Primitive = sum(k) coef_k * 1/(k+1) x^(k+1)
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     sum += coef->getVal(nset)*(pow(_x.max(rangeName),order+1)-pow(_x.min(rangeName),order+1))/(order+1) ; 
     order++ ;
   }

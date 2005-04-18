@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.cc,v 1.11 2004/11/29 20:24:17 wverkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.12 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
   // Lookup existing constant
   init() ;
   RooConstVar* var ;
-  while(var=(RooConstVar*)_constDBIter->Next()) {
+  while((var=(RooConstVar*)_constDBIter->Next())) {
     if (var->getVal()==value) return *var ;
   }
 

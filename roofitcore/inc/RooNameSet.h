@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameSet.rdl,v 1.11 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooNameSet.rdl,v 1.12 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ public:
   RooNameSet();
   RooNameSet(const RooArgSet& argSet);
   RooNameSet(const RooNameSet& other) ;
-  virtual TObject* Clone(const char* newname=0) const { return new RooNameSet(*this) ; }
+  virtual TObject* Clone(const char*) const { return new RooNameSet(*this) ; }
   virtual ~RooNameSet() ;
 
   void refill(const RooArgSet& argSet) ;

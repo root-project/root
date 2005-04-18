@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.12 2005/02/16 21:51:30 wverkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.13 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,7 +53,7 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   // Copy constructor
   TIterator* iter = other._altBinning.MakeIterator() ;
   RooAbsBinning* binning ;
-  while(binning=(RooAbsBinning*)iter->Next()) {
+  while((binning=(RooAbsBinning*)iter->Next())) {
     _altBinning.Add(binning->clone()) ;
   }
   delete iter ;
@@ -67,6 +67,10 @@ RooErrorVar::~RooErrorVar()
   delete _binning ;
 }
 
+
+Double_t RooErrorVar::getVal(const RooArgSet*) const { 
+  return evaluate();
+}
 
 
 Bool_t RooErrorVar::hasBinning(const char* name) const
@@ -211,7 +215,7 @@ void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 }
 
 
-Bool_t RooErrorVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
 {
   // Read object contents from given stream
 
@@ -232,8 +236,13 @@ Bool_t RooErrorVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 }
 
 
-void RooErrorVar::writeToStream(ostream& os, Bool_t compact) const
+void RooErrorVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
   // Write value only
   os << getVal() ;
+}
+
+void RooErrorVar::syncCache(const RooArgSet*) 
+{ 
+_value = evaluate() ; 
 }

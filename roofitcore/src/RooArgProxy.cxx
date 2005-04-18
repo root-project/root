@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgProxy.cc,v 1.24 2004/11/29 20:22:48 wverkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.25 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,7 +46,7 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 
 
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
-  TNamed(other), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
+  TNamed(name,name), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
   _valueServer(other._valueServer), _shapeServer(other._shapeServer),
   _isFund(other._isFund), _ownArg(other._ownArg) 
 {

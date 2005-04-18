@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.cc,v 1.14 2004/11/29 20:24:03 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.15 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,7 @@ RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList) : _catList("catList")
 }
 
 
-RooMultiCatIter::RooMultiCatIter(const RooMultiCatIter& other) : _catList("catList")
+RooMultiCatIter::RooMultiCatIter(const RooMultiCatIter& other) : TIterator(other), _catList("catList")
 {
   // Copy constructor
   initialize(other._catList) ;
@@ -48,7 +48,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   // Copy RooCategory list into internal argset
   TIterator* catIter = catList.createIterator() ;
   TObject* obj ;
-  while (obj = catIter->Next()) {
+  while ((obj = catIter->Next())) {
     RooAbsCategory *cat= dynamic_cast<RooAbsCategory*>(obj);
     if(0 == cat) {
       cout << "RooMultiCatIter:: list element " << obj->GetName() 
@@ -69,7 +69,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   _curIter = 0 ;
   TIterator* cIter = _catList.createIterator() ;
   RooAbsCategoryLValue* cat ;
-  while(cat=(RooAbsCategoryLValue*)cIter->Next()) {
+  while((cat=(RooAbsCategoryLValue*)cIter->Next())) {
     _catPtrList[_curIter] = cat ;
     _iterList[_curIter++] = cat->typeIterator() ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddition.cc,v 1.1 2005/02/23 15:09:30 wverkerke Exp $
+ *    File: $Id: RooAddition.cc,v 1.2 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,7 +55,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& s
 
   TIterator* inputIter = sumSet.createIterator() ;
   RooAbsArg* comp ;
-  while(comp = (RooAbsArg*)inputIter->Next()) {
+  while((comp = (RooAbsArg*)inputIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
@@ -88,7 +88,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
   TIterator* inputIter1 = sumSet1.createIterator() ;
   RooAbsArg* comp ;
-  while(comp = (RooAbsArg*)inputIter1->Next()) {
+  while((comp = (RooAbsArg*)inputIter1->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 	   << " in first list is not of type RooAbsReal" << endl ;
@@ -103,7 +103,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
 
   TIterator* inputIter2 = sumSet2.createIterator() ;
-  while(comp = (RooAbsArg*)inputIter2->Next()) {
+  while((comp = (RooAbsArg*)inputIter2->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 	   << " in first list is not of type RooAbsReal" << endl ;
@@ -148,7 +148,7 @@ Double_t RooAddition::evaluate() const
 
   if (!_setIter2) {
 
-    while(comp=(RooAbsReal*)_setIter1->Next()) {
+    while((comp=(RooAbsReal*)_setIter1->Next())) {
       sum += comp->getVal(nset) ;
     }
 
@@ -156,7 +156,7 @@ Double_t RooAddition::evaluate() const
 
     RooAbsReal* comp2 ;
     _setIter2->Reset() ;
-    while(comp=(RooAbsReal*)_setIter1->Next()) {
+    while((comp=(RooAbsReal*)_setIter1->Next())) {
       comp2 = (RooAbsReal*)_setIter2->Next() ;
       sum += comp->getVal(nset)*comp2->getVal(nset) ;
     }
@@ -178,7 +178,7 @@ Double_t RooAddition::defaultErrorLevel() const
   RooAbsArg* arg ;
 
   _setIter1->Reset() ;
-  while(arg=(RooAbsArg*)_setIter1->Next()) {
+  while((arg=(RooAbsArg*)_setIter1->Next())) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
@@ -189,7 +189,7 @@ Double_t RooAddition::defaultErrorLevel() const
 
   if (_setIter2) {
     _setIter2->Reset() ;
-    while(arg=(RooAbsArg*)_setIter2->Next()) {
+    while((arg=(RooAbsArg*)_setIter2->Next())) {
       if (dynamic_cast<RooNLLVar*>(arg)) {
 	nllArg = (RooAbsReal*)arg ;
       }

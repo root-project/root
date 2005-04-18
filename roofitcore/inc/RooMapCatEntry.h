@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMapCatEntry.rdl,v 1.9 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooMapCatEntry.rdl,v 1.10 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,11 @@ public:
   virtual ~RooMapCatEntry() {} ;
   RooMapCatEntry(const char* exp, const RooCatType* cat) ;
   RooMapCatEntry(const RooMapCatEntry& other) ;
-  virtual TObject* Clone(const char* newName=0) const { return new RooMapCatEntry(*this); }
+  virtual TObject* Clone(const char* newName=0) const { 
+ 	RooMapCatEntry* ca = new RooMapCatEntry(*this); 
+	if (newName) { ca->SetName(newName) ; }
+	return ca ;
+	}
 
   inline Bool_t ok() { return (_regexp.Status()==TRegexp::kOK) ; }
   Bool_t match(const char* testPattern) const ;

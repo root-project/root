@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.cc,v 1.32 2004/11/29 20:23:38 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.33 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -106,14 +106,14 @@ Double_t RooFormulaVar::evaluate() const
 
 
 
-Bool_t RooFormulaVar::isValidReal(Double_t value, Bool_t printError) const {
+Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const {
   // Check if given value is valid
   return kTRUE ;
 }
 
 
 
-Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
+Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   // Propagate server change information to embedded RooFormula object
   return _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : kFALSE ;
@@ -133,7 +133,7 @@ void RooFormulaVar::printToStream(ostream& os, PrintOption opt, TString indent) 
 }
 
 
-Bool_t RooFormulaVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
+Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
 {
   // Read object contents from given stream
   cout << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
@@ -160,7 +160,7 @@ Double_t RooFormulaVar::defaultErrorLevel() const
 
   TIterator* iter = _actualVars.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }

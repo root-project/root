@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.rdl,v 1.14 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.15 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@ public:
   RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 		   Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE, Bool_t proxyOwnsArg=kFALSE) ;
   RooCategoryProxy(const char* name, RooAbsArg* owner, const RooCategoryProxy& other) ;
-  virtual TObject* Clone(const char* newName=0) const { return new RooCategoryProxy(*this); }
+  virtual TObject* Clone(const char* newName=0) const { return new RooCategoryProxy(newName,_owner,*this); }
   virtual ~RooCategoryProxy();
 
   // Accessors

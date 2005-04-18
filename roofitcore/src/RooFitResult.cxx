@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.29 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.30 2005/04/04 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,6 +58,8 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
 // added FMV, 08/13/03
 RooFitResult::RooFitResult(const RooFitResult& other) : 
   TNamed(other),
+  RooPrintable(other),
+  RooDirItem(),
   _status(other._status),
   _covQual(other._covQual),
   _numBadNLL(other._numBadNLL),
@@ -75,7 +77,7 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   if (other._Lt) _Lt = new TMatrix(*other._Lt);
   TIterator* iter = other._corrMatrix.MakeIterator() ;
   RooArgList* corrMatrixRow(0);
-  while (corrMatrixRow=(RooArgList*)iter->Next()) 
+  while ((corrMatrixRow=(RooArgList*)iter->Next())) 
     _corrMatrix.Add((RooArgList*)corrMatrixRow->snapshot() );
 }
 
@@ -277,7 +279,7 @@ const RooArgList& RooFitResult::randomizePars() const {
   TIterator *iter= _randomPars->createIterator();
   RooRealVar *par(0);
   Int_t index(0);
-  while(0 != (par= (RooRealVar*)iter->Next())) {
+  while((0 != (par= (RooRealVar*)iter->Next()))) {
     par->setVal(par->getVal() + g(index++));
   }
   delete iter;
@@ -364,8 +366,8 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
   // Standard mode only the final values of the floating parameters are printed
 
   os << endl 
-     << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
-     << "                coviarance matrix quality: " ;
+     << indent << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
+     << indent << "                coviarance matrix quality: " ;
   switch(_covQual) {
   case 0: os << "Not calculated at all" ; break ;
   case 1: os << "Approximation only, not accurate" ; break ;
@@ -378,11 +380,11 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
   Int_t i ;
   if (opt>=Verbose) {
     if (_constPars->getSize()>0) {
-      os << "    Constant Parameter    Value     " << endl
-	 << "  --------------------  ------------" << endl ;
+      os << indent << "    Constant Parameter    Value     " << endl
+	 << indent << "  --------------------  ------------" << endl ;
 
       for (i=0 ; i<_constPars->getSize() ; i++) {
-	os << "  " << setw(20) << ((RooAbsArg*)_constPars->at(i))->GetName()
+	os << indent << "  " << setw(20) << ((RooAbsArg*)_constPars->at(i))->GetName()
 	   << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->at(i))->getVal())
 	   << endl ;
       }
@@ -402,17 +404,17 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
     }
 
     if (doAsymErr) {
-      os << "    Floating Parameter  InitialValue    FinalValue (+HiError,-LoError)    GblCorr." << endl
-	 << "  --------------------  ------------  ----------------------------------  --------" << endl ;
+      os << indent << "    Floating Parameter  InitialValue    FinalValue (+HiError,-LoError)    GblCorr." << endl
+	 << indent << "  --------------------  ------------  ----------------------------------  --------" << endl ;
     } else {
-      os << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
-	 << "  --------------------  ------------  --------------------------  --------" << endl ;
+      os << indent << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
+	 << indent << "  --------------------  ------------  --------------------------  --------" << endl ;
     }
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
-      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
-      os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
-	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal()) ;
+      os << indent << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
+      os << indent << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
+	 << indent << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal()) ;
       
       if (((RooRealVar*)_finalPars->at(i))->hasAsymError()) {
 	os << setw(21) << Form(" (+%8.2e,-%8.2e)",((RooRealVar*)_finalPars->at(i))->getAsymErrorHi(),
@@ -432,12 +434,12 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
     }
 
   } else {
-    os << "    Floating Parameter    FinalValue +/-  Error   " << endl
-       << "  --------------------  --------------------------" << endl ;
+    os << indent << "    Floating Parameter    FinalValue +/-  Error   " << endl
+       << indent << "  --------------------  --------------------------" << endl ;
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
       Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
-      os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
+      os << indent << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName()
 	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
 	 << " +/- " << setw(9)  << Form("%9.2e",err)
 	 << endl ;
@@ -476,7 +478,7 @@ void RooFitResult::fillCorrMatrix()
   TIterator* vIter = _initPars->createIterator() ;
   RooAbsArg* arg ;
   Int_t idx(0) ;
-  while(arg=(RooAbsArg*)vIter->Next()) {
+  while((arg=(RooAbsArg*)vIter->Next())) {
     // Create global correlation value holder
     TString gcName("GC[") ;
     gcName.Append(arg->GetName()) ;
@@ -493,7 +495,7 @@ void RooFitResult::fillCorrMatrix()
     _corrMatrix.Add(corrMatrixRow) ;
     TIterator* vIter2 = _initPars->createIterator() ;
     RooAbsArg* arg2 ;
-    while(arg2=(RooAbsArg*)vIter2->Next()) {
+    while((arg2=(RooAbsArg*)vIter2->Next())) {
 
       TString cName("C[") ;
       cName.Append(arg->GetName()) ;
@@ -567,7 +569,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   // Verify that all members of varList are of type RooRealVar
   TIterator* iter = varList.createIterator() ;
   RooAbsArg* arg  ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
       cout << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return 0 ;

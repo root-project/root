@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.13 2004/11/29 20:23:21 wverkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.14 2005/02/25 14:22:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,7 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
   TIterator* iter = data.get()->createIterator() ;
   Bool_t allCat(kTRUE) ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooCategory*>(arg)) allCat = kFALSE ;
   }
   delete iter ;
@@ -90,7 +90,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
     // Data contains only categories, sum over weighted supercategory states
     TIterator* iter = _superCat->typeIterator() ;
     RooCatType* type ;
-    while(type=(RooCatType*)iter->Next()) {
+    while((type=(RooCatType*)iter->Next())) {
       // Backprop state to data set so that _real takes appropriate value
       _superCat->setIndex(type->getVal()) ;
 

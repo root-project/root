@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgList.cc,v 1.12 2004/11/29 20:22:48 wverkerke Exp $
+ *    File: $Id: RooArgList.cc,v 1.13 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -185,7 +185,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 
   TIterator* iter = tcoll.MakeIterator() ;
   TObject* obj ;
-  while(obj=iter->Next()) {
+  while((obj=iter->Next())) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
       cout << "RooArgList::RooArgList(TCollection) element " << obj->GetName() 
 	   << " is not a RooAbsArg, ignored" << endl ;
@@ -248,7 +248,7 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
 
   TIterator *iterator= createIterator();
   RooAbsArg *next = 0;
-  while(0 != (next= (RooAbsArg*)iterator->Next())) {
+  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
       next->writeToStream(os,kTRUE) ;
       os << " " ;
   }
@@ -275,7 +275,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   TIterator *iterator= createIterator();
   RooStreamParser parser(is) ;
   RooAbsArg *next = 0;
-  while(0 != (next= (RooAbsArg*)iterator->Next())) {
+  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
     if (!next->getAttribute("Dynamic")) {
       if (next->readFromStream(is,kTRUE,verbose)) {
 	parser.zapToEnd() ;

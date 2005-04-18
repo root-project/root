@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.79 2005/02/25 14:22:51 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.80 2005/02/25 16:37:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -148,7 +148,7 @@ public:
   virtual ExtendMode extendMode() const { return CanNotBeExtended ; } 
   inline Bool_t canBeExtended() const { return (extendMode() != CanNotBeExtended) ; }
   inline Bool_t mustBeExtended() const { return (extendMode() == MustBeExtended) ; }
-  virtual Double_t expectedEvents(const RooArgSet* nset=0) const { return 0 ; } 
+  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ; 
 
   // Printing interface (human readable)
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
@@ -204,8 +204,8 @@ protected:
   static Int_t _verboseEval ;
 
   virtual Bool_t syncNormalization(const RooArgSet* dset, Bool_t adjustProxies=kTRUE) const ;
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const { return kFALSE ; } ;
-  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const {} ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const ;
+  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const ;
 
   virtual RooPlot *plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option_t* drawOptions="L",
 				    Double_t scaleFactor= 1.0, ScaleType stype=Relative, 

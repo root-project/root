@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsProxy.cc,v 1.11 2004/11/29 20:22:28 wverkerke Exp $
+ *    File: $Id: RooAbsProxy.cc,v 1.12 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ RooAbsProxy::RooAbsProxy() : _nset(0)
 }
 
 
-RooAbsProxy::RooAbsProxy(const char* name, const RooAbsProxy& other) : 
+RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) : 
   _nset(other._nset)
 {
   // Copy constructor

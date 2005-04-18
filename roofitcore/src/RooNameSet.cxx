@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameSet.cc,v 1.16 2004/11/29 20:24:03 wverkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.17 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,7 +37,7 @@ RooNameSet::RooNameSet()
 
 
 
-RooNameSet::RooNameSet(const RooArgSet& argSet)  
+RooNameSet::RooNameSet(const RooArgSet& argSet)
 {
   _len = 1024 ;
   _nameList = new char[_len] ;
@@ -47,7 +47,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet)
 
 
 
-RooNameSet::RooNameSet(const RooNameSet& other) : _nameList()
+RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(other), _nameList()
 {
   _len = other._len ;
   _nameList = new char[_len] ;
@@ -73,9 +73,9 @@ void RooNameSet::refill(const RooArgSet& argSet)
   RooAbsArg* arg ;
   char *ptr=_nameList ;
   char *end=_nameList+_len-2 ;
-  while(arg=(RooAbsArg*)iter->Next()) {    
+  while((arg=(RooAbsArg*)iter->Next())) {    
     const char* argName = arg->GetName() ;
-    while(*ptr++ = *argName++) {
+    while((*ptr++ = *argName++)) {
       if (ptr>=end) {
 	// Extend buffer
 	Int_t offset = ptr-_nameList ;
@@ -140,6 +140,6 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
 }
 
 
-void RooNameSet::printToStream(ostream &os, PrintOption opt, TString indent) const{
+void RooNameSet::printToStream(ostream &os, PrintOption /*opt*/, TString indent) const{
   os << indent << _nameList << endl ;
 }

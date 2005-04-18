@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMappedCategory.cc,v 1.22 2004/11/29 20:24:00 wverkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.23 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -168,7 +168,7 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt, TString inde
 }
 
 
-Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
    if (compact) {

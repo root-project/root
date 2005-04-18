@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.9 2005/02/14 20:44:25 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -88,7 +88,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   // Explicitly remove all server links at this point
   TIterator* iter = serverIterator() ;
   RooAbsArg* server ;
-  while(server=(RooAbsArg*)iter->Next()) {
+  while((server=(RooAbsArg*)iter->Next())) {
     removeServer(*server,kTRUE) ;
   }
   delete iter ;
@@ -102,13 +102,13 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
 
   RooAbsArg* arg ;
   TIterator* nIter = _compSetOwnedN->createIterator() ;  
-  while(arg=(RooAbsArg*)nIter->Next()) {
+  while((arg=(RooAbsArg*)nIter->Next())) {
 //     cout << "ownedN elem " << arg->GetName() << "(" << arg << ")" << endl ;
     arg->setOperMode(_operMode) ;
   }
   delete nIter ;
   TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while(arg=(RooAbsArg*)dIter->Next()) {
+  while((arg=(RooAbsArg*)dIter->Next())) {
 //     cout << "ownedD elem " << arg->GetName() << "(" << arg << ")" << endl ;
     arg->setOperMode(_operMode) ;
   }
@@ -141,10 +141,10 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   TIterator* intIter = intSet.createIterator() ;
   RooAbsPdf* pdf ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)intIter->Next()) {
+  while((arg=(RooAbsArg*)intIter->Next())) {
     Int_t count(0) ;
     compIter->Reset() ;
-    while(pdf=(RooAbsPdf*)compIter->Next()) {
+    while((pdf=(RooAbsPdf*)compIter->Next())) {
       if (pdf->dependsOn(*arg)) count++ ;
     }
 
@@ -159,7 +159,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
   compIter->Reset() ;
-  while(pdf=(RooAbsPdf*)compIter->Next()) {
+  while((pdf=(RooAbsPdf*)compIter->Next())) {
     if (pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
@@ -230,13 +230,13 @@ void RooGenProdProj::operModeHook()
 {
   RooAbsArg* arg ;
   TIterator* nIter = _compSetOwnedN->createIterator() ;  
-  while(arg=(RooAbsArg*)nIter->Next()) {
+  while((arg=(RooAbsArg*)nIter->Next())) {
     arg->setOperMode(_operMode) ;
   }
   delete nIter ;
 
   TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while(arg=(RooAbsArg*)dIter->Next()) {
+  while((arg=(RooAbsArg*)dIter->Next())) {
     arg->setOperMode(_operMode) ;
   }
   delete dIter ;

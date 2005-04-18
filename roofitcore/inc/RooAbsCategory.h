@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.rdl,v 1.33 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.34 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,7 @@ public:
   virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
   virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* set) const { return kTRUE ; }
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { return kTRUE ; }
 
   RooAbsArg *createFundamental(const char* newname=0) const;
 
@@ -67,7 +67,7 @@ protected:
 
   // Function evaluation and error tracing
   RooCatType traceEval() const ;
-  virtual Bool_t traceEvalHook(RooCatType value) const { return kFALSE ;}
+  virtual Bool_t traceEvalHook(RooCatType /*value*/) const { return kFALSE ;}
   virtual RooCatType evaluate() const = 0 ;
 
   // Type definition management
@@ -80,7 +80,7 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(RooCatType value) const ;
 
-  virtual void syncCache(const RooArgSet* set=0) { getIndex() ; }
+  virtual void syncCache(const RooArgSet* set=0) ;
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;

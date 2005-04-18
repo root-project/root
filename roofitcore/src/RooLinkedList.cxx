@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.14 2004/11/29 20:23:58 wverkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.15 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 
 
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
-   _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
+   TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
 {
   // Copy constructor
 
@@ -264,7 +264,7 @@ TObject* RooLinkedList::FindObject(const TObject* obj) const
 }
 
 
-void RooLinkedList::Clear(Option_t *o) 
+void RooLinkedList::Clear(Option_t *) 
 {
   RooLinkedListElem* elem = _first;
   while(elem) {
@@ -290,7 +290,7 @@ void RooLinkedList::Clear(Option_t *o)
 
 
 
-void RooLinkedList::Delete(Option_t *o) 
+void RooLinkedList::Delete(Option_t *) 
 {
   RooLinkedListElem* elem = _first;
   while(elem) {

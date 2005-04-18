@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.cc,v 1.22 2005/02/16 21:51:47 wverkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.23 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -130,7 +130,7 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   return ret ;
 }
 
-void RooStringVar::writeToStream(ostream& os, Bool_t compact) const
+void RooStringVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
   // Write object contents to given stream
   os << getVal() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.23 2004/11/29 20:23:04 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.24 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -125,7 +125,7 @@ Bool_t RooCategory::defineType(const char* label, Int_t index)
 }
 
 
-Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
 {
   // Read object contents from given stream
 

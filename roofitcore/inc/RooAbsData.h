@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.27 2005/02/24 22:36:03 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.28 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,8 +56,8 @@ public:
   virtual inline const RooArgSet* get() const { return &_vars ; } // last loaded row
   virtual Double_t weight() const = 0 ; 
   enum ErrorType { Poisson, SumW2 } ;
-  virtual Double_t weightError(ErrorType etype=Poisson) const { return 0 ; } ;
-  virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const { lo=0 ; hi=0 ; } 
+  virtual Double_t weightError(ErrorType etype=Poisson) const ;
+  virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
   virtual const RooArgSet* get(Int_t index) const = 0 ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;

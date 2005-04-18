@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.49 2005/02/23 15:09:36 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.50 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
   TIterator* iter = list.createIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     _origList.Add(arg) ;
   }
   delete iter ;
@@ -67,7 +67,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
 
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormula(), _isOK(other._isOK), _compiled(kFALSE) 
+  TFormula(), RooPrintable(other), _isOK(other._isOK), _compiled(kFALSE) 
 {
   // Copy constructor
 
@@ -76,7 +76,7 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 
   TIterator* iter = other._origList.MakeIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     _origList.Add(arg) ;
   }
   delete iter ;
@@ -175,7 +175,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
 
   TIterator* iter = _origList.MakeIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.Replace(arg,replace) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.46 2005/02/26 18:06:30 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.47 2005/03/22 13:05:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ public:
   virtual ~RooRealVar();
   
   // Parameter value and error accessors
-  inline virtual Double_t getVal(const RooArgSet* nset=0) const { return _value ; }
+  virtual Double_t getVal(const RooArgSet* nset=0) const ;
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError() const { return (_error>=0) ; }
@@ -102,6 +102,8 @@ public:
 
   static void printScientific(Bool_t flag=kFALSE) { _printScientific = flag ; }
   static void printSigDigits(Int_t ndig=5) { _printSigDigits = ndig>1?ndig:1 ; }
+
+  using RooAbsRealLValue::operator= ;
 
 protected:
 

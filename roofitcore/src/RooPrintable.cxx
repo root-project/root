@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.cc,v 1.14 2005/02/23 15:09:41 wverkerke Exp $
+ *    File: $Id: RooPrintable.cc,v 1.15 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ ostream& operator<<(ostream& os, const RooPrintable& rp) {
 }
 }
 
-void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
+void RooPrintable::printToStream(ostream& os, PrintOption /*opt*/, TString /*indent*/) const {
   // Print information about this object to the specified stream. The possible
   // PrintOptions are:
   //

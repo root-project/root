@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.38 2005/02/23 15:09:25 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.39 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -76,7 +76,7 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   RooAbsArg* refConvVar = 0;
   RooResolutionModel* model ;
   TIterator* mIter = modelList.createIterator() ;
-  while(model=(RooResolutionModel*)mIter->Next()) {
+  while((model=(RooResolutionModel*)mIter->Next())) {
 
     // Check that model is a RooResolutionModel
     if (!dynamic_cast<RooResolutionModel*>(model)) {
@@ -106,7 +106,7 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   // Loop over coef list
   RooAbsReal* coef ;
   TIterator* cIter = coefList.createIterator() ;
-  while(coef=(RooAbsReal*)cIter->Next()) {
+  while((coef=(RooAbsReal*)cIter->Next())) {
 
     // Check that coef is a RooAbsReal
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -140,13 +140,13 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   // Copy proxy lists
   TIterator *iter = other._coefProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
+  while((proxy=(RooRealProxy*)iter->Next())) {
     _coefProxyList.Add(new RooRealProxy("coef",this,*proxy)) ;
   }
   delete iter ;
 
   iter = other._modelProxyList.MakeIterator() ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
+  while((proxy=(RooRealProxy*)iter->Next())) {
 //     if (_basis) {
 //       removeServer(*proxy->absArg()) ;
 //       _modelProxyList.Add(new RooRealProxy("model","model",this,*(RooResolutionModel*)(proxy->arg().Clone()) )) ;
@@ -167,7 +167,7 @@ RooAddModel::~RooAddModel()
   if (_basis && !_isCopy) {
     TIterator* mIter = _modelProxyList.MakeIterator() ;
     RooRealProxy* modelProxy ;
-    while (modelProxy=((RooRealProxy*)mIter->Next())) {
+    while ((modelProxy=((RooRealProxy*)mIter->Next()))) {
       ownedList.Add(modelProxy->absArg()) ;
     }
     delete mIter ;
@@ -224,7 +224,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
   _modelProxyIter->Reset() ;
   RooRealProxy* model ;
   RooArgList modelList ;
-  while(model = (RooRealProxy*)_modelProxyIter->Next()) {       
+  while((model = (RooRealProxy*)_modelProxyIter->Next())) {       
     // Create component convolution
     RooResolutionModel* conv = ((RooResolutionModel*)(model->absArg()))->convolution(basis,owner) ;    
     modelList.add(*conv) ;
@@ -233,7 +233,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
   _coefProxyIter->Reset() ;
   RooRealProxy* coef ;
   RooArgList coefList ;  
-  while(coef = (RooRealProxy*)_coefProxyIter->Next()) {
+  while((coef = (RooRealProxy*)_coefProxyIter->Next())) {
     coefList.add(coef->arg()) ;
   }
     
@@ -254,7 +254,7 @@ Int_t RooAddModel::basisCode(const char* name) const
   TIterator* mIter = _modelProxyList.MakeIterator() ;
   RooRealProxy* model ;
   Bool_t first(kTRUE), code(0) ;
-    while(model = (RooRealProxy*)mIter->Next()) {
+    while((model = (RooRealProxy*)mIter->Next())) {
       Int_t subCode = ((RooResolutionModel&)model->arg()).basisCode(name) ;
       if (first) {
 	code = subCode ;
@@ -289,7 +289,7 @@ Double_t RooAddModel::evaluate() const
   // Do running sum of coef/model pairs, calculate lastCoef.
   RooRealProxy* coef ;
   RooRealProxy* model ;
-  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+  while((coef=(RooRealProxy*)_coefProxyIter->Next())) {
     model = (RooRealProxy*)_modelProxyIter->Next() ;
     Double_t coefVal = coef->arg().getVal(nset) ;
     if (coefVal) {
@@ -338,7 +338,7 @@ Double_t RooAddModel::getNorm(const RooArgSet* nset) const
   // Do running norm of coef/model pairs, calculate lastCoef.
   RooRealProxy* coef ;
   RooResolutionModel* model ;
-  while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
+  while((coef=(RooRealProxy*)_coefProxyIter->Next())) {
     model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
     if (_verboseEval>1) {
       cout << "RooAddModel::getNorm(" << GetName() << "): norm x coef = " 
@@ -385,7 +385,7 @@ Bool_t RooAddModel::checkObservables(const RooArgSet* set) const
 
   RooRealProxy* coef ;
   RooRealProxy* model ;
-  while(coef=(RooRealProxy*)cIter->Next()) {
+  while((coef=(RooRealProxy*)cIter->Next())) {
     model = (RooRealProxy*)pIter->Next() ;
     if (model->arg().observableOverlaps(set,coef->arg())) {
       cout << "RooAddModel::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->arg().GetName() 
@@ -409,7 +409,7 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
   TIterator *pIter = _modelProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
   RooResolutionModel* model ;
-  while(proxy = (RooRealProxy*) pIter->Next()) {
+  while((proxy = (RooRealProxy*) pIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
     if (model->_norm==0) {
       model->syncNormalization(proxy->nset()) ; // WVE this fails now --- CHECK
@@ -433,7 +433,7 @@ Bool_t RooAddModel::syncNormalization(const RooArgSet* nset, Bool_t adjustProxie
   TIterator *pIter = _modelProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
   RooResolutionModel* model ;
-  while(proxy = (RooRealProxy*)pIter->Next()) {
+  while((proxy = (RooRealProxy*)pIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
     model->syncNormalization(nset,adjustProxies) ;
   }
@@ -455,7 +455,7 @@ Bool_t RooAddModel::syncNormalization(const RooArgSet* nset, Bool_t adjustProxie
 }
 
 
-Bool_t RooAddModel::forceAnalyticalInt(const RooAbsArg& dep) const 
+Bool_t RooAddModel::forceAnalyticalInt(const RooAbsArg& /*dep*/) const 
 {
   // Force analytical integration of all dependents for non-convoluted resolution models
   return (_basisCode==0) ;
@@ -463,7 +463,7 @@ Bool_t RooAddModel::forceAnalyticalInt(const RooAbsArg& dep) const
 
 
 Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					   const RooArgSet* normSet, const char* rangeName) const 
+					   const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
@@ -487,7 +487,7 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
   Int_t n(0) ;
   // First iteration, determine what each component can integrate analytically
   RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_modelProxyIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
     RooArgSet subAnalVars ;
     model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
@@ -498,7 +498,7 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
     // it is dropped from the combined analytic list
     avIter->Reset() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)avIter->Next()) {
+    while((arg=(RooAbsArg*)avIter->Next())) {
       if (!subAnalVars.find(arg->GetName())) {
 	allAnalVars.remove(*arg,kTRUE) ;
       }
@@ -516,7 +516,7 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
   n=0 ;
   Int_t* subCode = new Int_t[_modelProxyList.GetSize()] ;
   Bool_t allOK(kTRUE) ;
-  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_modelProxyIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
     RooArgSet subAnalVars ;
     subCode[n] = model->getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
@@ -540,7 +540,7 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
-Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
+Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
   // Return analytical integral defined by given scenario code
 
@@ -567,7 +567,7 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
   // N models, N-1 coefficients
   Double_t lastCoef(1) ;
   RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)_coefProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_coefProxyIter->Next())) {
     coef  = (RooAbsReal*) proxy->absArg() ;
     model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
     Double_t coefVal = coef->getVal(normSet) ;
@@ -596,7 +596,7 @@ Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
   RooRealProxy* proxy ;
   RooResolutionModel* model ;
   _modelProxyIter->Reset() ;
-  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_modelProxyIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
     if (!model->isDirectGenSafe(arg)) return kFALSE ;
   }
@@ -615,7 +615,7 @@ Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &generate
   Int_t n(0) ;
   RooResolutionModel* model ;
   _modelProxyIter->Reset() ;
-  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_modelProxyIter->Next())) {
     model = (RooResolutionModel*) proxy->absArg() ;
 
     RooArgSet subGenVars ;
@@ -653,7 +653,7 @@ void RooAddModel::initGenerator(Int_t code)
   _genThresh[0] = 0 ;
   _modelProxyIter->Reset() ;
   RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+  while((proxy=(RooRealProxy*)_modelProxyIter->Next())) {
     ((RooResolutionModel*)proxy->absArg())->initGenerator(code) ;
     RooRealProxy *coefProxy = (RooRealProxy*) _coefProxyList.At(i-1) ;
     RooAbsReal* coef = (RooAbsReal*) (coefProxy ? coefProxy->absArg() : 0) ;
@@ -672,7 +672,7 @@ void RooAddModel::initGenerator(Int_t code)
 
 
 
-void RooAddModel::generateEvent(Int_t code)
+void RooAddModel::generateEvent(Int_t /*code*/)
 {
   // Throw a random number to determine which component to generate
   Double_t rand = RooRandom::uniform() ;

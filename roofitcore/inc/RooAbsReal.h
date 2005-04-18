@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.69 2005/02/24 22:36:05 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.70 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -66,7 +66,7 @@ public:
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kFALSE ; }
   virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none,
@@ -147,8 +147,8 @@ protected:
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   // Hook for objects with normalization-dependent parameters interperetation
-  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) {} ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) {} ;
+  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
   // Helper functions for plotting
   Bool_t plotSanityChecks(RooPlot* frame) const ;
@@ -182,7 +182,7 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
-  virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
+  virtual Bool_t traceEvalHook(Double_t /*value*/) const { return kFALSE ;}
   virtual Double_t evaluate() const = 0 ;
 
   // Hooks for RooDataSet interface

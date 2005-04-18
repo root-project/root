@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.65 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.66 2005/03/29 14:00:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -147,7 +147,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   RooAbsPdf* pdf ;
   RooAbsReal* coef ;
 
-  while(coef = (RooAbsPdf*)coefIter->Next()) {
+  while((coef = (RooAbsPdf*)coefIter->Next())) {
     pdf = (RooAbsPdf*) pdfIter->Next() ;
     if (!pdf) {
       cout << "RooAddPdf::RooAddPdf(" << GetName() 
@@ -211,7 +211,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   // Constructor with N PDFs 
   TIterator* pdfIter = pdfList.createIterator() ;
   RooAbsPdf* pdf ;
-  while(pdf = (RooAbsPdf*) pdfIter->Next()) {
+  while((pdf = (RooAbsPdf*) pdfIter->Next())) {
     
     if (!dynamic_cast<RooAbsReal*>(pdf)) {
       cout << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName() << " is not of type RooAbsPdf, ignored" << endl ;
@@ -323,7 +323,7 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
     // Recalculate projection integrals of PDFs 
     _pdfIter->Reset() ;
     RooAbsPdf* pdf ;
-    while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+    while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
 
       // Calculate projection integral
       RooAbsReal* pdfProj ;
@@ -405,7 +405,7 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset, c
 
 
 
-void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* rangeName) const
+void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* /*rangeName*/) const
 {
   // Update the list of supplemental normalization objects
   _snormList = _suppListMgr.getNormList(this,nset) ;
@@ -423,7 +423,7 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset, const char* rangeName) c
   _coefIter->Reset() ;
   RooAbsPdf* pdf ;
   RooAbsReal* coef ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {    
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {    
     coef=(RooAbsPdf*)_coefIter->Next() ;
 
     // Start with full list of dependents
@@ -587,7 +587,7 @@ Double_t RooAddPdf::evaluate() const
   updateCoefCache(nset,0) ;
 
   Int_t i(0) ;
-  while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)_snormList->at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
@@ -629,7 +629,7 @@ Bool_t RooAddPdf::checkObservables(const RooArgSet* nset) const
   _coefIter->Reset() ;
   RooAbsReal* coef ;
   RooAbsReal* pdf ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     pdf = (RooAbsReal*)_pdfIter->Next() ;
     if (pdf->observableOverlaps(nset,*coef)) {
       cout << "RooAddPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
@@ -663,7 +663,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
   Int_t n(0) ;
   // First iteration, determine what each component can integrate analytically
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     RooArgSet subAnalVars ;
     pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet,rangeName) ;
     //Int_t subCode = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
@@ -673,7 +673,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     // it is dropped from the combined analytic list
     avIter->Reset() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)avIter->Next()) {
+    while((arg=(RooAbsArg*)avIter->Next())) {
       if (!pdf->dependsOn(*arg) && (!normSet || !normSet->find(arg->GetName()))) {
 	//cout << "***RooAddPdf::getAI(" << GetName() << "): pdf #" << n << " needs factorization integral for " << arg->GetName() << endl ;
       }
@@ -696,7 +696,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   n=0 ;
   Int_t* subCode = new Int_t[_pdfList.getSize()] ;
   Bool_t allOK(kTRUE) ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     RooArgSet subAnalVars ;
     RooArgSet* allAnalVars2 = pdf->getObservables(allAnalVars) ;
     subCode[n] = pdf->getAnalyticalIntegralWN(*allAnalVars2,subAnalVars,normSet,rangeName) ;
@@ -763,7 +763,7 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
 //   cout << "ROP::aIWN updateCoefCache with rangeName = " << (rangeName?rangeName:"<null>") << endl ;
   updateCoefCache(snormSet,rangeName) ;      
-  while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
     if (_coefCache[i]) {
       snormVal = snormSet ? ((RooAbsReal*) _snormList->at(i))->getVal() : 1.0 ;
 
@@ -798,7 +798,7 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
     
     // Sum of the extended terms
     _pdfIter->Reset() ;
-    while(pdf = (RooAbsPdf*)_pdfIter->Next()) {      
+    while((pdf = (RooAbsPdf*)_pdfIter->Next())) {      
       expectedTotal += pdf->expectedEvents(nset) ;
     }   
     
@@ -807,7 +807,7 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
     // Sum the coefficients
     _coefIter->Reset() ;
     RooAbsReal* coef ;
-    while(coef=(RooAbsReal*)_coefIter->Next()) {
+    while((coef=(RooAbsReal*)_coefIter->Next())) {
       expectedTotal += coef->getVal() ;
     }   
   }
@@ -854,7 +854,7 @@ RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet 
 }
 
 
-Bool_t RooAddPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooAddPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   Bool_t ret(kFALSE) ;  
 
@@ -863,7 +863,7 @@ Bool_t RooAddPdf::redirectServersHook(const RooAbsCollection& newServerList, Boo
     RooArgList* plist = _projListMgr.getNormListByIndex(i) ;
     TIterator* iter = plist->createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
     }
     delete iter ;
@@ -879,7 +879,7 @@ void RooAddPdf::operModeHook()
     RooArgList* plist = _projListMgr.getNormListByIndex(i) ;
     TIterator* iter = plist->createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       arg->setOperMode(_operMode) ;
     }
     delete iter ;

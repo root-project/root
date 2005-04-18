@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.rdl,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHistError.rdl,v 1.11 2005/03/16 15:19:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,8 +61,8 @@ private:
       }
       return exp(-mu)*result;
     };
-    inline Double_t getMinLimit(UInt_t index) const { return 0; }
-    inline Double_t getMaxLimit(UInt_t index) const { return RooNumber::infinity; }
+    inline Double_t getMinLimit(UInt_t /*index*/) const { return 0; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const { return RooNumber::infinity; }
   private:
     Int_t _n;
   };
@@ -88,8 +88,8 @@ private:
 	return result;
       };
 
-    inline Double_t getMinLimit(UInt_t index) const { return -1; }
-    inline Double_t getMaxLimit(UInt_t index) const { return +1; }
+    inline Double_t getMinLimit(UInt_t /*index*/) const { return -1; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const { return +1; }
 
   private:
     Int_t _n1 ; // WVE Solaris CC5 doesn't want _n or _N here (likely compiler bug)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.28 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.29 2005/04/15 13:30:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,8 +34,8 @@ using std::setw;
 
 ClassImp(RooHist)
 
-RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma, Double_t xErrorFrac) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
+  RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma, Double_t /*xErrorFrac*/) :
+    TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create an empty histogram that can be filled with the addBin()
   // and addAsymmetryBin() methods. Use the optional parameter to

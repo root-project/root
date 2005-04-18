@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.45 2005/02/23 15:09:32 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.46 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -320,7 +320,7 @@ void RooDataHist::initialize(Bool_t fillTree)
   _iterator->Reset() ;
   RooAbsLValue* arg ;
   Int_t n(0), i ;
-  while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+  while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
     
     // Calculate sub-index multipliers for master index
     for (i=0 ; i<n ; i++) {
@@ -348,7 +348,7 @@ void RooDataHist::initialize(Bool_t fillTree)
   // Save real dimensions of dataset separately
   RooAbsArg* real ;
   _iterator->Reset() ;
-  while(real=(RooAbsArg*)_iterator->Next()) {
+  while((real=(RooAbsArg*)_iterator->Next())) {
     if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real) ;
   }
   _realIter = _realVars.createIterator() ;
@@ -363,7 +363,7 @@ void RooDataHist::initialize(Bool_t fillTree)
     RooAbsLValue* arg ;
     Int_t i(0), idx(0), tmp(ibin) ;
     Double_t binVolume(1) ;
-    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+    while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
@@ -379,7 +379,7 @@ void RooDataHist::initialize(Bool_t fillTree)
 
 
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooTreeData(other,newname), _curWeight(0), _curVolume(1), _pbinv(0)
+  RooTreeData(other,newname), RooDirItem(), _curWeight(0), _curVolume(1), _pbinv(0)
 {
   // Copy constructor
 
@@ -409,7 +409,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   // Save real dimensions of dataset separately
   RooAbsArg* arg ;
   _iterator->Reset() ;
-  while(arg=(RooAbsArg*)_iterator->Next()) {
+  while((arg=(RooAbsArg*)_iterator->Next())) {
     if (dynamic_cast<RooAbsReal*>(arg)) _realVars.add(*arg) ;
   }
   _realIter = _realVars.createIterator() ;
@@ -459,7 +459,7 @@ RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* n
 
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
-				  Int_t nStart, Int_t nStop, Bool_t copyCache)
+				   Int_t nStart, Int_t nStop, Bool_t /*copyCache*/)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
   checkInit() ;
@@ -491,7 +491,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
     if (cutRange) {
       RooAbsArg* arg ;
       vIter->Reset() ;
-      while(arg=(RooAbsArg*)vIter->Next()) {	
+      while((arg=(RooAbsArg*)vIter->Next())) {	
 	if (!arg->inRange(cutRange)) {
 	  doSelect = kFALSE ;
 	  break ;
@@ -541,7 +541,7 @@ Int_t RooDataHist::calcTreeIndex() const
   _iterator->Reset() ;
   RooAbsLValue* arg ;
   Int_t masterIdx(0), i(0) ;
-  while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+  while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
     masterIdx += _idxMult[i++]*arg->getBin() ;
   }
   return masterIdx ;
@@ -899,7 +899,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
   Int_t i(0) ;
   _iterator->Reset() ;
-  while(arg=(RooAbsArg*)_iterator->Next()) {
+  while((arg=(RooAbsArg*)_iterator->Next())) {
     if (sumSet.find(arg->GetName())) {
       mask[i] = kFALSE ;
     } else {
@@ -919,7 +919,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
     // Check if this bin belongs in selected slice
     _iterator->Reset() ;
-    while(!skip && (arg=(RooAbsArg*)_iterator->Next())) {
+    while((!skip && (arg=(RooAbsArg*)_iterator->Next()))) {
       idx  = tmp / _idxMult[ivar] ;
       tmp -= idx*_idxMult[ivar] ;
       if (mask[ivar] && idx!=refBin[ivar]) skip=kTRUE ;
@@ -960,7 +960,7 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
   _iterator->Reset() ;
   RooAbsArg* v ;
   Int_t i(0) ;
-  while(v=(RooAbsArg*)_iterator->Next()) {
+  while((v=(RooAbsArg*)_iterator->Next())) {
     selDim[i++] = dimSet.find(v->GetName()) ? kTRUE : kFALSE ;
   }
 
@@ -971,7 +971,7 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
     RooAbsLValue* arg ;
     Int_t i(0), idx(0), tmp(ibin) ;
     Double_t binVolume(1) ;
-    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
+    while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
       if (selDim[i-1]) {

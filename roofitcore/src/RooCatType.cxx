@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCatType.cc,v 1.11 2004/11/29 20:23:03 wverkerke Exp $
+ *    File: $Id: RooCatType.cc,v 1.12 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@ using std::ostream;
 ClassImp(RooCatType)
 ;
 
-void RooCatType::printToStream(ostream& os, PrintOption opt, TString indent) const {
+void RooCatType::printToStream(ostream& os, PrintOption /*opt*/, TString /*indent*/) const {
   // Print info about this category type to the specified stream. We only have a
   // OneLine output format.
 

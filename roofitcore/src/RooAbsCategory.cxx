@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.cc,v 1.41 2004/11/29 20:21:57 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.42 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,7 +57,7 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
 
   other._typeIter->Reset() ;
   TObject* obj ;
-  while (obj=other._typeIter->Next()) {
+  while ((obj=other._typeIter->Next())) {
     _types.Add(obj->Clone()) ;
   }
 
@@ -234,7 +234,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 
   RooCatType* type ;
   _typeIter->Reset() ;
-  while(type=(RooCatType*)_typeIter->Next()){
+  while((type=(RooCatType*)_typeIter->Next())){
     if((*type) == other) return type; // delegate comparison to RooCatType
   }
 
@@ -251,7 +251,7 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
 
   RooCatType* type ;
   _typeIter->Reset() ;
-  while(type=(RooCatType*)_typeIter->Next()){  
+  while((type=(RooCatType*)_typeIter->Next())){  
     if((*type) == index) return type; // delegate comparison to RooCatType
   }
   if (printError) {
@@ -267,7 +267,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
  
   RooCatType* type ;
   _typeIter->Reset() ;
-  while(type=(RooCatType*)_typeIter->Next()){  
+  while((type=(RooCatType*)_typeIter->Next())){  
     if((*type) == label) return type; // delegate comparison to RooCatType
   }
 
@@ -276,7 +276,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   Int_t idx=strtol(label,&endptr,10)  ;
   if (endptr==label+strlen(label)) {
     _typeIter->Reset() ;
-    while(type=(RooCatType*)_typeIter->Next()){  
+    while((type=(RooCatType*)_typeIter->Next())){  
        if((*type) == idx) return type; // delegate comparison to RooCatType
      }
   }
@@ -306,7 +306,7 @@ Roo1DTable* RooAbsCategory::createTable(const char *label)  const
   return new Roo1DTable(GetName(),label,*this) ;
 }
 
-Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t) 
 {
   // Read object contents from stream (dummy for now)
 
@@ -343,7 +343,7 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
     opt= lessVerbose(opt);
     RooCatType *type;
     _typeIter->Reset() ;
-    while(type=(RooCatType*)_typeIter->Next()) {
+    while((type=(RooCatType*)_typeIter->Next())) {
       os << indent;
       type->printToStream(os,opt,indent);
     }
@@ -393,7 +393,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
   lblName.Append("_lbl") ;
   
   // First determine if branch is taken
-  if (branch = t.GetBranch(idxName)) {    
+  if ((branch = t.GetBranch(idxName))) {    
 
     t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
     if (branch->GetCompressionLevel()<0) {
@@ -410,7 +410,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
   }
   
   // First determine if branch is taken
-  if (branch = t.GetBranch(lblName)) {
+  if ((branch = t.GetBranch(lblName))) {
 
     t.SetBranchAddress(lblName,_value._label) ;
     if (branch->GetCompressionLevel()<0) {
@@ -460,6 +460,11 @@ void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active)
   }
 }
 
+
+void RooAbsCategory::syncCache(const RooArgSet*) 
+{ 
+  getIndex() ; 
+}
 
 
 void RooAbsCategory::copyCache(const RooAbsArg* source) 
@@ -521,7 +526,7 @@ RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const
   // Copy states
   TIterator* tIter = typeIterator() ;
   RooCatType* type ;
-  while (type=(RooCatType*)tIter->Next()) {
+  while ((type=(RooCatType*)tIter->Next())) {
     ((RooAbsCategory*)fund)->defineType(type->GetName(),type->getVal()) ;
   }
   delete tIter;
@@ -540,7 +545,7 @@ Bool_t RooAbsCategory::isSignType(Bool_t mustHaveZero) const
   Bool_t ret(kTRUE) ;
   TIterator* tIter = typeIterator() ;
   RooCatType* type ;
-  while(type=(RooCatType*)tIter->Next()) {
+  while((type=(RooCatType*)tIter->Next())) {
     if (abs(type->getVal())>1) ret=kFALSE ;
   }
   

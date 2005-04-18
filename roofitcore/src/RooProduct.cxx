@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProduct.cc,v 1.4 2004/11/29 20:24:17 wverkerke Exp $
+ *    File: $Id: RooProduct.cc,v 1.5 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,7 +49,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& pro
 
   TIterator* compIter = prodSet.createIterator() ;
   RooAbsArg* comp ;
-  while(comp = (RooAbsArg*)compIter->Next()) {
+  while((comp = (RooAbsArg*)compIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       cout << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
@@ -81,7 +81,7 @@ Double_t RooProduct::evaluate() const
 
   RooAbsReal* comp ;
   const RooArgSet* nset = _compSet.nset() ;
-  while(comp=(RooAbsReal*)_compIter->Next()) {
+  while((comp=(RooAbsReal*)_compIter->Next())) {
     prod *= comp->getVal(nset) ;
   }
   

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.19 2005/02/14 20:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.20 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,7 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) 
 
 
 RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name) :
-  RooAbsCategory(other, name)
+  RooAbsCategory(other, name), RooAbsLValue(other)
 {
   // Copy constructor
 }
@@ -116,7 +116,7 @@ void RooAbsCategoryLValue::copyCache(const RooAbsArg* source)
 
 
 
-Bool_t RooAbsCategoryLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsCategoryLValue::readFromStream(istream&, Bool_t, Bool_t) 
 {
   // Read object contents from given stream
   return kTRUE ;
@@ -124,7 +124,7 @@ Bool_t RooAbsCategoryLValue::readFromStream(istream& is, Bool_t compact, Bool_t 
 
 
 
-void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
+void RooAbsCategoryLValue::writeToStream(ostream&, Bool_t) const
 {
   // Write object contents to given stream
 }

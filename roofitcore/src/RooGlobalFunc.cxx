@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.7 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.8 2005/03/22 13:05:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -108,7 +108,7 @@ namespace RooFit {
   RooCmdArg Minos(const RooArgSet& minosArgs)            { return RooCmdArg("Minos",kTRUE,0,0,0,0,0,&minosArgs,0) ; }
   RooCmdArg ConditionalObservables(const RooArgSet& set) { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set,0) ; }
   RooCmdArg ProjectedObservables(const RooArgSet& set)   { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set,0) ; }
-  RooCmdArg SplitRange(Bool_t flag)                      { return RooCmdArg("SplitRange",1,0,0,0,0,0,0,0) ; }
+  RooCmdArg SplitRange(Bool_t flag)                      { return RooCmdArg("SplitRange",flag,0,0,0,0,0,0,0) ; }
   
   // RooAbsPdf::paramOn arguments
   RooCmdArg Label(const char* str) { return RooCmdArg("Label",0,0,0,0,str,0,0,0) ; }
@@ -144,7 +144,7 @@ namespace RooFit {
              ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ; 
              ret.setProcessRecArgs(kFALSE) ; return ret ; 
   }
-  RooCmdArg Binned(Bool_t flag)               { return RooCmdArg("Binned",0,0,0,0,0,0,0,0) ; }
+  RooCmdArg Binned(Bool_t flag)               { return RooCmdArg("Binned",flag,0,0,0,0,0,0,0) ; }
 
   // RooMCStudy::plot* arguments
   RooCmdArg Frame(const RooCmdArg& arg1,const RooCmdArg& arg2,
@@ -156,7 +156,7 @@ namespace RooFit {
   }
   RooCmdArg FrameBins(Int_t nbins)                 { return RooCmdArg("FrameBins",nbins,0,0,0,0,0,0,0) ; }
   RooCmdArg FrameRange(Double_t xlo, Double_t xhi) { return RooCmdArg("FrameRange",0,0,xlo,xhi,0,0,0,0) ; }
-  RooCmdArg FitGauss(Bool_t flag)                  { return RooCmdArg("FitGauss",1,0,0,0,0,0,0,0) ; }
+  RooCmdArg FitGauss(Bool_t flag)                  { return RooCmdArg("FitGauss",flag,0,0,0,0,0,0,0) ; }
 
   // RooRealVar::format arguments
   RooCmdArg ShowName(Bool_t flag)             { return RooCmdArg("ShowName",flag,0,0,0,0,0,0,0) ; }

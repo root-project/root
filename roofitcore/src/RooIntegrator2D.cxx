@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.cc,v 1.9 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooIntegrator2D.cc,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,7 +35,7 @@ ClassImp(RooIntegrator2D)
 static void registerSimpsonIntegrator2D(RooNumIntFactory& fact)
 {
   RooIntegrator2D* proto = new RooIntegrator2D() ;
-  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
+  fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
   RooNumIntConfig::defaultConfig().method2D().setLabel(proto->IsA()->GetName()) ;
 }
 static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerSimpsonIntegrator2D) ;

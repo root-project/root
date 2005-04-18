@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.34 2005/02/23 15:10:06 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.35 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,7 +60,7 @@ public:
   virtual RooAbsArg* addColumn(RooAbsArg& var) ;
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
-  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const { return (Int_t)GetEntries() ; }
+  virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
   virtual void reset() { Reset() ; }
 
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;

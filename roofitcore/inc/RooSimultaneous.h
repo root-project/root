@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.36 2005/02/16 21:51:33 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.37 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,10 +52,11 @@ public:
 
   virtual Double_t expectedEvents(const RooArgSet* nset=0) const ;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
+  using RooAbsPdf::plotOn ;
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
 			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),

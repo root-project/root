@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.23 2004/11/29 20:23:42 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.24 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,14 +98,14 @@ Bool_t RooGenericPdf::setFormula(const char* formula)
 }
 
 
-Bool_t RooGenericPdf::isValidReal(Double_t value, Bool_t printError) const {
+Bool_t RooGenericPdf::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const {
   // Check if given value is valid
   return kTRUE ;
 }
 
 
 
-Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive)
+Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   // Propagate server changes to embedded formula objecy
   return _formula.changeDependents(newServerList,mustReplaceAll,nameChange) ;
@@ -126,7 +126,7 @@ void RooGenericPdf::printToStream(ostream& os, PrintOption opt, TString indent) 
 
 
 
-Bool_t RooGenericPdf::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
+Bool_t RooGenericPdf::readFromStream(istream& is, Bool_t compact, Bool_t /*verbose*/)
 {
   // Read object contents from given stream
   if (compact) {

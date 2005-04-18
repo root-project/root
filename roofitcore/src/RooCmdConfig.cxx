@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.14 2005/02/24 22:36:06 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.15 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,7 @@ ClassImp(RooCmdConfig)
 
 
 RooCmdConfig::RooCmdConfig(const char* methodName) :
+  TObject(),
   _name(methodName)
 {
   _verbose = kFALSE ;
@@ -49,7 +50,7 @@ RooCmdConfig::RooCmdConfig(const char* methodName) :
 }
 
 
-RooCmdConfig::RooCmdConfig(const RooCmdConfig& other) 
+RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other)
 {
   // Copy constructor
   _name   = other._name ;
@@ -69,55 +70,55 @@ RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)
 
   other._iIter->Reset() ;
   RooInt* ri ;
-  while(ri=(RooInt*)other._iIter->Next()) {
+  while((ri=(RooInt*)other._iIter->Next())) {
     _iList.Add(ri->Clone()) ;
   }
 
   other._dIter->Reset() ;
   RooDouble* rd ;
-  while(rd=(RooDouble*)other._dIter->Next()) {
+  while((rd=(RooDouble*)other._dIter->Next())) {
     _dList.Add(rd->Clone()) ;
   }
 
   other._sIter->Reset() ;
   RooStringVar* rs ;
-  while(rs=(RooStringVar*)other._sIter->Next()) {
+  while((rs=(RooStringVar*)other._sIter->Next())) {
     _sList.Add(rs->Clone()) ;
   }
 
   other._oIter->Reset() ;
   RooTObjWrap* os ;
-  while(os=(RooTObjWrap*)other._oIter->Next()) {
+  while((os=(RooTObjWrap*)other._oIter->Next())) {
     _oList.Add(os->Clone()) ;
   }
 
   other._rIter->Reset() ;
   TObjString* rr ;
-  while(rr=(TObjString*)other._rIter->Next()) {
+  while((rr=(TObjString*)other._rIter->Next())) {
     _rList.Add(rr->Clone()) ;
   }
 
   other._fIter->Reset() ;
   TObjString* ff ;
-  while(ff=(TObjString*)other._fIter->Next()) {
+  while((ff=(TObjString*)other._fIter->Next())) {
     _fList.Add(ff->Clone()) ;
   }
 
   other._mIter->Reset() ;
   TObjString* mm ;
-  while(mm=(TObjString*)other._mIter->Next()) {
+  while((mm=(TObjString*)other._mIter->Next())) {
     _mList.Add(mm->Clone()) ;
   }
 
   other._yIter->Reset() ;
   TObjString* yy ;
-  while(yy=(TObjString*)other._yIter->Next()) {
+  while((yy=(TObjString*)other._yIter->Next())) {
     _yList.Add(yy->Clone()) ;
   }
 
   other._pIter->Reset() ;
   TObjString* pp ;
-  while(pp=(TObjString*)other._pIter->Next()) {
+  while((pp=(TObjString*)other._pIter->Next())) {
     _pList.Add(pp->Clone()) ;
   }
 
@@ -175,7 +176,7 @@ const char* RooCmdConfig::missingArgs() const
   _rIter->Reset() ;
   TObjString* s ;
   Bool_t first(kTRUE) ;
-  while(s=(TObjString*)_rIter->Next()) {
+  while((s=(TObjString*)_rIter->Next())) {
     if (first) {
       first=kFALSE ;
     } else {
@@ -302,28 +303,28 @@ void RooCmdConfig::print()
   // Find registered integer fields for this opcode 
   _iIter->Reset() ;
   RooInt* ri ;
-  while(ri=(RooInt*)_iIter->Next()) {
+  while((ri=(RooInt*)_iIter->Next())) {
     cout << ri->GetName() << "[Int_t] = " << *ri << endl ;
   }
 
   // Find registered double fields for this opcode 
   _dIter->Reset() ;
   RooDouble* rd ;
-  while(rd=(RooDouble*)_dIter->Next()) {
+  while((rd=(RooDouble*)_dIter->Next())) {
     cout << rd->GetName() << "[Double_t] = " << *rd << endl ;
   }
 
   // Find registered string fields for this opcode 
   _sIter->Reset() ;
   RooStringVar* rs ;
-  while(rs=(RooStringVar*)_sIter->Next()) {
+  while((rs=(RooStringVar*)_sIter->Next())) {
     cout << rs->GetName() << "[string] = \"" << rs->getVal() << "\"" << endl ;
   }
 
   // Find registered argset fields for this opcode 
   _oIter->Reset() ;
   RooTObjWrap* ro ;
-  while(ro=(RooTObjWrap*)_oIter->Next()) {
+  while((ro=(RooTObjWrap*)_oIter->Next())) {
     cout << ro->GetName() << "[TObject] = " ; 
     if (ro->obj()) {
       cout << ro->obj()->GetName() << endl ;
@@ -340,7 +341,7 @@ Bool_t RooCmdConfig::process(const RooLinkedList& argList)
   Bool_t ret(kFALSE) ;
   TIterator* iter = argList.MakeIterator() ;
   RooCmdArg* arg ;
-  while(arg=(RooCmdArg*)iter->Next()) {
+  while((arg=(RooCmdArg*)iter->Next())) {
     ret |= process(*arg) ;
   }
   delete iter ;
@@ -412,7 +413,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   // Find registered integer fields for this opcode 
   _iIter->Reset() ;
   RooInt* ri ;
-  while(ri=(RooInt*)_iIter->Next()) {
+  while((ri=(RooInt*)_iIter->Next())) {
     if (!TString(opc).CompareTo(ri->GetTitle())) {
       *ri = arg.getInt(ri->GetUniqueID()) ;
       anyField = kTRUE ;
@@ -425,7 +426,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   // Find registered double fields for this opcode 
   _dIter->Reset() ;
   RooDouble* rd ;
-  while(rd=(RooDouble*)_dIter->Next()) {
+  while((rd=(RooDouble*)_dIter->Next())) {
     if (!TString(opc).CompareTo(rd->GetTitle())) {
       *rd = arg.getDouble(rd->GetUniqueID()) ;
       anyField = kTRUE ;
@@ -438,7 +439,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   // Find registered string fields for this opcode 
   _sIter->Reset() ;
   RooStringVar* rs ;
-  while(rs=(RooStringVar*)_sIter->Next()) {
+  while((rs=(RooStringVar*)_sIter->Next())) {
     if (!TString(opc).CompareTo(rs->GetTitle())) {
       
       const char* oldStr = rs->getVal() ;
@@ -457,7 +458,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   // Find registered dataset fields for this opcode 
   _oIter->Reset() ;
   RooTObjWrap* os ;
-  while(os=(RooTObjWrap*)_oIter->Next()) {
+  while((os=(RooTObjWrap*)_oIter->Next())) {
     if (!TString(opc).CompareTo(os->GetTitle())) {
       os->setObj((TObject*)arg.getObject(os->GetUniqueID())) ;
       anyField = kTRUE ;

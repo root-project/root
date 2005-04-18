@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.rdl,v 1.21 2005/02/14 20:44:29 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.22 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,7 +55,7 @@ protected:
   friend class RooAddModel ;
   RooRealProxy x ;                   // Dependent/convolution variable
 
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return (_basisCode!=0) ; } ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual void changeBasis(RooFormulaVar* basis) ;

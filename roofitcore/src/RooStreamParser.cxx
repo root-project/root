@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.26 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.27 2005/03/22 13:05:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -314,7 +314,7 @@ Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError)
 }
 
 
-Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t zapOnError) 
+Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t /*zapOnError*/) 
 {
   // Read a token and convert it to a Double_t
   TString token(readToken()) ;
@@ -347,7 +347,7 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
 }
 
 
-Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t zapOnError) 
+Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t /*zapOnError*/) 
 {
   // Read a token and convert it to an Int_t
   TString token(readToken()) ;
@@ -372,7 +372,7 @@ Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value)
 }
 
 
-Bool_t RooStreamParser::readString(TString& value, Bool_t zapOnError) 
+Bool_t RooStreamParser::readString(TString& value, Bool_t /*zapOnError*/) 
 {
   // Read a string token
   TString token(readToken()) ;

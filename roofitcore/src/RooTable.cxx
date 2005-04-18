@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTable.cc,v 1.9 2004/11/29 20:24:40 wverkerke Exp $
+ *    File: $Id: RooTable.cc,v 1.10 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,7 +31,7 @@ RooTable::RooTable(const char *name, const char *title) : TNamed(name,title)
 }
 
 
-RooTable::RooTable(const RooTable& other) : TNamed(other)
+RooTable::RooTable(const RooTable& other) : TNamed(other), RooPrintable(other)
 {
 }
 
@@ -41,7 +41,7 @@ RooTable::~RooTable()
 }
 
 
-void RooTable::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooTable::printToStream(ostream& os, PrintOption /*opt*/, TString indent) const
 {
   os << indent << "RooTable" << endl ;
 }

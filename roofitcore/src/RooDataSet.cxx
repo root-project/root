@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.88 2005/02/25 14:22:55 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.89 2005/04/15 13:05:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -195,7 +195,7 @@ RooDataSet::RooDataSet(const char *name, const char *filename, const char *treen
 
 
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
-  RooTreeData(other,newname)
+  RooTreeData(other,newname), RooDirItem()
 {
   // Copy constructor
   appendToDir(this,kTRUE) ;
@@ -423,7 +423,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
   RooDataSet* data ;
 
   // Sanity checks: data sets must have the same size
-  while(data=(RooDataSet*)iter->Next()) {
+  while((data=(RooDataSet*)iter->Next())) {
     if (numEntries()!=data->numEntries()) {
       cout << "RooDataSet::merge(" << GetName() << " ERROR: datasets have different size" << endl ;
       delete iter ;
@@ -436,10 +436,10 @@ Bool_t RooDataSet::merge(const TList& dsetList)
 
   // Extend vars with elements of other dataset
   iter->Reset() ;
-  while(data=(RooDataSet*)iter->Next()) {
+  while((data=(RooDataSet*)iter->Next())) {
     data->_iterator->Reset() ;
     RooAbsArg* arg ;
-    while (arg=(RooAbsArg*)data->_iterator->Next()) {
+    while ((arg=(RooAbsArg*)data->_iterator->Next())) {
       RooAbsArg* clone = _vars.addClone(*arg,kTRUE) ;
       if (clone) clone->attachToTree(*_tree,_defTreeBufSize) ;
     }
@@ -454,7 +454,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
 
     // Copy variables from merge sets
     iter->Reset() ;
-    while(data=(RooDataSet*)iter->Next()) {
+    while((data=(RooDataSet*)iter->Next())) {
       _vars = *data->get(i) ;
     }
 
@@ -846,7 +846,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     RooCategory* origIndexCat = (RooCategory*) variables.find(indexCatName) ;
     TIterator* tIter = indexCat->typeIterator() ;
     RooCatType* type = 0;
-      while (type=(RooCatType*)tIter->Next()) {
+      while ((type=(RooCatType*)tIter->Next())) {
 	origIndexCat->defineType(type->GetName(),type->getVal()) ;
       }
   }

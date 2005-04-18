@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.rdl,v 1.15 2005/02/16 21:51:30 wverkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.16 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,6 +52,8 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+
+  using RooAbsRealLValue::operator= ;
 
 protected:
 

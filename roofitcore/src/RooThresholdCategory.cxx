@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThresholdCategory.cc,v 1.9 2004/11/29 20:24:41 wverkerke Exp $
+ *    File: $Id: RooThresholdCategory.cc,v 1.10 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,7 +51,7 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
   // Copy constructor
   other._threshIter->Reset() ;
   RooThreshEntry* te ;
-  while(te=(RooThreshEntry*)other._threshIter->Next()) {
+  while((te=(RooThreshEntry*)other._threshIter->Next())) {
     _threshList.Add(new RooThreshEntry(*te)) ;
   }
 
@@ -74,7 +74,7 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
   // Check if identical threshold values is not defined yet
   _threshIter->Reset() ;
   RooThreshEntry* te ;
-  while (te=(RooThreshEntry*)_threshIter->Next()) {
+  while ((te=(RooThreshEntry*)_threshIter->Next())) {
     if (te->thresh() == upperLimit) {
       cout << "RooThresholdCategory::addThreshold(" << GetName() 
 	   << ") threshold at " << upperLimit << " already defined" << endl ;
@@ -106,7 +106,7 @@ RooThresholdCategory::evaluate() const
   // Scan the threshold list
   _threshIter->Reset() ;
   RooThreshEntry* te ;
-  while(te=(RooThreshEntry*)_threshIter->Next()) {
+  while((te=(RooThreshEntry*)_threshIter->Next())) {
     if (_inputVar<te->thresh()) return te->cat() ;
   }
 
@@ -128,7 +128,7 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
     // Scan list of threshold
     _threshIter->Reset() ;
     RooThreshEntry* te ;
-    while(te=(RooThreshEntry*)_threshIter->Next()) {
+    while((te=(RooThreshEntry*)_threshIter->Next())) {
       os << te->cat().GetName() << ":<" << te->thresh() << " " ;
     }
     os << _defCat->GetName() << ":*" ;
@@ -155,7 +155,7 @@ void RooThresholdCategory::printToStream(ostream& os, PrintOption opt, TString i
      os << indent << "  Threshold list" << endl ;
      _threshIter->Reset() ;
      RooThreshEntry* te ;
-     while(te=(RooThreshEntry*)_threshIter->Next()) {
+     while((te=(RooThreshEntry*)_threshIter->Next())) {
        os << indent << "    input < " << te->thresh() << " --> " ; 
        te->cat().printToStream(os,OneLine) ;
      }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.32 2004/11/29 20:24:23 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.33 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,7 +98,7 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
     RooAbsArg* basisServer ;
-    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+    while((basisServer = (RooAbsArg*)bsIter->Next())) {
       addServer(*basisServer,kTRUE,kFALSE) ;
     }
     delete bsIter ;
@@ -163,7 +163,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
     RooAbsArg* basisServer ;
-    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+    while((basisServer = (RooAbsArg*)bsIter->Next())) {
       removeServer(*basisServer) ;
     }
     delete bsIter ;
@@ -179,7 +179,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
     RooAbsArg* basisServer ;
-    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+    while((basisServer = (RooAbsArg*)bsIter->Next())) {
       addServer(*basisServer,kTRUE,kFALSE) ;
     }
     delete bsIter ;
@@ -236,7 +236,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 
 
 
-Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   // Forward redirectServers call to our basis function, which is not connected to either resolution
   // model or the physics model.
@@ -315,3 +315,9 @@ void RooResolutionModel::printToStream(ostream& os, PrintOption opt, TString ind
     }
   }
 }
+
+
+Bool_t RooResolutionModel::syncNormalizationPreHook(RooAbsReal*,const RooArgSet*) const 
+{ 
+  return (_basisCode!=0) ; 
+} 

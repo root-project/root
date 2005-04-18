@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.53 2005/02/26 18:06:30 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.54 2005/03/22 13:05:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -99,7 +99,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
   TIterator* iter = other._altBinning.MakeIterator() ;
   RooAbsBinning* binning ;
-  while(binning=(RooAbsBinning*)iter->Next()) {
+  while((binning=(RooAbsBinning*)iter->Next())) {
     _altBinning.Add(binning->clone()) ;
   }
   delete iter ;
@@ -112,6 +112,12 @@ RooRealVar::~RooRealVar()
   delete _binning ;
   _altBinning.Delete() ;
 }
+
+Double_t RooRealVar::getVal(const RooArgSet*) const 
+{ 
+  return _value ; 
+}
+
 
 void RooRealVar::setVal(Double_t value) {
   // Set current value

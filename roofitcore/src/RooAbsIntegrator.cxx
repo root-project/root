@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.cc,v 1.15 2004/11/29 20:22:05 wverkerke Exp $
+ *    File: $Id: RooAbsIntegrator.cc,v 1.16 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,3 +44,12 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
   }
   return ret ;
 }
+
+Bool_t RooAbsIntegrator::setLimits(Double_t, Double_t) 
+{ 
+  return kFALSE ; 
+}
+ 
+Bool_t RooAbsIntegrator::setUseIntegrandLimits(Bool_t) { 
+  return kFALSE ; 
+} 

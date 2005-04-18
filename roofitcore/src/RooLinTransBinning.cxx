@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinTransBinning.cc,v 1.9 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooLinTransBinning.cc,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,7 +54,7 @@ RooLinTransBinning::~RooLinTransBinning()
 }
 
 
-void RooLinTransBinning::setRange(Double_t xlo, Double_t xhi) 
+void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/) 
 {
   // Change limits
 }

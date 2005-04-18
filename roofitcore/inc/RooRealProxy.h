@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealProxy.rdl,v 1.18 2005/02/14 20:44:27 wverkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.19 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,7 +28,7 @@ public:
   RooRealProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
 	       Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE, Bool_t proxyOwnsArg=kFALSE) ;
   RooRealProxy(const char* name, RooAbsArg* owner, const RooRealProxy& other) ;
-  virtual TObject* Clone(const char* newName=0) const { return new RooRealProxy(*this); }
+  virtual TObject* Clone(const char* newName=0) const { return new RooRealProxy(newName,_owner,*this); }
   virtual ~RooRealProxy();
 
   // Accessors

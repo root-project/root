@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.cc,v 1.11 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.12 2005/02/25 14:23:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -94,7 +94,7 @@ Double_t RooUniformBinning::binCenter(Int_t i) const
 
 
 
-Double_t RooUniformBinning::binWidth(Int_t bin) const 
+Double_t RooUniformBinning::binWidth(Int_t /*bin*/) const 
 {
   return _binw ;
 }
@@ -144,7 +144,7 @@ Double_t* RooUniformBinning::array() const
 void RooUniformBinning::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
   if (opt==Standard) {
-    os << "B(" << _nbins << ")" << endl ;
+    os << indent << "B(" << _nbins << ")" << endl ;
   }
 }
 

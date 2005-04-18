@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.11 2005/02/16 21:51:30 wverkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.12 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,9 +34,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooErrorVar(*this,newname); }
   virtual ~RooErrorVar() ;
 
-  virtual Double_t getVal(const RooArgSet* set=0) const { 
-    return evaluate();
-  }
+  virtual Double_t getVal(const RooArgSet* set=0) const ; 
+
   virtual Double_t evaluate() const { 
     return ((RooRealVar&)_realVar.arg()).getError() ; // dummy because we overloaded getVal()
   } 
@@ -72,11 +71,13 @@ public:
   inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
   inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
 
+  using RooAbsRealLValue::operator= ;
+
 protected:
 
   RooLinkedList _altBinning ;  //! Optional alternative ranges and binnings
 
-  void syncCache(const RooArgSet* set=0) { _value = evaluate() ; }
+  void syncCache(const RooArgSet* set=0) ;
 
   RooRealProxy _realVar ; // RealVar with the original error
   RooAbsBinning* _binning ; //!

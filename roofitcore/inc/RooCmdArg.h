@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdArg.rdl,v 1.7 2005/02/23 15:09:32 wverkerke Exp $
+ *    File: $Id: RooCmdArg.rdl,v 1.8 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,7 +39,9 @@ public:
   const RooLinkedList& subArgs() const { return _argList ; }
 
   virtual TObject* Clone(const char* newName=0) const {
-    return new RooCmdArg(*this) ;
+    RooCmdArg* newarg = new RooCmdArg(*this) ;
+    if (newName) { newarg->SetName(newName) ; }
+    return newarg ;
   }
 
   ~RooCmdArg();

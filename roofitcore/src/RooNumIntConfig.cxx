@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.4 2005/02/23 15:09:41 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.5 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,6 +71,7 @@ RooNumIntConfig::~RooNumIntConfig()
 }
 
 RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
+  TObject(other), RooPrintable(other),
   _epsAbs(other._epsAbs),
   _epsRel(other._epsRel),
   _printEvalCounter(other._printEvalCounter),
@@ -86,7 +87,7 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   // Clone all configuration dat
   TIterator* iter = other._configSets.MakeIterator() ;
   RooArgSet* set ;
-  while(set=(RooArgSet*)iter->Next()) {
+  while((set=(RooArgSet*)iter->Next())) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
@@ -117,7 +118,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
   // Copy new integrator-specific data
   TIterator* iter = other._configSets.MakeIterator() ;
   RooArgSet* set ;
-  while(set=(RooArgSet*)iter->Next()) {
+  while((set=(RooArgSet*)iter->Next())) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
@@ -210,33 +211,33 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
 
   switch(opt) {
   case InLine:
-    os << "RooNumIntConfig" ;
+    os << indent << "RooNumIntConfig" ;
   case OneLine:
-    os << endl ;
+    os << indent << endl ;
     break ;
 
   case Shape:
     break ;
 
   case Standard:
-    os << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
+    os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
     if (_printEvalCounter) {
-      os << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+      os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
     }
 
-    os << "1-D integration method: " << _method1D.getLabel() ;
+    os << indent << "1-D integration method: " << _method1D.getLabel() ;
     if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
       os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
       os << endl ;
     }
-    os << "2-D integration method: " << _method2D.getLabel() ;
+    os << indent << "2-D integration method: " << _method2D.getLabel() ;
     if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
       os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
       os << endl ;
     }
-    os << "N-D integration method: " << _methodND.getLabel() ;
+    os << indent << "N-D integration method: " << _methodND.getLabel() ;
     if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
       os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
     } else {
@@ -246,25 +247,25 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
 
 
   case Verbose:
-    os << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
+    os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
     if (_printEvalCounter) {
-      os << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+      os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
     }
 
-    os << "Selected integration methods:" << endl ;
-    os << "1-D integration method: " << _method1D.getLabel() ;
+    os << indent << "Selected integration methods:" << endl ;
+    os << indent << "1-D integration method: " << _method1D.getLabel() ;
     if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
       os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
       os << endl ;
     }
-    os << "2-D integration method: " << _method2D.getLabel() ;
+    os << indent << "2-D integration method: " << _method2D.getLabel() ;
     if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
       os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
     } else {
       os << endl ;
     }
-    os << "N-D integration method: " << _methodND.getLabel() ;
+    os << indent << "N-D integration method: " << _methodND.getLabel() ;
     if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
       os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
     } else {
@@ -274,10 +275,10 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
     os << endl << "Available integration methods:" << endl << endl ;
     TIterator* cIter = _configSets.MakeIterator() ;
     RooArgSet* configSet ;
-    while (configSet=(RooArgSet*)cIter->Next()) {
+    while ((configSet=(RooArgSet*)cIter->Next())) {
 
-      os << "*** " << configSet->GetName() << " ***" << endl ;
-      os << "Capabilities: " ;
+      os << indent << "*** " << configSet->GetName() << " ***" << endl ;
+      os << indent << "Capabilities: " ;
       const RooAbsIntegrator* proto = RooNumIntFactory::instance().getProtoIntegrator(configSet->GetName()) ;
       if (proto->canIntegrate1D()) os << "[1-D] " ;
       if (proto->canIntegrate2D()) os << "[2-D] " ;
@@ -290,7 +291,7 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {
-	os << "(Depends on '" << depName << "')" << endl ;
+	os << indent << "(Depends on '" << depName << "')" << endl ;
       }
       os << endl ;
 

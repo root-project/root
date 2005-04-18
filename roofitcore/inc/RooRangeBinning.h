@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRangeBinning.rdl,v 1.1 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooRangeBinning.rdl,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,11 +28,11 @@ public:
   virtual ~RooRangeBinning() ;
 
   virtual Int_t numBoundaries() const { return 2 ; }
-  virtual Int_t binNumber(Double_t x) const { return 0 ; }
-  virtual Double_t binCenter(Int_t bin) const { return (_range[0] + _range[1]) / 2 ; }
-  virtual Double_t binWidth(Int_t bin) const { return (_range[1] - _range[0]) ; }
-  virtual Double_t binLow(Int_t bin) const { return _range[0] ; }
-  virtual Double_t binHigh(Int_t bin) const { return _range[1] ; }
+  virtual Int_t binNumber(Double_t) const { return 0 ; }
+  virtual Double_t binCenter(Int_t) const { return (_range[0] + _range[1]) / 2 ; }
+  virtual Double_t binWidth(Int_t) const { return (_range[1] - _range[0]) ; }
+  virtual Double_t binLow(Int_t) const { return _range[0] ; }
+  virtual Double_t binHigh(Int_t) const { return _range[1] ; }
 
   virtual void setRange(Double_t xlo, Double_t xhi) ;
   virtual void setMin(Double_t xlo) { setRange(xlo,highBound()) ; }

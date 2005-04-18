@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.31 2005/02/14 20:44:21 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.32 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -67,7 +67,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   TIterator *iterator= genVars.createIterator();
   const RooAbsArg *found = 0;
   const RooAbsArg *arg   = 0;
-  while(arg= (const RooAbsArg*)iterator->Next()) {
+  while((arg= (const RooAbsArg*)iterator->Next())) {
     if(arg->isDerived()) {
       cout << fName << "::" << ClassName() << ": cannot generate values for derived \""
 	   << arg->GetName() << "\"" << endl;
@@ -196,7 +196,7 @@ RooAcceptReject::~RooAcceptReject() {
   delete _funcValStore;
 }
 
-void RooAcceptReject::printToStream(ostream &os, PrintOption opt, TString indent) const
+void RooAcceptReject::printToStream(ostream &os, PrintOption /*opt*/, TString /*indent*/) const
 {
   oneLinePrint(os,*this);
 }
@@ -295,7 +295,7 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   // not own the event and it will be overwritten by a subsequent call.
 
   const RooArgSet *event = 0;
-  while(event= _cache->get(_eventsUsed)) {    
+  while((event= _cache->get(_eventsUsed))) {    
     _eventsUsed++ ;
     // accept this cached event?
     Double_t r= RooRandom::uniform();
@@ -317,12 +317,12 @@ void RooAcceptReject::addEventToCache() {
   // randomize each discrete argument
   _nextCatVar->Reset();
   RooCategory *cat = 0;
-  while(cat= (RooCategory*)_nextCatVar->Next()) cat->randomize();
+  while((cat= (RooCategory*)_nextCatVar->Next())) cat->randomize();
 
   // randomize each real argument
   _nextRealVar->Reset();
   RooRealVar *real = 0;
-  while(real= (RooRealVar*)_nextRealVar->Next()) real->randomize();
+  while((real= (RooRealVar*)_nextRealVar->Next())) real->randomize();
 
   // calculate and store our function value at this new point
   Double_t val= _funcClone->getVal();

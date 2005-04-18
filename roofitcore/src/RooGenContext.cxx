@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.41 2005/02/23 15:09:37 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.42 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,7 +77,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   TIterator *servers= _pdfClone->serverIterator();
   const RooAbsArg *tmp = 0;
   const RooAbsArg *arg = 0;
-  while(_isValid && (tmp= (const RooAbsArg*)iterator->Next())) {
+  while((_isValid && (tmp= (const RooAbsArg*)iterator->Next()))) {
     // is this argument derived?
     if(tmp->isDerived()) {
       cout << ClassName() << "::" << GetName() << ": cannot generate values for derived \""
@@ -279,7 +279,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
   if (_uniIter) {
     _uniIter->Reset() ;
     RooAbsArg* uniVar ;
-    while(uniVar=(RooAbsArg*)_uniIter->Next()) {
+    while((uniVar=(RooAbsArg*)_uniIter->Next())) {
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(uniVar) ;
       if (!arglv) {
 	cout << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " 

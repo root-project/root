@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.40 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.41 2005/03/16 15:19:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -192,7 +192,7 @@ void RooPlot::updateNormVars(const RooArgSet &vars) {
   if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(kTRUE);
 }
 
-Stat_t RooPlot::GetBinContent(Int_t i) const {
+Stat_t RooPlot::GetBinContent(Int_t /*i*/) const {
   // A plot object is a frame without any bin contents of its own so this
   // method always returns zero.
   return 0;
@@ -369,7 +369,7 @@ void RooPlot::Draw(Option_t *options) {
   TH1::Draw(options);
   _iterator->Reset();
   TObject *obj = 0;
-  while(obj= _iterator->Next()) {
+  while((obj= _iterator->Next())) {
     DrawOpt opt(_iterator->GetOption()) ;
     if (!opt.invisible) {
       obj->Draw(opt.drawOptions);
@@ -402,7 +402,7 @@ void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const 
     if(opt >= Shape) {
       _iterator->Reset();
       TObject *obj = 0;
-      while(obj= _iterator->Next()) {
+      while((obj= _iterator->Next())) {
 	os << deeper << "(Options=\"" << _iterator->GetOption() << "\") ";
 	// Is this a printable object?
 	if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
@@ -527,7 +527,7 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   TObject *ret = 0;
 
   TIterator* iter = _items.MakeIterator() ;
-  while(obj=iter->Next()) {
+  while((obj=iter->Next())) {
     if ((!name || !TString(name).CompareTo(obj->GetName())) && 
 	(!clas || (obj->IsA()==clas))) {
       ret = obj ;

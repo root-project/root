@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.83 2005/02/23 15:08:54 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.84 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -139,17 +139,13 @@ public:
   void printDirty(Bool_t depth=kTRUE) const ;
   static void setDirtyInhibit(Bool_t flag) { _inhibitDirty = flag ; }
 
-  // Universal assignment operators to fundamentals
-  virtual RooAbsArg& operator=(Int_t ival) ;
-  virtual RooAbsArg& operator=(Double_t fval) ;
-  virtual RooAbsArg& operator=(const char* cval) ;
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
 
   // Formatting control
   static void nameFieldLength(Int_t newLen) { _nameLength = newLen>0 ? newLen : 0 ; }
 
   // Range management
-  virtual Bool_t inRange(const char* name) const { return kTRUE ; }
+  virtual Bool_t inRange(const char*) const { return kTRUE ; }
 
 
   enum ConstOpCode { Activate=0, DeActivate=1, ConfigChange=2, ValueChange=3 } ;
@@ -161,7 +157,7 @@ public:
 
   void printCompactTree(const char* indent="",const char* fileName=0) ;
   void printCompactTree(std::ostream& os, const char* indent="") ;
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") {} ;
+  virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
   Bool_t deleteWatch() const { return _deleteWatch ; }
@@ -180,8 +176,8 @@ protected:
 
   virtual Bool_t isValid() const ;
 
-  virtual void getParametersHook(const RooArgSet* nset, RooArgSet* list) const {} ;
-  virtual void getObservablesHook(const RooArgSet* nset, RooArgSet* list) const {} ;
+  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
+  virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
   // Dirty state accessor/modifiers
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
@@ -232,8 +228,8 @@ protected:
 
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) { return kFALSE ; } ;
-  virtual void serverNameChangeHook(const RooAbsArg* oldServer, const RooAbsArg* newServer) { } ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
+  virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
   friend class RooFormula ;
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;

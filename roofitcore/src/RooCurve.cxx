@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.43 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.44 2005/04/15 13:30:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -143,6 +143,8 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) 
 {
   initialize() ;
+  SetName(name) ;
+  SetTitle(title) ;
 
   // Make deque of points in X
   deque<Double_t> pointList ;

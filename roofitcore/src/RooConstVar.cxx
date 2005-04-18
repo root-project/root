@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConstVar.cc,v 1.7 2004/11/29 20:23:06 wverkerke Exp $
+ *    File: $Id: RooConstVar.cc,v 1.8 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,13 @@ RooConstVar::~RooConstVar()
 }
 
 
-void RooConstVar::writeToStream(ostream& os, Bool_t compact) const
+Double_t RooConstVar::getVal(const RooArgSet*) const 
+{ 
+  return _value ; 
+}
+
+
+void RooConstVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
   // Write object contents to stream
   os << _value ;

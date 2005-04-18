@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.67 2005/03/02 17:20:23 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.68 2005/03/16 15:19:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -192,7 +192,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
 			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-			 Int_t nStart, Int_t nStop, Bool_t copyCache) :
+			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
   _blindString(t->_blindString)
 {
@@ -342,7 +342,7 @@ void RooTreeData::initialize() {
   // Attach each variable to the dataset
   _iterator->Reset() ;  
   RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)_iterator->Next())) {
+  while((0 != (var= (RooAbsArg*)_iterator->Next()))) {
     var->attachToTree(*_tree,_defTreeBufSize) ;
   }
 }
@@ -357,7 +357,7 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
   _cachedVars.removeAll() ;
   TIterator* iter = cachedVars.createIterator() ;
   RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)iter->Next())) {    
+  while((0 != (var= (RooAbsArg*)iter->Next()))) {    
     var->attachToTree(*_cacheTree,_defTreeBufSize) ;
     _cachedVars.add(*var) ;
   }
@@ -398,7 +398,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
     select->branchNodeServerList(&branchList) ;
     TIterator* iter = branchList.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       arg->setOperMode(RooAbsArg::ADirty) ;
     }
     delete iter ;
@@ -426,7 +426,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
 
     // Check that all copied values are valid
     allValid=kTRUE ;
-    while(arg=(RooAbsArg*)_iterator->Next()) {
+    while((arg=(RooAbsArg*)_iterator->Next())) {
       if (!arg->isValid() || (rangeName && !arg->inRange(rangeName))) {
 	allValid=kFALSE ;
 	break ;
@@ -442,7 +442,7 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
 }
 
 
-void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* rangeName, Int_t nStart, Int_t nStop) 
+void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/) 
 {
   // Load values from tree 't' into this data collection, optionally
   // selecting events using 'select' RooFormulaVar
@@ -465,7 +465,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
   // Attach args in cloned list to cloned source tree
   TIterator* sourceIter =  sourceArgSet->createIterator() ;
   RooAbsArg* sourceArg = 0;
-  while (sourceArg=(RooAbsArg*)sourceIter->Next()) {
+  while ((sourceArg=(RooAbsArg*)sourceIter->Next())) {
     sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
@@ -477,7 +477,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
     select->branchNodeServerList(&branchList) ;
     TIterator* iter = branchList.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       arg->setOperMode(RooAbsArg::ADirty) ;
     }
     delete iter ;
@@ -496,7 +496,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
      _iterator->Reset() ;
      sourceIter->Reset() ;
      Bool_t allOK(kTRUE) ;
-     while (destArg = (RooAbsArg*)_iterator->Next()) {              
+     while ((destArg = (RooAbsArg*)_iterator->Next())) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        destArg->copyCache(sourceArg) ;
        if (!destArg->isValid()) {
@@ -533,7 +533,7 @@ void RooTreeData::dump() {
 
   // Header line
   _iterator->Reset() ;
-  while (arg = (RooAbsArg*)_iterator->Next()) {       
+  while ((arg = (RooAbsArg*)_iterator->Next())) {       
     cout << arg->GetName() << "  " ;
   }  
   cout << endl ;
@@ -547,7 +547,7 @@ void RooTreeData::dump() {
      
     _iterator->Reset() ;
     // Copy from source to destination
-    while (arg = (RooAbsArg*)_iterator->Next()) {
+    while ((arg = (RooAbsArg*)_iterator->Next())) {
      arg->writeToStream(cout,kTRUE) ; 
      cout << " " ;
      }  
@@ -578,7 +578,7 @@ void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active)
 {
   TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
       cout << "RooTreeData::setArgStatus(" << GetName() 
@@ -606,7 +606,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset)
 
   Bool_t doTreeFill = (_cachedVars.getSize()==0) ;
     
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     // Attach original newVar to this tree
     arg->attachToTree(*_cacheTree,_defTreeBufSize) ;
     arg->redirectServers(_vars) ;
@@ -619,7 +619,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset)
     
     // Evaluate the cached variables and store the results
     iter->Reset() ;
-    while (arg=(RooAbsArg*)iter->Next()) {
+    while ((arg=(RooAbsArg*)iter->Next())) {
       arg->setValueDirty() ;
       arg->syncCache(nset) ;
       if (!doTreeFill) {
@@ -652,12 +652,12 @@ const RooArgSet* RooTreeData::get(Int_t index) const
     // Raise all dirty flags 
     _iterator->Reset() ;
     RooAbsArg* var = 0;
-    while (var=(RooAbsArg*)_iterator->Next()) {
+    while ((var=(RooAbsArg*)_iterator->Next())) {
       var->setValueDirty() ; // This triggers recalculation of all clients
     } 
     
     _cacheIter->Reset() ;
-    while (var=(RooAbsArg*)_cacheIter->Next()) {
+    while ((var=(RooAbsArg*)_cacheIter->Next())) {
       var->setValueDirty()  ; // This triggers recalculation of all clients, but doesn't recalculate self
       var->clearValueDirty() ; 
     } 
@@ -740,7 +740,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
   RooArgSet cloneSet ;
   RooArgSet* holderSet = new RooArgSet ;
 
-  while(var=(RooAbsArg*)vIter->Next()) {
+  while((var=(RooAbsArg*)vIter->Next())) {
     // Create a fundamental object of the right type to hold newVar values
     RooAbsArg* valHolder= var->createFundamental();
     holderSet->add(*valHolder) ;
@@ -781,7 +781,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 
     cIter->Reset() ;
     hIter->Reset() ;
-    while(clone=(RooAbsArg*)cIter->Next()) {
+    while((clone=(RooAbsArg*)cIter->Next())) {
       holder = (RooAbsArg*)hIter->Next() ;
 
       clone->syncCache(&_vars) ;
@@ -1317,7 +1317,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     if (cutRange) {
       _iterator->Reset() ;
       RooAbsArg* arg ;
-      while(arg=(RooAbsArg*)_iterator->Next()) {
+      while((arg=(RooAbsArg*)_iterator->Next())) {
 	Bool_t selectThisArg = kFALSE ;
 	UInt_t icut ;
 	for (icut=0 ; icut<cutVec.size() ; icut++) {
@@ -1374,7 +1374,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
 
 
-Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, const char* opts) const
+Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, const char* /*opts*/) const
 {
   // Create and fill a 1-dimensional table for given category column
   // This functions is the equivalent of plotOn() for category dimensions. 
@@ -1727,6 +1727,11 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
   return frame ;
 }
 
+
+Int_t RooTreeData::numEntries(Bool_t) const 
+{ 
+  return (Int_t)GetEntries() ; 
+}
 
 
 void RooTreeData::printToStream(ostream& os, PrintOption opt, TString indent) const {

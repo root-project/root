@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.17 2005/02/14 20:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.18 2005/02/25 14:22:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,14 +33,13 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) = 0 ;
   RooAbsArg& operator=(int index) ; 
   RooAbsArg& operator=(const char* label) ; 
-  RooAbsArg& operator=(Double_t fval) { return RooAbsArg::operator=(fval) ; }
   RooAbsArg& operator=(const RooAbsCategory& other) ;
 
   // Binned fit interface
   virtual void setBin(Int_t ibin) ;
   virtual Int_t getBin() const ;
   virtual Int_t numBins() const ;
-  virtual Double_t getBinWidth(Int_t i) const { return 1.0 ; }
+  virtual Double_t getBinWidth(Int_t /*i*/) const { return 1.0 ; }
 
   virtual void randomize();
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }

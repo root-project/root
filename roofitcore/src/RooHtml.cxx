@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.14 2005/02/28 21:48:20 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.15 2005/04/15 13:05:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,7 +49,7 @@ const char   *formatStr      = "%12s %5s %s";
 ClassImp(RooHtml)
   ;
 
-void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, TClass* cls) {
+void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, TClass* /*cls*/) {
   // Write a custom html header for RooFit class documentation to the specified output stream.  
 
   out
@@ -92,8 +92,8 @@ void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, TClass* cls) {
     << "</table></center>" << endl;
 }
 
-void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUpdate,
-			      const char *author, const char *copyright) {
+void RooHtml::WriteHtmlFooter(ofstream &out, const char * /*dir*/, const char *lastUpdate,
+			      const char * /*author*/, const char * /*copyright*/) {
   // Write a custom html footer for RooFit class documentation to the specified output stream.  
 
   // lastUpdate will be the CVS tag in case of .rdl and .cc files: clean it up a bit
@@ -224,7 +224,7 @@ char* RooHtml::getClassGroup(const char* fileName)
     
     // Find magic word
     char *ptr ;
-    if (ptr = strstr(line,"CLASS DESCRIPTION")) {
+    if ((ptr = strstr(line,"CLASS DESCRIPTION"))) {
       char* start = strchr(ptr,'[') ;
       if (start) {
 	// Must have closing bracket to proceed
@@ -271,7 +271,7 @@ void RooHtml::MakeIndexOfTopics()
 
   ofs << "<H2>" << endl << "<UL>" << endl ;
 
-  while(tag=(TObjString*)tagIter->Next()) {
+  while((tag=(TObjString*)tagIter->Next())) {
     desc=(TObjString*)descIter->Next() ;
     ofs << "<LI> <A HREF=" << tag->String() << "_Index.html>" << desc->String() << "</A>" << endl ;
   }

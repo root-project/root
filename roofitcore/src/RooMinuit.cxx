@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.17 2005/04/04 14:25:04 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.18 2005/04/15 13:05:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -104,7 +104,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
   TIterator* pIter = _floatParamList->createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)pIter->Next()) {
+  while((arg=(RooAbsArg*)pIter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       cout << "RooMinuit::RooMinuit: removing parameter " << arg->GetName() 
 	   << " from list because it is not of type RooRealVar" << endl ;
@@ -268,7 +268,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   if (minosParamList.getSize()>0) {
     TIterator* aIter = minosParamList.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)aIter->Next()) {
+    while((arg=(RooAbsArg*)aIter->Next())) {
       RooAbsArg* par = _floatParamList->find(arg->GetName());
       if (par && !par->isConstant()) {
 	Int_t index = _floatParamList->index(par);
@@ -807,8 +807,8 @@ void RooMinuit::backProp()
 
 
 
-void RooMinuitGlue(Int_t &np, Double_t *gin,
-		      Double_t &f, Double_t *par, Int_t flag)
+void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
+		   Double_t &f, Double_t *par, Int_t /*flag*/)
 {
   // Static function that interfaces minuit with RooMinuit
 

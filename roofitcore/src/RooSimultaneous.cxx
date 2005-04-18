@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.57 2005/02/23 15:10:04 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.58 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -99,7 +99,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   TIterator* cIter = indexCat.typeIterator() ;
   RooAbsPdf* pdf ;
   RooCatType* type ;
-  while (pdf=(RooAbsPdf*)pIter->Next()) {
+  while ((pdf=(RooAbsPdf*)pIter->Next())) {
     type = (RooCatType*) cIter->Next() ;
     addPdf(*pdf,type->GetName()) ;
     if (pdf->canBeExtended()) _anyCanExtend = kTRUE ;
@@ -126,7 +126,7 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   // Copy proxy list 
   TIterator* pIter = other._pdfProxyList.MakeIterator() ;
   RooRealProxy* proxy ;
-  while (proxy=(RooRealProxy*)pIter->Next()) {
+  while ((proxy=(RooRealProxy*)pIter->Next())) {
     _pdfProxyList.Add(new RooRealProxy(proxy->GetName(),this,*proxy)) ;
   }
   delete pIter ;
@@ -244,7 +244,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   TIterator* iter = _pdfProxyList.MakeIterator() ;
   normList = new RooArgList("normList") ;
   RooRealProxy* proxy ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
+  while((proxy=(RooRealProxy*)iter->Next())) {
     RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
     normList->addOwned(*pdfInt) ;
   }
@@ -257,7 +257,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 }
 
 
-Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
+Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
   // Return analytical integral defined by given scenario code
 
@@ -278,7 +278,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
-Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   Bool_t ret(kFALSE) ;  
 
@@ -287,7 +287,7 @@ Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerLis
     RooArgList* nlist = _normListMgr.getNormListByIndex(i) ;
     TIterator* iter = nlist->createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
     }
     delete iter ;
@@ -349,7 +349,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Take out the sliced variables
     TIterator* iter = sliceSet->createIterator() ;
     RooAbsArg* sliceArg ;
-    while(sliceArg=(RooAbsArg*)iter->Next()) {
+    while((sliceArg=(RooAbsArg*)iter->Next())) {
       RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
       if (arg) {
 	projectedVars.remove(*arg) ;
@@ -390,7 +390,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     RooAbsArg* server ;
     RooArgSet projIdxServers ;
     Bool_t anyServers(kFALSE) ;
-    while(server=(RooAbsArg*)sIter->Next()) {
+    while((server=(RooAbsArg*)sIter->Next())) {
       if (projectedVars.find(server->GetName())) {
 	anyServers=kTRUE ;
 	projIdxServers.add(*server) ;
@@ -404,7 +404,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Determine if all projected servers of the index category are in the projection dataset
     sIter = projIdxServers.createIterator() ;
     Bool_t allServers(kTRUE) ;
-    while(server=(RooAbsArg*)sIter->Next()) {
+    while((server=(RooAbsArg*)sIter->Next())) {
       if (!projData->get()->find(server->GetName())) {
 	allServers=kFALSE ;
       }
@@ -444,7 +444,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       TIterator* compIter =  indexCatComps->createIterator() ;    
       RooAbsCategory* idxComp ;
       Bool_t first(kTRUE) ;
-      while(idxComp=(RooAbsCategory*)compIter->Next()) {
+      while((idxComp=(RooAbsCategory*)compIter->Next())) {
 	if (!first) {
 	  cutString.Append("&&") ;
 	} else {
@@ -505,7 +505,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooRealProxy* proxy ;
   TIterator* pIter = _pdfProxyList.MakeIterator() ;
   Double_t sumWeight(0) ;
-  while(proxy=(RooRealProxy*)pIter->Next()) {
+  while((proxy=(RooRealProxy*)pIter->Next())) {
 
     idxCatClone->setLabel(proxy->name()) ;
 
@@ -513,7 +513,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     Bool_t skip(kFALSE) ;
     idxCompSliceIter->Reset() ;
     RooAbsCategory* idxSliceComp ;
-    while(idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next()) {
+    while((idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next())) {
       RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet->find(idxSliceComp->GetName()) ;
       if (idxComp->getIndex()!=idxSliceComp->getIndex()) {
 	skip=kTRUE ;
@@ -549,7 +549,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       idxCompSliceIter->Reset() ;
       RooAbsCategory* idxSliceComp ;
       Bool_t first(kTRUE) ;
-      while(idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next()) {
+      while((idxSliceComp=(RooAbsCategory*)idxCompSliceIter->Next())) {
 	if (!first) {
 	  cutString.Append("&&") ;
 	} else {
@@ -639,8 +639,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
 				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
-				 Double_t precision, Bool_t shiftToZero, const RooArgSet* projDataSet,
-				 Double_t rangeLo, Double_t rangeHi, RooCurve::WingMode wmode) const
+				 Double_t /*precision*/, Bool_t /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
+				 Double_t /*rangeLo*/, Double_t /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
 {
   // Forward to new implementation
 
@@ -661,13 +661,13 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
 
 
-void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t force) 
+void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*force*/) 
 {
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
 }
 
-void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t force) 
+void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*force*/) 
 {
   _plotCoefNormRange = RooNameReg::ptr(normRange) ;
 }
@@ -692,7 +692,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
     if (prototype) {
       TIterator* sIter = _indexCat.arg().serverIterator() ;
       RooAbsArg* server ;
-      while(server=(RooAbsArg*)sIter->Next()) {
+      while((server=(RooAbsArg*)sIter->Next())) {
 	if (prototype->get()->find(server->GetName())) {
 	  anyServer=kTRUE ;
 	} else {

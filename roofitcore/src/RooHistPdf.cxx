@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.cc,v 1.18 2005/02/23 15:09:39 wverkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,7 +53,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   }
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dvars->find(arg->GetName())) {
       cout << "RooHistPdf::ctor(" << GetName() 
 	   << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
@@ -113,7 +113,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   Int_t code(0),n(0) ;
   TIterator* iter = _depList.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (allVars.find(arg->GetName())) code |= (1<<n) ;
     n++ ;
   }
@@ -128,7 +128,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
   // Return integral identified by 'code'. The actual integration
   // is deferred to RooDataHist::sum() which implements partial

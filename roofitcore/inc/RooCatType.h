@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCatType.rdl,v 1.16 2004/11/29 12:22:15 wverkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.17 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,11 +22,11 @@
 
 class RooCatType : public TObject, public RooPrintable {
 public:
-  inline RooCatType() : TObject() { _value = 0 ; _label[0] = 0 ; } 
-  inline RooCatType(const char* name, Int_t value) : TObject(), _value(value) { SetName(name) ; } 
-  inline RooCatType(const RooCatType& other) : TObject(other), _value(other._value) { strcpy(_label,other._label) ;} ;
+  inline RooCatType() : TObject(), RooPrintable() { _value = 0 ; _label[0] = 0 ; } 
+  inline RooCatType(const char* name, Int_t value) : TObject(), RooPrintable(), _value(value) { SetName(name) ; } 
+  inline RooCatType(const RooCatType& other) : TObject(other), RooPrintable(other), _value(other._value) { strcpy(_label,other._label) ;} ;
   virtual ~RooCatType() {} ;
-  virtual TObject* Clone(const char* newname=0) const { return new RooCatType(*this); }
+  virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
   virtual const Text_t* GetName() const { return _label ; }
   virtual void SetName(const Text_t* name) { 
     if (strlen(name)>255) {

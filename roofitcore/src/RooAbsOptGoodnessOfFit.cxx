@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.20 2005/02/24 22:36:04 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.21 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,7 +71,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   const RooArgSet* dataDepSet = data.get() ;
   TIterator* iter = pdfDepSet->createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
     if (!pdfReal) continue ;
     
@@ -106,7 +106,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   if (rangeName) {
     // Adjust PDF normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     TIterator* iter2 = _dataClone->get()->createIterator() ;
-    while(arg=(RooAbsArg*)iter2->Next()) {
+    while((arg=(RooAbsArg*)iter2->Next())) {
       RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
       if (pdfReal) {
 	pdfReal->setRange("NormalizationRange",pdfReal->getMin(),pdfReal->getMax()) ;
@@ -117,7 +117,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     // Mark fitted range in original PDF dependents for future use
     if (!_splitRange) {
       iter->Reset() ;
-      while(arg=(RooAbsArg*)iter->Next()) {      
+      while((arg=(RooAbsArg*)iter->Next())) {      
 	RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
 	if (pdfReal) {
 	  pdfReal->setRange("fit",pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
@@ -198,7 +198,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& oth
   // Copy the operMode attribute of all branch nodes
   TIterator* iter = _pdfCloneSet->createIterator() ;
   RooAbsArg* branch ;
-  while(branch=(RooAbsArg*)iter->Next()) {
+  while((branch=(RooAbsArg*)iter->Next())) {
     branch->setOperMode(other._pdfCloneSet->find(branch->GetName())->operMode()) ;
   }
   delete iter ;

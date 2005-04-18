@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.20 2004/11/29 20:21:51 wverkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.21 2005/02/25 14:22:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
   Int_t nbin(0) ;
   TIterator* tIter = cat.typeIterator() ;
   RooCatType* type ;
-  while (type = (RooCatType*)tIter->Next()) {
+  while (((type = (RooCatType*)tIter->Next()))) {
     _types.Add(new RooCatType(*type)) ;
     nbin++ ;
   }
@@ -119,8 +119,8 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
 {
   // Print the formateed table contents on the given stream
 
-  os << endl ;
-  os << "  Table " << GetName() << " : " << GetTitle() << endl ;
+  os << indent << endl ;
+  os << indent << "  Table " << GetName() << " : " << GetTitle() << endl ;
 
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
@@ -144,7 +144,7 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
 
   // Header
   Int_t countWidth=((Int_t)log10(maxCount))+1 ;
-  os << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
+  os << indent << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
   os << setfill(' ') ;
 
   // Contents
@@ -157,14 +157,14 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
 
   // Overflow field
   if (_nOverflow) {
-    os << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
-    os << "  | " << "Overflow" << " | " << setw(countWidth) << _nOverflow << " |" << endl ;    
+    os << indent << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
+    os << indent << "  | " << "Overflow" << " | " << setw(countWidth) << _nOverflow << " |" << endl ;    
   }
 
   // Footer
-  os << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
+  os << indent << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
   os << setfill(' ') ;
-  os << endl ;
+  os << indent << endl ;
 }
 
 

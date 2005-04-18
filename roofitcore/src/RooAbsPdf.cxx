@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.93 2005/02/25 14:22:51 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.94 2005/03/22 13:05:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -339,6 +339,16 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const TNamed* ran
 }
 
 
+Bool_t RooAbsPdf::syncNormalizationPreHook(RooAbsReal*,const RooArgSet*) const 
+{ 
+  return kFALSE ; 
+} 
+
+void RooAbsPdf::syncNormalizationPostHook(RooAbsReal*,const RooArgSet*) const 
+{
+} 
+
+
 Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
 {
   // Verify that the normalization integral cached with this PDF
@@ -476,7 +486,7 @@ void RooAbsPdf::setTraceCounter(Int_t value, Bool_t allNodes)
     branchNodeServerList(&branchList) ;
     TIterator* iter = branchList.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
       if (pdf) pdf->setTraceCounter(value,kFALSE) ;
     }
@@ -876,7 +886,7 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
 
     Bool_t first=kTRUE ;
     RooAbsArg* var ;
-    while(var=(RooAbsArg*)pIter->Next()) {
+    while((var=(RooAbsArg*)pIter->Next())) {
       if (!first) {
 	os << "," ;
       } else {
@@ -1073,7 +1083,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet &pro
 
 
 
-Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto,Int_t nGen) const
+Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t) const
 {
   // Return lookup table with randomized access order for prototype events,
   // given nProto prototype data events and nGen events that will actually
@@ -1102,7 +1112,7 @@ Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto,Int_t nGen) const
 }
 
 
-Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedVars, Bool_t staticInitOK) const {
+Int_t RooAbsPdf::getGenerator(const RooArgSet &/*directVars*/, RooArgSet &/*generatedVars*/, Bool_t /*staticInitOK*/) const {
   // Load generatedVars with the subset of directVars that we can generate events for,
   // and return a code that specifies the generator algorithm we will use. A code of
   // zero indicates that we cannot generate any of the directVars (in this case, nothing
@@ -1116,12 +1126,12 @@ Int_t RooAbsPdf::getGenerator(const RooArgSet &directVars, RooArgSet &generatedV
 }
 
 
-void RooAbsPdf::initGenerator(Int_t code) 
+void RooAbsPdf::initGenerator(Int_t /*code*/) 
 {  
   // One-time initialization to setup the generator for the specified code.
 }
 
-void RooAbsPdf::generateEvent(Int_t code) {
+void RooAbsPdf::generateEvent(Int_t /*code*/) {
   // Generate an event using the algorithm corresponding to the specified code. The
   // meaning of each code is defined by the getGenerator() implementation. The default
   // implementation does nothing.
@@ -1139,7 +1149,7 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
   // There must be no other dependency routes
   TIterator* sIter = serverIterator() ;
   const RooAbsArg *server = 0;
-  while(server=(const RooAbsArg*)sIter->Next()) {
+  while((server=(const RooAbsArg*)sIter->Next())) {
     if(server == &arg) continue;
     if(server->dependsOn(arg)) {
       delete sIter ;
@@ -1151,7 +1161,7 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 }
 
 
-Int_t RooAbsPdf::getMaxVal(const RooArgSet& vars) const 
+Int_t RooAbsPdf::getMaxVal(const RooArgSet& /*vars*/) const 
   // Advertise capability to determine maximum value of function for given set of 
   // observables. If no direct generator method is provided, this information
   // will assist the accept/reject generator to operate more efficiently as
@@ -1162,7 +1172,7 @@ Int_t RooAbsPdf::getMaxVal(const RooArgSet& vars) const
 }
 
 
-Double_t RooAbsPdf::maxVal(Int_t code) 
+Double_t RooAbsPdf::maxVal(Int_t /*code*/) 
 {
   // Return maximum value for set of observables identified by code assigned
   // in getMaxVal
@@ -1305,7 +1315,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     // Discard any non-PDF nodes
     TIterator* iter = branchNodeSet.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       if (!dynamic_cast<RooAbsPdf*>(arg)) {
 	branchNodeSet.remove(*arg) ;
       }
@@ -1345,7 +1355,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
   // Discard any non-PDF nodes
   TIterator* iter = branchNodeSet.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsPdf*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
@@ -1355,7 +1365,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
   if (!selNodes) {
     // Reset PDF selection bits to kTRUE
     iter->Reset() ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       ((RooAbsPdf*)arg)->selectComp(kTRUE) ;
     }
     delete iter ;
@@ -1367,10 +1377,10 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
   iter->Reset() ;
   TIterator* sIter = selNodes->createIterator() ;
   RooArgSet tmp ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     sIter->Reset() ;
     RooAbsArg* selNode ;
-    while(selNode=(RooAbsArg*)sIter->Next()) {
+    while((selNode=(RooAbsArg*)sIter->Next())) {
       if (selNode->dependsOn(*arg)) {
 	tmp.add(*arg,kTRUE) ;
       }      
@@ -1380,7 +1390,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
 
   // Add all nodes that depend on selected nodes
   iter->Reset() ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (arg->dependsOn(*selNodes)) {
       tmp.add(*arg,kTRUE) ;
     }
@@ -1394,7 +1404,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
 
   // Set PDF selection bits according to selNodes
   iter->Reset() ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
     ((RooAbsPdf*)arg)->selectComp(select) ;
   }
@@ -1471,7 +1481,7 @@ RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_
   // Discard any non-PDF nodes
   TIterator* iter = branchNodeSet.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsPdf*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
@@ -1509,7 +1519,7 @@ RooPlot* RooAbsPdf::plotCompOn(RooPlot *frame, const char* compNameList, Option_
   // Discard any non-PDF nodes
   TIterator* iter = branchNodeSet.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsPdf*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
@@ -1536,7 +1546,7 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
   // Discard any non-PDF nodes
   TIterator* iter = branchNodeSet.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsPdf*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
@@ -1546,10 +1556,10 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
   iter->Reset() ;
   TIterator* sIter = selNodes->createIterator() ;
   RooArgSet tmp ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     sIter->Reset() ;
     RooAbsArg* selNode ;
-    while(selNode=(RooAbsArg*)sIter->Next()) {
+    while((selNode=(RooAbsArg*)sIter->Next())) {
       if (selNode->dependsOn(*arg)) {
 	tmp.add(*arg,kTRUE) ;
       }      
@@ -1559,7 +1569,7 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
 
   // Add all nodes that depend on selected nodes
   iter->Reset() ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (arg->dependsOn(*selNodes)) {
       tmp.add(*arg,kTRUE) ;
     }
@@ -1573,7 +1583,7 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
 
   // Set PDF selection bits according to selNodes
   iter->Reset() ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
     ((RooAbsPdf*)arg)->selectComp(select) ;
   }
@@ -1589,7 +1599,7 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
 
   // Reset PDF selection bits to kTRUE
   iter->Reset() ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     ((RooAbsPdf*)arg)->selectComp(kTRUE) ;
   }
 
@@ -1618,7 +1628,7 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const char* compNameList, co
   // Take out the sliced variables
   TIterator* iter = sliceSet.createIterator() ;
   RooAbsArg* sliceArg ;
-  while(sliceArg=(RooAbsArg*)iter->Next()) {
+  while((sliceArg=(RooAbsArg*)iter->Next())) {
     RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
     if (arg) {
       projectedVars.remove(*arg) ;
@@ -1653,7 +1663,7 @@ RooPlot* RooAbsPdf::plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, co
   // Take out the sliced variables
   TIterator* iter = sliceSet.createIterator() ;
   RooAbsArg* sliceArg ;
-  while(sliceArg=(RooAbsArg*)iter->Next()) {
+  while((sliceArg=(RooAbsArg*)iter->Next())) {
     RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
     if (arg) {
       projectedVars.remove(*arg) ;
@@ -1800,7 +1810,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   Double_t ymin(ymax), dy(0.06);
   Int_t index(nPar);
   RooRealVar *var = 0;
-  while(var=(RooRealVar*)pIter->Next()) {
+  while((var=(RooRealVar*)pIter->Next())) {
     if(showConstants || !var->isConstant()) ymin-= dy;
   }
 
@@ -1819,7 +1829,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
 //char buffer[512];
   index= nPar;
   pIter->Reset() ;
-  while(var=(RooRealVar*)pIter->Next()) {
+  while((var=(RooRealVar*)pIter->Next())) {
     if(var->isConstant() && !showConstants) continue;
     
     TString *formatted= options ? var->format(sigDigits, options) : var->format(*formatCmd) ;
@@ -1843,7 +1853,7 @@ void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet)
   RooArgSet* compSet = getComponents() ;
   TIterator* iter = compSet->createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf) {
       if (addNormSet.getSize()>0) {
@@ -1862,7 +1872,7 @@ void RooAbsPdf::fixAddCoefRange(const char* rangeName)
   RooArgSet* compSet = getComponents() ;
   TIterator* iter = compSet->createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf) {
       pdf->selectNormalizationRange(rangeName,kTRUE) ;
@@ -1873,8 +1883,8 @@ void RooAbsPdf::fixAddCoefRange(const char* rangeName)
 }
 
 
-RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
-			      Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) {
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& /*projDeps*/,
+			      Option_t* /*drawOptions*/, Double_t prec, Bool_t fixMinToZero) {
   
   RooNLLVar nll("nll","-log(L)",*this,*data,extended) ;
   if (fixMinToZero) {
@@ -1888,7 +1898,7 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
 
 
 Bool_t RooAbsPdf::redirectServersHook(const RooAbsCollection& newServerList, 
-				      Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+				      Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   Bool_t ret(kFALSE) ;  
 
@@ -1899,3 +1909,9 @@ Bool_t RooAbsPdf::redirectServersHook(const RooAbsCollection& newServerList,
   }
   return ret ;
 }
+
+
+Double_t RooAbsPdf::expectedEvents(const RooArgSet*) const 
+{ 
+  return 0 ; 
+} 

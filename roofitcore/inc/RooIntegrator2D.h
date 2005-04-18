@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.rdl,v 1.4 2004/11/29 20:23:57 wverkerke Exp $
+ *    File: $Id: RooIntegrator2D.rdl,v 1.5 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +41,7 @@ public:
   virtual Bool_t canIntegrate1D() const { return kFALSE ; }
   virtual Bool_t canIntegrate2D() const { return kTRUE ; }
   virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() { return kFALSE ; }
+  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
 

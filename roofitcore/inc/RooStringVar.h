@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.rdl,v 1.19 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.20 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,8 +34,6 @@ public:
   virtual operator TString() ;
   virtual const char* getVal() const { return _value ; } // overrides RooAbsReal::getVal()
   virtual void setVal(const char* newVal) ;
-  virtual RooAbsArg& operator=(Int_t ival) { return RooAbsArg::operator=(ival) ; }
-  virtual RooAbsArg& operator=(Double_t fval) { return RooAbsArg::operator=(fval) ; }
   virtual RooAbsArg& operator=(const char* newValue);
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset

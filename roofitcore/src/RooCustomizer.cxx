@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCustomizer.cc,v 1.17 2004/11/29 20:23:17 wverkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.18 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -204,7 +204,7 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
   }
   TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()){
+  while((arg=(RooAbsArg*)iter->Next())){
     splitArg(*arg,splitCat) ;
   }
   delete iter ;
@@ -316,7 +316,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 //   cout << "#cloneNodeList = " << _cloneNodeList->getSize() << endl ;
 
 //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
-  while(node=(RooAbsArg*)nIter->Next()) {
+  while((node=(RooAbsArg*)nIter->Next())) {
     RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
     if (splitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(splitArg)) ;
@@ -401,7 +401,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   _masterBranchListIter->Reset() ;
   RooAbsArg* branch ;
 //   cout << "loop over " << _masterBranchList.getSize() << " nodes" << endl ;
-  while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
+  while((branch=(RooAbsArg*)_masterBranchListIter->Next())) {
     
     // If branch is split itself, don't handle here
     if (masterNodesToBeSplit.find(branch->GetName())) {
@@ -437,7 +437,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
   clonedMasterBranches.setHashTableSize(1000) ;
   TIterator* iter = masterBranchesToBeCloned.createIterator() ;
-  while(branch=(RooAbsArg*)iter->Next()) {
+  while((branch=(RooAbsArg*)iter->Next())) {
     TString newName(branch->GetName()) ;
     newName.Append("_") ;
     newName.Append(masterCatState) ;
@@ -458,7 +458,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
   // Reconnect cloned branches to each other and to cloned nodess
   iter = clonedMasterBranches.createIterator() ;
-  while(branch=(RooAbsArg*)iter->Next()) {
+  while((branch=(RooAbsArg*)iter->Next())) {
     branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
     branch->redirectServers(clonedMasterNodes,kFALSE,kTRUE) ;
     branch->redirectServers(masterReplacementNodes,kFALSE,kTRUE) ;
@@ -470,23 +470,23 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 
 
-void RooCustomizer::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooCustomizer::printToStream(ostream& os, PrintOption /*opt*/, TString indent) const
 {
-  os << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
+  os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
 
   Int_t i, nsplit = _splitArgList.GetSize() ;
   if (nsplit>0) {
-    os << "  Splitting rules:" << endl ;
+    os << indent << "  Splitting rules:" << endl ;
     for (i=0 ; i<nsplit ; i++) {
-      os << "   " << _splitArgList.At(i)->GetName() << " is split by " << _splitCatList.At(i)->GetName() << endl ;
+      os << indent << "   " << _splitArgList.At(i)->GetName() << " is split by " << _splitCatList.At(i)->GetName() << endl ;
     }
   }
 
   Int_t nrepl = _replaceArgList.GetSize() ;
   if (nrepl>0) {
-    os << "  Replacement rules:" << endl ;
+    os << indent << "  Replacement rules:" << endl ;
     for (i=0 ; i<nrepl ; i++) {
-      os << "   " << _replaceSubList.At(i)->GetName() << " replaces " << _replaceArgList.At(i)->GetName() << endl ;
+      os << indent << "   " << _replaceSubList.At(i)->GetName() << " replaces " << _replaceArgList.At(i)->GetName() << endl ;
     }
   }
   

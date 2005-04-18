@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.rdl,v 1.7 2005/02/14 20:44:24 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.rdl,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,7 @@ public:
 
   Double_t evaluate() const { return _pdf ; }
 
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
+  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const {
     return ((RooAbsPdf&)_pdf.arg()).getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName) ;
   }

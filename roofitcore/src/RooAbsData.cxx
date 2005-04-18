@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.24 2005/02/24 22:36:03 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.25 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   // clone the fundamentals of the given data set into internal buffer
   TIterator* iter = vars.createIterator() ;
   RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)iter->Next())) {
+  while((0 != (var= (RooAbsArg*)iter->Next()))) {
     if (!var->isFundamental()) {
       cout << "RooAbsSet::initialize(" << GetName() 
 	   << "): Data set cannot contain non-fundamental types, ignoring " 
@@ -69,7 +69,8 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 
 
 RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) : 
-  TNamed(newname?newname:other.GetName(),other.GetTitle()), _vars(),
+  TNamed(newname?newname:other.GetName(),other.GetTitle()), 
+  RooPrintable(other), _vars(),
   _cachedVars("Cached Variables"), _doDirtyProp(kTRUE)
 {
   // Copy constructor
@@ -141,7 +142,7 @@ RooAbsData* RooAbsData::reduce(RooCmdArg arg1,RooCmdArg arg2,RooCmdArg arg3,RooC
     varSubset.add(*varSet) ;
     TIterator* iter = varSubset.createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       if (!_vars.find(arg->GetName())) {
 	cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
 	     << arg->GetName() << " not in dataset, ignored" << endl ;
@@ -220,7 +221,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
   RooArgSet varSubset2(varSubset) ;
   TIterator* iter = varSubset.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!_vars.find(arg->GetName())) {
       cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
 	   << arg->GetName() << " not in dataset, ignored" << endl ;
@@ -251,7 +252,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   RooArgSet varSubset2(varSubset) ;
   TIterator* iter = varSubset.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     if (!_vars.find(arg->GetName())) {
       cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
 	   << arg->GetName() << " not in dataset, ignored" << endl ;
@@ -263,6 +264,16 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
 }
 
+
+Double_t RooAbsData::weightError(ErrorType) const 
+{ 
+  return 0 ; 
+} 
+
+void RooAbsData::weightError(Double_t& lo, Double_t& hi, ErrorType) const 
+{ 
+  lo=0 ; hi=0 ; 
+} 
 
 
 RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,

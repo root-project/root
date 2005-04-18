@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.5 2005/02/25 14:22:48 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.6 2005/04/15 12:42:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -102,7 +102,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
 
   TIterator* iter = other._coefVarList.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while(((arg=(RooAbsArg*)iter->Next()))) {
     _coefVarList.addOwned(*(RooAbsArg*)arg->Clone()) ;
   }
   delete iter ;
@@ -122,7 +122,7 @@ RooAbsAnaConvPdf::~RooAbsAnaConvPdf()
   if (!_isCopy) {
     TIterator* iter = _convSet.createIterator() ;
     RooAbsArg* arg ;
-    while (arg = (RooAbsArg*)iter->Next()) {
+    while (((arg = (RooAbsArg*)iter->Next()))) {
       _convSet.remove(*arg) ;
       delete arg ;
     }
@@ -167,7 +167,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   TString basisName(expression) ;
   TIterator* iter = basisArgs.createIterator() ;
   RooAbsArg* arg  ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while(((arg=(RooAbsArg*)iter->Next()))) {
     basisName.Append("_") ;
     basisName.Append(arg->GetName()) ;
   }
@@ -197,7 +197,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   RooResolutionModel* conv ;
   RooArgList newConvSet ;
   Bool_t allOK(kTRUE) ;
-  while(conv=(RooResolutionModel*)cIter->Next()) {
+  while(((conv=(RooResolutionModel*)cIter->Next()))) {
 
     // Build new resolution model
     RooResolutionModel* newConv = newModel.convolution((RooFormulaVar*)&conv->basis(),this) ;
@@ -212,7 +212,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   if (!allOK) {
     // Delete new basis functions created sofar
     TIterator* iter = newConvSet.createIterator() ;
-    while(conv=(RooResolutionModel*)iter->Next()) delete conv ;
+    while(((conv=(RooResolutionModel*)iter->Next()))) delete conv ;
     delete iter ;
 
     return kTRUE ;
@@ -294,7 +294,7 @@ Double_t RooAbsAnaConvPdf::evaluate() const
   _convSetIter->Reset() ;
   RooAbsPdf* conv ;
   Int_t index(0) ;
-  while(conv=(RooAbsPdf*)_convSetIter->Next()) {
+  while(((conv=(RooAbsPdf*)_convSetIter->Next()))) {
     Double_t coef = coefficient(index++) ;
     if (coef!=0.) {
       result += conv->getVal(0)*coef ;
@@ -306,7 +306,7 @@ Double_t RooAbsAnaConvPdf::evaluate() const
 
 
 Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
-	  				        RooArgSet& analVars, const RooArgSet* normSet2, const char* rangeName) const 
+	  				        RooArgSet& analVars, const RooArgSet* normSet2, const char* /*rangeName*/) const 
 {
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
@@ -326,10 +326,10 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   TIterator* varIter  = intSetAll->createIterator() ;
   TIterator* convIter = _convSet.createIterator() ;
 
-  while(arg=(RooAbsArg*) varIter->Next()) {
+  while(((arg=(RooAbsArg*) varIter->Next()))) {
     Bool_t ok(kTRUE) ;
     convIter->Reset() ;
-    while(conv=(RooResolutionModel*) convIter->Next()) {
+    while(((conv=(RooResolutionModel*) convIter->Next()))) {
       if (conv->dependsOn(*arg)) ok=kFALSE ;
     }
     
@@ -349,10 +349,10 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   RooArgSet* normSetAll = normSet ? (new RooArgSet(*normSet,"normSetAll")) : 0 ;
   if (normSetAll) {
     varIter  =  normSetAll->createIterator() ;
-    while(arg=(RooAbsArg*) varIter->Next()) {
+    while(((arg=(RooAbsArg*) varIter->Next()))) {
       Bool_t ok(kTRUE) ;
       convIter->Reset() ;
-      while(conv=(RooResolutionModel*) convIter->Next()) {
+      while(((conv=(RooResolutionModel*) convIter->Next()))) {
 	if (conv->dependsOn(*arg)) ok=kFALSE ;
       }
       
@@ -458,7 +458,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
     // Integral over unnormalized function
     Double_t integral(0) ;
-    while(conv=(RooResolutionModel*)_convSetIter->Next()) {
+    while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
       Double_t coef = getCoefNorm(index++,intCoefSet,rangeName) ; 
 //       cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
       if (coef!=0) integral += coef*conv->getNorm(intConvSet) ;
@@ -470,7 +470,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     // Integral over normalized function
     Double_t integral(0) ;
     Double_t norm(0) ;
-    while(conv=(RooResolutionModel*)_convSetIter->Next()) {
+    while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
 
       Double_t coefInt = getCoefNorm(index,intCoefSet,rangeName) ;
 //       cout << "coefInt[" << index << "] = " << coefInt << " " ; intCoefSet->Print("1") ;
@@ -490,7 +490,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
 
 
-Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/) const 
 {
   // Default implementation of function advertising integration capabilities: no integrals
   // are advertised.
@@ -500,7 +500,7 @@ Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet&
 
 
 
-Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName) const 
+Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* /*rangeName*/) const 
 {
   // Default implementation of function implementing advertised integrals. Only
   // the pass-through scenario (no integration) is implemented.
@@ -513,7 +513,7 @@ Double_t RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const 
 
 
 
-Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& dep) const
+Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 {
   // This function forces RooRealIntegral to offer all integration dependents
   // to RooAbsAnaConvPdf::getAnalyticalIntegralWN() for consideration for
@@ -560,7 +560,7 @@ void RooAbsAnaConvPdf::makeCoefVarList() const
   TIterator* iter = coefVars->createIterator() ;
   RooAbsArg* arg ;
   Int_t i ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while(((arg=(RooAbsArg*)iter->Next()))) {
     for (i=0 ; i<_convSet.getSize() ; i++) {
       if (_convSet.at(i)->dependsOn(*arg)) {
 	coefVars->remove(*arg,kTRUE) ;
@@ -580,7 +580,7 @@ void RooAbsAnaConvPdf::makeCoefVarList() const
 
 
 
-Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const 
+Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* /*norm*/,const RooArgSet* nset) const 
 {
   // Overload of hook function in RooAbsPdf::syncNormalization(). This functions serves
   // two purposes: 
@@ -606,9 +606,9 @@ Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
   RooResolutionModel* conv ;
 
   // Build integration list for convolutions
-  while (dsArg = (RooAbsArg*) dsIter->Next()) {
+  while (((dsArg = (RooAbsArg*) dsIter->Next()))) {
     cvIter->Reset() ;
-    while(conv = (RooResolutionModel*) cvIter->Next()) {
+    while(((conv = (RooResolutionModel*) cvIter->Next()))) {
       if (conv->dependsOn(*dsArg)) {
 	// Add any data set variable that occurs in any convolution integral
 	convNormArgs.add(*dsArg) ;
@@ -625,7 +625,7 @@ Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* norm,const RooArgS
 
 
 
-void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* nset) const 
+void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* /*norm*/,const RooArgSet* /*nset*/) const 
 {
   // Overload of hook function in RooAbsPdf::syncNormalization(). This function propagates
   // the syncNormalization() call to all basis-function/resolution-model convolution component
@@ -639,7 +639,7 @@ void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSe
   RooResolutionModel* conv ;
 
   // Make convolution normalizations servers of the convoluted pdf normalization
-  while(conv=(RooResolutionModel*)cvIter->Next()) {
+  while(((conv=(RooResolutionModel*)cvIter->Next()))) {
     conv->syncNormalization(_convNormSet) ;
 
     // Add leaf node servers of convolution normalization integrals to our normalization
@@ -650,7 +650,7 @@ void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* norm,const RooArgSe
     TIterator* sIter = leafList.createIterator() ;
 
     RooAbsArg* server ;
-    while(server=(RooAbsArg*)sIter->Next()) {
+    while(((server=(RooAbsArg*)sIter->Next()))) {
       if (!_norm->findServer(*server)) {
 	_norm->addServer(*server,kTRUE,kFALSE) ;
       }
@@ -675,7 +675,7 @@ void RooAbsAnaConvPdf::printToStream(ostream& os, PrintOption opt, TString inden
     os << indent << "--- RooAbsAnaConvPdf ---" << endl;
     TIterator* iter = _convSet.createIterator() ;
     RooResolutionModel* conv ;
-    while (conv=(RooResolutionModel*)iter->Next()) {
+    while (((conv=(RooResolutionModel*)iter->Next()))) {
       conv->printToStream(os,Verbose,"    ") ;
     }
   }

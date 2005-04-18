@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.12 2004/11/29 20:23:45 wverkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.13 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,6 +42,7 @@ RooHashTable::RooHashTable(Int_t capacity, HashMethod hashMethod) :
 
 
 RooHashTable::RooHashTable(const RooHashTable& other) :
+  TObject(other),
   _hashMethod(other._hashMethod),
   _usedSlots(other._usedSlots), 
   _entries(other._entries), 

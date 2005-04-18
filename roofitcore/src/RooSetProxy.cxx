@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetProxy.cc,v 1.23 2004/11/29 20:24:25 wverkerke Exp $
+ *    File: $Id: RooSetProxy.cc,v 1.24 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ ClassImp(RooSetProxy)
 ;
 
 
-RooSetProxy::RooSetProxy(const char* name, const char* desc, RooAbsArg* owner, 
+RooSetProxy::RooSetProxy(const char* name, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :
   RooArgSet(name), _owner(owner), 
   _defValueServer(defValueServer), 
@@ -131,7 +131,7 @@ void RooSetProxy::removeAll()
   if (!isOwning()) {
     TIterator* iter = createIterator() ;
     RooAbsArg* arg ;
-    while (arg=(RooAbsArg*)iter->Next()) {
+    while ((arg=(RooAbsArg*)iter->Next())) {
       if (!isOwning()) {
 	_owner->removeServer(*arg) ;
       }
@@ -161,7 +161,7 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
   _iter->Reset() ;
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
-  while (arg=(RooAbsArg*)_iter->Next()) {
+  while ((arg=(RooAbsArg*)_iter->Next())) {
     
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg) error |= !RooArgSet::replace(*arg,*newArg) ;

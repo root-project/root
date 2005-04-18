@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.31 2005/02/25 14:22:52 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.32 2005/02/26 18:06:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +41,6 @@ public:
   virtual RooAbsArg& operator=(const RooAbsReal& other) ;
   virtual RooAbsArg& operator=(Double_t newValue);
   virtual RooAbsArg& operator=(Int_t ival) { return operator=((Double_t)ival) ; }
-  virtual RooAbsArg& operator=(const char* cval) { return RooAbsArg::operator=(cval) ; }
   virtual void randomize();
 
   // Implementation of RooAbsLValue
@@ -69,7 +68,7 @@ public:
   Bool_t hasFitMin() const ;
   Bool_t hasFitMax() const ;
 
-  virtual Bool_t isJacobianOK(const RooArgSet& depList) const { return kTRUE ; }
+  virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
   virtual Double_t jacobian() const { return 1 ; }
 
   inline virtual Bool_t isLValue() const { return kTRUE; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.11 2005/02/23 15:09:57 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.12 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -115,7 +115,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   RooAbsReal* func ;
   RooAbsReal* coef ;
 
-  while(coef = (RooAbsReal*)coefIter->Next()) {
+  while((coef = (RooAbsReal*)coefIter->Next())) {
     func = (RooAbsReal*) funcIter->Next() ;
 
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -197,7 +197,7 @@ Double_t RooRealSumPdf::evaluate() const
       
   // N funcs, N-1 coefficients 
   Double_t lastCoef(1) ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     func = (RooAbsReal*)_funcIter->Next() ;
     Double_t coefVal = coef->getVal(nset) ;
     if (coefVal) {
@@ -240,7 +240,7 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
   _coefIter->Reset() ;
   RooAbsReal* coef ;
   RooAbsReal* func ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     func = (RooAbsReal*)_funcIter->Next() ;
     if (func->observableOverlaps(nset,*coef)) {
       cout << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
@@ -261,7 +261,7 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 
 
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					     const RooArgSet* normSet2, const char* rangeName) const 
+					     const RooArgSet* normSet2, const char* /*rangeName*/) const 
 {
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
@@ -289,7 +289,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 
-Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* rangeName) const 
+Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* /*rangeName*/) const 
 {
   // Handle trivial passthrough scenario
   if (code==0) return getVal(normSet2) ;
@@ -314,7 +314,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
   // N funcs, N-1 coefficients 
   Double_t lastCoef(1) ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
+  while((coef=(RooAbsReal*)_coefIter->Next())) {
     funcInt = (RooAbsReal*)funcIntIter->Next() ;
     Double_t coefVal = coef->getVal(normSet) ;
     if (coefVal) {
@@ -349,7 +349,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //     cout << "_funcNormList = " << _funcNormList << endl ;
     TIterator* funcNormIter = _funcNormList->createIterator() ;
     _coefIter->Reset() ;
-    while(coef=(RooAbsReal*)_coefIter->Next()) {
+    while((coef=(RooAbsReal*)_coefIter->Next())) {
       funcNorm = (RooAbsReal*)funcNormIter->Next() ;
       Double_t coefVal = coef->getVal(normSet) ;
       if (coefVal) {
@@ -389,7 +389,7 @@ void RooRealSumPdf::syncFuncIntList(const RooArgSet* intSet) const
   _funcIntList = new RooArgList ;  
   _funcIter->Reset() ;
   RooAbsReal *func /*, *coef*/ ;
-  while(func=(RooAbsReal*)_funcIter->Next()) {
+  while((func=(RooAbsReal*)_funcIter->Next())) {
     RooAbsReal* funcInt = func->createIntegral(*intSet) ;
     _funcIntList->addOwned(*funcInt) ;
   }
@@ -410,7 +410,7 @@ void RooRealSumPdf::syncFuncNormList(const RooArgSet* normSet) const
   _funcNormList = new RooArgList ;  
   RooAbsReal *func /*, *coef*/ ;
   _funcIter->Reset() ;
-  while(func=(RooAbsReal*)_funcIter->Next()) {
+  while((func=(RooAbsReal*)_funcIter->Next())) {
     RooAbsReal* funcInt = func->createIntegral(*normSet) ;
     _funcNormList->addOwned(*funcInt) ;
   }

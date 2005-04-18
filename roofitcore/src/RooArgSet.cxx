@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.55 2005/03/22 13:05:14 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.56 2005/04/15 13:05:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -197,7 +197,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 
   TIterator* iter = tcoll.MakeIterator() ;
   TObject* obj ;
-  while(obj=iter->Next()) {
+  while((obj=iter->Next())) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
       cout << "RooArgSet::RooArgSet(TCollection) element " << obj->GetName() 
 	   << " is not a RooAbsArg, ignored" << endl ;
@@ -281,7 +281,7 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
   // Check if element with var's name is already in set
 
   RooAbsArg *other = 0;
-  if(other= find(var.GetName())) {
+  if((other= find(var.GetName()))) {
     if(other != &var) {
       if (!silent)
 	// print a warning if this variable is not the same one we
@@ -460,7 +460,7 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 
 
 
-void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section) 
+void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) 
 {
   // Write the contents of the argset in ASCII form to given stream.
   // 
@@ -477,7 +477,7 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section)
 
   TIterator *iterator= createIterator();
   RooAbsArg *next = 0;
-  while(0 != (next= (RooAbsArg*)iterator->Next())) {
+  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
     os << next->GetName() << " = " ;
     next->writeToStream(os,kFALSE) ;
     os << endl ;

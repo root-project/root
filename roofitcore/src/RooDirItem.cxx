@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDirItem.cc,v 1.7 2004/11/29 20:23:34 wverkerke Exp $
+ *    File: $Id: RooDirItem.cc,v 1.8 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@ RooDirItem::RooDirItem() : _dir(0)
   // Default constructor
 }
 
-RooDirItem::RooDirItem(const RooDirItem& other) : _dir(0) 
+RooDirItem::RooDirItem(const RooDirItem& /*other*/) : _dir(0) 
 {
   // Copy constructor
 }

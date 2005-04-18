@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.13 2004/12/03 13:18:28 wverkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.14 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -88,7 +88,7 @@ RooBinning::RooBinning(const RooBinning& other, const char* name) :
 
   other._bIter->Reset() ;
   RooDouble* boundary ;
-  while (boundary=(RooDouble*)other._bIter->Next()) {
+  while ((boundary=(RooDouble*)other._bIter->Next())) {
     addBoundary((Double_t)*boundary) ;
   }
 
@@ -143,7 +143,7 @@ Bool_t RooBinning::removeBoundary(Double_t boundary)
   // Remove boundary at given value
   _bIter->Reset() ;
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {
+  while((b=(RooDouble*)_bIter->Next())) {
     if (((Double_t)(*b))==boundary) {
 
       // If boundary is also range delimiter don't delete
@@ -167,7 +167,7 @@ Bool_t RooBinning::hasBoundary(Double_t boundary)
   // Check if boundary exists at given value
   _bIter->Reset() ;
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {
+  while((b=(RooDouble*)_bIter->Next())) {
     if (((Double_t)(*b))==boundary) {
       return kTRUE ;
     }
@@ -193,7 +193,7 @@ Int_t RooBinning::binNumber(Double_t x) const
   Int_t n(0) ;
   _bIter->Reset() ;
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {
+  while((b=(RooDouble*)_bIter->Next())) {
     Double_t val = (Double_t)*b ;
 
     if (x<val) {
@@ -214,7 +214,7 @@ Int_t RooBinning::rawBinNumber(Double_t x) const
   _bIter->Reset() ;
 
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {
+  while((b=(RooDouble*)_bIter->Next())) {
     Double_t val = (Double_t)*b ;
     if (x<val) return n>0?n-1:0 ;
     n++ ;
@@ -249,7 +249,7 @@ Double_t* RooBinning::array() const
   _bIter->Reset() ;
   RooDouble* boundary ;  
   Int_t i(0) ;
-  while(boundary=(RooDouble*)_bIter->Next()) {
+  while((boundary=(RooDouble*)_bIter->Next())) {
     Double_t bval = (Double_t)*boundary ;
     if (bval>=_xlo && bval <=_xhi) {
       _array[i++] = bval ;
@@ -271,7 +271,7 @@ void RooBinning::setRange(Double_t xlo, Double_t xhi)
   // Remove previous boundaries 
   _bIter->Reset() ;
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {    
+  while((b=(RooDouble*)_bIter->Next())) {    
     if (((Double_t)*b == _xlo && _ownBoundLo) ||
 	((Double_t)*b == _xhi && _ownBoundHi)) {
       _boundaries.Remove(b) ;
@@ -306,7 +306,7 @@ void RooBinning::updateBinCount()
   _bIter->Reset() ;
   RooDouble* boundary ;  
   Int_t i(-1) ;
-  while(boundary=(RooDouble*)_bIter->Next()) {
+  while((boundary=(RooDouble*)_bIter->Next())) {
     Double_t bval = (Double_t)*boundary ;
     if (bval>=_xlo && bval <=_xhi) {
       i++ ;
@@ -328,7 +328,7 @@ Bool_t RooBinning::binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const
   Int_t n(0) ;
   _bIter->Reset() ;
   RooDouble* b ;
-  while(b=(RooDouble*)_bIter->Next()) {
+  while((b=(RooDouble*)_bIter->Next())) {
     Double_t val = (Double_t)*b ;
 
     if (n==bin && val>=_xlo) {

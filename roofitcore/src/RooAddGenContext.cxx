@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.14 2005/02/14 20:44:21 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.15 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,7 +53,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _coefThresh = new Double_t[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
-  while(pdf=(RooAbsPdf*)model._pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.Add(cx) ;
   }  
@@ -82,7 +82,7 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
   // Forward initGenerator call to all components
   TIterator* iter = _gcList.MakeIterator() ;
   RooAbsGenContext* gc ;
-  while(gc=(RooAbsGenContext*)iter->Next()){
+  while((gc=(RooAbsGenContext*)iter->Next())){
     gc->initGenerator(theEvent) ;
   }
   delete iter ;

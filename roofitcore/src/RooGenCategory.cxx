@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenCategory.cc,v 1.18 2004/11/29 20:23:41 wverkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -139,7 +139,7 @@ void RooGenCategory::updateIndexList()
   TIterator* sIter = superClone->typeIterator() ;
   RooArgSet *catList = superClone->getParameters((const RooArgSet*)0) ;
   RooCatType* type ;
-  while (type=(RooCatType*)sIter->Next()) {
+  while ((type=(RooCatType*)sIter->Next())) {
     // Call user function
     superClone->setIndex(type->getVal()) ;
 
@@ -200,7 +200,7 @@ void RooGenCategory::printToStream(ostream& os, PrintOption opt, TString indent)
 }
 
 
-Bool_t RooGenCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooGenCategory::readFromStream(istream& /*is*/, Bool_t compact, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
    if (compact) {

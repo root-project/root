@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.55 2005/03/29 14:00:02 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.56 2005/03/29 18:43:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -150,7 +150,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   TIterator* iter = pdfList.createIterator() ;
   RooAbsArg* arg ;
   Int_t numExtended(0) ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (!pdf) {
       cout << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
@@ -264,7 +264,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   // Clone contents of normalizarion set list
   TIterator* iter = other._pdfNSetList.MakeIterator() ;
   RooArgSet* nset ;
-  while(nset=(RooArgSet*)iter->Next()) {
+  while((nset=(RooArgSet*)iter->Next())) {
     _pdfNSetList.Add(nset->snapshot()) ;
   }
   delete iter ;
@@ -280,7 +280,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   // Process set of full PDFS
   TIterator* siter = fullPdfSet.createIterator() ;
   RooAbsPdf* pdf ;
-  while(pdf=(RooAbsPdf*)siter->Next()) {
+  while((pdf=(RooAbsPdf*)siter->Next())) {
     _pdfList.add(*pdf) ;
     RooArgSet* nset1 = new RooArgSet("nset1") ;
     _pdfNSetList.Add(nset1) ;       
@@ -290,14 +290,14 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   // Process list of conditional PDFs
   TIterator* iter = l.MakeIterator() ;
   RooCmdArg* carg ;
-  while(carg=(RooCmdArg*)iter->Next()) {
+  while((carg=(RooCmdArg*)iter->Next())) {
     if (!TString(carg->GetName()).CompareTo("Conditional")) {
    
       RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
       RooArgSet* normSet = (RooArgSet*) carg->getObject(1) ;
       TIterator* siter = pdfSet->createIterator() ;
       RooAbsPdf* pdf ;
-      while(pdf=(RooAbsPdf*)siter->Next()) {
+      while((pdf=(RooAbsPdf*)siter->Next())) {
 	_pdfList.add(*pdf) ;
 	_pdfNSetList.Add(normSet->snapshot()) ;       
       }
@@ -408,7 +408,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   RooArgSet* pdfNSet ;
 
   // Loop over the PDFs
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {    
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {    
     pdfNSet = (RooArgSet*) nIter->Next() ;
     lIter->Reset() ;
     ldIter->Reset() ;
@@ -449,7 +449,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Check if this PDF has dependents overlapping with one of the existing terms
     Bool_t done(kFALSE) ;
-    while(term=(RooArgSet*)lIter->Next()) {      
+    while((term=(RooArgSet*)lIter->Next())) {      
       termNormDeps=(RooArgSet*)ldIter->Next() ;
       termAllDeps=(RooArgSet*)laIter->Next() ;
 
@@ -506,7 +506,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   laIter->Reset() ;
   TIterator* innIter = depIntNoNormList.MakeIterator() ;
 
-  while(term=(RooArgSet*)lIter->Next()) {
+  while((term=(RooArgSet*)lIter->Next())) {
     RooArgSet* normDeps = (RooArgSet*) ldIter->Next() ;
     RooArgSet* allDeps = (RooArgSet*) laIter->Next() ;
     RooArgSet* intNoNormDeps = (RooArgSet*) innIter->Next() ;
@@ -526,7 +526,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
 //    lIter->Reset() ;
 //    cout << "list of terms:" << endl ;
-//    while(term=(RooArgSet*)lIter->Next()) {
+//    while((term=(RooArgSet*)lIter->Next())) {
 //      term->Print("1") ;
 //    }
 
@@ -579,7 +579,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   TIterator* gIter = groupedList.MakeIterator() ;
   RooLinkedList* group ;
   
-  while(group=(RooLinkedList*)gIter->Next()) {
+  while((group=(RooLinkedList*)gIter->Next())) {
 
 //     group->Print("1") ;
     
@@ -615,7 +615,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       RooArgSet compTermSet, compTermNorm ;
       TIterator* tIter = group->MakeIterator() ;
       RooArgSet* term ;
-      while(term=(RooArgSet*)tIter->Next()) {
+      while((term=(RooArgSet*)tIter->Next())) {
 	
 	Int_t termIdx = terms.IndexOf(term) ;
 	norm=(RooArgSet*) norms.At(termIdx) ;
@@ -703,12 +703,12 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 
 void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps, 
 				   const RooLinkedList& terms, const RooLinkedList& norms, 
-				   const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const
+				   const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& /*cross*/) const
 {
   // Start out with each term in its own group
   TIterator* tIter = terms.MakeIterator() ;
   RooArgSet* term ;
-  while(term=(RooArgSet*)tIter->Next()) {
+  while((term=(RooArgSet*)tIter->Next())) {
     RooLinkedList* group = new RooLinkedList ;
     group->Add(term) ;
     groupedTerms.Add(group) ;
@@ -719,7 +719,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
   RooArgSet allImpDeps ;
   TIterator* iIter = imps.MakeIterator() ;
   RooArgSet *impDeps ;
-  while(impDeps=(RooArgSet*)iIter->Next()) {
+  while((impDeps=(RooArgSet*)iIter->Next())) {
     allImpDeps.add(*impDeps,kFALSE) ;
   }
   delete iIter ;
@@ -728,7 +728,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
   RooArgSet allIntDeps ;
   iIter = ints.MakeIterator() ;
   RooArgSet *intDeps ;
-  while(intDeps=(RooArgSet*)iIter->Next()) {
+  while((intDeps=(RooArgSet*)iIter->Next())) {
     allIntDeps.add(*intDeps,kFALSE) ;
   }
   delete iIter ;
@@ -746,7 +746,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
   TIterator* oidIter = outerIntDeps.createIterator() ;
   TIterator* glIter = groupedTerms.MakeIterator() ;
   RooAbsArg* outerIntDep ;
-  while (outerIntDep =(RooAbsArg*)oidIter->Next()) {
+  while ((outerIntDep =(RooAbsArg*)oidIter->Next())) {
     
 //     cout << "merge for outerIntDep " << outerIntDep->GetName() << endl ;
     
@@ -757,7 +757,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
     RooLinkedList* group ;
     glIter->Reset() ;    
     Bool_t needMerge = kFALSE ;
-    while(group=(RooLinkedList*)glIter->Next()) {
+    while((group=(RooLinkedList*)glIter->Next())) {
 
 //       cout << "considering the following group:" << endl ;
 //       group->Print("1") ;
@@ -766,7 +766,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
       // See if any term in this group depends in any ay on outerDepInt
       RooArgSet* term ;
       TIterator* tIter = group->MakeIterator() ;
-      while(term=(RooArgSet*)tIter->Next()) {
+      while((term=(RooArgSet*)tIter->Next())) {
 
 	Int_t termIdx = terms.IndexOf(term) ;
 	RooArgSet* termNormDeps = (RooArgSet*) norms.At(termIdx) ;
@@ -790,7 +790,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 	
 	// Add terms of this group to new term      
 	tIter->Reset() ;
-	while(term=(RooArgSet*)tIter->Next()) {
+	while((term=(RooArgSet*)tIter->Next())) {
 // 	  cout << "transferring group term to new merged group" << endl ;
 	  newGroup->Add(term) ;	  
 	}
@@ -886,7 +886,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
   // -----------------------------------------------------
   TIterator* pIter = term->createIterator() ;
   RooAbsPdf* pdf ;
-  while(pdf=(RooAbsPdf*)pIter->Next()) {
+  while((pdf=(RooAbsPdf*)pIter->Next())) {
 
     if (forceWrap) {
 
@@ -896,7 +896,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       TIterator* nIter = termNSet.createIterator() ;
       RooAbsArg* arg ;
       Bool_t first(kTRUE) ;
-      while(arg=(RooAbsArg*)nIter->Next()) {
+      while((arg=(RooAbsArg*)nIter->Next())) {
 	if (!first) {
 	  name.Append(",") ;
 	} else {
@@ -938,7 +938,7 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
   // Encode component names
   Bool_t first(kTRUE) ;
   RooAbsPdf* pdf ;
-  while(pdf=(RooAbsPdf*)pIter->Next()) {
+  while((pdf=(RooAbsPdf*)pIter->Next())) {
     if (first) {
       first = kFALSE ;
     } else {
@@ -954,7 +954,7 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
 }
 
 
-Bool_t RooProdPdf::forceAnalyticalInt(const RooAbsArg& dep) const 
+Bool_t RooProdPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const 
 {
   return kTRUE ;
 }
@@ -1040,9 +1040,9 @@ Bool_t RooProdPdf::checkObservables(const RooArgSet* nset) const
   _pdfIter->Reset() ;
   RooAbsPdf* pdf, *pdf2 ;
   TIterator* iter2 = _pdfList.createIterator() ;
-  while(pdf = (RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
     *iter2 = *_pdfIter ;
-    while(pdf2 = (RooAbsPdf*)iter2->Next()) {
+    while((pdf2 = (RooAbsPdf*)iter2->Next())) {
       if (pdf->observableOverlaps(nset,*pdf2)) {
 	cout << "RooProdPdf::checkObservables(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
 	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
@@ -1091,7 +1091,7 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   RooArgSet directSafe ;
   TIterator* dIter = directVars.createIterator() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)dIter->Next()) {
+  while((arg=(RooAbsArg*)dIter->Next())) {
     if (isDirectGenSafe(*arg)) directSafe.add(*arg) ;
   }
   delete dIter ;
@@ -1101,7 +1101,7 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t code[64], n(0) ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     RooArgSet pdfDirect ;
     code[n] = pdf->getGenerator(directSafe,pdfDirect,staticInitOK) ;
     if (code[n]!=0) {
@@ -1128,7 +1128,7 @@ void RooProdPdf::initGenerator(Int_t code)
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t i(0) ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     if (codeList[i]!=0) {
       pdf->initGenerator(codeList[i]) ;
     }
@@ -1145,7 +1145,7 @@ void RooProdPdf::generateEvent(Int_t code)
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t i(0) ;
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     if (codeList[i]!=0) {
       pdf->generateEvent(codeList[i]) ;
     }
@@ -1165,7 +1165,7 @@ void RooProdPdf::operModeHook()
     if (plist) {
       TIterator* iter = plist->createIterator() ;
       RooAbsArg* arg ;
-      while(arg=(RooAbsArg*)iter->Next()) {
+      while((arg=(RooAbsArg*)iter->Next())) {
 	arg->setOperMode(_operMode) ;
       }
       delete iter ;
@@ -1188,7 +1188,8 @@ void RooProdPdf::clearCache()
 
 
 
-Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
+				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
   // Throw away cache, as figuring out redirections on the cache is an unsolvable problem. 
   clearCache() ;
@@ -1207,7 +1208,7 @@ void RooProdPdf::printCompactTreeHook(ostream& os, const char* indent)
       RooAbsArg* arg ;
       TString indent2(indent) ;
       indent2 += Form("[%d] ",i) ;
-      while(arg=(RooAbsArg*)iter->Next()) {      
+      while((arg=(RooAbsArg*)iter->Next())) {      
 	arg->printCompactTree(os,indent2) ;
       }
       delete iter ;
@@ -1227,7 +1228,7 @@ Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
   // Argument may appear in only one PDF component
   _pdfIter->Reset() ;
   RooAbsPdf* pdf, *thePdf(0) ;  
-  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
 
     if (pdf->dependsOn(arg)) {
       // Found PDF depending on arg

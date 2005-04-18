@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.cc,v 1.3 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.cc,v 1.4 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ RooNumIntFactory::~RooNumIntFactory()
 {
 }
 
-RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) 
+RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) : TObject(other)
 {
 }
 

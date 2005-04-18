@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.39 2005/02/25 14:22:51 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.40 2005/02/26 18:06:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -61,7 +61,7 @@ RooAbsRealLValue::RooAbsRealLValue(const char *name, const char *title, const ch
 
 
 RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* name) :
-  RooAbsReal(other,name)
+  RooAbsReal(other,name), RooAbsLValue(other)
 {
   // Copy constructor
 }
@@ -121,13 +121,13 @@ Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const
 }                                                                                                                         
 
 
-Bool_t RooAbsRealLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsRealLValue::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
   return kTRUE ;
 }
 
-void RooAbsRealLValue::writeToStream(ostream& os, Bool_t compact) const
+void RooAbsRealLValue::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 {
   // Write object contents to given stream
 }
@@ -877,4 +877,9 @@ Int_t RooAbsRealLValue::numFitBins() const
 {
   cout << "WARNING numFitBins() IS OBSOLETE, PLEASE USE numBins()" << endl ;
   return hasMax() ;
+}
+
+Bool_t RooAbsRealLValue::isJacobianOK(const RooArgSet&) const 
+{ 
+  return kTRUE ; 
 }

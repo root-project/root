@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsString.cc,v 1.27 2004/11/29 20:22:43 wverkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.28 2005/02/25 14:22:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -100,23 +100,23 @@ Bool_t RooAbsString::operator==(const RooAbsArg& other)
 
 
 
-Bool_t RooAbsString::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooAbsString::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   //Read object contents from stream (dummy for now)
   return kFALSE ;
 } 
 
-void RooAbsString::writeToStream(ostream& os, Bool_t compact) const
+void RooAbsString::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 {
   //Write object contents to stream (dummy for now)
 }
 
 
-void RooAbsString::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooAbsString::printToStream(ostream& os, PrintOption /*opt*/, TString indent) const
 {
   //Print object contents
-  os << "RooAbsString: " << GetName() << " = " << getVal();
-  os << " : \"" << fTitle << "\"" ;
+  os << indent << "RooAbsString: " << GetName() << " = " << getVal();
+  os << indent << " : \"" << fTitle << "\"" ;
 
   printAttribList(os) ;
   os << endl ;
@@ -131,7 +131,7 @@ Bool_t RooAbsString::isValid() const
 }
 
 
-Bool_t RooAbsString::isValidString(const char* value, Bool_t printError) const 
+Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) const 
 {
   // Check if given value is valid
 
@@ -141,6 +141,11 @@ Bool_t RooAbsString::isValidString(const char* value, Bool_t printError) const
   return kTRUE ;
 }
 
+
+Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const 
+{ 
+  return kFALSE ; 
+}
 
 
 const char* RooAbsString::traceEval() const
@@ -159,6 +164,11 @@ const char* RooAbsString::traceEval() const
   return value ;
 }
 
+
+void RooAbsString::syncCache(const RooArgSet*) 
+{ 
+  getVal() ; 
+}
 
 
 void RooAbsString::copyCache(const RooAbsArg* source) 
@@ -183,7 +193,7 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
 
   // First determine if branch is taken
   TBranch* branch ;
-  if (branch = t.GetBranch(GetName())) {
+  if ((branch = t.GetBranch(GetName()))) {
     t.SetBranchAddress(GetName(),_value) ;
     if (branch->GetCompressionLevel()<0) {
       cout << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;

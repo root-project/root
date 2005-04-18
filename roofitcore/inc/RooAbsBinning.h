@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.rdl,v 1.9 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.rdl,v 1.10 2005/04/04 14:25:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,7 @@ class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
   RooAbsBinning(const char* name=0) ;
-  RooAbsBinning(const RooAbsBinning&, const char* name=0) {}
+  RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {}
   virtual TObject* Clone(const char* newname=0) const { return clone(newname) ; }
   virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
   virtual ~RooAbsBinning() ;

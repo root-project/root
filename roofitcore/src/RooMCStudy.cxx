@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.26 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.27 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -421,7 +421,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
   // Load list of data sets
   TIterator* iter = dataSetList.MakeIterator() ;
   RooAbsData* gset ;
-  while(gset=(RooAbsData*)iter->Next()) {
+  while((gset=(RooAbsData*)iter->Next())) {
     _genDataList.Add(gset) ;
   }
   delete iter ;
@@ -544,7 +544,7 @@ void RooMCStudy::calcPulls()
   
   TIterator* iter = _fitParams->createIterator()  ;
   RooRealVar* par ;
-  while(par=(RooRealVar*)iter->Next()) {
+  while((par=(RooRealVar*)iter->Next())) {
     
     RooErrorVar* err = par->errorVar() ;
     _fitParData->addColumn(*err) ;

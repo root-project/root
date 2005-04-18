@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.18 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.19 2005/03/29 18:43:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -68,7 +68,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     impIter->Reset() ;
     normIter->Reset() ;
 
-    while(term=(RooArgSet*)termIter->Next()) {
+    while((term=(RooArgSet*)termIter->Next())) {
       impDeps = (RooArgSet*)impIter->Next() ;
       termDeps = (RooArgSet*)normIter->Next() ;
 
@@ -127,7 +127,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	  RooLinkedList pdfSetList ;
 	  pdfIter->Reset() ;
 	  RooArgSet fullPdfSet ;
-	  while(pdf=(RooAbsPdf*)pdfIter->Next()) {
+	  while((pdf=(RooAbsPdf*)pdfIter->Next())) {
 
 	    RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
 	    RooArgSet* pdfSet = new RooArgSet(*pdf) ;
@@ -182,7 +182,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     normIter->Reset() ;
     RooArgSet trailerTerm ;
     RooArgSet trailerTermDeps ;
-    while(term=(RooArgSet*)termIter->Next()) {
+    while((term=(RooArgSet*)termIter->Next())) {
       RooArgSet* termDeps = (RooArgSet*)normIter->Next() ;
       trailerTerm.add(*term) ;
       trailerTermDeps.add(*termDeps) ;
@@ -197,7 +197,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     RooArgSet fullPdfSet ;
 
     TIterator* pdfIter = trailerTerm.createIterator() ;
-    while(pdf=(RooAbsPdf*)pdfIter->Next()) {
+    while((pdf=(RooAbsPdf*)pdfIter->Next())) {
 	
       RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
       RooArgSet* pdfSet = new RooArgSet(*pdf) ;
@@ -255,7 +255,7 @@ void RooProdGenContext::initGenerator(const RooArgSet &theEvent)
   // Forward initGenerator call to all components
   RooAbsGenContext* gc ;
   _gcIter->Reset() ;
-  while(gc=(RooAbsGenContext*)_gcIter->Next()){
+  while((gc=(RooAbsGenContext*)_gcIter->Next())){
     gc->initGenerator(theEvent) ;
   }
 }
@@ -276,7 +276,7 @@ void RooProdGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 //   ((RooRealVar*)theEvent.find("x"))->setVal(0) ;
 //   ((RooRealVar*)theEvent.find("y"))->setVal(0) ;
 
-  while(gc=(RooAbsGenContext*)_gcIter->Next()) {
+  while((gc=(RooAbsGenContext*)_gcIter->Next())) {
 
     // Generate component 
     gc->generateEvent(theEvent,remaining) ;
@@ -290,7 +290,7 @@ void RooProdGenContext::setProtoDataOrder(Int_t* lut)
   RooAbsGenContext::setProtoDataOrder(lut) ;
   _gcIter->Reset() ;
   RooAbsGenContext* gc ;
-  while(gc=(RooAbsGenContext*)_gcIter->Next()) {
+  while((gc=(RooAbsGenContext*)_gcIter->Next())) {
     gc->setProtoDataOrder(lut) ;
   }
 }
@@ -303,7 +303,7 @@ void RooProdGenContext::printToStream(ostream &os, PrintOption opt, TString inde
   indent2.Append("    ") ;
   RooAbsGenContext* gc ;
   _gcIter->Reset() ;
-  while(gc=(RooAbsGenContext*)_gcIter->Next()) {
+  while((gc=(RooAbsGenContext*)_gcIter->Next())) {
     gc->printToStream(os,opt,indent2) ;
   }  
 }

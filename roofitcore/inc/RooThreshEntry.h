@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThreshEntry.rdl,v 1.7 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooThreshEntry.rdl,v 1.8 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@ public:
   virtual ~RooThreshEntry() {} ;
   RooThreshEntry(Double_t thresh, const RooCatType& cat) ;
   RooThreshEntry(const RooThreshEntry& other) ;
-  virtual TObject* Clone(const char* newname = 0) const { return new RooThreshEntry(*this); }
+  virtual TObject* Clone(const char*) const { return new RooThreshEntry(*this); }
 
   virtual Int_t Compare(const TObject *) const ;
   virtual Bool_t IsSortable() const { return kTRUE ; }

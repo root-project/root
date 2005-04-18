@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.28 2004/11/29 20:24:26 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.29 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -413,7 +413,9 @@
 
 
 
-#define _REENTRANT
+#ifndef _REENTRANT
+ #define _REENTRANT
+#endif
 #include <string.h>
 
 // Matthew D. Langston  <langston@SLAC.Stanford.EDU>
@@ -479,7 +481,7 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
   TIterator* iter = _protoPdfSet.createIterator() ;
   RooAbsPdf* proto ;
-  while (proto=(RooAbsPdf*)iter->Next()) {
+  while ((proto=(RooAbsPdf*)iter->Next())) {
     buildConfig->addOwned(* new RooStringVar(proto->GetName(),proto->GetName(),"",4096)) ;
   }
   delete iter ;
@@ -668,7 +670,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 
     TIterator* iter = auxSplitCats->createIterator() ;
     RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
+    while((arg=(RooAbsArg*)iter->Next())) {
       // Find counterpart in cloned set
       RooAbsArg* aux = auxSplitCats->find(arg->GetName()) ;
 
@@ -707,7 +709,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   // Loop over requested physics models and build components
   TIterator* physIter = physModelSet.createIterator() ;
   RooAbsPdf* physModel ;
-  while(physModel=(RooAbsPdf*)physIter->Next()) {
+  while((physModel=(RooAbsPdf*)physIter->Next())) {
     cout << "RooSimPdfBuilder::buildPdf: processing physics model " << physModel->GetName() << endl ;
 
     RooCustomizer* physCustomizer = new RooCustomizer(*physModel,masterSplitCat,_splitNodeList) ;
@@ -901,7 +903,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		RooArgList fracLeafList ;
 		TString formExpr("1") ;
 		Int_t i(0) ;
-		while(type=(RooCatType*)iter->Next()) {
+		while((type=(RooCatType*)iter->Next())) {
 
 		  // Skip remainder state
 		  if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
@@ -996,7 +998,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   TIterator* fcIter = fitCat->typeIterator() ;
 
   RooCatType* fcState ;  
-  while(fcState=(RooCatType*)fcIter->Next()) {
+  while((fcState=(RooCatType*)fcIter->Next())) {
     // Select fitCat state
     fitCat->setLabel(fcState->GetName()) ;
 
@@ -1004,7 +1006,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     fclIter->Reset() ;
     RooAbsCategory* splitCat ;
     Bool_t select(kTRUE) ;
-    while(splitCat=(RooAbsCategory*)fclIter->Next()) {
+    while((splitCat=(RooAbsCategory*)fclIter->Next())) {
       // Find selected state list 
       TList* slist = (TList*) splitStateList.FindObject(splitCat->GetName()) ;
       if (!slist) continue ;

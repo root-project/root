@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.cc,v 1.14 2005/02/14 20:44:27 wverkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.15 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
   RooAbsArg *var = 0;
   TIterator* iter = vars.createIterator() ;
   Int_t index(0) ;
-  while(var=(RooAbsArg*)iter->Next()) {
+  while((var=(RooAbsArg*)iter->Next())) {
     _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
     if(0 == _vars[index]) {
       cout << "RooRealBinding: cannot bind to ";

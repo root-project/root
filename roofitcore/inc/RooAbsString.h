@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsString.rdl,v 1.21 2004/11/29 12:22:13 wverkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.22 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,14 +49,14 @@ protected:
 
   // Function evaluation and error tracing
   const char* traceEval() const ;
-  virtual Bool_t traceEvalHook(const char* value) const { return kFALSE ; }
+  virtual Bool_t traceEvalHook(const char* value) const ;
   virtual TString evaluate() const { return 0 ; }
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
   virtual Bool_t isValidString(const char*, Bool_t printError=kFALSE) const ;
 
-  virtual void syncCache(const RooArgSet* nset=0) { getVal() ; }
+  virtual void syncCache(const RooArgSet* nset=0) ;
   void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;

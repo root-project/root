@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.25 2005/02/16 21:51:30 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.26 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -134,7 +134,7 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
   // Check if jacobian has no real-valued dependents
   RooAbsArg* arg ;
   TIterator* dIter = depList.createIterator() ;
-  while (arg=(RooAbsArg*)dIter->Next()) {
+  while ((arg=(RooAbsArg*)dIter->Next())) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope.arg().dependsOn(*arg)) {
 	return kFALSE ;
@@ -152,7 +152,7 @@ Double_t RooLinearVar::jacobian() const
 
 
 
-Bool_t RooLinearVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooLinearVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from stream
   return kTRUE ;
@@ -163,9 +163,9 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to stream
   if (compact) {
-    cout << getVal() ;
+    os << getVal() ;
   } else {
-    cout << _slope.arg().GetName() << " * " << _var.arg().GetName() << " + " << _offset.arg().GetName() ;
+    os << _slope.arg().GetName() << " * " << _var.arg().GetName() << " + " << _offset.arg().GetName() ;
   }
 }
 

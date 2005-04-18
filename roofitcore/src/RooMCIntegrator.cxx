@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.18 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.19 2005/02/25 14:22:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -121,7 +121,7 @@ Bool_t RooMCIntegrator::checkLimits() const {
   return _grid.initialize(*integrand());
 }
 
-Double_t RooMCIntegrator::integral(const Double_t* yvec) {
+Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/) {
   // Evaluate the integral using a fixed number of calls to evaluate the integrand
   // equal to about 10k per dimension. Use the first 5k calls to refine the grid
   // over 5 iterations of 1k calls each, and the remaining 5k calls for a single

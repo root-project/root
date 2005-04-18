@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.cc,v 1.21 2004/11/29 20:24:40 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.22 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,7 +48,7 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
   // Copy category list
   TIterator* iter = inputCatList.createIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       cout << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
 	   << " is not an lvalue" << endl ;
@@ -97,7 +97,7 @@ void RooSuperCategory::updateIndexList()
   RooMultiCatIter mcIter(_catSet) ;
   TObjString* obj ;
   Int_t i(0) ;
-  while(obj = (TObjString*) mcIter.Next()) {
+  while((obj = (TObjString*) mcIter.Next())) {
     // Register composite label
     defineTypeUnchecked(obj->String(),i++) ;
   }
@@ -120,7 +120,7 @@ TString RooSuperCategory::currentLabel() const
   TString label ;
   RooAbsCategory* cat ;
   Bool_t first(kTRUE) ;
-  while(cat=(RooAbsCategory*) lIter->Next()) {
+  while((cat=(RooAbsCategory*) lIter->Next())) {
     label.Append(first?"{":";") ;
     label.Append(cat->getLabel()) ;      
     first=kFALSE ;
@@ -148,7 +148,7 @@ RooSuperCategory::evaluate() const
 }
 
 
-Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t printError) 
+Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t /*printError*/) 
 {
   // Set the value of the super category by specifying the state index code
   // Indirectly sets the values of the input categories
@@ -158,7 +158,7 @@ Bool_t RooSuperCategory::setIndex(Int_t index, Bool_t printError)
 }
 
 
-Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError) 
+Bool_t RooSuperCategory::setLabel(const char* label, Bool_t /*printError*/) 
 {
   // Set the value of the super category by specifying the state name
   // Indirectly sets the values of the input categories
@@ -168,7 +168,7 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
 }
 
 
-Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
+Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t /*printError*/)
 {
   // Set the value of the super category by specifying the state object
   // Indirectly sets the values of the input categories
@@ -183,7 +183,7 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t printError)
   // Parse composite label and set label of components to their values  
   char* ptr=buf+1 ;
   char* token = ptr ;
-  while (arg=(RooAbsCategoryLValue*)iter->Next()) {
+  while ((arg=(RooAbsCategoryLValue*)iter->Next())) {
 
     // Delimit name token for this category
     if (*ptr=='{') {
@@ -232,7 +232,7 @@ void RooSuperCategory::printToStream(ostream& os, PrintOption opt, TString inden
 }
 
 
-Bool_t RooSuperCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooSuperCategory::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
   return kTRUE ;

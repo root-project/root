@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.16 2005/02/24 22:36:03 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.17 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -202,7 +202,7 @@ Bool_t RooAbsGoodnessOfFit::initialize()
 
 
 
-Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t) 
 {
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
@@ -316,7 +316,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   _nGof = 0 ;
   RooCatType* type ;
   TIterator* catIter = simCat.typeIterator() ;
-  while(type=(RooCatType*)catIter->Next()){
+  while((type=(RooCatType*)catIter->Next())){
 
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;
@@ -332,7 +332,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   catIter->Reset() ;
-  while(type=(RooCatType*)catIter->Next()){
+  while((type=(RooCatType*)catIter->Next())){
 
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;

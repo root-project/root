@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.17 2005/02/23 15:08:58 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.18 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,7 +53,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   if(0 != _prototype) {
     TIterator *protoIterator= _prototype->get()->createIterator();
     const RooAbsArg *proto = 0;
-    while(proto= (const RooAbsArg*)protoIterator->Next()) {
+    while((proto= (const RooAbsArg*)protoIterator->Next())) {
       // is this variable being generated or taken from the prototype?
       if(!_theEvent->contains(*proto)) {
 	_protoVars.add(*proto);
@@ -132,7 +132,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     TIterator *iterator= _protoVars.createIterator();
     const RooAbsArg *arg = 0;
     Bool_t ok(kTRUE);
-    while(arg= (const RooAbsArg*)iterator->Next()) {
+    while((arg= (const RooAbsArg*)iterator->Next())) {
       if(vars->contains(*arg)) continue;
       cout << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
 	   << arg->GetName() << "\"" << endl;
@@ -185,7 +185,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   return data;
 }
 
-void RooAbsGenContext::initGenerator(const RooArgSet &theEvent) {
+void RooAbsGenContext::initGenerator(const RooArgSet&) {
   // The base class provides a do-nothing default implementation.
 }
 

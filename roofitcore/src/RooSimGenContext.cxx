@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimGenContext.cc,v 1.18 2005/02/14 20:44:29 wverkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.19 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,7 +60,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     TIterator* sIter = idxCat->serverIterator() ;
     RooAbsArg* server ;
     Bool_t anyServer(kFALSE), allServers(kTRUE) ;
-    while(server=(RooAbsArg*)sIter->Next()) {
+    while((server=(RooAbsArg*)sIter->Next())) {
       if (vars.find(server->GetName())) {
 	anyServer=kTRUE ;
 	pdfVars.remove(*server,kTRUE,kTRUE) ;
@@ -99,7 +99,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooRealProxy* proxy ;
   RooAbsPdf* pdf ;
   Int_t i(1) ;
-  while(proxy=(RooRealProxy*)iter->Next()) {
+  while((proxy=(RooRealProxy*)iter->Next())) {
     pdf=(RooAbsPdf*)proxy->absArg() ;
 
     // Create generator context for this PDF
@@ -156,7 +156,7 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   // Forward initGenerator call to all components
   RooAbsGenContext* gc ;
   TIterator* iter = _gcList.MakeIterator() ;
-  while(gc=(RooAbsGenContext*)iter->Next()){
+  while((gc=(RooAbsGenContext*)iter->Next())){
     gc->initGenerator(theEvent) ;
   }
   delete iter;
@@ -206,7 +206,7 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 
   TIterator* iter = _gcList.MakeIterator() ;
   RooAbsGenContext* gc ;
-  while(gc=(RooAbsGenContext*)iter->Next()) {
+  while((gc=(RooAbsGenContext*)iter->Next())) {
     gc->setProtoDataOrder(lut) ;
   }
   delete iter ;

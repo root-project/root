@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCategory.cc,v 1.6 2004/11/29 20:24:03 wverkerke Exp $
+ *    File: $Id: RooMultiCategory.cc,v 1.7 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,7 +47,7 @@ RooMultiCategory::RooMultiCategory(const char *name, const char *title, const Ro
   // Copy category list
   TIterator* iter = inputCatList.createIterator() ;
   RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
+  while ((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
       cout << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName() 
 	   << " is not a RooAbsCategory" << endl ;
@@ -84,7 +84,7 @@ void RooMultiCategory::updateIndexList()
 
   RooMultiCatIter iter(_catSet) ;
   TObjString* obj ;
-  while(obj=(TObjString*)iter.Next()) {
+  while((obj=(TObjString*)iter.Next())) {
     // Register composite label
     defineType(obj->String()) ;
   }
@@ -105,7 +105,7 @@ TString RooMultiCategory::currentLabel() const
   TString label ;
   RooAbsCategory* cat ;
   Bool_t first(kTRUE) ;
-  while(cat=(RooAbsCategory*) lIter->Next()) {
+  while((cat=(RooAbsCategory*) lIter->Next())) {
     label.Append(first?"{":";") ;
     label.Append(cat->getLabel()) ;      
     first=kFALSE ;
@@ -143,7 +143,7 @@ void RooMultiCategory::printToStream(ostream& os, PrintOption opt, TString inden
 }
 
 
-Bool_t RooMultiCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooMultiCategory::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
   return kTRUE ;

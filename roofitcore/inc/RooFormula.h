@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.rdl,v 1.30 2005/02/14 20:44:24 wverkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.31 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@ public:
   RooFormula() ;
   RooFormula(const char* name, const char* formula, const RooArgList& varList);
   RooFormula(const RooFormula& other, const char* name=0) ;
-  virtual TObject* Clone(const char* newName=0) const { return new RooFormula(*this) ; }
+  virtual TObject* Clone(const char* newName=0) const { return new RooFormula(*this,newName) ; }
   virtual ~RooFormula();
 	
   // Dependent management
