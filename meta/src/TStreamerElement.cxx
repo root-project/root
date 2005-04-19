@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.77 2005/03/09 22:40:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.78 2005/04/18 10:54:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -128,9 +128,9 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
       sscanf(sxmax.Data(),"%lg",&xmax);
    }
    UInt_t bigint;
-   if (nbits < 32) bigint = 1<<nbits;
-   else            bigint = 0xffffffff;
-   factor = bigint/(xmax-xmin);
+   if (nbits < 32)  bigint = 1<<nbits;
+   else             bigint = 0xffffffff;
+   if (xmin < xmax) factor = bigint/(xmax-xmin);
 }
    
 ClassImp(TStreamerElement)
