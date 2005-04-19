@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.49 2005/02/15 17:01:39 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.50 2005/04/05 15:56:19 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -973,7 +973,7 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    // make tab yellow
    Pixel_t yellow;
    fClient->GetColorByName("yellow", yellow);
-   TGTabElement *tabel = fTab->GetTabTab(2);
+   TGTabElement *tabel = fTab->GetTabTab("Tab 3");;
    tabel->ChangeBackground(yellow);
 
    //-------------- end embedded canvas demo

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.10 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.11 2005/03/15 09:38:09 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -88,12 +88,15 @@ public:
    virtual TGCompositeFrame *AddTab(const char *text);
    virtual void              RemoveTab(Int_t tabIndex);
    virtual Bool_t            SetTab(Int_t tabIndex);
+   virtual Bool_t            SetTab(const char *name);
    virtual void              DrawBorder() { }
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
    Int_t             GetCurrent() const { return fCurrent; }
    TGCompositeFrame *GetTabContainer(Int_t tabIndex) const;
+   TGCompositeFrame *GetTabContainer(const char *name) const;
    TGTabElement     *GetTabTab(Int_t tabIndex) const;
+   TGTabElement     *GetTabTab(const char *name) const;
    TGCompositeFrame *GetCurrentContainer() const { return GetTabContainer(fCurrent); }
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
