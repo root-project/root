@@ -1655,6 +1655,10 @@ void G__declare_template()
     c = G__fgetstream_template(temp3,">");
 #ifndef G__OLDIMPLEMENTATION2061
     c = G__fgetname_template(temp2,"*&(;");
+    if (c=='*' && strncmp(temp2,"operator",strlen("operator"))==0) {
+       strcat(temp2,"*");
+       c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
+    }
     while (c=='&'||c=='*') {
        /* we skip all the & and * we see and what's in between.
           This should be removed from the func name (what we are looking for)
