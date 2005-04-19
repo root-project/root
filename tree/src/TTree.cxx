@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.245 2005/04/12 09:26:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.246 2005/04/14 21:30:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2257,6 +2257,10 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
+//  Sum$(formula): return the sum of the value of the elements of the formula given 
+//                    as a parameter.  For eaxmple the mean for all the elements in 
+//                    one entry can be calculated with:
+//                Sum$(formula)/Length$(formula)
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".

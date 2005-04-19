@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.187 2005/03/28 21:17:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.188 2005/04/11 10:32:19 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -700,6 +700,10 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //
 //  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
+//  Sum$(formula): return the sum of the value of the elements of the formula given 
+//                    as a parameter.  For eaxmple the mean for all the elements in 
+//                    one entry can be calculated with:
+//                Sum$(formula)/Length$(formula)
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".

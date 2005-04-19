@@ -120,6 +120,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refSize  = RefClone(where,"hSize");
    TH1F *refSize2 = RefClone(where,"hSize2");
 
+   TH1F *refSumPx = RefClone(where,"hSumPx");
+
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
@@ -214,8 +216,10 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          }
          refCellOper->Fill( event->GetMatrix(2,1) - t->GetVertex(1) );
       }
+      Double_t sumPx = 0;
       for (i=0;i<ntracks;i++) {
          t = (Track*)tracks->UncheckedAt(i);
+         sumPx += t->GetPx();
          if (evmod == 0) refPx->Fill(t->GetPx());
          if (evmod == 0) refPy->Fill(t->GetPy());
          if (evmod == 0) refPz->Fill(t->GetPz());
@@ -279,6 +283,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          refAlias->Fill(head->GetEvtNum()*6+t->GetPx()*t->GetPy());
          refAliasSymbol->Fill(t->GetPx()+t->GetPy());
       }
+      refSumPx->Fill(sumPx);
    }
 
    delete event;
