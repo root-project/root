@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.30 2005/03/06 07:29:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.31 2005/04/07 13:28:30 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -547,6 +547,7 @@ Int_t TBasket::WriteBuffer()
          else               bufmax = kMAXBUF;
          R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
          if (nout == 0 || nout == fObjlen) { //this happens when the buffer cannot be compressed
+            nout = fObjlen;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
