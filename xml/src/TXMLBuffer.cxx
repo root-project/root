@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.13 2005/02/24 15:30:37 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.14 2005/04/18 10:54:58 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1274,7 +1274,7 @@ void TXMLBuffer::WriteObject(const void *actualObjStart, const TClass *actualCla
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadDouble32 (Double_t *d, TStreamerElement *ele)
+void TXMLBuffer::ReadDouble32 (Double_t * /*d*/, TStreamerElement * /*ele*/)
 {
    // read a Double32_t from the buffer
    //if (factor != 0) {
@@ -1286,7 +1286,7 @@ void TXMLBuffer::ReadDouble32 (Double_t *d, TStreamerElement *ele)
 
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteDouble32 (Double_t *d, TStreamerElement *ele)
+void TXMLBuffer::WriteDouble32 (Double_t * /*d*/, TStreamerElement * /*ele*/)
 {
    // write a Double32_t to the buffer
    //if (factor != 0) {
@@ -1401,7 +1401,7 @@ Int_t TXMLBuffer::ReadArray(Double_t  *&d)
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d, TStreamerElement *ele)
+Int_t TXMLBuffer::ReadArrayDouble32(Double_t  *&d, TStreamerElement * /*ele*/)
 {
 // Read array of Double32_t from buffer
 
@@ -1529,7 +1529,7 @@ Int_t TXMLBuffer::ReadStaticArray(Double_t  *d)
 }
 
 //______________________________________________________________________________
-Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d, TStreamerElement *ele)
+Int_t TXMLBuffer::ReadStaticArrayDouble32(Double_t  *d, TStreamerElement * /*ele*/)
 {
 // Read array of Double32_t from buffer
 
@@ -1718,7 +1718,7 @@ void TXMLBuffer::ReadFastArray(Double_t  *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele)
+void TXMLBuffer::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
 {
 // read array of Double32_t from buffer
 
@@ -1887,7 +1887,7 @@ void TXMLBuffer::WriteArray(const Double_t  *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele)
+void TXMLBuffer::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
 {
 // Write array of Double32_t to buffer
 
@@ -2082,7 +2082,7 @@ void TXMLBuffer::WriteFastArray(const Double_t  *d, Int_t n)
 }
 
 //______________________________________________________________________________
-void TXMLBuffer::WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele)
+void TXMLBuffer::WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
 {
 // Write array of Double32_t to buffer
 
