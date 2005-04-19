@@ -51,6 +51,7 @@
       Char_t isArray;                           \
       b >> isArray;                             \
       Int_t *l = (Int_t*)(arr[index]+imethod);  \
+      if (*l < 0 || *l > b.BufferSize()) continue;     \
       name **f = (name**)(arr[index]+ioffset);  \
       int j;                                    \
       if (isArray) for(j=0;j<fLength[i];j++) {  \
@@ -385,7 +386,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
      for (j=0;j<len;j++) {                                                \
        delete [] f[j];                                                    \
        f[j] = 0;                                                          \
-       if (*l ==0) continue;                                              \
+       if (*l <=0 || *l > b.BufferSize()) continue;                       \
        f[j] = new newtype[*l];                                            \
        newtype *af = f[j];                                                \
        b.ReadFastArray(readbuf, *l);                                      \
@@ -404,7 +405,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       DOLOOP {                                                            \
          b >> isArray;                                                    \
          Int_t *l = (Int_t*)(arr[k]+imethod);                             \
-         if (*l>0) readbuf = new name[*l];                                \
+         if (*l>0 && *l < b.BufferSize()) readbuf = new name[*l];         \
          switch(newtype) {                                                \
             case TStreamerInfo::kBool:     ConvCBasicPointerTo(Bool_t);   \
             case TStreamerInfo::kChar:     ConvCBasicPointerTo(Char_t);   \
