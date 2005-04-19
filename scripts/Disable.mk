@@ -11,6 +11,8 @@ test: tests ;
 
 test:
 
+check:
+
 $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; $(MAKE) --no-print-directory clean)
 
