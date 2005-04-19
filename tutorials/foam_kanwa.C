@@ -5,6 +5,7 @@
 
 Int_t foam_kanwa(){
   cout<<"--- kanwa started ---"<<endl;
+  gSystem->Load("libFoam.so");
   TH2D  *hst_xy = new TH2D("hst_xy" ,  "x-y plot", 50,0,1.0, 50,0,1.0);
   Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
   //

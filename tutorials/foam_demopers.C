@@ -7,6 +7,7 @@
 
 Int_t foam_demopers()
 {
+  gSystem->Load("libFoam.so");
   gROOT->ProcessLine(".L foam_demo.C+");
   //******************************************
   cout<<"====================== TestVector ================================"<<endl;

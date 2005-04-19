@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.6 2005/04/12 17:16:13 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.7 2005/04/13 13:15:27 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //____________________________________________________________________________
@@ -89,7 +89,7 @@ TFoamMaxwt& TFoamMaxwt::operator =(TFoamMaxwt &From)
 //________________________________________________________________________________
 void TFoamMaxwt::Fill(Double_t wt)
 {
-// Filling analysed weight
+// Filling analyzed weight
   fNent =  fNent+1.0;
   fWtHst1->Fill(wt,1.0);
   fWtHst2->Fill(wt,wt);

@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.8 2005/04/13 13:15:27 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.9 2005/04/15 12:39:34 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -91,7 +91,7 @@
 //------------------------------------------------------------------------------
 //  Name     | default  | Description
 //------------------------------------------------------------------------------
-//  Dim      | 0        | Dimension of the integration space. Must be redefined!
+//  kDim     | 0        | Dimension of the integration space. Must be redefined!
 //  nCells   | 1000     | No of allocated number of cells,
 //  nSampl   | 200      | No. of MC events in the cell MC exploration
 //  nBin     | 8        | No. of bins in edge-histogram in cell exploration
@@ -270,7 +270,7 @@ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
 // User must invoke Initialize with two arguments or Initialize without arguments.
 // This is done BEFORE generating first MC event and AFTER allocating FOAM object
 // and reseting (optionally) its internal parameters/switches.
-// The overall oprerational scheme of the FOAM is the following:
+// The overall operational scheme of the FOAM is the following:
 //BEGIN_HTML <!--
 /* -->
 <img src="gif/foam_schema2.gif">
@@ -339,7 +339,7 @@ void TFoam::Initialize()
 
   if(fPseRan==0) Error("Initialize", "Random number generator not set \n");
   if(fRho==0 && fMethodCall==0 ) Error("Initialize", "Distribution function not set \n");
-  if(fDim==0) Error("Initialize", "Zero dimension not alowed \n");
+  if(fDim==0) Error("Initialize", "Zero dimension not allowed \n");
 
   /////////////////////////////////////////////////////////////////////////
   //                   ALLOCATE SMALL LISTS                              //
@@ -410,7 +410,7 @@ void TFoam::Initialize()
   // Preperations for the M.C. generation
   fSumWt  = 0.0;               // M.C. generation sum of Wt
   fSumWt2 = 0.0;               // M.C. generation sum of Wt**2
-  fSumOve = 0.0;               // M.C. generation sum of overweighed
+  fSumOve = 0.0;               // M.C. generation sum of overweighted
   fNevGen = 0.0;               // M.C. generation sum of 1d0
   fWtMax  = kVlow;               // M.C. generation maximum wt
   fWtMin  = kHigh;               // M.C. generation minimum wt
@@ -618,7 +618,7 @@ void TFoam::Explore(TFoamCell *Cell)
   switch(fOptDrive){
   case 1:                       // VARIANCE REDUCTION
     if(kBest == -1) Varedu(CeSum,kBest,xBest,yBest); // determine the best edge,
-    //IntDriv =sqrt( CeSum[1]/NevMC -IntTrue*IntTrue ); // Older ansatz, numericaly not bad
+    //IntDriv =sqrt( CeSum[1]/NevMC -IntTrue*IntTrue ); // Older ansatz, numerically not bad
     IntDriv =sqrt(CeSum[1]/NevMC) -IntTrue; // Foam build-up, sqrt(<w**2>) -<w>
     IntPrim =sqrt(CeSum[1]/NevMC);          // MC gen. sqrt(<w**2>) =sqrt(<w>**2 +sigma**2)
     break;
@@ -990,7 +990,7 @@ void TFoam::ResetPseRan(TRandom *PseRan)
 // User may optionally reset random number generator using this method
 // Usually it is done when FOAM object is restored from the disk.
 // IMPORTANT: this method deletes existing  random number generator registered in the FOAM object.
-// In particular such an object is created by the streamer diring the disk-read operation.
+// In particular such an object is created by the streamer during the disk-read operation.
 
    if(fPseRan) {
       Info("ResetPseRan", "Resetting random number generator  \n");
@@ -1152,8 +1152,8 @@ void TFoam::MakeEvent(void)
     if( fMCwt<fMaxWtRej ){
       fMCwt = 1.0;                  // normal Wt=1 event
     }else{
-      fMCwt = fMCwt/fMaxWtRej;    // weight for overveighted events! kept for debug
-      fSumOve += fMCwt-fMaxWtRej; // contribution of overveighted
+      fMCwt = fMCwt/fMaxWtRej;    // weight for overweighted events! kept for debug
+      fSumOve += fMCwt-fMaxWtRej; // contribution of overweighted
     }
   }
   //********************** MC LOOP ENDS HERE **********************
@@ -1214,8 +1214,8 @@ void  TFoam::GetIntNorm(Double_t& IntNorm, Double_t& Errel )
 {
 // User subprogram.
 // It returns NORMALIZATION integral to be combined with the average weights
-// and content of the histograms in order to get proper absolute normaizadion
-// of the integranl and distributions.
+// and content of the histograms in order to get proper absolute normalization
+// of the integrand and distributions.
 // It can be called after initialization, before or during the MC run.
 
   if(fOptRej == 1){    // Wt=1 events, internal rejection
@@ -1277,7 +1277,7 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
     BX1F("    XDiver",Driver,   "Driver  total integral, R_loss         ");
     BXTXT("----------------------------------------");
     BX2F("    IntMC", MCresult,  MCerror,      "Result of the MC Integral");
-    BX1F(" MCerelat", MCerelat,  "Relative error of the MC intgral       ");
+    BX1F(" MCerelat", MCerelat,  "Relative error of the MC integral      ");
     BX1F(" <w>/WtMax",MCeff,     "MC efficiency, acceptance rate");
     BX1F(" Sigma/<w>",MCef2,     "MC efficiency, variance/ave_wt");
     BX1F("     WtMax",WtMax,     "WtMax(esp= 0.0005)            ");
