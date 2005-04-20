@@ -180,7 +180,9 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
       }
       if (mode == kCurlyLine) {
-         cline = new TCurlyLine(x0,y0,x1,y1);
+         cline = new TCurlyLine(x0,y0,x1,y1
+                                , TCurlyLine::GetDefaultWaveLength()
+                                , TCurlyLine::GetDefaultAmplitude());
          cline->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
@@ -189,7 +191,9 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))));
          phimin = 0;
          phimax = 360;
-         cline = new TCurlyArc(x0,y0,radius,phimin,phimax);
+         cline = new TCurlyArc(x0,y0,radius,phimin,phimax
+                                , TCurlyArc::GetDefaultWaveLength()
+                                , TCurlyArc::GetDefaultAmplitude());
          cline->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
