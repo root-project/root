@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.209 2005/03/19 17:09:38 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.210 2005/03/29 17:15:58 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -803,7 +803,17 @@ Int_t THistPainter::MakeCuts(char *choptin)
       while (*cuts == ' ') cuts++;
       Int_t nc = strlen(cuts);
       while (cuts[nc-1] == ' ') {cuts[nc-1] = 0; nc--;}
-      TCutG *cut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(cuts);
+      TIter next(gROOT->GetListOfSpecials());
+      TCutG *cut=0;
+      TObject *obj;
+      while ((obj = next())) {
+         if (!obj->InheritsFrom(TCutG::Class())) continue;
+         TString cutname = obj->GetName();
+         cutname.ToLower();
+         if (strcmp(cutname.Data(),cuts)) continue;
+         cut = (TCutG*)obj;
+         break;
+      }
       if (cut) {
          fCuts[fNcuts] = cut;
          fCutsOpt[fNcuts] = 1;
