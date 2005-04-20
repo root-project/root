@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.12 2004/11/15 10:26:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.13 2004/12/04 10:14:09 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -13,6 +13,10 @@
 #include "TROOT.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
+
+Float_t TArrow::fgDefaultAngle      = 60;    
+Float_t TArrow::fgDefaultArrowSize  = 0.05;
+TString TArrow::fgDefaultOption     = ">";   
 
 ClassImp(TArrow)
 
@@ -35,7 +39,7 @@ TArrow::TArrow(): TLine(),TAttFill()
 //*-*-*-*-*-*-*-*-*-*-*arrow default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   fAngle = 60;
+   fAngle = fgDefaultAngle;
 }
 
 //______________________________________________________________________________
@@ -57,13 +61,14 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 //  option = "<|>"    <|-----|>  arrow defined by a triangle
 //                   If FillColor == 0 draw open triangle
 //                   else  draw full triangle with fillcolor
-//
+//                   default is filled with LineColor
 
-   fAngle       = 60;
+   fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
    fOption      = option;
-   SetLineColor(1);
-   SetLineStyle(1);
+   SetFillColor(this->GetLineColor());
+//   SetLineColor(1);
+//   SetLineStyle(1);
 }
 
 //______________________________________________________________________________
@@ -315,3 +320,29 @@ void TArrow::SavePrimitive(ofstream &out, Option_t *)
     
    out<<"   arrow->Draw();"<<endl;
 }
+//______________________________________________________________________________
+void TArrow::SetDefaultAngle(Float_t Angle)
+{
+   fgDefaultAngle = Angle;
+}  
+void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
+{
+   fgDefaultArrowSize = ArrowSize;
+}    
+void TArrow::SetDefaultOption(Option_t *Option)
+{
+   fgDefaultOption = Option;
+}    
+Float_t TArrow::GetDefaultAngle()
+{
+    return fgDefaultAngle;
+}  
+Float_t TArrow::GetDefaultArrowSize()
+{
+   return fgDefaultArrowSize;
+}  
+Option_t *TArrow::GetDefaultOption()
+{
+   return fgDefaultOption.Data();
+}  
+

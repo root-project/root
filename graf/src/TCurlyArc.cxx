@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.5 2004/12/06 09:55:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.6 2005/02/07 14:35:07 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -31,12 +31,16 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 
+Double_t TCurlyArc::fgDefaultWaveLength = 0.02;
+Double_t TCurlyArc::fgDefaultAmplitude  = 0.01; 
+Bool_t   TCurlyArc::fgDefaultIsCurly    = kFALSE;   
+
 ClassImp(TCurlyArc)
 
 //_____________________________________________________________________________________
 TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
                    Double_t rad, Double_t phimin, Double_t phimax,
-                   Double_t tl, Double_t trad)
+                   Double_t wl, Double_t amp)
          : fR1(rad), fPhimin(phimin),fPhimax(phimax)
 {
  // create a new TCurlyarc with center (x1, y1) and radius rad.
@@ -45,9 +49,9 @@ TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
 
    fX1         = x1;
    fY1         = y1;
-   fIsCurly    = kTRUE;
-   fAmplitude  = trad;
-   fWaveLength = tl;
+   fIsCurly    = fgDefaultIsCurly;
+   fAmplitude  = amp;
+   fWaveLength = wl;
    fTheta      = 0;
    Build();
 }
@@ -404,4 +408,30 @@ void TCurlyArc::SetPhimax(Double_t x)
 {
    fPhimax = x;
    Build();
+}
+//_____________________________________________________________________________________
+
+void TCurlyArc::SetDefaultWaveLength(Double_t WaveLength)
+{
+   fgDefaultWaveLength = WaveLength;
+}
+void TCurlyArc::SetDefaultAmplitude(Double_t Amplitude)
+{
+   fgDefaultAmplitude = Amplitude ;
+}
+void TCurlyArc::SetDefaultIsCurly(Bool_t IsCurly)
+{
+   fgDefaultIsCurly = IsCurly;
+}
+Double_t TCurlyArc::GetDefaultWaveLength()
+{
+   return fgDefaultWaveLength;
+}
+Double_t TCurlyArc::GetDefaultAmplitude()
+{
+   return fgDefaultAmplitude;
+}
+Bool_t TCurlyArc::GetDefaultIsCurly()
+{
+   return fgDefaultIsCurly;
 }

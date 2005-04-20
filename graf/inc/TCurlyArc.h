@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.5 2004/12/15 14:21:09 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -25,11 +25,15 @@ private:
    Double_t fPhimax;              //  end phi (degrees)
    Double_t fTheta;               //  used internally
 
+   static Double_t fgDefaultWaveLength;   //default wavelength 
+   static Double_t fgDefaultAmplitude;    //default amplitude
+   static Bool_t   fgDefaultIsCurly;      //default curly type
+
 public:
    TCurlyArc(){;}
    TCurlyArc(Double_t x1, Double_t y1, Double_t rad,
              Double_t phimin, Double_t phimax,
-             Double_t tl = .02, Double_t trad = .01);
+             Double_t wl = fgDefaultWaveLength, Double_t amp = fgDefaultAmplitude);
    virtual     ~TCurlyArc(){;}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
@@ -42,6 +46,13 @@ public:
    virtual void SetPhimin(Double_t phimin);          // *MENU* *ARGS={phimin=>fPhimin}
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
    virtual void SavePrimitive(ofstream &out, Option_t *);
+
+   static void     SetDefaultWaveLength(Double_t WaveLength); 
+   static void     SetDefaultAmplitude (Double_t Amplitude );    
+   static void     SetDefaultIsCurly   (Bool_t   IsCurly   );      
+   static Double_t GetDefaultWaveLength();  
+   static Double_t GetDefaultAmplitude (); 
+   static Bool_t   GetDefaultIsCurly   ();
 
    ClassDef(TCurlyArc,2) // A curly arc
 };

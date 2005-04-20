@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.6 2004/12/06 09:55:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.7 2004/12/15 14:21:09 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -34,6 +34,10 @@ protected:
    Int_t    fNsteps;         // used internally (controls precision)
    Bool_t   fIsCurly;        // true: Gluon, false: Gamma
 
+   static Double_t fgDefaultWaveLength;   //default wavelength 
+   static Double_t fgDefaultAmplitude;    //default amplitude
+   static Bool_t   fgDefaultIsCurly;      //default curly type
+
 public:
    // TCurlyLine status bits
    enum {
@@ -41,7 +45,8 @@ public:
    };
    TCurlyLine(){;}
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
-              Double_t tl = .02, Double_t rad = .01);
+              Double_t wl = fgDefaultWaveLength, 
+              Double_t amp = fgDefaultAmplitude);
    virtual ~TCurlyLine(){;}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
@@ -60,6 +65,13 @@ public:
    virtual void SetStartPoint(Double_t x1, Double_t y1);
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
    virtual void SavePrimitive(ofstream &out, Option_t *);
+
+   static void     SetDefaultWaveLength(Double_t WaveLength); 
+   static void     SetDefaultAmplitude (Double_t Amplitude );    
+   static void     SetDefaultIsCurly   (Bool_t   IsCurly   );      
+   static Double_t GetDefaultWaveLength();  
+   static Double_t GetDefaultAmplitude (); 
+   static Bool_t   GetDefaultIsCurly   ();
 
    ClassDef(TCurlyLine,2) // A curly polyline
 };

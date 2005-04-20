@@ -173,8 +173,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
-         arrow = new TArrow(x0,y0,x1,y1,0.03,"|>");
-         arrow->SetFillColor(1);
+         arrow = new TArrow(x0,y0,x1,y1);
          arrow->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
       }
@@ -415,7 +414,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (mode == kPolyLine) {
             gr = new TGraph(2);
             gr->ResetBit(TGraph::kClipFrame);
-      
+
          } else {
             gr = (TGraph*)gROOT->ProcessLineFast(
                  Form("new %s(\"CUTG\",%d",

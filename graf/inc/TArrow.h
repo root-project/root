@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.5 2002/10/31 07:27:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.6 2003/10/09 16:39:59 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -38,10 +38,15 @@ protected:
         Float_t      fArrowSize;    //Arrow Size
         TString      fOption;       //Arrow shapes
 
+ static Float_t      fgDefaultAngle;        //default Arrow opening angle (degrees)
+ static Float_t      fgDefaultArrowSize;    //default Arrow Size
+ static TString      fgDefaultOption;       //default Arrow shapes
+
 public:
         TArrow();
         TArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
-                               ,Float_t arrowsize=0.05 ,Option_t *option=">");
+                               ,Float_t arrowsize=fgDefaultArrowSize
+                               ,Option_t *option=fgDefaultOption.Data());
         TArrow(const TArrow &arrow);
         virtual ~TArrow();
                 void   Copy(TObject &arrow) const;
@@ -58,6 +63,13 @@ public:
         virtual void   SetAngle(Float_t angle=60) {fAngle=angle;} // *MENU*
         virtual void   SetArrowSize(Float_t arrowsize=0.05) {fArrowSize=arrowsize;} // *MENU*
         virtual void   SetOption(Option_t *option=">"){ fOption = option;}
+
+        static void SetDefaultAngle     (Float_t  Angle    );
+        static void SetDefaultArrowSize (Float_t  ArrowSize);  
+        static void SetDefaultOption    (Option_t *Option  );
+        static Float_t GetDefaultAngle    ();
+        static Float_t GetDefaultArrowSize();
+        static Option_t *GetDefaultOption ();
 
         ClassDef(TArrow,1)  // An arrow (line with a arrowhead)
 };
