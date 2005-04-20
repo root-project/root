@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.79 2005/04/15 14:41:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.80 2005/04/18 10:54:58 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -786,7 +786,15 @@ void TBuffer::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
    //  [-10,100,16]
    // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-      
+   //
+   //  see example of use of the Double32_t data type in tutorial double32.C
+   //
+   //Begin_Html
+   /*
+     <img src="gif/double32.gif">
+   */
+   //End_Html
+         
       if (ele && ele->GetFactor() != 0) {
       Double_t x = d[0];
       Double_t xmin = ele->GetXmin();
