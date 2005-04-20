@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.24 2005/04/11 10:44:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.25 2005/04/11 22:38:43 rdm Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -764,7 +764,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       // on pad problems are resolved.
       if (gPad) {
          TVirtualViewer3D *viewer = gPad->GetViewer3D();
-         if (viewer && !strcmp(viewer->Class_Name(),"TViewer3DPad")) {
+         if (viewer && !strcmp(viewer->IsA()->GetName(),"TViewer3DPad")) {
             gPad->ReleaseViewer3D();
             delete viewer;
          }
