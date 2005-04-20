@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.6 2003/10/09 16:39:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.7 2005/04/20 14:59:38 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -45,8 +45,8 @@ protected:
 public:
         TArrow();
         TArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
-                               ,Float_t arrowsize=fgDefaultArrowSize
-                               ,Option_t *option=fgDefaultOption.Data());
+                               ,Float_t arrowsize=0.05
+                               ,Option_t *option=">");
         TArrow(const TArrow &arrow);
         virtual ~TArrow();
                 void   Copy(TObject &arrow) const;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.7 2004/12/15 14:21:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.8 2005/04/20 14:59:38 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -45,8 +45,8 @@ public:
    };
    TCurlyLine(){;}
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
-              Double_t wl = fgDefaultWaveLength, 
-              Double_t amp = fgDefaultAmplitude);
+              Double_t wl = .02, 
+              Double_t amp = .01);
    virtual ~TCurlyLine(){;}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
