@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoElement.h,v 1.1 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.h,v 1.2 2004/06/28 08:46:47 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -68,8 +68,6 @@ class TGeoElementTable : public TObject
 {
 private:
 // data members
-   static TGeoElementTable *fgInstance;
-
    Int_t                    fNelements;  // number of elements
    TObjArray               *fList;       // list of elements
 
@@ -82,14 +80,13 @@ public:
    // destructor
    virtual ~TGeoElementTable();
    // methods
-   static TGeoElementTable *Instance() {return fgInstance;}
    
    void                     AddElement(const char *name, const char *title, Int_t z, Double_t a);
    TGeoElement             *FindElement(const char *name);
    TGeoElement             *GetElement(Int_t z) {return (TGeoElement*)fList->At(z);}
    Int_t                    GetNelements() const {return fNelements;}
 
-  ClassDef(TGeoElementTable, 1)              // table of elements
+  ClassDef(TGeoElementTable, 2)              // table of elements
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

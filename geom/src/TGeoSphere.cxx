@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.39 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.40 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -338,9 +338,29 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
    }
    // compute distance to shape
    Double_t snxt = TGeoShape::Big();
+   Double_t rdotn = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
+   Bool_t fullsph = (!TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?kTRUE:kFALSE;
+   if (fullsph) {
+      Bool_t inrmax = kFALSE;
+      Bool_t inrmin = kFALSE;
+      if (r<=fRmax+TGeoShape::Tolerance()) inrmax = kTRUE;
+      if (r>=fRmin-TGeoShape::Tolerance()) inrmin = kTRUE;
+      if (inrmax && inrmin) {
+         if ((fRmax-r) < (r-fRmin)) {
+         // close to Rmax
+            if (rdotn>=0) return TGeoShape::Big();
+            return 0.0; // already in
+         }
+         // close to Rmin
+         if (fRmin==0.0 || rdotn>=0) return 0.0;
+         // check second crossing of Rmin
+         return DistToSphere(point, dir, fRmin, kFALSE, kFALSE);
+      }
+   }   
+   
    // first check if any crossing at all
    if (r>fRmax) {
-      Double_t b = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
+      Double_t b = rdotn;
       Double_t c = r2-fRmax*fRmax;
       Double_t d=b*b-c;
       if (d<0) return TGeoShape::Big();
@@ -573,8 +593,23 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
    }
    // first do rmin, rmax
    Double_t b,delta, znew;
-   Double_t sn1 = DistToSphere(point, dir, fRmin, kFALSE);
-   Double_t sn2 = DistToSphere(point, dir, fRmax, kFALSE);
+   Double_t rdotn = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
+   Double_t sn1 = TGeoShape::Big();
+   // Inner sphere
+   if (fRmin>0) {
+      // Protection in case point is actually outside the sphere
+      if (r <= fRmin+TGeoShape::Tolerance()) {
+         if (rdotn<0) return 0.0;
+      } else {
+         if (rdotn<0) sn1 = DistToSphere(point, dir, fRmin, kFALSE);
+      }
+   }      
+   Double_t sn2 = TGeoShape::Big();
+   // Outer sphere
+   if (r >= fRmax-TGeoShape::Tolerance()) {
+      if (rdotn>=0) return 0.0;
+   }   
+   sn2 = DistToSphere(point, dir, fRmax, kFALSE);
    Double_t sr = TMath::Min(sn1, sn2);
    // check theta conical surfaces
    sn1 = TGeoShape::Big();

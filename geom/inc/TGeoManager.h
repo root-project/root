@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.57 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.58 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -114,6 +114,7 @@ private :
    TGeoHMatrix          *fGLMatrix;         // matrix to be used for view transformations
    TObjArray            *fUniqueVolumes;    //-> list of unique volumes
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
+   TGeoElementTable     *fElementTable;     //! table of elements
 
    Int_t                *fNodeIdArray;      //! array of node id's
    Int_t                 fIntSize;          //! int buffer size
@@ -319,6 +320,7 @@ public:
    
    //--- geometry queries
    TGeoNode              *FindNextBoundary(Double_t stepmax=1e30,const char *path="");
+   TGeoNode              *FindNextDaughterBoundary(Double_t *point, Double_t *dir, Bool_t compmatrix=kFALSE);
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
@@ -401,6 +403,7 @@ public:
    TObjArray             *GetListOfShapes() const       {return fShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;} 
    TObjArray             *GetListOfTracks() const       {return fTracks;}
+   TGeoElementTable      *GetElementTable() const       {return fElementTable;}
 
    //--- modeler state getters/setters
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->UncheckedAt(level);}

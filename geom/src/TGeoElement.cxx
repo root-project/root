@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.2 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.4 2004/07/05 08:52:35 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 //
 //
 #include"TObjArray.h"
+#include "TGeoManager.h"
 #include"TGeoElement.h"
 
 // statics and globals
@@ -48,10 +49,8 @@ ClassImp(TGeoElementTable)
 //______________________________________________________________________________
 TGeoElementTable *TGeoElement::GetElementTable() const
 {
-   return TGeoElementTable::Instance();
+   return gGeoManager->GetElementTable();
 }
-
-TGeoElementTable *TGeoElementTable::fgInstance = 0;
 
 //______________________________________________________________________________
 TGeoElementTable::TGeoElementTable()
@@ -59,8 +58,6 @@ TGeoElementTable::TGeoElementTable()
 // default constructor
    fNelements = 0;
    fList      = 0;
-   if (fgInstance) Error("ctor", "Element table already instantiated");
-   else fgInstance = this;
 }
 
 //______________________________________________________________________________
@@ -69,12 +66,7 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 // constructor
    fNelements = 0;
    fList = new TObjArray(128);
-   if (fgInstance) {
-      Error("ctor", "Element table already instantiated");
-   } else {
-      fgInstance = this;
-      BuildDefaultElements();
-   }   
+   BuildDefaultElements();
 }
 
 //______________________________________________________________________________
@@ -85,7 +77,6 @@ TGeoElementTable::~TGeoElementTable()
       fList->Delete();
       delete fList;
    }
-   fgInstance = 0;
 }
 
 //______________________________________________________________________________
