@@ -173,7 +173,9 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
-         arrow = new TArrow(x0,y0,x1,y1);
+         arrow = new TArrow(x0,y0,x1,y1 
+                            , TArrow::GetDefaultArrowSize()
+                            , TArrow::GetDefaultOption());
          arrow->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
       }
