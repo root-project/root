@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.110 2005/03/29 17:44:20 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.111 2005/04/18 21:44:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -390,24 +390,24 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
     TString name(GetName()) ;
     name.Append(integralNameSuffix(iset,nset,rangeName)) ;
     return new RooRealIntegral(name,title,*this,iset,nset,cfg,rangeName) ;
-  } else {
-    // Integral over multiple ranges
-    char* buf = new char[strlen(rangeName)+1] ;
-    strcpy(buf,rangeName) ;
-    char* range = strtok(buf,",") ;
-    RooArgSet components ;
-    while (range) {
-      TString compName(GetName()) ;
-      compName.Append(integralNameSuffix(iset,nset,range)) ;
-      RooAbsReal* compIntegral = new RooRealIntegral(compName,title,*this,iset,nset,cfg,range) ;
-      components.add(*compIntegral) ;
-      range = strtok(0,",") ;
-    }
-    delete[] buf ;
-    TString fullName(GetName()) ;
-    fullName.Append(integralNameSuffix(iset,nset,rangeName)) ;
-    return new RooAddition(fullName,title,components,kTRUE) ;
+  } 
+
+  // Integral over multiple ranges
+  char* buf = new char[strlen(rangeName)+1] ;
+  strcpy(buf,rangeName) ;
+  char* range = strtok(buf,",") ;
+  RooArgSet components ;
+  while (range) {
+    TString compName(GetName()) ;
+    compName.Append(integralNameSuffix(iset,nset,range)) ;
+    RooAbsReal* compIntegral = new RooRealIntegral(compName,title,*this,iset,nset,cfg,range) ;
+    components.add(*compIntegral) ;
+    range = strtok(0,",") ;
   }
+  delete[] buf ;
+  TString fullName(GetName()) ;
+  fullName.Append(integralNameSuffix(iset,nset,rangeName)) ;
+  return new RooAddition(fullName,title,components,kTRUE) ;
 }
 
 TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName) const 

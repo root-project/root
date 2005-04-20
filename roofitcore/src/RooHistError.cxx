@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.17 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.18 2005/03/16 15:19:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -96,9 +96,9 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
     PoissonSum lower(n-1);
     return getInterval(&upper,&lower,(Double_t)n,1.0,mu1,mu2,nSigma);
   }
-  else {
-    return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
-  }
+
+  // Backup solution for negative numbers
+  return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
 }
 
 Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.40 2005/02/26 18:06:29 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.41 2005/04/18 21:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -247,9 +247,9 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
 
   if (name && title) {
     return new RooPlot(name,title,*this,xmin,xmax,nbins) ;
-  } else {
-    return new RooPlot(*this,xmin,xmax,nbins) ;
   }
+
+  return new RooPlot(*this,xmin,xmax,nbins) ;
 }
 
 RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {

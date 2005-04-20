@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.7 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.8 2005/03/22 13:05:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -139,13 +139,13 @@ RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 // RooMCStudy::ctor arguments
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
 RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
-                     const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
+                     const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
                      const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
 RooCmdArg Binned(Bool_t flag=kTRUE) ;
 
 // RooMCStudy::plot* arguments
 RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
-                const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
+                const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
                 const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
 RooCmdArg FrameBins(Int_t nbins) ;
 RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
