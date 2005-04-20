@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.69 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.70 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1710,7 +1710,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
         }
      }
   }
-  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -1818,7 +1818,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
         }
      }
   }
-  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
+  if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -1936,7 +1936,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      }
      if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
-  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -2055,7 +2055,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      }
      if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
-  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
+  if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
