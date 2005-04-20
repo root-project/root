@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.210 2005/03/29 17:15:58 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.211 2005/04/20 17:51:27 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -808,9 +808,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
       TObject *obj;
       while ((obj = next())) {
          if (!obj->InheritsFrom(TCutG::Class())) continue;
-         TString cutname = obj->GetName();
-         cutname.ToLower();
-         if (strcmp(cutname.Data(),cuts)) continue;
+         if (strcmp(obj->GetName(),cuts)) continue;
          cut = (TCutG*)obj;
          break;
       }

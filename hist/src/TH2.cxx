@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.70 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.71 2005/04/20 10:29:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1652,7 +1652,6 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //   The X axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
@@ -1679,6 +1678,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
@@ -1760,7 +1760,6 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //   The Y axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
@@ -1787,6 +1786,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
@@ -1873,7 +1873,6 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   The X axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
@@ -1900,6 +1899,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
@@ -1992,7 +1992,6 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
@@ -2019,6 +2018,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
