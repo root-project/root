@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.72 2005/03/21 15:01:14 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.73 2005/04/07 16:49:47 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1292,37 +1292,40 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      sourceFile.seekg(postponedpos);
                   } else {
 
+                     char *type = fLine;
                      char *typeEnd = 0;
                      char c2 = 0;
 
                      found = kFALSE;
 
                      // try to get type
-                     typeEnd = key - 1;
-                     while ((typeEnd > fLine)
-                            && (isspace(*typeEnd) || *typeEnd == '*'
-                                || *typeEnd == '&'))
-                        typeEnd--;
-                     typeEnd++;
-                     c2 = *typeEnd;
-                     *typeEnd = 0;
-                     char *type = typeEnd - 1;
-                     if (type<fLine) type = fLine;
-                     while (IsName(*type) && (type > fLine))
-                        type--;
-                     if (*type == ':' && ( (type - 1) > fLine)
-                         && *(type - 1) == ':') {
-                        // found a namespace
-                        type--;
-                        type--;
+                     if (key!=fLine) {
+                        typeEnd = key - 1;
+                        while ((typeEnd > fLine)
+                              && (isspace(*typeEnd) || *typeEnd == '*'
+                                 || *typeEnd == '&'))
+                           typeEnd--;
+                        typeEnd++;
+                        c2 = *typeEnd;
+                        *typeEnd = 0;
+                        type = typeEnd - 1;
+                        if (type<fLine) type = fLine;
                         while (IsName(*type) && (type > fLine))
                            type--;
+                        if (*type == ':' && ( (type - 1) > fLine)
+                           && *(type - 1) == ':') {
+                           // found a namespace
+                           type--;
+                           type--;
+                           while (IsName(*type) && (type > fLine))
+                              type--;
+                        }
+                        if (!IsWord(*type))
+                           type++;
+                        while ((type > fLine) && isspace(*(type - 1)))
+                           type--;
                      }
-                     if (!IsWord(*type))
-                        type++;
 
-                     while ((type > fLine) && isspace(*(type - 1)))
-                        type--;
                      if (type > fLine && (type-fLine)>=5 ) {
                         if (!strncmp(type - 5, "const", 5))
                            found = kTRUE;
@@ -1334,7 +1337,8 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      if (!strcmp(type, "void") && (*funcName == '~'))
                         found = kTRUE;
 
-                     *typeEnd = c2;
+                     if (typeEnd)
+                        *typeEnd = c2;
 
                      if (found) {
                         ptr = strchr(nameEndPtr, '{');
