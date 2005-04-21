@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.171 2005/04/13 16:52:34 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.172 2005/04/15 15:27:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4834,9 +4834,9 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    //                            // Create a polyline, then using the context
    //                            // menu item "SetName", change the name
    //                            // of the created TGraph to "ggg"
-   //   c1.FindObject("Arc");    // Set the editor in mode "Arc". Returns
+   //   c1.WaitPrimitive("TArc");// Set the editor in mode "Arc". Returns
    //                            // as soon as a TArc object is created.
-   //   c1.FindObject("lat","Text"); // Set the editor in Text/Latex mode.
+   //   c1.WaitPrimitive("lat","Text"); // Set the editor in Text/Latex mode.
    //                            // Create a text object, then Set its name to "lat"
    //
    // The following macro waits for 10 primitives of any type to be created.
@@ -4860,19 +4860,22 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents()) {
-      obj = FindObject(pname);
-      if (obj) {
-         gROOT->SetEditorMode();
-         return obj;
-      }
-      if (testlast) {
-         obj = gPad->GetListOfPrimitives()->Last();
-         if (obj != oldlast) return obj;
-         Int_t event = GetEvent();
-         if (event == kButton1Double || event == kKeyPress) return 0;
+      if (gROOT->GetEditorMode() == 0) {
+         obj = FindObject(pname);
+         if (obj) {
+//            gROOT->SetEditorMode();
+            return obj;
+         }
+         if (testlast) {
+            obj = gPad->GetListOfPrimitives()->Last();
+            if (obj != oldlast) return obj;
+            Int_t event = GetEvent();
+            if (event == kButton1Double || event == kKeyPress) return 0;
+         }
       }
       gSystem->Sleep(10);
    }
+
    return 0;
 }
 
