@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.60 2005/04/01 13:53:18 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.61 2005/04/05 13:38:23 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -522,6 +522,9 @@ void TGeoPainter::Draw(Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
       if (has_pad) gPad->Update();
    }
 	
@@ -565,6 +568,9 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
       PaintOverlap(ovlp, "range");
       overlap->GetPolyMarker()->Draw("SAME");
       if (has_pad) gPad->Update();
@@ -601,6 +607,9 @@ void TGeoPainter::DrawOnly(Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
       fVisOption = kGeoVisOnly;
       if (has_pad) gPad->Update();
    }

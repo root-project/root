@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.23 2005/03/11 17:22:21 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.24 2005/03/16 17:18:12 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -308,7 +308,16 @@ void TNode::Draw(Option_t *option)
 
    AppendPad(option);
 
-	// Create a 3D viewer to draw us
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
+   }
+   
+   // Create a 3D viewer to draw us
    gPad->GetViewer3D(option);
 }
 
