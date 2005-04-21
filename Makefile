@@ -439,9 +439,9 @@ debian:
 	    echo "Must have ROOT source tree in root-$$vers" ; \
 	    echo "Please rename this directory to `basename $$PWD` to"; \
 	    echo "root-$$vers and try again"; exit 1 ; fi
-	rm -rf debian 
+	rm -rf debian
 	build/package/lib/makedebdir.sh
-	fakeroot debian/rules debian/control 
+	fakeroot debian/rules debian/control
 	dpkg-buildpackage -rfakeroot -us -uc -i"G__|^debian|\.d$$"
 	@echo "Debian GNU/Linux packages done. They are put in '../'"
 

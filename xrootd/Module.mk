@@ -13,7 +13,7 @@ XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDDIRL := $(MODDIRS)/xrootd/lib
 XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
-XROOTDETAG := $(MODDIRS)/$(XROOTDVERS).extraction.tag
+XROOTDETAG := $(MODDIRS)/headers.d
 
 ##### Xrootd config options #####
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
