@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.155 2005/03/26 06:57:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.156 2005/04/17 14:12:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -305,10 +305,11 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 {
 // Graph constructor reading input from filename
 // filename is assumed to contain at least two columns of numbers
-
+// the string format is by default "%lg %lg"
+   
    Double_t x,y;
-   FILE *fp = fopen(filename,"r");
-   if (!fp) {
+   ifstream infile(filename);
+   if(!infile.is_open()){
       MakeZombie();
       Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
       fNpoints = 0;
@@ -316,19 +317,16 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
       fNpoints = 100;  //initial number of points
    }
    if (!CtorAllocate()) return;
-   char line[80];
-   Int_t np = 0;
-   while (fgets(line,80,fp)) {
-      if( 2 != sscanf(&line[0],format,&x, &y)) {
-         // skip empty and ill-formed lines
-         continue;
+   std::string line;
+   Int_t np=0;
+   while(std::getline(infile,line,'\n')){
+      if(2 != sscanf(line.c_str(),format,&x,&y) ) {
+         continue; // skip empty and ill-formed lines
       }
       SetPoint(np,x,y);
       np++;
    }
    Set(np);
-
-   fclose(fp);
 }
 
 //______________________________________________________________________________
