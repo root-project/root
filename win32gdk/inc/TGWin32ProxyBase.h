@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.7 2003/12/15 16:37:49 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.8 2004/05/10 12:10:09 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -30,7 +30,7 @@ protected:
    TGWin32CallBack   fCallBack;           // callback function (executed by "main" thread)
    void              *fParam;             // arguments passed to/from callback function
    ULong_t           fId;                 // thread id. There is one proxy per client thread
-   UInt_t            fMaxResponseTime;    // max period for waiting response from server thread 
+   static UInt_t     fMaxResponseTime;    // max period for waiting response from server thread 
    static Long_t     fgLock;              // fgLock=1 - all client threads locked
 
    virtual Bool_t ForwardCallBack(Bool_t sync);

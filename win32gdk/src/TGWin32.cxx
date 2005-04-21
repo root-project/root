@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.90 2005/03/16 06:22:37 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.91 2005/03/29 10:11:58 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2388,6 +2388,9 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    // Event loop
    button_press = 0;
 
+   // Set max response time to 2 minutes to avoid timeout 
+   // in TGWin32ProxyBase::ForwardCallBack during RequestLocator
+   TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    while (button_press == 0) {
       event = gdk_event_get();
 
@@ -2493,6 +2496,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          break;
       }
    }
+   TGWin32VirtualXProxy::fMaxResponseTime = 1000;
 
    x = xtmp;
    y = ytmp;
@@ -2537,6 +2541,9 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    pt = nt;
    focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
 
+   // Set max response time to 2 minutes to avoid timeout 
+   // in TGWin32ProxyBase::ForwardCallBack during RequestString
+   TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    TTF::SetTextFont(gTextFont);
    TTF::SetTextSize(fTextSize);
    do {
@@ -2722,6 +2729,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          gdk_event_free(event);
       }
    } while (key < 0);
+   TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    ::SetFocus(focuswindow);
 
    gdk_window_set_cursor(CurWnd, (GdkCursor *)fCursors[kPointer]);
