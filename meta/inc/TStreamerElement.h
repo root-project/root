@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.35 2004/12/10 07:42:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.36 2005/04/18 10:54:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -44,9 +44,9 @@ protected:
    TClass          *fClassObject;     //!pointer to class of object
    TMemberStreamer *fStreamer;        //!pointer to element Streamer
    TMethodCall     *fMethod;          //!pointer to TMethodCall
-   Double_t         fXmin;            //Minimum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fXmax;            //Maximum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fFactor;          //Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
+   Double_t         fXmin;            //!Minimum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fXmax;            //!Maximum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fFactor;          //!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
 
 public:
 
@@ -55,6 +55,10 @@ public:
                    kSTLvector = 1,
                    kSTLlist   =  2,  kSTLdeque   =  3,   kSTLmap    = 4,
                    kSTLset    =  5,  kSTLmultimap=6,     kSTLmultiset=7};
+   // TStreamerElement status bits
+   enum {
+      kHasRange     = BIT(6)
+   };
 
    TStreamerElement();
    TStreamerElement(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
@@ -96,7 +100,7 @@ public:
    virtual void     SetTypeName(const char *name) {fTypeName = name;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
 
-   ClassDef(TStreamerElement,3)  //Base class for one element (data member) to be Streamed
+   ClassDef(TStreamerElement,4)  //Base class for one element (data member) to be Streamed
 };
 
 //________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.78 2005/04/18 10:54:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.79 2005/04/19 10:11:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -175,6 +175,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fTObjectOffset = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
    GetRange(title,fXmin,fXmax,fFactor);
+   if (fFactor > 0) SetBit(kHasRange);
 }
 
 //______________________________________________________________________________
@@ -384,10 +385,14 @@ void TStreamerElement::Streamer(TBuffer &R__b)
          //check if element is a TRef or TRefArray
          GetExecID();
       }
-      if (R__v > 2) {
+      if (R__v == 3) {
          R__b >> fXmin;
          R__b >> fXmax;
          R__b >> fFactor;
+         if (fFactor > 0) SetBit(kHasRange);
+      }
+      if (R__v > 3) {
+         if (TestBit(kHasRange)) GetRange(GetTitle(),fXmin,fXmax,fFactor);
       }
       //R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
