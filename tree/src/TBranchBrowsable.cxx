@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.5 2004/12/17 07:20:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.2 2005/04/22 19:04:43 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -149,7 +149,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       if (branch->IsA()==TBranchElement::Class()) {
          // could be a split TClonesArray
          TBranchElement* be=(TBranchElement*) branch;
-         TClass* container=0;
+
          // this is the contained type - if !=0
          const char* clonesname=be->GetClonesName();
          if (clonesname && strlen(clonesname))
