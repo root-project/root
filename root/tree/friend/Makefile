@@ -1,5 +1,5 @@
-CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES)
-TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus
+CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES) [a-d][0-4].root
+TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -50,3 +50,7 @@ ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
 ChainFriendStatus: testFriend4.cc
 	$(CMDECHO) root.exe -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1
 
+FriendOfFriends.log: friendOfFriend_C.$(DllSuf) testFriends_C.$(DllSuf)
+
+FriendOfFriends: FriendOfFriends.log
+	$(TestDiff)
