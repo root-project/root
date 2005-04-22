@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.211 2005/04/20 17:51:27 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.212 2005/04/20 19:29:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1772,7 +1772,7 @@ void THistPainter::PaintBar(Option_t *)
 //End_Html
 
    Int_t bar = Hoption.Bar - 10;
-   Double_t xmin,xmax,ymin,ymax,umin,umax,w;
+   Double_t xmin,xmax,ymin,ymax,umin,umax,w,y;
    Double_t offset = fH->GetBarOffset();
    Double_t width  = fH->GetBarWidth();
    TBox box;
@@ -1781,15 +1781,16 @@ void THistPainter::PaintBar(Option_t *)
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
    for (Int_t bin=fXaxis->GetFirst();bin<=fXaxis->GetLast();bin++) {
+      y    = fH->GetBinContent(bin);
       xmin = gPad->XtoPad(fXaxis->GetBinLowEdge(bin));
       xmax = gPad->XtoPad(fXaxis->GetBinUpEdge(bin));
       ymin = gPad->GetUymin();
-      ymax = gPad->YtoPad(fH->GetBinContent(bin));
+      ymax = gPad->YtoPad(y);
       if (ymax < 0) {
          ymin = ymax;
-         ymax = TMath::Max(0.,gPad->GetUymin());
+         if (!gPad->GetLogy()) ymax = TMath::Max(0.,gPad->GetUymin());
       } else {
-         if (ymin < 0) ymin = 0;
+         if (!gPad->GetLogy() && ymin < 0) ymin = 0;
       }
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
