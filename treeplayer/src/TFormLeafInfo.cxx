@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.18 2005/03/24 18:37:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.19 2005/03/30 21:09:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1043,8 +1043,8 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance) {
 // on a TClonesArray object stored in a TTree.
 
 //______________________________________________________________________________
-TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr) :
-   TFormLeafInfo(classptr,0,&gFakeClonesElem)
+TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr, Bool_t top) :
+   TFormLeafInfo(classptr,0,&gFakeClonesElem),fTop(top)
 {
 }
 
@@ -1072,10 +1072,14 @@ void* TFormLeafInfoCollectionObject::GetLocalValuePointer(TLeaf *leaf, Int_t /*i
    // Return the pointer to the clonesArray
 
    void* collection;
-   if (leaf->InheritsFrom("TLeafObject") ) {
-      collection = ((TLeafObject*)leaf)->GetObject();
+   if (fTop) {
+      if (leaf->InheritsFrom("TLeafObject") ) {
+         collection = ((TLeafObject*)leaf)->GetObject();
+      } else {
+         collection = ((TBranchElement*)leaf->GetBranch())->GetObject();
+      }
    } else {
-      collection = ((TBranchElement*)leaf->GetBranch())->GetObject();
+      collection = TFormLeafInfo::GetLocalValuePointer(leaf);
    }
    return collection;
 }
@@ -1377,8 +1381,9 @@ void * TFormLeafInfoCollection::GetValuePointer(TLeaf *leaf, Int_t instance) {
          sub_instance = 0;
       }
       TVirtualCollectionProxy::TPushPop helper(fCollProxy,collection);
-      return fNext->GetValuePointer((char*)fCollProxy->At(index),
-                                    sub_instance);
+      char * obj = (char*)fCollProxy->At(index);
+      if (fCollProxy->HasPointers()) obj = *(char**)obj;
+      return fNext->GetValuePointer(obj,sub_instance);
    }
    return collection;
 }
@@ -1403,8 +1408,9 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance) {
          sub_instance = 0;
       }
       TVirtualCollectionProxy::TPushPop helper(fCollProxy,collection);
-      return fNext->GetValuePointer((char*)fCollProxy->At(index),
-                                    sub_instance);
+      char * obj = (char*)fCollProxy->At(index);
+      if (fCollProxy->HasPointers()) obj = *(char**)obj;
+      return fNext->GetValuePointer(obj,sub_instance);
    }
    return collection;
 }

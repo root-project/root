@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.176 2005/04/14 13:40:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.177 2005/04/19 19:39:58 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1183,7 +1183,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                if (maininfo==0) {
                   TFormLeafInfo* collectioninfo=0;
                   if (useLeafCollectionObject) {
-                     collectioninfo = new TFormLeafInfoCollectionObject(cl);
+                     
+                     Bool_t top = (branch==((TBranchElement*)branch)->GetMother()
+                                 || !leaf->IsOnTerminalBranch());
+                     collectioninfo = new TFormLeafInfoCollectionObject(cl,top);
                   }
                   maininfo=previnfo=collectioninfo;
                }

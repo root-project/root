@@ -149,6 +149,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       if (branch->IsA()==TBranchElement::Class()) {
          // could be a split TClonesArray
          TBranchElement* be=(TBranchElement*) branch;
+         TClass* container=0;
          // this is the contained type - if !=0
          const char* clonesname=be->GetClonesName();
          if (clonesname && strlen(clonesname))
@@ -158,7 +159,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          // we can only find out asking the streamer given our ID
          ULong_t *elems=0;
          TStreamerElement *element=0;
-         if (be->GetID()>0 && be->GetInfo() 
+         if (be->GetID()>=0 && be->GetInfo() 
             && ((elems=be->GetInfo()->GetElems()))
             && ((element=(TStreamerElement *)elems[be->GetID()]))) {
             // if contained is set (i.e. GetClonesName was successful),
@@ -249,13 +250,28 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const {
       fParent->GetScope(scope);
    else {
       scope=fBranch->GetName();
-      scope+=".";
+      if (!scope.EndsWith(".")) scope+=".";
       const TBranch* mother=fBranch;
-      while (mother != mother->GetMother() && (mother=mother->GetMother()))
-         scope.Prepend(".").Prepend(mother->GetName());
+      while (mother != mother->GetMother() && (mother=mother->GetMother())) {
+         TString nameMother(mother->GetName());
+         if (!nameMother.EndsWith(".")) {
+            scope.Prepend(".");
+            scope.Prepend(nameMother);
+         } else {
+            if (mother != mother->GetMother()) {
+               // If the mother is the top level mother
+               // and its ends ends with a ., the name is already
+               // embedded!
+               scope.Prepend(nameMother);
+            }
+         }
+      }
    }
-   scope+=GetName();
-   if (fClass) // otherwise we're a leaf, and no delimiter is appended
+   if (GetName() && GetName()[0]=='.')
+      scope+=(GetName()+1);
+   else
+      scope+=GetName();
+   if (fClass && !scope.EndsWith(".")) // otherwise we're a leaf, and no delimiter is appended
       if (fTypeIsPointer)
          scope+="->";
       else scope+=".";
@@ -527,11 +543,12 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& list, const TBranch* branch,
 // "list" with objects of type TNonSplitBrowsable which represent the members
 // of class "cl" (and its base classes' members).
 
-   // branch has to be unsplit, i.e. without leaves or its only leaf has 
-   // the same name as the branch.
-   if (branch && branch->GetSplitLevel()!=0) return 0;
+   // branch has to be unsplit, i.e. without sub-branches
+   if (branch && const_cast<TBranch*>(branch)->GetListOfBranches() 
+      && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0) 
+      return 0;
    // we only expand our own parents
-   if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;
+   //if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;
 
    TClass* clContained=0;
    GetCollectionContainedType(branch, parent, clContained);
@@ -566,6 +583,24 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& list, const TBranch* branch,
          while ((baseSE=(TStreamerElement*)iBaseSE()))
             // we should probably check whether we're replacing something here...
             myStreamerElementsToCheck.Add(baseSE);
+      } else if (!strcmp(streamerElement->GetName(),"This") 
+         && !strcmp(clContained->GetName(), streamerElement->GetTypeName())) {
+         // this is a collection of the real elements. 
+         // So get the class ptr for these elements...
+         TClass* clElements=streamerElement->GetClassPointer();
+         TVirtualCollectionProxy* collProxy=clElements?clElements->GetCollectionProxy():0;
+         clElements=collProxy?collProxy->GetValueClass():0;
+         if (!clElements) continue;
+
+         // now loop over the class's streamer elements
+         TStreamerInfo* streamerInfo=clElements->GetStreamerInfo();
+         TIter iElem(streamerInfo->GetElements());
+         TStreamerElement* elem=0;
+         while ((elem=(TStreamerElement*)iElem())) {
+            TNonSplitBrowsable* nsb=new TNonSplitBrowsable(elem, branch, parent);
+            list.Add(nsb);
+            numAdded++;
+         }
       } else {
          // we have a basic streamer element
          TNonSplitBrowsable* nsb=new TNonSplitBrowsable(streamerElement, branch, parent);
@@ -630,9 +665,9 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& list, const TBranch* br
 // std::list::size(), or TClonesArray::GetEntries()).
 // The objects we create are simply used to forward strings (like "@size") to
 // TTreeFormula via our Browse method. These strings are stored in fName.
-   TClass* clContained_WeDontCare=0;
-   TClass* clCollection=GetCollectionContainedType(branch, parent, clContained_WeDontCare);
-   if (!clCollection) return 0;
+   TClass* clContained=0;
+   TClass* clCollection=GetCollectionContainedType(branch, parent, clContained);
+   if (!clCollection || !clContained) return 0;
 
    // Build the fDraw string. Start with our scope.
    TString scope;
@@ -643,8 +678,20 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& list, const TBranch* br
       scope=branch->GetName();
       scope+=".";
       const TBranch* mother=branch;
-      while (mother != mother->GetMother() && (mother=mother->GetMother()))
-         scope.Prepend(".").Prepend(mother->GetName());
+      while (mother != mother->GetMother() && (mother=mother->GetMother())) {
+         TString nameMother(mother->GetName());
+         if (!nameMother.EndsWith(".")) {
+            scope.Prepend(".");
+            scope.Prepend(nameMother);
+         } else {
+            if (mother != mother->GetMother()) {
+               // If the mother is the top level mother
+               // and its ends ends with a ., the name is already
+               // embedded!
+               scope.Prepend(nameMother);
+            }
+         }
+      }
    } else {
       if (gTree)
          gTree->Warning("GetBrowsables", "Neither branch nor parent is set!");
@@ -743,10 +790,10 @@ Int_t TCollectionMethodBrowsable::GetBrowsables(TList& list, const TBranch* bran
 // and returns the number of added elements. If called from a TBranch::Browse 
 // overload, "branch" should be set to the calling TBranch, otherwise 
 // "parent" should be set to the TVirtualBranchBrowsable being browsed.
-   TClass* clContained_WeDontCare=0;
+   TClass* clContained=0;
    // we don't care about the contained class, but only about the collections, 
-   TClass* clContainer=GetCollectionContainedType(branch, parent, clContained_WeDontCare);
-   if (!clContainer) return 0;
+   TClass* clContainer=GetCollectionContainedType(branch, parent, clContained);
+   if (!clContainer || !clContained) return 0;
 
    TList listMethods;
    GetBrowsableMethodsForClass(clContainer, listMethods);
