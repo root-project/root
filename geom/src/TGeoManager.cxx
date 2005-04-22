@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.109 2005/04/04 15:00:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.110 2005/04/20 15:22:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -639,6 +639,7 @@ void TGeoManager::Init()
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
    fPaintVolume = 0;
+   fElementTable = 0;
 }
 
 //_____________________________________________________________________________
