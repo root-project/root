@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.5 2002/05/14 10:22:37 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.6 2005/04/23 11:01:34 brun Exp $
 // Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is
@@ -15,7 +15,7 @@ int main(int argc, char **argv)
    TApplication theApp("App", &argc, argv);
 
    TCanvas *c = new TCanvas("c", "The Hello Canvas", 400, 400);
-   //c->Connect("Closed()", "TApplication", &theApp, "Terminate()");
+   c->Connect("Closed()", "TApplication", &theApp, "Terminate()");
 
    TPaveLabel *hello = new TPaveLabel(0.2,0.4,0.8,0.6,"Hello World");
    hello->Draw();
