@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.73 2005/03/11 15:02:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.74 2005/03/16 17:18:13 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -846,7 +846,7 @@ again:
                      if (fEditor) fEditor->DeleteEditors();
                      if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
                         TVirtualPadEditor::Terminate();
-                     delete this;
+                     if (!gApplication->ReturnFromRun()) delete this;
                      gApplication->Terminate(0);
                      break;
 
