@@ -268,6 +268,7 @@ macosx)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+   auxcflags="-Wno-long-double $auxcflags"
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
@@ -281,9 +282,9 @@ macosx64)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-   auxcflags="-m64 $auxcflags"
+   auxcflags="-m64 -Wno-long-double $auxcflags"
    auxldflags="-m64"
+   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
