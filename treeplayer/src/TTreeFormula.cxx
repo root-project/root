@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.177 2005/04/19 19:39:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.178 2005/04/22 19:04:43 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -713,6 +713,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
    TTree *realtree = fTree->GetTree();
    const char* alias = 0;
    if (realtree) alias = realtree->GetFriendAlias(leaf->GetBranch()->GetTree());
+   if (!alias && realtree!=fTree) {
+      // Let's try on the chain
+      alias = fTree->GetFriendAlias(leaf->GetBranch()->GetTree());
+   }
    if (alias) sprintf(scratch,"%s.%s",alias,leaf->GetName());
    else strcpy(scratch,leaf->GetName());
 

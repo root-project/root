@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.246 2005/04/14 21:30:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.247 2005/04/19 19:39:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3087,6 +3087,16 @@ const char *TTree::GetFriendAlias(TTree *tree) const
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t==tree) return fe->GetName();
+      if (t->IsA()->InheritsFrom("TChain")) {
+         if (t->GetTree()==tree) return fe->GetName();
+      }
+   }
+   // After looking at the first level, let's see if it is
+   // a friend of friends.
+   nextf.Reset();
+   while ((fe = (TFriendElement*)nextf())) {
+      const char *res = fe->GetTree()->GetFriendAlias(tree);
+      if (res) return res;
    }
    return 0;
 }
