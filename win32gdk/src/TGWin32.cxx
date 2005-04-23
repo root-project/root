@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.91 2005/03/29 10:11:58 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.92 2005/04/21 18:46:25 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2731,6 +2731,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    } while (key < 0);
    TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    ::SetFocus(focuswindow);
+   SetInputFocus((Window_t)CurWnd);
 
    gdk_window_set_cursor(CurWnd, (GdkCursor *)fCursors[kPointer]);
    if (cursor != 0) {
