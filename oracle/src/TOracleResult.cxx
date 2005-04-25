@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.2 2005/03/03 08:06:16 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleResult.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -12,55 +12,84 @@
 #include "TOracleResult.h"
 #include "TOracleRow.h"
 
+#include <Riostream.h>
+
+using namespace std;
+
 
 ClassImp(TOracleResult)
 
 //______________________________________________________________________________
 void TOracleResult::GetMetaDataInfo()
 {
-   // Set fFieldInfo, fFieldCount, and fRowCount?
+   // Set fFieldInfo, fFieldCount, and fRowCount.
 
    if (!fResult)
       return;
-   fFieldInfo = new vector<MetaData>(fResult->getColumnListMetaData());
+
+   try {
+      fFieldInfo = new vector<MetaData>(fResult->getColumnListMetaData());
+   } catch (SQLException &oraex) {
+      Error("GetMetaDataInfo()", (oraex.getMessage()).c_str());
+      MakeZombie();
+   }
+
    fFieldCount = fFieldInfo->size();
    fRowCount = -1; //doesn't provide row count
 }
 
 //______________________________________________________________________________
-TOracleResult::TOracleResult(Statement *stmt)
+void TOracleResult::initResultSet(Statement *stmt)
 {
    // Oracle query result.
 
    if (!stmt) {
-      Error("TOracleResult", "construction: empty statement");
+      Error("initResultSet()", "construction: empty statement");
       fResultType = -1;
    } else {
-      fStmt         = stmt;
-      if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
-         fResultType = 1;
-         fResult    = stmt->getResultSet();
-         GetMetaDataInfo();
-         fUpdateCount = 0;
-         //printf("type:%d columnsize:%d \n", fResultType, fFieldCount);
-      } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
-         fResultType = 0;
-         fResult    = 0;
-         fRowCount  = 0;
-         fFieldInfo = 0;
-         fFieldCount= 0;
-         fUpdateCount = stmt->getUpdateCount();
-      } else {
-         fResultType = -1;
+      try {
+         fStmt = stmt;
+         if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
+            fResultType = 1;
+            fResult    = stmt->getResultSet();
+            GetMetaDataInfo();
+            fUpdateCount = 0;
+            //printf("type:%d columnsize:%d \n", fResultType, fFieldCount);
+         } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
+            fResultType = 0;
+            fResult    = 0;
+            fRowCount  = 0;
+            fFieldInfo = 0;
+            fFieldCount= 0;
+            fUpdateCount = stmt->getUpdateCount();
+         } else {
+            fResultType = -1;
+         }
+      } catch (SQLException &oraex) {
+         Error("initResultSet()", (oraex.getMessage()).c_str());
+         MakeZombie();
       }
    }
 }
 
 //______________________________________________________________________________
+TOracleResult::TOracleResult(Statement *stmt)
+{
+   initResultSet(stmt);
+}
+
+//______________________________________________________________________________
+TOracleResult::TOracleResult(Statement *stmt, int row_count)
+{
+   initResultSet(stmt);
+   // override fRowCount set by initResultSet()
+   fRowCount = (row_count==-1)?0:row_count;
+}
+
+//______________________________________________________________________________
+//This construction func is only used to get table metainfo
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
-   // This ctor is only used to get table metainfo.
-
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
       fResultType = -1;
@@ -94,7 +123,8 @@ void TOracleResult::Close(Option_t *)
    fResultType = -1;
    fStmt->closeResultSet(fResult);
    fResult    = 0;
-   fFieldInfo = 0;
+   if (fFieldInfo)
+      delete fFieldInfo;
    fRowCount  = 0;
 }
 
@@ -115,12 +145,6 @@ Int_t TOracleResult::GetFieldCount()
 {
    // Get number of fields in result.
 
-   /*
-   if (!fResult) {
-      Error("GetFieldCount", "result set closed");
-      return 0;
-   }
-   */
    return fFieldCount;
 }
 
@@ -150,9 +174,16 @@ TSQLRow *TOracleResult::Next()
       // if dml query, ...
       return new TOracleRow(fUpdateCount);
    }
+
    // if select query,
-   if (fResult->next())
-      return new TOracleRow(fResult, fFieldInfo);
-   else
-      return 0;
+   try {
+      if (fResult->next()) {
+         return new TOracleRow(fResult, fFieldInfo);
+      } else
+         return 0;
+   } catch (SQLException &oraex) {
+      Error("Next()", (oraex.getMessage()).c_str());
+      MakeZombie();
+   }
+   return 0;
 }

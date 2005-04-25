@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name: v4-00-08 $:$Id: TOracleRow.h,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleRow.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include <sys/time.h>
 #endif
 #include <occi.h>
-using namespace std;
 using namespace oracle::occi;
 #else
 class ResultSet;
@@ -31,15 +30,21 @@ class MetaData;
 class TOracleRow : public TSQLRow {
 
 private:
-   ResultSet        *fResult;      // current result set
-   vector<MetaData> *fFieldInfo;   // metadata for columns
-   UInt_t            fUpdateCount; // for dml queries
-   Int_t             fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
-   
+   ResultSet                *fResult;      // current result set
+   std::vector<MetaData>    *fFieldInfo;   // metadata for columns
+   UInt_t                    fFieldCount;
+   std::vector<std::string> *fFields;
+   UInt_t                    fUpdateCount; // for dml queries
+   Int_t                     fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
+
    Bool_t  IsValid(Int_t field);
 
+protected:
+   int         GetRowData();
+   int         GetRowData2();
+
 public:
-   TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData);
+   TOracleRow(ResultSet *rs, std::vector<MetaData> *fieldMetaData);
    TOracleRow(UInt_t updateCount);
    ~TOracleRow();
 

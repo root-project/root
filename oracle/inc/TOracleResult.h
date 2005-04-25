@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.2 2005/03/03 08:06:16 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include <sys/time.h>
 #endif
 #include <occi.h>
-using namespace std;
 using namespace oracle::occi;
 #else
 class Connection;
@@ -34,18 +33,22 @@ class MetaData;
 class TOracleResult : public TSQLResult {
 
 private:
-   Statement        *fStmt;
-   ResultSet        *fResult;      // query result (rows)
-   vector<MetaData> *fFieldInfo;   // info for each field in the row
-   Int_t             fFieldCount;  // num of fields in resultset
-   UInt_t            fUpdateCount; //for dml query, mutual exclusive with above
-   Int_t             fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
+   Statement             *fStmt;
+   ResultSet             *fResult;      // query result (rows)
+   std::vector<MetaData> *fFieldInfo;   // info for each field in the row
+   Int_t                  fFieldCount;  // num of fields in resultset
+   UInt_t                 fUpdateCount; // for dml query, mutual exclusive with above
+   Int_t                  fResultType;  // 0 - Update(dml); 1 - Select; -1 - empty
 
    Bool_t  IsValid(Int_t field);
+
+protected:
+   void    initResultSet(Statement *stmt);
    void    GetMetaDataInfo();
 
 public:
    TOracleResult(Statement *stmt);
+   TOracleResult(Statement *stmt, int row_count);
    TOracleResult(Connection *conn, const char *tableName);
    ~TOracleResult();
 
