@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.5 2005/04/13 13:15:27 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.cxx,v 1.6 2005/04/15 12:39:34 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //_________________________________________________________________________________
@@ -34,7 +34,7 @@ TFoamCell::TFoamCell(Int_t kDim)
 // User constructor allocating single empty Cell
   if (  kDim >0){
     //---------=========----------
-    fkDim     = kDim;
+    fDim     = kDim;
     fStatus   = 1;
     fParent   = 0;
     fDaught0  = 0;
@@ -115,7 +115,7 @@ void    TFoamCell::GetHcub( TFoamVect &Posi, TFoamVect &Size)  const
 // Provides size and position of the cell
 // These parameter are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
-  if(fkDim<1) return;
+  if(fDim<1) return;
     const TFoamCell *pCell,*dCell;
     Posi = 0.0; Size=1.0; // load all components
     dCell = this;
@@ -143,7 +143,7 @@ void    TFoamCell::GetHSize( TFoamVect &Size)  const
 // Provides size of the cell
 // Size parameters are calculated by analyzing information in all parents
 // cells up to the root cell. It takes time but saves memory.
-  if(fkDim<1) return;
+  if(fDim<1) return;
     const TFoamCell *pCell,*dCell;
     Size=1.0; // load all components
     dCell = this;
@@ -170,10 +170,10 @@ void TFoamCell::CalcVolume(void)
 
   Int_t k;
   Double_t volu=1.0;
-  if(fkDim>0){         // h-cubical subspace
-      TFoamVect Size(fkDim);
+  if(fDim>0){         // h-cubical subspace
+      TFoamVect Size(fDim);
       GetHSize(Size);
-      for(k=0; k<fkDim; k++) volu *= Size[k];
+      for(k=0; k<fDim; k++) volu *= Size[k];
   }
   fVolume =volu;
 }
@@ -199,8 +199,8 @@ void TFoamCell::Print(Option_t *option) const
   cout<< endl;
   //
   //
-  if(fkDim>0 ){
-    TFoamVect Posi(fkDim); TFoamVect Size(fkDim);
+  if(fDim>0 ){
+    TFoamVect Posi(fDim); TFoamVect Size(fDim);
     GetHcub(Posi,Size);
     cout <<"   Posi= "; Posi.Print("1"); cout<<","<< endl;
     cout <<"   Size= "; Size.Print("1"); cout<<","<< endl;

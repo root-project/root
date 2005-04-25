@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.4 2005/04/13 13:15:27 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamCell.h,v 1.5 2005/04/15 12:39:34 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 #ifndef ROOT_TFoamCell
@@ -22,7 +22,7 @@ class TFoamVect;
 class TFoamCell : public TObject {
   //   static, the same for all cells!
  private:
-  Short_t  fkDim;               // Dimension of the vector space
+  Short_t  fDim;                   // Dimension of the vector space
   //   MEMBERS
  private:
   //--- linked tree organization ---
