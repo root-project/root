@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.71 2005/04/20 10:29:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.72 2005/04/20 19:29:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1644,7 +1644,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //      myhist->ProfileX(" ",firstybin,lastybin,"[cutg]");
 //   To invert the cut, it is enough to put a "-" in front of its name:
 //      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
-//   It is possible to apply several cuts:
+//   It is possible to apply several cuts ("," means logical AND):
 //      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
 //
 //   NOTE that if a TProfile named name exists in the current directory or pad,

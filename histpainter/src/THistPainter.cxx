@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.212 2005/04/20 19:29:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.213 2005/04/22 06:29:49 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1355,7 +1355,7 @@ void THistPainter::Paint(Option_t *option)
 //      myhist->Draw("surf1 [cutg]");
 //   To invert the cut, it is enough to put a "-" in front of its name:
 //      myhist->Draw("surf1 [-cutg]");
-//   It is possible to apply several cuts:
+//   It is possible to apply several cuts ("," means logical AND):
 //      myhist->Draw("surf1 [cutg1,cutg2]");
 //   See a complete example in the tutorial fit2a.C. This example produces
 //   the following picture:
