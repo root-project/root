@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.56 2005/04/05 13:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.57 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -875,15 +875,19 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute the closest distance of approach from point px,py to this volume
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
-   if (!painter) return 9999;
-   return painter->DistanceToPrimitiveVol(this, px, py);
+   Int_t dist = 9999;
+   if (!painter) return dist;
+   dist = painter->DistanceToPrimitiveVol(this, px, py);
+   return dist;
 }
 
 //_____________________________________________________________________________
 void TGeoVolume::Draw(Option_t *option)
 {
 // draw top volume according to option
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
@@ -899,6 +903,7 @@ void TGeoVolume::Draw(Option_t *option)
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
@@ -960,6 +965,7 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of this volume.
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    fGeoManager->RandomPoints(this, npoints, option);
 }
 
@@ -967,6 +973,7 @@ void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Random raytracing method.
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
@@ -977,6 +984,7 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
 void TGeoVolume::Raytrace(Bool_t flag)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;
    
