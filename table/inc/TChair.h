@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.1.1.2 2002/12/02 21:57:31 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.1.1.2 2002/12/02 21:57:31 fisyak Exp $
+// $Id: TChair.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -25,14 +25,15 @@
 
 class TChair : public TDataSet {
 
-private:
-   TTable *fTable;
 
 protected:
+      
+   TTable  *fTable;     // the "TTable" object this object is pthe proxy for
    ULong_t  fLastIndx;  // index pof the last used  table row;
    void    *fLastRow;   // pointer to the last used table row; fLastRow = table[fLastIndx]
 
-   TTable    *GetThisTable() const {return fTable; }
+         TTable *GetThisTable()       {return fTable; }
+   const TTable *GetThisTable() const {return fTable; }
    static void  *GetOffset(const void *base,ULong_t offset) { return (void  *)((Char_t *)base + offset);}
    TChair(){ fTable = 0; }
 
@@ -119,6 +120,10 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.3  2003/01/27 20:41:36  brun
+// New version of the Table package by Valeri Fine.
+// New classes TIndexTable TResponseIterator TResponseTable TTableMap
+//
 // Revision 1.1.1.2  2002/12/02 21:57:31  fisyak
 // *** empty log message ***
 //

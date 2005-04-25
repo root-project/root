@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.172 2005/04/15 15:27:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.173 2005/04/21 09:51:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -139,6 +139,7 @@ TPad::TPad()
    fEditable   = kTRUE;
    fCrosshair  = 0;
    fCrosshairPos = 0;
+   fPadView3D  = 0;
    fMother     = (TPad*)gPad;
 
    fFixedAspectRatio = kFALSE;
@@ -221,6 +222,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fFrame      = 0;
    fView       = 0;
    fPadPaint   = 0;
+   fPadView3D  = 0;
    fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
    fNumber     = 0;
    fAbsCoord   = kFALSE;
