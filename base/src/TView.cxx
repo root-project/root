@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.25 2005/04/11 22:38:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.26 2005/04/20 14:08:05 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -414,7 +414,7 @@ void TView::DefinePerspectiveView()
 //   Output :
 //      nper[16] - normalizing transformation
 // compute tr+rot to get COV in origin, view vector parallel to -Z axis, up vector
-// parralel to Y.
+// parallel to Y.
 //                      ^Yv   UP ^  proj. plane
 //                     |        |   /|
 //                    |        |  /  |
@@ -1347,7 +1347,7 @@ void TView::SetOutlineToCube()
 }
 
 //______________________________________________________________________________
-void TView::SetParralel()
+void TView::SetParallel()
 {
    if (!IsPerspective()) return;
    SetBit(kPerspective, kFALSE);
@@ -1540,7 +1540,7 @@ void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
        }
        return;
     }
-    // parralel view
+    // parallel view
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
@@ -1571,7 +1571,7 @@ void TView::WCtoNDC(const Double_t *pw, Double_t *pn)
        }
        return;
     }
-    // parralel view
+    // parallel view
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.12 2003/05/07 13:31:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.13 2003/08/21 08:26:52 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -61,7 +61,7 @@ protected:
         Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
         Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
         Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
-        
+
         void            ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
 
 
@@ -126,7 +126,7 @@ public:
    void          SetLongitude(Double_t longitude) {fLongitude = longitude;}
    void          SetPsi(Double_t psi) {fPsi = psi;}
    virtual void  SetOutlineToCube();
-   virtual void  SetParralel(); // *MENU*
+   virtual void  SetParallel(); // *MENU*
    virtual void  SetPerspective(); // *MENU*
    virtual void  SetRange(const Double_t *min, const Double_t *max);
    virtual void  SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag=0);
