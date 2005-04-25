@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.110 2005/04/20 15:22:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.111 2005/04/22 07:32:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -435,6 +435,7 @@
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
 #include "TVirtualGeoPainter.h"
+#include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 
 // statics and globals
@@ -3396,11 +3397,16 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
 // Make a default painter if none present. Returns pointer to it.
     if (!fPainter) {
-       fPainter=TVirtualGeoPainter::GeoPainter();
-       if (!fPainter) {
-          Error("GetGeomPainter", "could not create painter");
-          return 0;
-       }
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         fPainter = (TVirtualGeoPainter*)h->ExecPlugin(1,this);
+         if (!fPainter) {
+            Error("GetGeomPainter", "could not create painter");
+            return 0;
+         }
+      }
     }
     return fPainter;
 }

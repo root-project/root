@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.37 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.38 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -48,6 +48,7 @@ class TGeoNode;
 class TGeoMatrix;
 class TGeoVoxelFinder;
 class TGeoPatternFinder;
+class TGeoManager;
 
 /*************************************************************************
  * TGeoVolume - class description
@@ -66,6 +67,7 @@ protected :
    TGeoMedium        *fMedium;         // tracking medium
    TGeoPatternFinder *fFinder;         // finder object for divisions
    TGeoVoxelFinder   *fVoxels;         // finder object for bounding boxes
+   TGeoManager       *fGeoManager;     //! pointer to TGeoManager owning this volume
 
    TObject           *fField;          //! just a hook for now
    TString            fOption;         //! option - if any
@@ -134,6 +136,7 @@ public:
    Int_t           GetNdaughters() const;
    Int_t           GetNtotal() const {return fNtotal;}
    virtual Int_t   GetByteCount() const;
+   TGeoManager    *GetGeoManager() const {return fGeoManager;}
    TGeoMaterial   *GetMaterial() const               {return fMedium->GetMaterial();}
    TGeoMedium     *GetMedium() const                 {return fMedium;}
    TObject        *GetField() const                  {return fField;}
@@ -189,7 +192,7 @@ public:
    void            Voxelize(Option_t *option);
    Double_t        Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
 
-  ClassDef(TGeoVolume, 4)              // geometry volume descriptor
+  ClassDef(TGeoVolume, 5)              // geometry volume descriptor
 };
 
 /*************************************************************************
