@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.129 2005/04/18 16:05:48 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.130 2005/04/18 21:17:45 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1095,7 +1095,8 @@ const char *TUnixSystem::TempDirectory() const
    // temporary files in.
 
    const char *dir =  gSystem->Getenv("TMPDIR");
-   if (!dir) dir = "/tmp";
+   if (!dir || gSystem->AccessPathName(dir, kWritePermission))
+      dir = "/tmp";
 
    return dir;
 }
