@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.157 2005/04/21 16:05:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.158 2005/04/26 12:33:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -660,12 +660,13 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       //linear interpolation
       //find point in graph immediatly below x
       //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
-      Int_t up, low = TMath::BinarySearch(fNpoints,fX,x);
-      if (low == fNpoints-1) {up=low; low = up+1;}
+      Int_t low = TMath::BinarySearch(fNpoints,fX,x);
+      Int_t up = low+1;
+      if (low == fNpoints-1) {up=low; low = up-1;}
       if (low == -1) {low=0; up=1;}
-      if (fX[low] == fX[low+1]) return fY[low];
-      Double_t yn = x*(fY[low]-fY[low+1]) +fX[low]*fY[low+1] - fX[low+1]*fY[low];
-      return yn/(fX[low]-fX[low+1]);
+      if (fX[low] == fX[up]) return fY[low];
+      Double_t yn = x*(fY[low]-fY[up]) +fX[low]*fY[up] - fX[up]*fY[low];
+      return yn/(fX[low]-fX[up]);
    } else {
       //spline interpolation using the input spline
       return spline->Eval(x);
