@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.40 2005/04/12 12:11:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.41 2005/04/26 16:36:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -464,7 +464,13 @@ void TStyle::Reset(Option_t *)
    SetLineStyleString(2,"12 12");
    SetLineStyleString(3,"4 8");
    SetLineStyleString(4,"12 16 4 16");
-   for (Int_t i=5;i<30;i++) SetLineStyleString(i," ");
+   SetLineStyleString(5,"20 12 4 12");
+   SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+   SetLineStyleString(7,"20 20");
+   SetLineStyleString(8,"20 12 4 12 4 12");
+   SetLineStyleString(9,"80 20");
+   SetLineStyleString(10,"80 40 4 40");
+   for (Int_t i=11;i<30;i++) SetLineStyleString(i," ");
 
    SetPaperSize();
 
@@ -786,7 +792,7 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
 // pixels. The initial and alternating elements (second, fourth, and so on)
 // are the dashes, and the others spaces between dashes.
 //
-// Default line styles are pre-defined as:
+// Default fixed line styles are pre-defined as:
 //
 //   linestyle 1  "[]"             solid
 //   linestyle 2  "[12 12]"        dashed
@@ -812,6 +818,7 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
 //  - The opening and closing brackets may be omitted
 //  - It is recommended to use 4 as the smallest segment length and multiple of
 //    4 for other lengths. 
+//  - The line style 1 to 10 are predefined. 1 to 4 cannot be changed.
 
    char *l;
    Int_t nch = strlen(text);
