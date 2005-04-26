@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog myclass.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += classref
+TEST_TARGETS += usedBits classref
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -21,4 +21,9 @@ myclass.root: RunMyClass_C.$(DllSuf)
 classref.log: myclass.root
 
 classref: classref.log
+	$(TestDiff)
+
+usedBits.log: usedBits_C.$(DllSuf)
+
+usedBits: usedBits.log
 	$(TestDiff)
