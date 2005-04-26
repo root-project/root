@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.234 2005/04/17 14:12:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.235 2005/04/21 13:58:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5142,6 +5142,65 @@ Double_t TH1::GetRMSError(Int_t axis) const
    if (stats[0]==0) return 0;
    return (rms/TMath::Sqrt(2*stats[0]));
 }
+
+//______________________________________________________________________________
+Double_t TH1::GetSkewness(Int_t axis) const
+{
+  //Returns skewness of the histogram
+  //Note, that since third and fourth moment are not calculated
+  //at the fill time, skewness is computed bin by bin
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t x, w, mean, rms, rms3, sum=0;
+   mean = GetMean(axis);
+   rms = GetRMS(axis);
+   rms3 = rms*rms*rms;
+   Int_t bin;
+   Double_t np=0;
+   const TAxis *ax;
+   if (axis==1) ax = &fXaxis;
+   else if (axis==2) ax = &fYaxis;
+   else ax = &fZaxis;
+
+   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+      x = GetBinCenter(bin);
+      w = GetBinContent(bin);
+      np+=w;
+      sum+=w*(x-mean)*(x-mean)*(x-mean);
+   }
+   sum/=np*rms3;
+   return sum;
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetKurtosis(Int_t axis) const
+{
+  //Returns kurtosis of the histogram. Kurtosis(gaussian(0, 1)) = 0.
+  //Note, that since third and fourth moment are not calculated
+  //at the fill time, kurtosis is computed bin by bin
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t x, w, mean, rms, rms4, sum=0;
+   mean = GetMean(axis);
+   rms = GetRMS(axis);
+   rms4 = rms*rms*rms*rms;
+   Int_t bin;
+   Double_t np=0;
+   const TAxis *ax;
+   if (axis==1) ax = &fXaxis;
+   else if (axis==2) ax = &fYaxis;
+   else ax = &fZaxis; 
+
+   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+      x = GetBinCenter(bin);
+      w = GetBinContent(bin);
+      np+=w;
+      sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
+   }
+   sum/=np*rms4;
+   return sum-3;
+}
+
 
 //______________________________________________________________________________
 void TH1::GetStats(Stat_t *stats) const
