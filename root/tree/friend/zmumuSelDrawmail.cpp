@@ -10,10 +10,11 @@
 #include "TCanvas.h"
 #include "TPostScript.h"
 #include "TCut.h"
+TTree* zfriendtree;
 
 void zmumuSelDraw(TTree* t0){
 
-   TTree* zfriendtree=new TTree("friendextra","A friend tree for new branches");
+   zfriendtree=new TTree("friendextra","A friend tree for new branches");
 
    zfriendtree->SetDirectory(0);
    /*
@@ -86,6 +87,9 @@ void zmumuSelDraw(TTree* t0){
    
    zfriendtree->AddFriend(t0);
    zfriendtree->SetScanField(-1);
+   //return;
+
+
    // this used to crash;
    zfriendtree->Scan("nneu:neumomcm[0]:neumomcm[1]:neumomcm[2]:neumomcm[3]:neumomcmtot");
    zfriendtree->Scan("nneu:neumomcm:neumomcmtot","","",8,0);

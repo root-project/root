@@ -39,10 +39,9 @@ void createTrees()
 
 
 TChain* chains[noChains];
-                                                                                                         
-                                                                                                         
-void testChainFriends() {
-   createTrees();
+                                                                                
+void testChainFriends(bool recreate = true) {
+   if (recreate) createTrees();
    for (Int_t i = 0; i < noChains; i++)
    {
       chains[i] = new TChain(chainNames[i]);
@@ -53,13 +52,28 @@ void testChainFriends() {
    }
    chains[0]->AddFriend(chains[1],"");
    chains[0]->AddFriend(chains[2],"");
+   
+   chains[0]->GetEntries();
+   //chains[0]->GetTree()->GetListOfFriends()->ls();
+   chains[2]->LoadTree(0);
+   //chains[0]->GetTree()->GetListOfFriends()->ls();
+
+
+   chains[0]->Scan("a.z:b.z:c.z","","",3);
+
+   
    chains[2]->AddFriend(chains[3],"");
-//   chains[1]->AddFriend(chains[0]);
-   chains[3]->Scan("d.z","","",3);
-   chains[2]->Scan("d.z","","",3);
-   chains[0]->Scan("a.z:b.z:c.z:d.z","","",3);
    chains[2]->Scan("d.z","","",3);
 
+   chains[1]->AddFriend(chains[0],"");
+
+   
+   chains[3]->Scan("d.z","","",3);
+
+   chains[2]->Scan("d.z","","",3);
+   chains[0]->Scan("a.z:b.z:c.z:d.z","","",3);
+   
+   chains[2]->Scan("d.z","","",3);
 }
 
 //TDSet* dsets[noChains];
