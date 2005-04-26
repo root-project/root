@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.156 2005/04/17 14:12:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.157 2005/04/21 16:05:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -309,7 +309,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    
    Double_t x,y;
    ifstream infile(filename);
-   if(!infile.is_open()){
+   if(!infile.good()){
       MakeZombie();
       Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
       fNpoints = 0;
