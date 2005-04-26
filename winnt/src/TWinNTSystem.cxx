@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.116 2005/04/06 09:51:19 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.117 2005/04/13 18:04:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -848,9 +848,10 @@ void TWinNTSystem::SetProgname(const char *name)
 
          gProgPath = StrDup(dirname);
       } else {
-         Warning("SetProgname",
-            "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)",
-            fullname);
+         // Do not issue a warning - ROOT is not using gProgPath anyway.
+         // Warning("SetProgname",
+         //   "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)", 
+         //   fullname);
          gProgPath = WorkingDirectory();
       }
 
