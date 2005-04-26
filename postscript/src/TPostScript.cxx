@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.52 2005/02/11 10:26:01 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.53 2005/02/11 12:41:34 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -2216,8 +2216,10 @@ void TPostScript::SetLineStyle(Style_t linestyle)
    if ( linestyle == fLineStyle) return;
    fLineStyle = linestyle;
    const char *st = gStyle->GetLineStyleString(linestyle);
+   PrintFast(1,"[");
    Int_t nch = strlen(st);
    PrintFast(nch,st);
+   PrintFast(6,"] 0 sd");
 }
 
 //______________________________________________________________________________

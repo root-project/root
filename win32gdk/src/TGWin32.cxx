@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.92 2005/04/21 18:46:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.93 2005/04/23 10:27:43 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -48,6 +48,9 @@
 #include "TGWin32VirtualXProxy.h"
 #include "TGWin32InterpreterProxy.h"
 #include "TWin32SplashThread.h"
+#include "TString.h"
+#include "TObjString.h"
+#include "TObjArray.h"
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -151,13 +154,13 @@ static struct {
 //
 // Keep style values for line GdkGC
 //
-static int gLineStyle = GDK_LINE_SOLID;
-static int gCapStyle = GDK_CAP_BUTT;
-static int gJoinStyle = GDK_JOIN_MITER;
-static char gDashList[4];
-static int gDashLength = 0;
-static int gDashOffset = 0;
-static int gDashSize = 0;
+static int  gLineStyle = GDK_LINE_SOLID;
+static int  gCapStyle  = GDK_CAP_BUTT;
+static int  gJoinStyle = GDK_JOIN_MITER;
+static char gDashList[10];
+static int  gDashLength = 0;
+static int  gDashOffset = 0;
+static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -1859,10 +1862,10 @@ void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
    } else {
       int i;
       gint8 dashes[32];
-      for (i = 0; i < sizeof(gDashList); i++) {
+      for (i = 0; i < gDashSize; i++) {
          dashes[i] = (gint8) gDashList[i];
       }
-      for (i = sizeof(gDashList); i < 32; i++) {
+      for (i = gDashSize; i < 32; i++) {
          dashes[i] = (gint8) 0;
       }
       gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
@@ -1898,10 +1901,10 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
          int i;
          gint8 dashes[32];
 
-         for (i = 0; i < sizeof(gDashList); i++) {
+         for (i = 0; i < gDashSize; i++) {
             dashes[i] = (gint8) gDashList[i];
          }
-         for (i = sizeof(gDashList); i < 32; i++) {
+         for (i = gDashSize; i < 32; i++) {
             dashes[i] = (gint8) 0;
          }
 
@@ -3420,13 +3423,12 @@ void TGWin32::SetLineType(int n, int *dash)
                                  (GdkJoinStyle) gJoinStyle);
    } else {
       int i, j;
+      gDashSize = TMath::Min((int)sizeof(gDashList),n);
       gDashLength = 0;
-      for (i = 0, j = 0; i < (int) sizeof(gDashList); i++) {
-         gDashList[i] = dash[j];
+      for (i = 0; i < gDashSize; i++) {
+         gDashList[i] = dash[i];
          gDashLength += gDashList[i];
-         if (++j >= n) j = 0;
       }
-      gDashSize = n;
       gDashOffset = 0;
       gLineStyle = GDK_LINE_ON_OFF_DASH;
       gdk_gc_set_line_attributes(gGCdash, fLineWidth,
@@ -3451,23 +3453,34 @@ void TGWin32::SetLineStyle(Style_t lstyle)
 //______________________________________________________________________________
 void TGWin32::UpdateLineStyle()
 {
-   //
+   // Update line style
 
-   static Int_t dashed[2] = { 5, 5 };
-   static Int_t dotted[2] = { 1, 3 };
-   static Int_t dasheddotted[4] = { 5, 3, 1, 3 };
+   static Int_t dashed[2] = { 3, 3 };
+   static Int_t dotted[2] = { 1, 2 };
+   static Int_t dasheddotted[4] = { 3, 4, 1, 4 };
 
    if (fLineStyle <= 1) {
       SetLineType(0, 0);
-   }
-   if (fLineStyle == 2) {
+   } else if (fLineStyle == 2) {
       SetLineType(2, dashed);
-   }
-   if (fLineStyle == 3) {
+   } else if (fLineStyle == 3) {
       SetLineType(2, dotted);
-   }
-   if (fLineStyle == 4) {
+   } else if (fLineStyle == 4) {
       SetLineType(4, dasheddotted);
+   } else {
+      TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
+      TObjArray *tokens = st.Tokenize(" ");
+      Int_t nt;
+      nt = tokens->GetEntries();
+      Int_t *linestyle = new Int_t[nt];
+      for (Int_t j = 0; j<nt; j++) {
+         Int_t it;
+         sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+         linestyle[j] = (Int_t)(it/4);
+      }
+      SetLineType(nt,linestyle);
+      delete [] linestyle;
+      delete tokens;
    }
    fPenModified = kFALSE;
 }

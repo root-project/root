@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.39 2005/02/14 15:07:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.40 2005/04/12 12:11:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -460,11 +460,11 @@ void TStyle::Reset(Option_t *)
    fAttDate.SetTextSize(0.025);
    fAttDate.SetTextAlign(11);
    SetLineScalePS();
-   SetLineStyleString(1,"[]");
-   SetLineStyleString(2,"[12 12]");
-   SetLineStyleString(3,"[4 8]");
-   SetLineStyleString(4,"[12 15 4 15]");
-   for (Int_t i=5;i<30;i++) SetLineStyleString(i,"[]");
+   SetLineStyleString(1," ");
+   SetLineStyleString(2,"12 12");
+   SetLineStyleString(3,"4 8");
+   SetLineStyleString(4,"12 16 4 16");
+   for (Int_t i=5;i<30;i++) SetLineStyleString(i," ");
 
    SetPaperSize();
 
@@ -781,26 +781,45 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 //______________________________________________________________________________
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-// Set line style string (used by Postscript)
-// PostScript uses the following convention
-//  a line is a suite of segments, each segment is described by the
-//  number of pixels. For example default line styles are defined as:
+// Set line style string using the PostScript convention. 
+// A line is a suite of segments, each segment is described by the number of 
+// pixels. The initial and alternating elements (second, fourth, and so on)
+// are the dashes, and the others spaces between dashes.
+//
+// Default line styles are pre-defined as:
+//
 //   linestyle 1  "[]"             solid
 //   linestyle 2  "[12 12]"        dashed
 //   linestyle 3  "[4 8]"          dotted
-//   linestyle 4  "[12 15 4 15]"   dash-dotted
+//   linestyle 4  "[12 16 4 16]"   dash-dotted
 //
-//  Up to 30 different styles may be defined.
-//   The opening and closing brackets may be omitted
-//   They will be automaticalled added by this function.
+//  For example the following lines define the line style 5 to 9.
+//
+//   gStyle->SetLineStyleString(5,"20 12 4 12");
+//   gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+//   gStyle->SetLineStyleString(7,"20 20");
+//   gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
+//   gStyle->SetLineStyleString(9,"80 20");
+//
+//Begin_Html
+/*
+<img src="gif/userlinestyle.gif">
+*/
+//End_Html
+//
+// Note: 
+//  - Up to 30 different styles may be defined.
+//  - The opening and closing brackets may be omitted
+//  - It is recommended to use 4 as the smallest segment length and multiple of
+//    4 for other lengths. 
 
+   char *l;
    Int_t nch = strlen(text);
    char *st = new char[nch+10];
    sprintf(st," ");
-   if (strstr(text,"[") == 0) strcat(st,"[");
    strcat(st,text);
-   if (strstr(text,"]") == 0) strcat(st,"]");
-   strcat(st," 0 sd");
+   l = strstr(st,"["); if (l) l[0] = ' '; 
+   l = strstr(st,"]"); if (l) l[0] = ' '; 
    if (i >= 1 && i <= 29) fLineStyle[i] = st;
    delete [] st;
 }

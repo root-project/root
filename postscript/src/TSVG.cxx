@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.11 2004/06/08 12:57:18 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.12 2004/11/23 17:05:49 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TSVG.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 ClassImp(TSVG)
 
@@ -1096,12 +1097,18 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
           WriteInteger(Int_t(fLineWidth), 0);
           PrintFast(1,"\"");
        }
-       if (fLineStyle == 2) {
-          PrintFast(23," stroke-dasharray=\"3,3\"");
-       } else if (fLineStyle == 3) {
-          PrintFast(23," stroke-dasharray=\"1,4\"");
-       } else if (fLineStyle == 4) {
-          PrintFast(27," stroke-dasharray=\"3,4,1,4\"");
+       if (fLineStyle > 1) {
+          PrintFast(19," stroke-dasharray=\"");
+          TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
+          TObjArray *tokens = st.Tokenize(" ");
+          for (Int_t j = 0; j<tokens->GetEntries(); j++) {
+             Int_t it;
+             sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+             if (j>0) PrintFast(1,",");
+             WriteInteger((Int_t)(it/4));
+          }
+          delete tokens;
+          PrintFast(1,"\"");
        }
        PrintFast(2,"/>");
     } else {
