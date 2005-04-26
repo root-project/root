@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.5 2005/04/11 17:48:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.6 2005/04/12 09:29:32 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -22,7 +22,7 @@
 */
 
 /**
- * I've modified some very nice bounding box tree code from 
+ * I've modified some very nice bounding box tree code from
  * Gino van der Bergen's Free Solid Library below. It's basically
  * the same code - but I've hacked out the transformation stuff as
  * I didn't understand it. I've also made it far less elegant!
@@ -57,7 +57,7 @@
 
 /*
 	This file contains compressed version of CSGSolid and SOLID.
-	All stuff is in RootCsg namespace (to avoid name clashes), 
+	All stuff is in RootCsg namespace (to avoid name clashes),
 	I used ROOT's own	typedefs and math functions, removed resulting triangulation
 	(I use OpenGL's inner implementation), changed names from MT_xxx CSG_xxx
 	to more natural etc.
@@ -66,7 +66,7 @@
 	BuildUnion
 	BuildIntersection
 	BuildDifference
-	
+
 	31.03.05 Timur Pocheptsov.
 */
 
@@ -86,24 +86,24 @@ namespace RootCsg {
    Int_t sign(Double_t x){return x < 0. ? -1 : x > 0. ? 1 : 0;}
    Bool_t fuzzy_zero(Double_t x){return TMath::Abs(x) < epsilon;}
    Bool_t fuzzy_zero2(Double_t x){return TMath::Abs(x) < epsilon2;}
-   
+
    class Tuple2 {
    protected:
-      Double_t fCo[2];                            
+      Double_t fCo[2];
    public:
       Tuple2(){}
       Tuple2(const Double_t *vv){SetValue(vv);}
       Tuple2(Double_t xx, Double_t yy){SetValue(xx, yy);}
       Double_t &operator[](Int_t i){return fCo[i];}
       const Double_t &operator[](Int_t i)const{return fCo[i];}
-      Double_t &X(){return fCo[0];} 
-      const Double_t &X()const{return fCo[0];} 
+      Double_t &X(){return fCo[0];}
+      const Double_t &X()const{return fCo[0];}
       Double_t &Y(){return fCo[1];}
-      const Double_t &Y()const{return fCo[1];} 
-      Double_t &U(){return fCo[0];} 
-      const Double_t &U()const{return fCo[0];} 
+      const Double_t &Y()const{return fCo[1];}
+      Double_t &U(){return fCo[0];}
+      const Double_t &U()const{return fCo[0];}
       Double_t &V(){return fCo[1];}
-      const Double_t &V()const{return fCo[1];} 
+      const Double_t &V()const{return fCo[1];}
       Double_t *GetValue(){return fCo;}
       const Double_t *GetValue()const{return fCo;}
       void GetValue(Double_t *vv)const
@@ -126,15 +126,15 @@ namespace RootCsg {
       Vector2 &operator -= (const Vector2 &v);
       Vector2 &operator *= (Double_t s);
       Vector2 &operator /= (Double_t s);
-      Double_t Dot(const Vector2 &v)const; 
+      Double_t Dot(const Vector2 &v)const;
       Double_t Length2()const;
       Double_t Length()const;
       Vector2 Absolute()const;
       void Normalize();
       Vector2 Normalized()const;
-      void Scale(Double_t x, Double_t y); 
-      Vector2 Scaled(Double_t x, Double_t y)const; 
-      Bool_t FuzzyZero()const; 
+      void Scale(Double_t x, Double_t y);
+      Vector2 Scaled(Double_t x, Double_t y)const;
+      Bool_t FuzzyZero()const;
       Double_t Angle(const Vector2 &v)const;
       Vector2 Cross(const Vector2 &v)const;
       Double_t Triple(const Vector2 &v1, const Vector2 &v2)const;
@@ -226,26 +226,26 @@ namespace RootCsg {
 
    class Tuple3 {
    protected:
-      Double_t fCo[3];                            
+      Double_t fCo[3];
    public:
       Tuple3(){}
       Tuple3(const Double_t *v){SetValue(v);}
       Tuple3(Double_t xx, Double_t yy, Double_t zz){SetValue(xx, yy, zz);}
       Double_t &operator [] (Int_t i){return fCo[i];}
       const Double_t &operator[](Int_t i)const{return fCo[i];}
-      Double_t &X(){return fCo[0];} 
-      const Double_t &X()const{return fCo[0];} 
+      Double_t &X(){return fCo[0];}
+      const Double_t &X()const{return fCo[0];}
       Double_t &Y(){return fCo[1];}
-      const Double_t &Y()const{return fCo[1];} 
-      Double_t &Z(){return fCo[2];} 
-      const Double_t &Z()const{return fCo[2];} 
+      const Double_t &Y()const{return fCo[1];}
+      Double_t &Z(){return fCo[2];}
+      const Double_t &Z()const{return fCo[2];}
       Double_t *GetValue(){return fCo;}
       const Double_t *GetValue()const{ return fCo; }
       void GetValue(Double_t *v)const
       {v[0] = Double_t(fCo[0]), v[1] = Double_t(fCo[1]), v[2] = Double_t(fCo[2]);}
       void SetValue(const Double_t *v)
       {fCo[0] = Double_t(v[0]), fCo[1] = Double_t(v[1]), fCo[2] = Double_t(v[2]);}
-      void SetValue(Double_t xx, Double_t yy, Double_t zz) 
+      void SetValue(Double_t xx, Double_t yy, Double_t zz)
       {fCo[0] = xx; fCo[1] = yy; fCo[2] = zz;}
    };
 
@@ -261,7 +261,7 @@ namespace RootCsg {
       Vector3 &operator -= (const Vector3& v);
       Vector3 &operator *= (Double_t s);
       Vector3 &operator /= (Double_t s);
-      Double_t Dot(const Vector3& v)const; 
+      Double_t Dot(const Vector3& v)const;
       Double_t Length2()const;
       Double_t Length()const;
       Vector3 Absolute()const;
@@ -269,9 +269,9 @@ namespace RootCsg {
       void Normalize();
       Vector3 Normalized()const;
       Vector3 SafeNormalized()const;
-      void Scale(Double_t x, Double_t y, Double_t z); 
-      Vector3 Scaled(Double_t x, Double_t y, Double_t z)const; 
-      Bool_t FuzzyZero()const; 
+      void Scale(Double_t x, Double_t y, Double_t z);
+      Vector3 Scaled(Double_t x, Double_t y, Double_t z)const;
+      Bool_t FuzzyZero()const;
       Double_t Angle(const Vector3 &v)const;
       Vector3 Cross(const Vector3 &v)const;
       Double_t Triple(const Vector3 &v1, const Vector3 &v2)const;
@@ -319,8 +319,8 @@ namespace RootCsg {
                    fCo[2] * v[0] - fCo[0] * v[2],
                    fCo[0] * v[1] - fCo[1] * v[0]);}
    Double_t Vector3::Triple(const Vector3 &v1, const Vector3 &v2)const
-   {return fCo[0] * (v1[1] * v2[2] - v1[2] * v2[1]) + 
-           fCo[1] * (v1[2] * v2[0] - v1[0] * v2[2]) + 
+   {return fCo[0] * (v1[1] * v2[2] - v1[2] * v2[1]) +
+           fCo[1] * (v1[2] * v2[0] - v1[0] * v2[2]) +
            fCo[2] * (v1[0] * v2[1] - v1[1] * v2[0]);}
    Int_t Vector3::ClosestAxis()const
    {Vector3 a = Absolute();
@@ -399,10 +399,10 @@ namespace RootCsg {
       {SetValue(xx, yy, zz, ww);}
       Double_t &operator[](Int_t i){return fCo[i];}
       const Double_t &operator[](Int_t i)const{return fCo[i];}
-      Double_t &X(){return fCo[0];} 
+      Double_t &X(){return fCo[0];}
       const Double_t &X()const{return fCo[0];}
       Double_t &Y(){return fCo[1];}
-      const Double_t &Y()const{return fCo[1];} 
+      const Double_t &Y()const{return fCo[1];}
       Double_t &Z(){return fCo[2];}
       const Double_t &Z()const{return fCo[2];}
       Double_t &W(){return fCo[3];}
@@ -432,15 +432,15 @@ namespace RootCsg {
                 Double_t yx, Double_t yy, Double_t yz,
                 Double_t zx, Double_t zy, Double_t zz)
       {SetValue(xx, xy, xz, yx, yy, yz, zx, zy, zz);}
-    
+
       Vector3 &operator [] (Int_t i){return fEl[i];}
       const Vector3 &operator [] (Int_t i)const{return fEl[i];}
       void SetValue(const Double_t *m)
       {fEl[0][0] = *m++; fEl[1][0] = *m++; fEl[2][0] = *m++; m++;
        fEl[0][1] = *m++; fEl[1][1] = *m++; fEl[2][1] = *m++; m++;
        fEl[0][2] = *m++; fEl[1][2] = *m++; fEl[2][2] = *m;}
-      void SetValue(Double_t xx, Double_t xy, Double_t xz, 
-                    Double_t yx, Double_t yy, Double_t yz, 
+      void SetValue(Double_t xx, Double_t xy, Double_t xz,
+                    Double_t yx, Double_t yy, Double_t yz,
                     Double_t zx, Double_t zy, Double_t zz)
       {fEl[0][0] = xx; fEl[0][1] = xy; fEl[0][2] = xz;
        fEl[1][0] = yx; fEl[1][1] = yy; fEl[1][2] = yz;
@@ -453,7 +453,7 @@ namespace RootCsg {
        Double_t sj = TMath::Sin(euler[1]);
        Double_t sh = TMath::Sin(euler[2]);
        Double_t cc = ci * ch;
-       Double_t cs = ci * sh; 
+       Double_t cs = ci * sh;
        Double_t sc = si * ch;
        Double_t ss = si * sh;
        SetValue(cj * ch, sj * sc - cs, sj * cc + ss,
@@ -473,7 +473,7 @@ namespace RootCsg {
       {*m++ = fEl[0][0]; *m++ = fEl[1][0]; *m++ = fEl[2][0]; *m++ = 0.0;
        *m++ = fEl[0][1]; *m++ = fEl[1][1]; *m++ = fEl[2][1]; *m++ = 0.0;
        *m++ = fEl[0][2]; *m++ = fEl[1][2]; *m++ = fEl[2][2]; *m   = 0.0;}
-      Matrix3x3 &operator *= (const Matrix3x3 &m); 
+      Matrix3x3 &operator *= (const Matrix3x3 &m);
       Double_t Tdot(Int_t c, const Vector3 &v)const
       {return fEl[0][c] * v[0] + fEl[1][c] * v[1] + fEl[2][c] * v[2];}
       Double_t Cofac(Int_t r1, Int_t c1, Int_t r2, Int_t c2)const
@@ -483,7 +483,7 @@ namespace RootCsg {
       Matrix3x3 Absolute()const;
       Matrix3x3 Transposed()const;
       void Transpose();
-      Matrix3x3 Inverse()const; 
+      Matrix3x3 Inverse()const;
       void Invert();
    };
 
@@ -574,8 +574,8 @@ namespace RootCsg {
       {Vector3 diff(fOrigin-point);	return diff.Dot(fDir);}
       Double_t UnboundDistance(const Point3& point)const
       {return UnboundSmallestVector(point).Length();}
-      Bool_t IsParameterOnLine(const Double_t &t) const 
-      {return ((fParams[0] - epsilon < t) || (!fBounds[0])) && ((fParams[1] > t + epsilon) || (!fBounds[1]));} 
+      Bool_t IsParameterOnLine(const Double_t &t) const
+      {return ((fParams[0] - epsilon < t) || (!fBounds[0])) && ((fParams[1] > t + epsilon) || (!fBounds[1]));}
    };
 
    Line3::Line3() : fOrigin(0,0,0), fDir(1,0,0)
@@ -606,11 +606,11 @@ namespace RootCsg {
     Vector3 l2 = c-b;
     Vector3 n = l1.Cross(l2);
     n = n.SafeNormalized();
-    Double_t d = n.Dot(a); 
+    Double_t d = n.Dot(a);
     fCo[0] = n.X(); fCo[1] = n.Y(); fCo[2] = n.Z(); fCo[3] = -d;}
    Plane3::Plane3(const Vector3 &n,	const Vector3 &p)
    {Vector3 mn = n.SafeNormalized();
-    Double_t md = mn.Dot(p); 
+    Double_t md = mn.Dot(p);
     fCo[0] = mn.X(); fCo[1] = mn.Y(); fCo[2] = mn.Z(); fCo[3] = -md;}
    Plane3::Plane3() : Tuple4()
    {fCo[0] = 1.; fCo[1] = 0.;	fCo[2] = 0.; fCo[3] = 0.;}
@@ -631,7 +631,7 @@ namespace RootCsg {
 	   Point3 fCenter;
 	   Vector3 fExtent;
    public:
-      BBox(){} 
+      BBox(){}
       BBox(const Point3 &mini, const Point3 &maxi)
       {SetValue(mini,maxi);}
 		const Point3 &Center()const
@@ -659,7 +659,7 @@ namespace RootCsg {
 		   SetValue(lower, upper);
 	   }
 		void SetEmpty()
-      {fCenter.SetValue(0., 0., 0.); 
+      {fCenter.SetValue(0., 0., 0.);
        fExtent.SetValue(-infinity, -infinity, -infinity);}
       void Include(const Point3 &p)
       {
@@ -740,12 +740,12 @@ namespace RootCsg {
 	   Int_t fNumLeaves;
    public :
 	   BBoxTree() {};
-	   const NodePtr RootNode()const{return fInternals;}
+	   NodePtr RootNode() const {return fInternals;}
 	   ~BBoxTree(){delete[] fLeaves;	delete[] fInternals;}
 	   void BuildTree(LeafPtr leaves, Int_t numLeaves);
    private :
 	   void RecursiveTreeBuild(Int_t n, LeafPtr leafIt);
-   };	
+   };
 
    BBoxInternal::BBoxInternal(Int_t n, LeafPtr leafIt)
    {fTag = kInternal; fBBox.SetEmpty();
@@ -757,7 +757,7 @@ namespace RootCsg {
     RecursiveTreeBuild(fNumLeaves,fLeaves);}
 
    void BBoxTree::RecursiveTreeBuild(Int_t n, LeafPtr leafIt)
-   {				
+   {
       fInternals[fBranch] = BBoxInternal(n,leafIt);
       BBoxInternal& aBBox  = fInternals[fBranch];
       fBranch++;
@@ -795,7 +795,7 @@ namespace RootCsg {
 		Int_t fVertexIndex;
 	public:
 		BlenderVProp(Int_t vIndex) : fVertexIndex(vIndex){}
-		BlenderVProp(Int_t vIndex, const BlenderVProp &, 
+		BlenderVProp(Int_t vIndex, const BlenderVProp &,
 						 const BlenderVProp &, const Double_t &)
 		{fVertexIndex = vIndex;}
 		BlenderVProp(){};
@@ -803,14 +803,14 @@ namespace RootCsg {
 		BlenderVProp &operator = (Int_t i)
 		{fVertexIndex = i; return *this;}
 	};
-	
+
 	template <class TMesh>
 	class PolygonGeometry {
 	public:
 		typedef typename TMesh::Polygon TPolygon;
 	private:
 		const TMesh &fMesh;
-		const TPolygon &fPoly;	
+		const TPolygon &fPoly;
 	public:
 		PolygonGeometry(const TMesh &mesh, Int_t pIndex)
 			: fMesh(mesh), fPoly(mesh.Polys()[pIndex])
@@ -830,7 +830,7 @@ namespace RootCsg {
 	class Mesh : public BaseMesh {
 	public:
 		typedef std::vector<TVertex> VLIST;
-		typedef std::vector<TPolygon> PLIST;	
+		typedef std::vector<TPolygon> PLIST;
 		typedef TPolygon Polygon;
 		typedef TVertex Vertex;
 		typedef PolygonGeometry<Mesh> TGBinder;
@@ -838,8 +838,8 @@ namespace RootCsg {
 		VLIST fVerts;
 		PLIST fPolys;
 	public:
-		VLIST &Verts(){return fVerts;}	
-		const VLIST &Verts()const{return fVerts;}	
+		VLIST &Verts(){return fVerts;}
+		const VLIST &Verts()const{return fVerts;}
 		PLIST &Polys(){return fPolys;}
 		const PLIST &Polys()const{return fPolys;}
 		//BaseMesh's final-overriders
@@ -853,12 +853,12 @@ namespace RootCsg {
 	};
 
 	const Int_t cofacTable[3][2] = {{1,2}, {0,2}, {0,1}};
-	
+
 	Bool_t intersect(const Plane3 &p1, const Plane3 &p2, Line3 &output)
 	{Matrix3x3 mat;
 	 mat[0] = p1.Normal();
 	 mat[1] = p2.Normal();
-	 mat[2] = mat[0].Cross(mat[1]);		
+	 mat[2] = mat[0].Cross(mat[1]);
 	 if (mat[2].FuzzyZero()) return kFALSE;
 	 Vector3 aPoint(-p1.Scalar(),-p2.Scalar(),0);
 	 output = Line3(Point3(0., 0., 0.) + mat.Inverse() * aPoint ,mat[2]);
@@ -869,7 +869,7 @@ namespace RootCsg {
 	 Int_t ind2 = cofacTable[majAxis][1];
 	 Double_t Zx = l2.Origin()[ind1] - l1.Origin()[ind1];
 	 Double_t Zy = l2.Origin()[ind2] - l1.Origin()[ind2];
-	 Double_t det =  l1.Direction()[ind1]*l2.Direction()[ind2] - 
+	 Double_t det =  l1.Direction()[ind1]*l2.Direction()[ind2] -
 						  l2.Direction()[ind1]*l1.Direction()[ind2];
 	 if (fuzzy_zero(det)) return kFALSE;
 	 l1Param = (l2.Direction()[ind2]*Zx - l2.Direction()[ind1]*Zy)/det;
@@ -880,7 +880,7 @@ namespace RootCsg {
 	{Bool_t isect = intersect_2d_no_bounds_check(l1, l2, majAxis, l1Param, l2Param);
 	if (!isect) return kFALSE;
 	return l1.IsParameterOnLine(l1Param) && l2.IsParameterOnLine(l2Param);}
-	
+
 	Int_t compute_classification(const Double_t &distance, const Double_t &epsilon)
 	{if (TMath::Abs(distance) < epsilon) return 0;
 	 else	return distance < 0 ? 1 : 2;}
@@ -904,7 +904,7 @@ namespace RootCsg {
 		 }
 	 }
 	 return (isectsFound > 0);}
-	 
+
 	template<typename TGBinder>
 	Bool_t instersect_poly_with_line_3d(const Line3 &l, const TGBinder &p1,
 													const Plane3 &plane,	Double_t &a)
@@ -931,7 +931,7 @@ namespace RootCsg {
 		 lastPoint = aPoint;
 	 }
 	 return kTRUE;}
-	 
+
 	template <typename TGBinder>
 	Point3 polygon_mid_point(const TGBinder &p1)
 	{Point3 midPoint(0., 0., 0.);
@@ -957,7 +957,7 @@ namespace RootCsg {
 	template <typename TGBinder>
 	Plane3 compute_plane(const TGBinder &poly)
 	{
-	 Point3 plast(poly[poly.Size()-1]);	
+	 Point3 plast(poly[poly.Size()-1]);
 	 Point3 pivot;
 	 Vector3 edge;
 	 Int_t j;
@@ -966,8 +966,8 @@ namespace RootCsg {
 		 edge =  pivot - plast;
 		 if (!edge.FuzzyZero()) break;
 	 }
-	 for (; j < poly.Size(); j++) {		
-		 Vector3 v2 = poly[j] - pivot;	
+	 for (; j < poly.Size(); j++) {
+		 Vector3 v2 = poly[j] - pivot;
 		 Vector3 v3 = edge.Cross(v2);
 		 if (!v3.FuzzyZero()) return Plane3(v3,pivot);
 	 }
@@ -986,7 +986,7 @@ namespace RootCsg {
 	 if (!intersect(plane1, plane2, intersectLine))	return kFALSE;
 	 Double_t p1A, p1B;
 	 Double_t p2A, p2B;
-	 if ( 
+	 if (
 		!intersect_poly_with_line_2d(intersectLine,p1,plane1,p1A,p1B) ||
 		!intersect_poly_with_line_2d(intersectLine,p2,plane2,p2A,p2B))
 	 {
@@ -1005,7 +1005,7 @@ namespace RootCsg {
 		SplitFunction(TMesh &mesh, TSplitFunctionBinder &functionBindor)
 			: fMesh(mesh), fFunctionBinder(functionBindor)
 		{}
-		void SplitPolygon(const Int_t p1Index,	const Plane3 &plane,	
+		void SplitPolygon(const Int_t p1Index,	const Plane3 &plane,
 								Int_t &inPiece, Int_t &outPiece,
 								const Double_t onEpsilon)
 		{
@@ -1014,10 +1014,10 @@ namespace RootCsg {
 			inP.Verts().clear();
 			outP.Verts().clear();
 			fFunctionBinder.DisconnectPolygon(p1Index);
-			Int_t lastIndex = p.Verts().back();	
+			Int_t lastIndex = p.Verts().back();
 			Point3 lastVertex = fMesh.Verts()[lastIndex].Pos();
 			Int_t lastClassification = compute_classification(plane.SignedDistance(lastVertex),onEpsilon);
-			Int_t totalClassification(lastClassification);			
+			Int_t totalClassification(lastClassification);
 			Int_t i;
 			Int_t j=p.Size()-1;
 			for (i = 0; i < p.Size(); j = i, ++i)
@@ -1038,11 +1038,11 @@ namespace RootCsg {
 					inP.Verts().push_back(  splitProp );
 					outP.Verts().push_back(	splitProp );
 					fFunctionBinder.InsertVertexAlongEdge(lastIndex,newIndex,splitProp);
-				} 
+				}
 				Classify(inP.Verts(),outP.Verts(),newClassification, p.VertexProps(i));
 				lastClassification = newClassification;
 				totalClassification |= newClassification;
-				lastVertex = aVertex;	
+				lastVertex = aVertex;
 				lastIndex = newIndex;
 			}
 			if (totalClassification == 3)
@@ -1055,7 +1055,7 @@ namespace RootCsg {
 				fFunctionBinder.ConnectPolygon(outPiece);
 			} else {
 				fFunctionBinder.ConnectPolygon(p1Index);
-				if (totalClassification == 1) 
+				if (totalClassification == 1)
 				{
 					inPiece = p1Index;
 					outPiece = -1;
@@ -1063,14 +1063,14 @@ namespace RootCsg {
 					outPiece = p1Index;
 					inPiece = -1;
 				}
-			}		
-		}	
+			}
+		}
 		void Classify(typename TMesh::Polygon::TVPropList &inGroup,
 						  typename TMesh::Polygon::TVPropList &outGroup,
 						  Int_t classification,
 						  typename TMesh::Polygon::TVProp prop)
 		{
-			switch (classification) 
+			switch (classification)
 			{
 				case 0 :
 					inGroup.push_back(prop);
@@ -1117,7 +1117,7 @@ namespace RootCsg {
 		BBox ComputeBBox()const;
 		//void Triangulate();
 		void SplitPolygon(Int_t p1Index,	const Plane3 &plane,
-								Int_t &inPiece, Int_t &outPiece,	Double_t onEpsilon);	
+								Int_t &inPiece, Int_t &outPiece,	Double_t onEpsilon);
 	};
 
 	template <typename TMesh>
@@ -1144,8 +1144,8 @@ namespace RootCsg {
 	{DefaultSplitFunctionBinder<typename TMesh::Polygon::TVProp> defaultSplitFunction;
 	 SplitFunction<MyType,DefaultSplitFunctionBinder<typename TMesh::Polygon::TVProp> >
 			splitFunction(*this,defaultSplitFunction);
-	 splitFunction.SplitPolygon(p1Index,plane,inPiece,outPiece,onEpsilon);}			
-	 
+	 splitFunction.SplitPolygon(p1Index,plane,inPiece,outPiece,onEpsilon);}
+
 	template <typename AVProp, typename AFProp>
 	class PolygonBase {
 	public:
@@ -1170,13 +1170,13 @@ namespace RootCsg {
 		Vector3 Normal()const{return fPlane.Normal();}
 		Int_t &Classification(){ return fClassification;}
 		const Int_t &Classification()const{return fClassification;}
-		void Reverse() 
+		void Reverse()
 		{std::reverse(fVerts.begin(),fVerts.end());fPlane.Invert();}
 		TFProp &FProp(){return fFaceProp;}
 		const TFProp &FProp()const{return fFaceProp;}
       void AddProp(const TVProp &prop){fVerts.push_back(prop);}
 	};
-	
+
 	typedef std::vector<Int_t> PIndexList;
 	typedef PIndexList::iterator PIndexIt;
 	typedef PIndexList::const_iterator const_PIndexIt;
@@ -1184,7 +1184,7 @@ namespace RootCsg {
 	typedef VIndexList::iterator VIndexIt;
 	typedef VIndexList::const_iterator const_VIndexIt;
 	typedef std::vector< PIndexList > OverlapTable;
-	
+
 	template <typename TMesh>
 	class TreeIntersector {
 	private:
@@ -1205,7 +1205,7 @@ namespace RootCsg {
 		void MarkIntersectingPolygons(const BBoxNode*a,const BBoxNode *b)
 		{
 			if (!intersect(a->fBBox, b->fBBox)) return;
-			if (a->fTag == BBoxNode::kLeaf && b->fTag == BBoxNode::kLeaf) 
+			if (a->fTag == BBoxNode::kLeaf && b->fTag == BBoxNode::kLeaf)
 			{
 				const BBoxLeaf *la = (const BBoxLeaf *)a;
 				const BBoxLeaf *lb = (const BBoxLeaf *)b;
@@ -1217,7 +1217,7 @@ namespace RootCsg {
 					 fMeshB->Polys()[lb->fPolyIndex].Plane()))
 				{
 					(*fAoverlapsB)[lb->fPolyIndex].push_back(la->fPolyIndex);
-					(*fBoverlapsA)[la->fPolyIndex].push_back(lb->fPolyIndex);			
+					(*fBoverlapsA)[la->fPolyIndex].push_back(lb->fPolyIndex);
 				}
 			} else if ( a->fTag == BBoxNode::kLeaf || (b->fTag != BBoxNode::kLeaf && a->fBBox.Size() < b->fBBox.Size()))
 			{
@@ -1278,7 +1278,7 @@ namespace RootCsg {
 		Double_t operator[](Int_t ind)const{return fPos[ind];}
 		const Double_t * GetValue()const{return fPos.GetValue();}
 	};
-	
+
 	class CVertex : public VertexBase {
 	private:
 		PIndexList fPolygons;
@@ -1340,24 +1340,24 @@ namespace RootCsg {
 		{fMesh.InsertVertexAlongEdge(lastIndex, newIndex,prop);}
 	};
 
-	template <typename TMesh> 
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::BuildVertexPolyLists()
 	{UInt_t i;
 	for (i=0; i < Polys().size(); i++){ConnectPolygon(i);}}
 
-	template <typename TMesh> 
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::DisconnectPolygon(Int_t polyIndex)
 	{const Polygon &poly = Polys()[polyIndex];
 	 UInt_t j;
 		for (j=0;j<poly.Verts().size(); j++){Verts()[poly[j]].RemovePolygon(polyIndex);}}
-	
-	template <typename TMesh> 
+
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::ConnectPolygon(Int_t polyIndex)
 	{const Polygon &poly = Polys()[polyIndex];
 	 UInt_t j;
 	 for (j=0;j<poly.Verts().size(); j++) {Verts()[poly[j]].AddPoly(polyIndex);}}
 
-	template <typename TMesh> 
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::EdgePolygons(Int_t v1, Int_t v2, PIndexList &polys)
 	{++fUniqueEdgeTestId;
 	 Vertex &vb1 = Verts()[v1];
@@ -1371,23 +1371,23 @@ namespace RootCsg {
 	 }
 	}
 
-	template <typename TMesh> 
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::InsertVertexAlongEdge(Int_t v1,	Int_t v2, const VProp &prop)
 	{
 		PIndexList npolys;
 		EdgePolygons(v1,v2,npolys);
 		Int_t newVertex = Int_t(prop);
 		UInt_t i;
-		for (i=0;i < npolys.size(); i++) 
+		for (i=0;i < npolys.size(); i++)
 		{
 			typename Polygon::TVPropList& polyVerts = Polys()[npolys[i]].Verts();
 			typename Polygon::TVPropIt v1pos = std::find(polyVerts.begin(),polyVerts.end(),v1);
-			if (v1pos != polyVerts.end()) {	
+			if (v1pos != polyVerts.end()) {
 				typename Polygon::TVPropIt prevPos = (v1pos == polyVerts.begin()) ? polyVerts.end()-1 : v1pos-1;
 				typename Polygon::TVPropIt nextPos = (v1pos == polyVerts.end()-1) ? polyVerts.begin() : v1pos+1;
 				if (*prevPos == v2) {
 					polyVerts.insert(v1pos,prop);
-				} else 
+				} else
 				if (*nextPos == v2) {
 					polyVerts.insert(nextPos,prop);
 				} else {
@@ -1397,11 +1397,11 @@ namespace RootCsg {
 			} else {
 				//assert(kFALSE);
 			}
-		}	
+		}
 	}
 
 
-	template <typename TMesh> 
+	template <typename TMesh>
 	void ConnectedMeshWrapper<TMesh>::SplitPolygon(Int_t p1Index, const Plane3 &plane,
 																  Int_t &inPiece,	Int_t &outPiece,
 																  Double_t onEpsilon)
@@ -1413,14 +1413,14 @@ namespace RootCsg {
 
 	struct NullType{};
 	//Original TestPolygon has two parameters, the second is face property
-		
+
 	typedef PolygonBase<BlenderVProp, NullType> TestPolygon;
 	typedef Mesh<TestPolygon,VertexBase> AMesh;
 	typedef Mesh<TestPolygon,CVertex > AConnectedMesh;
 	typedef MeshWrapper<AMesh> AMeshWrapper;
 	typedef ConnectedMeshWrapper<AConnectedMesh> AConnectedMeshWrapper;
 
-	template <class TMesh>	
+	template <class TMesh>
 	void build_split_group(const TMesh &meshA, const TMesh &meshB,
 								  const BBoxTree &treeA, const BBoxTree &treeB,
 								  OverlapTable &aOverlapsB, OverlapTable &bOverlapsA)
@@ -1458,13 +1458,13 @@ namespace RootCsg {
 						} else {
 							newFragments.push_back(fragments[k]);
 						}
-					}	
+					}
 					fragments = newFragments;
 				}
 			}
 		}
 	}
-	
+
 	template <typename CMesh, typename TMesh>
 	void classify_mesh(const TMesh &meshA,	const BBoxTree &aTree, CMesh &meshB)
 	{
@@ -1486,7 +1486,7 @@ namespace RootCsg {
 			}
 		}
 	}
-	
+
 	template <typename CMesh, typename TMesh>
 	void extract_classification(CMesh &meshA,	TMesh &newMesh, Int_t classification, Bool_t reverse)
 	{
@@ -1494,7 +1494,7 @@ namespace RootCsg {
 		for (i = 0; i < meshA.Polys().size(); ++i) {
 			typename CMesh::Polygon &meshAPolygon = meshA.Polys()[i];
 			if (meshAPolygon.Classification() == classification) {
-				newMesh.Polys().push_back(meshAPolygon);	
+				newMesh.Polys().push_back(meshAPolygon);
 				typename TMesh::Polygon &newPolygon = newMesh.Polys().back();
 				if (reverse) newPolygon.Reverse();
 				Int_t j;
@@ -1508,13 +1508,13 @@ namespace RootCsg {
 			}
 		}
 	}
-	
+
 	template <typename MeshA, typename MeshB>
 	void copy_mesh(const MeshA &source, MeshB &output)
 	{
 		Int_t vertexNum = source.Verts().size();
 		Int_t polyNum = source.Polys().size();
-		
+
       typedef typename MeshB::VLIST VLIST_t;
       typedef typename MeshB::PLIST PLIST_t;
 
@@ -1564,7 +1564,7 @@ namespace RootCsg {
 		extract_classification(meshAPartitioned, output, aClassification, reverseA);
 		extract_classification(meshBPartitioned, output, bClassification, reverseB);
 	}
-	
+
 	void extract_classification(const AMesh &meshA,
 										 const AMesh &meshB,
 										 const BBoxTree &aTree,
@@ -1600,8 +1600,8 @@ namespace RootCsg {
 		AMesh *output = new AMesh;
 		if (preserve) {
 			extract_classification_preserve(
-													  meshA, meshB, aTree, bTree, 
-													  aOverlapsB, bOverlapsA, 
+													  meshA, meshB, aTree, bTree,
+													  aOverlapsB, bOverlapsA,
 													  1, 1, kFALSE, kFALSE, *output
 													 );
 		} else {
@@ -1611,7 +1611,7 @@ namespace RootCsg {
 										  1, 1, kFALSE, kFALSE, *output
 										 );
 		}
-		return output;	
+		return output;
 	}
 
 	AMesh *build_union(const AMesh &meshA, const AMesh &meshB,	Bool_t preserve)
@@ -1636,7 +1636,7 @@ namespace RootCsg {
 										  2, 2, kFALSE, kFALSE, *output
 										 );
 		}
-		return output;	
+		return output;
 	}
 
 	AMesh *build_difference(const AMesh &meshA, const AMesh &meshB, Bool_t preserve)
@@ -1724,7 +1724,7 @@ namespace RootCsg {
       }
 
       AMeshWrapper wrap(*newMesh);
-      
+
       wrap.ComputePlanes();
 
       return newMesh;
