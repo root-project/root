@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.72 2005/04/20 19:29:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.73 2005/04/25 13:59:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -956,7 +956,7 @@ Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
   Stat_t stats[7];
   GetStats(stats);
   Stat_t sumw   = stats[0];
-  Stat_t sumw2  = stats[1];
+//Stat_t sumw2  = stats[1];
   Stat_t sumwx  = stats[2];
   Stat_t sumwx2 = stats[3];
   Stat_t sumwy  = stats[4];
@@ -965,10 +965,10 @@ Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
   if (sumw == 0) return 0;
   if (axis1 == 1 && axis2 == 1) {
-     return TMath::Abs(sumwx2/sumw - sumwx*sumwx/sumw2);
+     return TMath::Abs(sumwx2/sumw - sumwx/sumw*sumwx/sumw);
   }
   if (axis1 == 2 && axis2 == 2) {
-     return TMath::Abs(sumwy2/sumw - sumwy*sumwy/sumw2);
+     return TMath::Abs(sumwy2/sumw - sumwy/sumw*sumwy/sumw);
   }
   return sumwxy/sumw - sumwx/sumw*sumwy/sumw;
 }
