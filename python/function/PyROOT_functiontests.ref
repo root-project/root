@@ -1,6 +1,7 @@
 Test calling of a python global function ... ok
 Test calling of a python callable object ... ok
 Test fitting with a python global function ... ok
+Test calling of a C++ global function. ... ok
 
 ----------------------------------------------------------------------
 

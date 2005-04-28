@@ -11,7 +11,8 @@ from ROOT import *
 
 __all__ = [
    'CallFunctionTestCase',
-   'FitFunctionTestCase'
+   'FitFunctionTestCase',
+   'GlobalCppFunctionTestCase'
 ]
 
 
@@ -69,14 +70,28 @@ class FitFunctionTestCase( unittest.TestCase ):
    def test1FitGaussian( self ):
       """Test fitting with a python global function"""
 
-      f = TF1( 'pygaus', pygaus, -10, 10, 4 )
-      f.SetParameters( 300, 0.43, 0.035, 300 )
+      f = TF1( 'pygaus', pygaus, -4, 4, 4 )
+      f.SetParameters( 300, 0.43, 0.35, 300 )
 
-      h = TH1F( "h"," test", 100, -2, 2 )
-      h.FillRandom( "gaus", 1000 )
+      h = TH1F( "h"," test", 100, -4, 4 )
+      h.FillRandom( "gaus", 100000 )
       h.Fit( f, "0Q" )
 
       self.assertEqual( f.GetNDF(), 96 )
+      result = f.GetParameters()
+      self.assertAlmostEqual( result[1], 0., 1 )  # mean
+      self.assertAlmostEqual( result[2], 1., 1 )  # s.d.
+
+
+### calling a global function ================================================
+class GlobalCppFunctionTestCase( unittest.TestCase ):
+   def test1CallGlobalCppFunction( self ):
+      """Test calling of a C++ global function."""
+
+      gROOT.LoadMacro( "GlobalFunction.C+" )
+
+      self.assertAlmostEqual( Divide( 4. ), 4./2., 8 )
+      self.assertAlmostEqual( Divide( 7. ), 7./2., 8 )
 
 
 ## actual test run
