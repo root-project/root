@@ -75,7 +75,7 @@ else
 			fi; \
 		fi; \
 		cd $(FREETYPEVERS); \
-		FREECC=; \
+		FREECC=$(CC); \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
 		fi; \

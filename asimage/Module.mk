@@ -97,7 +97,7 @@ else
 			fi; \
 		fi; \
 		cd $(ASTEPVERS); \
-		ACC=; \
+		ACC=$(CC); \
 		ACFLAGS="-O"; \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
