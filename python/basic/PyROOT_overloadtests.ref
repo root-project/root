@@ -1,0 +1,7 @@
+Test functions overloaded on different ROOT clases ... ok
+Test functions overloaded on different arrays ... ok
+Test overloads using TMath::Mean(), TMath::Median ... ok
+
+----------------------------------------------------------------------
+
+OK
