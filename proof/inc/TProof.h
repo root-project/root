@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.53 2005/03/17 00:31:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.54 2005/03/17 15:00:47 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -252,9 +252,9 @@ private:
 
 protected:
    TProof(); // For derived classes to use
-   Int_t    Init(const char *masterurl, const char *conffile,
-                 const char *confdir, Int_t loglevel);
-   virtual Bool_t  StartSlaves();
+   Int_t           Init(const char *masterurl, const char *conffile,
+                        const char *confdir, Int_t loglevel);
+   virtual Bool_t  StartSlaves(Bool_t parallel);
    void            SetPlayer(TProofPlayer *player) { fPlayer = player; };
    TProofPlayer   *GetPlayer() const { return fPlayer; };
    virtual TProofPlayer *MakePlayer();
@@ -269,6 +269,9 @@ protected:
    Int_t    Collect(TList *slaves);
    void     SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
+
+   static void *SlaveStartupThread(void *);
+   static void *SubmasterStartupThread(void *);
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
@@ -367,7 +370,7 @@ private:
    TTimer  *fTimer;  //timer for delayed Condor COD suspend
 
 protected:
-   Bool_t   StartSlaves();
+   Bool_t   StartSlaves(Bool_t parallel);
    TString  GetJobAd();
 
 public:
@@ -386,7 +389,7 @@ class TProofSuperMaster : public TProof {
 friend class TProofPlayerSuperMaster;
 
 protected:
-   Bool_t StartSlaves();
+   Bool_t StartSlaves(Bool_t);
    Int_t  Process(TDSet *set, const char *selector,
                   Option_t *option = "", Long64_t nentries = -1,
                   Long64_t firstentry = 0, TEventList *evl = 0);

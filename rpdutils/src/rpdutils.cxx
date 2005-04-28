@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.78 2005/03/18 15:08:23 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.79 2005/04/15 17:26:09 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5232,6 +5232,7 @@ int RpdGenRSAKeys(int setrndinit)
    Int_t sbuf = 2*RSA_size(gRSASSLKey);
    char *kbuf = new char[sbuf];
    BIO_read(bkey,(void *)kbuf,sbuf);
+   BIO_free(bkey);
 
    // Prepare export
    gRSAPubExport[1].len = sbuf;

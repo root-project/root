@@ -171,7 +171,7 @@ CINTLIBS     := -lCint
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 RINTLIBS     := -lRint
-PROOFLIBS    := -lProof -lTreePlayer
+PROOFLIBS    := -lProof -lTreePlayer -lThread
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
@@ -180,7 +180,8 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
-PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
+PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
+                $(LPATH)/libThread.lib
 endif
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 ROOTLIBSDEP   = $(CORELIB) $(CINTLIB) $(HISTLIB) \

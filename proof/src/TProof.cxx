@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.83 2005/03/18 22:41:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.84 2005/04/01 16:19:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -56,6 +56,60 @@
 #include "TProofServ.h"
 #include "TMap.h"
 #include "TTimer.h"
+#include "TThread.h"
+#include <vector>
+
+//
+// Entities used for parallel startup
+//
+class TProofThreadArg {
+public:
+   const char *host;
+   Int_t       port;
+   const char *ord;
+   Int_t       perf;
+   const char *image;
+   const char *workdir;
+   const char *msd;
+   TList      *slaves;
+   TProof     *proof;
+   TCondorSlave *cslave;
+   TList      *claims;
+
+   TProofThreadArg(const char *h, Int_t po, const char *o, Int_t pe,
+                   const char *i, const char *w,
+                   TList *s, TProof *prf) {
+                   host = h ? StrDup(h) : 0; ord = o ? StrDup(o) : 0;
+                   image = i ? StrDup(i) : 0; workdir= w ? StrDup(w) : 0;
+                   port = po; perf = pe; slaves = s;
+                   proof = prf; cslave = 0; claims = 0; msd = 0;}
+   TProofThreadArg(TCondorSlave *csl, TList *clist,
+                   TList *s, TProof *prf) {
+                   host = 0; ord = 0; image = 0; workdir= 0; msd = 0;
+                   port = -1; perf = -1; slaves = s;
+                   proof = prf; cslave = csl; claims = clist;}
+   TProofThreadArg(const char *h, Int_t po, const char *o,
+                   const char *i, const char *w, const char *m,
+                   TList *s, TProof *prf) {
+                   host = h ? StrDup(h) : 0; ord = o ? StrDup(o) : 0;
+                   image = i ? StrDup(i) : 0; workdir= w ? StrDup(w) : 0;
+                   msd = m ? StrDup(m) : 0;
+                   port = po; perf = -1; slaves = s;
+                   proof = prf; cslave = 0; claims = 0;}
+
+   virtual ~TProofThreadArg() {
+                  if (host) delete[] host; if (ord) delete[] ord;
+                  if (image) delete[] image; if (msd) delete[] msd;
+                  if (workdir) delete[] workdir;}
+};
+
+class TProofThread {
+public:
+   TThread         *thread;
+   TProofThreadArg *args;
+   TProofThread(TThread *t, TProofThreadArg *a) { thread = t; args = a; }
+   virtual ~TProofThread() { SafeDelete(thread); SafeDelete(args); }
+};
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -236,6 +290,9 @@ TProof::~TProof()
    SafeDelete(fUniqueMonitor);
    SafeDelete(fSlaveInfo);
    SafeDelete(fChains);
+   SafeDelete(fPlayer);
+   SafeDelete(fFeedback);
+
    gROOT->GetListOfSockets()->Remove(this);
 
    if (gProof == this) {
@@ -307,7 +364,37 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fActiveMonitor    = new TMonitor;
    fUniqueMonitor    = new TMonitor;
 
-   if (!StartSlaves()) return 0;
+   // Master may want parallel startup
+   Bool_t parallelStartup = kFALSE;
+   if (IsMaster()) {
+      parallelStartup = gEnv->GetValue("Proof.ParallelStartup", kFALSE);
+      PDB(kGlobal,1) Info("Init", "Parallel Startup: %s",
+                          parallelStartup ? "kTRUE" : "kFALSE");
+      if (parallelStartup) {
+         // Load thread lib, if not done already
+#ifdef ROOTLIBDIR
+         TString threadLib = TString(ROOTLIBDIR) + "/libThread";
+#else
+         TString threadLib = TString(gRootDir) + "/lib/libThread";
+#endif
+         char *p;
+         if ((p = gSystem->DynamicPathName(threadLib, kTRUE))) {
+            delete[]p;
+            if (gSystem->Load(threadLib) == -1) {
+               Warning("Init",
+                       "Cannot load libThread: switch to serial startup");
+               parallelStartup = kFALSE;
+            }
+         } else {
+            Warning("Init",
+                    "Cannot find libThread: switch to serial startup");
+            parallelStartup = kFALSE;
+         }
+      }
+   }
+
+   // Start slaves
+   if (!StartSlaves(parallelStartup)) return 0;
 
    // we are now properly initialized
    fValid = kTRUE;
@@ -330,7 +417,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
-Bool_t TProof::StartSlaves()
+Bool_t TProof::StartSlaves(Bool_t parallel)
 {
    // Start up PROOF slaves.
 
@@ -340,17 +427,22 @@ Bool_t TProof::StartSlaves()
 
       TString fconf;
       fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
-      PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+      PDB(kGlobal,2)
+         Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
          fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
-         PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+         PDB(kGlobal,2)
+            Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("StartSlaves", "no PROOF config file found");
             return kFALSE;
          }
       }
 
-      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+      PDB(kGlobal,1)
+         Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+
+      UInt_t nSlaves = 0;
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -359,14 +451,16 @@ Bool_t TProof::StartSlaves()
 
          // read the config file
          char line[1024];
-         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-         int  ord = 0;
+         TString host =
+            gSystem->GetHostByName(gSystem->HostName()).GetHostName();
 
+         int  ord = 0;
          // check for valid master line
          while (fgets(line, sizeof(line), pconf)) {
             char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                word[0], word[1],
                 word[2], word[3], word[4], word[5], word[6],
                 word[7], word[8], word[9], word[10], word[11]);
 
@@ -394,13 +488,29 @@ Bool_t TProof::StartSlaves()
                   }
                   delete [] (char *) expworkdir;
                }
+            } else if (nword >= 2 &&
+               (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
+               nSlaves++;
             }
          }
 
          if (fImage.Length() == 0) {
             fclose(pconf);
-            Error("StartSlaves", "no appropriate master line found in %s", fconf.Data());
+            Error("StartSlaves",
+                  "no appropriate master line found in %s", fconf.Data());
             return kFALSE;
+         }
+
+         // Init arrays for threads, if neeeded
+         std::vector<TProofThread *> thrHandlers;
+         if (parallel) {
+            thrHandlers.reserve(nSlaves);
+            if (thrHandlers.max_size() < nSlaves) {
+               PDB(kGlobal,1)
+                  Info("StartSlaves","cannot reserve enough space thread"
+                       " handlers - switch to serial startup");
+               parallel = kFALSE;
+            }
          }
 
          // check for valid slave lines and start slaves
@@ -408,7 +518,8 @@ Bool_t TProof::StartSlaves()
          while (fgets(line, sizeof(line), pconf)) {
             char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                word[0], word[1],
                 word[2], word[3], word[4], word[5], word[6],
                 word[7], word[8], word[9], word[10], word[11]);
 
@@ -435,7 +546,8 @@ Bool_t TProof::StartSlaves()
 
                // Get slave FQDN ...
                TString SlaveFqdn;
-               TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
+               TInetAddress SlaveAddr =
+                  gSystem->GetHostByName((const char *)word[1]);
                if (SlaveAddr.IsValid()) {
                   SlaveFqdn = SlaveAddr.GetHostName();
                   if (SlaveFqdn == "UnNamedHost")
@@ -443,20 +555,88 @@ Bool_t TProof::StartSlaves()
                }
 
                // create slave server
-               TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
-               ord++;
-               TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx, image, workdir);
+               TString fullord = TString(gProofServ->GetOrdinal()) +
+                                 "." + ((Long_t) ord);
+               if (parallel) {
 
-               fSlaves->Add(slave);
-               if (slave->IsValid()) {
-                  fAllMonitor->Add(slave->GetSocket());
+                  // Prepare arguments
+                  TProofThreadArg *ta =
+                      new TProofThreadArg((const char *)(word[1]), sport,
+                                         fullord, perfidx, image, workdir,
+                                         fSlaves, this);
+                  if (ta) {
+                     // The type of the thread func makes it a detached thread
+                     TThread *th = new TThread(SlaveStartupThread,ta);
+                     if (!th) {
+                        Info("StartSlaves","Can't create startup thread:"
+                                      " out of system resources");
+                        SafeDelete(ta);
+                     } else {
+                        // Save in vector
+                        thrHandlers.push_back(new TProofThread(th,ta));
+                        // Run the thread
+                        th->Run();
+                     }
+                  } else {
+                     Info("StartSlaves","Can't create thread arguments object:"
+                                      " out of system resources");
+                  }
+
                } else {
-                  fBadSlaves->Add(slave);
+                  // create slave server
+                  TSlave *slave =
+                      CreateSlave(word[1], sport, fullord, perfidx,
+                                  image, workdir);
+
+                  fSlaves->Add(slave);
+                  if (slave->IsValid()) {
+                     fAllMonitor->Add(slave->GetSocket());
+                  } else {
+                     fBadSlaves->Add(slave);
+                  }
+                  PDB(kGlobal,3)
+                     Info("StartSlaves", "slave on host %s created"
+                                         " and added to list", word[1]);
+
                }
-               PDB(kGlobal,3)
-                  Info("StartSlaves","slave on host %s created and added to list", word[1]);
+               ord++;
             }
          }
+
+         if (parallel) {
+
+            // Wait completion of startup operations
+            std::vector<TProofThread *>::iterator i;
+            for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+               TProofThread *pt = *i;
+               // Wait on this condition
+               if (pt && pt->thread->GetState() == TThread::kRunningState) {
+                  PDB(kGlobal,3)
+                     Info("Init",
+                          "parallel startup: waiting for slave %s (%s:%d)",
+                           pt->args->ord, pt->args->host, pt->args->port);
+                  pt->thread->Join();
+               }
+            }
+
+            TIter next(fSlaves);
+            TSlave *sl = 0;
+            while ((sl = (TSlave *)next())) {
+               if (sl->IsValid())
+                  fAllMonitor->Add(sl->GetSocket());
+               else
+                  fBadSlaves->Add(sl);
+            }
+
+            // We can cleanup now
+            for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+               if (*i) {
+                  SafeDelete(*i);
+                  thrHandlers.erase(i);
+               }
+            }
+         }
+
       }
       fclose(pconf);
    } else {
@@ -468,7 +648,8 @@ Bool_t TProof::StartSlaves()
          // check protocol compatability
          // protocol 1 is not supported anymore
          if (fProtocol == 1) {
-            Error("StartSlaves", "client and remote protocols not compatible (%d and %d)",
+            Error("StartSlaves",
+                  "client and remote protocols not compatible (%d and %d)",
                   kPROOF_Protocol, fProtocol);
             delete slave;
             return kFALSE;
@@ -484,7 +665,8 @@ Bool_t TProof::StartSlaves()
 
          if (!slave->IsValid()) {
             delete slave;
-            Error("StartSlaves", "failed to setup connection with PROOF master server");
+            Error("StartSlaves",
+                  "failed to setup connection with PROOF master server");
             return kFALSE;
          }
 
@@ -492,7 +674,8 @@ Bool_t TProof::StartSlaves()
          fIntHandler->Add();
 
          if (!gROOT->IsBatch()) {
-            if ((fProgressDialog = gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
+            if ((fProgressDialog =
+                 gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
                if (fProgressDialog->LoadPlugin() == -1)
                   fProgressDialog = 0;
          }
@@ -732,7 +915,8 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
    EmitVA("IsDataReady(Long64_t,Long64_t)", 2, totalbytes, bytesready);
 
    //PDB(kGlobal,2)
-   Info("IsDataReady", "%lld / %lld (%s)", bytesready, totalbytes, fDataReady?"READY":"NOT READY");
+   Info("IsDataReady", "%lld / %lld (%s)",
+        bytesready, totalbytes, fDataReady?"READY":"NOT READY");
 
    return fDataReady;
 }
@@ -3021,7 +3205,7 @@ TProofCondor::~TProofCondor()
 }
 
 //______________________________________________________________________________
-Bool_t TProofCondor::StartSlaves()
+Bool_t TProofCondor::StartSlaves(Bool_t parallel)
 {
    // non static config
 
@@ -3045,17 +3229,20 @@ Bool_t TProofCondor::StartSlaves()
       // parse config file
       TString fconf;
       fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
-      PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+      PDB(kGlobal,2)
+         Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
          fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
-         PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+         PDB(kGlobal,2)
+            Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("StartSlaves", "no PROOF config file found");
             return kFALSE;
          }
       }
 
-      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+      PDB(kGlobal,1)
+         Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
 
       FILE *pconf;
       if ((pconf = fopen(fconf, "r"))) {
@@ -3067,13 +3254,14 @@ Bool_t TProofCondor::StartSlaves()
          while (fgets(line, sizeof(line), pconf)) {
             char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                word[0], word[1],
                 word[2], word[3], word[4], word[5], word[6],
                 word[7], word[8], word[9], word[10], word[11]);
 
             // find all slave servers, accept both "slave" and "worker" lines
-            if (nword >= 2 &&
-                (!strcmp(word[0], "condorslave") || !strcmp(word[0], "condorworker"))) {
+            if (nword >= 2 && (!strcmp(word[0], "condorslave") ||
+                               !strcmp(word[0], "condorworker"))) {
                int perfidx  = 100;
 
                const char *stripvm = strchr(word[1], '@');
@@ -3109,77 +3297,217 @@ Bool_t TProofCondor::StartSlaves()
    Int_t trial = 1;
    Int_t idx = 0;
    Int_t ord = 0;
+
+   // Init stuff for parallel start-up, if required
+   std::vector<TProofThread *> thrHandlers;
+   TIter *nextsl = 0, *nextclaim = 0;
+   TList *startedsl = 0;
+   UInt_t nSlaves = 0;
+   TTimer *ptimer = 0;
+   if (parallel) {
+      nSlaves = claims.GetSize();
+      thrHandlers.reserve(nSlaves);
+      if (thrHandlers.max_size() >= nSlaves) {
+         startedsl = new TList();
+         nextsl = new TIter(startedsl);
+         nextclaim = new TIter(&claims);
+      } else {
+         PDB(kGlobal,1)
+            Info("StartSlaves","cannot reserve enough space thread"
+                               " handlers - switch to serial startup");
+         parallel = kFALSE;
+      }
+   }
+
    while (claims.GetSize() > 0) {
 
-      // Get Condor Slave
       TCondorSlave* c = 0;
-      if (trial == 1) {
-         c = dynamic_cast<TCondorSlave*>(claims.At(idx));
-         c->fOrdinal = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
-         ord++;
-      } else {
-         TPair *p = dynamic_cast<TPair*>(claims.At(idx));
-         TTimer *t = dynamic_cast<TTimer*>(p->Value());
-         // wait remaining time
-         Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
-         if (wait>0) gSystem->Sleep(wait);
-         c = dynamic_cast<TCondorSlave*>(p->Key());
-      }
 
-      // Get slave FQDN ...
-      TString SlaveFqdn;
-      TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)c->fHostname);
-      if (SlaveAddr.IsValid()) {
-         SlaveFqdn = SlaveAddr.GetHostName();
-         if (SlaveFqdn == "UnNamedHost")
-         SlaveFqdn = SlaveAddr.GetHostAddress();
-      }
+      if (parallel) {
 
-      // create slave
-      TSlave *slave = CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
-                                  c->fPerfIdx, c->fImage, c->fWorkDir);
+         // Parallel startup in separate threads
 
-      // add slave to appropriate list
-      if (trial<ntries) {
-         if (slave->IsValid()) {
-            fSlaves->Add(slave);
-            fAllMonitor->Add(slave->GetSocket());
-            if (trial == 1) {
-               claims.Remove(c);
+         startedsl->RemoveAll();
+         nextclaim->Reset();
+         ord = 0;
+         while ((c = (TCondorSlave *)(*nextclaim)())) {
+
+            // Prepare arguments
+            TProofThreadArg *ta =
+               new TProofThreadArg(c, &claims, startedsl, this);
+
+            if (ta) {
+               // The type of the thread func makes it a detached thread
+               TThread *th = new TThread(SlaveStartupThread,ta);
+               if (!th) {
+                  Info("StartSlaves","can't create startup thread:"
+                                     " out of system resources");
+                  SafeDelete(ta);
+               } else {
+                  // Add to the vector
+                  thrHandlers.push_back(new TProofThread(th, ta));
+                  // Run the thread
+                  th->Run();
+               }
             } else {
-               TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
-               delete dynamic_cast<TTimer*>(p->Value());
-               delete p;
+               Info("StartSlaves","can't create thread arguments object:"
+                                  " out of system resources");
             }
-         } else {
-            if (trial == 1) {
-               TTimer* timer = new TTimer(delay);
-               TPair *p = new TPair(c, timer);
-               claims.RemoveAt(idx);
-               claims.AddAt(p, idx);
-            } else {
-               TPair *p = dynamic_cast<TPair*>(claims.At(idx));
-               dynamic_cast<TTimer*>(p->Value())->Reset();
-            }
-            delete slave;
-            idx++;
+            ord++;
          }
-      } else {
-         fSlaves->Add(slave);
-         if (slave->IsValid()) {
-            fAllMonitor->Add(slave->GetSocket());
-         } else {
-            fBadSlaves->Add(slave);
-         }
-         TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
-         delete dynamic_cast<TTimer*>(p->Value());
-         delete p;
-      }
 
-      if (idx>=claims.GetSize()) {
+         // Start or reset timer
+         if (trial == 1) {
+            ptimer = new TTimer(delay);
+         } else {
+            ptimer->Reset();
+         }
+
+
+         // Wait completion of startup operations
+         std::vector<TProofThread *>::iterator i;
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            TProofThread *pt = *i;
+            // Wait on this condition
+            if (pt && pt->thread->GetState() == TThread::kRunningState) {
+               PDB(kGlobal,3)
+                  Info("Init",
+                       "parallel startup: waiting for slave %s (%s:%d)",
+                        pt->args->ord, pt->args->host, pt->args->port);
+               pt->thread->Join();
+            }
+         }
+
+         // Add the good slaves to the lists
+         nextsl->Reset();
+         TSlave *sl = 0;
+         while ((sl = (TSlave *)(*nextsl)())) {
+            if (sl->IsValid()) {
+               fSlaves->Add(sl);
+               fAllMonitor->Add(sl->GetSocket());
+               startedsl->Remove(sl);
+            }
+         }
+
+         // In case of failures, and if we still have some bonus trial,
+         // try again when a 'delay' interval is elapsed;
+         // otherwise flag the bad guys and go on
+         if (claims.GetSize() > 0) {
+
+            if (trial < ntries) {
+               //
+               // Delete bad slaves
+               nextsl->Reset();
+               while ((sl = (TSlave *)(*nextsl)())) {
+                  SafeDelete(sl);
+               }
+               // wait remaining time
+               Long_t wait = (Long_t)(ptimer->GetAbsTime()-gSystem->Now());
+               if (wait > 0)
+                  gSystem->Sleep(wait);
+            } else {
+               //
+               // Flag bad slaves
+               nextsl->Reset();
+               while ((sl = (TSlave *)(*nextsl)())) {
+                  fBadSlaves->Add(sl);
+               }
+               //
+               // Empty the list of claims
+               claims.RemoveAll();
+            }
+         }
+
+         // Count trial
          trial++;
-         idx = 0;
+
+         // Thread vector cleanup
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            if (*i) {
+               SafeDelete(*i);
+               thrHandlers.erase(i);
+            }
+         }
+
+      } else {
+
+         // Serial startup
+
+         // Get Condor Slave
+         if (trial == 1) {
+            c = dynamic_cast<TCondorSlave*>(claims.At(idx));
+            c->fOrdinal = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
+            ord++;
+         } else {
+            TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+            TTimer *t = dynamic_cast<TTimer*>(p->Value());
+            // wait remaining time
+            Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
+            if (wait>0) gSystem->Sleep(wait);
+            c = dynamic_cast<TCondorSlave*>(p->Key());
+         }
+
+         // Get slave FQDN ...
+         TString SlaveFqdn;
+         TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)c->fHostname);
+         if (SlaveAddr.IsValid()) {
+            SlaveFqdn = SlaveAddr.GetHostName();
+            if (SlaveFqdn == "UnNamedHost")
+            SlaveFqdn = SlaveAddr.GetHostAddress();
+         }
+
+         // create slave
+         TSlave *slave = CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
+                                     c->fPerfIdx, c->fImage, c->fWorkDir);
+
+         // add slave to appropriate list
+         if (trial<ntries) {
+            if (slave->IsValid()) {
+               fSlaves->Add(slave);
+               fAllMonitor->Add(slave->GetSocket());
+               if (trial == 1) {
+                  claims.Remove(c);
+               } else {
+                  TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+                  delete dynamic_cast<TTimer*>(p->Value());
+                  delete p;
+               }
+            } else {
+               if (trial == 1) {
+                  TTimer* timer = new TTimer(delay);
+                  TPair *p = new TPair(c, timer);
+                  claims.RemoveAt(idx);
+                  claims.AddAt(p, idx);
+               } else {
+                  TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+                  dynamic_cast<TTimer*>(p->Value())->Reset();
+               }
+               delete slave;
+               idx++;
+            }
+         } else {
+            fSlaves->Add(slave);
+            if (slave->IsValid()) {
+               fAllMonitor->Add(slave->GetSocket());
+            } else {
+               fBadSlaves->Add(slave);
+            }
+            TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+            delete dynamic_cast<TTimer*>(p->Value());
+            delete p;
+         }
+
+         if (idx>=claims.GetSize()) {
+            trial++;
+            idx = 0;
+         }
       }
+   }
+
+   if (parallel) {
+      SafeDelete(startedsl);
+      SafeDelete(nextsl);
+      SafeDelete(nextclaim);
    }
 
    return kTRUE;
@@ -3245,7 +3573,7 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
 }
 
 //______________________________________________________________________________
-Bool_t TProofSuperMaster::StartSlaves()
+Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
 {
    // Start up PROOF submasters.
 
@@ -3271,6 +3599,7 @@ Bool_t TProofSuperMaster::StartSlaves()
    PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
 
    TList validSlaves;
+   UInt_t nSlaves = 0;
 
    FILE *pconf;
    if ((pconf = fopen(fconf, "r"))) {
@@ -3287,7 +3616,8 @@ Bool_t TProofSuperMaster::StartSlaves()
       while (fgets(line, sizeof(line), pconf)) {
          char word[12][128];
          if (line[0] == '#') continue;   // skip comment lines
-         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+             word[0], word[1],
              word[2], word[3], word[4], word[5], word[6],
              word[7], word[8], word[9], word[10], word[11]);
 
@@ -3308,7 +3638,8 @@ Bool_t TProofSuperMaster::StartSlaves()
                }
                fImage = image;
             }
-         }
+         } else if (nword >= 2 && (!strcmp(word[0], "submaster")))
+            nSlaves++;
       }
 
       if (fImage.Length() == 0) {
@@ -3317,12 +3648,25 @@ Bool_t TProofSuperMaster::StartSlaves()
          return kFALSE;
       }
 
+      // Init arrays for threads, if neeeded
+      std::vector<TProofThread *> thrHandlers;
+      if (parallel) {
+         thrHandlers.reserve(nSlaves);
+         if (thrHandlers.max_size() < nSlaves) {
+            PDB(kGlobal,1)
+               Info("StartSlaves","cannot reserve enough space thread"
+                    " handlers - switch to serial startup");
+            parallel = kFALSE;
+         }
+      }
+
       // check for valid submaster lines and start them
       rewind(pconf);
       while (fgets(line, sizeof(line), pconf)) {
          char word[12][128];
          if (line[0] == '#') continue;   // skip comment lines
-         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+             word[0], word[1],
              word[2], word[3], word[4], word[5], word[6],
              word[7], word[8], word[9], word[10], word[11]);
 
@@ -3356,29 +3700,103 @@ Bool_t TProofSuperMaster::StartSlaves()
                SlaveFqdn = SlaveAddr.GetHostAddress();
             }
 
-            TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
-            ord++;
-            // create submaster server
-            TSlave *slave = CreateSubmaster(word[1], sport, fullord, image, conffile, msd);
+            TString fullord =
+               TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
+            if (parallel) {
 
-            fSlaves->Add(slave);
-            if (slave->IsValid()) {
-               // check protocol compatability
-               // protocol 1 is not supported anymore
-               if (fProtocol == 1) {
-                  Error("StartSlaves", "master and submaster protocols not compatible (%d and %d)",
-                        kPROOF_Protocol, fProtocol);
+               // Prepare arguments
+               TProofThreadArg *ta =
+                   new TProofThreadArg((const char *)(word[1]), sport,
+                                       fullord, image, conffile, msd,
+                                       fSlaves, this);
+               if (ta) {
+                  // The type of the thread func makes it a detached thread
+                  TThread *th = new TThread(SubmasterStartupThread,ta);
+                  if (!th) {
+                     Info("StartSlaves","Can't create startup thread:"
+                                        " out of system resources");
+                     SafeDelete(ta);
+                  } else {
+                     // Save in vector
+                     thrHandlers.push_back(new TProofThread(th,ta));
+                     // Run the thread
+                     th->Run();
+                  }
+               } else {
+                  Info("StartSlaves","Can't create thread arguments object:"
+                                     " out of system resources");
+               }
+
+            } else {
+
+               // create submaster server
+               TSlave *slave = CreateSubmaster(word[1], sport, fullord,
+                                               image, conffile, msd);
+               fSlaves->Add(slave);
+               if (slave->IsValid()) {
+                  // check protocol compatability
+                  // protocol 1 is not supported anymore
+                  if (fProtocol == 1) {
+                     Error("StartSlaves", "master and submaster protocols"
+                           " not compatible (%d and %d)",
+                           kPROOF_Protocol, fProtocol);
+                     fBadSlaves->Add(slave);
+                  }
+                  else {
+                     fAllMonitor->Add(slave->GetSocket());
+                     validSlaves.Add(slave);
+                  }
+               } else {
                   fBadSlaves->Add(slave);
                }
-               else {
-                  fAllMonitor->Add(slave->GetSocket());
-                  validSlaves.Add(slave);
+               PDB(kGlobal,3)
+                  Info("StartSlaves","slave on host %s created and"
+                                     " added to list", word[1]);
+            }
+            ord++;
+         }
+
+      }
+      if (parallel) {
+
+         // Wait completion of startup operations
+         std::vector<TProofThread *>::iterator i;
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            TProofThread *pt = *i;
+            // Wait on this condition
+            if (pt && pt->thread->GetState() == TThread::kRunningState) {
+               PDB(kGlobal,3)
+                  Info("StartSlaves",
+                       "parallel startup: waiting for submaster %s (%s:%d)",
+                        pt->args->ord, pt->args->host, pt->args->port);
+               pt->thread->Join();
+            }
+         }
+
+         TIter next(fSlaves);
+         TSlave *sl = 0;
+         while ((sl = (TSlave *)next())) {
+            if (sl->IsValid()) {
+               if (fProtocol == 1) {
+                  Error("StartSlaves", "master and submaster protocols"
+                        " not compatible (%d and %d)",
+                        kPROOF_Protocol, fProtocol);
+                  fBadSlaves->Add(sl);
+               } else {
+                  fAllMonitor->Add(sl->GetSocket());
+                  validSlaves.Add(sl);
                }
             } else {
-               fBadSlaves->Add(slave);
+               fBadSlaves->Add(sl);
             }
-            PDB(kGlobal,3)
-               Info("StartSlaves","slave on host %s created and added to list", word[1]);
+         }
+
+         // We can cleanup now
+         for (i = thrHandlers.begin(); i != thrHandlers.end(); ++i) {
+            if (*i) {
+               SafeDelete(*i);
+               thrHandlers.erase(i);
+            }
          }
       }
 
@@ -3523,4 +3941,78 @@ TProofPlayer *TProofSuperMaster::MakePlayer()
 
    SetPlayer(new TProofPlayerSuperMaster(this));
    return GetPlayer();
+}
+
+//_____________________________________________________________________________
+void *TProof::SlaveStartupThread(void * arg)
+{
+   // Function executed in the slave startup thread
+
+   TProofThreadArg *ta = (TProofThreadArg *)arg;
+
+   PDB(kGlobal,1)
+      ::Info("TProof::SlaveStartupThread",
+             "Starting slave %s on host %s",ta->ord,ta->host);
+
+   TProof *proof = ta->proof;
+
+   TSlave *sl  = 0;
+   TCondorSlave *c = ta->cslave;
+   if (ta->claims && c) {
+      //
+      // Condor slave
+      sl = proof->CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
+                              c->fPerfIdx, c->fImage, c->fWorkDir);
+      //
+      // Add to the started slaves list
+      ta->slaves->Add(sl);
+      // If valid ...
+      if (sl->IsValid()) {
+         // Remove from the pending claims list
+         ta->claims->Remove(c);
+      }
+   } else {
+      //
+      // Normal slave
+      sl = proof->CreateSlave(ta->host, ta->port, ta->ord,
+                              ta->perf, ta->image, ta->workdir);
+      //
+      // Update list
+      ta->slaves->Add(sl);
+   }
+
+   // Notify we are done
+   PDB(kGlobal,1)
+      ::Info("TProof::SlaveStartupThread",
+             "slave %s on host %s created and added to list",
+             ta->ord,ta->host);
+
+   return 0;
+}
+
+//_____________________________________________________________________________
+void *TProof::SubmasterStartupThread(void * arg)
+{
+   // Function executed in the submaster startup thread
+
+   TProofThreadArg *ta = (TProofThreadArg *)arg;
+
+   PDB(kGlobal,1)
+      ::Info("TProof::SubmasterStartupThread",
+             "Starting submaster %s on host %s",ta->ord,ta->host);
+
+   TProof *proof = ta->proof;
+
+   TSlave *sl = proof->CreateSubmaster(ta->host, ta->port, ta->ord,
+                                       ta->image, ta->workdir, ta->msd);
+   //
+   // Update list
+   ta->slaves->Add(sl);
+
+   // Notify we are done
+   PDB(kGlobal,1)
+      ::Info("TProof::SubmasterStartupThread",
+             "submaster %s on host %s created and added to list",
+             ta->ord,ta->host);
+   return 0;
 }

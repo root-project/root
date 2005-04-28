@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.17 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.18 2004/12/15 17:48:03 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -327,8 +327,13 @@ void TPSocket::Close(Option_t *option)
    // for the parent of this process. Also called via the dtor (without
    // option "force", call explicitely Close("force") if this is desired).
 
-   if (!IsValid())
+
+   if (!IsValid()) {
+      // if closing happens too early (e.g. timeout) the underlying
+      // socket may still be open
+      TSocket::Close(option);
       return;
+   }
 
    if (fSize <= 1) {
       TSocket::Close(option);

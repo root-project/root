@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.8 2004/01/27 20:01:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.9 2004/10/05 23:01:19 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TError.h"
 #include "TSystem.h"
 #include "TString.h"
+#include "TVirtualMutex.h"
 
 int gErrorIgnoreLevel = 0;
 int gErrorAbortLevel  = kSysError+1;
@@ -51,6 +52,8 @@ static void DebugPrint(const char *fmt, ...)
 
    va_list arg_ptr;
    va_start(arg_ptr, fmt);
+
+   R__LOCKGUARD(gErrPrintMutex);
 
 again:
    if (!buf)

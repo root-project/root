@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.4 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.5 2004/06/25 16:49:09 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
    void     Update(THostAuth *ha);
    void     SetFirst(Int_t level);
    void     AddFirst(Int_t level, const char *details = 0);
+   void     SetLast(Int_t level);
    void     CountFailure(Int_t level);
    void     CountSuccess(Int_t level);
    Int_t    GetFailure(Int_t idx) const { return fFailure[idx]; }
@@ -111,10 +112,10 @@ public:
    virtual  void  Print(Option_t *option = "") const;
    void     PrintEstablished() const;
 
-   TSecContext *CreateSecContext(const char *user, const char *host, Int_t meth, 
+   TSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
                                  Int_t offset, const char *details,
                                  const char *token, TDatime expdate = kROOTTZERO,
-                                 void *ctx = 0, Int_t key = -1);   
+                                 void *ctx = 0, Int_t key = -1);
 
    ClassDef(THostAuth,0)  // Class providing host specific authentication information
 };

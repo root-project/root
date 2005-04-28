@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.98 2005/03/14 15:36:32 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.99 2005/04/25 07:53:27 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -171,6 +171,9 @@ ACLiC.Linkdef:          _linkdef
 # Proof.DebugLevel:	0
 # Proof.DebugMask:	-1
 #
+# On the master enable parallel startup of workers using threads
+# Proof.ParallelStartup: yes
+#
 # Proof.StatsHist:	no
 # Proof.StatsTrace:	no
 #
@@ -195,9 +198,29 @@ ACLiC.Linkdef:          _linkdef
 Rootd.Authentication:   0
 Proofd.Authentication:  0
 
+# Connection is shutdown at timeout expiration. Timeout is in seconds.
+# Negotiation cannot be attempted at low level (i.e. inside
+# TAuthenticate::Authenticate()) because of synchronization
+# problems with the server.
+# At higher level, TAuthenticate::HasTimedOut() gives information
+# about timeout: 0 = no timeout; 1 = timeout, no methods left;
+# 2 = timeout, still methods to be tried .
+# Caller should decide about an additional attempt.
+# Timeout disabled (< 0) by default. Can be changed on-the-fly
+# with the static method TAuthenticate::SetTimeOut(to_value)
+#
+# Auth.Timeout:        -1
+
 # Set this to 1 if you want full SRP authentication in PROOF
 # (Client-to-Master and Master-to-Slave).
 Proofd.SendSRPPwd:      0
+
+# Set this to 1 to use SSH authentication in PROOF servers
+# (Master-to-Slave or Slaves-to-DataServers). This is switched
+# off by default because credentials forwarding for SSH is not
+# controlled by the system; however the user may have other
+# ways to guarantee it, so it may want to switch it on.
+ProofServ.UseSSH:       0
 
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
@@ -267,26 +290,26 @@ RSA.KeyType:  1
 # Server authentication in TServerSocket.
 #
 # General: file with server access rules
-#SrvAuth.DaemonRc /etc/root/system.daemonrc
+#SrvAuth.DaemonRc: /etc/root/system.daemonrc
 #
 # UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
-#SrvAuth.CheckHostsEquivalence 1
+#SrvAuth.CheckHostsEquivalence: 1
 #
 # SRP: pass file (default $HOME/.srootdpass).
-#SrvAuth.SRPpassfile  <home>/.srootdpass
+#SrvAuth.SRPpassfile:  $HOME/.srootdpass
 #
 # Globus/GSI: hostcert configuration file.
-#SrvAuth.HostCert /etc/root/hostcert.conf
+#SrvAuth.HostCert:  /etc/root/hostcert.conf
 # Globus/GSI: gridmap file.
-#SrvAuth.GridMap /etc/grid-security/grid-mapfile
+#SrvAuth.GridMap:  /etc/grid-security/grid-mapfile
 #
 # SSH: port for the sshd daemon.
-#SrvAuth.SshdPort 22
+#SrvAuth.SshdPort:  22
 
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
-#TFile.ForceRemote 1
+#TFile.ForceRemote:  yes
 
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/patch/file.root or

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.26 2004/11/05 13:55:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.27 2004/11/11 18:56:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
    Bool_t       fSRPPwd;      // kTRUE if fPasswd is a SRP passwd
    Int_t        fVersion;     // 0,1,2, ... accordingly to remote daemon version
    TString      fUser;        // user to be authenticated
+   Int_t        fTimeOut;     // timeout flag
 
    Bool_t       Authenticate();
    Int_t        GenRSAKeys();
@@ -128,6 +129,7 @@ private:
    static TString        fgUser;
    static Bool_t         fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
    static Int_t          fgLastError;      // Last error code processed by AuthError()
+   static Int_t          fgAuthTO;         // if > 0, timeout in sec
 
    static Bool_t         CheckHost(const char *Host, const char *host);
    static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);
@@ -144,6 +146,7 @@ public:
 
    Int_t              AuthExists(TString User, Int_t method, const char *Options,
                           Int_t *Message, Int_t *Rflag, CheckSecCtx_t funcheck);
+   void               CatchTimeOut();
    Bool_t             CheckNetrc(TString &user, TString &passwd);
    Bool_t             CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t srppwd);
@@ -153,6 +156,7 @@ public:
    Int_t              GetRSAKeyType() const { return fRSAKey; }
    TSocket           *GetSocket() const { return fSocket; }
    const char        *GetUser() const { return fUser; }
+   Int_t              HasTimedOut() const { return fTimeOut; }
    void               SetRSAKeyType(Int_t key) { fRSAKey = key; }
    void               SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
 
@@ -208,6 +212,7 @@ public:
    static void        SetRSAInit(Int_t init = 1);
    static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
    static void        SetSecureAuthHook(SecureAuth_t func);
+   static void        SetTimeOut(Int_t to);
    static void        Show(Option_t *opt="S");
 
    ClassDef(TAuthenticate,0)  // Class providing remote authentication service

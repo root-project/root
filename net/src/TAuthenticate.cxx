@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.70 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.71 2005/03/18 15:07:20 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -36,6 +36,8 @@
 #include "NetErrors.h"
 #include "TRegexp.h"
 #include "snprintf.h"
+#include "TVirtualMutex.h"
+#include "TTimer.h"
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>
@@ -102,6 +104,7 @@ Bool_t         TAuthenticate::fgSRPPwd;
 TString        TAuthenticate::fgUser;
 Bool_t         TAuthenticate::fgUsrPwdCrypt;
 Int_t          TAuthenticate::fgLastError = -1;
+Int_t          TAuthenticate::fgAuthTO = -2;       // Timeout value
 
 // Protocol changes (this was in TNetFile before)
 // 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
@@ -126,9 +129,16 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
 {
    // Create authentication object.
 
+   if (gDebug > 2 && gAuthMutex)
+      Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
+   R__LOCKGUARD(gAuthMutex);
+
    // Use the ID of the starting thread as unique identifier
    if (gProcessID < 0)
       gProcessID = gSystem->GetPid();
+
+   if (fgAuthTO == -2)
+      fgAuthTO = gEnv->GetValue("Auth.Timeout",-1);
 
    fSocket   = sock;
    fRemote   = remote;
@@ -285,6 +295,11 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
          fHostAuth = new THostAuth(fRemote,fUser,0,(const char *)0);
    }
 
+   //
+   // Make memory copy of THostAuth personal to this user host
+   fHostAuth->SetHost(fqdn);
+   fHostAuth->SetUser(CheckUser);
+
    // If a specific method has been requested via the protocol
    // set it as first
    Int_t sec = -1;
@@ -325,26 +340,64 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    }
 }
 
+//_____________________________________________________________________________
+void TAuthenticate::CatchTimeOut()
+{
+   // Called in connection with a timer timeout
+
+   Info("CatchTimeOut", "%d sec timeout expired (protocol: %s)",
+           fgAuthTO, fgAuthMeth[fSecurity].Data());
+
+   fTimeOut = 1;
+   if (fSocket)
+      fSocket->Close("force");
+
+   return;
+}
+
 //______________________________________________________________________________
 Bool_t TAuthenticate::Authenticate()
 {
    // Authenticate to remote rootd or proofd server. Return kTRUE if
    // authentication succeeded.
 
-   Int_t RemMeth = 0, rMth[kMAXSEC], tMth[kMAXSEC] = {0};
+   Bool_t rc = kFALSE;
+   Int_t st = -1;
+   Int_t remMeth = 0, rMth[kMAXSEC], tMth[kMAXSEC] = {0};
    Int_t meth = 0;
-   char NoSupport[80] = { 0 };
-   char TriedMeth[80] = { 0 };
+   char noSupport[80] = { 0 };
+   char triedMeth[80] = { 0 };
+   Int_t ntry = 0;
 
    TString user, passwd;
    Bool_t pwhash;
 
-   Int_t ntry = 0;
+   // This is for dynamic loads ...
+#ifdef ROOTLIBDIR
+   static TString rootDir = TString(ROOTLIBDIR);
+#else
+   static TString rootDir = TString(gRootDir) + "/lib";
+#endif
+
+   if (gDebug > 2 && gAuthMutex)
+      Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
+   R__LOCKGUARD(gAuthMutex);
+
    if (gDebug > 2)
       Info("Authenticate", "enter: fUser: %s", fUser.Data());
-   NoSupport[0] = 0;
+
+   //
+   // Setup timeout timer, if required
+   TTimer *alarm = 0;
+   if (fgAuthTO > 0) {
+      alarm = new TTimer(0, kFALSE);
+      alarm->SetInterruptSyscalls();
+      // The method CatchTimeOut will be called at timeout
+      alarm->Connect("Timeout()", "TAuthenticate", this, "CatchTimeOut()");
+   }
 
  negotia:
+   st = -1;
    tMth[meth] = 1;
    if (gDebug > 2) {
       ntry++;
@@ -364,23 +417,24 @@ Bool_t TAuthenticate::Authenticate()
            fSecurity, fDetails.Data());
 
    // Keep track of tried methods in a list
-   if (strlen(TriedMeth) > 0)
-      sprintf(TriedMeth, "%s %s", TriedMeth, fgAuthMeth[fSecurity].Data());
+   if (strlen(triedMeth) > 0)
+      sprintf(triedMeth, "%s %s", triedMeth, fgAuthMeth[fSecurity].Data());
    else
-      sprintf(TriedMeth, "%s", fgAuthMeth[fSecurity].Data());
+      sprintf(triedMeth, "%s", fgAuthMeth[fSecurity].Data());
 
    // Set environments
    SetEnvironment();
 
-   // This is for dynamic loads ...
-#ifdef ROOTLIBDIR
-   TString RootDir = TString(ROOTLIBDIR);
-#else
-   TString RootDir = TString(gRootDir) + "/lib";
-#endif
+   st = -1;
+
+   //
+   // Reset timeout variables and start timer
+   fTimeOut = 0;
+   if (fgAuthTO > 0 && alarm) {
+      alarm->Start(fgAuthTO*1000, kTRUE);
+   }
 
    // Auth calls depend of fSec
-   Int_t st = -1;
    if (fSecurity == kClear) {
 
       Bool_t rc = kFALSE;
@@ -425,7 +479,7 @@ Bool_t TAuthenticate::Authenticate()
       if (!fgSecAuthHook) {
 
          char *p;
-         TString lib = RootDir + "/libSRPAuth";
+         TString lib = rootDir + "/libSRPAuth";
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
             delete [] p;
             gSystem->Load(lib);
@@ -456,7 +510,7 @@ Bool_t TAuthenticate::Authenticate()
          // Kerberos 5 Authentication
          if (!fgKrb5AuthHook) {
             char *p;
-            TString lib = RootDir + "/libKrb5Auth";
+            TString lib = rootDir + "/libKrb5Auth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
                delete [] p;
                gSystem->Load(lib);
@@ -473,10 +527,10 @@ Bool_t TAuthenticate::Authenticate()
          if (gDebug > 0)
             Info("Authenticate",
                  "remote daemon does not support Kerberos authentication");
-         if (strlen(NoSupport) > 0)
-            sprintf(NoSupport, "%s/Krb5", NoSupport);
+         if (strlen(noSupport) > 0)
+            sprintf(noSupport, "%s/Krb5", noSupport);
          else
-            sprintf(NoSupport, "Krb5");
+            sprintf(noSupport, "Krb5");
       }
 
    } else if (fSecurity == kGlobus) {
@@ -485,7 +539,7 @@ Bool_t TAuthenticate::Authenticate()
          // Globus Authentication
          if (!fgGlobusAuthHook) {
             char *p;
-            TString lib = RootDir + "/libGlobusAuth";
+            TString lib = rootDir + "/libGlobusAuth";
             if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
                delete [] p;
                gSystem->Load(lib);
@@ -501,10 +555,10 @@ Bool_t TAuthenticate::Authenticate()
          if (gDebug > 0)
             Info("Authenticate",
                  "remote daemon does not support Globus authentication");
-         if (strlen(NoSupport) > 0)
-            sprintf(NoSupport, "%s/Globus", NoSupport);
+         if (strlen(noSupport) > 0)
+            sprintf(noSupport, "%s/Globus", noSupport);
          else
-            sprintf(NoSupport, "Globus");
+            sprintf(noSupport, "Globus");
       }
 
 
@@ -519,10 +573,10 @@ Bool_t TAuthenticate::Authenticate()
          if (gDebug > 0)
             Info("Authenticate",
                  "remote daemon does not support SSH authentication");
-         if (strlen(NoSupport) > 0)
-            sprintf(NoSupport, "%s/SSH", NoSupport);
+         if (strlen(noSupport) > 0)
+            sprintf(noSupport, "%s/SSH", noSupport);
          else
-            sprintf(NoSupport, "SSH");
+            sprintf(noSupport, "SSH");
       }
 
    } else if (fSecurity == kRfio) {
@@ -536,17 +590,24 @@ Bool_t TAuthenticate::Authenticate()
          if (gDebug > 0)
             Info("Authenticate",
                  "remote daemon does not support UidGid authentication");
-         if (strlen(NoSupport) > 0)
-            sprintf(NoSupport, "%s/UidGid", NoSupport);
+         if (strlen(noSupport) > 0)
+            sprintf(noSupport, "%s/UidGid", noSupport);
          else
-            sprintf(NoSupport, "UidGid");
+            sprintf(noSupport, "UidGid");
       }
    }
    //
+   // Stop timer
+   if (alarm) alarm->Stop();
+
+   // Flag timeout condition
+   st = (fTimeOut > 0) ? -3 : st;
+
+   //
    // Analyse the result now ...
-   Bool_t rc = kFALSE;
    // Type of action after the analysis:
-   // 0 = return, 1 = negotiation, 2 = send kROOTD_BYE + 3, 3 = print failure and return
+   // 0 = return, 1 = negotiation, 2 = send kROOTD_BYE + 3,
+   // 3 = print failure and return
    Int_t action = 0;
    Int_t nmet = fHostAuth->NumMethods();
    Int_t remloc = nmet - meth - 1;
@@ -568,6 +629,7 @@ Bool_t TAuthenticate::Authenticate()
       case 0:
          //
          // Failure
+         fHostAuth->CountFailure((Int_t)fSecurity);
          if (fVersion < 2) {
             //
             // Negotiation not supported by old daemons ...
@@ -609,7 +671,7 @@ Bool_t TAuthenticate::Authenticate()
                   Warning("Authenticate",
                           "strings with accepted methods not received (%d:%d)",
                           kind, nrec);
-               RemMeth =
+               remMeth =
                    sscanf(answer, "%d %d %d %d %d %d", &rMth[0], &rMth[1],
                           &rMth[2], &rMth[3], &rMth[4], &rMth[5]);
                if (gDebug > 0 && remloc > 0)
@@ -633,7 +695,7 @@ Bool_t TAuthenticate::Authenticate()
             int i, j;
             char locav[40] = { 0 };
             Bool_t methfound = kFALSE;
-            for (i = 0; i < RemMeth; i++) {
+            for (i = 0; i < remMeth; i++) {
                for (j = 0; j < nmet; j++) {
                   if (fHostAuth->GetMethod(j) == rMth[i] && tMth[j] == 0) {
                      meth = j;
@@ -665,28 +727,50 @@ Bool_t TAuthenticate::Authenticate()
       case -1:
          //
          // Method not supported
+         fHostAuth->CountFailure((Int_t)fSecurity);
          if (gDebug > 2)
             Info("Authenticate",
                  "method not even started: insufficient or wrong info: %s",
                  "try with next method, if any");
-         if (meth < nmet - 1) {
-            meth++;
+         fHostAuth->RemoveMethod(fSecurity);
+         nmet--;
+         if (nmet > 0) {
             action = 1;
          } else
             action = 2;
+
          break;
 
       case -2:
          //
          // Remote host does not accepts connections from local host
-         if (fVersion > 2) {
-            rc = kFALSE;
-            break;
-         } else
+         fHostAuth->CountFailure((Int_t)fSecurity);
+         if (fVersion <= 2)
             if (gDebug > 2)
-               Info("Authenticate", "status code -2 not expected from old daemons");
+               Warning("Authenticate",
+                       "status code -2 not expected from old daemons");
+         rc = kFALSE;
+         break;
+
+      case -3:
+         //
+         // Timeout: we set the method as last one, should the caller
+         // decide to retry, if it will attempt first something else.
+         // (We can not retry directly, because the server will not be
+         //  synchronized ...)
+         fHostAuth->CountFailure((Int_t)fSecurity);
+         if (gDebug > 2)
+            Info("Authenticate", "got a timeout");
+         fHostAuth->SetLast(fSecurity);
+         if (meth < nmet - 1) {
+            fTimeOut = 2;
+         } else
+            fTimeOut = 1;
+         rc = kFALSE;
+         break;
 
       default:
+         fHostAuth->CountFailure((Int_t)fSecurity);
          if (gDebug > 2)
             Info("Authenticate", "unknown status code: %d - assume failure",st);
          rc = kFALSE;
@@ -700,17 +784,21 @@ Bool_t TAuthenticate::Authenticate()
       case 2:
          fSocket->Send("0", kROOTD_BYE);
       case 3:
-         if (strlen(NoSupport) > 0)
+         if (strlen(noSupport) > 0)
             Info("Authenticate", "attempted methods %s are not supported"
-                 " by remote server version", NoSupport);
+                 " by remote server version", noSupport);
          Info("Authenticate",
-              "failure: list of attempted methods: %s", TriedMeth);
+              "failure: list of attempted methods: %s", triedMeth);
          AuthError("Authenticate",-1);
          rc = kFALSE;
          break;
       default:
          break;
    }
+
+   // Cleanup timer
+   if (alarm)
+      SafeDelete(alarm);
 
    return rc;
 
@@ -1479,6 +1567,14 @@ void TAuthenticate::SetDefaultUser(const char *defaultuser)
 }
 
 //______________________________________________________________________________
+void TAuthenticate::SetTimeOut(Int_t to)
+{
+   // Set timeout (active if > 0)
+
+   fgAuthTO = (to <= 0) ? -1 : to;
+}
+
+//______________________________________________________________________________
 void TAuthenticate::SetAuthReUse(Bool_t authreuse)
 {
    // Set global AuthReUse flag
@@ -1576,6 +1672,20 @@ Int_t TAuthenticate::SshError(const char *errorfile)
 Int_t TAuthenticate::SshAuth(TString &User)
 {
    // SSH client authentication code.
+
+
+   // No control on credential forwarding in case of SSH authentication;
+   // switched it off on PROOF servers, unless the user knows what (s)he
+   // is doing
+   if (gROOT->IsProofServ()) {
+      if (!(gEnv->GetValue("ProofServ.UseSSH",0))) {
+         if (gDebug > 0)
+            Info("SshAuth", "SSH protocol is switched OFF by default"
+                 " for PROOF servers: use 'ProofServ.UseSSH 1'"
+                 " to enable it (see system.rootrc)");
+         return -1;
+      }
+   }
 
    Int_t sshproto = 1;
    if (fVersion < 4)
@@ -3716,6 +3826,7 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *RSAPubExport, rsa_NUMBER &RSA_n
             else
                ::Info("TAuthenticate::DecodeRSAPublic",
                       "no space allocated for output variable");
+         BIO_free(bpub);
       }
 #else
       } else {
@@ -3839,8 +3950,8 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 #endif
 
    // Send local public key, encodes
-   char buftmp[kMAXSECBUF];
-   char buflen[20];
+   char buftmp[kMAXSECBUF] = {0};
+   char buflen[20] = {0};
    Int_t slen = fgRSAPubExport[key].len;
    Int_t ttmp = 0;
    if (key == 0) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.3 2002/08/20 10:51:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.4 2004/12/15 13:15:14 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -77,6 +77,8 @@ public:
 R__EXTERN TVirtualMutex *gContainerMutex;
 R__EXTERN TVirtualMutex *gAllocMutex;
 R__EXTERN TVirtualMutex *gCINTMutex;
+R__EXTERN TVirtualMutex *gErrPrintMutex;
+R__EXTERN TVirtualMutex *gAuthMutex;
 
 // Zero overhead macros in case not compiled with thread support
 #ifdef _REENTRANT
