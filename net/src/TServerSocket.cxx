@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.4 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.5 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -266,40 +266,43 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    // Check authentication request from the client on new 
    // open connection
 
-   // Load libraries needed for (server) authentication ...
+   if (!fgSrvAuthHook) {
+
+      // Load libraries needed for (server) authentication ...
 #ifdef ROOTLIBDIR
-   TString srvlib = TString(ROOTLIBDIR) + "/libSrvAuth";
+      TString srvlib = TString(ROOTLIBDIR) + "/libSrvAuth";
 #else
-   TString srvlib = TString(gRootDir) + "/lib/libSrvAuth";
+      TString srvlib = TString(gRootDir) + "/lib/libSrvAuth";
 #endif
-   char *p = 0;
-   // The generic one
-   if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {
-      delete[] p;
-      if (gSystem->Load(srvlib) == -1) {
-         Error("Authenticate", "can't load %s",srvlib.Data());
+      char *p = 0;
+      // The generic one
+      if ((p = gSystem->DynamicPathName(srvlib, kTRUE))) {
+         delete[] p;
+         if (gSystem->Load(srvlib) == -1) {
+            Error("Authenticate", "can't load %s",srvlib.Data());
+            return kFALSE;
+         }
+      } else {
+         Error("Authenticate", "can't locate %s",srvlib.Data());
          return kFALSE;
       }
-   } else {
-      Error("Authenticate", "can't locate %s",srvlib.Data());
-      return kFALSE;
-   }
-   //   
-   // Locate SrvAuthenticate
-   Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
-   if (f)
-      fgSrvAuthHook = (SrvAuth_t)(f);
-   else {
-      Error("Authenticate", "can't find SrvAuthenticate");
-      return kFALSE;
-   }
-   //   
-   // Locate SrvAuthCleanup
-   f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
-   if (f)
-      fgSrvAuthClupHook = (SrvClup_t)(f);
-   else {
-      Warning("Authenticate", "can't find SrvAuthCleanup");
+      //   
+      // Locate SrvAuthenticate
+      Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
+      if (f)
+         fgSrvAuthHook = (SrvAuth_t)(f);
+      else {
+         Error("Authenticate", "can't find SrvAuthenticate");
+         return kFALSE;
+      }
+      //   
+      // Locate SrvAuthCleanup
+      f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
+      if (f)
+         fgSrvAuthClupHook = (SrvClup_t)(f);
+      else {
+         Warning("Authenticate", "can't find SrvAuthCleanup");
+      }
    }
 
    TString confdir;
@@ -345,19 +348,41 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
             auth, type, ctkn.c_str());
 
    TSecContext *seccontext = 0;
-   if (auth > 0 && type == 0) {
-      // New authentication: Fill a SecContext for cleanup
-      // in case of interrupt
-      seccontext = new TSecContext(user.c_str(), openhost, meth, -1,
-                                   "server", ctkn.c_str());
-      fSecContexts->Add(seccontext);
-   }
-   
-   if (seccontext) {
-      // Store SecContext
-      sock->SetSecContext(seccontext);
-      return kTRUE;
+   if (auth > 0) {
+
+      if (type == 1) {
+         // An existing authentication has been re-used: retrieve 
+         // the related security context
+         TIter next(gROOT->GetListOfSecContexts());
+         while ((seccontext = (TSecContext *)next())) {
+            if (!(strncmp(seccontext->GetDetails(),"server",6))) {
+               if (seccontext->GetMethod() == meth) {
+                  if (openhost == seccontext->GetHost()) {
+                     if (!strcmp(user.c_str(),seccontext->GetUser()))
+                        break;
+                  }
+               }
+            }
+         }
+      }
+
+      if (!seccontext) {
+         // New authentication: Fill a SecContext for cleanup
+         // in case of interrupt
+         seccontext = new TSecContext(user.c_str(), openhost, meth, -1,
+                                      "server", ctkn.c_str());
+         if (seccontext) { 
+            // Add to the list
+            fSecContexts->Add(seccontext);
+            // Store SecContext
+            sock->SetSecContext(seccontext);
+         } else {
+            if (gDebug > 0)
+               Warning("Authenticate","could not create sec context object"
+                                      ": potential problems in cleaning");
+         }
+      }
    }
 
-   return kFALSE;
+   return auth;
 }
