@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.77 2005/01/25 19:58:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.78 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -140,10 +140,22 @@ protected:
     virtual TBranch *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
     virtual Bool_t   CheckBranchAddressType(TBranch *branch, TClass *ptrClass, EDataType datatype, Bool_t ptr);
 
+    class TFriendLock {
+       // Helper class to prevent infinite recursion in the
+       // usage of TTree Friends.
+       // Implemented in TTree.cxx
+       TTree  *fTree;
+       Bool_t  fPrevious;
+    public:
+       TFriendLock(TTree *tree);
+       ~TFriendLock();
+    };
+
 public:
     // TTree status bits
     enum {
-       kForceRead   = BIT(11)
+       kForceRead   = BIT(11),
+       kFriendLock  = BIT(17)
     };
 
     TTree();
