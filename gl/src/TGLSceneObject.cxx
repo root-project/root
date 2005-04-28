@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.33 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.34 2005/04/07 14:43:35 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -211,7 +211,7 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, TObject *obj)
+TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
 							: fColor(),
 							  fIsSelected(kFALSE),
 							  fGLName(glName),
@@ -219,7 +219,7 @@ TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, TObject *obj
 							  fRealObject(obj)
 {
    SetColor(color, kTRUE);
-   fColor[3] = 1.f;
+   fColor[3] = 1.f - trans / 100.f;
 }
 
 //______________________________________________________________________________
@@ -409,8 +409,8 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
 }
 
 //______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, TObject *r)
-					:TGLSceneObject(n, c, r)
+TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t trans, UInt_t n, TObject *r)
+					:TGLSceneObject(n, c, trans, r)
 {
 	UInt_t nv = m->NumberOfVertices();
 	fVertices.reserve(3 * nv);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.22 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.23 2005/04/01 13:53:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -74,7 +74,7 @@ public:
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
    TGLSceneObject(const TBuffer3D &buffer,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
-	TGLSceneObject(UInt_t glName, const Float_t *color, TObject *realObj);
+	TGLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *realObj);
 
    virtual Bool_t IsTransparent()const;
 
@@ -117,7 +117,7 @@ private:
 public:
    TGLFaceSet(const TBuffer3D &buff, const Float_t *color,
               UInt_t glName, TObject *realObj);
-   TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, TObject *r);
+   TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t trans, UInt_t n, TObject *r);
 
    void GLDraw(const TGLFrustum *fr)const;
    void GLDrawPolys()const;

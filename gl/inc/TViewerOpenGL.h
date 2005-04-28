@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.25 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.26 2005/04/01 13:53:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -110,7 +110,12 @@ private:
    Bool_t                  fInsideComposite;
    UInt_t                  fCSLevel;
    std::vector<CSPART_t>   fCSTokens;
-   TObject                 *fComposite;
+   // Defered composite creation
+   struct {
+      TObject             *fRealObject;
+      Float_t              fColor[3];
+      Short_t              fTrans;
+   } fNewComposite;
 
    RootCsg::BaseMesh *BuildComposite();
 
