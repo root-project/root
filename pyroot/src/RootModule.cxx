@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.6 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.7 2005/03/04 19:41:29 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -43,7 +43,10 @@ namespace {
       if ( 2 < strkey.size() && strkey.substr( 0, 2 ) == "__" )
          return ep;
 
-   // all failed, attempt to get ROOT enum/global/class
+   // all failed, start calling into ROOT
+      PyROOT::gDictLookupActive = true;
+
+   // attempt to get ROOT enum/global/class
       PyObject* val = PyObject_GetAttr( gRootModule, key );
 
       if ( ! val ) {
@@ -71,6 +74,9 @@ namespace {
       } else
       // failure ...
          Py_DECREF( val );
+
+   // stopped calling into ROOT
+      PyROOT::gDictLookupActive = false;
 
       return ep;
    }

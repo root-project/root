@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.12 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.13 2005/04/13 05:04:50 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -26,9 +26,7 @@
 #include <stdexcept>
 #include <string>
 #include <stdio.h>
-#include <map>
 #include <utility>
-#include <vector>
 
 
 namespace {
@@ -692,9 +690,10 @@ namespace {
 
 //- TF1 behaviour --------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > gPyObjectCallbacks;
+   typedef std::pair< PyObject*, int > CallInfo_t;
 
-   int gLastTag = -99;
-   std::pair< PyObject*, int > gLastCallInfo;
+   int gLastTag = 99;
+   CallInfo_t* gLastCallInfo = 0;
 
    int pyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
@@ -702,27 +701,31 @@ namespace {
 
    // retrieve function information
       int tag = res->tagnum;
-      if ( gLastTag != tag ) {
+      if ( gLastTag != tag || ! gLastCallInfo ) {
+         G__ifunc_table* ifunc = 0;
+         int index = 0;
+         G__CurrentCall( G__RECMEMFUNCENV, &ifunc, index );
+
+         gLastCallInfo = (CallInfo_t*)ifunc->userparam[index];
          gLastTag = tag;
-         gLastCallInfo = gPyObjectCallbacks[ tag ];
       }
 
-      if ( gLastCallInfo.first != 0 ) {
+      if ( gLastCallInfo->first != 0 ) {
       // prepare arguments and call
          PyObject* arg1 = PyBufferFactory::Instance()->PyBuffer_FromMemory(
             (double*)G__int(libp->para[0]), 4 );
 
-         if ( gLastCallInfo.second != 0 ) {
+         if ( gLastCallInfo->second != 0 ) {
             PyObject* arg2 = PyBufferFactory::Instance()->PyBuffer_FromMemory(
-               (double*)G__int(libp->para[1]), gLastCallInfo.second );
+               (double*)G__int(libp->para[1]), gLastCallInfo->second );
 
             result = PyObject_CallFunction(
-               gLastCallInfo.first, const_cast< char* >( "OO" ), arg1, arg2 );
+               gLastCallInfo->first, const_cast< char* >( "OO" ), arg1, arg2 );
 
             Py_DECREF( arg2 );
          } else {
             result = PyObject_CallFunction(
-               gLastCallInfo.first, const_cast< char* >( "O" ), arg1 );
+               gLastCallInfo->first, const_cast< char* >( "O" ), arg1 );
          }
 
          Py_DECREF( arg1 );
@@ -807,7 +810,7 @@ namespace {
          if ( argc == 5 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, 4 ) );
 
-         gPyObjectCallbacks[ tag ] = std::make_pair( pyfunc, npar );
+         ifunc->userparam[index] = (void*) new std::pair< PyObject*, int >( pyfunc, npar );
 
       // get constructor
          MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(

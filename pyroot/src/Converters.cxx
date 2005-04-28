@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.5 2005/04/15 17:37:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.6 2005/04/16 05:46:06 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -164,49 +164,49 @@ namespace {
 //____________________________________________________________________________
 bool PyROOT::ShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'h', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'h', sizeof(Short_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::UShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'H', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'H', sizeof(UShort_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::IntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'i', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'i', sizeof(Int_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::UIntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'I', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'I', sizeof(UInt_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::LongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'l', sizeof(long) );
+   return CArraySetArg( pyobject, func, 'l', sizeof(Long_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::ULongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'L', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'L', sizeof(ULong_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::FloatArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'f', sizeof(float) );
+   return CArraySetArg( pyobject, func, 'f', sizeof(Float_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::DoubleArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'd', sizeof(double) );
+   return CArraySetArg( pyobject, func, 'd', sizeof(Double_t) );
 }
 
 

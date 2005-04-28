@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.3 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.h,v 1.4 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen   May 2004
 
 #ifndef ROOT_TPyReturn
@@ -14,46 +14,45 @@
 
 
 // ROOT
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
-#ifndef ROOT_TClassRef
-#include "TClassRef.h"
-#endif
-class TClass;
-
 
 // Python
 struct _object;
 typedef _object PyObject;
 
 
-class TPyReturn : public TObject {
+class TPyReturn {
 public:
    TPyReturn();
-   TPyReturn( PyObject* pyobject, TClass* klass );
+   TPyReturn( PyObject* pyobject );
+   TPyReturn( const TPyReturn& );
+   TPyReturn& operator=( const TPyReturn& );
    virtual ~TPyReturn();
-
-   virtual TClass* IsA() const;
 
 // conversions to standard types, may fail if unconvertible
    operator const char*() const;
-   operator long() const;
-   operator int() const;
-   operator double() const;
-   operator float() const;
+   operator Char_t() const;
 
-   operator TObject*() const;
+   operator Long_t() const;
+   operator Int_t() const { return (Int_t)operator Long_t(); }
+   operator Short_t() const { return (Short_t)operator Long_t(); }
+
+   operator ULong_t() const;
+   operator UInt_t() const { return (UInt_t)operator ULong_t(); }
+   operator UShort_t() const { return (UShort_t)operator UShort_t(); }
+
+   operator Double_t() const;
+   operator Float_t() const { return (Float_t)operator Double_t(); }
+
+// used for both TObject and PyObject conversions
+   operator void*() const;
+
+   ClassDef(TPyReturn,1)   //Python morphing return object
 
 private:
-   TPyReturn( const TPyReturn& );
-   TPyReturn& operator=( const TPyReturn& );
-
-   void AutoDestruct_() const;
-
-private:
-   PyObject* fPyObject;            // python side object
-   TClassRef fClass;               // TClass of held object if ROOT object
-
+   PyObject* fPyObject;            //! actual python object
 };
+
 #endif

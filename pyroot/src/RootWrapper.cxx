@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.23 2005/04/05 05:20:44 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.24 2005/04/13 05:04:50 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -147,7 +147,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          if ( mtName == clName )             // don't expose private ctors
             continue;
          else                                // mangle private methods
-            mtName = "__" + clName + "__" + mtName;
+            mtName = "_" + clName + "__" + mtName;
 
    // construct the holder
       PyCallable* pycall = 0;

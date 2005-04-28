@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.6 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.7 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -14,6 +14,7 @@
 // Standard
 #include <stdio.h>
 #include <Riostream.h>
+#include <string>
 
 //______________________________________________________________________________
 //                          Python interpreter access
@@ -104,6 +105,48 @@ Bool_t TPython::Initialize()
 }
 
 //____________________________________________________________________________
+void TPython::LoadMacro( const char* name )
+{
+// Execute the give python script as if it were a macro (effectively an
+// execfile in __main__), and create CINT equivalents for new python classes.
+
+// setup
+   if ( ! Initialize() )
+      return;
+
+// obtain a reference to look for new classes later
+   PyObject* old = PyDict_Values( gMainDict );
+
+// actual execution
+   Exec( (std::string( "execfile(\"" ) + name + "\")").c_str() );
+
+// obtain new __main__ contents
+   PyObject* current = PyDict_Values( gMainDict );
+
+// created CINT classes for all new python classes
+   for ( int i = 0; i < PyList_GET_SIZE( current ); ++i ) {
+      PyObject* value = PyList_GET_ITEM( current, i );
+      Py_INCREF( value );
+
+      if ( ! PySequence_Contains( old, value ) ) {
+      // collect classes
+         if ( PyClass_Check( value ) ||
+              PyObject_HasAttrString( value, const_cast< char* >( "__bases__" ) ) ) {
+         // force class creation
+            PyObject* str = PyObject_Str( value );
+            gROOT->GetClass( PyString_AS_STRING( str ) );
+            Py_DECREF( str );
+         }
+      }
+
+      Py_DECREF( value );
+   }
+
+   Py_DECREF( current );
+   Py_DECREF( old );
+};
+
+//____________________________________________________________________________
 void TPython::Exec( const char* cmd )
 {
 // Execute a python statement (e.g. "import ROOT").
@@ -125,7 +168,7 @@ void TPython::Exec( const char* cmd )
 
 
 //____________________________________________________________________________
-const TPyReturn& TPython::Eval( const char* expr )
+const TPyReturn TPython::Eval( const char* expr )
 {
 // Evaluate a python expression (e.g. "ROOT.TBrowser()").
 //
@@ -135,42 +178,30 @@ const TPyReturn& TPython::Eval( const char* expr )
 
 // setup
    if ( ! Initialize() )
-      return *(new TPyReturn( 0, 0 ));
+      return TPyReturn();
 
 // evaluate the expression
    PyObject* result =
       PyRun_String( const_cast< char* >( expr ), Py_eval_input, gMainDict, gMainDict );
 
-// test for error
+// report errors as appropriate; return void
    if ( ! result ) {
       PyErr_Print();
-      return *(new TPyReturn( 0, 0 ));
+      return TPyReturn();
    }
 
-// test for a usuable result
-   if ( result == Py_None ) {
-      Py_DECREF( result );
-      return *(new TPyReturn( 0, 0 ));
-   }
+// results that require no converion
+   if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) )
+      return TPyReturn( result );
 
-// let the TObject& fill the place of the PyObject&
-   if ( PyROOT::ObjectProxy_Check( result ) ) {
-      TObject* obj = (TObject*)((PyROOT::ObjectProxy*)result)->GetObject();
-      if ( obj != 0 ) {
-         TObject& robj = *obj;
-         return static_cast< TPyReturn& >( robj );
-      } else
-         return *(new TPyReturn( 0, 0 ));
-   }
-
-// apparently no ROOT object, try to convert from python
+// explicit conversion for python type required
    PyObject* pyclass = PyObject_GetAttr( result, gClassString );
    if ( pyclass != 0 ) {
    // retrieve class name and the module in which it resides
       PyObject* name = PyObject_GetAttr( pyclass, gNameString );
       PyObject* module = PyObject_GetAttr( pyclass, gModuleString );
 
-   // concatename
+   // concat name
       std::string qname =
          std::string( PyString_AS_STRING( module ) ) + '.' + PyString_AS_STRING( name );
       Py_DECREF( module );
@@ -181,15 +212,14 @@ const TPyReturn& TPython::Eval( const char* expr )
       TClass* klass = gROOT->GetClass( qname.c_str() );
 
    // construct general ROOT python object that pretents to be of class 'klass'
-      if ( klass != 0 ) {
-         return *(new TPyReturn( result, klass ));  // steals ref to 'result'
-      }
+      if ( klass != 0 )
+         return TPyReturn( result );
    } else
       PyErr_Clear();
 
 // no conversion, return null pointer object
    Py_DECREF( result );
-   return *(new TPyReturn( 0, 0 ));
+   return TPyReturn();
 }
 
 //____________________________________________________________________________
