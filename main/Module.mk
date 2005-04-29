@@ -31,6 +31,9 @@ PROOFSERVS   := $(MODDIRS)/pmain.cxx
 PROOFSERVO   := $(PROOFSERVS:.cxx=.o)
 PROOFSERVDEP := $(PROOFSERVO:.o=.d)
 PROOFSERV    := bin/proofserv$(EXEEXT)
+ifeq ($(PROOFLIB),)
+PROOFSERV    :=
+endif
 
 ##### hadd #####
 HADDS        := $(MODDIRS)/hadd.cxx
@@ -59,31 +62,34 @@ ifeq ($(PLATFORM),win32)
 G2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 G2ROOT       := bin/g2root$(EXEEXT)
+ifeq ($(PLATFORM),win32)
+G2ROOT       :=
+endif
 
 ##### g2rootold #####
-G2ROOTOLDS      := $(MODDIRS)/g2rootold.f
-G2ROOTOLDO      := $(G2ROOTOLDS:.f=.o)
+G2ROOTOLDS   := $(MODDIRS)/g2rootold.f
+G2ROOTOLDO   := $(G2ROOTOLDS:.f=.o)
 ifeq ($(PLATFORM),win32)
-G2ROOTOLDO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
+G2ROOTOLDO   += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
-G2ROOTOLD       := bin/g2rootold$(EXEEXT)
+G2ROOTOLD    := bin/g2rootold$(EXEEXT)
+ifeq ($(PLATFORM),win32)
+G2ROOTOLD    :=
+endif
 
 ##### ssh2rpd #####
 SSH2RPDS        := $(MODDIRS)/ssh2rpd.cxx
 SSH2RPDO        := $(SSH2RPDS:.cxx=.o)
 SSH2RPDDEP      := $(SSH2RPDO:.o=.d)
 SSH2RPD         := bin/ssh2rpd$(EXEEXT)
+ifeq ($(PLATFORM),win32)
+SSH2RPD         :=
+endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
-ifneq ($(PLATFORM),win32)
-ALLEXECS     += $(SSH2RPD)
-endif
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
 ifneq ($(CERNLIBS),)
-ALLEXECS     += $(H2ROOT)
-ifneq ($(PLATFORM),win32)
-ALLEXECS     += $(G2ROOT) $(G2ROOTOLD)
-endif
+ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
 
 # include all dependency files
@@ -128,12 +134,8 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
 
 ifneq ($(CERNLIBS),)
-ifneq ($(PLATFORM),win32)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT) \
-               $(G2ROOTOLD) $(SSH2RPD)
-else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(SSH2RPD)
-endif
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) \
+               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 else
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
 endif
