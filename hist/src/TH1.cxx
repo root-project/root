@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.235 2005/04/21 13:58:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.236 2005/04/26 13:03:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1990,6 +1990,8 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //      fname is the name of an already predefined function created by TF1 or TF2
 //      Predefined functions such as gaus, expo and poln are automatically
 //      created by ROOT.
+//      fname can also be a formula, accepted by the linear fitter (linear parts divided
+//      by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 //
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
@@ -2196,6 +2198,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //       TF1 +f1 = (TF1*)fitter->GetUserFunction(); //the user theoretical function
 //
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
+//     For fitting linear functions (containing the "++" sign" and polN functions, 
+//     the linear fitter is initialized.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 

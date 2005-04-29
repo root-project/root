@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.6 2005/03/15 12:13:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.7 2005/04/17 14:12:50 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -8,6 +8,15 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#include "TLinearFitter.h"
+#include "TDecompChol.h"
+#include "TGraph.h"
+#include "TGraph2D.h"
+#include "TMultiGraph.h"
+
+
+ClassImp(TLinearFitter)
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -139,14 +148,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TLinearFitter.h"
-#include "TDecompChol.h"
-#include "TGraph.h"
-#include "TGraph2D.h"
-#include "TMultiGraph.h"
 
-
-ClassImp(TLinearFitter);
 
 //______________________________________________________________________________
 TLinearFitter::TLinearFitter()
@@ -192,8 +194,10 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
 {
    //First parameter stands for number of dimensions in the fitting formula
    //Second parameter is the fitting formula: see class description for formula syntax
-   //The option is store or not store the input data. By default it is stored.
-   //To not store the data choose "" for the option
+   //Options:
+   //The option is to store or not to store the data
+   //If you don't want to store the data, choose "" for the option, or run 
+   //StoreData(kFalse) member function after the constructor
 
    fNdim=ndim;
    fNpoints=0;
@@ -206,9 +210,10 @@ TLinearFitter::TLinearFitter(Int_t ndim, const char *formula, Option_t *opt)
    TString option=opt;
    option.ToUpper();
    if (option.Contains("D"))
-       fStoreData=kTRUE;
+      fStoreData=kTRUE;
    else
       fStoreData=kFALSE;
+
    SetFormula(formula);
 }
 
@@ -217,11 +222,12 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
 {
    //This constructor uses a linear function. How to create it?
    //TFormula now accepts formulas of the following kind:
-   //TFormula("f", "x|y|z|x*x"). Other than the look, it's in no
+   //TFormula("f", "x++y++z++x*x"). Other than the look, it's in no
    //way different from the regular formula, it can be evaluated,
    //drawn, etc.
    //The option is to store or not to store the data
-   //If you don't want to store the data, choose "" for the option
+   //If you don't want to store the data, choose "" for the option, or run
+   //StoreData(kFalse) member function after the constructor
 
    fNdim=function->GetNdim();
    if (!function->IsLinear()){
@@ -237,6 +243,7 @@ TLinearFitter::TLinearFitter(TFormula *function, Option_t *opt)
    fNfixed=0;
    fFixedParams=0;
    fSpecial=0;
+   fFormula = 0;
    TString option=opt;
    option.ToUpper();
    if (option.Contains("D"))
@@ -345,10 +352,6 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    //Add a point to the AtA matrix and to the Atb vector.
 
    Int_t i, j, ii;
-   fEsum+=e;
-   //for numerical stability if y is large
-   e = TMath::Sqrt(e*e + (y*y*1e-26));
-   fEcorsum+=e;
    y/=e;
 
    Double_t val[100];
@@ -487,13 +490,6 @@ void TLinearFitter::Chisquare()
    Int_t i, j;
    Double_t sumtotal2;
    Double_t temp, temp2;
-
-   if (fEcorsum/fEsum > 1e3) {
-      Warning("Chisquare", "Some values of Y are very large compared to the weights\n");
-      printf("The chisquare might be calculated incorrectly. \n");
-      printf("It doesn't mean that parameters  or parameter errors are not correct\n");
-   }
-
 
    if (!fStoreData){
       sumtotal2 = 0;
@@ -920,8 +916,6 @@ void TLinearFitter::SetFormula(const char *formula)
       fFixedParams[i]=0;
    fIsSet=kFALSE;
    fChisquare=0;
-   fEsum=0;
-   fEcorsum=0;
 
 }
 
@@ -974,8 +968,7 @@ void TLinearFitter::SetFormula(TFormula *function)
       fFixedParams[i]=0;
    fIsSet=kFALSE;
    fChisquare=0;
-   fEsum=0;
-   fEcorsum=0;
+
 }
 
 //______________________________________________________________________________

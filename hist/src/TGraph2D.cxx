@@ -507,6 +507,10 @@ TObject *TGraph2D::FindObject(const TObject *obj) const
 Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 {
    // Fits this graph with function with name fname
+   // Predefined functions such as gaus, expo and poln are automatically
+   // created by ROOT.
+   // fname can also be a formula, accepted by the linear fitter (linear parts divided
+   // by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
 
    char *linear;
@@ -543,6 +547,8 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //                  is drawn unless the option"N" above is specified.
    //            = "+" Add this new fitted function to the list of fitted functions
    //                  (by default, any previous function is deleted)
+   //            = "C" In case of linear fitting, not calculate the chisquare
+   //                  (saves time)
    //
    //  In order to use the Range option, one must first create a function
    //  with the expression to be fitted. For example, if your graph2d

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.158 2005/04/26 12:33:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.159 2005/04/26 14:31:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -953,7 +953,13 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
-//  interface to TF1::Fit(TF1 *f1...
+//  interface to TGraph::Fit(TF1 *f1...
+//
+//      fname is the name of an already predefined function created by TF1 or TF2
+//      Predefined functions such as gaus, expo and poln are automatically
+//      created by ROOT.
+//      fname can also be a formula, accepted by the linear fitter (linear parts divided
+//      by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
    char *linear;
    linear= (char*) strstr(fname, "++");
@@ -1011,6 +1017,18 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //   Note that this function is called when calling TGraphErrors::Fit
 //   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
 //   see the discussion below on the errors calulation.
+//
+//   Linear fitting
+//   ============================
+//   When the fitting function is linear (contains the "++" sign) or the fitting
+//   function is a polynomial, a linear fitter is initialised.
+//   To create a linear function, use the following syntaxis: linear parts
+//   separated by "++" sign. 
+//   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a 
+//    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
+//   For such a TF1 you don't have to set the initial conditions
+//   Going via the linear fitter for functions, linear in parameters, gives a considerable
+//   advantage in speed.
 //
 //   Setting initial conditions
 //   ==========================
@@ -1071,6 +1089,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 // is of (error of x)**2 order. This approach is called "effective variance method".
 // This improvement has been made in version 4.00/08 by Anna Kreshuk.
 //
+// Note, that the linear fitter doesn't take into account the errors in x. If errors
+// in x are important, go through minuit (use option "F" for polynomial fitting).
+//
 //   Associated functions
 //   ====================
 //  One or more object (typically a TF1*) can be added to the list
@@ -1105,6 +1126,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
+
+
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
