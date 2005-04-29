@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.12 2005/04/29 17:05:49 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.1 2005/04/29 16:16:35 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -251,7 +251,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    // color for the dark part of the frame light is the color for the light
    // part of the frame
 
-   if (!gPad || !fImage) {
+   if (!gPad || !fImage || (bordersize < 1)) {
       return;
    }
    TColor *col;
@@ -267,6 +267,12 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    else           {pxl = px2; pxt = px1; xl = x2; xt = x1;}
    if (py1 > py2) {pyl = py1; pyt = py2; yl = y1; yt = y2;}
    else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
+
+   if (bordersize == 1) {
+      fImage->DrawBox(pxl, pyl, pxt, pyt-1, 
+                      gROOT->GetColor(fLineColor)->AsHexString());
+      return;
+   }
 
    TPoint frame[6];
 
@@ -652,9 +658,6 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    if (ttfsize <= 0) return;
 
    // Text alignment
-   Float_t tsizex = gPad->AbsPixeltoX(ttfsize) - gPad->AbsPixeltoX(0);
-   Float_t tsizey = gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(ttfsize);
-
    Int_t txalh = fTextAlign/10;
    if (txalh < 1) txalh = 1;
    if (txalh > 3) txalh = 3;
@@ -674,7 +677,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    if (txalh == 3) x -= w;
 
    if (txalv == 3) {
-     //y += 0.5 * h * TMath::Cos(kDEGRAD*fTextAngle);
+     y += h * TMath::Cos(kDEGRAD*fTextAngle);
      //x += 0.5 * h * TMath::Sin(kDEGRAD*fTextAngle);
    } if (txalv == 2) {
      y += 0.5 * h * TMath::Cos(kDEGRAD*fTextAngle);

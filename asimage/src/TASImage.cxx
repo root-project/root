@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.17 2005/01/31 17:20:30 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.18 2005/04/29 16:16:34 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -66,7 +66,6 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TObjArray.h"
-#include "TASPaletteEditor.h"
 #include "TArrayL.h"
 #include "TPoint.h"
 #include "TFrame.h"
@@ -92,7 +91,7 @@ extern "C" {
     extern Display *dpy;    // defined in afterbase.c
 }
 
-// auxilary polygon filling functions
+// auxilary general polygon filling functions
 #include "TASPolyUtils.c"
 
 
@@ -3499,7 +3498,7 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
 void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick,
                             TImage::ECoordMode mode)
 {
-   // draw poly line
+   // draw polyline
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -4441,10 +4440,10 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
 	}
 
    if (corner_y > 0) { 
-      dst += corner_y * cw;
+      dst += corner_y*cw;
    } else if (corner_y < 0) { 
       ah -= -corner_y;
-      src += -corner_y * tw;
+      src += -corner_y*tw;
    }
 
    if (corner_x  > 0) { 
@@ -4486,8 +4485,12 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 	ctx->tool = brush;
 	ctx->fill_hline_func = fill_hline_notile_argb32;
    ctx->apply_tool_func = apply_tool_2D_argb32;
+
 	return ctx;
 }
+
+static const UInt_t kBrushCacheSize = 20;
+static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
 
 //______________________________________________________________________________
 void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, 
@@ -4496,9 +4499,15 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    // draw wide line
 
    Int_t sz = thick*thick;
-   CARD32 *matrix = new CARD32[sz];
+   CARD32 *matrix;
 
-   for (int i=0; i < sz; i++) {
+   if (thick < kBrushCacheSize) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
       matrix[i] = (CARD32)color;
    };
 
@@ -4512,7 +4521,9 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    asim_move_to(ctx, x1, y1);
    asim_line_to(ctx, x2, y2);
 
-   delete [] matrix;
+   if (thick >= kBrushCacheSize) {
+      delete [] matrix;
+   }
 }
 
 
