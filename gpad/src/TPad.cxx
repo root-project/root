@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.173 2005/04/21 09:51:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.174 2005/04/25 17:23:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3489,6 +3489,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    char *filename = gSystem->ExpandPathName(filenam);
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
+   Bool_t image = kFALSE;
 
 //*-*   Set the default option as "Postscript" (Should be a data member of TPad)
 
@@ -3514,44 +3515,42 @@ void TPad::Print(const char *filenam, Option_t *option)
 
 //==============Save pad/canvas as a GIF file==================================
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (strstr(opt,"gif")) {
+   if (strstr(opt, "gif")) {
       gtype = TImage::kGif;
-   } else if (strstr(opt,"png")) {
+      image = kTRUE;
+   } else if (strstr(opt, "png")) {
       gtype = TImage::kPng;
-   } else if (strstr(opt,"jpg")) {
+      image = kTRUE;
+   } else if (strstr(opt, "jpg")) {
       gtype = TImage::kJpeg;
-   } else if (strstr(opt,"tiff")) {
+      image = kTRUE;
+   } else if (strstr(opt, "tiff")) {
       gtype = TImage::kTiff;
-   } else if (strstr(opt,"xpm")) {
+      image = kTRUE;
+   } else if (strstr(opt, "xpm")) {
       gtype = TImage::kXpm;
+      image = kTRUE;
+   } else if (strstr(opt, "bmp")) {
+      gtype = TImage::kBmp;
+      image = kTRUE;
    }
 
-   if (gtype != TImage::kUnknown) {
-      if (GetCanvas()->IsBatch()) {
-         Printf("Cannot create %s file in batch mode.", opt);
-         return;
-      }
-      Update();
+   if (!gROOT->IsBatch() && image) {
+      if (gtype != TImage::kUnknown) {
 
-      Int_t saver = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kFatal;
-      TImage *img = TImage::Create();
-      gErrorIgnoreLevel = saver;
+         Int_t saver = gErrorIgnoreLevel;
+         gErrorIgnoreLevel = kFatal;
+         TImage* img = TImage::Create();
+         gErrorIgnoreLevel = saver;
 
-      if (!img || (gtype == TImage::kGif)) {
-         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-
-         gVirtualX->SelectWindow(wid);
-         if (gVirtualX->WriteGIF((char*)psname.Data())) {
-            if (!gSystem->AccessPathName(psname)) Info("Print", "GIF file %s has been created", psname.Data());
-         }
-      } else {
          img->FromPad(this);
          img->WriteImage(psname, gtype);
-         if (!gSystem->AccessPathName(psname)) Info("Print", "file %s has been created", psname.Data());
+         if (!gSystem->AccessPathName(psname.Data())) {
+            Info("Print", "file %s has been created", psname.Data());
+         }
+      } else {
+         Warning("Print", "Cannot create %s file in batch mode.", opt);
       }
-
-      delete img;
       return;
    }
 
@@ -3626,6 +3625,38 @@ void TPad::Print(const char *filenam, Option_t *option)
       gVirtualPS = 0;
       padsav->cd();
 
+      return;
+   }
+
+//==============Save pad/canvas as an image file in batch mode============================
+   if (image) {
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname.Data());
+
+      TPad *padsav = (TPad*)gPad;
+      cd();
+      TVirtualPS *psave = gVirtualPS;
+
+      if (!gVirtualPS) {
+         // Plugin Postscript/SVG driver
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "image"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+         }
+      }
+      if (gVirtualPS) {
+         gVirtualPS->Open(psname.Data());
+         gVirtualPS->SetBit(kPrintingPS);
+         //gVirtualPS->NewPage();
+         Paint();
+
+         // close image
+         delete gVirtualPS;
+      }
+
+      gVirtualPS = psave;
+      padsav->cd();
       return;
    }
 
@@ -4069,29 +4100,33 @@ void TPad::SaveAs(const char *filename)
    }
 
    if (psname.EndsWith(".gif"))
-                Print(psname.Data(),"gif");
+                Print(psname,"gif");
    else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp"))
-                Print(psname.Data(),"cxx");
+                Print(psname,"cxx");
    else if (psname.EndsWith(".root"))
-                Print(psname.Data(),"root");
+                Print(psname,"root");
    else if (psname.EndsWith(".xml"))
-                Print(psname.Data(),"xml");
+                Print(psname,"xml");
    else if (psname.EndsWith(".eps"))
-                Print(psname.Data(),"eps");
+                Print(psname,"eps");
    else if (psname.EndsWith(".pdf"))
-                Print(psname.Data(),"pdf");
+                Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
-                Print(psname.Data(),"svg");
+                Print(psname,"svg");
    else if (psname.EndsWith(".xpm"))
-                Print(psname.Data(),"xpm");
+                Print(psname,"xpm");
    else if (psname.EndsWith(".png"))
-                Print(psname.Data(),"png");
+                Print(psname,"png");
    else if (psname.EndsWith(".jpg"))
                 Print(psname,"jpg");
+   else if (psname.EndsWith(".jpeg"))
+                Print(psname,"jpg");
+   else if (psname.EndsWith(".bmp"))
+                Print(psname,"bmp");
    else if (psname.EndsWith(".tiff"))
-                Print(psname.Data(),"tiff");
+                Print(psname,"tiff");
    else
-                Print(psname.Data(),"ps");
+                Print(psname,"ps");
 
  }
 

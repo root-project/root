@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.3 2004/10/19 17:13:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.4 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -119,6 +119,7 @@ public:
    TImage(const TImage &img) : TNamed(img), TAttImage(img) { }
    TImage &operator=(const TImage &img)
             { TNamed::operator=(img); TAttImage::operator=(img); return *this; }
+   TImage(UInt_t /*w*/, UInt_t /*h*/) : TNamed(), TAttImage() { }
 
    virtual ~TImage() { }
 

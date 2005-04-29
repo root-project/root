@@ -43,20 +43,36 @@ ASIMAGEDS    := $(MODDIRS)/G__ASImage.cxx
 ASIMAGEDO    := $(ASIMAGEDS:.cxx=.o)
 ASIMAGEDH    := $(ASIMAGEDS:.cxx=.h)
 
-ASIMAGEH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-ASIMAGES     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+ASIMAGEH     := $(MODDIRI)/TASImage.h
+ASIMAGES     := $(MODDIRS)/TASImage.cxx
 ASIMAGEO     := $(ASIMAGES:.cxx=.o)
 
 ASIMAGEDEP   := $(ASIMAGEO:.o=.d) $(ASIMAGEDO:.o=.d)
 
 ASIMAGELIB   := $(LPATH)/libASImage.$(SOEXT)
 
+##### libASImageGui #####
+ASIMAGEGUIL  := $(MODDIRI)/LinkDefGui.h
+ASIMAGEGUIDS := $(MODDIRS)/G__ASImageGui.cxx
+ASIMAGEGUIDO := $(ASIMAGEGUIDS:.cxx=.o)
+ASIMAGEGUIDH := $(ASIMAGEGUIDS:.cxx=.h)
+
+ASIMAGEGUIH  := $(MODDIRI)/TASPaletteEditor.h
+ASIMAGEGUIS  := $(MODDIRS)/TASPaletteEditor.cxx
+ASIMAGEGUIO  := $(ASIMAGEGUIS:.cxx=.o)
+
+ASIMAGEGUIDEP := $(ASIMAGEGUIO:.o=.d) $(ASIMAGEGUIDO:.o=.d)
+
+ASIMAGEGUILIB := $(LPATH)/libASImageGui.$(SOEXT)
+
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEH))
-ALLLIBS     += $(ASIMAGELIB)
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ASIMAGEGUIH))
+ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB)
 
 # include all dependency files
-INCLUDEFILES += $(ASIMAGEDEP)
+INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
 
 ##### local rules #####
 include/%.h:    $(ASIMAGEDIRI)/%.h
@@ -149,6 +165,7 @@ else
 endif
 endif
 
+##### libASImage #####
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
                 $(MAINLIBS) $(ASIMAGELIBDEP)
 ifeq ($(PLATFORM),win32)
@@ -160,7 +177,7 @@ else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
@@ -170,16 +187,43 @@ $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
 		$(CXX) $(NOOPT) $(CXXFLAGS) $(ASTEPDIRI) -I. -o $@ -c $<
 
-all-asimage:    $(ASIMAGELIB)
+
+##### libASImageGui #####
+$(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEGO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
+                $(MAINLIBS) $(ASIMAGEGUILIBDEP)
+ifeq ($(PLATFORM),win32)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImageGui.$(SOEXT) $@ \
+		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
+		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) $(ASIMAGELIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+else
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImageGui.$(SOEXT) $@ \
+		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
+		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) $(ASIMAGELIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+endif
+
+$(ASIMAGEGUIDS):   $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEGUIH) $(ASIMAGEGUIL)
+
+$(ASIMAGEGUIDO):   $(ASIMAGEGUIDS) $(ASIMAGEDS) $(ASTEPLIB)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(ASTEPDIRI) -I. -o $@ -c $<
+
+all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB)
 
 map-asimage:    $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGELIB) \
 		   -d $(ASIMAGELIBDEP) -c $(ASIMAGEL)
 
-map::           map-asimage
+map-asimagegui:    $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(ASIMAGEGUILIB) \
+		   -d $(ASIMAGEGUILIBDEP) -c $(ASIMAGEGUIL)
+
+map::           map-asimage map-asimagegui
 
 clean-asimage:
-		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
+		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO)
 ifeq ($(BUILTINASIMAGE), yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(ASTEPDIRS) ]; then \
@@ -199,7 +243,9 @@ endif
 clean::         clean-asimage
 
 distclean-asimage: clean-asimage
-		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB)
+		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB) \
+				$(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) $(ASIMAGEGUILIB)
+
 ifeq ($(BUILTINASIMAGE), yes)
 		@rm -rf $(ASTEPLIB)
 endif
@@ -209,4 +255,7 @@ distclean::     distclean-asimage
 
 ##### extra rules ######
 $(ASIMAGEO): %.o: %.cxx $(ASTEPLIB)
+	$(CXX) $(OPT) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<
+
+$(ASIMAGEGUIO): %.o: %.cxx $(ASTEPLIB)
 	$(CXX) $(OPT) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<

@@ -1,5 +1,5 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.16 2005/01/25 16:00:37 brun Exp $
-// Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.17 2005/01/31 17:20:30 brun Exp $
+// Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun, Fons Rademakers and Reiner Rohlfs *
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /**************************************************************************
- * The part of this source is based on AfterStep-2.00.00 code
+ * Some parts of this source are based on AfterStep-2.00.00
  *          (http://www.afterstep.org/)
  *
  * Copyright (c) 2002 Sasha Vasko <sasha@aftercode.net>
@@ -52,10 +52,6 @@
 // The color palette can be modified with a GUI, just select            //
 // StartPaletteEditor() from the context menu.                          //
 //                                                                      //
-// There are two methods for polygon filling:                           //
-//    FillPolygon  - fill convex  polygon                               //
-//    DrawFillArea - general polygon filling according "Even-Odd Rule". //
-//    Both methods has correspondent TVirtualX ones.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -75,7 +71,6 @@
 #include "TPoint.h"
 #include "TFrame.h"
 
-
 #ifndef WIN32
 #   include <X11/Xlib.h>
 #else
@@ -92,8 +87,13 @@ extern "C" {
 #   include <bmp.h>
 #   define X_DISPLAY_MISSING 1
 #endif
+#   include <draw.h> 
+
     extern Display *dpy;    // defined in afterbase.c
 }
+
+// auxilary polygon filling functions
+#include "TASPolyUtils.c"
 
 
 ASVisual *TASImage::fgVisual;
@@ -101,6 +101,7 @@ Bool_t TASImage::fgInit = kFALSE;
 
 static ASFontManager *gFontManager = 0;
 
+///////////////////////////// alphablending macros ///////////////////////////////
 typedef struct {
    unsigned char b;
    unsigned char g;
@@ -108,22 +109,19 @@ typedef struct {
    unsigned char a;
 } __argb32__;
 
-static __argb32__ *t;
-static __argb32__ *b;
+static __argb32__ *t = new __argb32__;
+static __argb32__ *b = new __argb32__;
 
 //______________________________________________________________________________
-inline void _alphaBlend(ARGB32 *bot, ARGB32 *top)
-{
-   // auxilary function providing alphablending for vector graphics
+#define _alphaBlend(bot, top) do {\
+   t = (__argb32__*)(top);\
+   b = (__argb32__*)(bot);\
+   b->a = b->a*(255-t->a)>>8 + t->a;\
+   b->r = (b->r*(255-t->a)+t->r*t->a)>>8;\
+   b->g = (b->g*(255-t->a)+t->g*t->a)>>8;\
+   b->b = (b->b*(255-t->a)+t->b*t->a)>>8;\
+} while (0)
 
-   t = (__argb32__*)top;
-   b = (__argb32__*)bot;
-
-   b->a = b->a*(255-t->a)>>8 + t->a;
-   b->r = (b->r*(255-t->a)+t->r*t->a)>>8;
-   b->g = (b->g*(255-t->a)+t->g*t->a)>>8;
-   b->b = (b->b*(255-t->a)+t->b*t->a)>>8;
-}
 
 
 ClassImp(TASImage)
@@ -143,6 +141,23 @@ TASImage::TASImage()
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
       fgInit = kTRUE;
    }
+}
+
+//______________________________________________________________________________
+TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
+{
+   // create an empty image
+
+   fScaledImage = 0;
+   fEditable    = kFALSE;
+   fPaintMode   = kTRUE;
+
+   if (!fgInit) {
+      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
+      fgInit = kTRUE;
+   }
+
+   fImage = fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
 }
 
 //______________________________________________________________________________
@@ -352,7 +367,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    if ((s = strrchr(file, '.'))) {
       s++;
       EImageFileTypes t = GetFileType(s);
-      if (t == kUnknown && type == kUnknown) {
+      if (t == kUnknown) {
          Error("WriteImage", "cannot determine a valid file type");
          return;
       }
@@ -381,6 +396,12 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.xpm.opaque_threshold = 127;
       parms.xpm.max_colors = 512;
       break;
+   case kBmp:
+      ASImage2bmp(fScaledImage ? fScaledImage->fImage : fImage, file, 0);
+      return;
+   case kXcf:
+      ASImage2xcf(fScaledImage ? fScaledImage->fImage : fImage, file, 0);
+      return;
    case kPng:
       parms.png.type = atype;
       parms.png.flags = EXPORT_ALPHA;
@@ -693,8 +714,12 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (h == 0)
       h = pad->VtoPixel(0.);
 
-   Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvas()->GetCanvasID()
-                                         : pad->GetPixmapID();
+   TCanvas *canvas = pad->GetCanvas();
+   canvas->Show();
+   pad->Modified();
+   canvas->Update();
+
+   Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    Window wd = (Window) gVirtualX->GetWindowID(wid);
 
 #ifndef WIN32
@@ -1504,10 +1529,15 @@ Bool_t TASImage::InitVisual()
    // Static function to initialize the ASVisual.
 
    if (fgVisual) return kTRUE;
-   if (gROOT->IsBatch()) return kFALSE;
+
+   // batch or win32 mode
+   if (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32")) {
+      dpy = 0;
+      fgVisual = create_asvisual( NULL, 0, 0, NULL );
+      return kTRUE;
+   }
 
    dpy = (Display*) gVirtualX->GetDisplay();
-
    Int_t screen  = gVirtualX->GetScreen();
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
@@ -1518,6 +1548,7 @@ Bool_t TASImage::InitVisual()
 #else
    fgVisual = create_asvisual( NULL, 0, 0, NULL );
 #endif
+
    return kTRUE;
 }
 
@@ -2344,39 +2375,6 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
    UnZoom();
 }
 
-//______________________________________________________________________________
-void TASImage::GetTextSize(UInt_t *width, UInt_t *height, const char *text,
-                           Int_t size, const char *font_name, EText3DType type)
-{
-   // returns width and height of the ttext
-
-   if (!gFontManager) gFontManager = create_font_manager(dpy, 0, 0);
-
-   if (!gFontManager) {
-      ::Warning("GetTextSize", "cannot create Font Manager");
-      return;
-   }
-
-   TString fn = font_name;
-   fn.Strip();
-
-   *width = 0;
-   *height = 0;
-
-   if (fn.EndsWith(".ttf") || fn.EndsWith(".TTF")) {
-      fn = gSystem->ExpandPathName(fn.Data());
-   }
-
-   ASFont *font = get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
-
-   if (!font) {
-      ::Warning("GetTextSize", "cannot find a font %s", font_name);
-      return;
-   }
-
-   get_text_size(text, font, (ASText3DType)type, width, height);
-}
-
 /////////////// auxilary funcs used in TASImage::Bevel method //////////////////
 //______________________________________________________________________________
 static CARD8 MakeComponentHilite(int cmp)
@@ -2858,7 +2856,7 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
    int xx = 0;
 
    if (!fImage->alt.argb32) {
-      fill_asimage(fgVisual, fImage, x, y, x+width, height, color); // x+width - because of bug in ASImage
+      fill_asimage(fgVisual, fImage, x, y, width, height, color); // x+width - because of bug in ASImage
    } else {
       for (UInt_t i = 0; i < height; i++) {
          for (UInt_t j = 0; j < width; j++) {
@@ -2992,7 +2990,6 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    int x, y, xend, yend;
    int xdir, ydir;
    int wid, q;
-   int w, wstart;
 
    if (!InitVisual()) {
       Warning("DrawLine", "Visual not initiated");
@@ -3030,15 +3027,18 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       return;
    }
 
-   if (dy <= dx) {
-      double ac = TMath::Cos(TMath::ATan2(dy, dx));
-      wid = ac != 0 ? int(thick/ac) : 1;
-      wid = wid ? wid : 1;
+   if (thick > 1) {
+      DrawWideLine(x1, y1, x2, y2, color, thick);
+      return;
+   }
 
+   wid = 1;
+
+   if (dy <= dx) {
       UInt_t ddy = dy << 1;
-      d = ddy - dx;
       i1 = ddy;
-      i2 = (dy - dx) << 1;
+      i2 = i1 - (dx << 1);
+      d = i1 - dx;
 
       if (x1 > x2) {
          x = x2;
@@ -3052,59 +3052,39 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          xend = x2;
       }
 
-      wstart = y - (wid >> 1);
-
-      for (w = wstart; w < wstart + wid; w++) {
-         _alphaBlend(&fImage->alt.argb32[w*fImage->width + x], &color);
-      }
-
+      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
       q = (y2 - y1) * ydir;
 
       if (q > 0) {
-
          while (x < xend) {
-            wstart = y - (wid >> 1);
-
-            for (w = wstart; w < wstart + wid; w++) {
-               _alphaBlend(&fImage->alt.argb32[w*fImage->width + x], &color);
-            }
+            _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             x++;
-            d += i1;
 
             if (d >= 0) {
                y++;
                d += i2;
-            } 
-
+            } else {
+               d += i1;
+            }
          }
       } else {
-
          while (x < xend) {
-            wstart = y - (wid >> 1);
-
-            for (w = wstart; w < wstart + wid; w++) {
-               _alphaBlend(&fImage->alt.argb32[w*fImage->width + x], &color);
-            }
+            _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             x++;
-            d += i1;
+            
             if (d >= 0) {
                y--;
                d += i2;
+            } else {
+               d += i1;
             }
-
          }
       }
    } else {
-
-      double as = TMath::Sin(TMath::ATan2(dy, dx));
-      wid = as != 0 ? int(thick/as) : 1;
-      wid = wid ? wid : 1;
-
       UInt_t ddx = dx << 1;
-
-      d = ddx - dy;
       i1 = ddx;
-      i2 = (dx - dy) << 1;
+      i2 = i1 - (dy << 1);
+      d = i1 - dy;
 
       if (y1 > y2) {
          y = y2;
@@ -3118,46 +3098,31 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          xdir = 1;
       }
 
-      wstart = x - (wid >> 1);
-
-      for (w = wstart; w < wstart + wid; w++) {
-         _alphaBlend(&fImage->alt.argb32[y*fImage->width + w], &color);
-      }
-
+      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
       q = (x2 - x1) * xdir;
 
       if (q > 0) {
-
          while (y < yend) {
-            wstart = x - (wid >> 1);
-
-            for (w = wstart; w < wstart + wid; w++) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + w], &color);
-            }
-
-            d += i1;
+            _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             y++;
 
             if (d >= 0) {
                x++;
                d += i2;
+            } else {
+               d += i1;
             }
-
          }
       } else {
          while (y < yend) {
-            wstart = x - (wid >> 1);
-
-            for (w = wstart; w < wstart + wid; w++) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + w], &color);
-            }
-
-            d += i1;
+            _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);    
             y++;
 
             if (d >= 0) {
                x--;
                d += i2;
+            } else {
+               d += i1;
             }
          }
       }
@@ -3201,6 +3166,7 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
          break;
 
       default:
+         FillRectangle(col, x, y, w, h);
          break;
    }
 }
@@ -3319,7 +3285,7 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    // draw dashed line with 1 pixel width
 
    int dx, dy, d;
-   int i, i1, i2, i3;
+   int i, i1, i2;
    int x, y, xend, yend;
    int xdir, ydir;
    int q;
@@ -3338,9 +3304,9 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       UInt_t ddy = dy << 1;
-      d = ddy - dx;
       i1 = ddy;
-      i2 = (dy - dx) << 1;
+      i2 = i1 - (dx << 1);
+      d = i1 - dx;
       i = 0;
 
       if (x1 > x2) {
@@ -3355,25 +3321,21 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          xend = x2;
       }
 
-      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
 
       q = (y2 - y1) * ydir;
-      i3 = i2 - i1;
-      d -= i1;
 
       if (q > 0) {
-
          while (x < xend) {
-
-            if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+            if ((iDash%2) == 0) {
+               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             }
-            d += i1;
             x++;
-
             if (d >= 0) {
                y++;
-               d += i3;
+               d += i2;
+            } else {
+               d += i1;
             }
 
             i++;
@@ -3387,19 +3349,16 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
             }
          }
       } else {
-      i3 = i2 - i1;
-      d -= i1;
-
          while (x < xend) {
-
-            if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+            if ((iDash%2) == 0) {
+               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             }
-            d += i1;
             x++;
             if (d >= 0) {
                y--;
-               d += i3;
+               d += i2;
+            } else {
+               d += i1;
             }
 
             i++;
@@ -3421,17 +3380,16 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       }
 
       UInt_t ddx = dx << 1;
-
-      d = ddx - dy;
       i1 = ddx;
-      i2 = (dx - dy) << 1;
+      i2 = i1 - (dy << 1);
+      d = i1 - dy;
       i = 0;
 
       if (y1 > y2) {
          y = y2;
          x = x2;
          yend = y1;
-         xdir = (-1);
+         xdir = -1;
       } else {
          y = y1;
          x = x1;
@@ -3439,23 +3397,21 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          xdir = 1;
       }
 
-      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+      _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
 
       q = (x2 - x1) * xdir;
 
       if (q > 0) {
-
          while (y < yend) {
-
-            if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+            if ((iDash%2) == 0) {
+               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             }
-            d += i1;
             y++;
-
             if (d >= 0) {
                x++;
                d += i2;
+            } else {
+               d += i1;
             }
 
             i++;
@@ -3470,17 +3426,15 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
          }
       } else {
          while (y < yend) {
-
-            if ((iDash%2)==0) {
-               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], (ARGB32*)&color);
+            if ((iDash%2) == 0) {
+               _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
             }
-
-            d += i1;
             y++;
-
             if (d >= 0) {
                x--;
                d += i2;
+            } else {
+               d += i1;
             }
 
             i++;
@@ -3560,6 +3514,7 @@ void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick
       y = (mode == kCoordModePrevious) ? y + xy[i].GetY() : xy[i].GetY();
 
       DrawLineInternal(x0, y0, x, y, (UInt_t)color, thick);
+
       x0 = x;
       y0 = y;
    }
@@ -3709,34 +3664,32 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
    }
 
    if (!npt || !ppt || !widths || (stipple && (!w || !h))) {
-      Warning("FillSpans", "Invalid input data npt=%d ppt=%x stipple=%x stipple=%x w=%d h=%d",
-              npt, ppt, widths, stipple, w, h);
+      Warning("FillSpans", "Invalid input data npt=%d ppt=%x col=%s widths=%x stipple=%x w=%d h=%d",
+              npt, ppt, col, widths, stipple, w, h);
       return;
    }
 
    ARGB32 color;
    parse_argb_color(col, &color);
-
    Int_t idx = 0;
-   Int_t ii = 0;
-   Int_t sz = fImage->width*fImage->height;
-   UInt_t x = 0;  
-   UInt_t xx = 0;
-   UInt_t yy = 0;
+   UInt_t x = 0;
 
    for (UInt_t i = 0; i < npt; i++) {
       for (UInt_t j = 0; j < widths[i]; j++) {
+         if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
+             (ppt[i].fY >= (Int_t)fImage->height) || (ppt[i].fY < 0)) continue;
+
          x = ppt[i].fX + j;
          idx = ppt[i].fY*fImage->width + x;
 
-         if (idx < sz) {
-            xx = x%w;
-            yy = ppt[i].fY%h;
-            ii = yy*w + xx;
+         if (!stipple) {
+            _alphaBlend(&fImage->alt.argb32[idx], &color);
+         } else {
+            Int_t ii = (ppt[i].fY%h)*w + x%w;
 
-            if (!stipple) _alphaBlend(&fImage->alt.argb32[idx], &color);
-            else if (stipple[ii/8] & (1 << (ii%8))) _alphaBlend(&fImage->alt.argb32[idx], &color);
-
+            if (stipple[ii/8] & (1 << (ii%8))) {
+               _alphaBlend(&fImage->alt.argb32[idx], &color);
+            }
          }
       }
    }
@@ -3774,7 +3727,6 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 
    Int_t idx = 0;
    Int_t ii = 0;
-   Int_t sz = fImage->width*fImage->height;
    UInt_t x = 0;  
    UInt_t *arr = tile->GetArgbArray();
    UInt_t xx = 0;
@@ -3782,15 +3734,14 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 
    for (UInt_t i = 0; i < npt; i++) {
       for (UInt_t j = 0; j < widths[i]; j++) {
+         if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
+             (ppt[i].fY >= (Int_t)fImage->height) || (ppt[i].fY < 0)) continue;
          x = ppt[i].fX + j;
          idx = ppt[i].fY*fImage->width + x;
-
-         if (idx < sz) {
-            xx = x%tile->GetWidth();
-            yy = ppt[i].fY%tile->GetHeight();
-            ii = yy*tile->GetWidth() + xx;
-            _alphaBlend(&fImage->alt.argb32[idx], (ARGB32*)&arr[ii]);
-         }
+         xx = x%tile->GetWidth();
+         yy = ppt[i].fY%tile->GetHeight();
+         ii = yy*tile->GetWidth() + xx;
+         _alphaBlend(&fImage->alt.argb32[idx], &arr[ii]);
       }
    }
 }
@@ -3856,7 +3807,6 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
       }
    }
 }
-
 
 //______________________________________________________________________________
 void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h,
@@ -4016,55 +3966,19 @@ UInt_t TASImage::AlphaBlend(UInt_t bot, UInt_t top)
 
    UInt_t ret = bot;
 
-   _alphaBlend((ARGB32*)&ret, (ARGB32*)&top);
+   _alphaBlend(&ret, &top);
    return ret;
 }
 
+//______________________________________________________________________________
+const ASVisual *TASImage::GetVisual()
+{
+   // return visual
+
+   return fgVisual;
+}
+
 //////////////////////// polygon filling //////////////////////////////
-#define BRESINITPGON(dy, x1, x2, xStart, d, m, m1, incr1, incr2) { \
-    int dx;\
-\
-    if ((dy) != 0) { \
-        xStart = (x1); \
-        dx = (x2) - xStart; \
-        if (dx < 0) { \
-            m = dx / (dy); \
-            m1 = m - 1; \
-            incr1 = -2 * dx + 2 * (dy) * m1; \
-            incr2 = -2 * dx + 2 * (dy) * m; \
-            d = 2 * m * (dy) - 2 * dx - 2 * (dy); \
-        } else { \
-            m = dx / (dy); \
-            m1 = m + 1; \
-            incr1 = 2 * dx - 2 * (dy) * m1; \
-            incr2 = 2 * dx - 2 * (dy) * m; \
-            d = -2 * m * (dy) + 2 * dx; \
-        } \
-    } \
-}
-
-#define BRESINCRPGON(d, minval, m, m1, incr1, incr2) { \
-    if (m1 > 0) { \
-        if (d > 0) { \
-            minval += m1; \
-            d += incr1; \
-        } \
-        else { \
-            minval += m; \
-            d += incr2; \
-        } \
-    } else {\
-        if (d >= 0) { \
-            minval += m1; \
-            d += incr1; \
-        } \
-        else { \
-            minval += m; \
-            d += incr2; \
-        } \
-    } \
-}
-
 //______________________________________________________________________________
 static int GetPolyYBounds(TPoint *pts, int n, int *by, int *ty)
 {
@@ -4150,7 +4064,6 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
    //  find leftx, bottomy, rightx, topy, and the index
    //  of bottomy. Also translate the points.
-
    imin = GetPolyYBounds(ppt, npt, &ymin, &ymax);
 
    dy = ymax - ymin + 1;
@@ -4165,13 +4078,11 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    //  loop through all edges of the polygon
    do {
       // add a left edge if we need to
- 
       if (ppt[nextleft].fY == y) {
          left = nextleft;
 
          //  find the next edge, considering the end
          //  conditions of the array.
- 
          nextleft++;
          if (nextleft >= (int)npt) {
             nextleft = 0;
@@ -4179,7 +4090,6 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
          // now compute all of the random information
          // needed to run the iterative algorithm.
-
          BRESINITPGON(ppt[nextleft].fY - ppt[left].fY,
                       ppt[left].fX, ppt[nextleft].fX,
                       xl, dl, ml, m1l, incr1l, incr2l);
@@ -4191,7 +4101,6 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
          // find the next edge, considering the end
          // conditions of the array.
-
          nextright--;
          if (nextright < 0) {
             nextright = npt-1;
@@ -4199,7 +4108,6 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
          //  now compute all of the random information
          //  needed to run the iterative algorithm.
-
          BRESINITPGON(ppt[nextright].fY - ppt[right].fY,
                       ppt[right].fX, ppt[nextright].fX,
                       xr, dr, mr, m1r, incr1r, incr2r);
@@ -4207,7 +4115,6 @@ void TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
       // generate scans to fill while we still have
       //  a right edge as well as a left edge.
-
       i = min(ppt[nextleft].fY, ppt[nextright].fY) - y;
 
       // in case we're called with non-convex polygon
@@ -4303,34 +4210,21 @@ void TASImage::CropPolygon(UInt_t npt, TPoint *ppt)
    }
 }
 
-class EdgeTableEntry : public TObject {
-public:
-   UInt_t fYmax;
-   Bool_t fClock;
-   int fMinor;    // minor axis
-   int fD;        // decision variable
-   int fM;        // slope
-   int fM1;       // slope+1
-   int fIncr1;    // error increment
-   int fIncr2;    // error increment
-};
+static const int NUMPTSTOBUFFER = 512;
 
 //______________________________________________________________________________
-void TASImage::GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t * /*nspans*/, 
-                                TPoint ** /*firstPoint*/, UInt_t ** /*firstWidth*/)
+void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col, 
+                           const char *stipple, UInt_t w, UInt_t h)
 {
    // fill a polygon (any type convex, non-convex)
-   //
-   // The code is based on Xserver/mi
-   //    "Copyright 1987, 1998  The Open Group"
 
    if (!InitVisual()) {
-      Warning("GetFillAreaSpans", "Visual not initiated");
+      Warning("DrawFillArea", "Visual not initiated");
       return;
    }
 
    if (!fImage) {
-      Warning("GetFillAreaSpans", "no image");
+      Warning("DrawFillArea", "no image");
       return;
    }
 
@@ -4339,172 +4233,287 @@ void TASImage::GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t * /*nspans*/,
    }
 
    if (!fImage->alt.argb32) {
-      Warning("GetFillAreaSpans", "Failed to get pixel array");
+      Warning("DrawFillArea", "Failed to get pixel array");
       return;
    }
 
-   if ((npt < 3) || !ppt) {
-      Warning("GetFillAreaSpans", "No points specified npt=%d ppt=%x", npt, ppt);
+   if ((count < 3) || !ptsIn) {
+      Warning("DrawFillArea", "No points specified npt=%d ppt=%x", count, ptsIn);
       return;
    }
-/*
-   TPoint *curr;
-   TPoint *pts;
-   TPoint *top;
-   TPoint *bottom;
-   int dy;
-   int y; // the current scanline
 
-
-   while (npt--)  {
-      curr = pts++;
-
-      if (prev->fY > curr->fY) {
-         bottom = prev;
-         top = curr;
-            pETEs->flock = kFALSE;
-      } else  {
-         bottom = curr;
-         top = prev;
-            pETEs->fClock = kTRUE;
-      }
-
-      // don't add horizontal edges to the Edge table.
-      if (bottom->fY != top->fY)  {
-         pETEs->ymax = bottom->fY - 1;  // -1 so we don't get last scanline
-
-         // initialize integer edge algorithm
-         dy = bottom->fY - top->fY;
-         BRESINITPGON(dy, top->fX, bottom->fX, pETEs->fMinor, pETEs->fD, 
-                      pETEs->fM, bpETEs->fM1, pETEs->fIncr1, pETEs->fIncr2);
-
-         if (!miInsertEdgeInET(ET, pETEs, top->fY, &pSLLBlock, &iSLLBlock)) {
-		      miFreeStorage(pSLLBlock->next);
-		      return;
-	      }
-
-         ET->ymax = max(ET->ymax, prev->fY);
-         ET->ymin = min(ET->ymin, prev->fY);
-         pETEs++;
-      }
-
-      prev = curr;
+   if (count < 5) {
+      FillPolygon(count, ptsIn, col, stipple, w, h);
+      return;
    }
 
+   EdgeTableEntry *pAET;  /* the Active Edge Table   */
+   int y;                 /* the current scanline    */
+   int nPts = 0;          /* number of pts in buffer */
+
+   ScanLineList *pSLL;    /* Current ScanLineList    */
+   TPoint *ptsOut;      /* ptr to output buffers   */
+   UInt_t *width;
+   TPoint firstPoint[NUMPTSTOBUFFER]; /* the output buffers */
+   UInt_t firstWidth[NUMPTSTOBUFFER];
+   EdgeTableEntry *pPrevAET;       /* previous AET entry      */
+   EdgeTable ET;                   /* Edge Table header node  */
+   EdgeTableEntry AET;             /* Active ET header node   */
+   EdgeTableEntry *pETEs;          /* Edge Table Entries buff */
+   ScanLineListBlock SLLBlock;     /* header for ScanLineList */
+
+   pETEs = new EdgeTableEntry[count];
+
+   ptsOut = firstPoint;
+   width = firstWidth;
+   CreateETandAET(count, ptsIn, &ET, &AET, pETEs, &SLLBlock);
    pSLL = ET.scanlines.next;
-
-   for (y = ET.ymin; y < ET.ymax; y++)  {
-      // Add a new edge to the active edge table when we get to the next edge.
-
-      if (pSLL && (y == pSLL->scanline))  {
-         miloadAET(&AET, pSLL->edgelist);
+   
+   for (y = ET.ymin; y < ET.ymax; y++) {
+      if (pSLL && y == pSLL->scanline) {
+         loadAET(&AET, pSLL->edgelist);
          pSLL = pSLL->next;
       }
       pPrevAET = &AET;
       pAET = AET.next;
 
-      // for each active edge
-
-      while (pAET)  {
-         ptsOut->fX = pAET->bres.minor;
-		   ptsOut++->fY = y;
-         *width++ = pAET->next->bres.minor - pAET->bres.minor;
+      while (pAET) {
+         ptsOut->fX = pAET->bres.minor_axis;
+         ptsOut->fY = y;
+		   ptsOut++;
          nPts++;
+                
+         *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;              
 
-         // send out the buffer when its full
          if (nPts == NUMPTSTOBUFFER) {
-		      FillSpans(nPts, firstPoint, firstWidth);
+            FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
             ptsOut = firstPoint;
             width = firstWidth;
             nPts = 0;
          }
+         EVALUATEEDGEEVENODD(pAET, pPrevAET, y)
+         EVALUATEEDGEEVENODD(pAET, pPrevAET, y)
+      }
+      InsertionSort(&AET);
+   }
+
+   if (nPts) FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
+
+   delete [] pETEs;
+   FreeStorage(SLLBlock.next);
+}
+
+//______________________________________________________________________________
+void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
+{
+   // fill a polygon (any type convex, non-convex)
+
+   if (!InitVisual()) {
+      Warning("DrawFillArea", "Visual not initiated");
+      return;
+   }
+
+   if (!fImage) {
+      Warning("DrawFillArea", "no image");
+      return;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!fImage->alt.argb32) {
+      Warning("DrawFillArea", "Failed to get pixel array");
+      return;
+   }
+
+   if ((count < 3) || !ptsIn) {
+      Warning("DrawFillArea", "No points specified npt=%d ppt=%x", count, ptsIn);
+      return;
+   }
+
+   if (count < 5) {
+      FillPolygon(count, ptsIn, tile);
+      return;
+   }
+
+   EdgeTableEntry *pAET;  /* the Active Edge Table   */
+   int y;                 /* the current scanline    */
+   int nPts = 0;          /* number of pts in buffer */ 
+
+   ScanLineList *pSLL;    /* Current ScanLineList    */
+   TPoint *ptsOut;      /* ptr to output buffers   */
+   UInt_t *width;
+   TPoint firstPoint[NUMPTSTOBUFFER]; /* the output buffers */
+   UInt_t firstWidth[NUMPTSTOBUFFER];
+   EdgeTableEntry *pPrevAET;       /* previous AET entry      */
+   EdgeTable ET;                   /* Edge Table header node  */
+   EdgeTableEntry AET;             /* Active ET header node   */
+   EdgeTableEntry *pETEs;          /* Edge Table Entries buff */
+   ScanLineListBlock SLLBlock;     /* header for ScanLineList */
+
+   pETEs = new EdgeTableEntry[count];
+
+   ptsOut = firstPoint;
+   width = firstWidth;
+   CreateETandAET(count, ptsIn, &ET, &AET, pETEs, &SLLBlock);
+   pSLL = ET.scanlines.next;
    
-         if (pAET->ymax == y) { //
-            pPrevAET->next = pAET->next;
-            pAET = pPrevAET->next;
-
-            if (pAET) {
-               pAET->back = pPrevAET;
-            }
-         } else {
-            BRESINCRPGON(pAET->fD, pAET->fMinor, pAET->fM, 
-                         pAET->fM1, pAET->fIncr1, pAET->fIncr2);
-            pPrevAET = pAET;
-            pAET = pAET->next;
-         }
+   for (y = ET.ymin; y < ET.ymax; y++) {
+      if (pSLL && y == pSLL->scanline) {
+         loadAET(&AET, pSLL->edgelist);
+         pSLL = pSLL->next;
       }
-    
-      AET = AET->next;
+      pPrevAET = &AET;
+      pAET = AET.next;
 
-      while (AET)  {
-         pETEinsert = AET;
-         pETEchase = AET;
+      while (pAET) {
+         ptsOut->fX = pAET->bres.minor_axis;
+         ptsOut->fY = y;
+		   ptsOut++;
+         nPts++;
+                
+         *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;              
 
-         while (pETEchase->back->fMinor > AET->fMinor) {
-            pETEchase = pETEchase->back;
+         if (nPts == NUMPTSTOBUFFER) {
+            FillSpans(nPts, firstPoint, firstWidth, tile);
+            ptsOut = firstPoint;
+            width = firstWidth;
+            nPts = 0;
          }
+         EVALUATEEDGEEVENODD(pAET, pPrevAET, y)
+         EVALUATEEDGEEVENODD(pAET, pPrevAET, y)
+      }
+      InsertionSort(&AET);
+   }
+   FillSpans(nPts, firstPoint, firstWidth, tile);
 
-         AET = AET->next;
+   delete [] pETEs;
+   FreeStorage(SLLBlock.next);
+}
 
-         if (pETEchase != pETEinsert) {
-            pETEchaseBackTMP = pETEchase->back;
-            pETEinsert->back->next = AET;
+//_____________________________________________________________________________
+static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y, 
+                                     int x_to, CARD32 ratio)
+{
+   //
 
-            if (AET) {
-               AET->back = pETEinsert->back;
-            }
-            pETEinsert->next = pETEchase;
-            pETEchase->back->next = pETEinsert;
-            pETEchase->back = pETEinsert;
-            pETEinsert->back = pETEchaseBackTMP;
-         }
+   int cw = ctx->canvas_width;
+
+   if (ratio != 0 && x_to >= 0 && x_from < cw && y >= 0 && y < ctx->canvas_height) {	
+      CARD32 value = ratio;
+      CARD32 *dst = ctx->canvas + y*cw; 
+      int x1 = x_from;
+      int x2 = x_to; 
+
+      if (x1 < 0) {
+         x1 = 0;
+      } 
+      if (x2 >= cw) { 
+         x2 = cw - 1; 
+      }
+      while (x1 <= x2) {
+         _alphaBlend(&dst[x1], &value);
+         ++x1;
       }
    }
+}
 
-   //    Get any spans that we missed by buffering
-   FillSpans(nPts, firstPoint, firstWidth, 1);
-   DEALLOCATE_LOCAL(pETEs);
-   miFreeStorage(SLLBlock.next);
-*/
+//_____________________________________________________________________________
+static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
+{
+   //
+
+   CARD32 *src = ctx->tool->matrix;
+   int corner_x = curr_x - ctx->tool->center_x;
+   int corner_y = curr_y - ctx->tool->center_y; 
+   int tw = ctx->tool->width;
+   int th = ctx->tool->height;
+   int cw = ctx->canvas_width;
+   int ch = ctx->canvas_height;
+   int aw = tw; 
+   int ah = th;
+   CARD32 *dst = ctx->canvas; 
+   int x, y;
+
+   if (corner_x+tw <= 0 || corner_x >= cw || corner_y+th <= 0 || corner_y >= ch) {
+      return;
+	}
+
+   if (corner_y > 0) { 
+      dst += corner_y * cw;
+   } else if (corner_y < 0) { 
+      ah -= -corner_y;
+      src += -corner_y * tw;
+   }
+
+   if (corner_x  > 0) { 
+      dst += corner_x;  
+   } else if (corner_x < 0) {	
+      src += -corner_x; 
+      aw -= -corner_x;
+   }
+
+   if (corner_x + tw > cw) { 
+      aw = cw - corner_x;
+   }
+
+   if (corner_y + th > ch) { 
+      ah = ch - corner_y;
+   }
+
+   for (y = 0; y < ah; ++y) { 
+      for (x = 0; x < aw; ++x) { 
+         _alphaBlend(&dst[x], &src[x]);
+      }
+      src += tw; 
+      dst += cw; 
+   }
+}	   
+
+//_____________________________________________________________________________
+static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
+{
+   //
+
+   static ASDrawContext *ctx = new ASDrawContext;
+
+	ctx->canvas_width = im->width; 
+	ctx->canvas_height = im->height;
+	ctx->canvas = im->alt.argb32;
+   ctx->scratch_canvas = 0;
+
+	ctx->tool = brush;
+	ctx->fill_hline_func = fill_hline_notile_argb32;
+   ctx->apply_tool_func = apply_tool_2D_argb32;
+	return ctx;
 }
 
 //______________________________________________________________________________
-void TASImage::DrawFillArea(UInt_t npt, TPoint *ppt, const char *col, 
-                           const char *stipple, UInt_t w, UInt_t h)
+void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, 
+                            UInt_t color, UInt_t thick)
 {
-   // fill a polygon (any type convex, non-convex)
+   // draw wide line
 
-   UInt_t  nspans = 0;
-   TPoint *firstPoint = 0;   // output buffer
-   UInt_t *firstWidth = 0;   // output buffer
+   Int_t sz = thick*thick;
+   CARD32 *matrix = new CARD32[sz];
 
-   GetFillAreaSpans(npt, ppt, &nspans, &firstPoint, &firstWidth);
+   for (int i=0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
 
-   if (nspans) {
-      FillSpans(nspans, firstPoint, firstWidth, col, stipple, w, h);
-    
-      delete [] firstWidth;
-      delete [] firstPoint;
-   }
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   asim_move_to(ctx, x1, y1);
+   asim_line_to(ctx, x2, y2);
+
+   delete [] matrix;
 }
 
-//______________________________________________________________________________
-void TASImage::DrawFillArea(UInt_t npt, TPoint *ppt, TImage *tile)
-{
-   // fill a polygon (any type convex, non-convex)
-
-   UInt_t  nspans = 0;
-   TPoint *firstPoint = 0;   // output buffer
-   UInt_t *firstWidth = 0;   // output buffer
-
-   GetFillAreaSpans(npt, ppt, &nspans, &firstPoint, &firstWidth);
-
-   if (nspans) {
-      FillSpans(nspans, firstPoint, firstWidth, tile);
-    
-      delete [] firstWidth;
-      delete [] firstPoint;
-   }
-}
 
 

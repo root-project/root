@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.5 2004/10/19 17:13:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.6 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -51,6 +51,7 @@ private:
    void DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thick);
    void DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thick);
    void DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t col, UInt_t thick);
+   void DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,  UInt_t col, UInt_t thick);
    void DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col);
@@ -84,6 +85,7 @@ protected:
 
 public:
    TASImage();
+   TASImage(UInt_t w, UInt_t h);
    TASImage(const char *file, EImageFileTypes type = kUnknown);
    TASImage(const char *name, const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette = 0);
    TASImage(const char *name, const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
@@ -178,9 +180,7 @@ public:
    UInt_t          *GetArgbArray();
    UInt_t          *GetScanline(UInt_t y);
 
-   static const ASVisual *GetVisual() { return fgVisual; }
-   static void  GetTextSize(UInt_t *width, UInt_t *height, const char *text = "", Int_t size = 12,
-                            const char *font = "fixed", EText3DType type = TImage::kPlain);
+   static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
 
    ClassDef(TASImage,1)  // Image display class

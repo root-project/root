@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.99 2005/04/25 07:53:27 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.100 2005/04/28 16:14:27 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -418,10 +418,11 @@ Plugin.TVirtualFitter:  Minuit TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualPS:      ps     TPostScript   Postscript   "TPostScript()"
 +Plugin.TVirtualPS:     svg    TSVG          Postscript   "TSVG()"
 +Plugin.TVirtualPS:     pdf    TPDF          Postscript   "TPDF()"
++Plugin.TVirtualPS:     image  TImageDump    Postscript   "TImageDump()"
 Plugin.TViewerX3D:      x11    TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 +Plugin.TViewerX3D:     qt     TQtViewerX3D  QtX3d        "TQtViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
-Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImage  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
+Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImageGui  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
 Plugin.TImage:              *  TASImage          ASImage  "TASImage()"
 Plugin.TFileDrawMap         *  TFileDrawMap  TreePlayer   "TFileDrawMap(const TFile*, const char*, const char*)"
 Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,const char*)"
