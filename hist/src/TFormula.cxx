@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.91 2005/03/04 19:37:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.92 2005/03/11 21:25:11 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2259,7 +2259,7 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
+Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -2275,7 +2275,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
   xx[1] = y;
   xx[2] = z;
   xx[3] = t;
-  return EvalPar(xx);
+  return ((TFormula*)this)->EvalPar(xx);
 }
 
 //______________________________________________________________________________

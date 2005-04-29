@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.2 2003/05/06 08:23:42 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.cxx,v 1.3 2004/05/25 16:53:11 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -119,7 +119,7 @@ TF1 *TF12::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/)
+Double_t TF12::Eval(Double_t x, Double_t /*y*/, Double_t /*z*/, Double_t /*t*/) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
