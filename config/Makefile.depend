@@ -16,10 +16,9 @@ WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
 WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
                       Opengl32.lib
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
-ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB) $(ASIMAGELIB)
 ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib
-ASIMAGEGUILIBEXTRA  = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib \
-                      lib/libGui.lib lib/libASImage.lib
+ASIMAGEGUILIBDEP    = $(GUILIB) $(ASIMAGELIB)
+ASIMAGEGUILIBEXTRA  = lib/libGui.lib lib/libASImage.lib
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
@@ -161,8 +160,9 @@ HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
-ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB)
 ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad -lGui
+ASIMAGEGUILIBDEP    = $(GUILIB) $(ASIMAGELIB)
+ASIMAGEGUILIBEXTRA  = -Llib -lGui -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
