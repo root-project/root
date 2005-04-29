@@ -79,8 +79,8 @@ class FitFunctionTestCase( unittest.TestCase ):
 
       self.assertEqual( f.GetNDF(), 96 )
       result = f.GetParameters()
-      self.assertAlmostEqual( result[1], 0., 1 )  # mean
-      self.assertAlmostEqual( result[2], 1., 1 )  # s.d.
+      self.assertEqual( round( result[1] - 0., 1), 0 )  # mean
+      self.assertEqual( round( result[2] - 1., 1), 0 )  # s.d.
 
 
 ### calling a global function ================================================
@@ -90,8 +90,8 @@ class GlobalCppFunctionTestCase( unittest.TestCase ):
 
       gROOT.LoadMacro( "GlobalFunction.C+" )
 
-      self.assertAlmostEqual( Divide( 4. ), 4./2., 8 )
-      self.assertAlmostEqual( Divide( 7. ), 7./2., 8 )
+      self.assertEqual( round( Divide( 4. ) - 4./2., 8), 0 )
+      self.assertEqual( round( Divide( 7. ) - 7./2., 8), 0 )
 
 
 ## actual test run

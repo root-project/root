@@ -48,24 +48,24 @@ class Overloads2TMathTestCase( unittest.TestCase ):
       mean, median = 4.0, 4.0
 
       af = array( 'f', numbers )
-      self.assertAlmostEqual( TMath.Mean( len(af), af ), mean, 5 )
-      self.assertAlmostEqual( TMath.Median( len(af), af ), median, 5 )
+      self.assertEqual( round( TMath.Mean( len(af), af ) - mean, 5 ), 0 )
+      self.assertEqual( round( TMath.Median( len(af), af ) - median, 5 ), 0 )
 
       ad = array( 'd', numbers )
-      self.assertAlmostEqual( TMath.Mean( len(ad), ad ), mean, 8 )
-      self.assertAlmostEqual( TMath.Median( len(ad), ad ), median, 8 )
+      self.assertEqual( round( TMath.Mean( len(ad), ad ) - mean, 8), 0 )
+      self.assertEqual( round( TMath.Median( len(ad), ad ) - median, 8), 0 )
 
       ai = array( 'i', numbers )
-      self.assertAlmostEqual( TMath.Mean( len(ai), ai ), mean, 8 )
-      self.assertAlmostEqual( TMath.Median( len(ai), ai ), median, 8 )
+      self.assertEqual( round( TMath.Mean( len(ai), ai ) - mean, 8), 0 )
+      self.assertEqual( round( TMath.Median( len(ai), ai ) - median, 8), 0 )
 
       ah = array( 'h', numbers )
-      self.assertAlmostEqual( TMath.Mean( len(ah), ah ), mean, 8 )
-      self.assertAlmostEqual( TMath.Median( len(ah), ah ), median, 8 )
+      self.assertEqual( round( TMath.Mean( len(ah), ah ) - mean, 8), 0 )
+      self.assertEqual( round( TMath.Median( len(ah), ah ) - median, 8), 0 )
 
       al = array( 'l', numbers )
-      self.assertAlmostEqual( TMath.Mean( len(al), al ), mean, 8 )
-      self.assertAlmostEqual( TMath.Median( len(al), al ), median, 8 )
+      self.assertEqual( round( TMath.Mean( len(al), al ) - mean, 8), 0 )
+      self.assertEqual( round( TMath.Median( len(al), al ) - median, 8), 0 )
 
     # this one should fail because there's no TMath::Mean( Long64_t, ULong_t* )
       aL = array( 'L', numbers )
