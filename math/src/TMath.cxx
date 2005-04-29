@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.95 2005/04/05 16:10:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.96 2005/04/08 16:45:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -80,12 +80,6 @@ static Double_t hypot(Double_t x, Double_t y)
    return amax*sqrt(1.0 + f*f);
 }
 #endif
-
-//______________________________________________________________________________
-Long_t TMath::Sqrt(Long_t x)
-{
-   return (Long_t) (sqrt((Double_t)x) + 0.5);
-}
 
 //______________________________________________________________________________
 Long_t TMath::Hypot(Long_t x, Long_t y)

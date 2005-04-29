@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.59 2004/12/16 18:08:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.60 2005/04/08 16:45:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -142,7 +142,6 @@ namespace TMath {
 
    // Some integer math
           Long_t   NextPrime(Long_t x);   // Least prime number greater than x
-          Long_t   Sqrt(Long_t x);
           Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
    // Abs
