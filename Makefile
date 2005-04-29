@@ -44,7 +44,7 @@ endif
 
 MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 newdelete hist tree freetype graf g3d gpad gui minuit \
-                histpainter treeplayer treeviewer proof physics postscript \
+                histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp \
                 guibuilder xml foam
 
@@ -98,6 +98,7 @@ MODULES      += asimage
 endif
 ifeq ($(ENABLETHREAD),yes)
 MODULES      += thread
+MODULES      += proof
 endif
 ifeq ($(BUILDFPYTHIA),yes)
 MODULES      += pythia
@@ -153,8 +154,8 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot ruby \
+                rootx rootd proofd proof dcache chirp hbook alien asimage \
+                ldap mlp krb5auth rpdutils globusauth pyroot ruby \
                 qt qtroot xrootd netx clarens peac oracle xmlparser
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
