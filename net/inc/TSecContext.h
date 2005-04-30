@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.1 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.2 2005/02/18 14:44:40 rdm Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 #endif
 
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
-const Int_t kROOTTZERO = 788914800;
+const TDatime kROOTTZERO = 788914800;
 
 // Small class with information for final cleanup
 class TSecContextCleanup;
