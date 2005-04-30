@@ -1,4 +1,4 @@
-/* $Id: gl2ps.c,v 1.200 2004/12/21 22:25:47 geuzaine Exp $ */
+/* $Id: gl2ps.c,v 1.1 2005/01/20 17:28:14 brun Exp $ */
 /*
  * GL2PS, an OpenGL to PostScript Printing Library
  * Copyright (C) 1999-2004 Christophe Geuzaine <geuz@geuz.org>
@@ -1208,7 +1208,7 @@ static GLboolean gl2psLess(GLfloat f1, GLfloat f2)
 
 static void gl2psBuildBspTree(GL2PSbsptree *tree, GL2PSlist *primitives)
 {
-  GL2PSprimitive *prim, *frontprim, *backprim;
+  GL2PSprimitive *prim=NULL, *frontprim=NULL, *backprim=NULL;
   GL2PSlist *frontlist, *backlist;
   GLint i, index;
 
