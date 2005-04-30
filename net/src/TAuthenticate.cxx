@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.71 2005/03/18 15:07:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.72 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -678,6 +678,8 @@ Bool_t TAuthenticate::Authenticate()
                   Info("Authenticate",
                        "remotely allowed methods not yet tried: %s",
                        answer);
+               if (answer)
+                  delete[] answer;
             } else if (stat == 0) {
                Info("Authenticate",
                     "no more methods accepted remotely to be tried");
@@ -817,7 +819,8 @@ void TAuthenticate::SetEnvironment()
 
    // Defaults
    fgDefaultUser = fgUser;
-   if (fSecurity == kKrb5)
+   if (fSecurity == kKrb5 || 
+      (fSecurity == kGlobus && gROOT->IsProofServ()))
       fgAuthReUse = kFALSE;
    else
       fgAuthReUse = kTRUE;
@@ -933,9 +936,11 @@ void TAuthenticate::SetEnvironment()
          if (!strncasecmp(Ru, "yes",3) || !strncmp(Ru, "1",1))
             fgAuthReUse = kTRUE;
       } else {
-         fgAuthReUse = kTRUE;
-         if (!strncasecmp(Ru, "no",2) || !strncmp(Ru, "0",1))
-            fgAuthReUse = kFALSE;
+         if (fSecurity != kGlobus || !(gROOT->IsProofServ())) {
+            fgAuthReUse = kTRUE;
+            if (!strncasecmp(Ru, "no",2) || !strncmp(Ru, "0",1))
+               fgAuthReUse = kFALSE;
+         }
       }
 
       // Set Expiring date
@@ -4715,7 +4720,7 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &Out)
                TString Cdir = Ucer;
                Cdir.Resize(Cdir.Last('/')+1);
                // Create Output
-               Out = Form("pt=0 ru:1 cd:%s cf:%s kf:%s ad:%s",
+               Out = Form("pt=0 ru:0 cd:%s cf:%s kf:%s ad:%s",
                           Cdir.Data(),Ucer.Data(),Ukey.Data(),Adir.Data());
             }
          }
