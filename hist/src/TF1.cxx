@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.101 2005/02/28 17:39:01 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.102 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1683,6 +1683,17 @@ TAxis *TF1::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+//______________________________________________________________________________
+TAxis *TF1::GetZaxis() const
+{
+   // Get z axis of the function. (In case this object is a TF2 or TF3)
+
+   //if (!gPad) return 0;
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetZaxis();
 }
 
 //______________________________________________________________________________

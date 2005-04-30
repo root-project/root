@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.47 2004/10/20 17:07:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.48 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -132,6 +132,7 @@ public:
    virtual Double_t GetXmax() const {return fXmax;}
    TAxis           *GetXaxis() const ;
    TAxis           *GetYaxis() const ;
+   TAxis           *GetZaxis() const ;
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=1e-12);
