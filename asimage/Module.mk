@@ -167,11 +167,19 @@ endif
 ##### libASImage #####
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
                 $(MAINLIBS) $(ASIMAGELIBDEP)
+ifeq ($(PLATFORM),win32)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
 		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) \
                     $(ASEXTRALIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+else
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
+		   "$(ASIMAGEO) $(ASIMAGEDO)" \
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) \
+                    $(ASEXTRALIB) $(XLIBS) $(FREETYPELDFLAGS) $(FREETYPELIB)"
+endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
