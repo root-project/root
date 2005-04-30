@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.21 2004/01/18 12:31:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.22 2004/01/20 15:44:33 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -696,7 +696,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
    Int_t *new_list; // list of new candidates
    UChar_t *slice1 = 0;
    UChar_t *slice2 = 0;
-   Int_t ndd[2];
+   Int_t ndd[2] = {0,0};
    Int_t islices = 0;
    Bool_t left;
    switch (islice) {
