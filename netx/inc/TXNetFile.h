@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    Bool_t         OpenFileWhenRedirected(char *newfhandle, Bool_t &wasopen);
    Bool_t         ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                         TXMessage *unsolmsg);
-   virtual void   Close(const Option_t *);
+   virtual void   Close(const Option_t *opt ="");
    virtual void   Flush();
    virtual Long_t GetRemoteFile(void**);
    virtual Bool_t IsOpen() const;
