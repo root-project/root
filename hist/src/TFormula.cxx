@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.92 2005/03/11 21:25:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.93 2005/04/29 20:34:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -704,7 +704,33 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
           {puiss10=0; grand=i;}
        if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
        if (chaine(i-1,1)=="<"  && compt==0 && compt2==0 && lshift==0 && petit==0)
-          {puiss10=0; petit=i;}
+          {puiss10=0; petit=i;
+            // Check whether or not we have a template names! (actually this can 
+            // only happen in TTreeFormula.
+            for(int ip = i,depth=0; ip < lchain; ++ip) {
+               char c = chaine(ip);
+               // The characteres allowed in the template parameter are alpha-numerical characters,
+               // underscores, comma, <, > and scope operator.
+               if (isalnum(c) || c=='_' || c==',') continue;
+               if (c==':' && chaine(ip+1)==':') { ++ip; continue; }
+               if (c=='<') { ++depth; continue; }
+               if (c=='>') {
+                  if (depth) { --depth; continue; }
+                  else {
+                     // We reach the end of the template parameter.
+                     petit = 0;
+                     i = ip+1;
+                     break;
+                  }
+               }
+               // Character not authorized within a template parameter
+               break;
+            }
+            if (petit==0) {
+               // We found a template parameter and modified i
+               continue; // the for(int i ,...)
+            }
+          }
        if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
            && peteg==0) {peteg=i; puiss10=0; petit=0;}
        if ((chaine(i-1,2)=="=>" || chaine(i-1,2)==">=") && compt==0 && compt2==0
