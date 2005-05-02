@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.3 2003/03/10 07:57:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.5 2003/04/03 14:51:47 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -85,6 +85,7 @@ private:
    static Int_t       fgTBlankW;               // trailing blanks width
    static Int_t       fgWidth;                 // string width, used to compute X alignment
 
+public:
    static Short_t CharToUnicode(UInt_t code);
    static void    LayoutGlyphs();
    static void    PrepareString(const char *string);

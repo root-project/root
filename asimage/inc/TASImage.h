@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.6 2004/12/07 15:34:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.7 2005/04/29 16:16:34 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -58,6 +58,8 @@ private:
    void GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   void DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, UInt_t color, const char *font_name, Float_t angle);
+   void DrawGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y);
 
 protected:
    ASImage  *fImage;        //! pointer to image structure of original image
@@ -131,8 +133,8 @@ public:
    void  Bevel(Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0, const char *hi = "#ffdddddd",
                const char *lo = "#ff555555", UShort_t thick = 1, Bool_t pressed = kFALSE);
    void  DrawText(Int_t  x = 0, Int_t y = 0, const char *text = "", Int_t size = 12,
-                  const char *color = 0, const char *font = "fixed", 
-                  EText3DType type = TImage::kPlain, const char *fore_file = 0);
+                  const char *color = 0, const char *font = "fixed", EText3DType type = TImage::kPlain,
+                  const char *fore_file = 0, Float_t angle = 0);
 
    // vector graphics
    void  BeginPaint(Bool_t fast = kTRUE);

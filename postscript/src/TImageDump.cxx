@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.1 2005/04/29 16:16:35 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.2 2005/04/29 18:44:30 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -676,16 +676,18 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    if (txalh == 2) x -= w*0.5;
    if (txalh == 3) x -= w;
 
+   Float_t angle = kDEGRAD*fTextAngle;
    if (txalv == 3) {
-     y += h * TMath::Cos(kDEGRAD*fTextAngle);
-     //x += 0.5 * h * TMath::Sin(kDEGRAD*fTextAngle);
+     y += (angle ? h * TMath::Cos(angle) : h);
+     x += (angle ? h * TMath::Sin(angle) : h);
    } if (txalv == 2) {
-     y += 0.5 * h * TMath::Cos(kDEGRAD*fTextAngle);
-     //x += 0.5 * h * TMath::Sin(kDEGRAD*fTextAngle);
+     y += (angle ? (h>>1) * TMath::Cos(angle) : h>>1);
+     x += (angle ? (h>>1) * TMath::Sin(angle) : h>>1);
    } 
 
    TColor *col = gROOT->GetColor(fTextColor);
-   fImage->DrawText((int)x, (int)y - h, chars, ttfsize, col->AsHexString(), ttfont);
+   fImage->DrawText((int)x, angle ? (int)y - w: (int)y - h, chars, ttfsize, col->AsHexString(),
+                     ttfont, TImage::kPlain, 0, fTextAngle);
 
    delete [] ttfont;
 }

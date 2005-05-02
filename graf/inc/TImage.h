@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.4 2004/12/07 15:34:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.5 2005/04/29 16:16:35 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -160,7 +160,7 @@ public:
                       UShort_t /*thick*/ = 1, Bool_t /*pressed*/ = kFALSE) {}
    virtual void DrawText(Int_t /*x*/ = 0, Int_t /*y*/ = 0, const char * /*text*/ = "", Int_t /*size*/ = 12, 
                          const char * /*color*/ = 0, const char * /*font*/ = "fixed",
-                         EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = 0) { }
+                         EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = 0, Float_t /*angle*/ = 0) { }
 
    // vector graphics
    virtual void BeginPaint(Bool_t /*fast*/ = kTRUE) {}

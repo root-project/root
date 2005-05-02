@@ -69,6 +69,7 @@
 #include "TArrayL.h"
 #include "TPoint.h"
 #include "TFrame.h"
+#include "TTF.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -1793,7 +1794,7 @@ TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
 //______________________________________________________________________________
 void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
                         const char *color, const char *font_name,
-                        EText3DType type, const char *fore_file)
+                        EText3DType type, const char *fore_file, Float_t angle)
 {
    // Draw text of size (in pixels for TrueType fonts) 
    // at position (x, y) with color  specified by hex string.
@@ -1808,15 +1809,14 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    ARGB32 text_color = ARGB32_Black;
    ASImage *fore_im = 0;
    ASImage *text_im = 0;
+   Bool_t ttfont = kFALSE;
 
    if (!InitVisual()) {
       Warning("DrawText", "Visual not initiated");
       return;
    }
-
-   if (!gFontManager) gFontManager = create_font_manager(dpy, 0, 0);
-   if (!gFontManager) {
-      Warning("DrawText", "cannot create Font Manager");
+   if (!InitVisual()) {
+      Warning("DrawFillArea", "Visual not initiated");
       return;
    }
 
@@ -1825,6 +1825,25 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    if (fn.EndsWith(".ttf") || fn.EndsWith(".TTF")) {
       fn = gSystem->ExpandPathName(fn.Data());
+      ttfont = kTRUE;
+   }
+
+   if (color) {
+      parse_argb_color(color, &text_color);
+   }
+
+   if (fImage->alt.argb32 && ttfont) {
+      DrawTextTTF(x, y, text, size, text_color, fn.Data(), angle);
+      return;
+   }
+
+   if (!gFontManager) {
+      gFontManager = create_font_manager(dpy, 0, 0);
+   }
+
+   if (!gFontManager) {
+      Warning("DrawText", "cannot create Font Manager");
+      return;
    }
 
    ASFont *font = get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
@@ -1837,11 +1856,10 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       }
    }
 
-   if (color) {
-      parse_argb_color(color, &text_color);
-   }
-
    get_text_size(text, font, (ASText3DType)type, &width, &height);
+   text_im = draw_text(text, font, (ASText3DType)type, 0);
+
+   ASImage *rimg = fImage;
 
    if (fore_file) {
       ASImage *tmp = file2ASImage(fore_file, 0xFFFFFFFF, SCREEN_GAMMA, 0, NULL);
@@ -1855,10 +1873,6 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
          fore_im = tmp;
       }
    }
-
-   text_im = draw_text(text, font, (ASText3DType)type, 0);
-
-   ASImage *rimg = fImage;
 
    if (fore_im) {
       move_asimage_channel(fore_im, IC_ALPHA, text_im, IC_ALPHA);
@@ -4501,8 +4515,9 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 
    Int_t sz = thick*thick;
    CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
 
-   if (thick < kBrushCacheSize) {
+   if (use_cache) {
       matrix = gBrushCache;
    } else {
       matrix = new CARD32[sz];
@@ -4522,10 +4537,105 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    asim_move_to(ctx, x1, y1);
    asim_line_to(ctx, x2, y2);
 
-   if (thick >= kBrushCacheSize) {
+   if (!use_cache) {
       delete [] matrix;
    }
 }
 
+//______________________________________________________________________________
+void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
+{
+   // Draw FT_Bitmap bitmap
 
+   FT_Bitmap *source = (FT_Bitmap *)bitmap;
+   UChar_t d = 0, *s = source->buffer;
+
+   static UInt_t col[5];
+   Int_t x, y;
+
+   ULong_t r, g, b;
+   Int_t   dots;
+   int idx = 0;
+
+   dots = Int_t(source->width * source->rows);
+   r = g = b = 0;
+
+   for (y = 0; y < (int) source->rows; y++) {
+      for (x = 0; x < (int) source->width; x++) {
+         idx = (bx + x) + (by + y) * fImage->width;
+         r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
+         g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
+         b += (fImage->alt.argb32[idx] & 0x0000ff);
+      }
+   }
+   if (dots != 0) {
+      r /= dots;
+      g /= dots;
+      b /= dots;
+   }
+
+   col[0] = (r << 16) + (g << 8) + b;
+   col[4] = color;
+   Int_t col4r = (col[4] & 0xff0000) >> 16;
+   Int_t col4g = (col[4] & 0x00ff00) >> 8;
+   Int_t col4b = (col[4] & 0x0000ff);
+
+   // interpolate between fore and backgound colors
+   for (x = 3; x > 0; x--) {
+      Int_t colxr   = (col4r*x + r*(4-x)) /4;
+      Int_t colxg = (col4g*x + g*(4-x)) /4;
+      Int_t colxb  = (col4b*x + b*(4-x)) /4;
+      col[x] = (colxr << 16) + (colxg << 8) + colxb;
+   }
+
+   // put smoothed character, character pixmap values are an index
+   // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+   for (y = 0; y < (int) source->rows; y++) {
+      for (x = 0; x < (int) source->width; x++) {
+         d = *s++ & 0xff;
+         d = ((d + 10) * 5) >> 8;
+         if (d > 4) d = 4;
+       
+         if (d && x < (int) source->width) {
+            idx = (bx + x) + (by + y) * fImage->width;
+            fImage->alt.argb32[idx] = (ARGB32)col[d];
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, 
+                           UInt_t color, const char *font_name, Float_t angle)
+{
+   // Draw text using TrueType fonts.
+
+   if (!TTF::IsInitialized()) TTF::Init();
+
+   TTF::SetTextFont(font_name);
+   TTF::SetTextSize(size);
+
+   TTF::SetRotationMatrix(angle);
+   TTF::PrepareString(text);
+   TTF::LayoutGlyphs();
+   //Align();
+
+   TTGlyph *glyph = TTF::GetGlyphs();
+
+   // compute the size and position  that will contain the text
+   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
+   Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
+   Int_t h    = TTF::GetBox().yMax + Yoff;
+
+   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, 0, 1 )) continue;
+
+      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
+      FT_Bitmap     *source = &bitmap->bitmap;
+
+      Int_t bx = x + bitmap->left;
+      Int_t by = y + h - bitmap->top;
+      DrawGlyph(source, color, bx, by);
+   }
+}
 
