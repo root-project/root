@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.73 2005/04/07 16:49:47 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.74 2005/04/21 14:04:33 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -4664,7 +4664,7 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
                   strClassName.Remove(strClassName.Last(':')-1);
 
                   // try to find strClassName - might have using directives added
-                  TDictionary* dict;
+                  TDictionary* dict=0;
                   if (!parseStack.FindType(strClassName, dict)) {
                      Warning("ExtractClassDocumentation",
                         "Found method candidate '%s', but no class it might belong to. Ignoring the method.",
