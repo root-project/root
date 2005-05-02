@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.188 2005/04/11 10:32:19 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.189 2005/04/19 19:39:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2718,7 +2718,12 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    } else {
       ncols = 1;
       onerow = varexp;
-      for (i=0;i<onerow.Length();i++)  if (onerow[i] == ':') ncols++;
+      for (i=0;i<onerow.Length();i++) {
+         if (onerow[i] == ':') {
+           if (onerow[i+1] == ':') ++i;
+           else ncols++;
+         }
+      }
       cnames = new TString[ncols];
       index  = new Int_t[ncols+1];
       fSelector->MakeIndex(onerow,index);
