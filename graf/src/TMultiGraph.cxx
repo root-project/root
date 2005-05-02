@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.19 2005/04/15 14:49:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.20 2005/04/17 14:12:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -378,6 +378,8 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    fitOption.User    = 0;
    fitOption.Nochisq = 0;
    fitOption.Minuit  = 0;
+   fitOption.Integral= 0;
+   fitOption.More    = 0;
    TString opt = option;
    opt.ToUpper();
 
@@ -392,7 +394,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-   if (opt.Contains("F"))fitOption.Minuit   = 1;
+   if (opt.Contains("F")) fitOption.Minuit  = 1;
 
    if (rxmax > rxmin) {
       xmin = rxmin;
