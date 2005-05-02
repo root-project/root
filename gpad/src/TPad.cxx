@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.174 2005/04/25 17:23:28 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.175 2005/04/29 16:16:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3540,8 +3540,10 @@ void TPad::Print(const char *filenam, Option_t *option)
 
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
-         TImage* img = TImage::Create();
+         TImage *img = TImage::Create();
          gErrorIgnoreLevel = saver;
+         gVirtualX->Update(1);
+         gSystem->Sleep(30); // syncronize
 
          img->FromPad(this);
          img->WriteImage(psname, gtype);

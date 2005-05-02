@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.18 2005/04/29 16:16:34 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.19 2005/04/29 18:44:30 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -717,6 +717,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    canvas->Show();
    pad->Modified();
    canvas->Update();
+   gVirtualX->Update(1);
 
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    Window wd = (Window) gVirtualX->GetWindowID(wid);
