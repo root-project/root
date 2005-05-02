@@ -1036,8 +1036,9 @@ macosx|win32)
     fi
     ;;
 linux|fbsd)
-    if test "x$enable_thread" = "x"; then
+    if test "x$enable_thread" = "x" || test "x$enable_thread" = "xyes"; then
         enable_thread="yes"
+        threadflag="-pthread"
         threadlib="-pthread"
         threadlibdir=
     fi
@@ -1045,8 +1046,19 @@ linux|fbsd)
 esac
 case $arch in
 win32gcc)
-    enable_thread="yes"
-    threadlib=
+    # if it was not set it was turned on in the above "linux" case
+    if test "x$enable_thread" = "xyes"; then
+        threadflag=
+        threadlib=
+    fi
+    ;;
+hpuxia64acc)
+    if test "x$enable_thread" = "x"; then
+        enable_thread="yes"
+        threadflag="-mt"
+        threadlib="-mt"
+        threadlibdir=
+    fi
     ;;
 esac
 if test "x$enable_thread" = "xyes" && \
@@ -3088,6 +3100,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@ssllibdir@|$ssllibdir|"              \
     -e "s|@sslextracflags@|$sslextracflags|"    \
     -e "s|@testdir@|$testdir|"                  \
+    -e "s|@threadflag@|$threadflag|"            \
     -e "s|@threadlib@|$threadlib|"              \
     -e "s|@threadlibdir@|$threadlibdir|"        \
     -e "s|@ttffontdir@|$fontdir|"               \

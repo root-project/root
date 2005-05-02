@@ -362,6 +362,14 @@ freebsd*|linux*)
       fi
    done
    ;;
+hpuxacc | hpuxia64acc)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         auxcflags="-mt $auxcflags"
+         auxlibs="-mt $auxlibs"
+      fi
+   done
+   ;;
 win32)
    ;;
 *)

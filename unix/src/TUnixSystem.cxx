@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.130 2005/04/18 21:17:45 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.131 2005/04/25 16:35:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -279,7 +279,7 @@ const char *kProtocolName   = "tcp";
 #   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
 #endif
 
-const Int_t kNFDBITS = (sizeof(Int_t) * 8);   // 8 bits per byte
+const Int_t kNFDBITS = (sizeof(Long_t) * 8);  // 8 bits per byte
 #ifdef FD_SETSIZE
 const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
 #else
@@ -298,7 +298,7 @@ public:
    void   Set(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] |= (1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Set","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -306,7 +306,7 @@ public:
    void   Clr(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] &= ~(1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Clr","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -314,7 +314,7 @@ public:
    Int_t  IsSet(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS));
+         return fds_bits[n/kNFDBITS] & (1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::IsSet","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
          return 0;
@@ -3149,8 +3149,19 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
 
    int retcode;
 
+#if (defined(R__HPUX) && defined(R__B64))
+   fd_set frd;
+   fd_set fwr;
+   for (int i = 0; i < nfds; i++) {
+      if (readready)  FD_SET(readready->IsSet(i),  &frd);
+      if (writeready) FD_SET(writeready->IsSet(i), &fwr);
+   }
+   fd_set *rd = (readready)  ? &frd : 0;
+   fd_set *wr = (writeready) ? &fwr : 0;
+#else
    fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
    fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
+#endif
 
    if (timeout >= 0) {
       struct timeval tv;
