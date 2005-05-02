@@ -52,8 +52,9 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 // Define an arrow between points x1,y1 and x2,y2
 // the arrowsize is in percentage of the pad height
 // Opening angle between the two sides of the arrow is fAngle (60 degrees)
+//
 //  option = ">"      -------->
-//  option = "|->"    |------->
+//  option = "|->"    |-------> 
 //  option = "<"      <--------
 //  option = "<-|"    <-------|
 //  option = "->-"    ---->----
@@ -61,9 +62,11 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 //  option = "-|>-"   ---|>----
 //  option = "<>"     <------->
 //  option = "<|>"    <|-----|>  arrow defined by a triangle
-//                   If FillColor == 0 draw open triangle
-//                   else  draw full triangle with fillcolor
-//                   default is filled with LineColor
+//
+//  Note:
+//  - If FillColor == 0 draw open triangle else  draw full triangle with fillcolor
+//    default is filled with LineColor
+//  - "Begin" and "end" bars can be combined with any other options. 
 
    fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
@@ -188,7 +191,6 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Int_t P2x,P2y,P3x,P3y,P0x,P0y;
 
 // Draw the start and end bars if needed
-printf("%s  ",opt.Data());
    if (opt.BeginsWith("|-")) {
       gPad->PaintLine(gPad->AbsPixeltoX(px1+Int_t(-st*dSiz+0.5)),
                       gPad->AbsPixeltoY(py1+Int_t(-ct*dSiz+0.5)),
@@ -203,7 +205,6 @@ printf("%s  ",opt.Data());
                       gPad->AbsPixeltoY(py2+Int_t( ct*dSiz+0.5)));
       opt(opt.Length()-1) = ' ';
    }
-printf("%s\n",opt.Data());
 
 // Otto start:  define default line  before move of origin of arrow
    Double_t XP0;
