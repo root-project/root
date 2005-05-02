@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.84 2005/04/01 16:19:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.85 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -127,7 +127,7 @@ Bool_t TProofInterruptHandler::Notify()
 {
    // TProof interrupt handler.
 
-   fProof->Interrupt(TProof::kHardInterrupt);
+   fProof->StopProcess(kTRUE);
    return kTRUE;
 }
 
@@ -342,7 +342,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
 
-   fPlayer = MakePlayer();
+   fPlayer   = MakePlayer();
    fFeedback = new TList;
    fFeedback->SetOwner();
    fFeedback->SetName("FeedbackList");
@@ -1030,10 +1030,10 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
             }
             if (nbytes > 0) {
                if (IsMaster())
-                  Printf("*** Slave %s:%s synchronized: %d bytes discarded",
-                         sl->GetName(), sl->GetOrdinal(), nbytes);
+                  Info("Interrupt", "slave %s:%s synchronized: %d bytes discarded",
+                       sl->GetName(), sl->GetOrdinal(), nbytes);
                else
-                  Printf("*** PROOF synchronized: %d bytes discarded", nbytes);
+                  Info("Interrupt", "PROOF synchronized: %d bytes discarded", nbytes);
             }
 
             // Get log file from master or slave after a hard interrupt
@@ -1070,7 +1070,7 @@ Int_t TProof::GetParallel() const
    TIter NextSlave(GetListOfActiveSlaves());
    Int_t nparallel = 0;
    while (TSlave* sl = dynamic_cast<TSlave*>(NextSlave()))
-      if(sl->GetParallel() >= 0)
+      if (sl->GetParallel() >= 0)
          nparallel += sl->GetParallel();
 
    return nparallel;
@@ -1459,6 +1459,8 @@ Int_t TProof::Collect(TMonitor *mon)
                if (out) {
                   out->SetOwner();
                   fPlayer->StoreOutput(out); // Adopts the list
+               } else {
+                  PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
                }
             }
             break;
@@ -1504,6 +1506,15 @@ Int_t TProof::Collect(TMonitor *mon)
             }
             break;
 
+         case kPROOF_STOPPROCESS:
+            {
+               // answer contains number of processed events;
+               Long64_t events;
+               (*mess) >> events;
+               fPlayer->AddEventsProcessed(events);
+               break;
+            }
+
          case kPROOF_GETSLAVEINFO:
             {
                PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
@@ -1518,7 +1529,7 @@ Int_t TProof::Collect(TMonitor *mon)
                for (Int_t i=0; i<nentries; i++) {
                   TSlaveInfo* slinfo =
                      dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
-                  if(slinfo) {
+                  if (slinfo) {
                      fSlaveInfo->Add(slinfo);
                      if (slinfo->fStatus != TSlaveInfo::kBad) {
                         if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
@@ -1761,7 +1772,19 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
       fProgressDialog->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
                                   first, nentries);
 
-   return fPlayer->Process(set, selector, option, nentries, first, evl);
+   Long64_t rv = fPlayer->Process(set, selector, option, nentries, first, evl);
+
+   if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
+      Info("Process","the processing was aborted - %lld events processed", fPlayer->GetEventsProcessed());
+      gProof->Progress(-1, fPlayer->GetEventsProcessed());
+      Emit("StopProcess(Bool_t)", kTRUE);
+   }
+   if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
+      Info("Process","the processing was stopped - %lld events processed", fPlayer->GetEventsProcessed());
+      gProof->Progress(-1, fPlayer->GetEventsProcessed());
+      Emit("StopProcess(Bool_t)", kFALSE);
+   }
+   return rv;
 }
 
 //______________________________________________________________________________
@@ -1779,7 +1802,28 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
 //______________________________________________________________________________
 void TProof::StopProcess(Bool_t abort)
 {
+   // Send STOPPROCESS message to master and workers.
+
+   PDB(kGlobal,2)
+      Info("StopProcess","enter %d", abort);
+
+   if (!IsValid()) return;
+
    fPlayer->StopProcess(abort);
+
+   if (fSlaves->GetSize() == 0) return;
+
+   TSlave *sl;
+   TIter   next(fSlaves);
+
+   while ((sl = (TSlave *)next())) {
+      if (sl->IsValid()) {
+         TSocket *s = sl->GetSocket();
+         TMessage msg(kPROOF_STOPPROCESS);
+         msg << abort;
+         s->Send(msg);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1797,7 +1841,8 @@ void TProof::ClearInput()
    // Clear input object list.
 
    fPlayer->ClearInput();
-      // the system feedback list is always in the input list
+
+   // the system feedback list is always in the input list
    AddInput(fFeedback);
 }
 
@@ -3136,7 +3181,7 @@ TList *TProof::GetOutputNames()
 //______________________________________________________________________________
 void TProof::Browse(TBrowser *b)
 {
-   // Build the proof's structure in the browser.
+   // Build the PROOF's structure in the browser.
 
    b->Add(fActiveSlaves, fActiveSlaves->Class(), "fActiveSlaves");
    b->Add(&fMaster, fMaster.Class(), "fMaster");

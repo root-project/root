@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.3 2004/05/13 11:38:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.4 2004/05/14 09:46:17 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -40,6 +40,7 @@ private:
    TGProgressBar      *fBar;     // progress bar
    TGTextButton       *fClose;
    TGTextButton       *fStop;
+   TGTextButton       *fAbort;
    TGCheckButton      *fKeep;
    TGLabel            *fFilesEvents;
    TGLabel            *fProcessed;
@@ -49,6 +50,7 @@ private:
    TTime               fStartTime;
    TTime               fEndTime;
    Long64_t            fPrevProcessed;
+   Long64_t            fPrevTotal;
    Long64_t            fFirst;
    Long64_t            fEntries;
    Int_t               fFiles;
@@ -59,12 +61,15 @@ public:
    TProofProgressDialog(TVirtualProof *proof, const char *selector,
                         Int_t files, Long64_t first, Long64_t entries);
    virtual ~TProofProgressDialog();
+
    void Progress(Long64_t total, Long64_t processed);
+   void IndicateStop(Bool_t aborted);
 
    void CloseWindow();
    void DoClose();
    void DoKeep(Bool_t on);
    void DoStop();
+   void DoAbort();
 
    ClassDef(TProofProgressDialog,0)  //PROOF progress dialog
 };

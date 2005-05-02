@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.87 2005/04/13 16:56:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.88 2005/04/15 17:26:09 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -254,6 +254,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
    fProof           = 0;
+   fPlayer          = 0;
    fSocket          = new TSocket(sock);
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
@@ -499,7 +500,7 @@ TDSetElement *TProofServ::GetNextPacket()
    TMessage *mess;
    if ((rc = fSocket->Recv(mess)) <= 0) {
       fLatency.Stop();
-      Error("GetNextPacket","Recv) failed, returned %d", rc);
+      Error("GetNextPacket","Recv() failed, returned %d", rc);
       return 0;
    }
 
@@ -513,32 +514,55 @@ TDSetElement *TProofServ::GetNextPacket()
    Long64_t       first;
    Long64_t       num;
 
-   (*mess) >> ok;
+   Int_t what = mess->What();
 
-   if (ok) {
-      (*mess) >> file >> dir >> obj >> first;
-      if (first != -1) {
-         (*mess) >> num;
-         e = new TDSetElement(0, file, obj, dir, first, num);
-      } else {
-         TEventList *elist;
-         (*mess) >> elist;
-         e = new TDSetElement(0, file, obj, dir);
-         e->SetEventList(elist);
-      }
-   } else {
-      e = 0;
-   }
-   if (e != 0) {
-      fCompute.Start();
-      PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %lld %lld",
-                         e->GetFileName(), e->GetDirectory(),
-                         e->GetObjName(), e->GetFirst(),e->GetNum());
-   } else {
-      PDB(kLoop, 2) Info("GetNextPacket", "Done");
+   switch (what) {
+      case kPROOF_GETPACKET:
+
+         (*mess) >> ok;
+
+         if (ok) {
+            (*mess) >> file >> dir >> obj >> first;
+            if (first != -1) {
+               (*mess) >> num;
+               e = new TDSetElement(0, file, obj, dir, first, num);
+            } else {
+               TEventList *elist;
+               (*mess) >> elist;
+               e = new TDSetElement(0, file, obj, dir);
+               e->SetEventList(elist);
+            }
+         } else {
+            e = 0;
+         }
+         if (e != 0) {
+            fCompute.Start();
+            PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %lld %lld",
+                               e->GetFileName(), e->GetDirectory(),
+                               e->GetObjName(), e->GetFirst(),e->GetNum());
+         } else {
+            PDB(kLoop, 2) Info("GetNextPacket", "Done");
+         }
+
+         delete mess;
+
+         return e;
+
+      case kPROOF_STOPPROCESS:
+         // if a kPROOF_STOPPROCESS message is returned to kPROOF_GETPACKET
+         // GetNextPacket() will return 0 and the TPacketizer and hence
+         // TEventIter will be stopped
+         PDB(kLoop, 2) Info("GetNextPacket:kPROOF_STOPPROCESS","received");
+         break;
+
+      default:
+         Error("GetNextPacket","unexpected answer message type: %d",what);
+         break;
    }
 
-   return e;
+   delete mess;
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -565,6 +589,14 @@ void TProofServ::GetOptions(int *argc, char **argv)
 void TProofServ::HandleSocketInput()
 {
    // Handle input coming from the client or from the master server.
+
+   static Int_t recursive = 0;
+
+   if (recursive > 0) {
+      HandleSocketInputDuringProcess();
+      return;
+   }
+   recursive++;
 
    static TStopwatch timer;
 
@@ -655,6 +687,13 @@ void TProofServ::HandleSocketInput()
          Terminate(0);
          break;
 
+      case kPROOF_STOPPROCESS:
+         // this message makes only sense when the query is being processed,
+         // however the message can also be received if the user pressed
+         // ctrl-c, so ignore it!
+         PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_STOPPROCESS","enter");
+         break;
+
       case kPROOF_PROCESS:
          {
             TDSet *dset;
@@ -683,6 +722,7 @@ void TProofServ::HandleSocketInput()
                p = new TProofPlayerSlave(fSocket);
                if (IsMaster()) fProof->SetPlayer(p);
             }
+            fPlayer = p;
 
             if (dset->IsA() == TDSetProxy::Class()) {
                ((TDSetProxy*)dset)->SetProofServ(this);
@@ -696,10 +736,22 @@ void TProofServ::HandleSocketInput()
 
             p->Process(dset, filename, opt, nentries, first);
 
+            // return number of events processed
+
+            if (p->GetExitStatus() != TProofPlayer::kFinished) {
+               TMessage m(kPROOF_STOPPROCESS);
+               m << p->GetEventsProcessed();
+               fSocket->Send(m);
+            }
+
             // return output!
 
-            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
-            fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+            if(p->GetExitStatus() != TProofPlayer::kAborted) {
+               PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send Output");
+               fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+            } else {
+               fSocket->SendObject(0,kPROOF_OUTPUTLIST);
+            }
 
             PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_PROCESS","Send LogFile");
 
@@ -709,6 +761,7 @@ void TProofServ::HandleSocketInput()
 
             if (fProof != 0) fProof->SetPlayer(0); // ensure player is no longer referenced
             delete p;
+            fPlayer = 0;
             delete input;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","Done");
@@ -1206,12 +1259,6 @@ void TProofServ::HandleSocketInput()
                      t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
                   }
                }
-//               if (!t && IsMaster()) {
-//                  PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
-//                                       "File or object not found at the master");
-//                  // ask a slave for the tree
-//                  t = fProof->GetTreeHeader(file.Data(), name.Data());
-//               }
             }
             if (t)
                answ << TString("Success") << t;
@@ -1296,12 +1343,49 @@ void TProofServ::HandleSocketInput()
          break;
    }
 
-   if (fProof) fProof->SetActive(kFALSE);
+   recursive--;
 
+   if (fProof) fProof->SetActive(kFALSE);
 
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
 
+   delete mess;
+}
+
+//______________________________________________________________________________
+void TProofServ::HandleSocketInputDuringProcess()
+{
+   // Handle messages that might arrive during processing while being in
+   // HandleSocketInput(). This avoids recursive calls into HandleSocketInput().
+
+   PDB(kGlobal,1) Info("HandleSocketInputDuringProcess", "enter");
+
+   TMessage *mess;
+   char      str[2048];
+   Int_t     what;
+   Bool_t    aborted = kFALSE;
+
+   if (fSocket->Recv(mess) <= 0)
+      Terminate(0);               // do something more intelligent here
+
+   what = mess->What();
+   switch (what) {
+
+      case kPROOF_STOPPROCESS:
+         (*mess) >> aborted;
+         PDB(kGlobal, 1)
+            Info("HandleSocketInputDuringProcess:kPROOF_STOPPROCESS", "enter %d", aborted);
+         if (fProof)
+            fProof->StopProcess(aborted);
+         else
+            if(fPlayer)
+               fPlayer->StopProcess(aborted);
+         break;
+      default:
+         Error("HandleSocketInputDuringProcess", "unknown command %d", what);
+         break;
+   }
    delete mess;
 }
 

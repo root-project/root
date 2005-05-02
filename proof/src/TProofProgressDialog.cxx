@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.8 2004/04/21 10:13:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.9 2004/05/13 11:38:51 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -45,6 +45,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fFirst         = first;
    fEntries       = entries;
    fPrevProcessed = 0;
+   fPrevTotal     = 0;
 
    const TGWindow *main = gClient->GetRoot();
    fDialog = new TGTransientFrame(main, main, 10, 10);
@@ -101,12 +102,21 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    UInt_t  nb = 0, width = 0, height = 0;
 
    fStop = new TGTextButton(hf3, "&Stop");
+   fStop->SetToolTipText("Stop processing, Terminate() will be executed");
    fStop->Connect("Clicked()", "TProofProgressDialog", this, "DoStop()");
    hf3->AddFrame(fStop, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 10, 0, 0));
    height = fStop->GetDefaultHeight();
    width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
 
+   fAbort = new TGTextButton(hf3, "C&ancel");
+   fAbort->SetToolTipText("Cancel processing, Terminate() will NOT be executed");
+   fAbort->Connect("Clicked()", "TProofProgressDialog", this, "DoAbort()");
+   hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 10, 0, 0));
+   height = fAbort->GetDefaultHeight();
+   width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
+
    fClose = new TGTextButton(hf3, "&Close");
+   fClose->SetToolTipText("Close this dialog");
    fClose->Connect("Clicked()", "TProofProgressDialog", this, "DoClose()");
    hf3->AddFrame(fClose, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 10, 5, 0, 0));
    height = fClose->GetDefaultHeight();
@@ -119,9 +129,11 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    hf3->Resize((width + 40) * nb, height);
 
    // connect slot to proof progress signal
-   if (fProof)
+   if (fProof) {
       fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
                       this, "Progress(Long64_t,Long64_t)");
+      fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this, "IndicateStop(Bool_t)");
+   }
 
    // set dialog title
    fDialog->SetWindowName("PROOF Query Progress");
@@ -168,6 +180,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
 
+   if (total < 0)
+      total = fPrevTotal;
+   else
+      fPrevTotal = total;
+
    if (fPrevProcessed == processed)
       return;
 
@@ -194,9 +211,12 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       sprintf(buf, "%lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
 
-      if (fProof)
+      if (fProof) {
          fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                             "Progress(Long64_t,Long64_t)");
+         fProof->Disconnect("StopProcess(Bool_t)", this,
+                            "IndicateStop(Bool_t)");
+      }
 
       if (!fgKeep)
          DoClose();
@@ -217,10 +237,12 @@ TProofProgressDialog::~TProofProgressDialog()
 {
    // Cleanup dialog.
 
-   if (fProof)
+   if (fProof) {
       fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                          "Progress(Long64_t,Long64_t)");
-
+      fProof->Disconnect("StopProcess(Bool_t)", this,
+                         "IndicateStop(Bool_t)");
+   }
    fDialog->Cleanup();
    delete fDialog;
 }
@@ -231,6 +253,24 @@ void TProofProgressDialog::CloseWindow()
    // Called when dialog is closed.
 
    delete this;
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::IndicateStop(Bool_t aborted)
+{
+   // Indicate that Cancel or Stop was clicked.
+
+   if (aborted == kTRUE)
+      fBar->SetBarColor("red");
+   else
+      fBar->SetBarColor("yellow");
+
+   if (fProof) {
+      fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
+                         "Progress(Long64_t,Long64_t)");
+      fProof->Disconnect("StopProcess(Bool_t)", this,
+                         "IndicateStop(Bool_t)");
+   }
 }
 
 //______________________________________________________________________________
@@ -255,5 +295,13 @@ void TProofProgressDialog::DoStop()
 {
    // Handle Stop button.
 
-   printf("DoStop\n");
+   fProof->StopProcess(kFALSE);
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::DoAbort()
+{
+   // Handle Cancel button.
+
+   fProof->StopProcess(kTRUE);
 }

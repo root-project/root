@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.55 2005/03/30 04:07:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.56 2005/04/13 16:56:52 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -84,6 +84,7 @@ TProofPlayer::TProofPlayer()
    // Default ctor.
 
    fInput         = new TList;
+   fExitStatus    = kFinished;
 }
 
 //______________________________________________________________________________
@@ -99,6 +100,10 @@ TProofPlayer::~TProofPlayer()
 void TProofPlayer::StopProcess(Bool_t abort)
 {
    if (fEvIter != 0) fEvIter->StopProcess(abort);
+   if (abort == kTRUE)
+      fExitStatus = kAborted;
+   else
+      fExitStatus = kStopped;
 }
 
 //______________________________________________________________________________
@@ -160,6 +165,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
+   fExitStatus = kFinished;
    fOutput = 0;
    if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
@@ -211,6 +217,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Loop over range
    Long64_t entry;
+   fEventsProcessed = 0;
    while (fSelStatus->IsOk() && (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
       if (version == 0) {
@@ -223,10 +230,12 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
          fSelector->Process(entry);
       }
+      fEventsProcessed++;
 
       gSystem->DispatchOneEvent(kTRUE);
       if (gROOT->IsInterrupted()) break;
    }
+   PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
 
    HandleTimer(0);
 
@@ -236,23 +245,25 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Finalize
 
-   if (fSelStatus->IsOk()) {
-      if (version == 0) {
-         PDB(kLoop,1) Info("Process","Call Terminate()");
-         fSelector->Terminate();
-      } else {
-         PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
-         fSelector->SlaveTerminate();
-         if (IsClient() && fSelStatus->IsOk()) {
+   if (fExitStatus != kAborted) {
+      if (fSelStatus->IsOk()) {
+         if (version == 0) {
             PDB(kLoop,1) Info("Process","Call Terminate()");
             fSelector->Terminate();
+         } else {
+            PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
+            fSelector->SlaveTerminate();
+            if (IsClient() && fSelStatus->IsOk()) {
+               PDB(kLoop,1) Info("Process","Call Terminate()");
+               fSelector->Terminate();
+            }
          }
       }
-   }
-   if (gProofServ && !gProofServ->IsParallel()) {  // put all the canvases onto the output list
-      TIter next(gROOT->GetListOfCanvases());
-      while (TCanvas* c = dynamic_cast<TCanvas*> (next()))
-         fOutput->Add(c);
+      if (gProofServ && !gProofServ->IsParallel()) {  // put all the canvases onto the output list
+         TIter next(gROOT->GetListOfCanvases());
+         while (TCanvas* c = dynamic_cast<TCanvas*> (next()))
+            fOutput->Add(c);
+      }
    }
 
    TPerfStats::Stop();
@@ -353,6 +364,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
+   fExitStatus = kFinished;
+   fEventsProcessed = 0;
 
 //   delete fOutput;
    if (!fOutput)
@@ -436,31 +449,35 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
    } else {
-      TIter next(fOutput);
-      TList *output = fSelector->GetOutputList();
-      while(TObject* obj = next()) {
-         if (!fProof->IsParallel()) {
-            if (TCanvas* c = dynamic_cast<TCanvas *> (obj))
-               c->Draw();
+      if (fExitStatus != kAborted) {
+         TIter next(fOutput);
+         TList *output = fSelector->GetOutputList();
+         while(TObject* obj = next()) {
+            if (!fProof->IsParallel()) {
+               if (TCanvas* c = dynamic_cast<TCanvas *> (obj))
+                  c->Draw();
+               else
+                  output->Add(obj);
+            }
             else
                output->Add(obj);
          }
-         else
-            output->Add(obj);
+         PDB(kLoop,1) Info("Process","Call Terminate()");
+         fOutput->Clear("nodelete");
+         fSelector->Terminate();
+         rv = fSelector->GetStatus();
+
+         // copy the output list back and clean the selector's list
+         TIter it(output);
+         while(TObject* o = it()) {
+            fOutput->Add(o);
+         }
+         // FIXME
+         output->SetOwner(kFALSE);
+         output->Clear("nodelete");
       }
-      PDB(kLoop,1) Info("Process","Call Terminate()");
-      fOutput->Clear("nodelete");
-      fSelector->Terminate();
-      rv = fSelector->GetStatus();
-     // copy the output list back and clean the selector's list
-      TIter it(output);
-      while(TObject* o = it()) {
-         fOutput->Add(o);
-      }
-      // FIXME
-      output->SetOwner(kFALSE);
-      output->Clear("nodelete");
    }
+   PDB(kGlobal,1) Info("Process","exit");
    return rv;
 }
 
@@ -570,6 +587,10 @@ void TProofPlayerRemote::Feedback(TList *objs)
 void TProofPlayerRemote::StopProcess(Bool_t abort)
 {
    if (fPacketizer != 0) fPacketizer->StopProcess(abort);
+   if (abort == kTRUE)
+      fExitStatus = kAborted;
+   else
+      fExitStatus = kStopped;
 }
 
 //______________________________________________________________________________
@@ -1032,6 +1053,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
    // Process specified TDSet on PROOF.
    // Returns -1 in case error, 0 otherwise.
 
+   fEventsProcessed = 0;
    PDB(kGlobal,1) Info("Process","Enter");
 
    TProofSuperMaster *proof = dynamic_cast<TProofSuperMaster*>(GetProof());
