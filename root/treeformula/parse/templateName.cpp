@@ -31,8 +31,8 @@ void plot_my_i()
     }
   t->Print();
   t->Draw("forproxy.C+","","goff");
-  t->Draw("plot_my_i.B<void>.i:against_my_i.B<void>.i");
-  t->Draw("plot_my_i.i:against_my_i.i");
+  t->Scan("plot_my_i.B<void>.i:against_my_i.B<void>.i","","",10);
+  t->Scan("plot_my_i.i:against_my_i.i","","",10);
   t->ResetBranchAddresses();
   //t->StartViewer();
 }

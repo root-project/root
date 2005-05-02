@@ -56,11 +56,34 @@ Warning in <TTreeProxyGenerator>: The branch name "j" is duplicated. Only the fi
 	will be available directly. The other instance(s) might be available via their complete name
 	(including the name of their mother branche's name).
 Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
-Error in <TTreeFormula::DefinedVariable>: B is not a datamember of C
-
-*ERROR 30 : 
- Bad numerical expression : "plot_my_i.B"
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
+************************************
+*    Row   * plot_my_i * against_m *
+************************************
+*        0 *         0 *         0 *
+*        1 *        13 *        26 *
+*        2 *        26 *        52 *
+*        3 *        39 *        78 *
+*        4 *        52 *       104 *
+*        5 *        65 *       130 *
+*        6 *        78 *       156 *
+*        7 *        91 *       182 *
+*        8 *       104 *       208 *
+*        9 *       117 *       234 *
+************************************
+************************************
+*    Row   * plot_my_i * against_m *
+************************************
+*        0 *         0 *         0 *
+*        1 *        13 *        26 *
+*        2 *        26 *        52 *
+*        3 *        39 *        78 *
+*        4 *        52 *       104 *
+*        5 *        65 *       130 *
+*        6 *        78 *       156 *
+*        7 *        91 *       182 *
+*        8 *       104 *       208 *
+*        9 *       117 *       234 *
+************************************
 ******************************************************************************
 *Tree    :mytreemk  : foo                                                    *
 *Entries :        1 : Total =            2985 bytes  File  Size =          0 *

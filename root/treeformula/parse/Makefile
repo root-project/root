@@ -4,7 +4,8 @@
 CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake*
 
 #Set the list of target to make while testing
-TEST_TARGETS += aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean
+TEST_TARGETS += aliases templateName BoolOrder testStringFormula testBoolOpt expotest NonFormulaMean \
+	templateBase
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -51,6 +52,9 @@ templateName.log: templateName_cpp.$(DllSuf) $(ROOTCORELIBS) $(ROOT_LOC)/lib/lib
 	$(CMDECHO) root.exe -q -b -l runtemplateName.C 2>&1 | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable' > templateName.log
 
 templateName: templateName.log
+	$(TestDiff)
+
+templateBase: templateBase.log
 	$(TestDiff)
 
 aliases: aliases.log
