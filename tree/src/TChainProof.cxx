@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.3 2005/03/17 15:00:47 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.1 2005/03/21 16:20:56 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "TChainProof.h"
 #include "TDSet.h"
 #include "TVirtualProof.h"
-#include "TDrawFeedback.h"
+
 
 ClassImp(TChainProof)
 

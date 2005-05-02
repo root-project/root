@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.104 2005/04/14 21:30:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.105 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -42,7 +42,7 @@
 #include "TRegexp.h"
 #include "TObjString.h"
 #include "TChainProof.h"
-#include "TProof.h"
+#include "TVirtualProof.h"
 #include "TDSet.h"
 
 
@@ -443,13 +443,13 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
 
    Assert(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
-  
+
    fFriends->Add(fe);
-   
+
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
    fTreeNumber = -1;
-   
+
    TTree *t = fe->GetTree();
    if (!t) {
       Warning("AddFriend","Unknown TChain %s",chain);
@@ -470,7 +470,7 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
    fTreeNumber = -1;
-   
+
    TTree *t = fe->GetTree();
    if (!t) {
       Warning("AddFriend","Unknown TChain %s",chain->GetName());
@@ -790,7 +790,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // If entry belongs to the current tree return entry
    if (t == fTreeNumber) {
       // First set the entry the tree on its owns friends
-      // (the friends of the chain will be updated in the 
+      // (the friends of the chain will be updated in the
       // next loop).
       fTree->LoadTree(fReadEntry);
       if (fFriends) {
@@ -811,7 +811,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             } while( fetree && !fetree->TestBit(TFriendElement::kFromChain) );
 
             TTree *t = fe->GetTree();
-            if (t->InheritsFrom(TChain::Class())) {            
+            if (t->InheritsFrom(TChain::Class())) {
                Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
                TTree* old = t->GetTree();
                TTree* oldintree = fetree->GetTree();
@@ -1224,7 +1224,7 @@ void TChain::Reset(Option_t *)
 }
 
 //_______________________________________________________________________
-Long64_t  TChain::Scan(const char *varexp, const char *selection, 
+Long64_t  TChain::Scan(const char *varexp, const char *selection,
                        Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
@@ -1461,7 +1461,7 @@ void TChain::ReleaseChainProof()
 //______________________________________________________________________________
 void TChain::SetProof(TVirtualProof *proof)
 {
-   // Sets the proof to be used for processing. "Draw" and "Processed" commands
+   // Sets the PROOF to be used for processing. "Draw" and "Processed" commands
    // will be handled by the proof.
    // If proof == (TVirtualProof*) -1 then the gProof is used.
    // If proof == 0 no proof is connected and the previously connected
