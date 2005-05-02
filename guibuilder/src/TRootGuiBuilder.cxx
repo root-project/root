@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.12 2004/12/09 22:55:06 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.13 2005/02/18 11:22:28 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TRootHelpDialog.h"
-#include "TGToolTip.h"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -310,7 +309,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fMain = new TGMdiMainFrame(cf, fMenuBar, 1, 1);
    cf->AddFrame(fMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   TGFrame *mdicont = fMain->GetContainer();   
+   TGFrame *mdicont = fMain->GetContainer();
    fMain->GetViewPort()->RemoveFrame(mdicont);
    delete mdicont;
    fMain->SetContainer(new TRootGuiBuilderContainer(fMain));
@@ -1196,7 +1195,7 @@ void TRootGuiBuilder::BindKeys()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::VSplitter()
 {
-   // creates new TGVSplitter 
+   // creates new TGVSplitter
 
    TGHorizontalFrame *ret = new TGHorizontalFrame();
    ret->SetCleanup(kDeepCleanup);
@@ -1219,7 +1218,7 @@ TGFrame *TRootGuiBuilder::VSplitter()
 //______________________________________________________________________________
 TGFrame *TRootGuiBuilder::HSplitter()
 {
-   //  creates new TGHSplitter 
+   //  creates new TGHSplitter
 
    TGVerticalFrame *ret = new TGVerticalFrame();
    ret->SetCleanup(kDeepCleanup);
