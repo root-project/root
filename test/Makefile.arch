@@ -353,9 +353,9 @@ endif
 ifeq ($(ARCH),linuxppc64gcc)
 # PPC64 Linux with gcc 3.x
 CXX           = g++
-CXXFLAGS      = -O2 -Wall -fPIC
+CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
-LDFLAGS       = -O2
+LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
