@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.5 2004/09/07 08:22:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.6 2005/03/10 08:56:27 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -24,6 +24,8 @@
 
 #include "TRotMatrix.h"
 #include "TVolumePosition.h"
+#include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
 
 //const Int_t kMAXLEVELS = 20;
 const Int_t kSonsInvisible = BIT(17);
@@ -448,8 +450,22 @@ void TVolume::Draw(Option_t *option)
     }
     if (parent) parent->AppendPad(option);
     else        AppendPad(option);
-
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
+   // the new (4.03/05) way to active 3D viewer
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
+   }
+   
+   // Create a 3D viewer to draw us
+   gPad->GetViewer3D(option);
+#else   
     Paint(option);
+#endif   
 }
 
 
@@ -577,6 +593,7 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
   if ( (0 < iopt) && (iopt <= level) )  return;
 
   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+  TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
 
   TVolumePosition *position = pos;
   if (!position)   position   = &nullPosition;
@@ -585,7 +602,7 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
 
   position->UpdatePosition(option);
 
-  if (!(GetVisibility() & kThisUnvisible))  PaintShape(option);
+  if ( viewer3D && !(GetVisibility() & kThisUnvisible))  PaintShape(option);
 
   if (GetVisibility() & kSonUnvisible) return;
 
@@ -630,10 +647,33 @@ void TVolume::PaintShape(Option_t *option)
       shape->SetFillColor(GetFillColor());
       shape->SetFillStyle(GetFillStyle());
       TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-      if (view3D)
+      TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+     if (view3D)
          view3D->SetLineAttr(GetLineColor(),GetLineWidth(),option);
     }
+    
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
+   // It MUST be the TShape::PAint method:
+    Bool_t viewerWantsSons = kTRUE;
+    TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+    if (viewer3D) {
+         // We only provide master frame positions in these shapes
+         // so don't ask viewer preference
+
+         // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
+         // Not all will support the last two - which is fine
+         const TBuffer3D & buffer = 
+            fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
+         Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
+         if (reqSections != TBuffer3D::kNone)
+         {
+            fShape->GetBuffer3D(reqSections);
+            viewer3D->AddObject(buffer);
+         }
+      }
+#else
     shape->Paint(option);
+#endif
   }
 }
 

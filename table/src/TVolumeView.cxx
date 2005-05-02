@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.9 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.10 2005/03/10 08:56:27 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -20,6 +20,9 @@
 #include "TGeometry.h"
 #include "TVirtualPad.h"
 #include "TObjArray.h"
+#include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TVolumeView                                                          //
@@ -519,7 +522,22 @@ void TVolumeView::Draw(Option_t *option)
     if (parent) parent->AppendPad(option);
     else        AppendPad(option);
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
+   // the new (4.03/05) way to active 3D viewer
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      // Set the view to perform a first autorange (frame) draw. 
+      // TViewer3DPad will revert view to normal painting after this
+      view->SetAutoRange(kTRUE);
+   }
+   
+   // Create a 3D viewer to draw us
+   gPad->GetViewer3D(option);
+#else   
     Paint(option);
+#endif   
 }
 
 //_____________________________________________________________________________
@@ -777,7 +795,28 @@ void TVolumeView::PaintShape(Option_t *option)
       if (view3D)
          view3D->SetLineAttr(shape->GetLineColor(),shape->GetLineWidth(),option);
     }
+#if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
+   // It MUST be the TShape::PAint method:
+    Bool_t viewerWantsSons = kTRUE;
+    TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+    if (viewer3D) {
+         // We only provide master frame positions in these shapes
+         // so don't ask viewer preference
+
+         // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
+         // Not all will support the last two - which is fine
+         const TBuffer3D & buffer = 
+            shape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
+         Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
+         if (reqSections != TBuffer3D::kNone)
+         {
+            shape->GetBuffer3D(reqSections);
+            viewer3D->AddObject(buffer);
+         }
+      }
+#else
     shape->Paint(option);
+#endif
   }
 }
 
