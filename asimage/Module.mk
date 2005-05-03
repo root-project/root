@@ -257,7 +257,7 @@ endif
 distclean::     distclean-asimage
 
 ##### extra rules ######
-$(ASIMAGEO): %.o: %.cxx $(ASTEPLIB)
+$(ASIMAGEO): %.o: %.cxx $(ASTEPLIB) $(FREETYPEDEP)
 	$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<
 
 $(ASIMAGEGUIO): %.o: %.cxx $(ASTEPLIB)
