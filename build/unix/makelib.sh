@@ -79,16 +79,16 @@ elif [ $PLATFORM = "lynxos" ]; then
    cmd="ar rv $LIB $OBJS $EXTRA"
    echo $cmd
    $cmd
-elif [ $PLATFORM = "fbsd" ]; then
-    cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR \
+elif [ $PLATFORM = "fbsd" ] || [ $PLATFORM = "obsd" ]; then
+   if [ "x$MAJOR" = "x" ] ; then
+      cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB \
          `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
-    echo $cmd
-    $cmd
-elif [ $PLATFORM = "obsd" ]; then
-    cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB \
+   else
+      cmd="$LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR \
          `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
-    echo $cmd
-    $cmd
+   fi
+   echo $cmd
+   $cmd
 elif [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # Look for a fink installation
