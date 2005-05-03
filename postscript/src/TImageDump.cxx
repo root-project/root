@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.3 2005/05/02 21:30:27 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.4 2005/05/03 13:11:32 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -585,7 +585,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y position of the text
 
    // To scale fonts to the same size as the old TT version
-   const Float_t kScale = 0.94;
+   const Float_t kScale = 1;
    const Double_t kDEGRAD = TMath::Pi()/180.;
 
    if (!gPad || !fImage || (fTextSize < 0)) {
@@ -689,12 +689,12 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    if (txalh == 3) x -= w;
 
    Float_t angle = kDEGRAD*fTextAngle;
+
    if (txalv == 3) {
-     y += (angle ? h * TMath::Cos(angle) : h);
-     x += (angle ? h * TMath::Sin(angle) : h);
-   } if (txalv == 2) {
-     y += (angle ? (h>>1) * TMath::Cos(angle) : h>>1);
-     x += (angle ? (h>>1) * TMath::Sin(angle) : h>>1);
+     y += (fTextAngle != 0. ? h * TMath::Cos(angle) : h);
+   } 
+   if (txalv == 2) {
+     y += (fTextAngle != 0. ? (h>>1) * TMath::Cos(angle) : h>>1);
    } 
 
    TColor *col = gROOT->GetColor(fTextColor);
