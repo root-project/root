@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.9 2004/05/13 11:38:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.10 2005/05/02 11:00:39 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fKeep->Connect("Toggled(Bool_t)", "TProofProgressDialog", this, "DoKeep(Bool_t)");
    fDialog->AddFrame(fKeep, new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
 
-   // stop and close buttons
+   // stop, cancel and close buttons
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
 
    UInt_t  nb = 0, width = 0, height = 0;
@@ -104,22 +104,23 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fStop = new TGTextButton(hf3, "&Stop");
    fStop->SetToolTipText("Stop processing, Terminate() will be executed");
    fStop->Connect("Clicked()", "TProofProgressDialog", this, "DoStop()");
-   hf3->AddFrame(fStop, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 10, 0, 0));
-   height = fStop->GetDefaultHeight();
+   hf3->AddFrame(fStop, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height = TMath::Max(height, fStop->GetDefaultHeight());
    width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
 
    fAbort = new TGTextButton(hf3, "C&ancel");
    fAbort->SetToolTipText("Cancel processing, Terminate() will NOT be executed");
    fAbort->Connect("Clicked()", "TProofProgressDialog", this, "DoAbort()");
-   hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 10, 0, 0));
-   height = fAbort->GetDefaultHeight();
-   width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
+   hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height = TMath::Max(height, fAbort->GetDefaultHeight());
+   width  = TMath::Max(width, fAbort->GetDefaultWidth()); ++nb;
 
    fClose = new TGTextButton(hf3, "&Close");
    fClose->SetToolTipText("Close this dialog");
+   fClose->SetState(kButtonDisabled);
    fClose->Connect("Clicked()", "TProofProgressDialog", this, "DoClose()");
-   hf3->AddFrame(fClose, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 10, 5, 0, 0));
-   height = fClose->GetDefaultHeight();
+   hf3->AddFrame(fClose, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height = TMath::Max(height, fClose->GetDefaultHeight());
    width  = TMath::Max(width, fClose->GetDefaultWidth()); ++nb;
 
    // place button frame (hf3) at the bottom
@@ -218,6 +219,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
                             "IndicateStop(Bool_t)");
       }
 
+      fClose->SetState(kButtonUp);
       if (!fgKeep)
          DoClose();
    } else {
@@ -271,6 +273,10 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
    }
+
+   fClose->SetState(kButtonUp);
+   if (!fgKeep)
+      DoClose();
 }
 
 //______________________________________________________________________________

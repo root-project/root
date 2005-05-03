@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.85 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.86 2005/05/02 11:00:39 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1772,6 +1772,12 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
       fProgressDialog->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
                                   first, nentries);
 
+   // deactivate the default application interrupt handler
+   // ctrl-c's will be forwarded to PROOF to stop the processing
+   TSignalHandler *sh = 0;
+   if (gApplication)
+      sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
+
    Long64_t rv = fPlayer->Process(set, selector, option, nentries, first, evl);
 
    if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
@@ -1784,6 +1790,11 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
       gProof->Progress(-1, fPlayer->GetEventsProcessed());
       Emit("StopProcess(Bool_t)", kFALSE);
    }
+
+   // reactivate the default application interrupt handler
+   if (sh)
+      gSystem->AddSignalHandler(sh);
+
    return rv;
 }
 
