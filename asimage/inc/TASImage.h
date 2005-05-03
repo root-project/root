@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.7 2005/04/29 16:16:34 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.8 2005/05/02 21:30:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -55,7 +55,7 @@ private:
    void DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col, UInt_t thick);
    void DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash, const char *pDash, UInt_t col);
-   void GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
+   Bool_t GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void GetFillAreaSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans, TPoint **firstPoint, UInt_t **firstWidth);
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, UInt_t color, const char *font_name, Float_t angle);

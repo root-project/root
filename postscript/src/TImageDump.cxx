@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.2 2005/04/29 18:44:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.3 2005/05/02 21:30:27 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TImageDump                                                           //
 //                                                                      //
-// save canvas in an image in batch mode     .                          //
+// save canvas as an image (GIF, JPEG, PNG, etc.) in batch mode     .   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TText.h"
+
 
 const char p_bits[26][32] = {
    {
@@ -188,18 +189,19 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 }
 
 //______________________________________________________________________________
-void TImageDump::Open(const char *fname, Int_t)
+void TImageDump::Open(const char *fname, Int_t type)
 {
    // Open a image file
 
    fImage = TImage::Create();
    SetName(fname);
+   fType = type;
 }
 
 //______________________________________________________________________________
 TImageDump::~TImageDump()
 {
-   // Default batch image destructor
+   // destructor
 
    Close();
 
@@ -214,7 +216,10 @@ void TImageDump::Close(Option_t *)
 {
    // Close a image file
 
-   if (fImage) fImage->WriteImage(GetName());
+   if (!fImage) return;
+   if (fType == 112) fImage->Flip(90);
+   
+   fImage->WriteImage(GetName());
 }
 
 //______________________________________________________________________________
@@ -231,11 +236,7 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    Int_t iy1 = y1 < y2 ? gPad->YtoAbsPixel(y1) : gPad->YtoAbsPixel(y2);
    Int_t iy2 = y1 < y2 ? gPad->YtoAbsPixel(y2) : gPad->YtoAbsPixel(y1);
 
-   //Int_t fillis = fFillStyle/1000;
-   //Int_t fillsi = fFillStyle%1000;
-
    TColor *col = gROOT->GetColor(fFillColor);
-
    fImage->DrawBox(ix1, iy1, ix2, iy2, col->AsHexString(), 1, TVirtualX::kFilled);
 }
 
@@ -303,7 +304,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
 //______________________________________________________________________________
 void TImageDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 {
-   //
+   // not used
 
    if (!gPad || !fImage) {
       return;
@@ -313,7 +314,7 @@ void TImageDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 //______________________________________________________________________________
 void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   //
+   // draw polymarker
 
    if (!gPad || !fImage) {
       return;
@@ -467,6 +468,9 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    fasi = fFillStyle%1000;
 
    Short_t px1, py1, px2, py2;
+   static const UInt_t gCachePtSize = 200;
+   static TPoint gPointCache[gCachePtSize];
+   Bool_t del = kTRUE;
 
    switch (n) {
       case 1:
@@ -506,7 +510,15 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
             return;
          }
 
-         TPoint *pt = new TPoint[n+1];
+         TPoint *pt = 0;
+         if (n+1 < gCachePtSize) {
+            pt = (TPoint*)&gPointCache;
+            del = kFALSE;
+         } else {
+            pt = new TPoint[n+1];
+            del = kTRUE;
+         }
+
          TColor *fcol = gROOT->GetColor(fFillColor);
          TColor *lcol = gROOT->GetColor(fLineColor);
 
@@ -529,7 +541,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          if (line || !fFillStyle || stipple) {
             fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
          }
-         delete [] pt;
+         if (del) delete [] pt;
       }   
       break;
    }
@@ -538,7 +550,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 //______________________________________________________________________________
 void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 {
-   //
+   // not used
 
    if (!gPad || !fImage) {
       return;
@@ -673,7 +685,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
 
-   if (txalh == 2) x -= w*0.5;
+   if (txalh == 2) x -= (w>>1);
    if (txalh == 3) x -= w;
 
    Float_t angle = kDEGRAD*fTextAngle;
@@ -706,7 +718,7 @@ static Int_t cellArrayIdx = 0;
 
 //______________________________________________________________________________
 void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
-                                  Double_t y1, Double_t y2)
+                                Double_t y1, Double_t y2)
 {
    //
 
