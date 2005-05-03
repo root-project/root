@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.120 2005/04/11 10:15:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.121 2005/04/11 15:55:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -440,7 +440,8 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 //______________________________________________________________________________
 void TSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers.
+   // Add a signal handler to list of system signal handlers. Only adds
+   // the handler if it is not already in the list of signal handlers.
 
    if (h && fSignalHandler && (fSignalHandler->FindObject(h) == 0))
       fSignalHandler->Add(h);
@@ -449,19 +450,20 @@ void TSystem::AddSignalHandler(TSignalHandler *h)
 //______________________________________________________________________________
 TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers.
+   // Remove a signal handler from list of signal handlers. Returns
+   // the handler or 0 if the handler was not in the list of signal handlers.
 
-   if (fSignalHandler) {
-      fSignalHandler->Remove(h);
-      return h;
-   }
+   if (fSignalHandler)
+      return (TSignalHandler *)fSignalHandler->Remove(h);
+
    return 0;
 }
 
 //______________________________________________________________________________
 void TSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers.
+   // Add a file handler to the list of system file handlers. Only adds
+   // the handler if it is not already in the list of file handlers.
 
    if (h && fFileHandler && (fFileHandler->FindObject(h) == 0))
       fFileHandler->Add(h);
@@ -470,12 +472,12 @@ void TSystem::AddFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 TFileHandler *TSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers.
+   // Remove a file handler from the list of file handlers. Returns
+   // the handler or 0 if the handler was not in the list of file handlers.
 
-   if (fFileHandler) {
-      fFileHandler->Remove(h);
-      return h;
-   }
+   if (fFileHandler)
+      return (TFileHandler *)fFileHandler->Remove(h);
+
    return 0;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.131 2005/04/25 16:35:10 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.132 2005/05/02 10:59:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -489,7 +489,8 @@ const char *TUnixSystem::HostName()
 //______________________________________________________________________________
 void TUnixSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers.
+   // Add a file handler to the list of system file handlers. Only adds
+   // the handler if it is not already in the list of file handlers.
 
    TSystem::AddFileHandler(h);
    if (h) {
@@ -508,7 +509,8 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers.
+   // Remove a file handler from the list of file handlers. Returns
+   // the handler or 0 if the handler was not in the list of file handlers.
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -536,7 +538,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers.
+   // Add a signal handler to list of system signal handlers. Only adds
+   // the handler if it is not already in the list of signal handlers.
 
    TSystem::AddSignalHandler(h);
    UnixSignal(h->GetSignal(), SigHandler);
@@ -545,11 +548,23 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 //______________________________________________________________________________
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers.
+   // Remove a signal handler from list of signal handlers. Returns
+   // the handler or 0 if the handler was not in the list of signal handlers.
 
-   // if last handler of specific signal need to reset sighandler to default
+   TSignalHandler *oh = TSystem::RemoveSignalHandler(h);
 
-   return TSystem::RemoveSignalHandler(h);
+   Bool_t last = kTRUE;
+   TSignalHandler *hs;
+   TIter next(fSignalHandler);
+
+   while ((hs = (TSignalHandler*) next())) {
+      if (hs->GetSignal() == h->GetSignal())
+         last = kFALSE;
+   }
+   if (last)
+      ResetSignal(h->GetSignal(), kTRUE);
+
+   return oh;
 }
 
 //______________________________________________________________________________

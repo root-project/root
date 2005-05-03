@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.117 2005/04/13 18:04:44 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.118 2005/04/26 09:00:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -850,7 +850,7 @@ void TWinNTSystem::SetProgname(const char *name)
       } else {
          // Do not issue a warning - ROOT is not using gProgPath anyway.
          // Warning("SetProgname",
-         //   "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)", 
+         //   "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)",
          //   fullname);
          gProgPath = WorkingDirectory();
       }
@@ -896,7 +896,8 @@ const char *TWinNTSystem::HostName()
 //______________________________________________________________________________
 void TWinNTSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers.
+   // Add a file handler to the list of system file handlers. Only adds
+   // the handler if it is not already in the list of file handlers.
 
    TSystem::AddFileHandler(h);
    if (h) {
@@ -915,7 +916,8 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers.
+   // Remove a file handler from the list of file handlers. Returns
+   // the handler or 0 if the handler was not in the list of file handlers.
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -942,7 +944,8 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers.
+   // Add a signal handler to list of system signal handlers. Only adds
+   // the handler if it is not already in the list of signal handlers.
 
    TSystem::AddSignalHandler(h);
    ESignals  sig = h->GetSignal();
@@ -957,7 +960,8 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 //______________________________________________________________________________
 TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers.
+   // Remove a signal handler from list of signal handlers. Returns
+   // the handler or 0 if the handler was not in the list of signal handlers.
 
    int sig = h->GetSignal();
 
@@ -973,6 +977,8 @@ void TWinNTSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
    // If reset is true reset the signal handler for the specified signal
    // to the default handler, else restore previous behaviour.
+
+   //FIXME!
 }
 
 //______________________________________________________________________________
@@ -980,6 +986,8 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    // If ignore is true ignore the specified signal, else restore previous
    // behaviour.
+
+   // FIXME!
 }
 
 //______________________________________________________________________________
