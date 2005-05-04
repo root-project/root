@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.237 2005/04/29 16:10:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.238 2005/05/04 10:06:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1105,17 +1105,20 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
      if (bin1 ==0 && bin2==0){
         --ndf; //no data means one less degree of freedom
      } else {
+
         temp  = bin1-bin2;
 	//
 	err1=this->GetBinError(i);
 	err2=h->GetBinError(i);
+	if (err1 == 0 && err2 == 0){
+	  Error("Chi2Test", "bins with non-zero content and zero error");
+	  return 0;
+	}
 	err1*=err1;
 	err2*=err2;
 	err1/=sum1*sum1;
 	err2/=sum2*sum2;
 	chsq+=temp*temp/(err1+err2);
-	//
-	// chsq += temp*temp/(bin1/sum1+bin2/sum2);
      }
   }
 
