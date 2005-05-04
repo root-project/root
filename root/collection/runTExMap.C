@@ -13,7 +13,6 @@ Bool_t TestUpdate()
 }
 
 
-
 typedef ULong_t (*hashfun_t)(Long_t);
 
 ULong_t hash_min(Long_t /* k */ ) { return 0; }
