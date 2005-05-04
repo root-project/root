@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.236 2005/04/26 13:03:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.237 2005/04/29 16:10:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1098,14 +1098,24 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   }
 
   Double_t chsq = 0;
+  Double_t bin1, bin2, err1, err2, temp;
   for (i=i_start; i<=i_end; i++){
-     Double_t bin1 = this->GetBinContent(i)/sum1;
-     Double_t bin2 = h->GetBinContent(i)/sum2;
+     bin1 = this->GetBinContent(i)/sum1;
+     bin2 = h->GetBinContent(i)/sum2;
      if (bin1 ==0 && bin2==0){
         --ndf; //no data means one less degree of freedom
      } else {
-        Double_t temp  = bin1-bin2;
-        chsq += temp*temp/(bin1+bin2);
+        temp  = bin1-bin2;
+	//
+	err1=this->GetBinError(i);
+	err2=h->GetBinError(i);
+	err1*=err1;
+	err2*=err2;
+	err1/=sum1*sum1;
+	err2/=sum2*sum2;
+	chsq+=temp*temp/(err1+err2);
+	//
+	// chsq += temp*temp/(bin1/sum1+bin2/sum2);
      }
   }
 
@@ -2398,6 +2408,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 	 ey = GetBinError(i);
 	 sumw2 += ey*ey;
       }
+      //
+      //
+      // printf("h1: sumw2=%f\n", sumw2);
+      //
 
       //   - Perform minimization
       arglist[0] = TVirtualFitter::GetMaxIterations();
