@@ -1,4 +1,4 @@
-# File: roottest/python/memory/PyROOT_memeorytests.py
+# File: roottest/python/memory/PyROOT_memorytests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 02/15/05
 # Last: 03/18/05
