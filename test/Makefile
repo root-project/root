@@ -146,9 +146,13 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -272,8 +276,12 @@ else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
@@ -291,8 +299,12 @@ else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
@@ -310,8 +322,12 @@ else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
@@ -328,8 +344,12 @@ else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
 		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
 endif
