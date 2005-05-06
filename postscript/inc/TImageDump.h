@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.1 2005/04/29 16:16:35 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.2 2005/05/03 13:11:32 brun Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -29,8 +29,9 @@
 class TImage;
 class TImageDump : public TVirtualPS {
 protected:
-   TImage  *fImage;  // image
-	Int_t fType;      // PostScript workstation type   
+   TImage  *fImage;     // image
+	Int_t    fType;      // PostScript workstation type
+  
 public:
    TImageDump();
    TImageDump(const char *filename, Int_t type=-111);
@@ -51,6 +52,9 @@ public:
    virtual void  Open(const char *filename, Int_t type=-111);
    virtual void  Text(Double_t x, Double_t y, const char *string);
    virtual void  SetColor(Float_t r, Float_t g, Float_t b);
+   virtual void *GetStream() const {  return (void*)fImage; }
+   virtual void  SetType(Int_t type=-111) { fType = type; }
+   virtual Int_t GetType() const { return fType; }
 
    ClassDef(TImageDump,0)  // create image in batch mode
 };

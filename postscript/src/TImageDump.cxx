@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.4 2005/05/03 13:11:32 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.5 2005/05/03 16:06:18 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -13,7 +13,13 @@
 //                                                                      //
 // TImageDump                                                           //
 //                                                                      //
-// save canvas as an image (GIF, JPEG, PNG, etc.) in batch mode     .   //
+// save canvas as an image (GIF, JPEG, PNG, XPM, TIFF etc.)             //
+// in batch mode.  Example:                                             //
+//                                                                      //
+//         $ root -b                                                    //
+//         root [0] .x hsimple.C                                        //
+//         root [1] c1->Print("c1.gif");                                //
+//                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -183,9 +189,14 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
    // Initialize batch image interface
    //
    //  fname : image file name
+   //
+   //    The possible workstation types are:
+   //  111 - Portrait
+   //  112 - Landscape
+   //  114 - preview, keep in memory (do not write on delete)  
 
-   fStream = 0;
-   fImage = TImage::Create();
+   Open(fname, wtype);
+   gVirtualPS = this;
 }
 
 //______________________________________________________________________________
@@ -193,6 +204,7 @@ void TImageDump::Open(const char *fname, Int_t type)
 {
    // Open a image file
 
+   fStream = 0;
    fImage = TImage::Create();
    SetName(fname);
    fType = type;
@@ -218,8 +230,7 @@ void TImageDump::Close(Option_t *)
 
    if (!fImage) return;
    if (fType == 112) fImage->Flip(90);
-   
-   fImage->WriteImage(GetName());
+   if (fType < 114) fImage->WriteImage(GetName());
 }
 
 //______________________________________________________________________________

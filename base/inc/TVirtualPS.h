@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.7 2004/02/13 17:04:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.8 2004/03/17 17:35:31 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -71,6 +71,9 @@ public:
    virtual void  PrintStr(const char *string="");
    virtual void  WriteInteger(Int_t i, Bool_t space=kTRUE);
    virtual void  WriteReal(Float_t r);
+   virtual void *GetStream() const {  return (void*)fStream; }
+   virtual void  SetType(Int_t /*type*/ = -111) { }
+   virtual Int_t GetType() const { return 111; }
 
    ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.8 2005/05/02 21:30:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.9 2005/05/03 13:11:32 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -41,12 +41,12 @@
 
 struct ASImage;
 struct ASVisual;
-class TH2D;
 
 class TASImage : public TImage {
 
 private:
    enum { kNoZoom = 0, kZoom = 1, kZoomOps = -1 };
+   enum { kReadWritePNG, kReadWriteVector };
 
    void DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thick);
    void DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thick);
@@ -64,15 +64,15 @@ private:
 protected:
    ASImage  *fImage;        //! pointer to image structure of original image
    TASImage *fScaledImage;  //! temporary scaled and zoomed image produced from original image
-   Double_t  fMaxValue;     // max value in image
-   Double_t  fMinValue;     // min value in image
-   UInt_t    fZoomOffX;     // X - offset for zooming in image pixels
-   UInt_t    fZoomOffY;     // Y - offset for zooming im image pixels
-   UInt_t    fZoomWidth;    // width of zoomed image in image pixels
-   UInt_t    fZoomHeight;   // hight of zoomed image in image pixels
-   Int_t     fZoomUpdate;   // kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
-   Bool_t    fEditable;     // kTRUE image can be resized, moved by resizing/moving gPad 
-   Bool_t    fPaintMode;    // kTRUE - fast mode, kFALSE - low memory mode
+   Double_t  fMaxValue;     //! max value in image
+   Double_t  fMinValue;     //! min value in image
+   UInt_t    fZoomOffX;     //! X - offset for zooming in image pixels
+   UInt_t    fZoomOffY;     //! Y - offset for zooming im image pixels
+   UInt_t    fZoomWidth;    //! width of zoomed image in image pixels
+   UInt_t    fZoomHeight;   //! hight of zoomed image in image pixels
+   Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
+   Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad 
+   Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
 
    static ASVisual *fgVisual;  // pointer to visual structure
    static Bool_t    fgInit;    // global flag to init afterimage only once

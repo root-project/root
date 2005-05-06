@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.21 2005/05/02 21:30:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.22 2005/05/03 13:11:32 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -138,10 +138,10 @@ TASImage::TASImage()
 {
    // Default image ctor.
 
-   fImage       = 0;
-   fScaledImage = 0;
-   fEditable    = kFALSE;
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = 0;
+   fEditable      = kFALSE;
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -154,9 +154,9 @@ TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
 {
    // create an empty image
 
-   fScaledImage = 0;
-   fEditable    = kFALSE;
-   fPaintMode   = kTRUE;
+   fScaledImage   = 0;
+   fEditable      = kFALSE;
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -173,10 +173,10 @@ TASImage::TASImage(const char *file, EImageFileTypes) : TImage(file)
    // For more information see description of function ReadImage()
    // which is called by this constructor.
 
-   fImage       = 0;
-   fScaledImage = 0;
-   fEditable    = kFALSE;
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = 0;
+   fEditable      = kFALSE;
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -194,10 +194,10 @@ TASImage::TASImage(const char *name, const Double_t *imageData, UInt_t width,
    // For more information see function SetImage() which is called
    // by this constructor.
 
-   fImage       = 0;
-   fScaledImage = 0;
-   fEditable    = kFALSE;
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = 0;
+   fEditable      = kFALSE;
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -216,10 +216,10 @@ TASImage::TASImage(const char *name, const TArrayD &imageData, UInt_t width,
    // For more information see function SetImage() which is called by
    // this constructor.
 
-   fImage       = 0;
-   fScaledImage = 0;
-   fEditable    = kFALSE; 
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = 0;
+   fEditable      = kFALSE; 
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -238,10 +238,10 @@ TASImage::TASImage(const char *name, const TVectorD &imageData, UInt_t width,
    // For more information see function SetImage() which is called by
    // this constructor.
 
-   fImage       = 0;
-   fScaledImage = 0;
-   fEditable    = kFALSE;
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = 0;
+   fEditable      = kFALSE;
+   fPaintMode     = 1;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -256,12 +256,13 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 {
    // Image copy ctor.
 
-   fImage       = 0;
-   fScaledImage = fScaledImage ? (TASImage*)fScaledImage->Clone("") : 0;
-   fPaintMode   = kTRUE;
+   fImage         = 0;
+   fScaledImage   = fScaledImage ? (TASImage*)fScaledImage->Clone("") : 0;
+   fPaintMode     = 1;
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
+
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
          fImage->alt.vector = (double*)malloc(size);
@@ -286,6 +287,9 @@ TASImage &TASImage::operator=(const TASImage &img)
       TImage::operator=(img);
       if (fImage)
          destroy_asimage(&fImage);
+
+      fPaintMode     = 1;
+
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
@@ -301,7 +305,6 @@ TASImage &TASImage::operator=(const TASImage &img)
       fZoomHeight = img.fZoomHeight;
       fEditable   = img.fEditable;
    }
-   fPaintMode   = kTRUE;
 
    return *this;
 }
@@ -344,6 +347,7 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    fZoomOffY   = 0;
    fZoomWidth  = fImage ? fImage->width : 0;
    fZoomHeight = fImage ? fImage->height : 0;
+   fPaintMode     = 1;
 
    SetName(file);
 }
@@ -707,13 +711,36 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
       return;
    }
 
-   if (fImage)
+   SetName(pad->GetName());
+
+   if (fImage) {
       destroy_asimage(&fImage);
+   }
 
    delete fScaledImage;
    fScaledImage = 0;
 
-   SetName(pad->GetName());
+   if (gROOT->IsBatch()) { // in batch mode
+      TVirtualPS *psave = gVirtualPS;
+      gVirtualPS = (TVirtualPS*)gROOT->ProcessLineFast("new TImageDump()");
+      gVirtualPS->Open(pad->GetName(), 114); // in memory
+      gVirtualPS->SetBit(BIT(11)); //kPrintingPS
+      pad->Paint();
+      TASImage *itmp = (TASImage*)gVirtualPS->GetStream();
+
+      if (itmp && itmp->fImage) {
+         fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);
+
+         if (itmp->fImage->alt.argb32) {
+            UInt_t sz = itmp->fImage->width*itmp->fImage->height;
+            fImage->alt.argb32 = new ARGB32[sz];
+            memcpy(fImage->alt.argb32, itmp->fImage->alt.argb32, sz*4);
+         }
+      }
+      delete gVirtualPS;
+      gVirtualPS = psave;
+      return;      
+   }
 
    if (w == 0)
       w = pad->UtoPixel(1.);
@@ -769,15 +796,18 @@ void TASImage::Draw(Option_t *option)
       }
    }
 
-   Double_t left =    gPad->GetLeftMargin();
-   Double_t right =   gPad->GetRightMargin();
-   Double_t top =     gPad->GetTopMargin();
-   Double_t bottom =  gPad->GetBottomMargin();
-   gPad->Range(-left / (1.0 - left - right), 
-               -bottom / (1.0 - top - bottom), 
-               1 + right / (1.0 - left - right),
-               1 + top / ( 1.0 - top - bottom));
-   gPad->RangeAxis(0,0,1,1);
+   if (!opt.Contains("xxx")) {
+      Double_t left = gPad->GetLeftMargin();
+      Double_t right = gPad->GetRightMargin();
+      Double_t top = gPad->GetTopMargin();
+      Double_t bottom = gPad->GetBottomMargin();
+
+      gPad->Range(-left / (1.0 - left - right), 
+                  -bottom / (1.0 - top - bottom), 
+                  1 + right / (1.0 - left - right),
+                  1 + top / ( 1.0 - top - bottom));
+      gPad->RangeAxis(0, 0, 1, 1);
+   }
 
    TFrame * frame = gPad->GetFrame();
    frame->SetBorderMode(0);
@@ -872,7 +902,8 @@ void TASImage::Paint(Option_t *option)
          to_w = Int_t(Double_t(fZoomWidth) * to_h / fZoomHeight);
    }
 
-   ASImage *grad_im = 0;
+   ASImage  *grad_im = 0;
+
    if (fImage->alt.vector) {
       // draw the palette
       ASGradient grad;
@@ -956,74 +987,87 @@ void TASImage::Paint(Option_t *option)
       return;
    }
 
+   int tox = expand  ? 0 : int(gPad->UtoPixel(1.) * gPad->GetLeftMargin());
+   int toy = expand  ? 0 : int(gPad->VtoPixel(0.) * gPad->GetTopMargin());
+
+   if (!gROOT->IsBatch()) {
+
 #ifndef WIN32
-   Pixmap pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
-                                 image, 0, kTRUE);
-   Int_t wid = gVirtualX->AddWindow(pxmap, to_w, to_h);
-   gPad->cd();
-   gVirtualX->CopyPixmap(wid,  (int)(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5),  
-                               (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
-
-   gVirtualX->RemoveWindow(wid);
-   gVirtualX->DeletePixmap(pxmap);
-#else
-   // Convert ASImage into DIB: 
-   bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits );
-   gPad->cd();
-   if(gDrawDIB != 0) {
-      gDrawDIB((ULong_t)bmi, (ULong_t)bmbits,
-          (int)(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5),  
-          (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
-      free(bmbits);
-      free(bmi);
-   }
-#endif
-   gPad->cd();
-
-   if (grad_im) {
-#ifndef WIN32
-      // draw color bar
-      pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
-                             grad_im, 0, kTRUE);
-      wid = gVirtualX->AddWindow(pxmap, UInt_t(pal_w), pal_h);
-
-      gPad->cd();
-      gVirtualX->CopyPixmap(wid, pal_x, pal_y);
-      gVirtualX->RemoveWindow(wid);
-      gVirtualX->DeletePixmap(pxmap);
+      Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
+      static GCValues_t gval;
+      static GContext_t gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gval);
+      asimage2drawable(fgVisual, wid, image, (GC)gc, 0, 0, tox, toy,
+                       image->width, image->height, 1);
 #else
       // Convert ASImage into DIB: 
-      bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits );
-      gPad->cd();
+      bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits );
       if(gDrawDIB != 0) {
-         gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, pal_x, pal_y);
+         gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, tox, toy);
          free(bmbits);
          free(bmi);
       }
 #endif
-      gPad->cd();
 
-      // values of palette
-      TGaxis axis;
-      Int_t ndiv = 510;
-      double min = fMinValue;
-      double max = fMaxValue;
-      axis.SetLineColor(0);       // draw white ticks
-      Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
-      axis.PaintAxis(pal_Xpos, gPad->PixeltoY(pal_Ay + pal_h - 1),
-                     pal_Xpos, gPad->PixeltoY(pal_Ay),
-                     min, max, ndiv, "+LU");
-      min = fMinValue;
-      max = fMaxValue;
-      axis.SetLineColor(1);       // draw black ticks
-      axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
-                     pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
-                     min, max, ndiv, "+L");
+      if (grad_im) {
+#ifndef WIN32
+         // draw color bar
+         asimage2drawable(fgVisual, wid, grad_im, (GC)gc, 0, 0, pal_x, pal_y, 
+                          grad_im->width, grad_im->height, 1);
+#else
+         // Convert ASImage into DIB: 
+         bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits );
+
+         if(gDrawDIB != 0) {
+            gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, pal_x, pal_y);
+            free(bmbits);
+            free(bmi);
+         }
+#endif
+
+         // values of palette
+         TGaxis axis;
+         Int_t ndiv = 510;
+         double min = fMinValue;
+         double max = fMaxValue;
+         axis.SetLineColor(0);       // draw white ticks
+         Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+         axis.PaintAxis(pal_Xpos, gPad->PixeltoY(pal_Ay + pal_h - 1),
+                        pal_Xpos, gPad->PixeltoY(pal_Ay),
+                        min, max, ndiv, "+LU");
+         min = fMinValue;
+         max = fMaxValue;
+         axis.SetLineColor(1);       // draw black ticks
+         axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
+                        pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
+                        min, max, ndiv, "+L");
+      }
    }
 
    // loop over pxmap and draw image to PostScript
    if (gVirtualPS) {
+      if (gVirtualPS->InheritsFrom("TImageDump")) { // PostScript is asimage
+         TImage *dump = (TImage *)gVirtualPS->GetStream();
+         dump->Merge(fScaledImage ? fScaledImage : this, "alphablend", 
+                     gPad->XtoAbsPixel(0), gPad->YtoAbsPixel(1));
 
+         if (grad_im) {
+            TASImage tgrad;
+            tgrad.fImage = grad_im;
+            dump->Merge(&tgrad, "alphablend", pal_Ax, pal_Ay);
+
+            // values of palette
+            TGaxis axis;
+            Int_t ndiv = 510;
+            double min = fMinValue;
+            double max = fMaxValue;
+            axis.SetLineColor(1);       // draw black ticks
+            Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+            axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
+                           pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
+                           min, max, ndiv, "+L");
+         }
+         return;
+      }
       // get special color cell to be reused during image printing
       TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
       TColor *color = 0;
@@ -1036,10 +1080,12 @@ void TASImage::Paint(Option_t *option)
 
       Double_t xconv = (gPad->AbsPixeltoX(to_w) - gPad->AbsPixeltoX(0)) / image->width;
       Double_t yconv = (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(to_h)) / image->height;
+
       Double_t x1 = 0;
       Double_t x2 = 1 * xconv;
-      Double_t y2 = 1;
       Double_t y1 = 1 - yconv;
+      Double_t y2 = 1;
+
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
       ASImageDecoder *imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
@@ -2844,6 +2890,34 @@ UInt_t *TASImage::GetScanline(UInt_t y)
    return (UInt_t*)ret;
 }
 
+/////////////////////////////// vector graphics ///////////////////////////////
+// a couple of macros which can be "assembler accelerated"
+#if defined(__GNUC__) && defined(_i386__)
+#define _MEMSET_(dst, lng, val)   asm("movl  %0,%%eax \n"             \
+                                      "movl  %1,%%edi \n"             \
+                                      "movl  %2,%%ecx \n"             \
+                                      "cld \n"                        \
+                                      "rep \n"                        \
+                                      "stosl %%eax,(%%edi) \n"        \
+                                      ::"g" (val),"g" (dst),"g" (lng) \
+                                      :"eax","edi","ecx"              \
+                                     )
+
+#else
+ #define _MEMSET_(dst, lng, val) do {\
+ for( UInt_t j=0; j < lng; j++) *((dst)+j) = val; } while (0)
+
+#endif
+
+#define FillSpansInternal(npt, ppt, widths, color) do {\
+   UInt_t yy = ppt[0].fY*fImage->width;\
+   for (UInt_t i = 0; i < npt; i++) {\
+      _MEMSET_(&fImage->alt.argb32[yy + ppt[i].fX], widths[i], color);\
+      yy += ((i+1 < npt) && (ppt[i].fY != ppt[i+1].fY) ? fImage->width : 0);\
+   }\
+} while (0)
+
+
 //______________________________________________________________________________
 void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
@@ -2882,7 +2956,6 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
       for (UInt_t i = 0; i < height; i++) {
          yy = y + i;
          if ((yy < 0) || (yy >= (int)fImage->height)) continue;
-
          for (UInt_t j = 0; j < width; j++) {
             xx = x + j;
             if ((xx < 0) || (xx >= (int)fImage->width)) continue;
@@ -2923,7 +2996,6 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
    }
 
    FillRectangleInternal((UInt_t)color, x, y, width, height);
-   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -3727,7 +3799,6 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
 
    for (UInt_t i = 0; i < npt; i++) {
       yy = ppt[i].fY*fImage->width;
-
       for (UInt_t j = 0; j < widths[i]; j++) {
          if ((ppt[i].fX >= (Int_t)fImage->width) || (ppt[i].fX < 0) ||
              (ppt[i].fY >= (Int_t)fImage->height) || (ppt[i].fY < 0)) continue;
@@ -3740,7 +3811,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
          } else {
             Int_t ii = (ppt[i].fY%h)*w + x%w;
 
-            if (stipple[ii/8] & (1 << (ii%8))) {
+            if (stipple[ii >> 3] & (1 << (ii%8))) {
                _alphaBlend(&fImage->alt.argb32[idx], &color);
             }
          }
@@ -4240,9 +4311,15 @@ void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, const char *col,
    UInt_t *firstWidth = 0;   // output buffer
 
    Bool_t del = GetPolygonSpans(npt, ppt, &nspans, &firstPoint, &firstWidth);
+   ARGB32 color;
+   parse_argb_color(col, &color);
 
    if (nspans) {
-      FillSpans(nspans, firstPoint, firstWidth, col, stipple, w, h);
+      if (!stipple && ((color & 0xff000000)==0xff000000)) { //no stipple no alpha
+         FillSpansInternal(nspans, firstPoint, firstWidth, color);
+      } else {
+         FillSpans(nspans, firstPoint, firstWidth, col, stipple, w, h);
+      }
 
       if (del) {
          delete [] firstWidth;
@@ -4294,7 +4371,7 @@ void TASImage::CropPolygon(UInt_t npt, TPoint *ppt)
    }
 }
 
-static const int NUMPTSTOBUFFER = 512;
+static const UInt_t NUMPTSTOBUFFER = 512;
 
 //______________________________________________________________________________
 void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col, 
@@ -4331,20 +4408,23 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       return;
    }
 
-   EdgeTableEntry *pAET;  /* the Active Edge Table   */
-   int y;                 /* the current scanline    */
-   int nPts = 0;          /* number of pts in buffer */
+   ARGB32 color;
+   parse_argb_color(col, &color);
 
-   ScanLineList *pSLL;    /* Current ScanLineList    */
-   TPoint *ptsOut;      /* ptr to output buffers   */
+   EdgeTableEntry *pAET;  // the Active Edge Table 
+   int y;                 // the current scanline
+   UInt_t nPts = 0;          // number of pts in buffer
+
+   ScanLineList *pSLL;   // Current ScanLineList 
+   TPoint *ptsOut;       // ptr to output buffers
    UInt_t *width;
-   TPoint firstPoint[NUMPTSTOBUFFER]; /* the output buffers */
+   TPoint firstPoint[NUMPTSTOBUFFER];  // the output buffers
    UInt_t firstWidth[NUMPTSTOBUFFER];
-   EdgeTableEntry *pPrevAET;       /* previous AET entry      */
-   EdgeTable ET;                   /* Edge Table header node  */
-   EdgeTableEntry AET;             /* Active ET header node   */
-   EdgeTableEntry *pETEs;          /* Edge Table Entries buff */
-   ScanLineListBlock SLLBlock;     /* header for ScanLineList */
+   EdgeTableEntry *pPrevAET;       // previous AET entry 
+   EdgeTable ET;                   // Edge Table header node
+   EdgeTableEntry AET;             // Active ET header node
+   EdgeTableEntry *pETEs;          // Edge Table Entries buff
+   ScanLineListBlock SLLBlock;     // header for ScanLineList
    Bool_t del = kTRUE;
 
    static const UInt_t gEdgeTableEntryCacheSize = 200;
@@ -4380,7 +4460,11 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
          *width++ = pAET->next->bres.minor_axis - pAET->bres.minor_axis;              
 
          if (nPts == NUMPTSTOBUFFER) {
-            FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
+            if (!stipple && ((color & 0xff000000)==0xff000000)) { //no stipple, no alpha
+               FillSpansInternal(nPts, firstPoint, firstWidth, color);
+            } else {
+               FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
+            }
             ptsOut = firstPoint;
             width = firstWidth;
             nPts = 0;
@@ -4391,7 +4475,13 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       InsertionSort(&AET);
    }
 
-   if (nPts) FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
+   if (nPts) {
+      if (!stipple && ((color & 0xff000000)==0xff000000)) {  //no stipple, no alpha
+         FillSpansInternal(nPts, firstPoint, firstWidth, color);
+      } else {
+         FillSpans(nPts, firstPoint, firstWidth, col, stipple, w, h);
+      }
+   }
 
    if (del) delete [] pETEs;
    FreeStorage(SLLBlock.next);
@@ -4431,20 +4521,20 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
       return;
    }
 
-   EdgeTableEntry *pAET;  /* the Active Edge Table   */
-   int y;                 /* the current scanline    */
-   int nPts = 0;          /* number of pts in buffer */ 
+   EdgeTableEntry *pAET;   // the Active Edge Table
+   int y;                  // the current scanline 
+   UInt_t nPts = 0;       // number of pts in buffer
 
-   ScanLineList *pSLL;    /* Current ScanLineList    */
-   TPoint *ptsOut;      /* ptr to output buffers   */
+   ScanLineList *pSLL;    // Current ScanLineList 
+   TPoint *ptsOut;        // ptr to output buffers 
    UInt_t *width;
-   TPoint firstPoint[NUMPTSTOBUFFER]; /* the output buffers */
+   TPoint firstPoint[NUMPTSTOBUFFER]; // the output buffers 
    UInt_t firstWidth[NUMPTSTOBUFFER];
-   EdgeTableEntry *pPrevAET;       /* previous AET entry      */
-   EdgeTable ET;                   /* Edge Table header node  */
-   EdgeTableEntry AET;             /* Active ET header node   */
-   EdgeTableEntry *pETEs;          /* Edge Table Entries buff */
-   ScanLineListBlock SLLBlock;     /* header for ScanLineList */
+   EdgeTableEntry *pPrevAET;       // previous AET entry 
+   EdgeTable ET;                   // Edge Table header node
+   EdgeTableEntry AET;             // Active ET header node
+   EdgeTableEntry *pETEs;          // Edge Table Entries buff
+   ScanLineListBlock SLLBlock;     // header for ScanLineList
 
    pETEs = new EdgeTableEntry[count];
 
@@ -4715,6 +4805,16 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
       Int_t bx = x + bitmap->left;
       Int_t by = y + h - bitmap->top;
       DrawGlyph(source, color, bx, by);
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::Streamer(TBuffer &b)
+{
+   // streamer
+
+   if (b.IsReading()) {
+   } else {
    }
 }
 

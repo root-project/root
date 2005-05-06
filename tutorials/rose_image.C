@@ -5,6 +5,8 @@
 #include "TColor.h"
 #include "TAttImage.h"
 
+TCanvas *c1;
+
 void rose_image()
 {
    // Display image in a new canvas and pad.
@@ -37,7 +39,7 @@ void rose_image()
    // tile image
    img2->Tile(img->GetWidth(), img->GetHeight());
 
-   TCanvas *c1 = new TCanvas("rose512.jpg", "examples of image manipulations", 760, 900);
+   c1 = new TCanvas("rose512.jpg", "examples of image manipulations", 760, 900);
    c1->Divide(2, 3);
    c1->cd(1);
    img->Draw("xxx");
