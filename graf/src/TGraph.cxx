@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.159 2005/04/26 14:31:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.160 2005/04/29 16:10:42 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -306,7 +306,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 // Graph constructor reading input from filename
 // filename is assumed to contain at least two columns of numbers
 // the string format is by default "%lg %lg"
-   
+
    Double_t x,y;
    ifstream infile(filename);
    if(!infile.good()){
@@ -1023,8 +1023,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //   When the fitting function is linear (contains the "++" sign) or the fitting
 //   function is a polynomial, a linear fitter is initialised.
 //   To create a linear function, use the following syntaxis: linear parts
-//   separated by "++" sign. 
-//   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a 
+//   separated by "++" sign.
+//   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a
 //    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
 //   For such a TF1 you don't have to set the initial conditions
 //   Going via the linear fitter for functions, linear in parameters, gives a considerable
@@ -1162,20 +1162,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    // Decode string choptin and fill fitOption structure
    Foption_t fitOption;
-   fitOption.Quiet   = 0;
-   fitOption.Verbose = 0;
-   fitOption.Bound   = 0;
-   fitOption.Like    = 0;
-   fitOption.W1      = 0;
-   fitOption.Errors  = 0;
-   fitOption.Range   = 0;
-   fitOption.Gradient= 0;
-   fitOption.Nograph = 0;
-   fitOption.Nostore = 0;
-   fitOption.Plus    = 0;
-   fitOption.User    = 0;
-   fitOption.Nochisq = 0;
-   fitOption.Minuit  = 0;
+
    TString opt = option;
    opt.ToUpper();
 

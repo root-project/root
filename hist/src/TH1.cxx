@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.238 2005/05/04 10:06:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.239 2005/05/04 10:37:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2064,7 +2064,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //                = "+" Add this new fitted function to the list of fitted functions
 //                      (by default, any previous function is deleted)
 //                = "C" In case of linear fitting, don't calculate the chisquare
-//                      (saves time) 
+//                      (saves time)
 //                = "F" If fitting a polN, switch to minuit fitter
 //
 //      When the fit is drawn (by default), the parameter goption may be used
@@ -2211,7 +2211,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //       TF1 +f1 = (TF1*)fitter->GetUserFunction(); //the user theoretical function
 //
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
-//     For fitting linear functions (containing the "++" sign" and polN functions, 
+//     For fitting linear functions (containing the "++" sign" and polN functions,
 //     the linear fitter is initialized.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -2748,22 +2748,6 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
 {
 //   -*-*-*-*-*-*-*Decode string choptin and fill Foption structure*-*-*-*-*-*
 //                 ================================================
-
-   Foption.Quiet   = 0;
-   Foption.Verbose = 0;
-   Foption.Bound   = 0;
-   Foption.Like    = 0;
-   Foption.User    = 0;
-   Foption.W1      = 0;
-   Foption.Errors  = 0;
-   Foption.More    = 0;
-   Foption.Range   = 0;
-   Foption.Gradient= 0;
-   Foption.Nograph = 0;
-   Foption.Nostore = 0;
-   Foption.Plus    = 0;
-   Foption.Integral= 0;
-   Foption.Minuit  = 0;
 
    Int_t nch = strlen(choptin);
    if (!nch) return 1;
@@ -3680,7 +3664,7 @@ Long64_t TH1::Merge(TCollection *list)
 // If all histograms have bin labels, bins with identical labels
 // will be merged, no matter what their order is.
 // If overflows are present and limits are different the function will fail.
-// The function returns the total number of entries in the result histogram 
+// The function returns the total number of entries in the result histogram
 // if the merge is successfull, -1 otherwise.
 //
 // IMPORTANT remark. The axis x may have different number
@@ -3732,7 +3716,7 @@ Long64_t TH1::Merge(TCollection *list)
             allLabels.Add(lb);
       }
    }
-   
+
    TAxis newXAxis;
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allHaveLabels = haveOneLabel;
@@ -3762,7 +3746,7 @@ Long64_t TH1::Merge(TCollection *list)
                Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
                      "first: (%d, %f, %f), second: (%d, %f, %f)",
                      newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), 
+                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                      h->GetXaxis()->GetXmax());
             }
          }
@@ -5210,7 +5194,7 @@ Double_t TH1::GetKurtosis(Int_t axis) const
    const TAxis *ax;
    if (axis==1) ax = &fXaxis;
    else if (axis==2) ax = &fYaxis;
-   else ax = &fZaxis; 
+   else ax = &fZaxis;
 
    for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
       x = GetBinCenter(bin);

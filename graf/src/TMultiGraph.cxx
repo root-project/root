@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.20 2005/04/17 14:12:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.21 2005/05/02 21:45:05 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -192,7 +192,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 //*-*                  ==================================
 //
 //   In this function all graphs of the multigraph are fitted simultaneously
-//   
+//
 //   f1 is an already predefined function created by TF1.
 //   Predefined functions such as gaus, expo and poln are automatically
 //   created by ROOT.
@@ -288,7 +288,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 // a little different approach to approximating the uncertainty in y because of the
 // errors in x, is to make it equal the error in x times the slope of the line.
 // The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order. This approach is called "effective variance method".  
+// is of (error of x)**2 order. This approach is called "effective variance method".
 // This improvement has been made in version 4.00/08 by Anna Kreshuk.
 //
 //   Associated functions
@@ -335,7 +335,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    Int_t np;
    TF1 *fnew1;
-   
+
    // Check validity of function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
@@ -345,13 +345,13 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       Error("Fit", "function is zombie");
       return 0;
    }
-   
+
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
       return 0;
    }
-   
+
    // Check that function has same dimension as graph
    if (f1->GetNdim() > 1) {
       Error("Fit", "function %s is not 1-D", f1->GetName());
@@ -364,22 +364,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
    Double_t *arglist = new Double_t[100];
    // Decode string choptin and fill fitOption structure
    Foption_t fitOption;
-   fitOption.Quiet   = 0;
-   fitOption.Verbose = 0;
-   fitOption.Bound   = 0;
-   fitOption.Like    = 0;
-   fitOption.W1      = 0;
-   fitOption.Errors  = 0;
-   fitOption.Range   = 0;
-   fitOption.Gradient= 0;
-   fitOption.Nograph = 0;
-   fitOption.Nostore = 0;
-   fitOption.Plus    = 0;
-   fitOption.User    = 0;
-   fitOption.Nochisq = 0;
-   fitOption.Minuit  = 0;
-   fitOption.Integral= 0;
-   fitOption.More    = 0;
+
    TString opt = option;
    opt.ToUpper();
 
@@ -465,13 +450,13 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 	 delete TVirtualFitter::GetFitter();
 	 IsSet=kFALSE;
       }
-      if (!IsSet)	
-	 TVirtualFitter::SetFitter(0);	       
+      if (!IsSet)
+	 TVirtualFitter::SetFitter(0);
    }
 
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    grFitter->Clear();
-   
+
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grFitter->SetUserFunc(f1);
    grFitter->SetFitOption(fitOption);
@@ -485,7 +470,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 
    if (linear){
       grFitter->ExecuteCommand("FitMultiGraph", 0, 0);
-     
+
    } else {
 
       //Int_t special = f1->GetNumber();
@@ -494,7 +479,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       else if (special == 400)      InitGaus(xmin,xmax);
       else if (special == 200)      InitExpo(xmin,xmax);
       else if (special == 299+npar) InitPolynom(xmin,xmax);
-      
+
       //*-*- Some initialisations
       if (!fitOption.Verbose) {
       arglist[0] = -1;
@@ -502,8 +487,8 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       arglist[0] = 0;
       grFitter->ExecuteCommand("SET NOW",   arglist,0);
       }
-   
-      /////////////////////////////////////////////////////////      
+
+      /////////////////////////////////////////////////////////
       //*-*- Set error criterion for chisquare
       arglist[0] = TVirtualFitter::GetErrorDef();
       if (!fitOption.User) grFitter->SetFitMethod("MultiGraphFitChisquare");
@@ -519,7 +504,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 	 delete [] arglist;
 	 return fitResult;
       }
-      
+
       //*-*- Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
       for (i=0;i<npar;i++) {
@@ -535,7 +520,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 	 grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
       if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
-      
+
       //*-*- Reset Print level
       if (!fitOption.Quiet) {
 	 if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
@@ -564,7 +549,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
 	 grFitter->ExecuteCommand("HESSE",arglist,0);
 	 grFitter->ExecuteCommand("MINOS",arglist,0);
       }
-      
+
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
       f1->SetChisquare(amin);
       Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
@@ -601,7 +586,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
          TObject *obj;
          while ((obj = next2())) {
             if (obj->InheritsFrom(TF1::Class())){
-	       obj = fFunctions->Remove(obj); 
+	       obj = fFunctions->Remove(obj);
 	       delete obj;
 	    }
          }
@@ -629,7 +614,7 @@ Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
 {
 // Return the draw option for the TGraph gr in this TMultiGraph
 // The return option is the one specified when calling TMultiGraph::Add(gr,option).
-   
+
    if (!fGraphs || !gr) return "";
    TListIter next(fGraphs);
    TObject *obj;
@@ -748,7 +733,7 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
     TGraph *g;
     TIter next(fGraphs);
     Double_t *px, *py;
-    Int_t n=0; 
+    Int_t n=0;
     Int_t npp;
     while ((g = (TGraph*) next())) {
        px=g->GetX();
@@ -843,7 +828,7 @@ void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, 
     TGraph *g;
     TIter next(fGraphs);
     Double_t *px, *py;
-    Int_t npp;    
+    Int_t npp;
     while ((g = (TGraph*) next())) {
        px=g->GetX();
        py=g->GetY();
@@ -938,7 +923,7 @@ void TMultiGraph::Paint(Option_t *option)
 // paint all the graphs of this multigraph
 
   if (fGraphs->GetSize() == 0) return;
-  
+
   char *l;
   static char chopt[33];
   Int_t nch = strlen(option);
@@ -962,7 +947,7 @@ void TMultiGraph::Paint(Option_t *option)
      char *ytitle = 0;
      Int_t firstx = 0;
      Int_t lastx  = 0;
-     
+
      if (fHistogram) {
         //cleanup in case of a previous unzoom
         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {

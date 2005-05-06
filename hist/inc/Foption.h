@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.2 2005/03/04 09:06:37 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: Foption.h,v 1.3 2005/04/17 14:12:49 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,6 +42,25 @@ struct Foption_t {
    int Integral;    // "I"  Use function integral instead of function in center of bin
    int Nochisq;     // "C"  In case of linear fitting, don't calculate the chisquare
    int Minuit;      // "F" If fitting a polN, switch to minuit fitter
+
+   Foption_t() {
+      Quiet    = 0;
+      Verbose  = 0;
+      Bound    = 0;
+      Like     = 0;
+      User     = 0;
+      W1       = 0;
+      Errors   = 0;
+      More     = 0;
+      Range    = 0;
+      Gradient = 0;
+      Nostore  = 0;
+      Nograph  = 0;
+      Plus     = 0;
+      Integral = 0;
+      Nochisq  = 0;
+      Minuit   = 0;
+   }
 };
 
 #endif
