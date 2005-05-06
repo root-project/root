@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.2 2005/03/04 18:44:14 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
@@ -52,13 +52,13 @@ R__EXTERN PyObject* TPyExceptionMagic;
 class TPyException : public std::exception {
 public:
 // default constructor
-   TPyException ();
+   TPyException();
 
 // destructor
-   virtual ~TPyException () throw();
+   virtual ~TPyException() throw();
 
 // give reason for raised exception
-   virtual const char* what () const throw ();
+   virtual const char* what() const throw();
 
    ClassDef(TPyException,0)   //C++ exception for throwing python exceptions
 };

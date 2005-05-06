@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.7 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.8 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -123,7 +123,7 @@ void TPython::LoadMacro( const char* name )
 // obtain new __main__ contents
    PyObject* current = PyDict_Values( gMainDict );
 
-// created CINT classes for all new python classes
+// create CINT classes for all new python classes
    for ( int i = 0; i < PyList_GET_SIZE( current ); ++i ) {
       PyObject* value = PyList_GET_ITEM( current, i );
       Py_INCREF( value );

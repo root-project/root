@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.19 2005/03/22 05:58:59 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.20 2005/04/13 05:04:49 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/12/05
+# Last: 05/04/05
 
 """PyROOT user module.
 
@@ -87,20 +87,20 @@ gPad = _TVirtualPad()
 ### RINT command emulation ------------------------------------------------------
 def _excepthook( exctype, value, traceb ):
  # catch syntax errors only (they contain the full line)
-   if isinstance( value, exceptions.SyntaxError ):
+   if isinstance( value, exceptions.SyntaxError ) and value.text:
       cmd, arg = split( value.text[:-1] )
 
     # mimic ROOT/CINT commands
       if cmd == '.q':
          sys.exit( 0 )
-      elif cmd == '.!':
+      elif cmd == '.!' and arg:
          return os.system( arg )
-      elif cmd == '.x':
+      elif cmd == '.x' and arg:
          import __main__
          fn = os.path.expanduser( os.path.expandvars( arg ) )
          execfile( fn, __main__.__dict__, __main__.__dict__ )
          return
-      elif cmd == '.cd':
+      elif cmd == '.cd' and arg:
          os.chdir( arg )
          return
       elif cmd == '.ls':

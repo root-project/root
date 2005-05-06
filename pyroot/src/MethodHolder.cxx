@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.30 2005/04/13 05:04:49 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.31 2005/04/14 21:53:47 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -24,6 +24,7 @@
 
 // Standard
 #include <assert.h>
+#include <string.h>
 #include <exception>
 #include <string>
 #include <Riostream.h>
@@ -182,6 +183,17 @@ inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
    }
 }
 
+//____________________________________________________________________________
+inline void PyROOT::MethodHolder::SetPyError_( PyObject* msg )
+{
+// helper to report errors in a consistent format (derefs msg)
+   PyObject* doc = GetDocString();
+   PyErr_Format( PyExc_TypeError,
+      "%s =>\n    %s", PyString_AS_STRING( doc ), PyString_AS_STRING( msg ) );
+
+   Py_DECREF( doc );
+   Py_DECREF( msg );
+}
 
 //- constructors and destructor ----------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* klass, TMethod* method ) :
@@ -236,9 +248,8 @@ PyROOT::MethodHolder::~MethodHolder()
 //- public members -----------------------------------------------------------
 PyObject* PyROOT::MethodHolder::GetDocString()
 {
-   return PyString_FromFormat( "%s%s %s::%s%s",
-      ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetReturnTypeName(),
-      fClass->GetName(), fMethod->GetName(), fMethod->GetSignature() );
+   return PyString_FromFormat( "%s%s",
+      ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );
 }
 
 //____________________________________________________________________________
@@ -287,7 +298,10 @@ bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyOb
 // otherwise, check for a suitable 'self' in args and update accordingly
    if ( PyTuple_GET_SIZE( args ) != 0 ) {
       ObjectProxy* pyobj = (ObjectProxy*)PyTuple_GET_ITEM( args, 0 );
-      if ( ObjectProxy_Check( pyobj ) ) {
+
+   // demand PyROOT object, and either free global or matching class instance
+      if ( ObjectProxy_Check( pyobj ) && ( strlen( fClass->GetName() ) == 0 ||
+           ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass ) ) ) ) {
       // reset self
          self = pyobj;
 
@@ -300,9 +314,9 @@ bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyOb
    }
 
 // no self, set error and lament
-   PyErr_Format( PyExc_TypeError,
+   SetPyError_( PyString_FromFormat(
       "unbound method %s::%s must be called with a %s instance as first argument",
-      fClass->GetName(), fMethod->GetName(), fClass->GetName() );
+      fClass->GetName(), fMethod->GetName(), fClass->GetName() ) );
    return false;
 }
 
@@ -317,19 +331,19 @@ bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
 
 // argc must be between min and max number of arguments
    if ( argc < fArgsRequired ) {
-      PyErr_Format( PyExc_TypeError, "%s() takes at least %d arguments (%d given)",
-         fMethod ? fMethod->GetName() : fClass->GetName(), fArgsRequired, argc );
+      SetPyError_( PyString_FromFormat(
+         "takes at least %d arguments (%d given)", fArgsRequired, argc ) );
       return false;
    } else if ( argMax < argc ) {
-      PyErr_Format( PyExc_TypeError, "%s() takes at most %d arguments (%d given)",
-         fMethod ? fMethod->GetName() : fClass->GetName(), argMax, argc );
+      SetPyError_( PyString_FromFormat(
+         "takes at most %d arguments (%d given)", argMax, argc ) );
       return false;
    }
 
 // convert the arguments to the method call array
    for ( int i = 0; i < argc; i++ ) {
       if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fMethodCall ) ) {
-         PyErr_Format( PyExc_TypeError, "could not convert argument %d", i );
+         SetPyError_( PyString_FromFormat( "could not convert argument %d", i ) );
          return false;
       }
    }
@@ -351,6 +365,12 @@ PyObject* PyROOT::MethodHolder::Execute( void* self )
       result = TPyExceptionMagic;
    } catch ( std::exception& e ) {
       std::cout << "C++ exception caught: " << e.what() << std::endl;
+      result = 0;
+   }
+
+   if ( result && PyErr_Occurred() ) {
+   // can happen in the case of a CINT error: trigger exception processing
+      Py_DECREF( result );
       result = 0;
    }
 

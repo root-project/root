@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.13 2005/04/13 05:04:50 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.14 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -752,7 +752,9 @@ namespace {
    public:
       virtual PyObject* GetDocString()
       {
-         return PyString_FromString( "TF1::__init__(const char* name, pycallable, Double_t xmin, Double_t xmax, Int_t npar = 0)" );
+         return PyString_FromString(
+            "TF1::TF1(const char* name, PyObject* callable, "
+            "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
 
    public:

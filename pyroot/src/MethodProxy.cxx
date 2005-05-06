@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.3 2005/03/07 21:46:25 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.4 2005/04/16 05:46:06 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -8,10 +8,27 @@
 #include "ObjectProxy.h"
 #include "TPyException.h"
 
+// Standard
+#include <functional>
+#include <vector>
+
 
 namespace PyROOT {
 
 namespace {
+
+// helper for collecting/maintaining exception data in overload dispatch
+   struct PyError {
+      PyError() { fType = fValue = fTrace = 0; }
+
+      static void Clear( PyError& e )
+      {
+         Py_XDECREF( e.fType ); Py_XDECREF( e.fValue ); Py_XDECREF( e.fTrace );
+         e.fType = e.fValue = e.fTrace = 0;
+      }
+
+      PyObject *fType, *fValue, *fTrace;
+   };
 
 // helper to hash tuple (using tuple hash would cause self-tailing loops)
    inline long HashSignature( PyObject* args )
@@ -49,16 +66,18 @@ namespace {
          return doc;
 
    // overloaded method
+      PyObject* separator = PyString_FromString( "\n" );
       for ( int i = 1; i < nMethods; ++i ) {
-         PyString_ConcatAndDel( &doc, PyString_FromString( "\n" ) );
+         PyString_Concat( &doc, separator );
          PyString_ConcatAndDel( &doc, methods[i]->GetDocString() );
       }
+      Py_DECREF( separator );
 
       return doc;
    }
 
    PyGetSetDef mp_getset[] = {
-      { (char*)"__name_", (getter)mp_name, NULL, NULL, NULL },
+      { (char*)"__name__", (getter)mp_name, NULL, NULL, NULL },
       { (char*)"__doc__", (getter)mp_doc, NULL, NULL, NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
@@ -97,23 +116,45 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
+      std::vector< PyError > errors;
       for ( int i = 0; i < nMethods; ++i ) {
          PyObject* result = (*methods[i])( meth->fSelf, args, kwds );
 
-         if ( result == TPyExceptionMagic )
+         if ( result == TPyExceptionMagic ) {
+            std::for_each( errors.begin(), errors.end(), PyError::Clear );
             return 0;              // exception info was already set
+         }
 
          if ( result != 0 ) {
-         // success: update the dispatch map
+         // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
+            std::for_each( errors.begin(), errors.end(), PyError::Clear );
             return result;
          }
 
-      // failure: reset and try again
-         PyErr_Clear();
+      // failure: collect error message/trace (automatically clears exception, too)
+         PyError e;
+         PyErr_Fetch( &e.fType, &e.fValue, &e.fTrace );
+         errors.push_back( e );
       }
 
-      PyErr_Format( PyExc_TypeError, "none of the %d overloaded methods succeeded", nMethods );
+   // first summarize, then add details
+      PyObject* value = PyString_FromFormat(
+         "none of the %d overloaded methods succeeded. Full details:", nMethods );
+      PyObject* separator = PyString_FromString( "\n  " );
+
+   // if this point is reached, none of the overloads succeeded: notify user
+      for ( std::vector< PyError >::iterator e = errors.begin(); e != errors.end(); ++e ) {
+         PyString_Concat( &value, separator );
+         PyString_Concat( &value, e->fValue );
+      }
+
+      Py_DECREF( separator );
+      std::for_each( errors.begin(), errors.end(), PyError::Clear );
+
+   // report failure
+      PyErr_SetObject( PyExc_TypeError, value );
+      Py_DECREF( value );
       return 0;
    }
 

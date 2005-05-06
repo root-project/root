@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.11 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.12 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -43,6 +43,7 @@ namespace PyROOT {
          kLongLong    = 0x00000800,
          kEnum        = 0x00001000,
          kSTLString   = 0x00002000,
+         kMacro       = 0x00004000,
          kString      = kPtrMask | kChar,
          kDoublePtr   = kPtrMask | kDouble,
          kFloatPtr    = kPtrMask | kFloat,
@@ -58,6 +59,9 @@ namespace PyROOT {
    // meta information
       EDataType effectiveType( const std::string& name );
       int isPointer( const std::string& name );   // 0 = no, 1 = yes, 2 = ref
+
+   // CINT integration
+      void ErrMsgCallback( char* msg );
 
    } // namespace Utility
 

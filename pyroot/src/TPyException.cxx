@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 // Bindings
@@ -37,7 +37,7 @@ PyROOT::TPyException::~TPyException() throw()
 
 
 //- public members -----------------------------------------------------------
-const char* PyROOT::TPyException::what() const throw ()
+const char* PyROOT::TPyException::what() const throw()
 {
 // Return reason for throwing this exception: a python exception was raised.
    return "python exception";

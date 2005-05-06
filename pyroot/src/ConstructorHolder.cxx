@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.2 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -35,8 +35,10 @@ PyROOT::ConstructorHolder::ConstructorHolder( TClass* klass, TMethod* method ) :
 //- public members -----------------------------------------------------------
 PyObject* PyROOT::ConstructorHolder::GetDocString()
 {
-   return PyString_FromFormat(
-      "%s::__init__%s", GetClass()->GetName(), GetMethod()->GetSignature() );
+// GetMethod() may return zero if this is just a special case place holder
+   const char* clName = GetClass()->GetName();
+   return PyString_FromFormat( "%s::%s%s",
+      clName, clName, GetMethod() ? GetMethod()->GetSignature() : "()" );
 }
 
 //____________________________________________________________________________

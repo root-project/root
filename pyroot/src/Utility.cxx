@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.13 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.14 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -11,6 +11,10 @@
 
 // CINT
 #include "Api.h"
+
+// Standard
+#include <stdlib.h>
+#include <string.h>
 
 
 //- data _____________________________________________________________________
@@ -150,6 +154,9 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& na
       effType = EDataType( (int) kVoid | mask );
    else if ( shortName == "string" && isp == 0 )
       effType = kSTLString;
+   else if ( name == "#define" ) {
+      effType = kMacro;
+   }
    else
       effType = kOther;
 
@@ -172,4 +179,67 @@ int PyROOT::Utility::isPointer( const std::string& name )
    }
 
    return isp;
+}
+
+//____________________________________________________________________________
+void PyROOT::Utility::ErrMsgCallback( char* msg ) {
+// Translate CINT error/warning into python equivalent
+
+// ignore the "*** Interpreter error recovered ***" message
+   if ( strstr( msg, "error recovered" ) )
+      return;
+
+// ignore FILE/LINE messages (picked up directly when needed)
+   if ( strstr( msg, "FILE:" ) )
+      return;
+
+// get file name and line number
+   char* errFile = strstr( G__ifile.name, "./" );
+   if ( ! errFile )
+      errFile = G__ifile.name;
+   int errLine = G__ifile.line_number;
+
+// strip newline, if any
+   int len = strlen( msg );
+   if ( msg[ len-1 ] == '\n' )
+      msg[ len-1 ] = '\0';
+
+// concatenate message if already in error processing mode (e.g. if multiple CINT errors)
+   if ( PyErr_Occurred() ) {
+      PyObject *etype, *value, *trace;
+      PyErr_Fetch( &etype, &value, &trace );           // clears current exception
+
+   // need to be sure that error can be added; otherwise leave earlier error in place
+      if ( PyString_Check( value ) ) {
+         if ( ! PyErr_GivenExceptionMatches( etype, PyExc_IndexError ) )
+            PyString_ConcatAndDel( &value, PyString_FromString( (char*)"\n  " ) );
+         PyString_ConcatAndDel( &value, PyString_FromString( msg ) );
+      }
+
+      PyErr_Restore( etype, value, trace );
+      return;
+   }
+
+// else, tranlate known errors and warnings, or simply accept the default
+   char* format = (char*)"(file \"%s\", line %d) %s";
+   char* p = 0;
+   if ( ( p = strstr( msg, "Syntax Error:" ) ) )
+      PyErr_Format( PyExc_SyntaxError, format, errFile, errLine, p+14 );
+   else if ( ( p = strstr( msg, "Error: Array" ) ) )
+      PyErr_Format( PyExc_IndexError, format, errFile, errLine, p+7 );
+   else if ( ( p = strstr( msg, "Error:" ) ) )
+      PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, p+7 );
+   else if ( ( p = strstr( msg, "Limitation:" ) ) )
+      PyErr_Format( PyExc_NotImplementedError, format, errFile, errLine, p+12 );
+   else if ( ( p = strstr( msg, "Internal Error: malloc" ) ) )
+      PyErr_Format( PyExc_MemoryError, format, errFile, errLine, p+16 );
+   else if ( ( p = strstr( msg, "Internal Error:" ) ) )
+      PyErr_Format( PyExc_SystemError, format, errFile, errLine, p+16 );
+   else if ( ( p = strstr( msg, "Warning:" ) ) ) {
+   // either printout or raise exception, depending on user settings
+      PyErr_WarnExplicit( NULL, p+9, errFile, errLine, (char*)"CINT", NULL );
+      return;                                // NOTE: return after warning is set
+   }
+   else
+      PyErr_Format( PyExc_RuntimeError, format, errFile, errLine, msg );
 }

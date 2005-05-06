@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.24 2005/04/13 05:04:50 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.25 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -55,7 +55,7 @@ namespace {
       }
    };
 
-   inline void addToScope( const char* label, TObject* obj, TClass* klass )
+   inline void AddToScope( const char* label, TObject* obj, TClass* klass )
    {
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
@@ -84,15 +84,18 @@ void PyROOT::InitRoot()
       argv[ 0 ] = Py_GetProgramName();
 
       gApplication = new PyROOTApplication( "PyROOT", &argc, argv );
+
+   // CINT message callback (only if loaded from python, i.e. !gApplication)
+      G__set_errmsgcallback( (void*)&PyROOT::Utility::ErrMsgCallback );
    }
 
    if ( !gProgName )               // should be set by TApplication
       gSystem->SetProgname( Py_GetProgramName() );
 
 // bind ROOT globals
-   addToScope( "gROOT", gROOT, gROOT->IsA() );
-   addToScope( "gSystem", gSystem, gSystem->IsA() );
-   addToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
+   AddToScope( "gROOT", gROOT, gROOT->IsA() );
+   AddToScope( "gSystem", gSystem, gSystem->IsA() );
+   AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
 // memory management
    gROOT->GetListOfCleanups()->Add( new MemoryRegulator() );
@@ -470,6 +473,32 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
          return PyFloat_FromDouble( (double) *(Float_t*)gbl->GetAddress() );
       case Utility::kDouble:
          return PyFloat_FromDouble( (double) *(Double_t*)gbl->GetAddress() );
+      case Utility::kMacro: {
+         std::string gblName = gbl->GetName();    // == macro label
+
+      // TGlobal offers no specifics; go directly to CINT for the type info
+         G__DataMemberInfo dmi;
+         while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() causes overwrite
+
+            if ( dmi.Name() == gblName ) {
+            // for now, only handle int, double, and C-string
+               switch ( ((G__var_array*)dmi.Handle())->type[dmi.Index()] ) {
+               case 'p':
+                  return PyInt_FromLong( (long) *(Int_t*)gbl->GetAddress() );
+               case 'P':
+                  return PyFloat_FromDouble( (double) *(Double_t*)gbl->GetAddress() );
+               case 'T':
+                  return PyString_FromString( *(char**)gbl->GetAddress() );
+               default:
+                  return 0;
+               }
+            }
+
+         }
+
+      // type unknown; this will be reported as if the TGlobal doesn't exist
+         return 0;
+      }
       default:
          klass = TGlobal::Class();
       }
@@ -480,4 +509,3 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 
    return BindRootObject( (void*)gbl->GetAddress(), klass );
 }
-

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.12 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.13 2005/04/13 05:04:50 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -63,6 +63,8 @@ namespace PyROOT {
 
       bool InitCallFunc_( std::string& );
       void CalcOffset_( void* self, TClass* klass );
+
+      void SetPyError_( PyObject* msg );
 
    private:
    // representation
