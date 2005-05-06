@@ -694,7 +694,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
 #elif !defined(G__OLDIMPLEMENTATION1546)
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -707,7 +707,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*));
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
 #else
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -720,7 +720,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*));
+	void*,void*,void*,void*,void*,void*,void*,void*));
 #endif
 
 /**************************************************************************
@@ -865,6 +865,7 @@ char *fname;
 #ifndef G__OLDIMPLEMENTATION1485
 	,G__set_errmsgcallback
 #endif
+   ,G__get_ifile
 	);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.14 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.15 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -194,10 +194,10 @@ void PyROOT::Utility::ErrMsgCallback( char* msg ) {
       return;
 
 // get file name and line number
-   char* errFile = strstr( G__ifile.name, "./" );
+   char* errFile = strstr( G__get_ifile()->name, "./" );
    if ( ! errFile )
-      errFile = G__ifile.name;
-   int errLine = G__ifile.line_number;
+      errFile = G__get_ifile()->name;
+   int errLine = G__get_ifile()->line_number;
 
 // strip newline, if any
    int len = strlen( msg );

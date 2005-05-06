@@ -385,7 +385,7 @@
 /***********************************************************************
  * Native long long support
  ***********************************************************************/
-#if defined(G__WIN32)
+#if defined(G__WIN32) && !defined(__CINT__)
 typedef __int64            G__int64;
 typedef unsigned __int64   G__uint64;
 #else
@@ -2168,6 +2168,7 @@ extern G__EXPORT int G__readline G__P((FILE *fp,char *line,char *argbuf,int *arg
 extern G__EXPORT int G__getFuncNow G__P((void));
 extern FILE* G__getIfileFp G__P((void));
 extern G__EXPORT void G__incIfileLineNumber G__P((void));
+extern G__EXPORT struct G__input_file* G__get_ifile G__P((void));
 extern G__EXPORT void G__setReturn G__P((int rtn));
 extern G__EXPORT int G__getPrerun G__P((void));
 extern G__EXPORT short G__getDispsource G__P((void));
@@ -2338,6 +2339,7 @@ static void (*G__setPrerun) G__P((int prerun));
 static int (*G__readline) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
 static int (*G__getFuncNow) G__P((void));
 static FILE* (*G__getIfileFp) G__P((void));
+static struct G__input_file* G__get_ifile G__P((void));
 static void (*G__incIfileLineNumber) G__P((void));
 static void (*G__setReturn) G__P((int rtn));
 static int (*G__getPrerun) G__P((void));
@@ -2565,6 +2567,7 @@ G__EXPORT void G__SetCppCintApiPointers(
 		,void* a135
 		,void* a136
 #endif
+      ,void* a137
 		)
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
@@ -2635,6 +2638,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__readline = (int (*) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[])) ) a58;
   G__getFuncNow = (int (*) G__P((void)) ) a59;
   G__getIfileFp = (FILE* (*) G__P((void)) ) a60;
+  G__get_ifile = (struct G__intput_ifile* (*) G__P((void)) ) a137;
   G__incIfileLineNumber = (void (*) G__P((void)) ) a61;
   G__setReturn = (void (*) G__P((int rtn)) ) a62;
   G__getPrerun = (int (*) G__P((void)) ) a63;

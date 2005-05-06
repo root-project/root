@@ -2990,6 +2990,13 @@ int G__closemfp()
 #endif
 }
 
+/**************************************************************************
+* G__get_ifile()
+**************************************************************************/
+struct G__input_file *G__get_ifile()
+{
+   return &G__ifile;
+}
 
 #if 0
 /* Just for experimenting Windows Server OS tmpfile patch */
