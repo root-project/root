@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.h,v 1.7 2004/12/09 07:22:40 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.8 2005/04/18 10:54:58 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TXMLBuffer
-#define ROOT_TXMLBuffer
+#ifndef ROOT_TBufferXML
+#define ROOT_TBufferXML
 
 #ifndef ROOT_TBuffer
 #include "TBuffer.h"
@@ -38,12 +38,12 @@ class TXMLFile;
 class TXMLStackObj;
 
 
-class TXMLBuffer : public TBuffer, public TXMLSetup {
+class TBufferXML : public TBuffer, public TXMLSetup {
    public:
    
-      TXMLBuffer(TBuffer::EMode mode);
-      TXMLBuffer(TBuffer::EMode mode, TXMLFile* file);
-      virtual ~TXMLBuffer();
+      TBufferXML(TBuffer::EMode mode);
+      TBufferXML(TBuffer::EMode mode, TXMLFile* file);
+      virtual ~TBufferXML();
       
       void             SetCompressionLevel(int level) { fCompressLevel = level; }
       void             SetXML(TXMLEngine* xml) { fXML = xml; }
@@ -198,7 +198,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       // end of redefined virtual functions
 
    protected:
-      TXMLBuffer();
+      TBufferXML();
 
       // redefined protected virtual functions
 
@@ -289,7 +289,7 @@ class TXMLBuffer : public TBuffer, public TXMLSetup {
       TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
       Int_t            fCompressLevel;        //!   compress level used to minimize size of file 
 
-   ClassDef(TXMLBuffer,1) //a specialized TBuffer to read/write to XML files
+   ClassDef(TBufferXML,1) //a specialized TBuffer to read/write to XML files
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.6 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.7 2004/07/30 01:12:28 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #endif
 
 
-class TXMLKey;
+class TKeyXML;
 class TList;
 class TStreamerElement;
 class TStreamerInfo;

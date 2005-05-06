@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.9 2004/12/09 07:22:40 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.10 2004/12/20 17:15:48 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -67,7 +67,7 @@
 // =============
 // The "xml" package is currently under development. A more complete
 // documentation will be provided shortly in the classes reference guide.
-// See classes TXMLFile, TXMLKey, TXMLBuffer, TXMLEngine, TXMLSetup
+// See classes TXMLFile, TKeyXML, TBufferXML, TXMLEngine, TXMLSetup
 // and TXMLPlayer.
 // An example of XML file corresponding to the small example below
 //can be found at http://root.cern.ch/root/Example.xml
@@ -81,8 +81,8 @@
 #include "TList.h"
 #include "TBrowser.h"
 #include "TObjArray.h"
-#include "TXMLBuffer.h"
-#include "TXMLKey.h"
+#include "TBufferXML.h"
+#include "TKeyXML.h"
 #include "TObjArray.h"
 #include "TArrayC.h"
 #include "TStreamerInfo.h"
@@ -463,7 +463,7 @@ Int_t TXMLFile::WriteObjectAny(const void *obj, const char *classname, const cha
 Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* name, Option_t* option) 
 {
   // write object of any class with disctionary to xml file  
-  // object is tranformed to xml structure, which then kept in TXMLKey
+  // object is tranformed to xml structure, which then kept in TKeyXML
   // Data will be stored to file only when Close() or ReOpen() or destructor is called
   // For more details see TDirectory::WriteObjectAny() function
     
@@ -518,7 +518,7 @@ Int_t TXMLFile::WriteObjectAny(const void* obj, const TClass* cl, const char* na
       oldkey = (TKey*)GetKey(oname);
    }
    
-   key = new TXMLKey(this, obj, cl, oname);
+   key = new TKeyXML(this, obj, cl, oname);
    
    if (newName) delete [] newName;
 
@@ -565,7 +565,7 @@ void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& d
 void TXMLFile::SaveToFile() 
 {
    // Saves xml structures to file
-   // xml elements are kept in list of TXMLKey objects 
+   // xml elements are kept in list of TKeyXML objects 
    // When saving, all this elements are linked to root xml node
    // In the end StreamerInfo structures are added
    // After xml document is saved, all nodes will be unlinked from root node 
@@ -589,9 +589,9 @@ void TXMLFile::SaveToFile()
    ProduceFileNames(fRealName, fname, dtdname);
 
    TIter iter(GetListOfKeys());
-   TXMLKey* key = 0;
+   TKeyXML* key = 0;
 
-   while ((key=(TXMLKey*)iter()) !=0)
+   while ((key=(TKeyXML*)iter()) !=0)
       fXML->AddChild(fRootNode, key->KeyNode());
 
    WriteStreamerInfo();
@@ -610,7 +610,7 @@ void TXMLFile::SaveToFile()
 //       fDtdGener->Produce(dtdname);
 
    iter.Reset();
-   while ((key=(TXMLKey*)iter()) !=0)
+   while ((key=(TKeyXML*)iter()) !=0)
       fXML->UnlinkNode(key->KeyNode());
       
    if (fStreamerInfoNode)
@@ -663,7 +663,7 @@ Bool_t TXMLFile::ReadFromFile()
       if (strcmp(xmlNames_Xmlkey, fXML->GetNodeName(keynode))==0) {
          fXML->UnlinkNode(keynode);
 
-         TXMLKey* key = new TXMLKey(this, keynode);
+         TKeyXML* key = new TKeyXML(this, keynode);
          AppendKey(key);
          
          if (gDebug>2)

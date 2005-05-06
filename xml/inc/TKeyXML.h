@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLKey.h,v 1.3 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.h,v 1.4 2004/06/03 21:06:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TXMLKey
-#define ROOT_TXMLKey
+#ifndef ROOT_TKeyXML
+#define ROOT_TKeyXML
 
 #ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
@@ -22,15 +22,15 @@
 
 class TXMLFile;
 
-class TXMLKey : public TKey {
+class TKeyXML : public TKey {
    protected:
-      TXMLKey();
+      TKeyXML();
     
    public:
-      TXMLKey(TXMLFile* file, const TObject* obj, const char* name = 0);
-      TXMLKey(TXMLFile* file, const void* obj, const TClass* cl, const char* name);
-      TXMLKey(TXMLFile* file, xmlNodePointer keynode);
-      virtual ~TXMLKey();
+      TKeyXML(TXMLFile* file, const TObject* obj, const char* name = 0);
+      TKeyXML(TXMLFile* file, const void* obj, const TClass* cl, const char* name);
+      TKeyXML(TXMLFile* file, xmlNodePointer keynode);
+      virtual ~TKeyXML();
 
       // redefined TKey Methods
       virtual void      Browse(TBrowser *b);
@@ -56,7 +56,7 @@ class TXMLKey : public TKey {
       virtual Int_t     Sizeof() const { return 0; }
       virtual Int_t     WriteFile(Int_t =1) { return 0; }
 
-      // TXMLKey specific methods
+      // TKeyXML specific methods
 
       xmlNodePointer    KeyNode() const { return fKeyNode; }
       void              SetXML(TXMLEngine* xml) { fXML = xml; }
@@ -72,7 +72,7 @@ class TXMLKey : public TKey {
       TXMLEngine*       fXML;      //!
       xmlNodePointer    fKeyNode;  //!
 
-   ClassDef(TXMLKey,1) // a special TKey for XML files      
+   ClassDef(TKeyXML,1) // a special TKey for XML files      
 };
 
 
