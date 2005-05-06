@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.21 2004/02/24 15:02:50 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.22 2004/10/25 10:51:34 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
   if (argc > 2) {
     file_out=argv[2];
   } else {
-    file_out= new char[128];
+    file_out= new char[2000];
     strcpy(file_out,file_in);
     char *dot = strrchr(file_out,'.');
     if (dot) strcpy(dot+1,"root");
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
      return 1;
   }
 
-  char root_file_title[128];
+  char root_file_title[2000];
   sprintf(root_file_title,"HBOOK file: %s converted to ROOT",file_in);
   TFile* hfile= TFile::Open(file_out,"RECREATE",root_file_title,compress);
   
