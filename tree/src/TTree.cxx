@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.248 2005/04/23 06:13:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.249 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3146,6 +3146,8 @@ const char *TTree::GetFriendAlias(TTree *tree) const
 //  However, note that 'treealias.myAlias' will be expanded literally, without
 //  'remembering' it comes from the aliased friend and thus the branch
 //  name might not be disambiguated properly.
+
+   if (tree==this || tree==GetTree()) return 0;
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
