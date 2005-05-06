@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.4 2005/04/16 05:46:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.5 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -11,6 +11,7 @@
 // Standard
 #include <functional>
 #include <vector>
+#include <algorithm>
 
 
 namespace PyROOT {
