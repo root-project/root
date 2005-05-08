@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.8 2004/07/23 16:52:53 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.9 2005/01/19 18:30:58 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
- 
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -32,16 +32,9 @@
 # include "TCut.h"
 #endif
 
-//#if ROOT_VERSION_CODE >= ROOT_VERSION(3,03,5)
 # ifndef ROOT_Riosfwd
 #  include "Riosfwd.h"
 # endif
-#if defined(R__ANSISTREAM)
-    using namespace std;
-#endif 
-
-// #endif
-
 
 #ifndef __CINT__
 #  include <string.h>
@@ -95,8 +88,8 @@ public:
    enum ETableBits {
       kIsNotOwn      = BIT(23)   // if the TTable wrapper doesn't own the STAF table
 		                 // As result of the Update() method for example
-   };   
-   static const char *fgTypeName[kEndColumnType]; 
+   };
+   static const char *fgTypeName[kEndColumnType];
    TTable(const Text_t *name=0, Int_t size=0);
    TTable(const Text_t *name, Int_t n,Int_t size);
    TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);
@@ -188,19 +181,19 @@ public:
    // Table index iterator:
    class iterator {
       public:
-         typedef vector<Long_t>::iterator vec_iterator;
-         typedef vector<Long_t>::const_iterator vec_const_iterator; 
+         typedef std::vector<Long_t>::iterator vec_iterator;
+         typedef std::vector<Long_t>::const_iterator vec_const_iterator;
       private:
          Long_t        fRowSize;
          const TTable *fThisTable;
          vec_iterator  fCurrentRow;
       public:
-	     iterator(): fRowSize(0), fThisTable(0) {;}
+        iterator(): fRowSize(0), fThisTable(0) {;}
         iterator(const TTable &table, vec_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
-        iterator(const TTable &table, vec_const_iterator &rowPtr) : 
-           fRowSize(table.GetRowSize()), 
-           fThisTable(&table), 
-           fCurrentRow(*(vector<Long_t>::iterator *)(void *)&rowPtr) {;}
+        iterator(const TTable &table, vec_const_iterator &rowPtr) :
+           fRowSize(table.GetRowSize()),
+           fThisTable(&table),
+           fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&rowPtr) {;}
 //           fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&rowPtr) ) {;}
         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
@@ -208,23 +201,23 @@ public:
         void operator++(int) {   fCurrentRow++; }
         void operator--()    { --fCurrentRow;   }
         void operator--(int) {   fCurrentRow--; }
-        iterator operator+(Int_t idx)   { vector<Long_t>::iterator addition   = fCurrentRow+idx; return  iterator(*fThisTable,addition); }
-        iterator operator-(Int_t idx)   { vector<Long_t>::iterator subtraction = fCurrentRow-idx; return  iterator(*fThisTable,subtraction); }
+        iterator operator+(Int_t idx)   { std::vector<Long_t>::iterator addition   = fCurrentRow+idx; return  iterator(*fThisTable,addition); }
+        iterator operator-(Int_t idx)   { std::vector<Long_t>::iterator subtraction = fCurrentRow-idx; return  iterator(*fThisTable,subtraction); }
         void operator+=(Int_t idx)  {  fCurrentRow+=idx; }
         void operator-=(Int_t idx)  {  fCurrentRow-=idx; }
         void *rowPtr() const { return  (void *)(((const char *)fThisTable->GetArray()) + (*fCurrentRow)*fRowSize ); }
         operator void *() const { return rowPtr(); }
         Int_t operator-(const iterator &it) const { return (*fCurrentRow)-(*(it.fCurrentRow)); }
-        Long_t operator *() const { return  *fCurrentRow; } 
+        Long_t operator *() const { return  *fCurrentRow; }
         Bool_t operator==(const iterator &t) const { return  ( (fCurrentRow == t.fCurrentRow) && (fThisTable == t.fThisTable) ); }
         Bool_t operator!=(const iterator &t) const { return !operator==(t); }
 
         const TTable &Table()   const { return *fThisTable;}
         const Long_t &RowSize() const { return fRowSize;}
 #ifndef __CINT__
-        const vector<Long_t>::iterator &Row() const { return fCurrentRow;}
+        const std::vector<Long_t>::iterator &Row() const { return fCurrentRow;}
 #endif
-    };                
+    };
 
 #ifndef __CINT__
     //  pointer iterator
@@ -232,32 +225,32 @@ public:
     // type provided.
     // For example" piterator(table,kPtr) is to iterate over
     // all cells of (TTableMap *) type
-    
+
     class piterator {
       private:
-		vector<ULong_t>  fPtrs;
-        UInt_t           fCurrentRowIndex;
-        UInt_t           fCurrentColIndex;
-        UInt_t           fRowSize;
-        const Char_t    *fCurrentRowPtr;
-        void           **fCurrentColPtr;
-        
+        std::vector<ULong_t>  fPtrs;
+        UInt_t                fCurrentRowIndex;
+        UInt_t                fCurrentColIndex;
+        UInt_t                fRowSize;
+        const Char_t         *fCurrentRowPtr;
+        void                **fCurrentColPtr;
+
       protected:
       	void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
-      	
+
       public:
         piterator(const TTable *t=0,EColumnType type=kPtr);
         piterator(const piterator& iter);
     	  void operator=(const piterator& iter);
-    	
+
     	  void operator++();
     	  void operator++(int);
     	  void operator--();
     	  void operator--(int);
-       
+
 //        operator const char *() const;
         void **operator *();
-        
+
  	      Bool_t operator==(const piterator &t) const;
 	      Bool_t operator!=(const piterator &t) const;
 
@@ -343,7 +336,7 @@ inline void TTable::Draw(Option_t *opt)
            fCurrentColIndex(iter.fCurrentColIndex),
            fCurrentRowPtr(iter.fCurrentRowPtr),
            fCurrentColPtr(iter.fCurrentColPtr)
-    {}   
+    {}
     //________________________________________________________________________________________________________________
     inline void TTable::piterator::operator=(const piterator& iter){
         fPtrs            = iter.fPtrs;
@@ -362,7 +355,7 @@ inline void TTable::Draw(Option_t *opt)
            fCurrentRowPtr += fRowSize;
          }
          column();
-    }	
+    }
     //________________________________________________________________________________________________________________
     inline void TTable::piterator::operator++(int) {  operator++(); }
     //________________________________________________________________________________________________________________
@@ -379,9 +372,9 @@ inline void TTable::Draw(Option_t *opt)
        column();
     }
     //________________________________________________________________________________________________________________
-    inline void TTable::piterator::operator--(int) {  operator--();  }    
+    inline void TTable::piterator::operator--(int) {  operator--();  }
     //________________________________________________________________________________________________________________
-    // inline TTable::piterator::operator const char *() const { return fCurrentColPtr; }    
+    // inline TTable::piterator::operator const char *() const { return fCurrentColPtr; }
     //________________________________________________________________________________________________________________
     inline void **TTable::piterator::operator *()            { return fCurrentColPtr; }
     //________________________________________________________________________________________________________________
@@ -396,7 +389,7 @@ inline void TTable::Draw(Option_t *opt)
     //________________________________________________________________________________________________________________
     inline Bool_t TTable::piterator::operator!=(const piterator &t) const { return !operator==(t); }
     //________________________________________________________________________________________________________________
-    inline void  TTable::piterator::MakeEnd(UInt_t lastRowIndex){fCurrentColIndex = 0; fCurrentRowIndex = lastRowIndex;} 
+    inline void  TTable::piterator::MakeEnd(UInt_t lastRowIndex){fCurrentColIndex = 0; fCurrentRowIndex = lastRowIndex;}
     //________________________________________________________________________________________________________________
     inline UInt_t TTable::piterator::Row()    const { return fCurrentRowIndex;}
     //________________________________________________________________________________________________________________

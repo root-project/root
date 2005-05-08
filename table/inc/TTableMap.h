@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:$:$Id:$
+// @(#)root/table:$Name:  $:$Id: TTableMap.h,v 1.3 2004/02/13 14:27:00 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 class TTableMap : public TObject
 #ifndef __CINT__
- , public vector<Long_t>
+ , public std::vector<Long_t>
 #endif
 {
   protected:
@@ -41,7 +41,7 @@ class TTableMap : public TObject
     TTableMap(const TTable *table=0);
     TTableMap(const TTableMap &map) : TObject(map)
 #ifndef __CINT__
-		, vector<Long_t>(map)
+		, std::vector<Long_t>(map)
 #endif
     , fTable(map.fTable)	{;}
     ~TTableMap(){;}
@@ -74,13 +74,13 @@ inline  Bool_t TTableMap::IsValid() const
     return kTRUE;
 }
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::Begin()          { vector<Long_t>::iterator bMap = this->begin(); return TTable::iterator(*fTable, bMap);}
+inline TTable::iterator TTableMap::Begin()          { std::vector<Long_t>::iterator bMap = this->begin(); return TTable::iterator(*fTable, bMap);}
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::Begin()    const { vector<Long_t>::const_iterator bMap = ((TTableMap*) this)->begin(); return TTable::iterator(*fTable, bMap);}
+inline TTable::iterator TTableMap::Begin()    const { std::vector<Long_t>::const_iterator bMap = ((TTableMap*) this)->begin(); return TTable::iterator(*fTable, bMap);}
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::End()            { vector<Long_t>::iterator eMap = this->end(); return TTable::iterator(*fTable, eMap);}
+inline TTable::iterator TTableMap::End()            { std::vector<Long_t>::iterator eMap = this->end(); return TTable::iterator(*fTable, eMap);}
 //___________________________________________________________________________________________________________
-inline TTable::iterator TTableMap::End()      const { vector<Long_t>::const_iterator eMap = ((TTableMap*) this)->end();  return TTable::iterator(*fTable, eMap);}
+inline TTable::iterator TTableMap::End()      const { std::vector<Long_t>::const_iterator eMap = ((TTableMap*) this)->end();  return TTable::iterator(*fTable, eMap);}
 //___________________________________________________________________________________________________________
 inline Bool_t           TTableMap::IsFolder() const { return kTRUE;}
 //___________________________________________________________________________________________________________
