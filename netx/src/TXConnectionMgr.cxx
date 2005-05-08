@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.cxx,v 1.4 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TXDebug.h"
 #include "TXMessage.h"
 #include "TError.h"
+
+using namespace std;
 
 extern TEnv *gEnv;
 
@@ -116,7 +118,7 @@ void TXConnectionMgr::Init()
    if (gEnv->GetValue("XNet.StartGarbageCollectorThread",
                       DFLT_STARTGARBAGECOLLECTORTHREAD)) {
       // The type of the thread func makes it a detached thread
-      fThreadHandler = 
+      fThreadHandler =
          new TThread((TThread::VoidFunc_t) GarbageCollectorThread,this);
       if (!fThreadHandler) {
          Info("Init","Can't create garbage collector"
@@ -251,7 +253,7 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
 
       for (unsigned short int i=0; i < fPhyVec.size(); i++) {
 	 if (fPhyVec[i] && fPhyVec[i]->IsValid() &&
-	     fPhyVec[i]->IsPort(TcpPort) && 
+	     fPhyVec[i]->IsPort(TcpPort) &&
              fPhyVec[i]->IsAddress(RemoteAddress)) {
 	    // We link that physical connection to the new logical connection
 	    fPhyVec[i]->Touch();
@@ -280,7 +282,7 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
                          " Probable system resources exhausted.");
          gSystem->Abort();
       }
-      if (phyconn && 
+      if (phyconn &&
           phyconn->Connect(RemoteAddress, TcpPort, TcpWindowSize)) {
 
          logconn->SetPhyConnection(phyconn);
@@ -341,7 +343,7 @@ void TXConnectionMgr::Disconnect(short int LogConnectionID,
 
    {
       R__LOCKGUARD(fMutex);
-      if ((UInt_t(LogConnectionID) >= fLogVec.size()) || 
+      if ((UInt_t(LogConnectionID) >= fLogVec.size()) ||
           (!fLogVec[LogConnectionID])) {
          Error("Disconnect", "Destroying nonexistent logconnid %d.",
                 LogConnectionID);
@@ -504,7 +506,7 @@ Bool_t TXConnectionMgr::ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
    {
       R__LOCKGUARD(fMutex);
       for (unsigned short int i = 0; i < fLogVec.size(); i++)
-	 if (fLogVec[i] && 
+	 if (fLogVec[i] &&
             (fLogVec[i]->GetPhyConnection() == sender)) {
 	     fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
 	 }
@@ -516,7 +518,7 @@ Bool_t TXConnectionMgr::ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
 //_____________________________________________________________________________
 void TXConnectionMgr::RemoveLogConn(TXLogConnection *logc)
 {
-   // Remove logc from the list of logical connections 
+   // Remove logc from the list of logical connections
 
    {
       R__LOCKGUARD(fMutex);
@@ -534,7 +536,7 @@ void TXConnectionMgr::RemoveLogConn(TXLogConnection *logc)
 //_____________________________________________________________________________
 void TXConnectionMgr::RemovePhyConn(TXPhyConnection *phyc)
 {
-   // Remove phyc from the list of physical connections 
+   // Remove phyc from the list of physical connections
 
    {
       R__LOCKGUARD(fMutex);

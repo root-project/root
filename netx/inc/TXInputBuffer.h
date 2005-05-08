@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.h,v 1.3 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -31,17 +31,16 @@
 #include <list>
 #include <map>
 
-using namespace std;
 
 class TXInputBuffer {
 
 private:
 
-   list<TXMessage *>           fMsgQue;      // queue for incoming messages
-   TMutex                     *fMutex;       // mutex to protect data structures
-   map<Short_t, TCondition *>  fSyncobjRepo; // each streamid counts on a condition
-                                             // variable to make the caller wait
-                                             // until some data is available
+   std::list<TXMessage *>          fMsgQue;      // queue for incoming messages
+   TMutex                         *fMutex;       // mutex to protect data structures
+   std::map<Short_t, TCondition *> fSyncobjRepo; // each streamid counts on a condition
+                                                 // variable to make the caller wait
+                                                 // until some data is available
    TCondition     *GetSyncObjOrMakeOne(Short_t streamid);
    Int_t           MsgForStreamidCnt(Short_t streamid);
 

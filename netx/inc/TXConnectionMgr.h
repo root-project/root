@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.5 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -67,15 +67,15 @@ class TXConnectionMgr: public TXAbsUnsolicitedMsgHandler,
                        TXUnsolicitedMsgSender {
 friend class TXNetConn;
 private:
-   Bool_t                    fInitialized;
-   vector <TXLogConnection*> fLogVec;
-   vector <TXPhyConnection*> fPhyVec;
-   TMutex                    *fMutex; // mutex used to protect local variables
-                                      // of this and TXLogConnection, TXPhyConnection
-                                      // classes; not used to protect i/o streams
+   Bool_t                         fInitialized;
+   std::vector <TXLogConnection*> fLogVec;
+   std::vector <TXPhyConnection*> fPhyVec;
+   TMutex                        *fMutex; // mutex used to protect local variables
+                                          // of this and TXLogConnection, TXPhyConnection
+                                          // classes; not used to protect i/o streams
 
-   TThread                   *fThreadHandler;
-   Bool_t                     fThreadKilled;
+   TThread                       *fThreadHandler;
+   Bool_t                         fThreadKilled;
 
    friend void * GarbageCollectorThread(void *);
    Bool_t        ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,

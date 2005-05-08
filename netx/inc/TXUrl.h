@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXUrl.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -26,9 +26,8 @@
 
 #define PROTO "root"
 
-using namespace std;
 
-typedef vector<TUrl*> UrlArray;
+typedef std::vector<TUrl*> UrlArray;
 
 
 class TXUrl {
