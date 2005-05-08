@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.2 2005/03/14 17:22:38 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.h,v 1.3 2005/04/06 13:09:07 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -57,16 +57,16 @@ public:
    virtual Int_t           ParseFile(const char *filename);
    virtual Int_t           ParseBuffer(const char *contents, Int_t len);
 
-   virtual void            OnStartDocument();
-   virtual void            OnEndDocument();
-   virtual void            OnStartElement(const char *name, const TList *attr);
-   virtual void            OnEndElement(const char *name);
-   virtual void            OnCharacters(const char *characters);
-   virtual void            OnComment(const char *text);
-   virtual void            OnWarning(const char *text);
-   virtual Int_t           OnError(const char *text);
-   virtual Int_t           OnFatalError(const char *text);
-   virtual void            OnCdataBlock(const char *text, Int_t len);
+   virtual void            OnStartDocument();  //*SIGNAL*
+   virtual void            OnEndDocument();  //*SIGNAL*
+   virtual void            OnStartElement(const char *name, const TList *attr);  //*SIGNAL*
+   virtual void            OnEndElement(const char *name);  //*SIGNAL*
+   virtual void            OnCharacters(const char *characters);  //*SIGNAL*
+   virtual void            OnComment(const char *text);  //*SIGNAL*
+   virtual void            OnWarning(const char *text);  //*SIGNAL*
+   virtual Int_t           OnError(const char *text);  //*SIGNAL*
+   virtual Int_t           OnFatalError(const char *text);  //*SIGNAL*
+   virtual void            OnCdataBlock(const char *text, Int_t len);  //*SIGNAL*
 
    virtual void            ConnectToHandler(const char *handlerName, void *handler);
 
