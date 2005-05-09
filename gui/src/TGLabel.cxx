@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.14 2004/09/11 16:27:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.15 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -219,7 +219,7 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
 
    TGGC *gc = fClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
 
-   if (global) {
+   if (!global) {
       gc = new TGGC(*gc); // copy
       fHasOwnFont = kTRUE;
    }
