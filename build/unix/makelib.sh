@@ -111,9 +111,14 @@ elif [ $PLATFORM = "macosx" ]; then
        SONAME=`echo $SONAME | sed "s/.*\./&${MAJOR}./"`
        LIB=`echo $LIB | sed "s/\/*.*\/.*\./&${MAJOR}.${MINOR}./"`
    fi
-   cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
-        `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
-        -ldl $EXTRA $EXPLLNKCORE $VERSION"
+   if [ $macosx_minor -ge 4 ]; then
+      cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
+           -ldl $EXTRA $EXPLLNKCORE $VERSION"
+   else
+      cmd="$LD $SOFLAGS$SONAME $m64 -o $LIB $OBJS \
+           `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
+           -ldl $EXTRA $EXPLLNKCORE $VERSION"
+   fi
    echo $cmd
    $cmd
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
@@ -123,21 +128,17 @@ elif [ $PLATFORM = "macosx" ]; then
    fi
    if [ $macosx_minor -ge 4 ]; then
       cmd="ln -fs `basename $LIB` $BUNDLE"
-      echo $cmd
-      $cmd
    elif [ $macosx_minor -ge 3 ]; then
       cmd="$LD $opt $m64 -bundle -undefined dynamic_lookup -o \
           $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
           -ldl $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
    else
       cmd="$LD $opt -bundle -undefined suppress -o $BUNDLE \
 	   $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
            -ldl $EXTRA $EXPLLNKCORE"
-      echo $cmd
-      $cmd
    fi
+   echo $cmd
+   $cmd
 elif [ $LD = "KCC" ]; then
    cmd="$LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
    echo $cmd

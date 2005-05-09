@@ -266,43 +266,53 @@ openbsd)
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxcflags="-Wno-long-double $auxcflags"
-   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
+      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+      auxcflags="-Wno-long-double $auxcflags"
+      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
+   else
+      auxcflags="-Wno-long-double"
+      auxlibs="-lm -ldl"
    fi
    ;;
 macosx64)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxcflags="-m64 -Wno-long-double $auxcflags"
-   auxldflags="-m64"
-   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
+      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+      auxcflags="-m64 -Wno-long-double $auxcflags"
+      auxldflags="-m64"
+      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
+   else
+      auxcflags="-m64 -Wno-long-double"
+      auxldflags="-m64"
+      auxlibs="-lm -ldl"
    fi
    ;;
 macosxxlc)
    # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
    if [ $macosx_minor -le 3 ]; then
+      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
+   else
+      auxcflags=
+      auxlibs="-lm -ldl"
    fi
    ;;
 hiux)
