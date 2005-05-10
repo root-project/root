@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.73 2005/04/25 13:59:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.74 2005/04/27 12:11:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -765,13 +765,15 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       else         f1->SetRange(fXaxis.GetXmin(),fXaxis.GetXmax());
    }
    Int_t npar = f1->GetNpar();
+   if (npar <= 0) return;
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
 
    //Create one histogram for each function parameter
    Int_t ipar;
-   char name[80], title[80];
-   TH1D *hlist[25];
+   TH1D **hlist = new TH1D*[npar];
+   char *name   = new char[2000];
+   char *title  = new char[2000];
    const TArrayD *bins = fYaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
@@ -811,6 +813,9 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       delete hpx;
    }
    delete [] parsave;
+   delete [] name;
+   delete [] title;
+   delete [] hlist;
 }
 
 //______________________________________________________________________________
@@ -878,13 +883,15 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       else         f1->SetRange(fYaxis.GetXmin(),fYaxis.GetXmax());
    }
    Int_t npar = f1->GetNpar();
+   if (npar <= 0) return;
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
 
    //Create one histogram for each function parameter
    Int_t ipar;
-   char name[80], title[80];
-   TH1D *hlist[25];
+   TH1D **hlist = new TH1D*[npar];
+   char *name   = new char[2000];
+   char *title  = new char[2000];
    const TArrayD *bins = fXaxis.GetXbins();
    for (ipar=0;ipar<npar;ipar++) {
       sprintf(name,"%s_%d",GetName(),ipar);
@@ -924,6 +931,9 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       delete hpy;
    }
    delete [] parsave;
+   delete [] name;
+   delete [] title;
+   delete [] hlist;
 }
 
 //______________________________________________________________________________
