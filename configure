@@ -944,9 +944,7 @@ if test "x$noact" = "xno"; then
     cp -f $ROOTAUTHRCIN rootauthrc.tmp
     cp -f $ROOTDAEMONRCIN rootdaemonrc.tmp
     cp -f $MEMPROBEIN memprobe.tmp
-    if test ! "x$haveconfig" = "x" ; then
-       cp -f $ROOTDIN rootd.tmp
-    fi
+    cp -f $ROOTDIN rootd.tmp
 fi
 
 ######################################################################
@@ -3263,14 +3261,11 @@ echo "done"
 #---------------------------------------------------------------------
 # etc/rootd
 #
-if test ! "x$haveconfig" = "x" ; then
-   message "Writing $ROOTDOUT"
-   sed \
-       -e "s|@bindir@|$bindir|" \
-       < rootd.tmp > $ROOTDOUT
-   rm -f rootd.tmp
-   echo "done"
-fi
+message "Writing $ROOTDOUT"
+sed -e "s|@bindir@|$bindir|" \
+    < rootd.tmp > $ROOTDOUT
+rm -f rootd.tmp
+echo "done"
 
 #---------------------------------------------------------------------
 # bin/memprobe
