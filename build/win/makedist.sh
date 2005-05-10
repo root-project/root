@@ -6,10 +6,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
-MACHINE=`uname`
-OSREL=`uname -r`
-#TYPE=$MACHINE.$OSREL
-TYPE=win32
+TYPE=`bin/root-config --arch`
 TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 TAR=/bin/tar

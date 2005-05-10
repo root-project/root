@@ -211,6 +211,7 @@ endif
 ifneq ($(findstring gnu,$(COMPILER)),)
 GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
 GCC_MINOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
+GCC_VERS     := gcc-$(GCC_MAJOR).$(GCC_MINOR)
 endif
 
 ##### f77 options #####
@@ -420,7 +421,7 @@ map::   $(RLIBMAP)
 dist:
 	@rm -f $(ROOTMAP)
 	@$(MAKE) map
-	@$(MAKEDIST)
+	@$(MAKEDIST) $(GCC_VERS)
 
 distsrc:
 	@$(MAKEDISTSRC)

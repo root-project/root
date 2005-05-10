@@ -6,14 +6,12 @@
 # Author: Fons Rademakers, 29/2/2000
 
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
-MACHINE=`uname`
-OSREL=`uname -r`
-if [ "x$MACHINE" = "xCYGWIN_NT-5.1" ]; then
-   TYPE=$MACHINE
+TYPE=`bin/root-config --arch`
+if [ "x$1" = "x" ]; then
+   TARFILE=root_v$ROOTVERS.$TYPE.tar
 else
-   TYPE=$MACHINE.$OSREL
+   TARFILE=root_v$ROOTVERS.$TYPE-$1.tar
 fi
-TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 rm -f ../${TARFILE}.gz
 
