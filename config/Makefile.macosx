@@ -40,6 +40,7 @@ COMPILER      = gnu
 
 # OS version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
 # Linker:
 LD            = g++
@@ -71,8 +72,22 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
+ifeq ($(MACOSX_MINOR),4)
+ifeq (g95,$(findstring g95,$(ROOTBUILD)))
+F77           = g95
+F77LIBS       = -L$(FINK_DIR)/lib -lf95
+else
+F77           = gfortran
+F77LIBS       = -L$(FINK_DIR)/lib -lgfortran -lgfortranbegin
+endif
+else
 F77           = g77
 F77LIBS       = -lg2c
+endif
+
+ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
+BUILDHBOOK   := no
+endif
 
 # Override default in Makefile.config
 INSTALL      := cp -pPR
@@ -80,7 +95,6 @@ INSTALLDATA  := cp -pPR
 
 # Extras
 ifeq ($(NEEDFINK),yes)
-FINK_DIR      = $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
 FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
 FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)

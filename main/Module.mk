@@ -88,7 +88,7 @@ endif
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
-ifneq ($(CERNLIBS),)
+ifeq ($(BUILDHBOOK),yes)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
 
@@ -133,7 +133,7 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 		   $(CERNLIBDIR) $(CERNLIBS) $(RFIOLIBEXTRA) $(SHIFTLIBDIR) \
 		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
 
-ifneq ($(CERNLIBS),)
+ifeq ($(BUILDHBOOK),yes)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) \
                $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 else
