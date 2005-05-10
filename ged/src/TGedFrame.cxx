@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.4 2004/09/15 14:56:35 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.5 2004/09/21 14:17:59 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -35,14 +35,14 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
    : TGCompositeFrame(p, width, height, options, back), TGWidget(id)
 {
    // Constructor of the base GUI attribute frame.
-   
+
    fPad    = 0;
    fModel  = 0;
    fInit   = kTRUE;
-   
+
    Associate(p);
    fTab = (TGTab*)p->GetParent()->GetParent();
-   
+
 //   gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -50,18 +50,18 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
  TGedFrame::~TGedFrame()
 {
    // Destructor of the base GUI attribute frame.
-   
+
 //   gROOT->GetListOfCleanups()->Remove(this);
-   
+
 }
 
 //______________________________________________________________________________
 Option_t *TGedFrame::GetDrawOption() const
 {
    // Get draw options of the selected object.
-   
+
    if (!fPad) return "";
-   
+
    TListIter next(fPad->GetListOfPrimitives());
    TObject *obj;
    while ((obj = next())) {
@@ -75,7 +75,7 @@ void TGedFrame::MakeTitle(const char *title)
 {
    // Create attribute frame title.
 
-   TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
+   TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, title), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1),
@@ -88,17 +88,17 @@ void TGedFrame::SetActive(Bool_t active)
 {
    // Set active GUI attribute frames related to the selected object.
 
-   if (active) 
+   if (active)
       ((TGCompositeFrame*)GetParent())->ShowFrame(this);
    else
       ((TGCompositeFrame*)GetParent())->HideFrame(this);
 
    ((TGMainFrame*)GetMainFrame())->Layout();
-   
+
    // to avoid that the user changes options on a deactivated Tab
-   if (fTab->IsEnabled(fTab->GetCurrent())) 
+   if (fTab->IsEnabled(fTab->GetCurrent()))
       fTab->SetTab(fTab->GetCurrent());
-   else 
+   else
       fTab->SetTab(0);
 }
 
@@ -160,12 +160,12 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 {
    // Create the frame containing the selected object name.
 
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
                                                kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1,"Name"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f1, new TGLayoutHints(kLHintsTop));
-   
+
    f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fLabel = new TGLabel(f2, "");
    f2->AddFrame(fLabel, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -179,7 +179,7 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
 
    TGFrameElement *el;
    TIter next(GetList());
-   
+
    while ((el = (TGFrameElement *)next())) {
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
@@ -209,8 +209,8 @@ void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    // Set red color for the name.
    Pixel_t color;
    gClient->GetColorByName("#ff0000", color);
-   fLabel->SetTextColor(color, kTRUE);
+   fLabel->SetTextColor(color, kFALSE);
    fLabel->SetText(new TGString(string));
-   
+
    SetActive();
 }
