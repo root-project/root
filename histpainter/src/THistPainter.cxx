@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.213 2005/04/22 06:29:49 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.214 2005/04/25 13:59:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4490,7 +4490,9 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //    n = 1;  name of histogram is printed
 //    e = 1;  number of entries printed
 //    m = 1;  mean value printed
+//    m = 2;  mean and mean error values printed
 //    r = 1;  rms printed
+//    r = 2;  rms and rms error printed
 //    u = 1;  number of underflows printed
 //    o = 1;  number of overflows printed
 //    i = 1;  integral of bins printed
@@ -4607,24 +4609,36 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    char textstats[50];
    if (print_mean) {
-      sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
-      sprintf(t,textstats,fH->GetMean(1));
+      if (print_mean == 1) {
+         sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetMean(1));
+      } else {
+         sprintf(textstats,"Mean  = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                  ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetMean(1),fH->GetMeanError());
+      }
       stats->AddText(t);
-      if(fH->InheritsFrom("TProfile")) {
-		 sprintf(textstats,"Meany = %s%s","%",stats->GetStatFormat());
+      if (fH->InheritsFrom("TProfile")) {
+         sprintf(textstats,"Meany = %s%s","%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetMean(2));
          stats->AddText(t);
-	  }
+      }
    }
    if (print_rms) {
-      sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
-      sprintf(t,textstats,fH->GetRMS(1));
+      if (print_rms == 1) {
+         sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetRMS(1));
+      } else {
+         sprintf(textstats,"RMS   = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                  ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetRMS(1),fH->GetRMSError());
+      }
       stats->AddText(t);
       if(fH->InheritsFrom("TProfile")) {
-		 sprintf(textstats,"RMSy = %s%s","%",stats->GetStatFormat());
+         sprintf(textstats,"RMSy = %s%s","%",stats->GetStatFormat());
          sprintf(t,textstats,fH->GetRMS(2));
          stats->AddText(t);
-	  }
+      }
    }
    if (print_under) {
       sprintf(textstats,"Underflow = %s%s","%",stats->GetStatFormat());
