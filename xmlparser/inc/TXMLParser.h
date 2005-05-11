@@ -1,5 +1,5 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.1 2005/03/14 15:33:43 rdm Exp $
-// Author: Jose Lo   12/1/2005
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.2 2005/03/14 20:02:41 rdm Exp $
+// Author: Jose Lo   12/4/2005
 
 /*************************************************************************
  * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
@@ -23,8 +23,8 @@
 // The libxml library provides two interfaces to the parser, a DOM      //
 // style tree interface and a SAX style event based interface.          //
 //                                                                      //
-// TXMLParser is parent class of TSAXParser, which is a SAX interface   //
-// of libxml.                                                           //
+// TXMLParser is the parent class of TSAXParser, which is               //
+// a SAX interface of libxml  and TDOMParser, a DOM interface of libxml.//
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -72,30 +72,16 @@ public:
 
    Int_t               GetParseCode() const { return fParseCode; }
 
+   const char         *GetParseCodeMessage(Int_t parseCode) const;
+
    void                SetStopOnError(Bool_t stop = kTRUE);
    Bool_t              GetStopOnError() const { return fStopError; }
 
    const char         *GetValidateError() const { return fValidateError; }
    const char         *GetValidateWarning() const { return fValidateWarning; }
 
-   ClassDef(TXMLParser,0);
+   ClassDef(TXMLParser,0);  // XML SAX parser
 };
-
-
-class TXMLAttr : public TObject {
-private:
-   const char *fKey;     // XML attribute key
-   const char *fValue;   // XML attribute value
-
-public:
-   TXMLAttr(const char *key, const char *value) : fKey(key), fValue(value) { }
-   const char  *GetName() const { return fKey; }
-   const char  *Key() const { return fKey; }
-   const char  *Value() const { return fValue; }
-
-   ClassDef(TXMLAttr,0)  //XML attribute pair
-};
-
 
 #endif
 

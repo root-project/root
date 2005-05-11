@@ -9,13 +9,14 @@
 // To run this program do:                                                    //
 // .x SAXHandler.C                                                            //
 //                                                                            //
+// Requires: saxexample.xml                                                   //
+//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-
-#include "Riostream.h"
-#include "TList.h"
-#include "TObjString.h"
-#include "TSAXParser.h"
+#include <Riostream.h>
+#include <TList.h>
+#include <TSAXParser.h>
+#include <TXMLAttr.h>
 
 
 class SaxHandler {
@@ -47,7 +48,7 @@ void SaxHandler::OnStartElement(const char *name, const TList *attributes)
 
    TIter next(attributes);
    while ((attr = (TXMLAttr*) next())) {
-      cout << " " << attr->Key() << "=\"" << attr->Value() << "\"";
+      cout << " " << attr->GetName() << "=\"" << attr->GetValue() << "\"";
    }
 
    cout  << ">";

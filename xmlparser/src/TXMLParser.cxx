@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:$:$Id:$
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.cxx,v 1.1 2005/03/14 15:33:43 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 // of libxml.                                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 
 /*************************************************************************
   This source is based on libxml++, a C++ wrapper for the libxml XML
@@ -96,6 +95,32 @@ void TXMLParser::OnValidateWarning(const TString& message)
    // Message is the parse error.
 
    fValidateWarning += message;
+}
+
+//______________________________________________________________________________
+const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
+{
+   // Returns the parse code message.
+
+   switch (parseCode) {
+      case -1:
+         return "Attempt to parse a second file while a parse is in progress";
+         break;
+      case -2:
+         return "Parse context is not created";
+         break;
+      case -3:
+         return "An error occured while parsing file";
+         break;
+      case -4:
+         return "A fatal error occured while parsing file";
+         break;
+      case -5:
+         return "Document is not well-formed";
+         break;
+      default:
+         return "Parse code not exists";
+   }
 }
 
 //______________________________________________________________________________

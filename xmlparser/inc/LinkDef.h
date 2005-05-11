@@ -6,6 +6,9 @@
 
 #pragma link C++ class TXMLParser;
 #pragma link C++ class TSAXParser;
+#pragma link C++ class TDOMParser;
 #pragma link C++ class TXMLAttr;
+#pragma link C++ class TXMLDocument;
+#pragma link C++ class TXMLNode;
 
 #endif
