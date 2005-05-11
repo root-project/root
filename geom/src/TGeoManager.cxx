@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.111 2005/04/22 07:32:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.112 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1253,7 +1253,6 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
 //  UPAR   Vector containing shape parameters
    Int_t i;
    TGeoVolume *volume = 0;
-   TIter next(fMedia);
    TGeoMedium *medium = GetMedium(nmed);
    if (!medium) {
       Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
@@ -1342,7 +1341,6 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
 //  UPAR   Vector containing shape parameters
    Int_t i;
    TGeoVolume *volume = 0;
-   TIter next(fMedia);
    TGeoMedium *medium = GetMedium(nmed);
    if (!medium) {
       Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
@@ -3048,7 +3046,11 @@ TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
    fIsSameLocation = kTRUE;
    TGeoNode *last = fCurrentNode;
    TGeoNode *found = SearchNode();
-   if (last->IsOverlapping() && found==last) fIsSameLocation = kTRUE;
+   if (found != last) {
+      fIsSameLocation = kFALSE;
+   } else {   
+      if (last->IsOverlapping()) fIsSameLocation = kTRUE;
+   }   
    return found;
 }
 
@@ -3068,7 +3070,11 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    fIsSameLocation = kTRUE;
    TGeoNode *last = fCurrentNode;
    TGeoNode *found = SearchNode();
-   if (last->IsOverlapping() && found==last) fIsSameLocation = kTRUE;
+   if (found != last) {
+      fIsSameLocation = kFALSE;
+   } else {   
+      if (last->IsOverlapping()) fIsSameLocation = kTRUE;
+   }   
    return found;
 }
 
