@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.26 2005/03/15 09:38:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.27 2005/04/28 08:30:57 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -289,7 +289,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
    if (event->fType == kButtonPress) {
       Window_t child = (Window_t)event->fUser[0];  // fUser[0] = child window
 
-      if (child == fDDButton->GetId() || (fSelEntry && child == fSelEntry->GetId())) { 
+      if (child == fDDButton->GetId() || (fSelEntry && child == fSelEntry->GetId())) {
          fDDButton->SetState(kButtonDown);
 
          if (fTextEntry && (child == fTextEntry->GetId())) {
@@ -300,7 +300,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 
          gVirtualX->TranslateCoordinates(fId, fComboFrame->GetParent()->GetId(),
                                          0, fHeight, ax, ay, wdummy);
-   
+
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
          fDDButton->SetState(kButtonUp);
 
@@ -359,7 +359,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                e = fListBox->GetSelectedEntry();
                if (fSelEntry) {
                   fSelEntry->Update(e);
-               } else if (fTextEntry && 
+               } else if (fTextEntry &&
                           e->InheritsFrom(TGTextLBEntry::Class())) {
                   TGTextLBEntry *te = (TGTextLBEntry*)e;
                   fTextEntry->SetText(te->GetText()->GetString());
@@ -459,7 +459,6 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), 0, i),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-   GetListBox()->Resize(GetListBox()->GetWidth(), 72);
    Select(1);  // to have first entry selected
 
    SetWindowName();
