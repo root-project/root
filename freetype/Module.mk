@@ -41,6 +41,15 @@ $(FREETYPELIB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),macosx)
 		$(MACOSXTARGET) $(CC) $(SOFLAGS)libfreetype.dylib -o $@ \
 		   $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/*.o
+ifeq ($(USECONFIG),TRUE)
+		@if [ -d $(LIBDIR) ]; then \
+		   inode1=`ls -id $(LIBDIR) | awk '{ print $$1 }'`; \
+		fi; \
+		inode2=`ls -id $$PWD/lib | awk '{ print $$1 }'`; \
+		if [ -d $(LIBDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
+		   cp $@ $(LIBDIR)/ ; \
+		fi
+endif
 else
 		cp $< $@
 endif
