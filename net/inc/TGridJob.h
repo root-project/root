@@ -1,38 +1,50 @@
-// @(#)root/net:$Name:  $:$Id: TGridProof.cxx,v 1.0 2003/09/05 10:00:00 peters Exp $
-// Author: Andreas Peters   05/09/2003
+// @(#)root/net:$Name:  $:$Id: TGridJob.h,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
+// Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_TGridJob
+#define ROOT_TGridJob
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGridProof                                                           //
+// TGridJob                                                             //
 //                                                                      //
-// Abstract base class defining interface to a GRID PROOF service.      //
-// Objects of this class are created by TGrid methods.                  //
+// Abstract base class defining interface to a GRID job.                //
 //                                                                      //
-// Related classes are TGrid.                                           //
+// Related classes are TGridJobStatus.                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGridProof.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
-ClassImp(TGridProof)
+class TGridJobStatus;
 
-//______________________________________________________________________________
-TGridProof::~TGridProof()
-{
-   // Clean up Grid PROOF environment.
+typedef ULong64_t GridJobID_t;
 
-   if (fProofSession) {
-      //    delete fProofSession;
-   }
 
-   if (fProof)
-      delete fProof;
-}
+class TGridJob : public TObject {
+
+protected:
+   GridJobID_t  fJobID;  // the job's ID
+
+public:
+   TGridJob(GridJobID_t jobID) : fJobID(jobID) { }
+   virtual ~TGridJob() { }
+
+   virtual GridJobID_t GetJobID() { return fJobID; }
+
+   virtual TGridJobStatus *GetJobStatus() = 0;
+
+   ClassDef(TGridJob,1)
+};
+
+#endif

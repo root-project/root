@@ -1,25 +1,36 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.cxx,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
-// Author: Fons Rademakers   23/5/2002
+// @(#)root/net:$Name:  $:$Id: TAlienCollection.h,v 1.3 2004/11/01 17:38:08 jgrosseo Exp $
+// Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_TGridCollection
+#define ROOT_TGridCollection
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGridResult                                                          //
+// TGridCollection                                                      //
 //                                                                      //
-// Abstract base class defining interface to a GRID result.             //
-// Objects of this class are created by TGrid methods.                  //
-//                                                                      //
-// Related classes are TGrid.                                           //
+// Class which manages collection files on the Grid.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGridResult.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
-ClassImp(TGridResult)
+
+class TGridCollection : public TObject {
+public:
+   TGridCollection() { }
+   virtual ~TGridCollection() { }
+
+   ClassDef(TGridCollection,0)  // ABC managing collection of files on the Grid
+};
+
+#endif

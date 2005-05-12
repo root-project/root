@@ -1,8 +1,8 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.cxx,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
-// Author: Fons Rademakers   23/5/2002
+// @(#)root/net:$Name:  $:$Id: TGridJob.cxx,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
+// Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,15 +11,14 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGridResult                                                          //
+// TGridJob                                                             //
 //                                                                      //
-// Abstract base class defining interface to a GRID result.             //
-// Objects of this class are created by TGrid methods.                  //
+// Abstract base class defining interface to a GRID job.                //
 //                                                                      //
-// Related classes are TGrid.                                           //
+// Related classes are TGridJobStatus.                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGridResult.h"
+#include "TGridJob.h"
 
-ClassImp(TGridResult)
+ClassImp(TGridJob)
