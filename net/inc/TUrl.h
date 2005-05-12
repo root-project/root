@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.5 2004/11/22 16:41:56 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.6 2005/04/08 13:42:38 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -35,15 +35,16 @@
 class TUrl : public TObject {
 
 private:
-   TString fUrl;         // full URL
-   TString fProtocol;    // protocol: http, ftp, news, root, proof, rfio, hpss
-   TString fUser;        // user name
-   TString fPasswd;      // password
-   TString fHost;        // remote host
-   TString fFile;        // remote object
-   TString fAnchor;      // anchor in object
-   TString fOptions;     // options (after ?)
-   Int_t   fPort;        // port through which to contact remote server
+   TString fUrl;            // full URL
+   TString fProtocol;       // protocol: http, ftp, news, root, proof
+   TString fUser;           // user name
+   TString fPasswd;         // password
+   TString fHost;           // remote host
+   TString fFile;           // remote object
+   TString fAnchor;         // anchor in object
+   TString fOptions;        // options (after ?)
+   mutable TString fFileAO; //!file and option
+   Int_t   fPort;           // port through which to contact remote server
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
 
@@ -63,6 +64,7 @@ public:
    const char *GetFile() const { return fFile; }
    const char *GetAnchor() const { return fAnchor; }
    const char *GetOptions() const { return fOptions; }
+   const char *GetFileAndOptions() const;
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
 

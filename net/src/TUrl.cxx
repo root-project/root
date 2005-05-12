@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.17 2004/03/02 13:03:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.18 2004/07/19 09:43:58 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -75,8 +75,15 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
       TString &s = os->String();
       int l = s.Length();
       if (!strncmp(url, s, l)) {
-         fProtocol = s(0, l-1);
-         if (!strncmp(url+5, "//", 2))
+         if (s(0) == '/' && s(l-1) == '/') {
+            // case whith file namespace like: /alien/user/file.root
+            fProtocol = s(1, l-2);
+            l--;
+         } else {
+            // case with protocol, like: rfio:machine:/data/file.root
+            fProtocol = s(0, l-1);
+         }
+         if (!strncmp(url+l, "//", 2))
             fFile = url+l+2;
          else
             fFile = url+l;
@@ -339,6 +346,21 @@ const char *TUrl::GetUrl()
    }
 
    return fUrl;
+}
+
+//______________________________________________________________________________
+const char *TUrl::GetFileAndOptions() const
+{
+   // Return the file and its options (the string specified behind the ?).
+   // Convenience function useful when the option is used to pass
+   // authetication/access information for the specified file.
+
+   fFileAO = fFile;
+   if (fOptions != "") {
+      fFileAO += "?";
+      fFileAO += fOptions;
+   }
+   return fFileAO;
 }
 
 //______________________________________________________________________________
