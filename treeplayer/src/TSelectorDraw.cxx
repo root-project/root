@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.49 2005/03/22 10:00:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.50 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -231,7 +231,7 @@ void TSelectorDraw::Begin(TTree *tree)
                ncols  = 1;
                for (j=0;j<i;j++) {
                   if (varexp[j] == ':'
-                      && ! ( (i>0&&varexp[i-1]==':') || varexp[i+1]==':' )
+                      && ! ( (j>0&&varexp[j-1]==':') || varexp[j+1]==':' )
                       ) {
                      ncols++;
                   }
