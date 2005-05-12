@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.26 2005/03/21 15:14:39 rdm Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.27 2005/03/21 16:20:56 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,8 +49,6 @@
 #pragma link C++ class TTreeRow-;
 #pragma link C++ class TDSet+;
 #pragma link C++ class TDSetElement+;
-#pragma link C++ class TDSetElementPfn+;
-#pragma link C++ class TDSetElementMsn+;
 #pragma link C++ class TVirtualBranchBrowsable+;
 #pragma link C++ class TMethodBrowsable+;
 #pragma link C++ class TNonSplitBrowsable+;
