@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.7 2004/12/16 19:23:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.8 2005/05/01 10:00:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -54,7 +54,7 @@ void (*evtFunc)();
 Bool_t TXNetFile::fgTagAlreadyPrinted = kFALSE;
 
 Short_t gXDebugLevel = 0;
-  
+
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
 		     Int_t compress, Int_t netopt) :
@@ -101,9 +101,8 @@ TXNetFile::~TXNetFile()
 
 //_____________________________________________________________________________
 void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle,
-		       Int_t compress, Int_t netopt) {
-
-
+		       Int_t compress, Int_t netopt)
+{
   short locallogid;
   Bool_t validDomain = kFALSE;
   fOpenWithRefresh = kFALSE;
@@ -219,7 +218,7 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
         fConnModule->SetUrl(fUrl);
 
         if (DebugLevel() >= kHIDEBUG)
-           Info("CreateTXNf", "Working url is [%s]", fUrl.GetUrl());
+	  Info("CreateTXNf", "Working url is [%s]", fUrl.GetUrl());
 
         // after connection deal with server
         if (!fConnModule->GetAccessToSrv()) {
@@ -235,7 +234,7 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
                     "Access to server failed (%d)",fConnModule->fOpenError);
            }
         } else {
-	   if (DebugLevel() >= kUSERDEBUG)
+           if (DebugLevel() >= kUSERDEBUG)
 	      Info("CreateTXNf", "Access to server granted.");
            break;
 	}
@@ -573,8 +572,8 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
   }
 
   // First attempt to open a remote file without the kXR_refresh option ON
-  Bool_t lowopenRes = LowOpen(fUrl.GetFile(), option, ftitle, compress,
-                              netopt, DoInit);
+  Bool_t lowopenRes = LowOpen(fUrl.GetFileAndOptions(), option, ftitle,
+                              compress, netopt, DoInit);
   if (lowopenRes) {
      // Let's remember that we succesfully opened a file without refresh
      fOpenWithRefresh = kFALSE;
@@ -592,7 +591,7 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
       (!fOpenWithRefresh)) {
      Info("Open", "Trying to re-open the file with REFRESH option...");
 
-     if (!LowOpen(fUrl.GetFile(), option, ftitle, compress,
+     if (!LowOpen(fUrl.GetFileAndOptions(), option, ftitle, compress,
                   netopt, DoInit, kTRUE)) {
 	// Even if after a "resfresh-ed open" the file has not been found
 	// goto in zombie state and return; and let's remember that we used
@@ -635,8 +634,8 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
     fConnModule->GoToAnotherServer(lbsHost, lbsPort, netopt);
 
     // now try to open with refresh...
-    Bool_t secondTry = LowOpen(fUrl.GetFile(), option, ftitle, compress,
-                               netopt, DoInit, kTRUE);
+    Bool_t secondTry = LowOpen(fUrl.GetFileAndOptions(), option, ftitle,
+                               compress, netopt, DoInit, kTRUE);
     if (!secondTry) {
        Error("Open","File not found even after open with REFRESH mode ON.");
        return kFALSE;
@@ -797,7 +796,7 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
    }
 
    if (!IsOpen()) {
-      Error("SysStat","The remote file %s is not open",fUrl.GetFile());
+      Error("SysStat","The remote file %s is not open",fUrl.GetFileAndOptions());
       *size = 0;
       return 0;
    }
@@ -815,14 +814,14 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
    statFileRequest.stat.requestid = kXR_stat;
    memset(statFileRequest.stat.reserved, 0,
           sizeof(statFileRequest.stat.reserved));
-   statFileRequest.stat.dlen = strlen(fUrl.GetFile());
+   statFileRequest.stat.dlen = strlen(fUrl.GetFileAndOptions());
 
    if (DebugLevel() >= kHIDEBUG)
       Info("SysStat", "Calling TXNetConn::SendGenCommand...");
 
    char fStats[2048];
 
-   fConnModule->SendGenCommand(&statFileRequest, (const char*)fUrl.GetFile(),
+   fConnModule->SendGenCommand(&statFileRequest, fUrl.GetFileAndOptions(),
                                0, fStats , kFALSE, (char *)"SysStat");
 
    if (DebugLevel() >= kHIDEBUG)
