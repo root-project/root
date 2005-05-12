@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.16 2005/02/02 17:45:47 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.17 2005/03/03 22:06:49 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -75,7 +75,8 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   if (canvas) Resize(GetWidth(), canvas->GetWh()+4);  // 4 canvas borders
+   if (canvas) 
+      Resize(GetWidth(), canvas->GetWindowHeight());
 
    gROOT->GetListOfCleanups()->Add(this);
 }
@@ -281,6 +282,16 @@ void TGedEditor::Show()
    if (fCanvas->GetShowEditor())
       fCanvas->ToggleEditor();
 
+   if (fGlobal) {
+      Int_t gedx = 0, gedy = fCanvas->GetWindowTopY() - 20;
+      UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
+      if (cx > GetWidth())
+         gedx = cx - GetWidth() - 20;
+      else
+         gedx = cx + fCanvas->GetWindowWidth() + 10;
+      MoveResize(gedx, gedy, GetWidth(), fCanvas->GetWindowHeight());
+      SetWMPosition(gedx, gedy);
+   }
    MapWindow();
    if (!gROOT->GetListOfCleanups()->FindObject(this))
       gROOT->GetListOfCleanups()->Add(this);
