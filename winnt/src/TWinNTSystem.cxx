@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.118 2005/04/26 09:00:46 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.119 2005/05/03 13:17:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1190,6 +1190,12 @@ void TWinNTSystem::ExitLoop()
 #ifndef GDK_WIN32
    // Release Dispatch one event
    if (fhTermInputEvent) ::SetEvent(fhTermInputEvent);
+#else
+   if(gConsoleThreadHandle) {
+      TerminateThread(gConsoleThreadHandle, 0);
+      ::CloseHandle(gConsoleThreadHandle);
+      gConsoleThreadHandle = 0;
+   }
 #endif
 }
 
