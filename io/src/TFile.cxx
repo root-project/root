@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.134 2004/09/15 17:09:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.135 2004/09/21 15:41:14 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -196,6 +196,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    if (!strncmp(fname1, "file:", 5))
       fname1 += 5;
+
+   // don't append URL options into the file name used inside the TFile
+   TString sName = fname1;
+   char *optionstart;
+
+   if ((optionstart = strrchr(fname1, '?'))) {
+      sName = sName(0, optionstart-fname1);
+      // change fname1 to the file name without options
+      fname1 = sName;
+   }
 
    gDirectory = 0;
    SetName(fname1);
