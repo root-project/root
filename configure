@@ -636,7 +636,7 @@ the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
   afs                AFS support, requires AFS libs and objects
-  alien              AliEn support, requires libAliEnAPI++ from ALICE
+  alien              AliEn support, requires libgliteUI from ALICE
   asimage            Image processing support, requires libAfterImage
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
   builtin-freetype   Built included libfreetype, or use system libfreetype
@@ -676,8 +676,8 @@ enable/disable options, prefix with either --enable- or --disable-
 with options, prefix with --with-, enables corresponding support
 
   afs                AFS support, location of AFS distribution
-  alien-incdir       AliEn support, location of AliEnAPI++.h
-  alien-libdir       AliEn support, location of libAliEnAPI++
+  alien-incdir       AliEn support, location of gliteUI.h
+  alien-libdir       AliEn support, location of libgliteUI
   cern-libdir        HBOOK converter, location of CERNLIB libraries
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
@@ -1587,19 +1587,15 @@ fi
 #
 # (See http://alien.cern.ch)
 #
-# Check for libAliEnAPI++
+# Check for libgliteUI
 #
 if test ! "x$enable_alien" = "xno" ; then
-    check_header "AliEnAPI++.h" "$alienincdir" $ALIEN $ALIEN/include \
+    check_header "gliteUI.h" "$alienincdir" $ALIEN $ALIEN/include \
 	/opt/alien/include /usr/local/alien/include /usr/include \
 	/usr/local/include
     alienincdir=$found_dir
 
-    if test ! "x$alienincdir" = "x" ; then
-       alienincdir="$alienincdir $alienincdir/soap"
-    fi
-
-    check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
+    check_library "libgliteUI" "$enable_shared" "$alienlibdir" \
 	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib /usr/lib \
         /usr/local/lib
     alienlib=$found_lib
