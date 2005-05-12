@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.74 2005/03/16 17:18:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.75 2005/04/23 10:55:07 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -843,10 +843,14 @@ again:
                      SendCloseMessage();
                      break;
                   case kFileQuit:
-                     if (fEditor) fEditor->DeleteEditors();
-                     if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
+                     if (!gApplication->ReturnFromRun()) {
+                        if (fEditor) fEditor->DeleteEditors();
+                        if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
+                           TVirtualPadEditor::Terminate();
+                        delete this;
+                     } 
+                     if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (!gApplication->ReturnFromRun()) delete this;
                      gApplication->Terminate(0);
                      break;
 
