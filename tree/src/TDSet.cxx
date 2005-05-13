@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.18 2005/05/02 10:57:32 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.19 2005/05/12 12:15:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -103,10 +103,7 @@ TDSetElement::TDSetElement(const TDSet *set, const char *file,
 TDSetElement::~TDSetElement()
 {
    // Clean up the element.
-
-//   SafeDelete(fEventList);
 }
-
 
 //______________________________________________________________________________
 const char *TDSetElement::GetObjName() const
@@ -128,7 +125,6 @@ const char *TDSetElement::GetDirectory() const
    return fDirectory;
 }
 
-
 //______________________________________________________________________________
 void TDSetElement::Print(Option_t *opt) const
 {
@@ -145,7 +141,6 @@ void TDSetElement::Print(Option_t *opt) const
            << endl;
    } else
       cout << "\tLFN: " << fFileName << endl;
-
 }
 
 //______________________________________________________________________________
@@ -252,6 +247,7 @@ Int_t TDSetElement::Compare(const TObject *obj) const
    }
    return order;
 }
+
 
 //______________________________________________________________________________
 TDSet::TDSet()
@@ -439,6 +435,8 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
          return kFALSE;
       }
    }
+
+   fElements->Add(new TDSetElement(this, file, objname, dir, first, num, msd));
 
    return kTRUE;
 }
