@@ -7,7 +7,8 @@ bool runNestedFunc() {
    cout <<feta2->Eval(2.0) << endl;
    double a = feta1->Eval(2.0);
    double b = feta2->Eval(2.0);
-   return (a==b);
+   Bool_t result = (TMath::Abs( a-b )/a) < 1e-7; 
+   return !(result);
 }
 
 
