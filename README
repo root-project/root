@@ -97,9 +97,7 @@ The organization.
    cint : CINT test
 
 ==============================================================================
-Makefile(s)
-
-
+Writing Makefile(s)
 
 The default test rule, for example for the test 'sometest', depends on
 a log file named using the testname plus the suffix .log, (eg 'sometest.log')
@@ -133,5 +131,21 @@ disabled!
 
 and it skips these tests (if not runnnig make clean).
 
+==============================================================================
+Running the test
+
+To clean the current directory and any sub-directory
+	make clean
+	
+To run the tests in the current directory and any sub-directory
+	make
+	
+To run the tests in current directory and any sub-directory in a fresh
+enviroment.  In this case the output file will be deleted before running
+the test
+	make cleantest
+	
+==============================================================================
+	
 
 

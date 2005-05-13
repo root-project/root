@@ -34,13 +34,19 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk
 
-.PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
+.PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
 
+ifeq ($(MAKECMDGOALS),cleantest)
+	TESTGOAL = cleantest
+else
+	TESTGOAL = test
+endif
+
 $(TEST_TARGETS_DIR): %.test: 
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory test; \
+	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL); \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
@@ -68,6 +74,16 @@ endif
 clean:  $(CLEAN_TARGETS_DIR)
 	$(CMDECHO) rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS)
 
+cleantest: test
+
+ifeq ($(MAKECMDGOALS),cleantest)
+  ifeq ($(VERBOSE),) 
+     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
+  else 
+     ForceRemoveFilesVerbose := $(shell echo rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) 1>&2 )
+     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
+  endif
+endif
 
 # here we guess the platform
 
