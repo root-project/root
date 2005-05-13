@@ -32,7 +32,7 @@ SOFLAGS       = -shared -fPIC
 SOEXT         = sl
 
 # System libraries:
-SYSLIBS       = -lm -ldld
+SYSLIBS       = -lm -ldld $(OSTHREADLIBDIR) $(OSTHREADLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -L/usr/lib -lm -ldld
 

@@ -32,7 +32,7 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -rdynamic
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -lncurses -ldl -rdynamic
 CRYPTLIBS     = -lcrypt

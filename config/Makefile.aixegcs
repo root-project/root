@@ -35,7 +35,7 @@ SOFLAGS       = -Xlinker -G
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -lld -lg++
+SYSLIBS       = -lm -lld -lg++ $(OSTHREADLIBDIR) $(OSTHREADLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11 -L/share/lib
 CILIBS        = -lm -L../lib -lCint -lbsd -lcurses -lld
 

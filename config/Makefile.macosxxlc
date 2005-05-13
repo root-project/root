@@ -57,7 +57,8 @@ endif
 SOEXT         = dylib
 
 # System libraries:
-SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \
+                $(OSTHREADLIB) -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 

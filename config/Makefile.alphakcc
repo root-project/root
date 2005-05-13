@@ -57,7 +57,7 @@ SOFLAGS       = --COMPDO_ln_dy '-expect_unresolved *'
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm
+SYSLIBS       = -lm $(OSTHREADLIBDIR) $(OSTHREADLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap -lbsd
 CRYPTLIBS     = -lcrypt

@@ -33,7 +33,7 @@ SOFLAGS       = -Wl,-expect_unresolved,* -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ltermcap
+SYSLIBS       = -lm -ltermcap $(OSTHREADLIBDIR) $(OSTHREADLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -ltermcap
 

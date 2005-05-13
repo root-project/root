@@ -41,7 +41,7 @@ SOFLAGS       = -b -Wl,+vnocompatwarnings
 SOEXT         = sl
 
 # System libraries:
-SYSLIBS       = -lm -ldld
+SYSLIBS       = -lm -ldld $(OSTHREADLIBDIR) $(OSTHREADLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
 CILIBS        = -lm -Wl,-E -ldld -lcurses
 
