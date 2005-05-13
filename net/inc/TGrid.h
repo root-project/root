@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.5 2004/11/03 23:32:20 apeters Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.10 2005/05/12 13:19:39 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -78,18 +78,19 @@ public:
 
    virtual TGridResult *LocateSites() { return 0; }
 
-   virtual Bool_t Query2Dataset(TDSet *dset, const char *path,
-                                const char *pattern, const char *conditions,
-                                const char *options) { return kFALSE; }
+   virtual Bool_t Query2Dataset(TDSet * /*dset*/, const char * /*path*/,
+                                const char * /*pattern*/,
+                                const char * /*conditions*/,
+                                const char * /*options*/) { return kFALSE; }
 
    //--- file management interface
    virtual Bool_t Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
                      UInt_t buffersize = 1000000);
-   virtual Bool_t SetCWD(const char *path) { return kFALSE; }
+   virtual Bool_t SetCWD(const char * /*path*/) { return kFALSE; }
    virtual const char *GetCWD() { return 0; }
 
    //--- job Submission Interface
-   virtual TGridJob *Submit(const char *jdl) { return 0; }
+   virtual TGridJob *Submit(const char * /*jdl*/) { return 0; }
    virtual TGridJDL *GetJDLGenerator() { return 0; }
 
    //--- load desired plugin and setup conection to GRID

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.1.1.1 2004/09/28 14:24:59 apeters Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.7 2005/05/12 13:19:39 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -161,21 +161,21 @@ Bool_t TGrid::Cp(const char *src, const char *dst, Bool_t progressbar,
       }
 
       readop = sfile->ReadBuffer(copybuffer, readsize);
-      read = (sfile->GetBytesRead()-b0);
-      if (read<0) {
+      read = Int_t(sfile->GetBytesRead()-b0);
+      if (read < 0) {
          Error("Cp", "cannot read from source file %s",src);
          goto Copyout;
       }
 
       Double_t w0=dfile->GetBytesWritten();
       writeop= dfile->WriteBuffer(copybuffer, read);
-      written = (dfile->GetBytesWritten()-w0);
-      if (written!=read) {
+      written = Int_t(dfile->GetBytesWritten()-w0);
+      if (written != read) {
          Error("Cp", "cannot write %d bytes to destination file %s",read,dst);
          goto Copyout;
       }
       totalread+=read;
-   } while (read == buffersize);
+   } while (read == (Int_t)buffersize);
 
    if (progressbar) {
       PrintProgress(totalread,filesize);
