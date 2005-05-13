@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.25 2003/05/01 07:42:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.26 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -52,22 +52,6 @@ class TMethod;
 class TTimer;
 
 
-//----- Global bits (can be set for any object and should not be reused).
-//----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used
-//----- in different class hierarchies (make sure there is no overlap in
-//----- any given hierarchy).
-enum EObjBits {
-   kCanDelete        = BIT(0),   // if object in a list can be deleted
-   kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
-   kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
-   kIsReferenced     = BIT(4),   // if object is referenced by a TRef or TRefArray
-   kHasUUID          = BIT(5),   // if object has a TUUID (its fUniqueID=UUIDNumber)
-   kCannotPick       = BIT(6),   // if object in a pad cannot be picked
-   kNoContextMenu    = BIT(8),   // if object does not want context menu
-   kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
-};
-
-
 class TObject {
 
 private:
@@ -82,6 +66,21 @@ protected:
    virtual void DoError(int level, const char *location, const char *fmt, va_list va) const;
 
 public:
+   //----- Global bits (can be set for any object and should not be reused).
+   //----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used
+   //----- in different class hierarchies (make sure there is no overlap in
+   //----- any given hierarchy).
+   enum EStatusBits {
+      kCanDelete        = BIT(0),   // if object in a list can be deleted
+      kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
+      kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
+      kIsReferenced     = BIT(4),   // if object is referenced by a TRef or TRefArray
+      kHasUUID          = BIT(5),   // if object has a TUUID (its fUniqueID=UUIDNumber)
+      kCannotPick       = BIT(6),   // if object in a pad cannot be picked
+      kNoContextMenu    = BIT(8),   // if object does not want context menu
+      kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
+   };
+
    //----- Private bits, clients can only test but not change them
    enum {
       kIsOnHeap      = 0x01000000,    // object is on heap
@@ -188,6 +187,20 @@ public:
    static void      SetObjectStat(Bool_t stat);
 
    ClassDef(TObject,1)  //Basic ROOT object
+};
+
+// Global bits (can be set for any object and should not be reused).
+// Only here for backward compatibility reasons.
+// For detailed description see TObject::EStatusBits above.
+enum EObjBits {
+   kCanDelete        = TObject::kCanDelete,
+   kMustCleanup      = TObject::kMustCleanup,
+   kObjInCanvas      = TObject::kObjInCanvas,
+   kIsReferenced     = TObject::kIsReferenced,
+   kHasUUID          = TObject::kHasUUID,
+   kCannotPick       = TObject::kCannotPick,
+   kNoContextMenu    = TObject::kNoContextMenu,
+   kInvalidObject    = TObject::kInvalidObject
 };
 
 #ifndef ROOT_TBuffer
