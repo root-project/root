@@ -1,5 +1,5 @@
 CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES) [a-d][0-4].root
-TEST_TARGETS += treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends
+TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
