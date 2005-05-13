@@ -16,8 +16,8 @@ void createChain(TString name, Int_t constantValue)
       TFile *f = new TFile(Form("%s%d.root",name.Data(),i),"recreate");
       TTree *T = new TTree(name,"test friend trees");
       T->Branch("x", &x, "x/F");
-      T->Branch("y", &y, "x/F");
-      T->Branch("z", &z, "x/F");
+      T->Branch("y", &y, "y/F");
+      T->Branch("z", &z, "z/F");
       for (Int_t j = 0; j < size[i]; j++) {
          x = j;
          y = size[i] - j;
