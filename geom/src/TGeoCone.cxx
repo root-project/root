@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.49 2005/04/04 15:00:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.50 2005/04/05 10:17:00 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -833,7 +833,7 @@ void TGeoCone::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rmax1 = " << fRmax1 << ";" << endl;
    out << "   rmin2 = " << fRmin2 << ";" << endl;
    out << "   rmax2 = " << fRmax2 << ";" << endl;
-   out << "   pShape = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);   
 }
          
@@ -2042,11 +2042,11 @@ void TGeoConeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   dz    = " << fDz << ";" << endl;
    out << "   rmin1 = " << fRmin1 << ";" << endl;
    out << "   rmax1 = " << fRmax1 << ";" << endl;
-   out << "   rmin2 = " << fRmin1 << ";" << endl;
+   out << "   rmin2 = " << fRmin2 << ";" << endl;
    out << "   rmax2 = " << fRmax2 << ";" << endl;
    out << "   phi1  = " << fPhi1 << ";" << endl;
    out << "   phi2  = " << fPhi2 << ";" << endl;
-   out << "   pShape = new TGeoConeSeg(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoConeSeg(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 

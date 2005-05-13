@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.44 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.45 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -994,7 +994,7 @@ void TGeoPcon::SavePrimitive(ofstream &out, Option_t * /*option*/)
       out << "      rmax  = " << fRmax[i] << ";" << endl;
       out << "   pcon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
    }
-   out << "   pShape = pcon;" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = pcon;" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
          

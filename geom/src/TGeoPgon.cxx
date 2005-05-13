@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.49 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.50 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1652,7 +1652,7 @@ void TGeoPgon::SavePrimitive(ofstream &out, Option_t * /*option*/)
       out << "      rmax  = " << fRmax[i] << ";" << endl;
       out << "   pgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
    }
-   out << "   pShape = pgon;" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = pgon;" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

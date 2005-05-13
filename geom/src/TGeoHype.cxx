@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.7 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.8 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -730,7 +730,7 @@ void TGeoHype::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rout  = " << fRmax << ";" << endl;
    out << "   stout = " << fStOut << ";" << endl;
    out << "   dz    = " << fDz << ";" << endl;
-   out << "   pShape = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 

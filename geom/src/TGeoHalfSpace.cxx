@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.6 2005/02/03 16:58:57 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.7 2005/02/28 20:52:43 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -181,7 +181,7 @@ void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   norm[0]  = " << fN[0] << ";" << endl;
    out << "   norm[1]  = " << fN[1] << ";" << endl;
    out << "   norm[2]  = " << fN[2] << ";" << endl;
-   out << "   pShape = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

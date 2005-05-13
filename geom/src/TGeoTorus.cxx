@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.23 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.24 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -724,7 +724,7 @@ void TGeoTorus::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rmax = " << fRmax << ";" << endl;
    out << "   phi1 = " << fPhi1 << ";" << endl;
    out << "   dphi = " << fDphi << ";" << endl;
-   out << "   pShape = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.29 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.30 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -616,7 +616,7 @@ void TGeoTrd1::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   dx2 = " << fDx2 << ";" << endl;
    out << "   dy  = " << fDy  << ";" << endl;
    out << "   dz  = " << fDZ  << ";" << endl;
-   out << "   pShape = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << endl;  
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << endl;  
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

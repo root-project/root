@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.28 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.29 2005/03/11 11:05:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -475,5 +475,16 @@ const TBuffer3D &TGeoShape::GetBuffer3D(Int_t /*reqSections*/, Bool_t /*localFra
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
    Warning("GetBuffer3D", "this must be implemented for shapes in a TGeoPainter hierarchy. This will be come a pure virtual fn eventually.");
    return buffer;
+}
+
+//_____________________________________________________________________________
+char *TGeoShape::GetPointerName() const
+{
+// Provide a pointer name containing uid.
+   static char name[20];
+   Int_t uid = GetUniqueID();
+   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
+   else     sprintf(name,"p%s", GetName());
+   return name;
 }
 

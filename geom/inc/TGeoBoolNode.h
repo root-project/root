@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.10 2005/04/01 13:53:17 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.11 2005/04/05 10:17:00 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -70,7 +70,9 @@ public:
    TGeoShape        *GetLeftShape() const {return fLeft;}
    TGeoShape        *GetRightShape() const {return fRight;}
    virtual void      Paint(Option_t *option);
+   void              RegisterMatrices();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
    virtual void      SetPoints(Double_t *points) const = 0;
    virtual void      SetPoints(Float_t *points)  const = 0;
    void              SetSelected(Int_t sel) {fSelected = sel;}
@@ -107,6 +109,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
@@ -146,6 +149,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
@@ -186,6 +190,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual void      SavePrimitive(ofstream &out, Option_t *option);
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;

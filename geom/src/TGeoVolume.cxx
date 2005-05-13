@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.57 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.58 2005/04/25 10:05:54 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1068,7 +1068,7 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
       out << "   Double_t xvert[50], yvert[50];" << endl;
       out << "   Double_t zsect,x0,y0,scale0;" << endl;
       out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
-      out << "   TGeoShape *pShape;" << endl << endl;
+      out << "   TGeoBoolNode *pBoolNode = 0;" << endl << endl;
       // first save materials/media
       out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << endl;
       SavePrimitive(out, "m");
@@ -1089,12 +1089,11 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
    }
    // check if we need to save shape/volume
    if (!strcmp(option, "s")) {
-      // create the shape for this volume (pShape)
+      // create the shape for this volume
       if (TestAttBit(TGeoAtt::kSavePrimitiveAtt)) return;
       fShape->SavePrimitive(out,option);
-      if (fShape->IsComposite()) fShape->SavePrimitive(out,"");
       out << "   // Volume: " << GetName() << endl;
-      out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\", pShape, "<< fMedium->GetPointerName() << ");" << endl;
+      out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << endl;
       if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << endl;
       if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << endl;
       if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << endl;

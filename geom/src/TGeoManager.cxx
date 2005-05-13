@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.112 2005/04/25 07:53:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.113 2005/05/11 11:34:24 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -434,6 +434,7 @@
 #include "TGeoTorus.h"
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoBoolNode.h"
 #include "TVirtualGeoPainter.h"
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
@@ -1436,15 +1437,27 @@ void TGeoManager::SetAllIndex()
       med->ResetBit(TGeoMedium::kMedSavePrimitive);
    }   
    index = 1;
-   TIter next2(fMatrices);
+   TIter next2(fShapes);
+   TGeoShape *shape;
+   while ((shape=(TGeoShape*)next2())) {
+      shape->SetUniqueID(index++);
+      if (shape->IsComposite()) ((TGeoCompositeShape*)shape)->GetBoolNode()->RegisterMatrices();
+   }
+      
+   TIter next3(fMatrices);
    TGeoMatrix *matrix;
-   while ((matrix=(TGeoMatrix*)next2())) {
+   while ((matrix=(TGeoMatrix*)next3())) {
+      matrix->RegisterYourself();   
+   }
+   TIter next4(fMatrices);
+   index = 1;
+   while ((matrix=(TGeoMatrix*)next4())) {
       matrix->SetUniqueID(index++);   
       matrix->ResetBit(TGeoMatrix::kGeoSavePrimitive);
    }
-   TIter next3(fVolumes);
+   TIter next5(fVolumes);
    TGeoVolume *vol;
-   while ((vol=(TGeoVolume*)next3())) vol->UnmarkSaved();
+   while ((vol=(TGeoVolume*)next5())) vol->UnmarkSaved();
 }
 
 //_____________________________________________________________________________

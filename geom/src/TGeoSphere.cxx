@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.40 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.41 2005/04/20 15:22:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -1088,7 +1088,7 @@ void TGeoSphere::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   theta2 = " << fTheta2 << ";" << endl;
    out << "   phi1   = " << fPhi1 << ";" << endl;
    out << "   phi2   = " << fPhi2 << ";" << endl;
-   out << "   pShape = new TGeoSphere(\"" << GetName() << "\",rmin,rmax,theta1, theta2,phi1,phi2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoSphere(\"" << GetName() << "\",rmin,rmax,theta1, theta2,phi1,phi2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);   
 }
 

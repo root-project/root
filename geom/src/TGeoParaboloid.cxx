@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.14 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.15 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -483,7 +483,7 @@ void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rlo = " << fRlo << ";" << endl;
    out << "   rhi = " << fRhi << ";" << endl;
    out << "   dz  = " << fDZ << ";" << endl;  
-   out << "   pShape = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

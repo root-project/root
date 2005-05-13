@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.29 2005/04/01 13:53:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.30 2005/04/05 08:54:12 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -363,22 +363,10 @@ void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   if (!strcmp(option,"s")) {
-      fNode->GetLeftShape()->SavePrimitive(out,option);
-      fNode->GetRightShape()->SavePrimitive(out,option);
-      TGeoMatrix *matleft = fNode->GetLeftMatrix();
-      TGeoMatrix *matright = fNode->GetRightMatrix();
-      matleft->SavePrimitive(out,option);
-      if (!matleft->IsIdentity()) 
-         out << "   " << matleft->GetPointerName() << "->RegisterYourself();" << endl;
-      matright->SavePrimitive(out,option);
-      if (!matright->IsIdentity()) 
-         out << "   " << matright->GetPointerName() << "->RegisterYourself();" << endl;
-      return;
-   } else {
-      out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;   
-   }
-   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\",\"" << GetTitle() << "\");" << endl;
+   if (fNode) fNode->SavePrimitive(out,option);
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;   
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCompositeShape(\"" << GetName() << "\", pBoolNode);" << endl;
+   if (strlen(GetTitle())) out << "   " << GetPointerName() << "->SetTitle(\"" << GetTitle() << "\");" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

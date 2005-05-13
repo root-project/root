@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.41 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.42 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -841,7 +841,7 @@ void TGeoArb8::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   vert[13] = " << fXY[6][1] << ";" << endl;
    out << "   vert[14] = " << fXY[7][0] << ";" << endl;
    out << "   vert[15] = " << fXY[7][1] << ";" << endl;
-   out << "   pShape = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -1347,7 +1347,7 @@ void TGeoTrap::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   bl2    = " << fBl2<< ";" << endl;
    out << "   tl2    = " << fTl2<< ";" << endl;
    out << "   alpha2 = " << fAlpha2 << ";" << endl;
-   out << "   pShape = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -1565,6 +1565,6 @@ void TGeoGtra::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   bl2    = " << fBl2<< ";" << endl;
    out << "   tl2    = " << fTl2<< ";" << endl;
    out << "   alpha2 = " << fAlpha2 << ";" << endl;
-   out << "   pShape = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }

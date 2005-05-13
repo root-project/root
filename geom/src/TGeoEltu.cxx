@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.23 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.24 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -381,7 +381,7 @@ void TGeoEltu::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   a  = " << fRmin << ";" << endl;
    out << "   b  = " << fRmax << ";" << endl;
    out << "   dz = " << fDz << ";" << endl;
-   out << "   pShape = new TGeoEltu(\"" << GetName() << "\",a,b,dz);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoEltu(\"" << GetName() << "\",a,b,dz);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

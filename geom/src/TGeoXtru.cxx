@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.23 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.24 2005/04/05 08:54:12 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -860,7 +860,7 @@ void TGeoXtru::SavePrimitive(ofstream &out, Option_t * /*option*/)
       out << "   scale0 = " << fScale[i] << ";" << endl; 
       out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << endl;
    }
-   out << "   pShape = xtru;" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = xtru;" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

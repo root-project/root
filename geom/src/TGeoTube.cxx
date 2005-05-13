@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.59 2005/03/18 08:03:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.60 2005/04/25 21:12:08 rdm Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -759,7 +759,7 @@ void TGeoTube::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rmin = " << fRmin << ";" << endl;
    out << "   rmax = " << fRmax << ";" << endl;
    out << "   dz   = " << fDz << ";" << endl;
-   out << "   pShape = new TGeoTube(\"" << GetName() << "\",rmin,rmax,dz);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTube(\"" << GetName() << "\",rmin,rmax,dz);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -1794,7 +1794,7 @@ void TGeoTubeSeg::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   dz   = " << fDz << ";" << endl;
    out << "   phi1 = " << fPhi1 << ";" << endl;
    out << "   phi2 = " << fPhi2 << ";" << endl;
-   out << "   pShape = new TGeoTubeSeg(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2);" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTubeSeg(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2);" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -2586,7 +2586,7 @@ void TGeoCtub::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   tx   = " << fNhigh[0] << ";" << endl;
    out << "   ty   = " << fNhigh[1] << ";" << endl;
    out << "   tz   = " << fNhigh[2] << ";" << endl;
-   out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

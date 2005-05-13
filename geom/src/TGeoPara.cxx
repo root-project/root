@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.24 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.25 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -554,7 +554,7 @@ void TGeoPara::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   alpha = " << fAlpha<< ";" << endl;
    out << "   theta = " << fTheta << ";" << endl;
    out << "   phi   = " << fPhi << ";" << endl;
-   out << "   pShape = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << endl;  
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << endl;  
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
