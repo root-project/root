@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.78 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.79 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -129,6 +129,7 @@ protected:
     TBranchRef    *fBranchRef;         //  Branch supporting the TRefTable (if any)
   static Int_t     fgBranchStyle;      //  Old/New branch style
   static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
+    UInt_t         fFriendLockStatus;  //! Record which method is locking the friend recursion
 
 protected:
     void             AddClone(TTree*);
@@ -144,18 +145,33 @@ protected:
        // Helper class to prevent infinite recursion in the
        // usage of TTree Friends.
        // Implemented in TTree.cxx
-       TTree  *fTree;
-       Bool_t  fPrevious;
+       TTree  *fTree;      // Pointer to the locked tree
+       UInt_t  fMethodBit; // BIT for the locked method
+       Bool_t  fPrevious;  // Previous value of the BIT.
     public:
-       TFriendLock(TTree *tree);
+       TFriendLock(TTree *tree, UInt_t methodbit);
        ~TFriendLock();
     };
+
+    enum {
+       kFindBranch        = BIT(0),
+       kFindLeaf          = BIT(1),
+       kGetAlias          = BIT(2),
+       kGetBranch         = BIT(3),
+       kGetEntry          = BIT(4),
+       kGetEntryWithIndex = BIT(5), 
+       kGetFriendAlias    = BIT(6),
+       kGetLeaf           = BIT(7),
+       kLoadTree          = BIT(8),
+       kPrint             = BIT(9),
+       kRemoveFriend      = BIT(10),
+       kSetBranchStatus   = BIT(11)
+    }; // ELockStatusBits use to update fFriendLockStatus
 
 public:
     // TTree status bits
     enum {
-       kForceRead   = BIT(11),
-       kFriendLock  = BIT(17)
+       kForceRead   = BIT(11)
     };
 
     TTree();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.106 2005/05/02 10:57:32 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.107 2005/05/06 08:57:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -769,7 +769,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
-   if (TestBit(kFriendLock)) return 0;
+   if (kLoadTree & fFriendLockStatus) return 0;
 
    if (!fNtrees) return 1;
    if (entry < 0 || (entry > 0 && entry >= fEntries)) return -2;
@@ -800,7 +800,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          //An Alternative would move this code to each of the function calling LoadTree
          //(and to overload a few more).
          TIter next(fFriends);
-         TFriendLock lock(this);
+         TFriendLock lock(this,kLoadTree);
          TFriendElement *fe;
          TFriendElement *fetree;
          Bool_t needUpdate = kFALSE;
@@ -948,7 +948,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       //An Alternative would move this code to each of the function calling LoadTree
       //(and to overload a few more).
       TIter next(fFriends);
-      TFriendLock lock(this);
+      TFriendLock lock(this,kLoadTree);
       TFriendElement *fe;
       while ((fe = (TFriendElement*)next())) {
          TTree *t = fe->GetTree();
