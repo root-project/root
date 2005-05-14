@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.15 2003/07/02 21:18:21 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.16 2004/01/23 23:30:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 
 #pragma link C++ class TAxis-;
 #pragma link C++ class TFormula-;
+#pragma link C++ class TFormulaPrimitive+;
 #pragma link C++ class TFractionFitter+;
 #pragma link C++ class TF1-;
 #pragma link C++ class TF12+;

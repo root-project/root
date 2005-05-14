@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.28 2005/03/22 19:53:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.29 2005/04/29 20:34:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -32,10 +32,34 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
+#include "TFormulaPrimitive.h"
 
 const Int_t kMAXFOUND = 200;
 const Int_t kTFOperMask = 0x7fffff;
 const UChar_t kTFOperShift = 23;
+
+
+class  TOperOffset {
+   friend class TFormula;
+public:
+   enum {
+      kVariable  = 0,
+      kParameter = 1,
+      kConstant  = 2 
+   };
+   TOperOffset();              
+protected:
+   Short_t fType0;            // type     of operand  0
+   Short_t fOffset0;          // offset   of operand  0
+   Short_t fType1;            // type     of operand  1
+   Short_t fOffset1;          // offset   of operand  1
+   Short_t fType2;            // type     of operand  2
+   Short_t fOffset2;          // offset   of operand  2
+   Short_t fType3;            // type     of operand  3
+   Short_t fOffset3;          // offset   of operand  3
+   Short_t fToJump;           // where to jump in case of optimized boolen
+   Short_t fOldAction;        // temporary variable used during optimization
+};
 
 class TFormula : public TNamed {
 
@@ -60,6 +84,15 @@ protected:
 
    TBits      fAlreadyFound;    //! cache for information
 
+   // Optimized expression
+   Int_t                fNOperOptimized; //!Number of operators after optimization
+   TString             *fExprOptimized;  //![fNOperOptimized] List of expressions
+   Int_t               *fOperOptimized;  //![fNOperOptimized] List of operators. (See documentation for changes made at version 7)
+   TOperOffset         *fOperOffset;     //![fNOperOptimized]         Offsets of operrands
+   TFormulaPrimitive **fPredefined;      //![fNPar] predefined function  
+
+   Int_t             PreCompile();   
+   void              MakePrimitive(const char *expr, Int_t pos);
    inline Int_t     *GetOper() const { return fOper; }
    inline Short_t    GetAction(Int_t code) const { return fOper[code] >> kTFOperShift; }
    inline Int_t      GetActionParam(Int_t code) const { return fOper[code] & kTFOperMask; }
@@ -68,11 +101,28 @@ protected:
       fOper[code]  = (value) << kTFOperShift; 
       fOper[code] += param;
    }
+   inline Int_t     *GetOperOptimized() const { return fOperOptimized; }
+   inline Short_t    GetActionOptimized(Int_t code) const { return fOperOptimized[code] >> kTFOperShift; }
+   inline Int_t      GetActionParamOptimized(Int_t code) const { return fOperOptimized[code] & kTFOperMask; }
+
+   inline void       SetActionOptimized(Int_t code, Int_t value, Int_t param = 0) { 
+      fOperOptimized[code]  = (value) << kTFOperShift; 
+      fOperOptimized[code] += param;
+   }
 
            void    ClearFormula(Option_t *option="");
    virtual Bool_t  IsString(Int_t oper) const;
 
-   virtual void    Convert(UInt_t fromVersion);
+   virtual void    Convert(UInt_t fromVersion); 
+   //
+   // Functions  - used for formula evaluation
+   Double_t        EvalParFast(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive0(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive1(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive2(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive3(const Double_t *x, const Double_t *params);
+   Double_t        EvalPrimitive4(const Double_t *x, const Double_t *params);
 
    // Action code for Version 6 and above.
    enum {
@@ -121,15 +171,30 @@ protected:
       kpol    = 130 , kxpol    = 130, kypol    = 131, kzpol    = 132,
 
       kParameter       = 140,
-      kConstant     = 141,
-      kBoolOptimize = 142,
+      kConstant        = 141,
+      kBoolOptimize    = 142,
       kStringConst     = 143,
-      kVariable     = 144,
-      kFunctionCall = 145,
-
+      kVariable        = 144,
+      kFunctionCall    = 145,
+      kData            = 146,
+      kUnary           = 147,
+      kBinary          = 148,
+      kThree           = 149,
       kDefinedVariable = 150,
-      kDefinedString   = 151
-
+      kDefinedString   = 151,
+      //
+      kPlusD           = 152,
+      kPlusDD          = 153,
+      kMultD           = 154,
+      kMultDD          = 155,
+      kBoolOptimizeOr  = 156,
+      kBoolOptimizeAnd = 157,
+      kBoolSet         = 158,
+      kFDM             = 159,
+      kFD0             = 160,
+      kFD1             = 161,
+      kFD2             = 162,
+      kFD3             = 163
    };
 
 public:
@@ -147,6 +212,8 @@ public:
    virtual   ~TFormula();
 
  public:
+   TFormulaPrimitive::TFuncG              fOptimal; //!pointer to optimal function
+   void              Optimize();
    virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
    virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
    virtual Int_t       Compile(const char *expression="");
@@ -156,7 +223,8 @@ public:
    virtual Double_t    DefinedValue(Int_t code);
    virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
    virtual Double_t    Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
-   virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0);
+   virtual Double_t    EvalParOld(const Double_t *x, const Double_t *params=0);
+   virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0){return ((*this).*fOptimal)(x,params);};
    virtual const TObject *GetLinearPart(Int_t i);
    virtual Int_t       GetNdim() const {return fNdim;}
    virtual Int_t       GetNpar() const {return fNpar;}

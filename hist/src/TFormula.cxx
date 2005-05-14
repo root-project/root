@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.93 2005/04/29 20:34:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.94 2005/05/01 19:10:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -134,6 +134,14 @@ TFormula::TFormula(): TNamed()
    fNstring= 0;
    fNames  = 0;
    fNval   = 0;
+   //
+   //MI change
+   fNOperOptimized = 0;
+   fExprOptimized  = 0;
+   fOperOptimized  = 0;
+   fOperOffset     = 0;
+   fPredefined     = 0;
+   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld; 
 }
 
 //______________________________________________________________________________
@@ -155,6 +163,14 @@ TFormula::TFormula(const char *name,const char *expression) :
    fNstring= 0;
    fNames  = 0;
    fNval   = 0;
+   //
+   //MI change
+   fNOperOptimized = 0;
+   fExprOptimized  = 0;
+   fOperOptimized  = 0;
+   fOperOffset     = 0;
+   fPredefined     = 0;
+   fOptimal        = (TFormulaPrimitive::TFuncG)&TFormula::EvalParOld; 
 
    if (!expression || !*expression) {
       Error("TFormula", "expression may not be 0 or have 0 length");
@@ -183,16 +199,16 @@ TFormula::TFormula(const char *name,const char *expression) :
       TString chaine = expr;
       //special case for functions for linear fitting
       if (chaine.Contains("++"))
-	  linear = kTRUE;
+         linear = kTRUE;
       // special case for normalized gaus
       if (chaine.Contains("gausn")) {
-	 gausNorm = kTRUE;
-	 chaine.ReplaceAll("gausn","gaus");
+         gausNorm = kTRUE;
+         chaine.ReplaceAll("gausn","gaus");
       }
       // special case for normalized landau
       if (chaine.Contains("landaun")) {
-	 landauNorm = kTRUE;
-	 chaine.ReplaceAll("landaun","landau");
+         landauNorm = kTRUE;
+         chaine.ReplaceAll("landaun","landau");
       }
       SetTitle(chaine.Data());
    }
@@ -386,7 +402,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
       } else {
 
-
          // Analyze the arguments
          TIter next(&argArr);
          TObjString *objstr;
@@ -404,8 +419,49 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    delete method;
+   //
+   // MI change - extended space of functions
+   // not forward compatible change
+   //
+   TString cbase(chaine);
+   if (cbase.First("(")>0){
+      cbase[cbase.First("(")]=0;
+   }   
 
-   return false;
+   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase);   
+   if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {   
+      // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
+      // Analyze the arguments
+      TIter next(&argArr);
+      TObjString *objstr;
+      while ( (objstr=(TObjString*)next()) ) {
+         Analyze(objstr->String(),err,offset);
+      }
+      if (nargs!=prim->fNArguments) {
+         Error("Compile",	"%s requires %d arguments",
+            prim->GetName(), prim->fNArguments);
+         return kFALSE;
+      }
+      fExpr[fNoper] = prim->GetName();     
+      if (prim->fType==10){
+         SetAction(fNoper, kFD1);
+      }
+      if (prim->fType==110){
+         SetAction(fNoper, kFD2);
+      }
+      if (prim->fType==1110){
+         SetAction(fNoper, kFD3);
+      }
+      if (prim->fType==-1){
+         SetAction(fNoper, kFDM);
+         if (fNpar<prim->fNParameters) fNpar+=prim->fNParameters;
+      }
+
+      fNoper++;
+      return kTRUE;
+   }
+
+   return kFALSE;
 }
 
 
@@ -1911,7 +1967,12 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fNames)  { delete [] fNames;  fNames  = 0;}
    fFunctions.Delete();
    fLinearParts.Delete();
-
+   //
+   //MI change
+   if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
+   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = 0;}
+   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = 0;}
+   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = 0;}
    // should we also remove the object from the list?
    // gROOT->GetListOfFunctions()->Remove(this);
    // if we don't, what happens if it fails the new compilation?
@@ -1962,7 +2023,7 @@ Int_t TFormula::Compile(const char *expression)
 
 //if the function is linear, process it and fill the array of linear parts
   if (TestBit(kLinear)){
-	ProcessLinear(chaine);  
+     ProcessLinear(chaine);  
   }
 
 
@@ -1976,8 +2037,8 @@ Int_t TFormula::Compile(const char *expression)
   fNames  = new TString[MAXPAR];
   fOper   = new Int_t[MAXOP];
   for (i=0; i<MAXPAR; i++) {
-      fParams[i] = 0;
-      fNames[i] = "";
+     fParams[i] = 0;
+     fNames[i] = "";
   }
   for (i=0; i<MAXOP; i++) {
       fExpr[i] = "";
@@ -2118,7 +2179,13 @@ Int_t TFormula::Compile(const char *expression)
   }
 
   if (err) { fNdim = 0; return 1; }
-//   Convert(5);
+  //   Convert(5);
+  //
+  //MI change
+  if (!IsA()->GetBaseClass("TTreeFormula")) {
+     Optimize();
+  }
+  //
   return 0;
 }
 
@@ -2170,12 +2237,28 @@ void TFormula::Copy(TObject &obj) const
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fParams[i] = fParams[i];
    for (i=0;i<fNpar;i++)   ((TFormula&)obj).fNames[i]  = fNames[i];
 
-
    TIter next(&fFunctions);
    TObject *fobj;
    while ( (fobj = next()) ) {
       ((TFormula&)obj).fFunctions.Add( fobj->Clone() );
    }
+   //
+   // MI change
+   //
+   //
+   ((TFormula&)obj).fExprOptimized   = new TString[fNoper];
+   ((TFormula&)obj).fOperOptimized   = new Int_t[fNoper];
+   ((TFormula&)obj).fPredefined      = new TFormulaPrimitive*[fNoper];
+   ((TFormula&)obj).fOperOffset      = new TOperOffset[fNoper];
+   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExprOptimized[i]   = fExprOptimized[i];
+   for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOperOptimized[i]   = fOperOptimized[i];
+   ((TFormula&)obj).fNOperOptimized = fNOperOptimized;
+   ((TFormula&)obj).fPredefined   = new TFormulaPrimitive*[fNoper];
+   ((TFormula&)obj).fOperOffset  = new TOperOffset[fNoper];
+   for (i=0;i<fNoper;i++) {((TFormula&)obj).fPredefined[i] = fPredefined[i];}
+   for (i=0;i<fNoper;i++) {((TFormula&)obj).fOperOffset[i] = fOperOffset[i];}
+   ((TFormula&)obj).fOptimal = fOptimal;
+
 }
 
 //______________________________________________________________________________
@@ -2281,6 +2364,27 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
      if (fNdim < 4) fNdim = 4;
      return 3;
   }
+  // MI change
+  // extended defined variable (MI)
+  //
+  if (chaine.Data()[0]=='x'){
+     if (chaine.Data()[1]=='[' && chaine.Data()[3]==']'){
+        const char ch0 = '0';
+        Int_t dim = chaine.Data()[2]-ch0;
+        if (dim<0) return -1;
+        if (dim>9) return -1;
+        if (fNdim<=dim) fNdim = dim+1;
+        return dim;
+     }
+     if (chaine.Data()[1]=='[' && chaine.Data()[4]==']'){
+        const char ch0 = '0';
+        Int_t dim = (chaine.Data()[2]-ch0)*10+(chaine.Data()[3]-ch0);
+        if (dim<0) return -1;
+        if (dim>99) return -1;
+        if (fNdim<=dim) fNdim = dim+1;
+        return dim;
+     }
+  }
   return -1;
 }
 
@@ -2305,7 +2409,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 }
 
 //______________________________________________________________________________
-Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
+Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *params)
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -2807,6 +2911,17 @@ void TFormula::Print(Option_t *) const
       Printf(" fExpr[%d] = %s  action = %d action param = %d ",
              i,(const char*)fExpr[i],GetAction(i),GetActionParam(i));
    }
+   //MI change
+   //
+   if (fNOperOptimized>0){
+      Printf("Optimized expresion");
+      for (i=0;i<fNOperOptimized;i++) {
+         Printf(" fExpr[%d] = %s\t\t  action = %d action param = %d ",
+            i,(const char*)fExprOptimized[i],GetActionOptimized(i),GetActionParamOptimized(i));
+      }
+   }
+   //
+   //
    if (!fNames) return;
    if (!fParams) return;
    for (i=0;i<fNpar;i++) {
@@ -2819,7 +2934,6 @@ void TFormula::ProcessLinear(TString &formula)
 {   
    //if the formula is for linear fitting, change the title to
    //normal and fill the LinearParts array
-
 
    TString formula2(formula);
    char repl[20];
@@ -3013,6 +3127,7 @@ void TFormula::Streamer(TBuffer &b)
          } else if (v<6) {
             Convert(v);
          }
+	 Optimize();
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3193,5 +3308,788 @@ void TFormula::Convert(UInt_t /* fromVersion */)
    if (i!=j) {
       fNoper -= (i-j);
    }
+
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+//______________________________________________________________________________
+TOperOffset::TOperOffset()
+{
+   //  TOper offset  - helper class for TFormula*
+   //                     specify type of operand
+   //                     fTypeX   = kVariable    
+   //                              = kParameter   
+   //                              = kConstant
+   //                     fOffestX = offset in corresponding array 
+   //*-*                  ============================
+   fType0=0;
+   fType1=0;
+   fType2=0;
+   fType3=0;
+   fOffset0=0;
+   fOffset1=0;
+   fOffset2=0;
+   fOffset3=0;
+}
+
+//______________________________________________________________________________
+void  TFormula::MakePrimitive(const char *expr, Int_t pos)
+{
+   //
+   //  MakePrimitive
+   //  find TFormulaPrimitive replacement for some operands
+   //  
+   //
+   TString cbase(expr);
+   cbase.ReplaceAll("Double_t ","");
+   if (cbase.First("(")>0){
+      cbase[cbase.First("(")]=0;
+   }
+
+   if (cbase=="<") cbase="XlY";
+   if (cbase=="<=") cbase="XleY";
+   if (cbase==">") cbase="XgY";
+   if (cbase==">=") cbase="XgeY";
+   if (cbase=="==") cbase="XeY";
+   if (cbase=="!=") cbase="XneY";
+
+   TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase);
+   if (prim) {
+      fPredefined[pos] = prim;
+      if (prim->fType==10) {
+         SetActionOptimized(pos, kFD1);
+      }
+      if (prim->fType==110) {
+         SetActionOptimized(pos, kFD2);
+      }
+      if (prim->fType==1110) {
+         SetActionOptimized(pos, kFD3);
+      }
+      if (prim->fType==-1) {
+         SetActionOptimized(pos, kFDM);
+      }    
+      if (prim->fType==0){
+         SetActionOptimized(pos,kConstant);
+         fConst[fNconst] = prim->Eval(0);
+         fNconst++;
+      }
+      return;
+   }
+}
+
+//______________________________________________________________________________
+void TFormula::Optimize()
+{
+   //
+   // MI include 
+   //
+   // Optimize formula
+   // 1.) Minimize the number of operands
+   //     a.)  several operanands are glued togther
+   //     b.)  some primitive functions glued together - exemp. (x+y) => PlusXY(x,y)
+   //     c.)  maximize number of standard calls minimizing number of jumps in Eval cases 
+   //     d.)  variables, parameters and constants are mapped - using fOperOfssets0
+   //          Eval procedure use direct acces to data (only one corresponding case statement in eval procedure)
+   //          
+   //          pdata[operand={Var,Par,Const}][offset]
+   //          pdata[fOperOffsets0[i]][fOperOffset1[i+1]] 
+   // 2.) The fastest evaluation function is choosen at the end 
+   //     a.) fOptimal := pointer to the fastest function for given evaluation string
+   //             switch(GetActionOptimized(0)){
+   //               case kData : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
+   //               case kUnary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive1; break;}
+   //               case kBinary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive2; break;}
+   //               case kThree : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive3; break;}
+   //               case kFDM : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive4; break;}
+   //             }
+   //     b.) ex. fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
+   //                      = ::EvalParameter1 - if only one unary operation
+   //                      = ::EvalPrimitive2 - if only one binary operation 
+   //                        .......
+
+   //
+   // Initialize data members
+   //
+   if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
+   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = 0;}
+   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = 0;}
+   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = 0;}
+
+   fExprOptimized   = new TString[fNoper];
+   fOperOptimized   = new Int_t[fNoper];
+   fPredefined      = new TFormulaPrimitive*[fNoper];
+   fOperOffset      = new TOperOffset[fNoper];
+   for (Int_t i=0; i<fNoper; i++) {
+      fExprOptimized[i]   = fExpr[i] ;
+      fOperOptimized[i]   = fOper[i];
+      fPredefined[i]= 0;
+   }
+
+   //
+   //Make primitives
+   //
+   for (Int_t i=0;i<fNoper;i++){   
+      if (fExprOptimized[i].Data()) {
+         //printf("%s\n",fExprOptimized[i].Data());
+         MakePrimitive(fExprOptimized[i].Data(), i);
+      }
+   }  
+   //
+   Int_t *offset    = new Int_t[kMAXFOUND*16];
+   Int_t *optimized = new Int_t[kMAXFOUND];
+   //
+   //
+   TFormulaPrimitive*  primitive[10];
+   primitive[0] =  TFormulaPrimitive::FindFormula("PlusXY");
+   primitive[1] =  TFormulaPrimitive::FindFormula("MinusXY");
+   primitive[2] =  TFormulaPrimitive::FindFormula("MultXY");
+   primitive[3] =  TFormulaPrimitive::FindFormula("DivXY");
+   primitive[4] =  TFormulaPrimitive::FindFormula("XpYpZ");
+   primitive[5] =  TFormulaPrimitive::FindFormula("XxYxZ");
+   primitive[6] =  TFormulaPrimitive::FindFormula("XxYpZ");
+   primitive[7] =  TFormulaPrimitive::FindFormula("XpYxZ");
+   primitive[8] =  TFormulaPrimitive::FindFormula("Pow2");
+   primitive[9] =  TFormulaPrimitive::FindFormula("Pow3");
+   //
+   // set data pointers
+   //
+   for (Int_t i=0;i<fNoper;i++) optimized[i]=0;    
+   //
+   for (Int_t i=0;i<fNoper;i++){        
+      Int_t actionparam = GetActionParamOptimized(i);
+      Int_t action = GetActionOptimized(i);
+
+      if (action==kBoolOptimize){
+         //      
+         // optimize boolens
+         //
+         fOperOffset[i].fType1     = actionparam/10;           //  operands to skip
+         fOperOffset[i].fOffset0   = actionparam%10;           //  1 is && , 2 is ||   - operand
+         fOperOffset[i].fToJump    = i+fOperOffset[i].fType1;  //  where we should  jump
+         continue;
+      }
+      //
+      if (action==kConstant&&i<fNoper-2){
+         //
+         // get offsets for kFDM operands 
+         //
+         if (GetActionOptimized(i+1)==kConstant && GetActionOptimized(i+2)==kFDM){
+            optimized[i]=1;
+            optimized[i+1]=1;
+            i+=2;
+            fOperOffset[i].fType0=actionparam;
+            fOperOffset[i].fOffset0=GetActionParamOptimized(i-1);
+            Int_t offset =  int(fConst[fOperOffset[i].fOffset0]+0.4);
+            fOperOffset[i].fOffset0=offset;
+            Int_t nparmax = offset+fPredefined[i]->fNParameters;  
+            if (nparmax>fNpar){ // increase expected number of parameters
+               fNpar=nparmax;
+            }
+            continue;
+         }
+      }
+      switch(action){
+    case kVariable : {action=kData; fOperOffset[i].fType0=0; break;}
+    case kParameter: {action=kData; fOperOffset[i].fType0=1; break;}
+    case kConstant : {action=kData; fOperOffset[i].fType0=2; break;}      	
+      }    
+      //
+      fOperOffset[i].fOffset0 = GetActionParamOptimized(i);
+      SetActionOptimized(i,action, actionparam);    //set common data option 
+   }
+   //
+   //
+   fNOperOptimized = fNoper;
+   //
+   for (Int_t i=0; i<fNoper; ++i)
+   {
+      //
+      if (!(GetActionOptimized(i)== kData)) continue;
+      offset[0] = fOperOffset[i].fType0;       //      	    
+      offset[1] = fOperOptimized[i] & kTFOperMask;   // offset
+
+      if ((i+1) >= fNoper) continue;
+
+      if (GetActionOptimized(i+1)==kFD1){
+         optimized[i] = 1; // to be optimized
+         i++;
+         fOperOffset[i].fType0   = offset[0];
+         fOperOffset[i].fOffset0 = offset[1];      
+         SetActionOptimized(i  ,kUnary);
+         continue;
+      }
+      if (GetActionOptimized(i+1)==kAdd){
+         optimized[i] = 1; // to be optimized
+         i++;
+         fOperOffset[i].fType0   = offset[0];
+         fOperOffset[i].fOffset0 = offset[1];      
+         SetActionOptimized(i  ,kPlusD);
+         continue;
+      }
+      if (GetActionOptimized(i+1)==kMultiply){
+         optimized[i] = 1; // to be optimized
+         i++;
+         fOperOffset[i].fType0   = offset[0];
+         fOperOffset[i].fOffset0 = offset[1];      
+         SetActionOptimized(i,kMultD);
+         continue;
+      }
+
+      if ((i+2) >= fNoper) continue;
+
+      //
+      //Binary operators
+      if (!(GetActionOptimized(i+1)== kData))  continue;
+      offset[2] = fOperOffset[i+1].fType0;
+      offset[3] = fOperOptimized[i+1] & kTFOperMask;   // offset
+      //  
+      if (GetActionOptimized(i+2)==kFD2 || GetActionOptimized(i+2)==kAdd ||GetActionOptimized(i+2)==kSubstract||
+          GetActionOptimized(i+2)==kMultiply || GetActionOptimized(i+2)==kDivide){
+ 
+          optimized[i] = 1; // to be optimized
+          optimized[i+1] = 1; // to be optimized
+          i+=2;
+          //
+          fOperOffset[i].fType0   = offset[0];
+          fOperOffset[i].fOffset0 = offset[1];
+          fOperOffset[i].fType1   = offset[2];
+          fOperOffset[i].fOffset1 = offset[3];      
+          fOperOffset[i].fType2   = GetActionOptimized(i);  //remember old action
+          if (GetActionOptimized(i)==kAdd)       {fPredefined[i] = primitive[0];}
+          if (GetActionOptimized(i)==kSubstract) {fPredefined[i] = primitive[1];}
+          if (GetActionOptimized(i)==kMultiply) {
+             fPredefined[i]=primitive[2];
+             if (offset[0]==offset[2]&&offset[1]==offset[3]) {
+                fPredefined[i] = primitive[8];
+                SetActionOptimized(i,kUnary);
+                continue;
+             }
+          }
+          if (GetActionOptimized(i)==kDivide) {
+             fPredefined[i] = primitive[3];
+          }
+          SetActionOptimized(i,kBinary);
+          continue;
+       }
+
+       if ((i+3) >= fNoper) continue;
+
+       //
+       //operator 3
+       //
+       if (!(GetActionOptimized(i+2)== kData))  continue;
+       offset[4] = fOperOffset[i+2].fType0;
+       offset[5] = fOperOptimized[i+2] & kTFOperMask;   // offset
+       //  
+       if (GetActionOptimized(i+3)==kFD3|| (  (GetActionOptimized(i+3)==kAdd||GetActionOptimized(i+3)==kMultiply) && 
+           (GetActionOptimized(i+4)==kAdd||GetActionOptimized(i+4)==kMultiply) ) ){
+          optimized[i+0]   = 1; // to be optimized
+          optimized[i+1] = 1; // to be optimized
+          optimized[i+2] = 1; // to be optimized
+          i+=3;
+          //
+          fOperOffset[i].fType0   = offset[0];
+          fOperOffset[i].fOffset0 = offset[1];
+          fOperOffset[i].fType1   = offset[2];
+          fOperOffset[i].fOffset1 = offset[3]; 
+          fOperOffset[i].fType2   = offset[4];
+          fOperOffset[i].fOffset2 = offset[5]; 
+          //     
+          fOperOffset[i].fOldAction = GetActionOptimized(i);  //remember old action
+          if (GetActionOptimized(i)==kFD3) {
+             SetActionOptimized(i,kThree);
+             continue;
+          }
+          Int_t action=0;
+          Int_t action2=kThree;
+          if (GetActionOptimized(i)==kAdd&&GetActionOptimized(i+1)==kAdd)      action=4;
+          if (GetActionOptimized(i)==kMultiply&&GetActionOptimized(i+1)==kMultiply) {
+             action=5;
+             if (offset[0]==offset[2]&&offset[1]==offset[3]&&offset[0]==offset[4]&&offset[1]==offset[5]){
+                fPredefined[i]=primitive[9];	 
+                action2=kUnary;
+                action =9;
+             }
+          }
+          if (GetActionOptimized(i)==kAdd&&GetActionOptimized(i+1)==kMultiply) action=6;
+          if (GetActionOptimized(i)==kMultiply&&GetActionOptimized(i+1)==kAdd) action=7;
+          //
+          optimized[i]=1;
+          i++; 
+          fOperOffset[i].fType0   = offset[0];
+          fOperOffset[i].fOffset0 = offset[1];
+          fOperOffset[i].fType1 = offset[2];
+          fOperOffset[i].fOffset1 = offset[3]; 
+          fOperOffset[i].fType2 = offset[4];
+          fOperOffset[i].fOffset2 = offset[5];       
+          fPredefined[i]=primitive[action];
+          SetActionOptimized(i,action2);
+          continue;
+       }
+   }   
+   //
+   // 
+   Int_t operO=0;
+   TString expr="";
+   Int_t map0[kMAXFOUND];      //remapping of the operands
+   Int_t map1[kMAXFOUND];      //remapping of the operands
+   for (Int_t i=0;i<fNoper;i++){
+      map0[i]     =  operO;
+      map1[operO] =  i;
+      fOperOptimized[operO] = fOperOptimized[i];
+      fPredefined[operO]    = fPredefined[i];    
+      fOperOffset[operO]    = fOperOffset[i];
+      expr += fExprOptimized[i];
+      if (optimized[i]==0){
+         fExprOptimized[operO] = expr;
+         expr = "";
+         operO++;
+      }else{
+         expr += ",";
+      }
+   }
+   //
+   // Recalculate long jump for  Boolen optimize
+   //  
+   for (Int_t i=0; i<fNOperOptimized; i++){
+      if (GetActionOptimized(i)==kBoolOptimize){
+         Int_t oldpos = fOperOffset[i].fToJump;
+         Int_t newpos = map0[oldpos];
+         fOperOffset[i].fToJump = newpos;   // new position to jump
+         Int_t actionparam = GetActionParamOptimized(i);
+         if (actionparam%10==1)  SetActionOptimized(i,kBoolOptimizeAnd);  // set optimal action
+         if (actionparam%10==2)  SetActionOptimized(i,kBoolOptimizeOr);
+      }
+   }
+
+
+   fNOperOptimized = operO;
+   //  
+   fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalParFast;  
+   if (fNOperOptimized==1) {
+      switch(GetActionOptimized(0)){
+         case kData   : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}
+         case kUnary  : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive1; break;}
+         case kBinary : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive2; break;}
+         case kThree  : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive3; break;}
+         case kFDM    : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive4; break;}
+      }
+   }
+
+   delete [] offset;
+   delete [] optimized;
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   Double_t result = pdata[fOperOffset->fType0][fOperOffset->fOffset0];
+   switch((fOperOptimized[0] >> kTFOperShift)) {
+     case kData          : return result;
+     case kUnary         : return (fPredefined[0]->fFunc10)(pdata[fOperOffset->fType0][fOperOffset->fOffset0]);
+     case kBinary         :return (fPredefined[0]->fFunc110)(result, 
+                              pdata[fOperOffset->fType1][fOperOffset->fOffset1]);   
+
+     case kThree         :return (fPredefined[0]->fFunc1110)(result, pdata[fOperOffset->fType1][fOperOffset->fOffset1],
+                             pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
+     case kFDM         : return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
+                            (Double_t*)&params[fOperOffset->fOffset0]);
+   }  
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive0(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   return  pdata[fOperOffset->fType0][fOperOffset->fOffset0];
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive1(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   return (fPredefined[0]->fFunc10)(pdata[fOperOffset->fType0][fOperOffset->fOffset0]);
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive2(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   return (fPredefined[0]->fFunc110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0],
+      pdata[fOperOffset->fType1][fOperOffset->fOffset1]);
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive3(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};  
+   return (fPredefined[0]->fFunc1110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0], pdata[fOperOffset->fType1][fOperOffset->fOffset1],
+      pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
+}
+
+//______________________________________________________________________________
+Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
+{
+   //
+   //Evaluate primitive formula
+   //
+   const Double_t *par = (params!=0)?params:fParams;
+   return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
+      (Double_t*)&par[fOperOffset->fOffset0]); 
+}
+
+
+//______________________________________________________________________________
+Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *params)
+{
+   //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                  =====================
+   //*-*
+   //*-*   The current value of variables x,y,z,t is passed through the pointer x.
+   //*-*   The parameters used will be the ones in the array params if params is given
+   //*-*    otherwise parameters will be taken from the stored data members fParams
+   //Begin_Html
+   /*
+   <img src="gif/eval.gif">
+   */
+   //End_Html
+   //*-*
+   //*-*
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};  
+   //
+   Int_t i,j,pos,pos2; // ,inter,inter2,int1,int2;
+   //    Float_t aresult;
+   Double_t tab[kMAXFOUND];
+   char *tab2[kMAXSTRINGFOUND];
+   Double_t param_calc[kMAXFOUND];
+   //    Double_t dexp,intermede,intermede1,intermede2;
+   char *string_calc[kMAXSTRINGFOUND];
+   Int_t precalculated = 0;
+   Int_t precalculated_str = 0;
+
+   if (params) {
+      for (j=0;j<fNpar;j++) fParams[j] = params[j];
+   }
+   pos  = 0;
+   pos2 = 0;
+   //   for (i=0; i<fNoper; ++i) {
+   for (i=0; i<fNOperOptimized; ++i) {
+      //
+      const int oper = fOperOptimized[i];
+
+      switch((oper >> kTFOperShift)) {  // FREQUENTLY USED OPERATION
+         case kData       : tab[pos] = pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; pos++;continue;
+         case kPlusD      : tab[pos-1]+= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;
+         case kMultD      : tab[pos-1]*= pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]; continue;       
+         case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
+         case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
+         case kMultiply   : pos--; tab[pos-1] *= tab[pos]; continue;
+         case kDivide     : pos--; if (tab[pos] == 0) tab[pos-1] = 0; //  division by 0
+                            else               tab[pos-1] /= tab[pos];
+                            continue;
+         case kUnary      : tab[pos] = (fPredefined[i]->fFunc10)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0]); pos++;continue;
+         case kBinary     : tab[pos] = (fPredefined[i]->fFunc110)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0], 
+                               pdata[fOperOffset[i].fType1][fOperOffset[i].fOffset1]);pos++;continue;
+
+         case kThree      : tab[pos]   = (fPredefined[i]->fFunc1110)(pdata[fOperOffset[i].fType0][fOperOffset[i].fOffset0],
+                               pdata[fOperOffset[i].fType1][fOperOffset[i].fOffset1],
+                               pdata[fOperOffset[i].fType2][fOperOffset[i].fOffset2]); pos++; continue;
+
+         case kFDM         : tab[pos] = (fPredefined[i]->fFuncG)(&x[fOperOffset[i].fType0],&params[fOperOffset[i].fOffset0]); pos++;continue;
+         case kFD1       : tab[pos-1]   =(fPredefined[i]->fFunc10)(tab[pos-1]); continue;
+         case kFD2       :    pos--; tab[pos-1]   = (fPredefined[i]->fFunc110)(tab[pos-1],tab[pos]); continue;
+         case kFD3       :    pos-=2; tab[pos-1]   = (fPredefined[i]->fFunc1110)(tab[pos-2],tab[pos-1],tab[pos]); continue;
+      }       
+      //
+      switch((oper >> kTFOperShift)) {
+         case kBoolOptimizeAnd:{
+            if (!tab[pos-1]) i=fOperOffset[i].fToJump; continue;
+                               }
+         case kBoolOptimizeOr:{
+            if (tab[pos-1])  i=fOperOffset[i].fToJump; continue;
+                              }     
+         case kAnd  : pos--; tab[pos-1] = tab[pos];  continue;  // use the fact that other were check before - see bool optimize
+         case kOr   : pos--; tab[pos-1] = tab[pos];  continue;
+      }
+      switch((oper >> kTFOperShift)) { 
+         //    case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
+         case kabs  : if (tab[pos-1]<0) tab[pos-1]=-tab[pos-1]; continue;
+         case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
+         case kint  : tab[pos-1] = Double_t(Int_t(tab[pos-1])); continue;
+         case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
+
+         case kModulo     : {pos--; 
+            Long64_t int1((Long64_t)tab[pos-1]); 
+            Long64_t int2((Long64_t)tab[pos]); 
+            tab[pos-1] = Double_t(int1%int2); 
+            continue;}
+
+
+         case kStringConst: { pos2++;tab2[pos2-1] = (char*)fExprOptimized[i].Data(); pos++; tab[pos-1] = 0; continue; }
+         case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
+
+         case kstrstr : pos2 -= 2; pos-=2; pos++;
+            if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+            else tab[pos-1]=0; continue;
+         case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
+
+
+         case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
+
+         case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
+
+
+         case kEqual: pos--; if (tab[pos-1] == tab[pos]) tab[pos-1]=1;
+                      else tab[pos-1]=0; continue;
+         case kNotEqual : pos--; if (tab[pos-1] != tab[pos]) tab[pos-1]=1;
+                          else tab[pos-1]=0; continue;
+         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
+
+         case kStringEqual : pos2 -= 2; pos -=2 ; pos++;
+            if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+            else tab[pos-1]=0; continue;
+         case kStringNotEqual: pos2 -= 2; pos -= 2; pos++;
+            if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+            else tab[pos-1]=0; continue;
+
+         case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
+         case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
+         case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
+         case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+
+         case kBoolOptimize: {
+            // boolean operation optimizer
+
+            int param = (oper & kTFOperMask);
+            Bool_t skip = kFALSE;
+            int op = param % 10; // 1 is && , 2 is ||
+
+            if (op == 1 && (!tab[pos-1]) ) {
+               // &&: skip the right part if the left part is already false
+
+               skip = kTRUE;
+
+               // Preserve the existing behavior (i.e. the result of a&&b is
+               // either 0 or 1)
+               tab[pos-1] = 0;
+
+            } else if (op == 2 && tab[pos-1] ) {
+               // ||: skip the right part if the left part is already true
+
+               skip = kTRUE;
+
+               // Preserve the existing behavior (i.e. the result of a||b is
+               // either 0 or 1)
+               tab[pos-1] = 1;
+            }
+
+            if (skip) {
+               int toskip = param / 10;
+               i += toskip;
+            }
+            continue;
+         }
+
+      }
+      switch((oper >> kTFOperShift)) {
+
+#define R__EXPO(var)                                                         \
+         {                                                                   \
+           pos++; int param = (oper & kTFOperMask);                          \
+           tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[var]);  \
+           continue;                                                         \
+         }
+         // case kexpo:
+        case kxexpo: R__EXPO(0);
+        case kyexpo: R__EXPO(1);
+        case kzexpo: R__EXPO(2);
+        case kxyexpo:{  pos++; int param = (oper & kTFOperMask);
+           tab[pos-1] = TMath::Exp(fParams[param]+fParams[param+1]*x[0]+fParams[param+2]*x[1]);
+           continue;  }
+#ifdef R__GAUS
+#undef R__GAUS
+#endif
+#define R__GAUS(var)                                                                           \
+                     {                                                                         \
+                     pos++; int param = (oper & kTFOperMask);                                  \
+                     tab[pos-1] = fParams[param]*TMath::Gaus(x[var],fParams[param+1],          \
+                                                             fParams[param+2],IsNormalized()); \
+                     continue;                                                                 \
+                     }
+
+                     // case kgaus:
+        case kxgaus: R__GAUS(0);
+        case kygaus: R__GAUS(1);
+        case kzgaus: R__GAUS(2);
+        case kxygaus: { pos++; int param = (oper & kTFOperMask);
+           Double_t intermede1;
+           if (fParams[param+2] == 0) {
+              intermede1=1e10;
+           } else {
+              intermede1=Double_t((x[0]-fParams[param+1])/fParams[param+2]);
+           }
+           Double_t intermede2;
+           if (fParams[param+4] == 0) {
+              intermede2=1e10;
+           } else {
+              intermede2=Double_t((x[1]-fParams[param+3])/fParams[param+4]);
+           }
+           tab[pos-1] = fParams[param]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
+           continue; }
+
+#define R__LANDAU(var)                                                                  \
+                      {                                                                                       \
+                      pos++; const int param = (oper & kTFOperMask);                                       \
+                      tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
+                      continue;                                                                            \
+                      }
+                      // case klandau:
+        case kxlandau: R__LANDAU(0);
+        case kylandau: R__LANDAU(1);
+        case kzlandau: R__LANDAU(2);
+        case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
+           Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2],IsNormalized());
+           Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3],IsNormalized());
+           tab[pos-1] = fParams[param]*intermede1*intermede2;
+           continue;
+                        }
+
+#define R__POLY(var)                                                                       \
+                        {                                                                  \
+                        pos++; int param = (oper & kTFOperMask);                           \
+                        tab[pos-1] = 0; Double_t intermede = 1;                            \
+                        Int_t inter = param/100; /* arrondit */                            \
+                        Int_t int1= param-inter*100-1; /* aucune simplification ! (sic) */ \
+                        for (j=0 ;j<inter+1;j++) {                                         \
+                        tab[pos-1] += intermede*fParams[j+int1];                           \
+                        intermede *= x[var];                                               \
+                        }                                                                  \
+                        continue;                                                          \
+                        }
+                        // case kpol:
+        case kxpol: R__POLY(0);
+        case kypol: R__POLY(1);
+        case kzpol: R__POLY(2);
+
+        case kDefinedVariable : {
+           if (!precalculated) {
+              precalculated = 1;
+              for(j=0;j<fNval;j++) param_calc[j]=DefinedValue(j);
+           }
+           pos++; tab[pos-1] = param_calc[(oper & kTFOperMask)];
+           continue;
+                                }
+
+        case kDefinedString : {
+           int param = (oper & kTFOperMask);
+           if (!precalculated_str) {
+              precalculated_str=1;
+              for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
+           }
+           pos2++; tab2[pos2-1] = string_calc[param];
+           pos++; tab[pos-1] = 0;
+           continue;
+                              }
+
+        case kFunctionCall: {
+           // an external function call
+
+           int param = (oper & kTFOperMask);
+           int fno   = param / 1000;
+           int nargs = param % 1000;
+
+           // Retrieve the function
+           TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
+
+           // Set the arguments
+           TString args;
+           if (nargs) {
+              UInt_t argloc = pos-nargs;
+              for(j=0;j<nargs;j++,argloc++,pos--) {
+                 if (TMath::IsNaN(tab[argloc])) {
+                    // TString would add 'nan' this is not what we want
+                    // so let's do somethign else
+                    args += "(double)(0x8000000000000)";
+                 } else {
+                    args += tab[argloc];
+                 }
+                 args += ',';
+              }
+              args.Remove(args.Length()-1);
+           }
+           pos++;
+           Double_t ret;
+           method->Execute(args,ret);
+           tab[pos-1] = ret; // check for the correct conversion!
+
+           continue;
+                            };
+      }
+      Assert(0);
+   }
+   Double_t result0 = tab[0];
+   return result0;
+
+}
+
+
+//______________________________________________________________________________
+Int_t TFormula::PreCompile()
+{
+   //
+   //Pre compile function 
+   //
+   TString str = fTitle;
+   if (str.Length()<3) return 1;
+   if (str[str.Length()-1]!='+'&&str[str.Length()-2]!='+') return 1;
+   str[str.Length()-2]=0;
+   char funName[1000],fileName[1000];
+   sprintf(funName,"preformula_%s",fName.Data());
+   if (TFormulaPrimitive::FindFormula(funName)) return 0;
+   sprintf(fileName,"/tmp/%s.C",funName);
+
+   FILE *hf;
+   hf = fopen(fileName,"w");
+   if (hf == 0) {
+      Error("PreCompile","Unable to open the file %s for writing.",fileName);
+      return 1;
+   }
+   fprintf(hf,   "/////////////////////////////////////////////////////////////////////////\n");
+   fprintf(hf,   "//   This code has been automatically generated \n");
+   //
+   fprintf(hf,   "Double_t %s(Double_t *x, Double_t *p){",funName);
+   fprintf(hf,   "return (%s);\n}",str.Data());
+
+   //   fprintf("TFormulaPrimitive::AddFormula(new TFormulaPrimitive(\"%s::%s\",\"%s::%s\",(TFormulaPrimitive::GenFunc0)%s::%s));\n",
+   // 			   clname,method->GetName(),clname,method->GetName(),clname,method->GetName());
+   fclose(hf);
+
+   return 0;
+
 
 }
