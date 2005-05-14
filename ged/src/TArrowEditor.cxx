@@ -30,9 +30,10 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 
+ClassImp(TGedFrame)
 ClassImp(TArrowEditor)
 
-enum EArrowWid {
+enum {
    kARROW_ANG,
    kARROW_OPT,
    kARROW_SIZ,

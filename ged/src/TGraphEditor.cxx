@@ -46,7 +46,8 @@
 
 ClassImp(TGraphEditor)
 
-enum EGraphWid { 
+enum 
+{ 
    kShape = 0,
    kSHAPE_NOLINE,
    kSHAPE_SMOOTH,

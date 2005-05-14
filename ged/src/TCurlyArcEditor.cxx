@@ -31,9 +31,10 @@
 #include "TVirtualPad.h"
 #include "iostream"
 
+ClassImp(TGedFrame)
 ClassImp(TCurlyArcEditor)
 
-enum ECurlyArcWid {
+enum {
    kCRLA_RAD,
    kCRLA_FMIN,
    kCRLA_FMAX,

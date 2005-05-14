@@ -32,9 +32,10 @@
 #include "TVirtualPad.h"
 #include "iostream"
 
+ClassImp(TGedFrame)
 ClassImp(TCurlyLineEditor)
 
-enum ECurlyLineWid {
+enum {
    kCRLL_AMPL,
    kCRLL_WAVE,
    kCRLL_ISW,
