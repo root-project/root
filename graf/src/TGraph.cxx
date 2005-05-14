@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.154 2005/03/18 22:41:26 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.159 2005/04/26 14:31:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -305,10 +305,11 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 {
 // Graph constructor reading input from filename
 // filename is assumed to contain at least two columns of numbers
-
+// the string format is by default "%lg %lg"
+   
    Double_t x,y;
-   FILE *fp = fopen(filename,"r");
-   if (!fp) {
+   ifstream infile(filename);
+   if(!infile.good()){
       MakeZombie();
       Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
       fNpoints = 0;
@@ -316,19 +317,16 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
       fNpoints = 100;  //initial number of points
    }
    if (!CtorAllocate()) return;
-   char line[80];
-   Int_t np = 0;
-   while (fgets(line,80,fp)) {
-      if( 2 != sscanf(&line[0],format,&x, &y)) {
-         // skip empty and ill-formed lines
-         continue;
+   std::string line;
+   Int_t np=0;
+   while(std::getline(infile,line,'\n')){
+      if(2 != sscanf(line.c_str(),format,&x,&y) ) {
+         continue; // skip empty and ill-formed lines
       }
       SetPoint(np,x,y);
       np++;
    }
    Set(np);
-
-   fclose(fp);
 }
 
 //______________________________________________________________________________
@@ -662,12 +660,13 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       //linear interpolation
       //find point in graph immediatly below x
       //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
-      Int_t up, low = TMath::BinarySearch(fNpoints,fX,x);
-      if (low == fNpoints-1) {up=low; low = up+1;}
+      Int_t low = TMath::BinarySearch(fNpoints,fX,x);
+      Int_t up = low+1;
+      if (low == fNpoints-1) {up=low; low = up-1;}
       if (low == -1) {low=0; up=1;}
-      if (fX[low] == fX[low+1]) return fY[low];
-      Double_t yn = x*(fY[low]-fY[low+1]) +fX[low]*fY[low+1] - fX[low+1]*fY[low];
-      return yn/(fX[low]-fX[low+1]);
+      if (fX[low] == fX[up]) return fY[low];
+      Double_t yn = x*(fY[low]-fY[up]) +fX[low]*fY[up] - fX[up]*fY[low];
+      return yn/(fX[low]-fX[up]);
    } else {
       //spline interpolation using the input spline
       return spline->Eval(x);
@@ -954,7 +953,13 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
 {
 //*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
-//  interface to TF1::Fit(TF1 *f1...
+//  interface to TGraph::Fit(TF1 *f1...
+//
+//      fname is the name of an already predefined function created by TF1 or TF2
+//      Predefined functions such as gaus, expo and poln are automatically
+//      created by ROOT.
+//      fname can also be a formula, accepted by the linear fitter (linear parts divided
+//      by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
    char *linear;
    linear= (char*) strstr(fname, "++");
@@ -991,6 +996,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //                   is drawn unless the option"N" above is specified.
 //             = "+" Add this new fitted function to the list of fitted functions
 //                   (by default, any previous function is deleted)
+//             = "C" In case of linear fitting, not calculate the chisquare
+//                    (saves time)
+//             = "F" If fitting a polN, switch to minuit fitter
 //
 //   When the fit is drawn (by default), the parameter goption may be used
 //   to specify a list of graphics options. See TGraph::Paint for a complete
@@ -1009,6 +1017,18 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //   Note that this function is called when calling TGraphErrors::Fit
 //   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
 //   see the discussion below on the errors calulation.
+//
+//   Linear fitting
+//   ============================
+//   When the fitting function is linear (contains the "++" sign) or the fitting
+//   function is a polynomial, a linear fitter is initialised.
+//   To create a linear function, use the following syntaxis: linear parts
+//   separated by "++" sign. 
+//   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a 
+//    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
+//   For such a TF1 you don't have to set the initial conditions
+//   Going via the linear fitter for functions, linear in parameters, gives a considerable
+//   advantage in speed.
 //
 //   Setting initial conditions
 //   ==========================
@@ -1069,6 +1089,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 // is of (error of x)**2 order. This approach is called "effective variance method".
 // This improvement has been made in version 4.00/08 by Anna Kreshuk.
 //
+// Note, that the linear fitter doesn't take into account the errors in x. If errors
+// in x are important, go through minuit (use option "F" for polynomial fitting).
+//
 //   Associated functions
 //   ====================
 //  One or more object (typically a TF1*) can be added to the list
@@ -1103,6 +1126,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
+
+
    Int_t fitResult = 0;
    Double_t xmin, xmax, ymin, ymax;
    Int_t i, npar,nvpar,nparx;
@@ -1150,6 +1175,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    fitOption.Plus    = 0;
    fitOption.User    = 0;
    fitOption.Nochisq = 0;
+   fitOption.Minuit  = 0;
    TString opt = option;
    opt.ToUpper();
 
@@ -1164,6 +1190,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
+   if (opt.Contains("F")) fitOption.Minuit = 1;
+
    xmin    = fX[0];
    xmax    = fX[fNpoints-1];
    ymin    = fY[0];
@@ -1191,6 +1219,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    Bool_t linear = f1->IsLinear();
    if (special == 299 + npar)
       linear = kTRUE;
+   if (fitOption.Bound || fitOption.User || fitOption.Errors || fitOption.Minuit)
+      linear = kFALSE;
 
    char l[] = "TLinearFitter";
    Int_t strdiff = 0;
@@ -1238,7 +1268,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
 //*-*- If case of a predefined function, then compute initial values of parameters
 ///////
-   if (linear && !fitOption.Bound && !fitOption.Like && !fitOption.Errors){
+   if (linear){
      grFitter->ExecuteCommand("FitGraph", 0, 0);
 
    } else {
@@ -1304,6 +1334,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 if (ex > 0 || ey > 0) hasErrors = kTRUE;
 	 sumw2 += ey*ey;
       }
+
       //*-*- Perform minimization
 
       arglist[0] = TVirtualFitter::GetMaxIterations();
@@ -1312,6 +1343,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (fitOption.Errors) {
 	 grFitter->ExecuteCommand("HESSE",arglist,0);
 	 grFitter->ExecuteCommand("MINOS",arglist,0);
+
       }
 
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
@@ -1336,6 +1368,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 f1->SetParError(i,werr);
       }
    }
+
 //*-*- Print final values of parameters.
    if (!fitOption.Quiet) {
       if (fitOption.Errors) grFitter->PrintResults(4,amin);

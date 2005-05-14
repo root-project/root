@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.2 2005/03/16 06:15:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.6 2005/04/16 05:46:06 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -162,27 +162,51 @@ namespace {
 } // unnamed namespace
 
 //____________________________________________________________________________
+bool PyROOT::ShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'h', sizeof(Short_t) );
+}
+
+//____________________________________________________________________________
+bool PyROOT::UShortArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'H', sizeof(UShort_t) );
+}
+
+//____________________________________________________________________________
 bool PyROOT::IntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'i', sizeof(int) );
+   return CArraySetArg( pyobject, func, 'i', sizeof(Int_t) );
+}
+
+//____________________________________________________________________________
+bool PyROOT::UIntArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'I', sizeof(UInt_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::LongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'l', sizeof(long) );
+   return CArraySetArg( pyobject, func, 'l', sizeof(Long_t) );
+}
+
+//____________________________________________________________________________
+bool PyROOT::ULongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   return CArraySetArg( pyobject, func, 'L', sizeof(ULong_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::FloatArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'f', sizeof(float) );
+   return CArraySetArg( pyobject, func, 'f', sizeof(Float_t) );
 }
 
 //____________________________________________________________________________
 bool PyROOT::DoubleArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 {
-   return CArraySetArg( pyobject, func, 'd', sizeof(double) );
+   return CArraySetArg( pyobject, func, 'd', sizeof(Double_t) );
 }
 
 
@@ -198,6 +222,37 @@ bool PyROOT::TStringConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
 // set the value and declare success
    func->SetArg( reinterpret_cast< long >( &fBuffer ) );
    return true;
+}
+
+//____________________________________________________________________________
+bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   if ( ! ObjectProxy_Check( pyobject ) )
+      return false;
+
+   if ( ((ObjectProxy*)pyobject)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
+   // if non-const, object can no longer be held, as pointer to it may get copied
+      if ( ! IsConst() )
+         ((ObjectProxy*)pyobject)->Release();
+
+   // set pointer (may be null) and declare success
+      func->SetArg( reinterpret_cast< long >( ((ObjectProxy*)pyobject)->GetObject() ) );
+      return true;
+   }
+
+   return false;
+}
+
+//____________________________________________________________________________
+bool PyROOT::LongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc* func )
+{
+   PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+   if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
+      Py_DECREF( pytc );           // such thing for long long in module array
+      return false;
+   }
+   
+   return VoidArrayConverter::SetArg( pyobject, func );
 }
 
 //____________________________________________________________________________
@@ -227,11 +282,16 @@ namespace {
    PYROOT_CONVERTER_FACTORY( LongLongConverter )
    PYROOT_CONVERTER_FACTORY( CStringConverter )
    PYROOT_CONVERTER_FACTORY( VoidArrayConverter )
+   PYROOT_CONVERTER_FACTORY( ShortArrayConverter )
+   PYROOT_CONVERTER_FACTORY( UShortArrayConverter )
    PYROOT_CONVERTER_FACTORY( IntArrayConverter )
+   PYROOT_CONVERTER_FACTORY( UIntArrayConverter )
    PYROOT_CONVERTER_FACTORY( LongArrayConverter )
+   PYROOT_CONVERTER_FACTORY( ULongArrayConverter )
    PYROOT_CONVERTER_FACTORY( FloatArrayConverter )
    PYROOT_CONVERTER_FACTORY( DoubleArrayConverter )
    PYROOT_CONVERTER_FACTORY( TStringConverter )
+   PYROOT_CONVERTER_FACTORY( LongLongArrayConverter )
    PYROOT_CONVERTER_FACTORY( PyObjectConverter )
 
    Converter* CreateConstVoidArrayConverter()
@@ -264,13 +324,18 @@ namespace {
    // pointer/array factories
       ncp_t( "void*",              &CreateVoidArrayConverter          ),
       ncp_t( "const void*",        &CreateConstVoidArrayConverter     ),
+      ncp_t( "short*",             &CreateShortArrayConverter         ),
+      ncp_t( "unsigned short*",    &CreateUShortArrayConverter        ),
       ncp_t( "int*",               &CreateIntArrayConverter           ),
+      ncp_t( "unsigned int*",      &CreateUIntArrayConverter          ),
       ncp_t( "long*",              &CreateLongArrayConverter          ),
+      ncp_t( "unsigned long*",     &CreateULongArrayConverter         ),
       ncp_t( "float*",             &CreateFloatArrayConverter         ),
       ncp_t( "double*",            &CreateDoubleArrayConverter        ),
 
    // factories for special cases
       ncp_t( "TString",            &CreateTStringConverter            ),
+      ncp_t( "long long*",         &CreateLongLongArrayConverter      ),
       ncp_t( "PyObject*",          &CreatePyObjectConverter           ),
       ncp_t( "_object*",           &CreatePyObjectConverter           )
    };

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TColumnView.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -35,8 +35,10 @@ void TColumnView::Browse(TBrowser *)
    if (!IsFolder()) 
    {
       Draw(GetName(),"");
-      gPad->Modified();
-      gPad->Update();
+      if (gPad) {
+         gPad->Modified();
+         gPad->Update();
+      }
    }
 }
 //______________________________________________________________________________
@@ -44,8 +46,10 @@ TH1 *TColumnView::Histogram(const char *selection)
 {
    // Create a histogram from the context menu
    TH1 *h = Draw(GetName(),selection);
-   gPad->Modified();
-   gPad->Update();
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+   }
    return h;
 }
 

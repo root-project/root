@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixFCramerInv.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixFCramerInv.h,v 1.2 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -40,6 +40,7 @@ public:
   static Bool_t Inv5x5(TMatrixF &m,Double_t *determ);
   static Bool_t Inv6x6(TMatrixF &m,Double_t *determ);
 
+  virtual ~TMatrixFCramerInv() { }
   ClassDef(TMatrixFCramerInv,0)  //Interface to math routines
 };
 

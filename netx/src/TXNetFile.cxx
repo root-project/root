@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.6 2004/12/08 14:52:48 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.7 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -203,7 +203,8 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
            if (DebugLevel() >= kHIDEBUG)
               Info("CreateTXNf", "Trying to connect to %s:%d. Connect try %d.",
                            fUrl.GetHost(), fUrl.GetPort(), connectTry+1);
-           locallogid = fConnModule->Connect(fUrl.GetHost(), fUrl.GetPort(), netopt);
+           locallogid = fConnModule->Connect(fUrl.GetHost(),
+                                             fUrl.GetPort(), netopt);
         }
      }
 
@@ -221,9 +222,19 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
            Info("CreateTXNf", "Working url is [%s]", fUrl.GetUrl());
 
         // after connection deal with server
-        if (!fConnModule->GetAccessToSrv())
-           Error("CreateTXNf", "Access to server failed");
-        else {
+        if (!fConnModule->GetAccessToSrv()) {
+           if (fConnModule->fOpenError == kXR_NotAuthorized) {
+              // Authentication error: does not make much sense to retry
+              fConnModule->Disconnect(kTRUE);
+              TString msg = fConnModule->fOpenErrorMsg;
+              msg.Remove(msg.Last(':'));
+              Error("CreateTXNf","Authentication failure: %s",msg.Data());
+              goto zombie;
+           } else {
+              Error("CreateTXNf",
+                    "Access to server failed (%d)",fConnModule->fOpenError);
+           }
+        } else {
 	   if (DebugLevel() >= kUSERDEBUG)
 	      Info("CreateTXNf", "Access to server granted.");
            break;
@@ -280,6 +291,7 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
      if (!Open(option, fTitle, compress, netopt, kTRUE)) {
 	Error("CreateTXNf", "Error opening the file %s on host %s:%d",
                         fUrl.GetFile(), fUrl.GetHost(), fUrl.GetPort());
+          fConnModule->Disconnect(kTRUE);
 	  goto zombie;
      } else {
 	if (DebugLevel() >= kUSERDEBUG)
@@ -308,7 +320,7 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
 zombie:
    // error in file opening occured, make this object a zombie
    MakeZombie();
-
+   gDirectory = gROOT;
 }
 
 //_____________________________________________________________________________

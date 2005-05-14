@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.79 2005/03/11 18:36:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.81 2005/04/15 17:26:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -209,13 +209,6 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(linux) && defined(R__ppc64)
-#   define R__LINUX
-#   define R__UNIX
-#   define R__B64
-#   define NEED_SIGJMP
-#endif
-
 #if defined(linux) && defined(__alpha__)
 #   define R__LINUX
 #   define R__UNIX
@@ -248,12 +241,11 @@
 #endif
 
 #if defined(linux) && defined(__powerpc__)
-#   define R__MKLINUX
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
-#      define R__PPCEGCS
+#   if defined(R__ppc64)
+#      define R__B64
 #   endif
 #endif
 
@@ -296,12 +288,16 @@
 #endif
 
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
+#   include <AvailabilityMacros.h>
 #   define R__MACOSX
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
 #      define R__ANSISTREAM
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   endif
+#   if defined(__ppc64__)
+#      define R__B64      /* enable when 64 bit machine */
 #   endif
 #endif
 

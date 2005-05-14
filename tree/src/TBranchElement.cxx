@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.165 2005/03/30 21:09:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.167 2005/04/07 13:28:31 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -937,8 +937,15 @@ Int_t TBranchElement::Fill()
 {
 //*-*-*-*-*-*-*-*Loop on all leaves of this branch to fill Basket buffer*-*-*
 //*-*            =======================================================
+//
+// The function returns the number of bytes committed to the 
+// individual branch(es).
+// If a write error occurs, the number of bytes returned is -1.
+// If no data are written, because e.g. the branch is disabled,
+// the number of bytes returned is 0.
+//
 
-   Int_t nbytes = 0;
+   Int_t nbytes = 0, nwrite = 0, nerror = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    // update addresses if top level branch
    if (fID < 0) {
@@ -961,22 +968,42 @@ Int_t TBranchElement::Fill()
    }
 
    if (nbranches) {
-      if (fType == 3 || fType == 4)  nbytes += TBranch::Fill();  //TClonesArray counter
-      else             fEntries++;
-      for (Int_t i=0;i<nbranches;i++)  {
-         TBranchElement *branch = (TBranchElement*)fBranches[i];
-         if (!branch->TestBit(kDoNotProcess)) nbytes += branch->Fill();
-      }
+     if (fType == 3 || fType == 4)  {
+       nbytes += (nwrite = TBranch::Fill());  //TClonesArray counter
+       if ( nwrite < 0 )  {
+         Error("Fill","Failed filling branch:%s, nbytes=%d",GetName(),nwrite);
+         nerror++;
+       }
+     }
+     else  {
+       fEntries++;
+     }
+     for (Int_t i=0;i<nbranches;i++)  {
+        TBranchElement *branch = (TBranchElement*)fBranches[i];
+        if (!branch->TestBit(kDoNotProcess))  {
+          nbytes += (nwrite = branch->Fill());
+          if ( nwrite < 0 )  {
+            Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
+            nerror++;
+          }
+        }
+     }
    } else {
-      if (!TestBit(kDoNotProcess)) nbytes += TBranch::Fill();
+     if (!TestBit(kDoNotProcess)) {
+       nbytes += (nwrite = TBranch::Fill());
+       if ( nwrite < 0 )  {
+         Error("Fill","Failed filling branch:%s, nbytes=%d",GetName(),nwrite);
+         nerror++;
+       }
+     }
    }
    if (fTree->Debug() > 0) {
-      Int_t entry = (Int_t)fEntries;
+      Long64_t entry = fEntries;
       if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
-         printf("Fill: %d, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
+         printf("Fill: %lld, branch=%s, nbytes=%d\n",entry,GetName(),nbytes);
       }
    }
-   return nbytes;
+   return nerror==0 ? nbytes : -1;
 }
 
 //______________________________________________________________________________

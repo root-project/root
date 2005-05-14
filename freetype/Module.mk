@@ -8,6 +8,7 @@ FREETYPELIBF    := $(shell freetype-config --libs)
 FREETYPEINC     := $(shell freetype-config --cflags)
 FREETYPELIB     := $(filter -l%,$(FREETYPELIBF))
 FREETYPELDFLAGS := $(filter-out -l%,$(FREETYPELIBF))
+FREETYPEDEP     :=
 else
 
 MODDIR       := freetype
@@ -32,6 +33,7 @@ FREETYPELIB  := $(LPATH)/libfreetype.a
 endif
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
+FREETYPEDEP  := $(FREETYPELIB)
 FREETYPELDFLAGS :=
 
 ##### local rules #####
@@ -73,7 +75,7 @@ else
 			fi; \
 		fi; \
 		cd $(FREETYPEVERS); \
-		FREECC=; \
+		FREECC=$(CC); \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
 		fi; \

@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.7 2005/03/09 18:19:27 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.8 2005/04/01 13:53:18 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -53,11 +53,11 @@ private:
    TGLayoutHints  *fMenuBarItemLayout;  // layout hints for menu in menubar
    TGLayoutHints  *fMenuBarHelpLayout;  // layout hint for help menu in menubar
    TGLayoutHints  *fCanvasLayout;       // layout for canvas widget
-   UInt_t          fWidth;              // viewer width 
+   UInt_t          fWidth;              // viewer width
    UInt_t          fHeight;             // viewer height
    Int_t           fXPos;               // viewer X position
    Int_t           fYPos;               // viewer Y position
-   TVirtualPad    *fPad;                // pad we are attached to 
+   TVirtualPad    *fPad;                // pad we are attached to
    Bool_t          fBuildingScene;      // Rebuilding 3D scene
    enum EPass { kSize, kDraw };         // Multi-pass build : size then draw
    EPass           fPass;
@@ -91,12 +91,12 @@ public:
    virtual void   BeginScene();
    virtual Bool_t BuildingScene()    const { return fBuildingScene; }
    virtual void   EndScene();
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);   
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   
+
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of component shapes
-   virtual void   OpenComposite(const TBuffer3D & /*buffer*/, Bool_t *x=0) {};
+   virtual void   OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * =0) {};
    virtual void   CloseComposite() {};
    virtual void   AddCompositeOp(UInt_t /*operation*/) {};
 

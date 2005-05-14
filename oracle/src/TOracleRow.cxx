@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name: v4-00-08 $:$Id: TOracleRow.cxx,v 1.0 2004/12/04 17:00:45 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleRow.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -10,6 +10,10 @@
  *************************************************************************/
 
 #include "TOracleRow.h"
+#include <Riostream.h>
+
+using namespace std;
+
 
 ClassImp(TOracleRow);
 
@@ -20,6 +24,9 @@ TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
 
    fResult      = rs;
    fFieldInfo   = fieldMetaData;
+   fFieldCount  = fFieldInfo->size();
+   fFields      = new vector<string>(fFieldCount, "");
+   GetRowData();
    fUpdateCount = 0;
    fResultType  = 1;
 }
@@ -28,6 +35,8 @@ TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
 TOracleRow::TOracleRow(UInt_t updateCount)
 {
    fUpdateCount = updateCount;
+   fFieldCount  = 0;
+   fFields      = 0;
    fResultType  = 0;
 }
 
@@ -45,20 +54,23 @@ TOracleRow::~TOracleRow()
 void TOracleRow::Close(Option_t *)
 {
    // Close row.
-   
+
    if (fResultType == -1)
       return;
 
    fFieldInfo   = 0;
+   fFieldCount  = 0;
    fResult      = 0;
    fResultType  = 0;
+   if (fFields)
+      delete fFields;
 }
 
 //______________________________________________________________________________
 Bool_t TOracleRow::IsValid(Int_t field)
 {
    // Check if row is open and field index within range.
-   
+
    if (!fResult) {
       Error("IsValid", "row closed");
       return kFALSE;
@@ -74,7 +86,7 @@ Bool_t TOracleRow::IsValid(Int_t field)
 ULong_t TOracleRow::GetFieldLength(Int_t field)
 {
    // Get length in bytes of specified field.
-   
+
    if (!IsValid(field) || fFieldInfo->size() <= 0)
       return 0;
 
@@ -84,49 +96,109 @@ ULong_t TOracleRow::GetFieldLength(Int_t field)
 }
 
 //______________________________________________________________________________
-const char *TOracleRow::GetField(Int_t field)
+int TOracleRow::GetRowData()
 {
-   // Note: Index starts from 0, not 1 as oracle call does.
-   // Data Type conversion:
-   // C++type   OracleType
-   // Uint       2:0:x [type:precision:scale]
-   // float     2:noneZero:nonZero
-   // double    2:nonZero:-127
-   // string    1:x:x
-   // string    188:0:x - Timestamp
+   // Fetch a row from current resultset into fFields vector as ASCII
+   // supported Oracle internal types conversion:
+   // NUMBER -> int, float, double -> (char *)
+   // CHAR   -> (char *)
+   // VARCHAR2 -> (char *)
+   // TIMESTAMP -> Timestamp -> (char *)
+   // DATE -> (char *)
+   // NOTE: above types are tested to work and this is the default impl.
 
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
-   if (!IsValid(field) || !fResult || !fFieldInfo) {
-      Error("TOracleRow","GetField(): out-of-range or No ResultSet/MetaData");
+   if (!fFields || !fResult || !fFieldInfo) {
+      Error("GetRowData()", "Empty row, resultset or MetaData");
       return 0;
    }
    int fDataType, fDataSize, fPrecision, fScale;
-   fDataType = (*fFieldInfo)[field].getInt(MetaData::ATTR_DATA_TYPE);
-   fDataSize = (*fFieldInfo)[field].getInt(MetaData::ATTR_DATA_SIZE);
-   fPrecision = (*fFieldInfo)[field].getInt(MetaData::ATTR_PRECISION);
-   fScale = (*fFieldInfo)[field].getInt(MetaData::ATTR_SCALE);
-
-   switch (fDataType) {
-      case 2: //NUMBER
-         if (fScale == 0) {
-            return (const char *)(new unsigned int(fResult->getUInt(field+1)));
-         } else if (fPrecision != 0 && fScale == -127) {
-            return (const char *)(new double(fResult->getDouble(field+1)));
-         } else if (fScale > 0) {
-            return (const char *)(new float(fResult->getFloat(field+1)));
+   char str_number[1024];
+   int int_val; double double_val; float float_val;
+   try {
+      for (UInt_t i=0; i<fFieldCount; i++) {
+         if (fResult->isNull(i+1)) {
+            (*fFields)[i] = "";
+         } else {
+            fDataType = (*fFieldInfo)[i].getInt(MetaData::ATTR_DATA_TYPE);
+            fDataSize = (*fFieldInfo)[i].getInt(MetaData::ATTR_DATA_SIZE);
+            fPrecision = (*fFieldInfo)[i].getInt(MetaData::ATTR_PRECISION);
+            fScale = (*fFieldInfo)[i].getInt(MetaData::ATTR_SCALE);
+            switch (fDataType) {
+               case 2: //NUMBER
+                  if (fScale == 0 || fPrecision == 0) {
+                     int_val = fResult->getInt(i+1);
+                     sprintf(str_number, "%d", int_val);
+                  } else if (fPrecision != 0 && fScale == -127) {
+                     double_val = fResult->getDouble(i+1);
+                     sprintf(str_number, "%lf", double_val);
+                  } else if (fScale > 0) {
+                     float_val = fResult->getFloat(i+1);
+                     sprintf(str_number, "%f", float_val);
+                  }
+                  (*fFields)[i] = str_number;
+                  break;
+               case 96:  // CHAR
+               case 1:   // VARCHAR2
+                  (*fFields)[i] = fResult->getString(i+1);
+                  break;
+               case 187: // TIMESTAMP
+               case 232: // TIMESTAMP WITH LOCAL TIMEZONE
+               case 188: // TIMESTAMP WITH TIMEZONE
+                  (*fFields)[i] = (fResult->getTimestamp(i+1)).toText("MM/DD/YYYY, HH24:MI:SS",0);
+                  break;
+               case 12: // DATE
+                  //to fetch DATE, getDate() does NOT work in occi
+                  (*fFields)[i] = fResult->getString(i+1);
+                  break;
+               default:
+                  Error("GetRowData()","Oracle type %d not supported.", fDataType);
+                  return 0;
+            }
          }
-         break;
-      case 1: //VARCHAR2
-         return (const char *)(new string(fResult->getString(field+1)));
-      case 188: //Timestamp - oracle's date/time class. convert to string
-         {
-            Timestamp ts = fResult->getTimestamp(field+1);
-            string s = ts.toText("MM/dd/YYYY, HH:MM:SS",0);
-            return (const char *)s.c_str();
-         }
-      default:
-         return 0;
+      }
+      return 1;
+   } catch (SQLException &oraex) {
+      Error("GetRowData()", (oraex.getMessage()).c_str());
+      return 0;
    }
-   return 0;
+}
+
+//______________________________________________________________________________
+int TOracleRow::GetRowData2()
+{
+   // Fetch a row from current resultset into fFields vector as ASCII.
+   // This impl only use getString() to fetch column value.
+   // Pro: support all type conversions, indicated by OCCI API doc
+   // Con: not tested for each Oracle internal type. it has problem on
+   //      Timestamp or Date type conversion.
+   // NOTE: This is supposed to be the easiest and direct implemention.
+
+   if (!fFields || !fResult || !fFieldInfo) {
+      Error("GetRowData2()", "Empty row, resultset or MetaData");
+      return 0;
+   }
+
+   try {
+      for (UInt_t i=0; i<fFieldCount; i++) {
+         if (fResult->isNull(i+1)) {
+            (*fFields)[i] = "";
+         } else {
+            (*fFields)[i] = fResult->getString(i+1);
+         }
+      }
+      return 1;
+   } catch (SQLException &oraex) {
+      Error("GetRowData2()", (oraex.getMessage()).c_str());
+      return 0;
+   }
+}
+
+//______________________________________________________________________________
+const char *TOracleRow::GetField(Int_t field)
+{
+   if (!IsValid(field) || !fResult || !fFields) {
+      Error("TOracleRow","GetField(): out-of-range or No RowData/ResultSet/MetaData");
+      return 0;
+   }
+   return (*fFields)[field].c_str();
 }

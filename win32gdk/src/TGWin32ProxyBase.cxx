@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.13 2004/02/04 17:23:00 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.14 2004/05/10 15:06:35 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -128,7 +128,8 @@ TGWin32ProxyBasePrivate::~TGWin32ProxyBasePrivate()
 ULong_t TGWin32ProxyBase::fgPostMessageId = 0;
 ULong_t TGWin32ProxyBase::fgPingMessageId = 0;
 ULong_t TGWin32ProxyBase::fgMainThreadId = 0;
-Long_t TGWin32ProxyBase::fgLock = 0;
+Long_t  TGWin32ProxyBase::fgLock = 0;
+UInt_t  TGWin32ProxyBase::fMaxResponseTime = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________

@@ -41,6 +41,7 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
+EXPLLINKLIBS="\$LinkedLibs"
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
@@ -50,13 +51,14 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ]; then
    else
       SOFLAGS="-bundle $OPT -undefined suppress"
    fi
+   EXPLLINKLIBS=""
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
     SOFLAGS=$SOFLAGS\$LibName.$SOEXT
     # Alternatively we could remove the soname flag.
     #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
 fi
-EXPLLINKLIBS="\$LinkedLibs"
+
 
 rm -f __compiledata
 

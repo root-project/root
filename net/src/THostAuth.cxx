@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.5 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.6 2004/02/19 00:11:18 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -38,10 +38,10 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
                      Int_t *authmeth, char **details) : TObject()
 {
    // Create hostauth object.
-   // 'host' may contain also the server for whicb these directives 
-   // are valid in the form 'host:server' or 'server://host' 
-   // with server either "sock[d]", "root[d]", "proof[d]" or 
-   // 0, 1, 2, respectively. 
+   // 'host' may contain also the server for whicb these directives
+   // are valid in the form 'host:server' or 'server://host'
+   // with server either "sock[d]", "root[d]", "proof[d]" or
+   // 0, 1, 2, respectively.
 
    Create(host, user, nmeth, authmeth, details);
 }
@@ -51,10 +51,10 @@ THostAuth::THostAuth(const char *host, Int_t server, const char *user,
                      Int_t nmeth, Int_t *authmeth, char **details) : TObject()
 {
    // Create hostauth object.
-   // 'host' may contain also the server for whicb these directives 
-   // are valid in the form 'host:server' or 'server://host' 
-   // with server either "sock[d]", "root[d]", "proof[d]" or 
-   // 0, 1, 2, respectively. 
+   // 'host' may contain also the server for whicb these directives
+   // are valid in the form 'host:server' or 'server://host'
+   // with server either "sock[d]", "root[d]", "proof[d]" or
+   // 0, 1, 2, respectively.
 
    Create(host, user, nmeth, authmeth, details);
 
@@ -66,8 +66,8 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
                      const char *details) : TObject()
 {
    // Create hostauth object with one method only.
-   // 'host' may contain also the server for whicb these directives 
-   // are valid in the form 'host:server' or 'server://host' 
+   // 'host' may contain also the server for whicb these directives
+   // are valid in the form 'host:server' or 'server://host'
 
    Create(host, user, 1, &authmeth, (char **)&details);
 }
@@ -77,8 +77,8 @@ THostAuth::THostAuth(const char *host, Int_t server, const char *user,
                      Int_t authmeth, const char *details) : TObject()
 {
    // Create hostauth object with one method only.
-   // 'host' may contain also the server for whicb these directives 
-   // are valid in the form 'host:server' or 'server://host' 
+   // 'host' may contain also the server for whicb these directives
+   // are valid in the form 'host:server' or 'server://host'
 
    Create(host, user, 1, &authmeth, (char **)&details);
    fServer = server;
@@ -89,10 +89,10 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
                        Int_t *authmeth, char **details)
 {
    // Create hostauth object.
-   // 'host' may contain also the server for whicb these directives 
-   // are valid in the form 'host:server' or 'server://host' 
-   // with server either "sock[d]", "root[d]", "proof[d]" or 
-   // 0, 1, 2, respectively. 
+   // 'host' may contain also the server for whicb these directives
+   // are valid in the form 'host:server' or 'server://host'
+   // with server either "sock[d]", "root[d]", "proof[d]" or
+   // 0, 1, 2, respectively.
 
    int i;
 
@@ -156,7 +156,7 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
             fMethods[i] = -1;
             fSuccess[i] = -1;
             fFailure[i] = -1;
-         } 
+         }
       }
    }
 
@@ -187,7 +187,7 @@ THostAuth::THostAuth(const char *asstring) : TObject()
 {
    // Create hostauth object from directives given as a compact string
    // See THostAuth::AsString().
-   // Used in proof context only; fServer not set; to be set by hand 
+   // Used in proof context only; fServer not set; to be set by hand
    // with SetServer() method if really needed
 
    fServer = -1;
@@ -210,22 +210,22 @@ THostAuth::THostAuth(const char *asstring) : TObject()
    fNmet.Remove(0,fNmet.Index(":")+1);
 
    if (tmp) delete[] tmp;
-   
+
    fNumMethods = atoi(fNmet.Data());
    Int_t i = 0;
    for (; i < fNumMethods; i++) {
       TString Det = Tmp;
       Det.Remove(0,Det.Index("'")+1);
       Det.Resize(Det.Index("'"));
-      // Remove leading spaces, if 
+      // Remove leading spaces, if
       char cmet[2];
       sscanf(Det.Data(),"%s",cmet);
       Int_t met = atoi(cmet);
       if (met > -1 && met < kMAXSEC) {
-         Det.ReplaceAll(cmet,"");            
-         while (Det.First(' ') == 0) 
+         Det.ReplaceAll(cmet,"");
+         while (Det.First(' ') == 0)
             Det.Remove(0,1);
-         while (Det.Last(' ') == (Det.Length() - 1)) 
+         while (Det.Last(' ') == (Det.Length() - 1))
             Det.Resize(Det.Length() - 1);
          fMethods[i] = met;
          fSuccess[i] = 0;
@@ -271,7 +271,7 @@ THostAuth::THostAuth(THostAuth &ha) : TObject()
 //______________________________________________________________________________
 void  THostAuth::AddMethod(Int_t meth, const char *details)
 {
-   // Add method to the list. If already there, change its 
+   // Add method to the list. If already there, change its
    // details to 'details'
 
    // Check 'meth'
@@ -338,8 +338,8 @@ void  THostAuth::RemoveMethod(Int_t meth)
 //______________________________________________________________________________
 void  THostAuth::Reset()
 {
-   // Remove all methods, leaving Active status and 
-   // list of associted TSceContexts unchanged 
+   // Remove all methods, leaving Active status and
+   // list of associted TSceContexts unchanged
 
    // Free all filled positions
    Int_t i = 0;
@@ -423,17 +423,17 @@ void THostAuth::Print(Option_t *proc) const
 
    char srvnam[5][8] = { "any", "sockd", "rootd", "proofd", "???" };
 
-   Int_t isrv = (fServer >= -1 && fServer <= TSocket::kPROOFD) ? 
+   Int_t isrv = (fServer >= -1 && fServer <= TSocket::kPROOFD) ?
                 fServer+1 : TSocket::kPROOFD+2;
- 
+
    Info("Print",
    "%s +------------------------------------------------------------------+",proc);
    Info("Print","%s + Host:%s - Srv:%s - User:%s - # of available methods:%d",
          proc, fHost.Data(), srvnam[isrv], fUser.Data(), fNumMethods);
    int i = 0;
    for (i = 0; i < fNumMethods; i++){
-      Info("Print","%s + Method: %d (%s) Ok:%d Ko:%d Dets:%s", proc, 
-           fMethods[i],TAuthenticate::GetAuthMethod(fMethods[i]), 
+      Info("Print","%s + Method: %d (%s) Ok:%d Ko:%d Dets:%s", proc,
+           fMethods[i],TAuthenticate::GetAuthMethod(fMethods[i]),
            fSuccess[i], fFailure[i], fDetails[i].Data());
    }
    Info("Print",
@@ -454,7 +454,7 @@ void THostAuth::PrintEstablished() const
    if (fSecContexts->GetSize()>0) {
       TIter next(fSecContexts);
       TSecContext *ctx = 0;
-      Int_t k = 1; 
+      Int_t k = 1;
       while ((ctx = (TSecContext *) next())) {
          TString opt;
          opt += k++;
@@ -468,7 +468,7 @@ void THostAuth::PrintEstablished() const
 //______________________________________________________________________________
 void  THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
 {
-   // Reorder nmet methods according fmet[nmet] 
+   // Reorder nmet methods according fmet[nmet]
 
    // Temporary arrays
    Int_t   tMethods[kMAXSEC];
@@ -514,10 +514,10 @@ void  THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
 
    // Restore from temporary
    fNumMethods = k;
-   for (i = 0; i < fNumMethods; i++) { 
-      fMethods[i] = tMethods[i]; 
-      fSuccess[i] = tSuccess[i]; 
-      fFailure[i] = tFailure[i]; 
+   for (i = 0; i < fNumMethods; i++) {
+      fMethods[i] = tMethods[i];
+      fSuccess[i] = tSuccess[i];
+      fFailure[i] = tFailure[i];
       fDetails[i] = tDetails[i];
    }
 
@@ -590,7 +590,7 @@ void  THostAuth::SetFirst(Int_t method)
 
       // Rescale methods
       Int_t j = i;
-      for (; j > 0; j--) { 
+      for (; j > 0; j--) {
          fMethods[j] = fMethods[j-1];
          fSuccess[j] = fSuccess[j-1];
          fFailure[j] = fFailure[j-1];
@@ -608,10 +608,43 @@ void  THostAuth::SetFirst(Int_t method)
 }
 
 //______________________________________________________________________________
+void THostAuth::SetLast(Int_t method)
+{
+   // Set 'method' to be the last used (if in the list ...).
+
+   Int_t i = -1;
+   if (HasMethod(method,&i)) {
+
+      Int_t tMe = fMethods[i];
+      Int_t tSu = fSuccess[i];
+      Int_t tFa = fFailure[i];
+      TString tDe = fDetails[i];
+
+      // Rescale methods
+      Int_t j = i;
+      for (; j < (fNumMethods - 1); j++) {
+         fMethods[j] = fMethods[j+1];
+         fSuccess[j] = fSuccess[j+1];
+         fFailure[j] = fFailure[j+1];
+         fDetails[j] = fDetails[j+1];
+      }
+
+      // The saved method first
+      Int_t lp = fNumMethods - 1;
+      fMethods[lp] = tMe;
+      fSuccess[lp] = tSu;
+      fFailure[lp] = tFa;
+      fDetails[lp] = tDe;
+   }
+
+   if (gDebug > 3) Print();
+}
+
+//______________________________________________________________________________
 void THostAuth::AddFirst(Int_t level, const char *details)
 {
    // Add new method in first position
-   // If already in the list, set as first method 'level' with 
+   // If already in the list, set as first method 'level' with
    // authentication 'details'.
    // Faster then AddMethod(method,details)+SetFirst(method).
 
@@ -626,7 +659,7 @@ void THostAuth::AddFirst(Int_t level, const char *details)
    }
 
    // Rescale methods
-   for (i = fNumMethods; i > 0; i--) { 
+   for (i = fNumMethods; i > 0; i--) {
       fMethods[i] = fMethods[i-1];
       fSuccess[i] = fSuccess[i-1];
       fFailure[i] = fFailure[i-1];
@@ -682,14 +715,14 @@ void THostAuth::CountFailure(Int_t method)
 }
 
 //______________________________________________________________________________
-TSecContext *THostAuth::CreateSecContext(const char *user, const char *host, 
+TSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
                         Int_t meth, Int_t offset, const char *details,
-                        const char *token, TDatime expdate, void *sctx, Int_t key)   
+                        const char *token, TDatime expdate, void *sctx, Int_t key)
 {
    // Create a Security context and add it to local list
    // Return pointer to it to be stored in TAuthenticate
 
-   TSecContext *ctx = new TSecContext(user, host, meth, offset, details, 
+   TSecContext *ctx = new TSecContext(user, host, meth, offset, details,
                                       token, expdate, sctx, key);
    // Add it also to the local list if active
    if (ctx->IsActive())
@@ -702,7 +735,7 @@ TSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
 //______________________________________________________________________________
 void THostAuth::AsString(TString &Out)
 {
-   // Return a static string with all info in a serialized form 
+   // Return a static string with all info in a serialized form
 
    Out = Form("h:%s u:%s n:%d",GetHost(),GetUser(),fNumMethods);
 

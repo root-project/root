@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDSymCramerInv.h,v 1.2 2004/07/12 20:00:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixDSymCramerInv.h,v 1.1 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Oct 2004
 
 /*************************************************************************
@@ -40,6 +40,7 @@ public:
   static Bool_t Inv5x5(TMatrixDSym &m,Double_t *determ);
   static Bool_t Inv6x6(TMatrixDSym &m,Double_t *determ);
 
+  virtual ~TMatrixDSymCramerInv() { }
   ClassDef(TMatrixDSymCramerInv,0)  //Cramer Inversion routines for symmetric matrix
 };
 

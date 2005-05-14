@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.71 2005/03/20 21:36:51 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.74 2005/04/21 14:04:33 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1292,37 +1292,40 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      sourceFile.seekg(postponedpos);
                   } else {
 
+                     char *type = fLine;
                      char *typeEnd = 0;
                      char c2 = 0;
 
                      found = kFALSE;
 
                      // try to get type
-                     typeEnd = key - 1;
-                     while ((typeEnd > fLine)
-                            && (isspace(*typeEnd) || *typeEnd == '*'
-                                || *typeEnd == '&'))
-                        typeEnd--;
-                     typeEnd++;
-                     c2 = *typeEnd;
-                     *typeEnd = 0;
-                     char *type = typeEnd - 1;
-                     if (type<fLine) type = fLine;
-                     while (IsName(*type) && (type > fLine))
-                        type--;
-                     if (*type == ':' && ( (type - 1) > fLine)
-                         && *(type - 1) == ':') {
-                        // found a namespace
-                        type--;
-                        type--;
+                     if (key!=fLine) {
+                        typeEnd = key - 1;
+                        while ((typeEnd > fLine)
+                              && (isspace(*typeEnd) || *typeEnd == '*'
+                                 || *typeEnd == '&'))
+                           typeEnd--;
+                        typeEnd++;
+                        c2 = *typeEnd;
+                        *typeEnd = 0;
+                        type = typeEnd - 1;
+                        if (type<fLine) type = fLine;
                         while (IsName(*type) && (type > fLine))
                            type--;
+                        if (*type == ':' && ( (type - 1) > fLine)
+                           && *(type - 1) == ':') {
+                           // found a namespace
+                           type--;
+                           type--;
+                           while (IsName(*type) && (type > fLine))
+                              type--;
+                        }
+                        if (!IsWord(*type))
+                           type++;
+                        while ((type > fLine) && isspace(*(type - 1)))
+                           type--;
                      }
-                     if (!IsWord(*type))
-                        type++;
 
-                     while ((type > fLine) && isspace(*(type - 1)))
-                        type--;
                      if (type > fLine && (type-fLine)>=5 ) {
                         if (!strncmp(type - 5, "const", 5))
                            found = kTRUE;
@@ -1334,7 +1337,8 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      if (!strcmp(type, "void") && (*funcName == '~'))
                         found = kTRUE;
 
-                     *typeEnd = c2;
+                     if (typeEnd)
+                        *typeEnd = c2;
 
                      if (found) {
                         ptr = strchr(nameEndPtr, '{');
@@ -2635,7 +2639,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             while (IsName(*endNameSpace) && *endNameSpace)
                endNameSpace++;
             *endNameSpace = 0;
-            if (GetClass((const char *) keywordTmp) != 0,forceLoad)
+            if (GetClass((const char *) keywordTmp, forceLoad) != 0)
                end = keyword + (endNameSpace - keywordTmp);
             if (keywordTmp != 0)
                delete[]keywordTmp;
@@ -4660,7 +4664,7 @@ printf("FOUND NAMESP DECL: %s \n%s\n", strNamesp.Data(), fLine);
                   strClassName.Remove(strClassName.Last(':')-1);
 
                   // try to find strClassName - might have using directives added
-                  TDictionary* dict;
+                  TDictionary* dict=0;
                   if (!parseStack.FindType(strClassName, dict)) {
                      Warning("ExtractClassDocumentation",
                         "Found method candidate '%s', but no class it might belong to. Ignoring the method.",

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.115 2005/03/16 06:22:37 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.118 2005/04/26 09:00:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -491,7 +491,7 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             delete gSplash;
             gSplash = 0;
          }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), 
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
                           ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
          if (gConsoleEvent) {
             ::ResetEvent(gConsoleEvent);
@@ -848,9 +848,10 @@ void TWinNTSystem::SetProgname(const char *name)
 
          gProgPath = StrDup(dirname);
       } else {
-         Warning("SetProgname",
-            "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)", 
-            fullname);
+         // Do not issue a warning - ROOT is not using gProgPath anyway.
+         // Warning("SetProgname",
+         //   "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)",
+         //   fullname);
          gProgPath = WorkingDirectory();
       }
 
@@ -858,7 +859,7 @@ void TWinNTSystem::SetProgname(const char *name)
       progname[idot] = '\0';
       gProgName = StrDup(progname);
       if (which) delete [] which;
-      delete[] fullname; 
+      delete[] fullname;
    }
 }
 
@@ -895,7 +896,8 @@ const char *TWinNTSystem::HostName()
 //______________________________________________________________________________
 void TWinNTSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers.
+   // Add a file handler to the list of system file handlers. Only adds
+   // the handler if it is not already in the list of file handlers.
 
    TSystem::AddFileHandler(h);
    if (h) {
@@ -914,7 +916,8 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers.
+   // Remove a file handler from the list of file handlers. Returns
+   // the handler or 0 if the handler was not in the list of file handlers.
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -941,7 +944,8 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers.
+   // Add a signal handler to list of system signal handlers. Only adds
+   // the handler if it is not already in the list of signal handlers.
 
    TSystem::AddSignalHandler(h);
    ESignals  sig = h->GetSignal();
@@ -956,7 +960,8 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 //______________________________________________________________________________
 TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers.
+   // Remove a signal handler from list of signal handlers. Returns
+   // the handler or 0 if the handler was not in the list of signal handlers.
 
    int sig = h->GetSignal();
 
@@ -972,6 +977,8 @@ void TWinNTSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
    // If reset is true reset the signal handler for the specified signal
    // to the default handler, else restore previous behaviour.
+
+   //FIXME!
 }
 
 //______________________________________________________________________________
@@ -979,6 +986,8 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    // If ignore is true ignore the specified signal, else restore previous
    // behaviour.
+
+   // FIXME!
 }
 
 //______________________________________________________________________________
@@ -1062,6 +1071,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
+   Bool_t pollOnce = pendingOnly;
+
    while (1) {
       if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          if (!pendingOnly) {
@@ -1078,17 +1089,17 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
       }
 
-     // check for file descriptors ready for reading/writing
+      // check for file descriptors ready for reading/writing
       if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
          if (CheckDescriptors()) {
             if (!pendingOnly) {
                return;
             }
          }
-         fNfd = 0;
-         fReadready->Zero();
-         fWriteready->Zero();
       }
+      fNfd = 0;
+      fReadready->Zero();
+      fWriteready->Zero();
 
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
@@ -1112,7 +1123,15 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
       }
 
-      if (pendingOnly) return;
+      // if in pendingOnly mode poll once file descriptor activity
+      Long_t nextto = NextTimeOut(kTRUE);
+      if (pendingOnly) {
+         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
+            nextto = 0;
+            pollOnce = kFALSE;
+         } else
+            return;
+      }
 
       if (fReadmask && !fReadmask->GetBits() &&
           fWritemask && !fWritemask->GetBits()) {
@@ -1120,10 +1139,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          return;
       }
 
-      *fReadready = *fReadmask;
+      *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
+      fNfd = WinNTSelect(fReadready, fWriteready, nextto);
 
       // serious error has happened -> reset all file descrptors
       if ((fNfd < 0) && (fNfd != -2)) {
@@ -2128,7 +2147,7 @@ Bool_t TWinNTSystem::InitUsersGroups()
    // Collect local users and groups accounts informations
 
    // Net* API functions allowed and OS is Windows NT/2000/XP
-   if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) { 
+   if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) {
       fActUser = -1;
       fNbGroups = fNbUsers = 0;
       HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");

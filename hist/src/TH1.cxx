@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.232 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.238 2005/05/04 10:06:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -467,8 +467,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
-   SetBarOffset(gStyle->GetBarOffset());
-   SetBarWidth(gStyle->GetBarWidth());
+   UseCurrentStyle();
 }
 
 //______________________________________________________________________________
@@ -1099,14 +1098,27 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   }
 
   Double_t chsq = 0;
+  Double_t bin1, bin2, err1, err2, temp;
   for (i=i_start; i<=i_end; i++){
-     Double_t bin1 = this->GetBinContent(i)/sum1;
-     Double_t bin2 = h->GetBinContent(i)/sum2;
+     bin1 = this->GetBinContent(i)/sum1;
+     bin2 = h->GetBinContent(i)/sum2;
      if (bin1 ==0 && bin2==0){
         --ndf; //no data means one less degree of freedom
      } else {
-        Double_t temp  = bin1-bin2;
-        chsq += temp*temp/(bin1+bin2);
+
+        temp  = bin1-bin2;
+	//
+	err1=this->GetBinError(i);
+	err2=h->GetBinError(i);
+	if (err1 == 0 && err2 == 0){
+	  Error("Chi2Test", "bins with non-zero content and zero error");
+	  return 0;
+	}
+	err1*=err1;
+	err2*=err2;
+	err1/=sum1*sum1;
+	err2/=sum2*sum2;
+	chsq+=temp*temp/(err1+err2);
      }
   }
 
@@ -1991,9 +2003,12 @@ Int_t TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xx
 //      fname is the name of an already predefined function created by TF1 or TF2
 //      Predefined functions such as gaus, expo and poln are automatically
 //      created by ROOT.
+//      fname can also be a formula, accepted by the linear fitter (linear parts divided
+//      by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 //
 //  This function finds a pointer to the TF1 object with name fname
 //  and calls TH1::Fit(TF1 *f1,...)
+
    char *linear;
    linear= (char*)strstr(fname, "++");
    TF1 *f1=0;
@@ -2048,6 +2063,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //                      is drawn unless the option"N" above is specified.
 //                = "+" Add this new fitted function to the list of fitted functions
 //                      (by default, any previous function is deleted)
+//                = "C" In case of linear fitting, don't calculate the chisquare
+//                      (saves time) 
+//                = "F" If fitting a polN, switch to minuit fitter
 //
 //      When the fit is drawn (by default), the parameter goption may be used
 //      to specify a list of graphics options. See TH1::Draw for a complete
@@ -2193,6 +2211,8 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //       TF1 +f1 = (TF1*)fitter->GetUserFunction(); //the user theoretical function
 //
 //     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
+//     For fitting linear functions (containing the "++" sign" and polN functions, 
+//     the linear fitter is initialized.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -2246,6 +2266,14 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    zmin    = fZaxis.GetBinLowEdge(hzfirst);
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
 
+//   - Decode list of options into Foption
+   Foption_t Foption;
+   if (!FitOptionsMake(option,Foption)) return 0;
+   if (xxmin != xxmax) {
+      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
+      Foption.Range = 1;
+   }
+
 //   - Check if Minuit is initialized and create special functions
 
 
@@ -2253,6 +2281,9 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    Bool_t linear = f1->IsLinear();
    if (special==299+npar)
       linear = kTRUE;
+   if (Foption.Bound || Foption.Like || Foption.Errors || Foption.Gradient || Foption.More || Foption.User|| Foption.Integral || Foption.Minuit)
+      linear = kFALSE;
+
    char l[] ="TLinearFitter";
    Int_t strdiff = 0;
    Bool_t IsSet = kFALSE;
@@ -2269,7 +2300,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 	 IsSet=kFALSE;
       }
       if (!IsSet) {
-	 //TLinearFitter *lf=(TLinearFitter *)cl->New();
 	 TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
@@ -2290,13 +2320,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 
    if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
-//   - Decode list of options into Foption
-   Foption_t Foption;
-   if (!FitOptionsMake(option,Foption)) return 0;
-   if (xxmin != xxmax) {
-      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
-      Foption.Range = 1;
-   }
    hFitter->SetFitOption(Foption);
 
 //   - Is a Fit range specified?
@@ -2322,19 +2345,15 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
    hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
 
-
-   //Int_t special = f1->GetNumber();
-
-   if (linear && !Foption.Bound && !Foption.Like && !Foption.Errors && !Foption.Gradient && !Foption.More){
+   if (linear){
       hFitter->ExecuteCommand("FitHist", 0, 0);
    } else {
       //   - If case of a predefined function, then compute initial values of parameters
-      //Int_t special = f1->GetNumber();
       if (Foption.Bound) special = 0;
       if      (special == 100)      H1InitGaus();
       else if (special == 400)      H1InitGaus();
       else if (special == 200)      H1InitExpo();
-      //else if (special == 299+npar) H1InitPolynom();
+      else if (special == 299+npar) H1InitPolynom();
 
       //   - Some initialisations
       if (!Foption.Verbose) {
@@ -2392,6 +2411,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 	 ey = GetBinError(i);
 	 sumw2 += ey*ey;
       }
+      //
+      //
+      // printf("h1: sumw2=%f\n", sumw2);
+      //
 
       //   - Perform minimization
       arglist[0] = TVirtualFitter::GetMaxIterations();
@@ -2740,6 +2763,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
    Foption.Nostore = 0;
    Foption.Plus    = 0;
    Foption.Integral= 0;
+   Foption.Minuit  = 0;
 
    Int_t nch = strlen(choptin);
    if (!nch) return 1;
@@ -2764,6 +2788,8 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &Foption)
    if (strstr(chopt,"I"))  Foption.Integral= 1;
    if (strstr(chopt,"B"))  Foption.Bound   = 1;
    if (strstr(chopt,"U")) {Foption.User    = 1; Foption.Like = 0;}
+   if (strstr(chopt,"F"))  Foption.Minuit = 1;
+   if (strstr(chopt,"C"))  Foption.Nochisq = 1;
    return 1;
 }
 
@@ -5137,6 +5163,65 @@ Double_t TH1::GetRMSError(Int_t axis) const
    if (stats[0]==0) return 0;
    return (rms/TMath::Sqrt(2*stats[0]));
 }
+
+//______________________________________________________________________________
+Double_t TH1::GetSkewness(Int_t axis) const
+{
+  //Returns skewness of the histogram
+  //Note, that since third and fourth moment are not calculated
+  //at the fill time, skewness is computed bin by bin
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t x, w, mean, rms, rms3, sum=0;
+   mean = GetMean(axis);
+   rms = GetRMS(axis);
+   rms3 = rms*rms*rms;
+   Int_t bin;
+   Double_t np=0;
+   const TAxis *ax;
+   if (axis==1) ax = &fXaxis;
+   else if (axis==2) ax = &fYaxis;
+   else ax = &fZaxis;
+
+   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+      x = GetBinCenter(bin);
+      w = GetBinContent(bin);
+      np+=w;
+      sum+=w*(x-mean)*(x-mean)*(x-mean);
+   }
+   sum/=np*rms3;
+   return sum;
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetKurtosis(Int_t axis) const
+{
+  //Returns kurtosis of the histogram. Kurtosis(gaussian(0, 1)) = 0.
+  //Note, that since third and fourth moment are not calculated
+  //at the fill time, kurtosis is computed bin by bin
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t x, w, mean, rms, rms4, sum=0;
+   mean = GetMean(axis);
+   rms = GetRMS(axis);
+   rms4 = rms*rms*rms*rms;
+   Int_t bin;
+   Double_t np=0;
+   const TAxis *ax;
+   if (axis==1) ax = &fXaxis;
+   else if (axis==2) ax = &fYaxis;
+   else ax = &fZaxis; 
+
+   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+      x = GetBinCenter(bin);
+      w = GetBinContent(bin);
+      np+=w;
+      sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
+   }
+   sum/=np*rms4;
+   return sum-3;
+}
+
 
 //______________________________________________________________________________
 void TH1::GetStats(Stat_t *stats) const

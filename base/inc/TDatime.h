@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.7 2003/03/03 20:02:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.8 2004/07/07 22:42:40 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@ public:
    TDatime(Int_t year, Int_t month, Int_t day,
            Int_t hour, Int_t min, Int_t sec);
    TDatime(const char *sqlDateTime);
+   virtual ~TDatime() { }
 
    TDatime operator=(const TDatime &d);
 

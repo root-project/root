@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_METHODPROXY_H
@@ -79,6 +79,13 @@ namespace PyROOT {
       MethodProxy* pymeth = (MethodProxy*)MethodProxy_Type.tp_new( &MethodProxy_Type, 0, 0 );
       pymeth->Set( name, methods );
       return pymeth;
+   }
+
+   inline MethodProxy* MethodProxy_New( const std::string& name, PyCallable* method )
+   {
+      std::vector< PyCallable* > p;
+      p.push_back( method );
+      return MethodProxy_New( name, p );
    }
 
 } // namespace PyROOT

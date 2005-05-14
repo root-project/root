@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.9 2005/03/11 21:25:11 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.11 2005/04/18 10:54:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

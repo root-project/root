@@ -51,8 +51,9 @@ in this Software without prior written authorization from the X Consortium.
 #include <unistd.h>
 #endif
 #if !defined(__hpux)
-#if defined(R__MACOSX_VERS)
-#if R__MACOSX_VERS < 4
+#if defined(__APPLE__)
+#include <AvailabilityMacros.h>
+#if !defined(MAC_OS_X_VERSION_10_4)
 extern int fchmod();
 #endif
 #else

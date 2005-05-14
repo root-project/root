@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.46 2004/09/07 20:17:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.48 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
    virtual void     DrawIntegral(Option_t *option="al");   // *MENU*
    virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
    virtual void     DrawPanel(); // *MENU*
-   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
+   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
@@ -132,6 +132,7 @@ public:
    virtual Double_t GetXmax() const {return fXmax;}
    TAxis           *GetXaxis() const ;
    TAxis           *GetYaxis() const ;
+   TAxis           *GetZaxis() const ;
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=1e-12);

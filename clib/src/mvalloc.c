@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mvalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: mvalloc.c,v 1.2 2000/10/02 11:10:51 rdm Exp $ */
 /* Author: */
 
 /* Allocate memory on a page boundary.
@@ -25,7 +25,7 @@ Boston, MA 02111-1307, USA.  */
 #  include <unistd.h>
 #endif
 
-#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(R__GLIBC)
+#if defined(R__LINUX) && !defined(R__GLIBC)
 extern size_t getpagesize PARAMS ((void));
 #else
 extern int getpagesize PARAMS ((void));

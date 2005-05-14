@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.5 2004/09/01 15:08:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.6 2004/09/01 17:18:10 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -38,6 +38,7 @@ public:
    TGDimension() { fWidth = fHeight = 0; }
    TGDimension(UInt_t width, UInt_t height) { fWidth = width; fHeight = height; }
    TGDimension(const TGDimension &d) { fWidth = d.fWidth; fHeight = d.fHeight; }
+   virtual ~TGDimension() { }
 
    Bool_t operator==(const TGDimension &b) const
       { return ((fWidth == b.fWidth) && (fHeight == b.fHeight)); }
@@ -58,6 +59,7 @@ public:
    TGPosition() { fX = fY = 0; }
    TGPosition(Int_t xc, Int_t yc) { fX = xc; fY = yc; }
    TGPosition(const TGPosition &p) { fX = p.fX; fY = p.fY; }
+   virtual ~TGPosition() { }
 
    Bool_t operator==(const TGPosition &b) const
       { return ((fX == b.fX) && (fY == b.fY)); }
@@ -78,6 +80,7 @@ public:
    TGLongPosition() { fX = fY = 0; }
    TGLongPosition(Long_t xc, Long_t yc) { fX = xc; fY = yc; }
    TGLongPosition(const TGLongPosition &p) { fX = p.fX; fY = p.fY; }
+   virtual ~TGLongPosition() { }
 
    Bool_t operator==(const TGLongPosition &b) const
       { return ((fX == b.fX) && (fY == b.fY)); }
@@ -102,6 +105,7 @@ public:
       { fL = lf; fR = rg; fT = tp; fB = bt; }
    TGInsets(const TGInsets &in)
       { fL = in.fL; fR = in.fR; fT = in.fT; fB = in.fB; }
+   virtual ~TGInsets() { }
 
    Bool_t operator==(const TGInsets &in) const
       { return ((fL == in.fL) && (fR == in.fR) && (fT == in.fT) && (fB == in.fB)); }
@@ -125,6 +129,7 @@ public:
                 { fX = p.fX; fY = p.fY; fW = d.fWidth; fH = d.fHeight; }
    TGRectangle(const TGRectangle &r)
                 { fX = r.fX; fY = r.fY; fW = r.fW; fH = r.fH; }
+   virtual ~TGRectangle() { }
 
    // methods
    Bool_t Contains(Int_t px, Int_t py) const

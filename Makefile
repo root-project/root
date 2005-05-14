@@ -44,9 +44,9 @@ endif
 
 MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 newdelete hist tree freetype graf g3d gpad gui minuit \
-                histpainter treeplayer treeviewer proof physics postscript \
+                histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp \
-                guibuilder xml
+                guibuilder xml foam
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
@@ -98,6 +98,7 @@ MODULES      += asimage
 endif
 ifeq ($(ENABLETHREAD),yes)
 MODULES      += thread
+MODULES      += proof
 endif
 ifeq ($(BUILDFPYTHIA),yes)
 MODULES      += pythia
@@ -153,8 +154,8 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot ruby \
+                rootx rootd proofd proof dcache chirp hbook alien asimage \
+                ldap mlp krb5auth rpdutils globusauth pyroot ruby \
                 qt qtroot xrootd netx clarens peac oracle xmlparser
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -171,7 +172,7 @@ CINTLIBS     := -lCint
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 RINTLIBS     := -lRint
-PROOFLIBS    := -lProof -lTreePlayer
+PROOFLIBS    := -lProof -lTreePlayer -lThread
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
@@ -180,7 +181,8 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
-PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
+PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
+                $(LPATH)/libThread.lib
 endif
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 ROOTLIBSDEP   = $(CORELIB) $(CINTLIB) $(HISTLIB) \
@@ -439,9 +441,9 @@ debian:
 	    echo "Must have ROOT source tree in root-$$vers" ; \
 	    echo "Please rename this directory to `basename $$PWD` to"; \
 	    echo "root-$$vers and try again"; exit 1 ; fi
-	rm -rf debian 
+	rm -rf debian
 	build/package/lib/makedebdir.sh
-	fakeroot debian/rules debian/control 
+	fakeroot debian/rules debian/control
 	dpkg-buildpackage -rfakeroot -us -uc -i"G__|^debian|\.d$$"
 	@echo "Debian GNU/Linux packages done. They are put in '../'"
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.34 2005/03/23 12:41:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.35 2005/03/24 07:11:27 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TProfile2D::TProfile2D() : TH2D()
 //*-*-*-*-*-*Default constructor for Profile2D histograms*-*-*-*-*-*-*-*-*
 //*-*        ============================================
    fTsumwz = fTsumwz2 = 0;
+   fScaling = kFALSE;
 }
 
 //______________________________________________________________________________

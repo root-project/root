@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF112.h,v 1.15 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF12.h,v 1.1 2003/04/05 16:53:03 brun Exp $
 // Author: Rene Brun   05/04/2003
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
    virtual   ~TF12();
    virtual void     Copy(TObject &f12) const;
    virtual TF1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0);
+   virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    virtual Double_t GetXY() const {return fXY;}
    virtual void     SavePrimitive(ofstream &out, Option_t *option);

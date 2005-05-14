@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.18 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.19 2005/03/15 09:38:09 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -428,6 +428,35 @@ Bool_t TGTab::SetTab(Int_t tabIndex)
 }
 
 //______________________________________________________________________________
+Bool_t TGTab::SetTab(const char *name)
+{
+   // Brings the composite frame with the name to the
+   // front and generate the following event if the front tab has changed:
+   // kC_COMMAND, kCM_TAB, tab id, 0.
+   // Returns kFALSE if tab with name does not exist.
+
+   TGFrameElement *el;
+   Int_t  count = 0;
+   TGTabElement *tab = 0;
+
+   TIter next(fList);
+
+   while (next()) {
+      el = (TGFrameElement *) next();
+      tab = (TGTabElement *)el->fFrame;
+
+      if (name == *(tab->GetText())) {
+         // change tab and generate event
+         ChangeTab(count);
+         return kTRUE;
+      }
+      count++;
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 {
    // Return container of tab with index tabIndex.
@@ -446,6 +475,30 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
       if (count == tabIndex)
          return (TGCompositeFrame *) el->fFrame;
       count++;
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
+{
+   // Return the tab container of tab with string name.
+   // Returns 0 in case name is not found.
+
+   TGFrameElement *el;
+   TGTabElement *tab = 0;
+   TGCompositeFrame *comp = 0;
+
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      comp = (TGCompositeFrame *) el->fFrame;
+      el = (TGFrameElement *) next();
+      tab = (TGTabElement *)el->fFrame;
+      if (name == *(tab->GetText())) {
+         return comp;
+      }
    }
 
    return 0;
@@ -473,6 +526,29 @@ TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+TGTabElement *TGTab::GetTabTab(const char *name) const
+{
+   // Return the tab element of tab with string name.
+   // Returns 0 in case name is not found.
+
+   TGFrameElement *el;
+   TGTabElement *tab = 0;
+
+   TIter next(fList);
+   next();
+
+   while ((el = (TGFrameElement *) next())) {
+      tab = (TGTabElement *)el->fFrame;
+      if (name == *(tab->GetText())) {
+         return tab;
+      }
+      next();
+   }
+
+   return tab;
 }
 
 //______________________________________________________________________________

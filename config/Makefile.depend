@@ -15,9 +15,11 @@ G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
 WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
 WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
                       Opengl32.lib
-ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB)
-ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib \
-                      lib/libGui.lib
+ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
+ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib
+ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
+ASIMAGEGUILIBEXTRA  = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
+                      lib/libASImage.lib
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
@@ -43,9 +45,9 @@ TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libGui.lib
 PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                      $(TREEPLAYERLIB)
+                      $(TREEPLAYERLIB) $(THREADLIB)
 PROOFLIBEXTRA       = lib/libTree.lib lib/libGraf3d.lib lib/libGraf.lib \
-                      lib/libHist.lib lib/libTreePlayer.lib
+                      lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
@@ -90,6 +92,8 @@ RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = lib/libHist.lib
 GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = lib/libGui.lib
+FOAMLIBDEP          = $(HISTLIB)
+FOAMLIBEXTRA        = lib/libHist.lib
 
 else
 
@@ -123,8 +127,8 @@ TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
 PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                      $(TREEPLAYERLIB)
-PROOFLIBEXTRA       = -Llib -lTree -lGraf3d -lGraf -lHist -lTreePlayer
+                      $(TREEPLAYERLIB) $(THREADLIB)
+PROOFLIBEXTRA       = -Llib -lTree -lGraf3d -lGraf -lHist -lTreePlayer -lThread
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
 PROOFGUILIBEXTRA    = -Llib -lProof -lGui
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
@@ -156,8 +160,10 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
-ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB)
-ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad -lGui
+ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
+ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad
+ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
+ASIMAGEGUILIBEXTRA  = -Llib -lGraf -lHist -lGui -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
@@ -173,5 +179,7 @@ NETXLIBDEP          = $(THREADLIB)
 NETXLIBEXTRA        = -Llib -lThread
 GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = -Llib -lGui
+FOAMLIBDEP          = $(HISTLIB)
+FOAMLIBEXTRA        = -Llib -lHist
 
 endif

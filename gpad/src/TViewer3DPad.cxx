@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.6 2005/03/18 16:19:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.8 2005/04/11 08:40:59 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -17,6 +17,17 @@
 
 #include <assert.h>
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TViewer3DPad                                                         //
+//                                                                      //
+// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.    //
+// Will be merged with TView / TView3D eventually.                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+ClassImp(TViewer3DPad)
+
 //______________________________________________________________________________
 Bool_t TViewer3DPad::PreferLocalFrame() const
 {
@@ -29,8 +40,7 @@ Bool_t TViewer3DPad::PreferLocalFrame() const
 //______________________________________________________________________________
 void TViewer3DPad::BeginScene()
 {
-   // Open a scene on the viewer. Is re-entrant as pad requires a two pass
-   // draw.
+   // Open a scene on the viewer
    assert(!fBuilding);
 
    // Create a 3D view if none exists
@@ -42,12 +52,11 @@ void TViewer3DPad::BeginScene()
          return;
       }
       fPad.SetView(view);
-   }
 
-   // Perform a first pass to calculate the range
-   if (!fBuilding && !view->GetAutoRange()) {
+      // Set view to perform first auto-range (scaling) pass 
       view->SetAutoRange(kTRUE);
    }
+
    fBuilding = kTRUE;
 }
 

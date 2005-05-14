@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.43 2005/03/11 21:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.44 2005/03/22 19:53:59 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
           kMissingLeaf = BIT(15) // true if some of the needed leaves are missing in the current TTree
         };
    enum { kDirect, kDataMember, kMethod, 
-          kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc };
+          kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum };
    enum { kAlias           = 200,
           kAliasString     = 201,
           kAlternate       = 202,

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.23 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.24 2005/02/08 22:40:36 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 
 
 class TProof;
+class TProofPlayer;
 class TSocket;
 class TList;
 class TDSetElement;
@@ -47,37 +48,38 @@ class TDSetElement;
 class TProofServ : public TApplication {
 
 private:
-   TString     fService;          //service we are running, either "proofserv" or "proofslave"
-   TString     fUser;             //user as which we run
-   TString     fPasswd;           //encoded passwd info for slaves
-   TString     fConfDir;          //directory containing cluster config information
-   TString     fConfFile;         //file containing config information
-   TString     fWorkDir;          //directory containing all proof related info
-   TString     fSessionDir;       //directory containing session dependent files
-   TString     fPackageDir;       //directory containing packages and user libs
-   TString     fCacheDir;         //directory containing cache of user files
-   TString     fPackageLock;      //package dir lock file
-   TString     fCacheLock;        //cache dir lock file
-   TSocket    *fSocket;           //socket connection to client
-   TProof     *fProof;            //PROOF talking to slave servers
-   FILE       *fLogFile;          //log file
-   TList      *fEnabledPackages;  //list of enabled packages
-   Int_t       fPackageLockId;    //file id of package dir lock
-   Int_t       fCacheLockId;      //file id of cache dir lock
-   Int_t       fProtocol;         //protocol version number
-   TString     fOrdinal;          //slave ordinal number
-   Int_t       fGroupId;          //slave unique id in the active slave group
-   Int_t       fGroupSize;        //size of the active slave group
-   Int_t       fLogLevel;         //debug logging level
-   Int_t       fNcmd;             //command history number
-   Bool_t      fPwHash;           //true if fPasswd is a passwd hash
-   Bool_t      fSRPPwd;           //true if fPasswd is a SRP passwd
-   Bool_t      fMasterServ;       //true if we are a master server
-   Bool_t      fInterrupt;        //if true macro execution will be stopped
-   Float_t     fRealTime;         //real time spent executing commands
-   Float_t     fCpuTime;          //CPU time spent executing commands
-   TStopwatch  fLatency;          //measures latency of packet requests
-   TStopwatch  fCompute;          //measures time spend processing a packet
+   TString       fService;          //service we are running, either "proofserv" or "proofslave"
+   TString       fUser;             //user as which we run
+   TString       fPasswd;           //encoded passwd info for slaves
+   TString       fConfDir;          //directory containing cluster config information
+   TString       fConfFile;         //file containing config information
+   TString       fWorkDir;          //directory containing all proof related info
+   TString       fSessionDir;       //directory containing session dependent files
+   TString       fPackageDir;       //directory containing packages and user libs
+   TString       fCacheDir;         //directory containing cache of user files
+   TString       fPackageLock;      //package dir lock file
+   TString       fCacheLock;        //cache dir lock file
+   TSocket      *fSocket;           //socket connection to client
+   TProof       *fProof;            //PROOF talking to slave servers
+   TProofPlayer *fPlayer;           //actual player
+   FILE         *fLogFile;          //log file
+   TList        *fEnabledPackages;  //list of enabled packages
+   Int_t         fPackageLockId;    //file id of package dir lock
+   Int_t         fCacheLockId;      //file id of cache dir lock
+   Int_t         fProtocol;         //protocol version number
+   TString       fOrdinal;          //slave ordinal number
+   Int_t         fGroupId;          //slave unique id in the active slave group
+   Int_t         fGroupSize;        //size of the active slave group
+   Int_t         fLogLevel;         //debug logging level
+   Int_t         fNcmd;             //command history number
+   Bool_t        fPwHash;           //true if fPasswd is a passwd hash
+   Bool_t        fSRPPwd;           //true if fPasswd is a SRP passwd
+   Bool_t        fMasterServ;       //true if we are a master server
+   Bool_t        fInterrupt;        //if true macro execution will be stopped
+   Float_t       fRealTime;         //real time spent executing commands
+   Float_t       fCpuTime;          //CPU time spent executing commands
+   TStopwatch    fLatency;          //measures latency of packet requests
+   TStopwatch    fCompute;          //measures time spend processing a packet
 
    void        Setup();
    void        RedirectOutput();
@@ -90,6 +92,7 @@ private:
    Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
    Int_t       UnloadPackage(const char* package);
    Int_t       UnloadPackages();
+   void        HandleSocketInputDuringProcess();
 
 public:
    TProofServ(int *argc, char **argv);

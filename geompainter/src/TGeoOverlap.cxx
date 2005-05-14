@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.5 2003/07/05 20:42:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.6 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -92,19 +92,19 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
 //______________________________________________________________________________
 Int_t TGeoOverlap::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   return gGeoManager->GetGeomPainter()->DistanceToPrimitiveVol(fVolume, px, py);
+   return fVolume->GetGeoManager()->GetGeomPainter()->DistanceToPrimitiveVol(fVolume, px, py);
 }
 
 //______________________________________________________________________________
 void TGeoOverlap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   gGeoManager->GetGeomPainter()->ExecuteVolumeEvent(fVolume, event, px, py);
+   fVolume->GetGeoManager()->GetGeomPainter()->ExecuteVolumeEvent(fVolume, event, px, py);
 }
 
 //______________________________________________________________________________
 void TGeoOverlap::Paint(Option_t *option)
 {
-   gGeoManager->GetGeomPainter()->PaintOverlap(this, option);
+   fVolume->GetGeoManager()->GetGeomPainter()->PaintOverlap(this, option);
 }
 
 //______________________________________________________________________________
@@ -151,7 +151,7 @@ void TGeoExtrusion::Draw(Option_t *option)
 {
 // Draw the extrusion. Mother volume will be blue, extruding daughter green,
 // extruding points red.
-   gGeoManager->GetGeomPainter()->DrawOverlap(this, option);
+   fVolume->GetGeoManager()->GetGeomPainter()->DrawOverlap(this, option);
    PrintInfo();
 }
 
@@ -219,7 +219,7 @@ void TGeoNodeOverlap::Draw(Option_t *option)
 {
 // Draw the overlap. One daughter will be blue, the other green,
 // extruding points red.
-   gGeoManager->GetGeomPainter()->DrawOverlap(this, option);
+   fVolume->GetGeoManager()->GetGeomPainter()->DrawOverlap(this, option);
    PrintInfo();
 }
  

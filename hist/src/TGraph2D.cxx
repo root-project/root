@@ -16,7 +16,6 @@
 #include "TGraphDelaunay.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
-//#include "TLinearFitter.h"
 
 ClassImp(TGraph2D)
 
@@ -508,6 +507,11 @@ TObject *TGraph2D::FindObject(const TObject *obj) const
 Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 {
    // Fits this graph with function with name fname
+   // Predefined functions such as gaus, expo and poln are automatically
+   // created by ROOT.
+   // fname can also be a formula, accepted by the linear fitter (linear parts divided
+   // by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
+
 
    char *linear;
    linear= (char*)strstr(fname, "++");
@@ -543,6 +547,8 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //                  is drawn unless the option"N" above is specified.
    //            = "+" Add this new fitted function to the list of fitted functions
    //                  (by default, any previous function is deleted)
+   //            = "C" In case of linear fitting, not calculate the chisquare
+   //                  (saves time)
    //
    //  In order to use the Range option, one must first create a function
    //  with the expression to be fitted. For example, if your graph2d
@@ -639,16 +645,12 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
       return 0;
    }
 
-
-   //char *linear;
-   //linear=strchr(f2->GetName(), '|');
-   //if (!linear){
    npar = f2->GetNpar();
    if (npar <= 0) {
      Error("Fit", "function %s has illegal number of parameters = %d", f2->GetName(), npar);
      return 0;
    }
-   
+
    // Check that function has same dimension as graph
    if (f2->GetNdim() != 2) {
      Error("Fit","function %s is not 2-D", f2->GetName());
@@ -659,19 +661,6 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
    // Decode string choptin and fill fitOption structure
    Foption_t fitOption;
-   fitOption.Quiet   = 0;
-   fitOption.Verbose = 0;
-   fitOption.Bound   = 0;
-   fitOption.Like    = 0;
-   fitOption.W1      = 0;
-   fitOption.Errors  = 0;
-   fitOption.Range   = 0;
-   fitOption.Gradient= 0;
-   fitOption.Nograph = 0;
-   fitOption.Nostore = 0;
-   fitOption.Plus    = 0;
-   fitOption.User    = 0;
-   fitOption.Nochisq = 0;
 
    TString opt = option;
    opt.ToUpper();
@@ -687,7 +676,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-///xmin    = fX[0];
+ ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
 ///ymin    = fY[0];
 ///ymax    = fY[fNpoints-1];
@@ -709,6 +698,9 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    // Check if Minuit is initialized and create special functions
 
    Bool_t linear = f2->IsLinear();
+
+   if (fitOption.Bound || fitOption.User || fitOption.Errors)
+      linear = kFALSE;
 
    char l[]="TLinearFitter";
    Int_t strdiff = 0;
@@ -734,8 +726,8 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 	 delete TVirtualFitter::GetFitter();
 	 IsSet=kFALSE;
       }
-      if (!IsSet)	
-	 TVirtualFitter::SetFitter(0);	       
+      if (!IsSet)
+	 TVirtualFitter::SetFitter(0);
    }
 
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f2->GetNpar());
@@ -745,7 +737,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    grFitter->SetUserFunc(f2);
    grFitter->SetFitOption(fitOption);
 
- 
+
 //*-*- Is a Fit range specified?
    Int_t gxfirst, gxlast;
 ///if (fitOption.Range) {
@@ -773,7 +765,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 	    arglist[0] = 0;
 	    grFitter->ExecuteCommand("SET NOW",   arglist,0);
 	 }
-	 
+
 	 // Set error criterion for chisquare
 	 arglist[0] = 1;
 	 if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
@@ -786,7 +778,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 	    delete [] arglist;
 	    return fitResult;
 	 }
-	 
+
 	 // Transfer names and initial values of parameters to Minuit
 	 Int_t nfixed = 0;
 	 for (i=0;i<npar;i++) {
@@ -802,7 +794,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 	    grFitter->SetParameter(i,f2->GetParName(i),par,we,al,bl);
 	 }
 	 if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
-	 
+
 	 // Reset Print level
 	 if (fitOption.Verbose) {
 	    arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1);
@@ -826,12 +818,12 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 	    grFitter->ExecuteCommand("HESSE",arglist,0);
 	    grFitter->ExecuteCommand("MINOS",arglist,0);
 	 }
-	 
+
 	 grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
 	 f2->SetChisquare(amin);
 	 Int_t ndf = f2->GetNumberFitPoints()-npar+nfixed;
 	 f2->SetNDF(ndf);
-	 
+
 	 // Get return status
 	 char parName[50];
 	 for (i=0;i<npar;i++) {

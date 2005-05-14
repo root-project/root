@@ -36,12 +36,12 @@ private:
    Float_t      fYlast;        //Y coordinate of the last point
    Float_t      fZfirst;       //Z coordinate of the first point
    Float_t      fZlast;        //Z coordinate of the last point
-   Double32_t   fCharge;       //Charge of this track
-   Double32_t   fVertex[3];    //Track vertex position
+   Double32_t   fCharge;       //[-1,1,2] Charge of this track
+   Double32_t   fVertex[3];    //[-30,30,16] Track vertex position
    Int_t        fNpoint;       //Number of points for this track
    Short_t      fValid;        //Validity criterion
    Int_t        fNsp;          //Number of points for this track with a special value
-   Double32_t*  fPointValue;   //[fNsp] a special quantity for some point.
+   Double32_t*  fPointValue;   //[fNsp][0,3] a special quantity for some point.
    TBits        fTriggerBits;  //Bits triggered by this track.
 
 public:
@@ -108,7 +108,7 @@ private:
    Double32_t     fTemperature;
    Int_t          fMeasures[10];
    Double32_t     fMatrix[4][4];
-   Double32_t    *fClosestDistance;   //[fNvertex]
+   Double32_t    *fClosestDistance;   //[fNvertex][-10,10,16]
    EventHeader    fEvtHdr;
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.8 2005/02/07 17:23:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.9 2005/03/08 05:33:30 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -169,30 +169,6 @@ TTreeIndex::~TTreeIndex()
 }
 
 //______________________________________________________________________________
-Int_t TTreeIndex::GetEntry(Long64_t entry)
-{
-   // Read in memory the branches referenced in major and minorname
-
-   if (!fTree) return 0;
-   TLeaf *leaf;
-   Int_t i;
-   Int_t nbytes = 0;
-   for (i=0;i<10;i++) {
-      if (!fMajorFormula) break;
-      leaf = fMajorFormula->GetLeaf(i);
-      if (!leaf) break;
-      nbytes += leaf->GetBranch()->GetEntry(entry);
-   }
-   for (i=0;i<10;i++) {
-      if (!fMinorFormula) break;
-      leaf = fMinorFormula->GetLeaf(i);
-      if (!leaf) break;
-      nbytes += leaf->GetBranch()->GetEntry(entry);
-   }
-   return nbytes;
-}
-
-//______________________________________________________________________________
 Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
 {
 // returns the entry number in this friend Tree corresponding to entry in
@@ -235,7 +211,7 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 // Note that this function returns only the entry number, not the data
 // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
 // the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major + minor*1e-9;
+// corresponding to val = major<<31 + minor;
 // The function performs binary search in this sorted table.
 // If it finds a pair that maches val, it returns directly the
 // index in the table.
@@ -262,7 +238,7 @@ Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 // Note that this function returns only the entry number, not the data
 // To read the data corresponding to an entry number, use TTree::GetEntryWithIndex
 // the BuildIndex function has created a table of Double_t* of sorted values
-// corresponding to val = major + minor*1e-9;
+// corresponding to val = major<<31 + minor;
 // The function performs binary search in this sorted table.
 // If it finds a pair that maches val, it returns directly the
 // index in the table, otherwise it returns -1.
@@ -274,7 +250,7 @@ Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
    value += minor;
    Int_t i = TMath::BinarySearch(fN, fIndexValues, value);
    if (i < 0) return -1;
-   if (TMath::Abs(fIndexValues[i] - value) > 1.e-10) return -1;
+   if (fIndexValues[i] != value) return -1;
    return fIndex[i];
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.55 2005/04/05 08:54:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.57 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -360,6 +360,7 @@ TGeoVolume::TGeoVolume()
    fNumber   = 0;
    fNtotal   = 0;
    fOption   = "";
+   fGeoManager = gGeoManager;
    TObject::ResetBit(kVolumeImportNodes);
 }
 
@@ -385,7 +386,8 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    }   
    fNumber   = 0;
    fNtotal   = 0;
-   if (gGeoManager) fNumber = gGeoManager->AddVolume(this);
+   fGeoManager = gGeoManager;
+   if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
 }
 
@@ -420,11 +422,11 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
 // Shoot nrays with random directions from starting point (startx, starty, startz)
 // in the reference frame of this volume. Track each ray until exiting geometry, then
 // shoot backwards from exiting point and compare boundary crossing points.
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
-   if (old_vol!=this) gGeoManager->SetTopVolume((TGeoVolume*)this);
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume((TGeoVolume*)this);
    else old_vol=0;
-   gGeoManager->GetTopVolume()->Draw();
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   fGeoManager->GetTopVolume()->Draw();
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->CheckGeometry(nrays, startx, starty, startz);
 }         
 
@@ -433,17 +435,17 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
 {
 // Overlap checking tool. Check for illegal overlaps within a limit OVLP.
    if (!GetNdaughters() || fFinder) return;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   gGeoManager->SetNsegments(80);
-   if (!gGeoManager->IsCheckingOverlaps()) {
-      gGeoManager->ClearOverlaps();
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
+   fGeoManager->SetNsegments(80);
+   if (!fGeoManager->IsCheckingOverlaps()) {
+      fGeoManager->ClearOverlaps();
       printf("=== Checking overlaps vor volume %s ===\n", GetName());
    }   
    painter->CheckOverlaps(this, ovlp, option);
    
-   if (!gGeoManager->IsCheckingOverlaps()) {
-      gGeoManager->SortOverlaps();
-      TObjArray *overlaps = gGeoManager->GetListOfOverlaps();
+   if (!fGeoManager->IsCheckingOverlaps()) {
+      fGeoManager->SortOverlaps();
+      TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
       Int_t novlps = overlaps->GetEntriesFast();
       TNamed *obj;
       char *name;
@@ -477,7 +479,7 @@ void TGeoVolume::CleanAll()
 //_____________________________________________________________________________
 void TGeoVolume::ClearShape()
 {
-   gGeoManager->ClearShape(fShape);
+   fGeoManager->ClearShape(fShape);
 }   
 
 //_____________________________________________________________________________
@@ -545,7 +547,7 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
          fNtotal = 1;
          break;
       case 2:
-         visopt = gGeoManager->GetVisOption();
+         visopt = fGeoManager->GetVisOption();
          if (!IsVisDaughters()) last = kTRUE;
          switch (visopt) {
             case TVirtualGeoPainter::kGeoVisDefault:
@@ -591,15 +593,15 @@ Bool_t TGeoVolume::IsStyleDefault() const
 Bool_t TGeoVolume::IsTopVolume() const
 {
 // True if this is the top volume of the geometry
-   if (gGeoManager->GetTopVolume() == this) return kTRUE;
+   if (fGeoManager->GetTopVolume() == this) return kTRUE;
    return kFALSE;
 }
 
 //_____________________________________________________________________________
 Bool_t TGeoVolume::IsRaytracing() const
 {
-   if (gGeoManager->GetTopVolume() != this) return kFALSE;
-   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   if (fGeoManager->GetTopVolume() != this) return kFALSE;
+   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return kFALSE;
    return painter->IsRaytracing();
 }
@@ -858,7 +860,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    }         
    TGeoVolume *voldiv = fShape->Divide(this, divname, iaxis, ndiv, start, step);
    if (numed) {
-      TGeoMedium *medium = gGeoManager->GetMedium(numed);
+      TGeoMedium *medium = fGeoManager->GetMedium(numed);
       if (!medium) {
          Fatal("Divide", "invalid medium number %d for division volume %s", numed, divname);
          return voldiv;
@@ -873,18 +875,22 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute the closest distance of approach from point px,py to this volume
-   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
-   if (!painter) return 9999;
-   return painter->DistanceToPrimitiveVol(this, px, py);
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
+   Int_t dist = 9999;
+   if (!painter) return dist;
+   dist = painter->DistanceToPrimitiveVol(this, px, py);
+   return dist;
 }
 
 //_____________________________________________________________________________
 void TGeoVolume::Draw(Option_t *option)
 {
 // draw top volume according to option
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
-   if (old_vol!=this) gGeoManager->SetTopVolume(this);
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume(this);
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->SetRaytracing(kFALSE);
    if (option && strlen(option) > 0) {
       painter->Draw(option); 
@@ -897,10 +903,11 @@ void TGeoVolume::Draw(Option_t *option)
 void TGeoVolume::DrawOnly(Option_t *option)
 {
 // draw only this volume
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
-   if (old_vol!=this) gGeoManager->SetTopVolume(this);
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->DrawOnly(option);   
 }
 
@@ -910,7 +917,7 @@ Bool_t TGeoVolume::OptimizeVoxels()
 // Perform an exensive sampling to find which type of voxelization is
 // most efficient.
    printf("Optimizing volume %s ...\n", GetName());
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    return painter->TestVoxels(this);   
 }
 
@@ -918,7 +925,7 @@ Bool_t TGeoVolume::OptimizeVoxels()
 void TGeoVolume::Paint(Option_t *option)
 {
 // paint volume
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->Paint(option);   
 }
 
@@ -945,9 +952,9 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
                             Double_t rmin, Double_t rmax, Option_t *option)
 {
 // Generate a lego plot fot the top volume, according to option.
-   TVirtualGeoPainter *p = gGeoManager->GetGeomPainter();
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
-   if (old_vol!=this) gGeoManager->SetTopVolume(this);
+   TVirtualGeoPainter *p = fGeoManager->GetGeomPainter();
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
    TH2F *hist = p->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
    hist->Draw("lego1sph");
@@ -958,29 +965,32 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of this volume.
-   gGeoManager->RandomPoints(this, npoints, option);
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   fGeoManager->RandomPoints(this, npoints, option);
 }
 
 //_____________________________________________________________________________
 void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
 {
 // Random raytracing method.
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
-   if (old_vol!=this) gGeoManager->SetTopVolume(this);
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
-   gGeoManager->RandomRays(nrays, startx, starty, startz);
+   fGeoManager->RandomRays(nrays, startx, starty, startz);
 }
 
 //_____________________________________________________________________________
 void TGeoVolume::Raytrace(Bool_t flag)
 {
 // Draw this volume with current settings and perform raytracing in the pad.
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    Bool_t drawn = (painter->GetDrawnVolume()==this)?kTRUE:kFALSE;
    
-   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) {
-      gGeoManager->SetTopVolume(this);
+      fGeoManager->SetTopVolume(this);
       painter->SetRaytracing(kFALSE);
       painter->Draw();
       painter->SetRaytracing(flag);
@@ -1006,7 +1016,7 @@ void TGeoVolume::SaveAs(const char *filename)
       Error("SavePrimitive", "Bad file name: %s", filename);
       return;
    }
-   if (gGeoManager->GetTopVolume() != this) gGeoManager->SetTopVolume(this);
+   if (fGeoManager->GetTopVolume() != this) fGeoManager->SetTopVolume(this);
    
    char fname[1000];
    strcpy(fname,filename);
@@ -1034,8 +1044,8 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
    Bool_t mustDraw = kFALSE;
    if (strstr(option,"ogl") || strstr(option,"x3d")) mustDraw = kTRUE;
    if (!strlen(option) || mustDraw) {
-      gGeoManager->SetAllIndex();
-      out << "   new TGeoManager(\"" << gGeoManager->GetName() << "\", \"" << gGeoManager->GetTitle() << "\");" << endl << endl;
+      fGeoManager->SetAllIndex();
+      out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << endl << endl;
       if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << endl;
       else          out << "   Bool_t mustDraw = kFALSE;" << endl;
       out << "   Double_t dx,dy,dz;" << endl;
@@ -1170,7 +1180,7 @@ void TGeoVolume::UnmarkSaved()
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
 // Execute mouse actions on this volume.
-   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return;
    painter->ExecuteVolumeEvent(this, event, px, py);
 }
@@ -1211,7 +1221,7 @@ Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
 char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
    TGeoVolume *vol = (TGeoVolume*)this;
-   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return 0;
    return painter->GetVolumeInfo(vol, px, py);
 }
@@ -1248,7 +1258,7 @@ char *TGeoVolume::GetPointerName() const
 void TGeoVolume::GrabFocus()
 {
 // Move perspective view focus to this volume
-   TVirtualGeoPainter *painter = gGeoManager->GetPainter();
+   TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (painter) painter->GrabFocus();
 }   
 
@@ -1351,13 +1361,13 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 //_____________________________________________________________________________
 void TGeoVolume::SetAsTopVolume()
 {
-   gGeoManager->SetTopVolume(this);
+   fGeoManager->SetTopVolume(this);
 }
 
 //_____________________________________________________________________________
 void TGeoVolume::SetCurrentPoint(Double_t x, Double_t y, Double_t z)
 {
-   gGeoManager->SetCurrentPoint(x,y,z);
+   fGeoManager->SetCurrentPoint(x,y,z);
 }
 
 //_____________________________________________________________________________
@@ -1431,7 +1441,7 @@ void TGeoVolume::Streamer(TBuffer &R__b)
       if (!fVoxels) {
          TGeoVolume::Class()->WriteBuffer(R__b, this);
       } else {
-         if (!gGeoManager->IsStreamingVoxels()) {
+         if (!fGeoManager->IsStreamingVoxels()) {
             TGeoVoxelFinder *voxels = fVoxels;
             fVoxels = 0;
             TGeoVolume::Class()->WriteBuffer(R__b, this);
@@ -1454,21 +1464,21 @@ void TGeoVolume::SetOption(const char * /*option*/)
 void TGeoVolume::SetLineColor(Color_t lcolor) 
 {
    TAttLine::SetLineColor(lcolor);
-   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 
 //_____________________________________________________________________________
 void TGeoVolume::SetLineStyle(Style_t lstyle) 
 {
    TAttLine::SetLineStyle(lstyle);
-   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 
 //_____________________________________________________________________________
 void TGeoVolume::SetLineWidth(Style_t lwidth) 
 {
    TAttLine::SetLineWidth(lwidth);
-   //if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   //if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
 }   
 
 //_____________________________________________________________________________
@@ -1524,8 +1534,8 @@ void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
    TGeoAtt::SetVisibility(vis);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
-   gGeoManager->ModifiedPad();
+   if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   fGeoManager->ModifiedPad();
 }   
 
 //_____________________________________________________________________________
@@ -1542,7 +1552,7 @@ Bool_t TGeoVolume::FindMatrixOfDaughterVolume(TGeoVolume *vol) const
    if (vol == this) return kTRUE;
    Int_t nd = GetNdaughters();
    if (!nd) return kFALSE;
-   TGeoHMatrix *global = gGeoManager->GetHMatrix();
+   TGeoHMatrix *global = fGeoManager->GetHMatrix();
    TGeoNode *dnode;
    TGeoVolume *dvol;
    TGeoMatrix *local;
@@ -1569,8 +1579,8 @@ void TGeoVolume::VisibleDaughters(Bool_t vis)
 {
 // set visibility for daughters
    SetVisDaughters(vis);
-   if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
-   gGeoManager->ModifiedPad();
+   if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   fGeoManager->ModifiedPad();
 }
 
 //_____________________________________________________________________________
@@ -1628,8 +1638,8 @@ Double_t TGeoVolume::Weight(Double_t precision, Option_t *option)
 {
 // Estimate the weight of a volume with SIGMA(M)/M better than PRECISION.
 // Option can be : v - verbose (default)
-   gGeoManager->SetTopVolume((TGeoVolume*)this);
-   return gGeoManager->Weight(precision, option);
+   fGeoManager->SetTopVolume((TGeoVolume*)this);
+   return fGeoManager->Weight(precision, option);
 }
 
 ClassImp(TGeoVolumeMulti)
@@ -1665,7 +1675,7 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, const TGeoMedium *med)
    TObject::SetBit(kVolumeMulti);
    SetName(name);
    SetMedium(med);
-   gGeoManager->AddVolume(this);
+   fGeoManager->AddVolume(this);
 //   printf("--- volume multi %s created\n", name);
 }
 
@@ -1748,7 +1758,7 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoMedium *medium = fMedium;
    if (numed) {
-      medium = gGeoManager->GetMedium(numed);
+      medium = fGeoManager->GetMedium(numed);
       if (!medium) {
          Error("Divide", "Invalid medium number %d for division volume %s", numed, divname);
          medium = fMedium;

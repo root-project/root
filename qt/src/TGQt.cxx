@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.15 2005/03/28 20:32:30 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.16 2005/04/06 09:32:11 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -624,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.95 2005/04/05 15:53:43 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.97 2005/04/14 01:05:16 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -1674,9 +1674,8 @@ void  TGQt::SelectWindow(int wid)
          }
       }
    }
-   // fprintf(stderr,"TGQt::SelectWindow fSelecteWindow old = %p; current= %p, buffer =%p\n"
-   //            ,fPrevWindow,fSelectedWindow, fSelectedBuffer);
-   if (fPrevWindow && (iwid(fPrevWindow) != -1) )            End();
+   
+   if (fPrevWindow && fPrevWindow != (void *)-1 && (fWidgetArray->find(fPrevWindow) != -1) )   End();
    if (fSelectedWindow && (fSelectedWindow != NoOperation))  Begin();
 }
 

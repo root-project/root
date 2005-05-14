@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.3 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 // TQtApplication -  Instantiate the Qt system within ROOT environment  //
 //                                                                      //
-// Instantiate the Qt package by createing Qapplication object if any   //
+// Instantiate the Qt package by creating Qapplication object if any   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +48,7 @@ public:
 
    static TQtApplication *GetQtApplication();
    static bool IsThisGuiThread();
+   static Int_t QtVersion();
    ClassDef(TQtApplication,0) // Instantiate the Qt system within ROOT environment
 
 };

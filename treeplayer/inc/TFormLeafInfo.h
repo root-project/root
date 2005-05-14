@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.2 2005/02/25 19:13:24 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.3 2005/03/11 21:25:11 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -134,8 +134,9 @@ public:
 // it is split.
 
 class TFormLeafInfoCollectionObject : public TFormLeafInfo {
+   Bool_t fTop;  //If true, it indicates that the branch itself contains
 public:
-   TFormLeafInfoCollectionObject(TClass* classptr = 0);
+   TFormLeafInfoCollectionObject(TClass* classptr = 0, Bool_t fTop = kTRUE);
 
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoCollectionObject(*this);

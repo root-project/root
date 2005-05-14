@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.29 2005/01/27 20:34:01 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.30 2005/03/14 15:38:33 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -179,9 +179,10 @@ public:
    virtual void      Paint(Option_t *option="");
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj) { return TPad::Pick(px, py, pickobj); }
    virtual TPad     *Pick(Int_t px, Int_t py, TObject *prevSelObj);
-   virtual void      Picked(TPad *selpad, TObject *selected, Int_t event); // *SIGNAL*
+   virtual void      Picked(TPad *selpad, TObject *selected, Int_t event);             // *SIGNAL*
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
-   virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);  // *SIGNAL*
+   virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
+   virtual void      Closed();                                                         // *SIGNAL*
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
    void              SaveSource(const char *filename="", Option_t *option="");

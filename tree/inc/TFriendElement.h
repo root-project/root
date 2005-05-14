@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.4 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.5 2004/09/24 18:22:46 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 class TFile;
 class TTree;
+class TClass;
 
 class TFriendElement : public TNamed {
 
@@ -41,6 +42,7 @@ protected:
     Bool_t        fOwnFile;     // true if file is managed by this class
 
 public:
+   enum { kFromChain = BIT(11) };
    TFriendElement();
    TFriendElement(TTree *tree, const char *treename, const char *filename);
    TFriendElement(TTree *tree, const char *treename, TFile *file);

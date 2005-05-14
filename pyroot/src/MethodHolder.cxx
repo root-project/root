@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.28 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.30 2005/04/13 05:04:49 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -37,6 +37,16 @@ namespace {
       TempLevelGuard() { G__settemplevel( 1 ); }
       ~TempLevelGuard() { G__settemplevel( -1 ); }
    };
+
+   TClassRef GetGlobalNamespace() {
+      static TClass c;
+      return &c;
+   }
+
+   G__ClassInfo* GetGlobalNamespaceInfo() {
+      static G__ClassInfo gcl;
+      return &gcl;
+   }
 
 } // unnamed namespace
 
@@ -95,12 +105,16 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
       if ( Utility::isPointer( fullType ) ) {
          ConvFactories_t::iterator h = gConvFactories.find( realType + "*" );
          if ( h == gConvFactories.end() ) {
-            if ( fullType.find( "const" ) != std::string::npos )
-               h = gConvFactories.find( "const void*" );
-            else
-               h = gConvFactories.find( "void*" );
+            bool isConst = fullType.find( "const" ) != std::string::npos;
+            if ( TClass* klass = gROOT->GetClass( realType.c_str() ) )
+               fConverters[ iarg ] = new KnownClassConverter( klass, isConst );
+            else {
+               h = isConst ? gConvFactories.find( "const void*" ) : gConvFactories.find( "void*" );
+               fConverters[ iarg ] = (h->second)();
+            }
          }
-         fConverters[ iarg ] = (h->second)();
+         else
+            fConverters[ iarg ] = (h->second)();
       } else if ( argType.Property() & G__BIT_ISENUM ) {
          fConverters[ iarg ] = (gConvFactories.find( "UInt_t" )->second)();
       } else {
@@ -158,10 +172,12 @@ bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
 inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
 {
 // actual offset calculation, as needed
-   long derivedtagnum = klass->GetClassInfo()->Tagnum();
+   long derivedtagnum = klass->GetClassInfo() ? klass->GetClassInfo()->Tagnum() : -1;
 
    if ( derivedtagnum != fTagnum ) {
-      fOffset = G__isanybase( fClass->GetClassInfo()->Tagnum(), derivedtagnum, (long) obj );
+      fOffset = G__isanybase(
+         fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1,
+         derivedtagnum, (long) obj );
       fTagnum = derivedtagnum;
    }
 }
@@ -170,6 +186,19 @@ inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
 //- constructors and destructor ----------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* klass, TMethod* method ) :
       fClass( klass ), fMethod( method )
+{
+   fMethodCall    =  0;
+   fExecutor      =  0;
+   fArgsRequired  = -1;
+   fOffset        =  0;
+   fTagnum        = -1;
+
+   fIsInitialized = false;
+}
+
+//____________________________________________________________________________
+PyROOT::MethodHolder::MethodHolder( TFunction* function ) :
+      fClass( GetGlobalNamespace() ), fMethod( function )
 {
    fMethodCall    =  0;
    fExecutor      =  0;
@@ -230,8 +259,14 @@ bool PyROOT::MethodHolder::Initialize()
    assert( fMethodCall == 0 );
 
    fMethodCall = new G__CallFunc();
-   fMethodCall->SetFuncProto( fClass->GetClassInfo(),
-      fMethod ? fMethod->GetName() : fClass->GetName(), callString.c_str(), &fOffset );
+   fMethodCall->Init();
+
+   G__ClassInfo* gcl = fClass->GetClassInfo();
+   if ( ! gcl )
+      gcl = GetGlobalNamespaceInfo();
+   
+   fMethodCall->SetFunc( gcl->GetMethod(
+      fMethod ? fMethod->GetName() : fClass->GetName(), callString.c_str(), &fOffset ) );
 
 // minimum number of arguments when calling
    fArgsRequired = fMethod ? fMethod->GetNargs() - fMethod->GetNargsOpt() : 0;
@@ -241,7 +276,6 @@ bool PyROOT::MethodHolder::Initialize()
 
    return true;
 }
-
 
 //____________________________________________________________________________
 bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyObject*& )

@@ -268,6 +268,22 @@ macosx)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+   auxcflags="-Wno-long-double $auxcflags"
+   auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   if [ $macosx_minor -le 3 ]; then
+      forcelibs=$rootulibs
+      forceglibs=$rootuglibs
+   fi
+   ;;
+macosx64)
+   # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+   auxcflags="-m64 -Wno-long-double $auxcflags"
+   auxldflags="-m64"
    auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
@@ -343,6 +359,14 @@ freebsd*|linux*)
       if test "x$f" = "xthread" ; then
          auxcflags="-pthread $auxcflags"
          auxlibs="-pthread $auxlibs"
+      fi
+   done
+   ;;
+hpuxacc | hpuxia64acc)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         auxcflags="-mt $auxcflags"
+         auxlibs="-mt $auxlibs"
       fi
    done
    ;;

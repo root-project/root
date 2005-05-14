@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.4 2005/01/19 18:30:58 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.6 2005/04/18 10:54:58 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -269,7 +269,6 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
   char   buffer[8192];
   void*  memory  = 0;
   StreamHelper* itm = 0;
-
   switch ( fSTL_type )  {
     case TClassEdit::kVector:
       if ( fVal->fKind != EDataType(kBOOL_t) )  {

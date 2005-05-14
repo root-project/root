@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.108 2005/03/08 10:32:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.111 2005/04/22 07:32:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -435,6 +435,7 @@
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
 #include "TVirtualGeoPainter.h"
+#include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 
 // statics and globals
@@ -529,6 +530,7 @@ TGeoManager::TGeoManager()
       fMatrixReflection = kFALSE;
       fGLMatrix = 0;
       fPaintVolume = 0;
+      fElementTable = 0;
       //gGeoManager = this;
     } else {
       Init();
@@ -638,6 +640,7 @@ void TGeoManager::Init()
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
    fPaintVolume = 0;
+   fElementTable = 0;
 }
 
 //_____________________________________________________________________________
@@ -657,7 +660,7 @@ TGeoManager::~TGeoManager()
    if (fNodes) delete fNodes;
    if (fOverlaps) {fOverlaps->Delete(); delete fOverlaps;}
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
-   if (TGeoElementTable::Instance()) delete TGeoElementTable::Instance();
+   if (fElementTable) delete fElementTable;
    if (fMedia) {fMedia->Delete(); delete fMedia;}
    if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}
@@ -1496,7 +1499,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
-      if (!TGeoElementTable::Instance()) new TGeoElementTable(200);
+      if (!fElementTable) fElementTable = new TGeoElementTable(200);
       if (!fTopNode) {
          if (!fMasterVolume) {
             Error("CloseGeometry", "Master volume not streamed");
@@ -2840,7 +2843,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       if (fStep<1E-6) return fCurrentNode;
    }
    fNextNode = (fStep<1E20)?fCurrentNode:0;
+   // Find next daughter boundary for the current volume
+   FindNextDaughterBoundary(point,dir,computeGlobal);
+   
    TGeoNode *current = 0;
+   TGeoNode *dnode = 0;
    TGeoVolume *mother = 0;
    // if we are in an overlapping node, check also the mother(s)
    if (fCurrentOverlapping) {
@@ -2881,16 +2888,53 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                   fStep = snext;
                   fNextNode = current;
                }
+            } else {
+               // another many - check if point is in or out
+               current->cd();
+               current->MasterToLocal(&mothpt[0], &dpt[0]);
+               current->MasterToLocalVect(&vecpt[0], &dvec[0]);
+               if (current->GetVolume()->GetNdaughters()) {
+                  if (current->GetVolume()->Contains(dpt)) {
+                     CdDown(ovlps[i]);
+                     dnode = FindNextDaughterBoundary(dpt,dvec,computeGlobal);
+                     CdUp();
+                  }   
+               } else {
+                  snext = current->GetVolume()->GetShape()->DistFromOutside(&dpt[0], &dvec[0], iact, fStep, &safe);
+                  if (snext<fStep) {
+                     if (computeGlobal) {
+                        *fCurrentMatrix = GetCurrentMatrix();
+                        fCurrentMatrix->Multiply(current->GetMatrix());
+                     }
+                     fIsStepEntering = kFALSE;
+                     fStep = snext;
+                     fNextNode = current;
+                  }               
+               }  
             }
          }
       }
       PopPath();
    }
-   // get number of daughters. If no daughters we are done.
+   return fNextNode;
+}
+
+//_____________________________________________________________________________
+TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, Bool_t compmatrix)
+{
+// Computes as fStep the distance to next daughter of the current volume. 
+// The point and direction must be converted in the coordinate system of the current volume.
+// The proposed step limit is fStep.
+
+   Double_t snext;
+   TGeoNode *nodefound = 0;
+   // Get number of daughters. If no daughters we are done.
+
+   TGeoVolume *vol = fCurrentNode->GetVolume();
    Int_t nd = vol->GetNdaughters();
-   if (!nd) return fNextNode;
-   Double_t lpoint[3];
-   Double_t ldir[3];
+   if (!nd) return 0;  // No daughter 
+   Double_t lpoint[3], ldir[3];
+   TGeoNode *current = 0;
    Int_t i=0;
    // if current volume is divided, we are in the non-divided region. We
    // check only the first and the last cell
@@ -2901,15 +2945,16 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
       if (snext<fStep) {
-         if (computeGlobal) {
+         if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
              fCurrentMatrix->Multiply(current->GetMatrix());
           }
          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
+         nodefound = current;
       }
       Int_t ilast = ifirst+finder->GetNdiv()-1;
       if (ilast==ifirst) return fNextNode;
@@ -2917,17 +2962,18 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
       if (snext<fStep) {
-         if (computeGlobal) {
+         if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
              fCurrentMatrix->Multiply(current->GetMatrix());
-          }
-          fIsStepEntering = kTRUE;
+         }
+         fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
+         nodefound = current;
       }
-      return fNextNode;
+      return nodefound;
    }
    // if only few daughters, check all and exit
    TGeoVoxelFinder *voxels = vol->GetVoxels();
@@ -2941,24 +2987,25 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             }
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
          } else {
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
          }
 
          if (snext<fStep) {
-            if (computeGlobal) {
+            if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                 fCurrentMatrix->Multiply(current->GetMatrix());
-             }
-             fIsStepEntering = kTRUE;
+            }
+            fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
+            nodefound = current;
          }
       }
-      return fNextNode;
+      return nodefound;
    }
    // if current volume is voxelized, first get current voxel
    if (voxels) {
@@ -2971,20 +3018,21 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             current->cd();
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
             if (snext<fStep) {
-               if (computeGlobal) {
+               if (compmatrix) {
                   *fCurrentMatrix = GetCurrentMatrix();
                    fCurrentMatrix->Multiply(current->GetMatrix());
                 }
                fIsStepEntering = kTRUE;
                fStep=snext;
                fNextNode = current;
+               nodefound = current;
             }
          }
       }
    }
-   return fNextNode;
+   return nodefound;
 }
 
 //_____________________________________________________________________________
@@ -3349,11 +3397,16 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
 // Make a default painter if none present. Returns pointer to it.
     if (!fPainter) {
-       fPainter=TVirtualGeoPainter::GeoPainter();
-       if (!fPainter) {
-          Error("GetGeomPainter", "could not create painter");
-          return 0;
-       }
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
+         fPainter = (TVirtualGeoPainter*)h->ExecPlugin(1,this);
+         if (!fPainter) {
+            Error("GetGeomPainter", "could not create painter");
+            return 0;
+         }
+      }
     }
     return fPainter;
 }
@@ -3856,7 +3909,7 @@ void TGeoManager::BuildDefaultMaterials()
 {
 // Build the default materials. A list of those can be found in ...
 //   new TGeoMaterial("Air", 14.61, 7.3, 0.001205);
-   new TGeoElementTable(200);
+   fElementTable = new TGeoElementTable(200);
 }
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)

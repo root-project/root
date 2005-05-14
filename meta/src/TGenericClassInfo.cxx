@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.6 2004/07/30 19:09:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.7 2004/10/29 18:03:10 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -34,7 +34,9 @@ namespace ROOT {
                                         IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
+        fDictionary(dictionary), fInfo(info), 
+        fImplFileName(0), fImplFileLine(0),
+        fIsA(isa), fShowMembers(showmembers),
         fVersion(1), 
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
         fCollectionProxy(0), fSizeof(sizof)
@@ -49,7 +51,9 @@ namespace ROOT {
                                         IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
+        fDictionary(dictionary), fInfo(info), 
+        fImplFileName(0), fImplFileLine(0),
+        fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
         fCollectionProxy(0), fSizeof(sizof)
@@ -64,7 +68,9 @@ namespace ROOT {
                                         IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(0),
+        fDictionary(dictionary), fInfo(info), 
+        fImplFileName(0), fImplFileLine(0),
+        fIsA(isa), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
         fCollectionProxy(0), fSizeof(sizof)
@@ -80,7 +86,9 @@ namespace ROOT {
                                         VoidFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(typeid(fornamespace)), fIsA(0), fShowMembers(0),
+        fDictionary(dictionary), fInfo(typeid(fornamespace)), 
+        fImplFileName(0), fImplFileLine(0),
+        fIsA(0), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
         fCollectionProxy(0), fSizeof(0)

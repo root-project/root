@@ -957,7 +957,7 @@ void RootShower::produce()
 //______________________________________________________________________________
 void RootShower::OnShowerProduce()
 {
-    Int_t     i,gifindex;
+    Int_t     i,j,gifindex;
     Char_t    gifname[80];
     fStatusBar->SetText("",1);
 
@@ -1000,7 +1000,8 @@ void RootShower::OnShowerProduce()
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            fEvent->GetTrack(i)->Draw();
+            for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
+               fEvent->GetParticle(i)->GetTrack(j)->Draw();
             // show track by track if "show process" has been choosen
             // into the menu
             if(fShowProcess) {
@@ -1062,7 +1063,7 @@ void RootShower::HighLight(TGListTreeItem *item)
 void RootShower::OnShowSelected(TGListTreeItem *item)
 {
     // Shows track which has been selected into the list tree
-    Int_t i,retval;
+    Int_t i,j,retval;
 
     fCB->cd();
     fCB->SetFillColor(1);
@@ -1090,7 +1091,8 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_E) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_MUON) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
-        fEvent->GetTrack(retval)->Draw();
+        for(j=0;j<fEvent->GetParticle(retval)->GetNTracks();j++)
+           fEvent->GetParticle(retval)->GetTrack(j)->Draw();
     }
     fCB->GetView()->SetPerspective();
     fCB->cd();
@@ -1104,7 +1106,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     // Opens a root file into which a previous event
     // has been saved.
     char   strtmp[256];
-    Int_t  i;
+    Int_t  i,j;
     TFile *f = new TFile(filename);
     TTree *tree;
     TBranch *branch;
@@ -1149,7 +1151,8 @@ void RootShower::OnOpenFile(const Char_t *filename)
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
-            fEvent->GetTrack(i)->Draw();
+            for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
+               fEvent->GetParticle(i)->GetTrack(j)->Draw();
         }
     }
     // Reparent each list tree item regarding the
@@ -1330,18 +1333,20 @@ Bool_t RootShower::HandleTimer(TTimer *)
 Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
 {
     // Compute distance from point px,py to objects in event
-    Int_t i;
+    Int_t i,j;
     Int_t dist = 9999;
 
     if(fEvent->GetTotal() <= 0) return 0;
     // Browse every track and get related particle infos.
     for(i=0;i<fEvent->GetTotal();i++) {
-        dist = fEvent->GetTrack(i)->DistancetoPrimitive(px, py);
-        if (dist < 2) {
-            gPad->SetSelected((TObject*)fEvent->GetParticle(i));
-            fStatusBar->SetText(fEvent->GetParticle(i)->GetObjectInfo(px, py),1);
-            gPad->SetCursor(kPointer);
-            return 0;
+        for(j=0;j<fEvent->GetParticle(i)->GetNTracks();j++) {
+           dist = fEvent->GetParticle(i)->GetTrack(j)->DistancetoPrimitive(px, py);
+           if (dist < 2) {
+               gPad->SetSelected((TObject*)fEvent->GetParticle(i));
+               fStatusBar->SetText(fEvent->GetParticle(i)->GetObjectInfo(px, py),1);
+               gPad->SetCursor(kPointer);
+               return 0;
+           }
         }
     }
     gPad->SetSelected((TObject*)gPad->GetView());
@@ -1374,11 +1379,11 @@ int main(int argc, char **argv)
 
     gRandom->SetSeed( (UInt_t)time( NULL ) );
     const Int_t NRGBs = 5;
-    Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+    Double_t Stops[NRGBs] = { 0.00, 0.50, 0.75, 0.875, 1.00 };
     Double_t Red[NRGBs] = { 1.00, 1.00, 1.00, 1.00, 1.00 };
     Double_t Green[NRGBs] = { 1.00, 0.75, 0.50, 0.25, 0.00 };
     Double_t Blue[NRGBs] = { 0.00, 0.00, 0.00, 0.00, 0.00 };
-    gColIndex = gStyle->CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 11);
+    gColIndex = gStyle->CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 17);
 
     // Create RootShower
     RootShower theShower(gClient->GetRoot(), 400, 200);

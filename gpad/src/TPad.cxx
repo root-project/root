@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.169 2005/03/22 16:57:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.175 2005/04/29 16:16:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -139,6 +139,7 @@ TPad::TPad()
    fEditable   = kTRUE;
    fCrosshair  = 0;
    fCrosshairPos = 0;
+   fPadView3D  = 0;
    fMother     = (TPad*)gPad;
 
    fFixedAspectRatio = kFALSE;
@@ -167,9 +168,9 @@ TPad::TPad()
    fYlowNDC = 0;
    fWNDC    = 1;
    fHNDC    = 1;
-   
+
    fViewer3D = 0;
-   
+
    //the following line is temporarily disabled. It has side effects
    //when the pad is a TDrawPanelHist or a TFitPanel.
    //the line was supposed to fix a problem with DrawClonePad
@@ -221,6 +222,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fFrame      = 0;
    fView       = 0;
    fPadPaint   = 0;
+   fPadView3D  = 0;
    fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
    fNumber     = 0;
    fAbsCoord   = kFALSE;
@@ -2100,7 +2102,7 @@ void TPad::Paint(Option_t * /*option*/)
 
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    TObject *obj;
-   
+
    Bool_t began3DScene = kFALSE;
    while (lnk) {
       obj = lnk->GetObject();
@@ -2123,8 +2125,8 @@ void TPad::Paint(Option_t * /*option*/)
    if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
-   
-   // Close the 3D scene if we opened it. This must be done after modified 
+
+   // Close the 3D scene if we opened it. This must be done after modified
    // flag is cleared, as some viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
       fViewer3D->EndScene();
@@ -2331,14 +2333,14 @@ void TPad::PaintModified()
    TObject *obj;
 
    Bool_t began3DScene = kFALSE;
-   
+
    while (lnk) {
       obj = lnk->GetObject();
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
 
-         // Create a pad 3D viewer if none exists and we encounter a 
+         // Create a pad 3D viewer if none exists and we encounter a
          // 3D shape
          if (!fViewer3D && obj->InheritsFrom("TAtt3D")) {
             GetViewer3D("pad");
@@ -2359,7 +2361,7 @@ void TPad::PaintModified()
    fPadPaint = 0;
    Modified(kFALSE);
 
-   // This must be done after modified flag is cleared, as some 
+   // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
       fViewer3D->EndScene();
@@ -3483,80 +3485,92 @@ void TPad::Print(const char *filenam, Option_t *option)
 //    }// end loop
 //    c1.Print("file.ps]");   // No actual print, just close.
 
-   char psname[264];
+   TString psname;
    char *filename = gSystem->ExpandPathName(filenam);
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
+   Bool_t image = kFALSE;
 
 //*-*   Set the default option as "Postscript" (Should be a data member of TPad)
-
 
    const char *opt_default="ps";
    if( !opt ) opt = opt_default;
 
-   if ( !lenfil )  sprintf(psname,"%s.%s",GetName(),opt);
-   else            strcpy(psname,filename);
+   if ( !lenfil )  {
+      psname = GetName();
+      psname += opt;
+   } else {
+      psname = filename;
+   }
 
-   // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
-   if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
+   // lines below protected against case like c1->SaveAs( "../ps/cs.ps" );
+   if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) {
+      psname = GetName();
+      psname.Append(filename);
+      psname.Prepend("/");
+      psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
+   }
+
    delete [] filename;
 
 //==============Save pad/canvas as a GIF file==================================
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (strstr(opt,"gif")) {
+   if (strstr(opt, "gif")) {
       gtype = TImage::kGif;
-   } else if (strstr(opt,"png")) {
+      image = kTRUE;
+   } else if (strstr(opt, "png")) {
       gtype = TImage::kPng;
-   } else if (strstr(opt,"jpg")) {
+      image = kTRUE;
+   } else if (strstr(opt, "jpg")) {
       gtype = TImage::kJpeg;
-   } else if (strstr(opt,"tiff")) {
+      image = kTRUE;
+   } else if (strstr(opt, "tiff")) {
       gtype = TImage::kTiff;
-   } else if (strstr(opt,"xpm")) {
+      image = kTRUE;
+   } else if (strstr(opt, "xpm")) {
       gtype = TImage::kXpm;
+      image = kTRUE;
+   } else if (strstr(opt, "bmp")) {
+      gtype = TImage::kBmp;
+      image = kTRUE;
    }
 
-   if (gtype != TImage::kUnknown) {
-      if (GetCanvas()->IsBatch()) {
-         Printf("Cannot create %s file in batch mode.", opt);
-         return;
-      }
-      Update();
+   if (!gROOT->IsBatch() && image) {
+      if (gtype != TImage::kUnknown) {
 
-      Int_t saver = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kFatal;
-      TImage* img = TImage::Create();
-      gErrorIgnoreLevel = saver;
+         Int_t saver = gErrorIgnoreLevel;
+         gErrorIgnoreLevel = kFatal;
+         TImage *img = TImage::Create();
+         gErrorIgnoreLevel = saver;
+         gVirtualX->Update(1);
+         gSystem->Sleep(30); // syncronize
 
-      if (!img || (gtype == TImage::kGif)) {
-         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-
-         gVirtualX->SelectWindow(wid);
-         if (gVirtualX->WriteGIF(psname)) {
-            if (!gSystem->AccessPathName(psname)) Info("Print", "GIF file %s has been created", psname);
-         }
-      } else {
          img->FromPad(this);
          img->WriteImage(psname, gtype);
-         if (!gSystem->AccessPathName(psname)) Info("Print", "file %s has been created", psname);
+         if (!gSystem->AccessPathName(psname.Data())) {
+            Info("Print", "file %s has been created", psname.Data());
+         }
+      } else {
+         Warning("Print", "Cannot create %s file in batch mode.", opt);
       }
       return;
    }
 
 //==============Save pad/canvas as a C++ script==================================
    if (strstr(opt,"cxx")) {
-      GetCanvas()->SaveSource(psname,"");
+      GetCanvas()->SaveSource(psname, "");
       return;
    }
 
 //==============Save pad/canvas as a root file==================================
    if (strstr(opt,"root")) {
       TDirectory *dirsav = gDirectory;
-      TFile *fsave = new TFile(psname,"RECREATE");
+      TFile *fsave = new TFile(psname, "RECREATE");
       Write();
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname.Data());
       return;
    }
 
@@ -3570,7 +3584,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          delete file;
       }
       if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname.Data());
       return;
    }
 
@@ -3606,7 +3620,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
-      if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
 
       delete gVirtualPS;
       gVirtualPS = psave;
@@ -3616,16 +3630,48 @@ void TPad::Print(const char *filenam, Option_t *option)
       return;
    }
 
+//==============Save pad/canvas as an image file in batch mode============================
+   if (image) {
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname.Data());
+
+      TPad *padsav = (TPad*)gPad;
+      cd();
+      TVirtualPS *psave = gVirtualPS;
+
+      if (!gVirtualPS) {
+         // Plugin Postscript/SVG driver
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "image"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+         }
+      }
+      if (gVirtualPS) {
+         gVirtualPS->Open(psname.Data());
+         gVirtualPS->SetBit(kPrintingPS);
+         //gVirtualPS->NewPage();
+         Paint();
+
+         // close image
+         delete gVirtualPS;
+      }
+
+      gVirtualPS = psave;
+      padsav->cd();
+      return;
+   }
+
 //==============Save pad/canvas as a Postscript file==================================
 
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen   = strstr(psname,"("); if (copen)  *copen  = 0;
-   char *cclose  = strstr(psname,")"); if (cclose) *cclose = 0;
-   char *copenb  = strstr(psname,"["); if (copenb)  *copenb  = 0;
-   char *ccloseb = strstr(psname,"]"); if (ccloseb) *ccloseb = 0;
+   char *copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
+   char *cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
+   char *copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
+   char *ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
    if (copen  || copenb)  mustClose = kFALSE;
@@ -3673,7 +3719,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          Paint();
       }
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
@@ -3688,7 +3734,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS->NewPage();
          Paint();
       }
-      Info("Print", "Current canvas added to %s file %s", opt, psname);
+      Info("Print", "Current canvas added to %s file %s", opt, psname.Data());
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
@@ -3698,7 +3744,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
    }
 
-   if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname,psname));
+   if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname.Data(),psname.Data()));
 
    padsav->cd();
 }
@@ -4075,6 +4121,10 @@ void TPad::SaveAs(const char *filename)
                 Print(psname,"png");
    else if (psname.EndsWith(".jpg"))
                 Print(psname,"jpg");
+   else if (psname.EndsWith(".jpeg"))
+                Print(psname,"jpg");
+   else if (psname.EndsWith(".bmp"))
+                Print(psname,"bmp");
    else if (psname.EndsWith(".tiff"))
                 Print(psname,"tiff");
    else
@@ -4823,9 +4873,9 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    //                            // Create a polyline, then using the context
    //                            // menu item "SetName", change the name
    //                            // of the created TGraph to "ggg"
-   //   c1.FindObject("Arc");    // Set the editor in mode "Arc". Returns
+   //   c1.WaitPrimitive("TArc");// Set the editor in mode "Arc". Returns
    //                            // as soon as a TArc object is created.
-   //   c1.FindObject("lat","Text"); // Set the editor in Text/Latex mode.
+   //   c1.WaitPrimitive("lat","Text"); // Set the editor in Text/Latex mode.
    //                            // Create a text object, then Set its name to "lat"
    //
    // The following macro waits for 10 primitives of any type to be created.
@@ -4849,19 +4899,22 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents()) {
-      obj = FindObject(pname);
-      if (obj) {
-         gROOT->SetEditorMode();
-         return obj;
-      }
-      if (testlast) {
-         obj = gPad->GetListOfPrimitives()->Last();
-         if (obj != oldlast) return obj;
-         Int_t event = GetEvent();
-         if (event == kButton1Double || event == kKeyPress) return 0;
+      if (gROOT->GetEditorMode() == 0) {
+         obj = FindObject(pname);
+         if (obj) {
+//            gROOT->SetEditorMode();
+            return obj;
+         }
+         if (testlast) {
+            obj = gPad->GetListOfPrimitives()->Last();
+            if (obj != oldlast) return obj;
+            Int_t event = GetEvent();
+            if (event == kButton1Double || event == kKeyPress) return 0;
+         }
       }
       gSystem->Sleep(10);
    }
+
    return 0;
 }
 
@@ -4947,7 +5000,7 @@ void TPad::CloseToolTip(TObject *tip)
 void TPad::x3d(Option_t *type)
 {
    ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
-   
+
    // Default on GetViewer3D is pad - for x3d
    // it was x3d...
    if (!type || !type[0]) {
@@ -4965,7 +5018,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
       if (fViewer3D) {
          return fViewer3D;
       }
-      // otherwise default to the pad 
+      // otherwise default to the pad
       else {
          type = "pad";
       }
@@ -4973,16 +5026,16 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    // Ensure we can create the new viewer before removing any exisiting one
    TVirtualViewer3D *newViewer = 0;
-   
+
 	Bool_t createdExternal = kFALSE;
-	
+
   // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad"))
    {
       newViewer = TVirtualViewer3D::Viewer3D(this,type);
       if (!newViewer) {
          Error("TPad::CreateViewer3D", "Cannot create 3D viewer of type: %s", type);
-         
+
          // Return the existing viewer
          return fViewer3D;
       }
@@ -4991,7 +5044,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    else {
       newViewer = new TViewer3DPad(*this);
    }
-   
+
    // If we had a previous viewer destroy it now
    // In this case we do take responsibility for destorying viewer
    // c.f. ReleaseViewer3D
@@ -4999,7 +5052,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
 
    // Set and return new viewer
    fViewer3D = newViewer;
-   
+
    // Ensure any new external viewer is painted
 	// For internal TViewer3DPad type we assume this is being
 	// create on demand due to a paint - so this is not required
@@ -5007,7 +5060,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    	Modified();
    	Update();
    }
-   
+
    return fViewer3D;
 }
 
@@ -5020,10 +5073,11 @@ void TPad::ReleaseViewer3D(Option_t * /*type*/ )
 
    // We would like to ensure the pad is repainted
    // when external viewer is closed down. However
-	// a modify/paint call here will repaint the pad 
+	// a modify/paint call here will repaint the pad
 	// before the external viewer window actually closes.
 	// So the pad would have to be redraw twice over.
 	// Currenltly we just have to live with the pad staying blank
 	// any click in pad will refresh.
 }
+
 

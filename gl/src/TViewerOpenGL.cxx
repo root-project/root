@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.54 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.55 2005/04/06 09:43:39 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -172,7 +172,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
    fContextMenu = 0;
    fSelectedObj = 0;
    fAction = kNoAction;
-   fComposite = 0;
+   fNewComposite.fRealObject = 0;
 
    static Bool_t init = kFALSE;
    if (!init) {
@@ -1000,7 +1000,7 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
       *addChildren = kTRUE;
    }
 
-   // TODO: Still required?
+   // TODO: Cleanup color parts
    Int_t colorIndex = buffer.fColor;
    if (colorIndex <= 1) colorIndex = 42; //temporary
 
@@ -1072,7 +1072,25 @@ void TViewerOpenGL::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren
    }
 
    fInsideComposite = kTRUE;
-   fComposite = buffer.fID;
+
+   // TODO: Cleanup color parts
+   Int_t colorIndex = buffer.fColor;
+   if (colorIndex <= 1) colorIndex = 42; //temporary
+
+   Float_t colorRGB[3] = {0.f};
+   TColor *rcol = gROOT->GetColor(colorIndex);
+
+   if (rcol) {
+      rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
+   }
+
+   // These values need to be retained until composite creation in
+   // CloseComposite()
+   fNewComposite.fColor[0] = colorRGB[0];
+   fNewComposite.fColor[1] = colorRGB[1];
+   fNewComposite.fColor[2] = colorRGB[2];
+   fNewComposite.fTrans = buffer.fTransparency;
+   fNewComposite.fRealObject = buffer.fID;
 }
 
 void TViewerOpenGL::CloseComposite()
@@ -1080,8 +1098,10 @@ void TViewerOpenGL::CloseComposite()
    fInsideComposite = kFALSE;
    fCSLevel = 0;
 
+   assert(fNewComposite.fRealObject);
    RootCsg::BaseMesh *resultMesh = BuildComposite();
-   TGLFaceSet *addObj = new TGLFaceSet(resultMesh, 0, fNbShapes++, fComposite);
+   TGLFaceSet *addObj = new TGLFaceSet(resultMesh, fNewComposite.fColor, fNewComposite.fTrans, fNbShapes++, 
+                                       fNewComposite.fRealObject);
 
    UpdateRange(addObj->GetBBox());
    fRender->AddNewObject(addObj);
@@ -1089,7 +1109,8 @@ void TViewerOpenGL::CloseComposite()
    delete resultMesh;
    for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
    fCSTokens.clear();
-   fComposite = 0;
+
+   fNewComposite.fRealObject = 0;
 }
 
 void TViewerOpenGL::AddCompositeOp(UInt_t operation)

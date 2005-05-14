@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.38 2005/01/04 10:25:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.41 2005/04/26 16:36:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -460,11 +460,17 @@ void TStyle::Reset(Option_t *)
    fAttDate.SetTextSize(0.025);
    fAttDate.SetTextAlign(11);
    SetLineScalePS();
-   SetLineStyleString(1,"[]");
-   SetLineStyleString(2,"[12 12]");
-   SetLineStyleString(3,"[4 8]");
-   SetLineStyleString(4,"[12 15 4 15]");
-   for (Int_t i=5;i<30;i++) SetLineStyleString(i,"[]");
+   SetLineStyleString(1," ");
+   SetLineStyleString(2,"12 12");
+   SetLineStyleString(3,"4 8");
+   SetLineStyleString(4,"12 16 4 16");
+   SetLineStyleString(5,"20 12 4 12");
+   SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+   SetLineStyleString(7,"20 20");
+   SetLineStyleString(8,"20 12 4 12 4 12");
+   SetLineStyleString(9,"80 20");
+   SetLineStyleString(10,"80 40 4 40");
+   for (Int_t i=11;i<30;i++) SetLineStyleString(i," ");
 
    SetPaperSize();
 
@@ -781,26 +787,46 @@ void TStyle::SetLabelSize(Float_t size, Option_t *axis)
 //______________________________________________________________________________
 void TStyle::SetLineStyleString(Int_t i, const char *text)
 {
-// Set line style string (used by Postscript)
-// PostScript uses the following convention
-//  a line is a suite of segments, each segment is described by the
-//  number of pixels. For example default line styles are defined as:
+// Set line style string using the PostScript convention. 
+// A line is a suite of segments, each segment is described by the number of 
+// pixels. The initial and alternating elements (second, fourth, and so on)
+// are the dashes, and the others spaces between dashes.
+//
+// Default fixed line styles are pre-defined as:
+//
 //   linestyle 1  "[]"             solid
 //   linestyle 2  "[12 12]"        dashed
 //   linestyle 3  "[4 8]"          dotted
-//   linestyle 4  "[12 15 4 15]"   dash-dotted
+//   linestyle 4  "[12 16 4 16]"   dash-dotted
 //
-//  Up to 30 different styles may be defined.
-//   The opening and closing brackets may be omitted
-//   They will be automaticalled added by this function.
+//  For example the following lines define the line style 5 to 9.
+//
+//   gStyle->SetLineStyleString(5,"20 12 4 12");
+//   gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+//   gStyle->SetLineStyleString(7,"20 20");
+//   gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
+//   gStyle->SetLineStyleString(9,"80 20");
+//
+//Begin_Html
+/*
+<img src="gif/userlinestyle.gif">
+*/
+//End_Html
+//
+// Note: 
+//  - Up to 30 different styles may be defined.
+//  - The opening and closing brackets may be omitted
+//  - It is recommended to use 4 as the smallest segment length and multiple of
+//    4 for other lengths. 
+//  - The line style 1 to 10 are predefined. 1 to 4 cannot be changed.
 
+   char *l;
    Int_t nch = strlen(text);
    char *st = new char[nch+10];
    sprintf(st," ");
-   if (strstr(text,"[") == 0) strcat(st,"[");
    strcat(st,text);
-   if (strstr(text,"]") == 0) strcat(st,"]");
-   strcat(st," 0 sd");
+   l = strstr(st,"["); if (l) l[0] = ' '; 
+   l = strstr(st,"]"); if (l) l[0] = ' '; 
    if (i >= 1 && i <= 29) fLineStyle[i] = st;
    delete [] st;
 }
@@ -1232,6 +1258,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //  The color parameters can be changed via TColor::SetRGB.
 
    Int_t i;
+   static Int_t PaletteType = 0;
    Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
                         21,22,23,24,25,26,27,28,29,30, 8,
                         31,32,33,34,35,36,37,38,39,40, 9,
@@ -1242,6 +1269,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
+      PaletteType = 1;
       return;
    }
 
@@ -1250,17 +1278,20 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       ncolors = 50;
       fPalette.Set(ncolors);
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
+      PaletteType = 2;
       return;
    }
 
    // set DeepSea palette
    if (colors == 0 && ncolors > 50) {
+      if (ncolors == fPalette.fN && PaletteType == 3) return; 
       const Int_t NRGBs = 5;
       Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t Red[NRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t Green[NRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
       Double_t Blue[NRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
       CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
+      PaletteType = 3;
       return;
    }
 
@@ -1268,6 +1299,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
+   PaletteType = 4;
 }
 
 //______________________________________________________________________________

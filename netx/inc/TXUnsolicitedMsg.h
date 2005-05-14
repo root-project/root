@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXUnsolicitedMsg.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUnsolicitedMsg.h,v 1.3 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TXMessage;
 
 class TXAbsUnsolicitedMsgHandler {
 public:
-
+  virtual ~TXAbsUnsolicitedMsgHandler() { }
   // To be called when an unsolicited response arrives from the lower layers
   virtual Bool_t ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                        TXMessage *unsolmsg) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.3 2003/06/26 08:55:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.4 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/08/2001
 
 /*************************************************************************
@@ -179,15 +179,20 @@ Long64_t TNtupleD::ReadFile(const char *filename, const char * /*branchDescripto
 // read from filename as many columns as variables in the ntuple
 // the function returns the number of rows found in the file
 // The second argument "branchDescriptor" is currently not used.
+// Lines in the input file starting with "#" are ignored.
          
    Long64_t nlines = 0;
    ifstream in;
    in.open(filename);
    while (1) {
-      for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
-      if (!in.good()) break;
-      TTree::Fill();
-      nlines++;
+     if ( in.peek() != '#' ) {
+       for (Int_t i=0;i<fNvar;i++) in >> fArgs[i];
+       if (!in.good()) break;
+       TTree::Fill();
+       nlines++;
+     }
+     in.ignore(8192,'\n');
+
    }
    in.close();
    return nlines;

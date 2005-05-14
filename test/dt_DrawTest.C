@@ -189,6 +189,7 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"event.fTracks@.size()","","+hSize",level>2 && !(gBranchStyle==0 && !gHasLibrary));
    DrawSkippable(tree,"@fTracks.size()","","hSize2",level>2 && gBranchStyle!=0);
    DrawSkippable(tree,"fTracks@.size()","","+hSize2",level>2 && gBranchStyle!=0);
+   DrawSkippable(tree,"Sum$(fPx)","","hSumPx",level>2);
 
    if (quietLevel<2) gBenchmark->Show("DrawTest");   
    else gBenchmark->Stop("DrawTest");  

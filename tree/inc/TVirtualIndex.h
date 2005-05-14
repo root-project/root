@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.8 2004/03/22 15:57:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualIndex.h,v 1.1 2004/07/08 08:07:56 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -36,7 +36,6 @@ protected:
 public:
   TVirtualIndex();
   virtual               ~TVirtualIndex();
-  virtual Int_t          GetEntry(Long64_t /*entry*/) = 0;
   virtual Int_t          GetEntryNumberFriend(const TTree * /*T*/) = 0;
   virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const = 0;
   virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const = 0;

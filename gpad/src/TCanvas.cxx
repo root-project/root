@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.87 2005/03/05 22:17:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.88 2005/03/08 05:57:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -602,6 +602,14 @@ void TCanvas::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TCanvas::Closed()
+{
+   // emit Closed signal
+
+   Emit("Closed()");
+}
+
+//______________________________________________________________________________
 void TCanvas::Close(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Close canvas*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -635,12 +643,13 @@ void TCanvas::Close(Option_t *option)
    // Close actual window on screen
    SafeDelete(fCanvasImp);
 
-
    if (cansave == this) {
       gPad = (TCanvas *) gROOT->GetListOfCanvases()->First();
    } else {
       gPad = padsave;
    }
+
+   Closed();
 }
 
 //______________________________________________________________________________

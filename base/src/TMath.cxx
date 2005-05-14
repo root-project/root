@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.94 2005/02/04 22:34:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.96 2005/04/08 16:45:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -39,6 +39,8 @@ namespace TMath {
 
    Double_t GamCf(Double_t a,Double_t x);
    Double_t GamSer(Double_t a,Double_t x);
+   Double_t VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t itype);
+   void VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *WCM, Double_t *AC, Double_t *HC, Int_t &itype, Int_t &npt);
 
 }
 
@@ -78,12 +80,6 @@ static Double_t hypot(Double_t x, Double_t y)
    return amax*sqrt(1.0 + f*f);
 }
 #endif
-
-//______________________________________________________________________________
-Long_t TMath::Sqrt(Long_t x)
-{
-   return (Long_t) (sqrt((Double_t)x) + 0.5);
-}
 
 //______________________________________________________________________________
 Long_t TMath::Hypot(Long_t x, Long_t y)
@@ -4324,4 +4320,485 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
    }
    if(neg) quantile=-quantile;
    return quantile;
+}
+
+//______________________________________________________________________________
+Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
+{
+   //Returns the value of the Vavilov density function
+   //Parameters: 1st - the point were the density function is evaluated
+   //            2nd - value of kappa (distribution parameter)
+   //            3rd - value of beta2 (distribution parameter)
+   //The algorithm was taken from the CernLib function vavden(G115)
+   //Reference: A.Rotondi and P.Montagna, Fast Calculation of Vavilov distribution
+   //Nucl.Instr. and Meth. B47(1990), 215-224
+   //Accuracy: quote from the reference above:
+   //"The resuls of our code have been compared with the values of the Vavilov
+   //density function computed numerically in an accurate way: our approximation
+   //shows a difference of less than 3% around the peak of the density function, slowly
+   //increasing going towards the extreme tails to the right and to the left"
+//Begin_Html
+/*
+<img src="gif/Vavilov.gif">
+*/
+//End_Html
+
+   Double_t *AC = new Double_t[14];
+   Double_t *HC = new Double_t[9];
+
+   Int_t itype;
+   Int_t npt;
+   TMath::VavilovSet(kappa, beta2, 0, 0, AC, HC, itype, npt);
+   Double_t v =  TMath::VavilovDenEval(x, AC, HC, itype);
+   delete [] AC;
+   delete [] HC;
+   return v;
+}
+
+//______________________________________________________________________________
+Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
+{
+   //Returns the value of the Vavilov distribution function
+   //Parameters: 1st - the point were the density function is evaluated
+   //            2nd - value of kappa (distribution parameter)
+   //            3rd - value of beta2 (distribution parameter) 
+   //The algorithm was taken from the CernLib function vavden(G115)
+   //Reference: A.Rotondi and P.Montagna, Fast Calculation of Vavilov distribution
+   //Nucl.Instr. and Meth. B47(1990), 215-224
+   //Accuracy: quote from the reference above:
+   //"The resuls of our code have been compared with the values of the Vavilov
+   //density function computed numerically in an accurate way: our approximation
+   //shows a difference of less than 3% around the peak of the density function, slowly
+   //increasing going towards the extreme tails to the right and to the left"
+
+   Double_t *AC = new Double_t[14];
+   Double_t *HC = new Double_t[9];
+   Double_t *WCM = new Double_t[200];
+   Int_t itype;
+   Int_t npt;
+   Int_t k;
+   Double_t xx, v;
+   TMath::VavilovSet(kappa, beta2, 1, WCM, AC, HC, itype, npt);
+   if (x < AC[0]) v = 0;
+   else if (x >=AC[8]) v = 1;
+   else {
+      xx = x - AC[0];
+      k = Int_t(xx*AC[10]);
+      v = TMath::Min(WCM[k] + (xx - k*AC[9])*(WCM[k+1]-WCM[k])*AC[10], 1.);
+   }
+   delete [] AC;
+   delete [] HC;
+   delete [] WCM;
+   return v;
+}
+
+//______________________________________________________________________________
+Double_t TMath::LandauI(Double_t x) 
+{
+   //Returns the value of the Landau distribution function at point x.
+   //The algorithm was taken from the Cernlib function dislan(G110)
+   //Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
+   //distribution", Computer Phys.Comm., 31(1984), 97-111
+
+   Double_t P1[] = {0.2514091491e+0,-0.6250580444e-1, 0.1458381230e-1, -0.2108817737e-2, 0.7411247290e-3};
+   Double_t Q1[] = {1.0             ,-0.5571175625e-2, 0.6225310236e-1, -0.3137378427e-2, 0.1931496439e-2};
+
+   Double_t P2[] = {0.2868328584e+0, 0.3564363231e+0, 0.1523518695e+0, 0.2251304883e-1};
+   Double_t Q2[] = {1.0             , 0.6191136137e+0, 0.1720721448e+0, 0.2278594771e-1};
+
+   Double_t P3[] = {0.2868329066e+0, 0.3003828436e+0, 0.9950951941e-1, 0.8733827185e-2};
+   Double_t Q3[] = {1.0             , 0.4237190502e+0, 0.1095631512e+0, 0.8693851567e-2};
+
+   Double_t P4[] = {0.1000351630e+1, 0.4503592498e+1, 0.1085883880e+2, 0.7536052269e+1};
+   Double_t Q4[] = {1.0             , 0.5539969678e+1, 0.1933581111e+2, 0.2721321508e+2};
+
+   Double_t P5[] = {0.1000006517e+1, 0.4909414111e+2, 0.8505544753e+2, 0.1532153455e+3};
+   Double_t Q5[] = {1.0             , 0.5009928881e+2, 0.1399819104e+3, 0.4200002909e+3};
+
+   Double_t P6[] = {0.1000000983e+1, 0.1329868456e+3, 0.9162149244e+3, -0.9605054274e+3};
+   Double_t Q6[] = {1.0             , 0.1339887843e+3, 0.1055990413e+4, 0.5532224619e+3};
+
+   Double_t A1[] = {0, -0.4583333333e+0, 0.6675347222e+0,-0.1641741416e+1};
+
+   Double_t A2[] = {0,  1.0             ,-0.4227843351e+0,-0.2043403138e+1};
+
+   Double_t u, v;
+   Double_t lan;
+   v = x;
+   if (v < -5.5) {
+      u = TMath::Exp(v+1);
+      lan = 0.3989422803*TMath::Exp(-1./u)*TMath::Sqrt(u)*(1+(A1[1]+(A1[2]+A1[3]*u)*u)*u);
+   }
+   else if (v < -1 ) {
+      u = TMath::Exp(-v-1);
+      lan = (TMath::Exp(-u)/TMath::Sqrt(u))*(P1[0]+(P1[1]+(P1[2]+(P1[3]+P1[4]*v)*v)*v)*v)/
+          (Q1[0]+(Q1[1]+(Q1[2]+(Q1[3]+Q1[4]*v)*v)*v)*v);
+   }
+   else if (v < 1)
+      lan = (P2[0]+(P2[1]+(P2[2]+P2[3]*v)*v)*v)/(Q2[0]+(Q2[1]+(Q2[2]+Q2[3]*v)*v)*v);
+   else if (v < 4) 
+      lan = (P3[0]+(P3[1]+(P3[2]+P3[3]*v)*v)*v)/(Q3[0]+(Q3[1]+(Q3[2]+Q3[3]*v)*v)*v);
+   else if (v < 12) {
+      u = 1./v;
+      lan = (P4[0]+(P4[1]+(P4[2]+P4[3]*u)*u)*u)/(Q4[0]+(Q4[1]+(Q4[2]+Q4[3]*u)*u)*u);
+   }
+   else if (v < 50) {
+      u = 1./v;
+      lan = (P5[0]+(P5[1]+(P5[2]+P5[3]*u)*u)*u)/(Q5[0]+(Q5[1]+(Q5[2]+Q5[3]*u)*u)*u);
+   }
+   else if (v < 300) {
+      u = 1./v;
+      lan = (P6[0]+(P6[1]+(P6[2]+P6[3]*u)*u)*u)/(Q6[0]+(Q6[1]+(Q6[2]+Q6[3]*u)*u)*u);
+   }
+   else {
+      u = 1./(v-v*TMath::Log(v)/(v+1));
+      lan = 1-(A2[1]+(A2[2]+A2[3]*u)*u)*u;
+   }
+   return lan;
+} 
+
+ 
+//______________________________________________________________________________
+void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *WCM, Double_t *AC, Double_t *HC, Int_t &itype, Int_t &npt)
+{
+   //Internal function, called by Vavilov and VavilovI
+
+
+   Double_t BKMNX1 = 0.02, BKMNY1 = 0.05, BKMNX2 = 0.12, BKMNY2 = 0.05,
+      BKMNX3 = 0.22, BKMNY3 = 0.05, BKMXX1 = 0.1 , BKMXY1 = 1,
+      BKMXX2 = 0.2 , BKMXY2 = 1   , BKMXX3 = 0.3 , BKMXY3 = 1;
+
+   Double_t FBKX1 = 2/(BKMXX1-BKMNX1), FBKX2 = 2/(BKMXX2-BKMNX2),
+      FBKX3 = 2/(BKMXX3-BKMNX3), FBKY1 = 2/(BKMXY1-BKMNY1),
+      FBKY2 = 2/(BKMXY2-BKMNY2), FBKY3 = 2/(BKMXY3-BKMNY3);
+
+   Double_t FNINV[] = {0, 1, 0.5, 0.33333333, 0.25, 0.2};
+
+   Double_t EDGEC[]= {0, 0, 0.16666667e+0, 0.41666667e-1, 0.83333333e-2,
+                      0.13888889e-1, 0.69444444e-2, 0.77160493e-3};
+
+   Double_t U1[] = {0, 0.25850868e+0,  0.32477982e-1, -0.59020496e-2,
+                    0.            , 0.24880692e-1,  0.47404356e-2,
+                    -0.74445130e-3,  0.73225731e-2,  0.           ,
+                    0.11668284e-2,  0.           , -0.15727318e-2,-0.11210142e-2};
+
+   Double_t U2[] = {0, 0.43142611e+0,  0.40797543e-1, -0.91490215e-2,
+                    0.           ,  0.42127077e-1,  0.73167928e-2,
+                    -0.14026047e-2,  0.16195241e-1,  0.24714789e-2,
+                    0.20751278e-2,  0.           , -0.25141668e-2,-0.14064022e-2};
+
+   Double_t U3[] = {0,  0.25225955e+0,  0.64820468e-1, -0.23615759e-1,
+                    0.           ,  0.23834176e-1,  0.21624675e-2,
+                    -0.26865597e-2, -0.54891384e-2,  0.39800522e-2,
+                    0.48447456e-2, -0.89439554e-2, -0.62756944e-2,-0.24655436e-2};
+
+   Double_t U4[] = {0, 0.12593231e+1, -0.20374501e+0,  0.95055662e-1,
+                    -0.20771531e-1, -0.46865180e-1, -0.77222986e-2,
+                    0.32241039e-2,  0.89882920e-2, -0.67167236e-2,
+                    -0.13049241e-1,  0.18786468e-1,  0.14484097e-1};
+
+   Double_t U5[] = {0, -0.24864376e-1, -0.10368495e-2,  0.14330117e-2,
+                    0.20052730e-3,  0.18751903e-2,  0.12668869e-2,
+                    0.48736023e-3,  0.34850854e-2,  0.           ,
+                    -0.36597173e-3,  0.19372124e-2,  0.70761825e-3, 0.46898375e-3};
+
+   Double_t U6[] = {0,  0.35855696e-1, -0.27542114e-1,  0.12631023e-1,
+                    -0.30188807e-2, -0.84479939e-3,  0.           ,
+                    0.45675843e-3, -0.69836141e-2,  0.39876546e-2,
+                    -0.36055679e-2,  0.           ,  0.15298434e-2, 0.19247256e-2};
+
+   Double_t U7[] = {0, 0.10234691e+2, -0.35619655e+1,  0.69387764e+0,
+                    -0.14047599e+0, -0.19952390e+1, -0.45679694e+0,
+                    0.           ,  0.50505298e+0};
+   Double_t U8[] = {0,  0.21487518e+2, -0.11825253e+2,  0.43133087e+1,
+                    -0.14500543e+1, -0.34343169e+1, -0.11063164e+1,
+                    -0.21000819e+0,  0.17891643e+1, -0.89601916e+0,
+                    0.39120793e+0,  0.73410606e+0,  0.           ,-0.32454506e+0};
+
+   Double_t V1[] = {0, 0.27827257e+0, -0.14227603e-2,  0.24848327e-2,
+                    0.           ,  0.45091424e-1,  0.80559636e-2,
+                    -0.38974523e-2,  0.           , -0.30634124e-2,
+                    0.75633702e-3,  0.54730726e-2,  0.19792507e-2};
+
+   Double_t V2[] = {0, 0.41421789e+0, -0.30061649e-1,  0.52249697e-2,
+                    0.           ,  0.12693873e+0,  0.22999801e-1,
+                    -0.86792801e-2,  0.31875584e-1, -0.61757928e-2,
+                    0.           ,  0.19716857e-1,  0.32596742e-2};
+
+   Double_t V3[] = {0, 0.20191056e+0, -0.46831422e-1,  0.96777473e-2,
+                    -0.17995317e-2,  0.53921588e-1,  0.35068740e-2,
+                    -0.12621494e-1, -0.54996531e-2, -0.90029985e-2,
+                    0.34958743e-2,  0.18513506e-1,  0.68332334e-2,-0.12940502e-2};
+
+   Double_t V4[] = {0, 0.13206081e+1,  0.10036618e+0, -0.22015201e-1,
+                    0.61667091e-2, -0.14986093e+0, -0.12720568e-1,
+                    0.24972042e-1, -0.97751962e-2,  0.26087455e-1,
+                    -0.11399062e-1, -0.48282515e-1, -0.98552378e-2};
+
+   Double_t V5[] = {0, 0.16435243e-1,  0.36051400e-1,  0.23036520e-2,
+                    -0.61666343e-3, -0.10775802e-1,  0.51476061e-2,
+                    0.56856517e-2, -0.13438433e-1,  0.           ,
+                    0.           , -0.25421507e-2,  0.20169108e-2,-0.15144931e-2};
+
+   Double_t V6[] = {0, 0.33432405e-1,  0.60583916e-2, -0.23381379e-2,
+                    0.83846081e-3, -0.13346861e-1, -0.17402116e-2,
+                    0.21052496e-2,  0.15528195e-2,  0.21900670e-2,
+                    -0.13202847e-2, -0.45124157e-2, -0.15629454e-2, 0.22499176e-3};
+
+   Double_t V7[] = {0, 0.54529572e+1, -0.90906096e+0,  0.86122438e-1,
+                    0.           , -0.12218009e+1, -0.32324120e+0,
+                    -0.27373591e-1,  0.12173464e+0,  0.           ,
+                    0.           ,  0.40917471e-1};
+
+   Double_t V8[] = {0, 0.93841352e+1, -0.16276904e+1,  0.16571423e+0,
+                    0.           , -0.18160479e+1, -0.50919193e+0,
+                    -0.51384654e-1,  0.21413992e+0,  0.           ,
+                    0.           ,  0.66596366e-1};
+
+   Double_t W1[] = {0, 0.29712951e+0,  0.97572934e-2,  0.           ,
+                    -0.15291686e-2,  0.35707399e-1,  0.96221631e-2,
+                    -0.18402821e-2, -0.49821585e-2,  0.18831112e-2,
+                    0.43541673e-2,  0.20301312e-2, -0.18723311e-2,-0.73403108e-3};
+
+   Double_t W2[] = {0, 0.40882635e+0,  0.14474912e-1,  0.25023704e-2,
+                    -0.37707379e-2,  0.18719727e+0,  0.56954987e-1,
+                    0.           ,  0.23020158e-1,  0.50574313e-2,
+                    0.94550140e-2,  0.19300232e-1};
+
+   Double_t W3[] = {0, 0.16861629e+0,  0.           ,  0.36317285e-2,
+                    -0.43657818e-2,  0.30144338e-1,  0.13891826e-1,
+                    -0.58030495e-2, -0.38717547e-2,  0.85359607e-2,
+                    0.14507659e-1,  0.82387775e-2, -0.10116105e-1,-0.55135670e-2};
+
+   Double_t W4[] = {0, 0.13493891e+1, -0.26863185e-2, -0.35216040e-2,
+                    0.24434909e-1, -0.83447911e-1, -0.48061360e-1,
+                    0.76473951e-2,  0.24494430e-1, -0.16209200e-1,
+                    -0.37768479e-1, -0.47890063e-1,  0.17778596e-1, 0.13179324e-1};
+
+   Double_t W5[] = {0,  0.10264945e+0,  0.32738857e-1,  0.           ,
+                    0.43608779e-2, -0.43097757e-1, -0.22647176e-2,
+                    0.94531290e-2, -0.12442571e-1, -0.32283517e-2,
+                    -0.75640352e-2, -0.88293329e-2,  0.52537299e-2, 0.13340546e-2};
+
+   Double_t W6[] = {0, 0.29568177e-1, -0.16300060e-2, -0.21119745e-3,
+                    0.23599053e-2, -0.48515387e-2, -0.40797531e-2,
+                    0.40403265e-3,  0.18200105e-2, -0.14346306e-2,
+                    -0.39165276e-2, -0.37432073e-2,  0.19950380e-2, 0.12222675e-2};
+
+   Double_t W8[] = {0,  0.66184645e+1, -0.73866379e+0,  0.44693973e-1,
+                    0.           , -0.14540925e+1, -0.39529833e+0,
+                    -0.44293243e-1,  0.88741049e-1};
+
+   itype = 0;
+   if (rkappa <0.01 || rkappa >12) {
+      Error("Vavilov distribution", "illegal value of kappa");
+      return;
+   }
+
+   Double_t DRK[6];
+   Double_t DSIGM[6];
+   Double_t ALFA[8];
+   Int_t j;
+   Double_t x, y, xx, yy, x2, x3, y2, y3, xy, p2, p3, q2, q3, pq;
+   if (rkappa >= 0.29) {
+      itype = 1;
+      npt = 100;
+      Double_t wk = 1./TMath::Sqrt(rkappa);
+      
+      AC[0] = (-0.032227*beta2-0.074275)*rkappa + (0.24533*beta2+0.070152)*wk + (-0.55610*beta2-3.1579);
+      AC[8] = (-0.013483*beta2-0.048801)*rkappa + (-1.6921*beta2+8.3656)*wk + (-0.73275*beta2-3.5226);
+      DRK[1] = wk*wk;
+      DSIGM[1] = TMath::Sqrt(rkappa/(1-0.5*beta2));
+      for (j=1; j<=4; j++) {
+	 DRK[j+1] = DRK[1]*DRK[j];
+	 DSIGM[j+1] = DSIGM[1]*DSIGM[j];
+	 ALFA[j+1] = (FNINV[j]-beta2*FNINV[j+1])*DRK[j];
+      }
+      HC[0]=TMath::Log(rkappa)+beta2+0.42278434;
+      HC[1]=DSIGM[1];
+      HC[2]=ALFA[3]*DSIGM[3];
+      HC[3]=(3*ALFA[2]*ALFA[2] + ALFA[4])*DSIGM[4]-3;
+      HC[4]=(10*ALFA[2]*ALFA[3]+ALFA[5])*DSIGM[5]-10*HC[2];
+      HC[5]=HC[2]*HC[2];
+      HC[6]=HC[2]*HC[3];
+      HC[7]=HC[2]*HC[5];
+      for (j=2; j<=7; j++)
+	 HC[j]*=EDGEC[j];
+      HC[8]=0.39894228*HC[1];
+   } 
+   else if (rkappa >=0.22) {
+      itype = 2;
+      npt = 150;
+      x = 1+(rkappa-BKMXX3)*FBKX3;
+      y = 1+(TMath::Sqrt(beta2)-BKMXY3)*FBKY3;
+      xx = 2*x;
+      yy = 2*y;
+      x2 = xx*x-1;
+      x3 = xx*x2-x;
+      y2 = yy*y-1;
+      y3 = yy*y2-y;
+      xy = x*y;
+      p2 = x2*y;
+      p3 = x3*y;
+      q2 = y2*x;
+      q3 = y3*x;
+      pq = x2*y2;
+      AC[1] = W1[1] + W1[2]*x + W1[4]*x3 + W1[5]*y + W1[6]*y2 + W1[7]*y3 +
+         W1[8]*xy + W1[9]*p2 + W1[10]*p3 + W1[11]*q2 + W1[12]*q3 + W1[13]*pq;
+      AC[2] = W2[1] + W2[2]*x + W2[3]*x2 + W2[4]*x3 + W2[5]*y + W2[6]*y2 +
+         W2[8]*xy + W2[9]*p2 + W2[10]*p3 + W2[11]*q2;
+      AC[3] = W3[1] + W3[3]*x2 + W3[4]*x3 + W3[5]*y + W3[6]*y2 + W3[7]*y3 +
+         W3[8]*xy + W3[9]*p2 + W3[10]*p3 + W3[11]*q2 + W3[12]*q3 + W3[13]*pq;
+      AC[4] = W4[1] + W4[2]*x + W4[3]*x2 + W4[4]*x3 + W4[5]*y + W4[6]*y2 + W4[7]*y3 +
+         W4[8]*xy + W4[9]*p2 + W4[10]*p3 + W4[11]*q2 + W4[12]*q3 + W4[13]*pq;
+      AC[5] = W5[1] + W5[2]*x + W5[4]*x3 + W5[5]*y + W5[6]*y2 + W5[7]*y3 +
+         W5[8]*xy + W5[9]*p2 + W5[10]*p3 + W5[11]*q2 + W5[12]*q3 + W5[13]*pq;
+      AC[6] = W6[1] + W6[2]*x + W6[3]*x2 + W6[4]*x3 + W6[5]*y + W6[6]*y2 + W6[7]*y3 +
+         W6[8]*xy + W6[9]*p2 + W6[10]*p3 + W6[11]*q2 + W6[12]*q3 + W6[13]*pq;
+      AC[8] = W8[1] + W8[2]*x + W8[3]*x2 + W8[5]*y + W8[6]*y2 + W8[7]*y3 + W8[8]*xy;
+      AC[0] = -3.05;
+   } else if (rkappa >= 0.12) {
+      itype = 3;
+      npt = 200;
+      x = 1 + (rkappa-BKMXX2)*FBKX2;
+      y = 1 + (TMath::Sqrt(beta2)-BKMXY2)*FBKY2;
+      xx = 2*x;
+      yy = 2*y;
+      x2 = xx*x-1;
+      x3 = xx*x2-x;
+      y2 = yy*y-1;
+      y3 = yy*y2-y;
+      xy = x*y;
+      p2 = x2*y;
+      p3 = x3*y;
+      q2 = y2*x;
+      q3 = y3*x;
+      pq = x2*y2;
+      AC[1] = V1[1] + V1[2]*x + V1[3]*x2 + V1[5]*y + V1[6]*y2 + V1[7]*y3 + 
+         V1[9]*p2 + V1[10]*p3 + V1[11]*q2 + V1[12]*q3;
+      AC[2] = V2[1] + V2[2]*x + V2[3]*x2 + V2[5]*y + V2[6]*y2 + V2[7]*y3 + 
+         V2[8]*xy + V2[9]*p2 + V2[11]*q2 + V2[12]*q3;
+      AC[3] = V3[1] + V3[2]*x + V3[3]*x2 + V3[4]*x3 + V3[5]*y + V3[6]*y2 + V3[7]*y3 + 
+         V3[8]*xy + V3[9]*p2 + V3[10]*p3 + V3[11]*q2 + V3[12]*q3 + V3[13]*pq;
+      AC[4] = V4[1] + V4[2]*x + V4[3]*x2 + V4[4]*x3 + V4[5]*y + V4[6]*y2 + V4[7]*y3 + 
+         V4[8]*xy + V4[9]*p2 + V4[10]*p3 + V4[11]*q2 + V4[12]*q3;
+      AC[5] = V5[1] + V5[2]*x + V5[3]*x2 + V5[4]*x3 + V5[5]*y + V5[6]*y2 + V5[7]*y3 + 
+         V5[8]*xy + V5[11]*q2 + V5[12]*q3 + V5[13]*pq;
+      AC[6] = V6[1] + V6[2]*x + V6[3]*x2 + V6[4]*x3 + V6[5]*y + V6[6]*y2 + V6[7]*y3 + 
+         V6[8]*xy + V6[9]*p2 + V6[10]*p3 + V6[11]*q2 + V6[12]*q3 + V6[13]*pq;
+      AC[7] = V7[1] + V7[2]*x + V7[3]*x2 + V7[5]*y + V7[6]*y2 + V7[7]*y3 + 
+         V7[8]*xy + V7[11]*q2;
+      AC[8] = V8[1] + V8[2]*x + V8[3]*x2 + V8[5]*y + V8[6]*y2 + V8[7]*y3 + 
+         V8[8]*xy + V8[11]*q2;
+      AC[0] = -3.04;
+   } else {
+      itype = 4;
+      if (rkappa >=0.02) itype = 3;
+      npt = 200;
+      x = 1+(rkappa-BKMXX1)*FBKX1;
+      y = 1+(TMath::Sqrt(beta2)-BKMXY1)*FBKY1;
+      xx = 2*x;
+      yy = 2*y;
+      x2 = xx*x-1;
+      x3 = xx*x2-x;
+      y2 = yy*y-1;
+      y3 = yy*y2-y;
+      xy = x*y;
+      p2 = x2*y;
+      p3 = x3*y;
+      q2 = y2*x;
+      q3 = y3*x;
+      pq = x2*y2;
+      if (itype==3){
+	 AC[1] = U1[1] + U1[2]*x + U1[3]*x2 + U1[5]*y + U1[6]*y2 + U1[7]*y3 + 
+            U1[8]*xy + U1[10]*p3 + U1[12]*q3 + U1[13]*pq;
+	 AC[2] = U2[1] + U2[2]*x + U2[3]*x2 + U2[5]*y + U2[6]*y2 + U2[7]*y3 + 
+            U2[8]*xy + U2[9]*p2 + U2[10]*p3 + U2[12]*q3 + U2[13]*pq;
+	 AC[3] = U3[1] + U3[2]*x + U3[3]*x2 + U3[5]*y + U3[6]*y2 + U3[7]*y3 + 
+            U3[8]*xy + U3[9]*p2 + U3[10]*p3 + U3[11]*q2 + U3[12]*q3 + U3[13]*pq;
+	 AC[4] = U4[1] + U4[2]*x + U4[3]*x2 + U4[4]*x3 + U4[5]*y + U4[6]*y2 + U4[7]*y3 + 
+            U4[8]*xy + U4[9]*p2 + U4[10]*p3 + U4[11]*q2 + U4[12]*q3;
+	 AC[5] = U5[1] + U5[2]*x + U5[3]*x2 + U5[4]*x3 + U5[5]*y + U5[6]*y2 + U5[7]*y3 + 
+            U5[8]*xy + U5[10]*p3 + U5[11]*q2 + U5[12]*q3 + U5[13]*pq;
+	 AC[6] = U6[1] + U6[2]*x + U6[3]*x2 + U6[4]*x3 + U6[5]*y + U6[7]*y3 + 
+            U6[8]*xy + U6[9]*p2 + U6[10]*p3 + U6[12]*q3 + U6[13]*pq;
+	 AC[7] = U7[1] + U7[2]*x + U7[3]*x2 + U7[4]*x3 + U7[5]*y + U7[6]*y2 + U7[8]*xy;
+      }
+      AC[8] = U8[1] + U8[2]*x + U8[3]*x2 + U8[4]*x3 + U8[5]*y + U8[6]*y2 + U8[7]*y3 + 
+         U8[8]*xy + U8[9]*p2 + U8[10]*p3 + U8[11]*q2 + U8[13]*pq;
+      AC[0] = -3.03;
+   }
+   
+   AC[9] = (AC[8] - AC[0])/npt;
+   AC[10] = 1./AC[9];
+   if (itype == 3) {
+      x = (AC[7]-AC[8])/(AC[7]*AC[8]);
+      y = 1./TMath::Log(AC[8]/AC[7]);
+      p2 = AC[7]*AC[7];
+      AC[11] = p2*(AC[1]*TMath::Exp(-AC[2]*(AC[7]+AC[5]*p2)-
+                                    AC[3]*TMath::Exp(-AC[4]*(AC[7]+AC[6]*p2)))-0.045*y/AC[7])/(1+x*y*AC[7]);
+      AC[12] = (0.045+x*AC[11])*y;
+   }
+   if (itype == 4) AC[13] = 0.995/LandauI(AC[8]);
+   
+   if (mode==0) return;
+   //
+   x = AC[0];
+   WCM[0] = 0;
+   Double_t fl, fu;
+   Int_t k;
+   fl = TMath::VavilovDenEval(x, AC, HC, itype);
+   for (k=1; k<=npt; k++) {
+      x += AC[9];
+      fu = TMath::VavilovDenEval(x, AC, HC, itype);
+      WCM[k] = WCM[k-1] + fl + fu;
+      fl = fu;
+   }
+   x = 0.5*AC[9];
+   for (k=1; k<=npt; k++)
+      WCM[k]*=x;
+}
+
+//______________________________________________________________________________
+Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t itype)
+{
+   //Internal function, called by Vavilov and VavilovSet
+
+   Double_t v = 0;
+   if (rlam < AC[0] || rlam > AC[8])
+      return 0;
+   Int_t k;
+   Double_t x, fn, s;
+   Double_t h[10];
+   if (itype ==1 ) {
+      fn = 1;
+      x = (rlam + HC[0])*HC[1];
+      h[1] = x;
+      h[2] = x*x -1;
+      for (k=2; k<=8; k++) {
+	 fn++;
+	 h[k+1] = x*h[k]-fn*h[k-1];
+      }
+      s = 1 + HC[7]*h[9];
+      for (k=2; k<=6; k++) 
+	 s+=HC[k]*h[k+1];
+      v = HC[8]*TMath::Exp(-0.5*x*x)*TMath::Max(s, 0.);
+   } 
+   else if (itype == 2) {
+      x = rlam*rlam;
+      v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x) - AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x))); 
+   }
+   else if (itype == 3) {
+      if (rlam < AC[7]) {
+	 x = rlam*rlam;
+	 v = AC[1]*TMath::Exp(-AC[2]*(rlam+AC[5]*x)-AC[3]*TMath::Exp(-AC[4]*(rlam+AC[6]*x)));
+      } else {
+	 x = 1./rlam;
+	 v = (AC[11]*x + AC[12])*x;
+      }
+   }
+   else if (itype == 4) {
+      v = AC[13]*TMath::Landau(rlam);
+   }
+  return v;
 }

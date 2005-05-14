@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.69 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.73 2005/04/25 13:59:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -956,7 +956,7 @@ Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
   Stat_t stats[7];
   GetStats(stats);
   Stat_t sumw   = stats[0];
-  Stat_t sumw2  = stats[1];
+//Stat_t sumw2  = stats[1];
   Stat_t sumwx  = stats[2];
   Stat_t sumwx2 = stats[3];
   Stat_t sumwy  = stats[4];
@@ -965,10 +965,10 @@ Stat_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
   if (sumw == 0) return 0;
   if (axis1 == 1 && axis2 == 1) {
-     return TMath::Abs(sumwx2/sumw - sumwx*sumwx/sumw2);
+     return TMath::Abs(sumwx2/sumw - sumwx/sumw*sumwx/sumw);
   }
   if (axis1 == 2 && axis2 == 2) {
-     return TMath::Abs(sumwy2/sumw - sumwy*sumwy/sumw2);
+     return TMath::Abs(sumwy2/sumw - sumwy/sumw*sumwy/sumw);
   }
   return sumwxy/sumw - sumwx/sumw*sumwy/sumw;
 }
@@ -1644,7 +1644,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //      myhist->ProfileX(" ",firstybin,lastybin,"[cutg]");
 //   To invert the cut, it is enough to put a "-" in front of its name:
 //      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
-//   It is possible to apply several cuts:
+//   It is possible to apply several cuts ("," means logical AND):
 //      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
 //
 //   NOTE that if a TProfile named name exists in the current directory or pad,
@@ -1652,7 +1652,6 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //   The X axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
@@ -1679,6 +1678,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
@@ -1710,7 +1710,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
         }
      }
   }
-  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -1760,7 +1760,6 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //   The Y axis attributes of the TH2 are copied to the X axis of the profile.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
@@ -1787,6 +1786,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
@@ -1818,7 +1818,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
         }
      }
   }
-  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
+  if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -1873,7 +1873,6 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   The X axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstybin < 0) firstybin = 1;
@@ -1900,6 +1899,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
@@ -1936,7 +1936,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      }
      if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
-  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;
@@ -1992,7 +1992,6 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
 
   TString opt = option;
-  opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
   if (firstxbin < 0) firstxbin = 1;
@@ -2019,6 +2018,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      ((TH2 *)this)->GetPainter();
      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
   }
+  opt.ToLower();  //must be called after MakeCuts
 
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
@@ -2055,7 +2055,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      }
      if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
-  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
+  if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
 
   if (opt.Contains("d")) {
      TVirtualPad *padsav = gPad;

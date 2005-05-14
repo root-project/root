@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.99 2005/02/10 20:44:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.102 2005/04/29 20:34:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1023,7 +1023,7 @@ void TF1::DrawPanel()
 }
 
 //______________________________________________________________________________
-Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
+Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================
@@ -1042,9 +1042,9 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
   xx[2] = z;
   xx[3] = t;
 
-  InitArgs(xx,fParams);
+  ((TF1*)this)->InitArgs(xx,fParams);
 
-  return EvalPar(xx,fParams);
+  return ((TF1*)this)->EvalPar(xx,fParams);
 }
 
 //______________________________________________________________________________
@@ -1683,6 +1683,17 @@ TAxis *TF1::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+//______________________________________________________________________________
+TAxis *TF1::GetZaxis() const
+{
+   // Get z axis of the function. (In case this object is a TF2 or TF3)
+
+   //if (!gPad) return 0;
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetZaxis();
 }
 
 //______________________________________________________________________________

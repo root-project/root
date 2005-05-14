@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.65 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.66 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -204,6 +204,7 @@ public:
     virtual Stat_t   GetEntries() const;
     virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
+    virtual Double_t GetKurtosis(Int_t axis=1) const;
     virtual void     GetLowEdge(Axis_t *edge) const {fXaxis.GetLowEdge(edge);}
     virtual Double_t GetMaximum(Double_t maxval=FLT_MAX) const;
     virtual Int_t    GetMaximumBin() const;
@@ -232,6 +233,7 @@ public:
     virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
     virtual Double_t GetRMS(Int_t axis=1) const;
     virtual Double_t GetRMSError(Int_t axis=1) const;
+    virtual Double_t GetSkewness(Int_t axis=1) const;
             TAxis   *GetXaxis() const;
             TAxis   *GetYaxis() const;
             TAxis   *GetZaxis() const;

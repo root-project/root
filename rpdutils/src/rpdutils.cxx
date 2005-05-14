@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.77 2005/03/16 17:29:07 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.79 2005/04/15 17:26:09 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
+#include "RConfig.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -88,9 +89,6 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #   define R__GLIBC
 #endif
 
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
@@ -5234,6 +5232,7 @@ int RpdGenRSAKeys(int setrndinit)
    Int_t sbuf = 2*RSA_size(gRSASSLKey);
    char *kbuf = new char[sbuf];
    BIO_read(bkey,(void *)kbuf,sbuf);
+   BIO_free(bkey);
 
    // Prepare export
    gRSAPubExport[1].len = sbuf;

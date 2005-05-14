@@ -43,6 +43,8 @@ MyParticle::MyParticle() : TParticle()
     fChild[4] = 0;
     fChild[5] = 0;
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -69,6 +71,8 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     fChild[4] = 0;
     fChild[5] = 0;
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -102,6 +106,8 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
                  +  (GetMass() * GetMass()));
     TParticle::SetMomentum(pMomentum.x(),pMomentum.y(),pMomentum.z(),energy);
     fTimeOfDecay = 0.0;
+    fTracks = new TObjArray(1);
+    fNtrack = 0;
 }
 
 //______________________________________________________________________________
@@ -112,6 +118,7 @@ char *MyParticle::GetObjectInfo(Int_t, Int_t) const
    return info;
 }
 
+//______________________________________________________________________________
 void MyParticle::SetMoment(const TVector3 &mom)
 {
     // Set particle momentum with TVector3 members
@@ -123,6 +130,7 @@ void MyParticle::SetMoment(const TVector3 &mom)
     SetMomentum(mom.x(), mom.y(), mom.z(), energy);
 }
 
+//______________________________________________________________________________
 void MyParticle::GenerateTimeOfDecay()
 {
     // Generates time of decay for this type of particle.
@@ -155,23 +163,59 @@ const Char_t *MyParticle::GetName() const
     // get name of particle with its PDG number, or Unknown if
     // particle name is not defined into ParticlesDef.h
     Int_t i;
-    Char_t *pdg_name = new Char_t[40];
     Int_t my_code = GetPdgCode();
 
-    sprintf(pdg_name,"Unknown");
     for(i=0;i<total_defs;i++) {
-        if(particle_def[i].code == my_code) {
-            sprintf(pdg_name,"%s", particle_def[i].name);
-            break;
-        }
+        if(particle_def[i].code == my_code)
+            return(particle_def[i].name);
     }
-    return pdg_name;
+    return ("Unknown");
+}
+
+//______________________________________________________________________________
+TPolyLine3D *MyParticle::AddTrack(const TVector3 &pos, Int_t color)
+{
+   // Add a new track to the list of tracks for this particle.
+   TPolyLine3D *poly;
+   fTracks->Add(new TPolyLine3D());
+   fNtrack = fTracks->GetLast();
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   poly->SetPoint(0, pos.x(), pos.y(), pos.z());
+   poly->SetLineColor(color);
+   return poly;
+}
+
+//______________________________________________________________________________
+TPolyLine3D *MyParticle::AddTrack(Double_t x, Double_t y, Double_t z, Int_t col)
+{
+   // Add a new track to the list of tracks for this particle.
+   TPolyLine3D *poly;
+   fTracks->Add(new TPolyLine3D());
+   fNtrack = fTracks->GetLast();
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   poly->SetPoint(0, x, y, z);
+   poly->SetLineColor(col);
+   return poly;
+}
+
+//______________________________________________________________________________
+void MyParticle::SetNextPoint(Int_t color)
+{
+   // Set next polyline point for the current track if the color did not change
+   // or add a new polyline with the new color.
+   TPolyLine3D *poly;
+   poly = (TPolyLine3D *)fTracks->At(fNtrack);
+   poly->SetNextPoint(fLocation->x(), fLocation->y(), fLocation->z());
+   if(color != poly->GetLineColor())
+      AddTrack(fLocation->x(), fLocation->y(), fLocation->z(), color);
 }
 
 //______________________________________________________________________________
 MyParticle::~MyParticle()
 {
     // destructor
-    delete   fLocation;
+    fTracks->Delete();
+    delete fTracks;
+    delete fLocation;
 }
 

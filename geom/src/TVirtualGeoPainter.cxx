@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.cxx,v 1.4 2002/07/16 17:11:26 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -12,13 +12,14 @@
 #include "TROOT.h"
 #include "TVirtualGeoPainter.h"
 #include "TPluginManager.h"
+#include "TGeoManager.h"
 
 TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
 
 ClassImp(TVirtualGeoPainter)
 
 //______________________________________________________________________________
-TVirtualGeoPainter::TVirtualGeoPainter()
+TVirtualGeoPainter::TVirtualGeoPainter(TGeoManager *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
@@ -47,7 +48,7 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
          if (h->LoadPlugin() == -1)
             return 0;
-         fgGeoPainter = (TVirtualGeoPainter*)h->ExecPlugin(0);
+         fgGeoPainter = (TVirtualGeoPainter*)h->ExecPlugin(1,gGeoManager);
       }
    }
    return fgGeoPainter;

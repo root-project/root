@@ -28,7 +28,6 @@
 ClassImp(EventHeader)
 ClassImp(MyEvent)
 
-TObjArray    *MyEvent::fgTracks    = 0;
 TClonesArray *MyEvent::fgParticles = 0;
 
 //______________________________________________________________________________
@@ -39,9 +38,6 @@ MyEvent::MyEvent()
    // class static variables fgParticles and fgTracks is 0 and
    // the TClonesArray fgParticles is created.
 
-   if (!fgTracks) fgTracks = new TObjArray(1);
-   fTracks = fgTracks;
-   fNtrack = 0;
    if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 100000);
    fgParticles->BypassStreamer(kFALSE);
    fParticles = fgParticles;
@@ -69,15 +65,11 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    // generate array of energies threshold used
    // to give a track color related to the particle
    // energy
-   for(i=0;i<10;i++)
-      fEThreshold[i] = E_0/(2<<i);
+   for(i=0;i<16;i++)
+      fEThreshold[i] = EMass + E_0 / (2 << i);
 
    Clear();
    Reset();
-
-   if (!fgTracks) fgTracks = new TObjArray(1);
-   fTracks = fgTracks;
-   fNtrack = 0;
 
    if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 100000);
    fParticles = fgParticles;
@@ -96,10 +88,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    AddParticle(0,first_particle, location, momentum);
    GetParticle(0)->GenerateTimeOfDecay();
 
-   AddTrack(0, fDetector.GetMinY(), 0, gColIndex);
-
-   gTmpLTI = gEventListTree->AddItem(gBaseLTI,
-             GetParticle(0)->GetName());
+   gTmpLTI = gEventListTree->AddItem(gBaseLTI, GetParticle(0)->GetName());
    sprintf(strtmp,"%1.2e GeV",GetParticle(0)->Energy());
    gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
    gLTI[0] = gTmpLTI;
@@ -110,8 +99,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
 void MyEvent::Clear(Option_t *option)
 {
    // Clear tracks and particles arrays
-   fTracks->Clear(option);
-   fParticles->Clear(option);
+   fgParticles->Delete(option);
    fMatter = 0;
 }
 
@@ -119,7 +107,6 @@ void MyEvent::Clear(Option_t *option)
 void MyEvent::Reset(Option_t *option)
 {
    // Static function to reset all static objects for this event
-   delete fgTracks; fgTracks = 0;
    delete fgParticles; fgParticles = 0;
    fMatter = 0;
 }
@@ -129,34 +116,7 @@ void MyEvent::SetHeader(Int_t i, Int_t run, TDatime date, Int_t primary,
                         Double_t energy)
 {
    // set event header with event identification and startup parameters
-   fNtrack = 0;
    fEvtHdr.Set(i, run, date, primary, energy);
-}
-
-//______________________________________________________________________________
-TPolyLine3D *MyEvent::AddTrack(const TVector3 &pos, Int_t color)
-{
-   // Add a new track to the list of tracks for this event.
-   TPolyLine3D *poly;
-   fTracks->Add(new TPolyLine3D());
-   fNtrack = fTracks->GetLast();
-   poly = (TPolyLine3D *)fTracks->At(fNtrack);
-   poly->SetPoint(0, pos.x(), pos.y(), pos.z());
-   poly->SetLineColor(color);
-   return poly;
-}
-
-//______________________________________________________________________________
-TPolyLine3D *MyEvent::AddTrack(Double_t x, Double_t y, Double_t z, Int_t col)
-{
-   // Add a new track to the list of tracks for this event.
-   TPolyLine3D *poly;
-   fTracks->Add(new TPolyLine3D());
-   fNtrack = fTracks->GetLast();
-   poly = (TPolyLine3D *)fTracks->At(fNtrack);
-   poly->SetPoint(0, x, y, z);
-   poly->SetLineColor(col);
-   return poly;
 }
 
 //______________________________________________________________________________
@@ -171,7 +131,8 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
    TClonesArray &parts = *fParticles;
    MyParticle *part = new(parts[fNparticles++])
                           MyParticle(id, pdg_code, CREATED, UNDEFINE, pos, mom);
-   //Save reference to last Track in the collection of Tracks
+   part->AddTrack(pos.x(), pos.y(), pos.z(), ParticleColor(id));
+   //Save reference to last particle in the collection of particles
    fLastParticle = part;
    return part;
 }
@@ -319,7 +280,6 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
         part->SetTimeOfDecay(GetParticle(id)->GetTimeOfDecay());
         GetParticle(id)->SetChild(0, d_num1);
         // add a track related to this particle
-        AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
         // add a particle related list tree item to the event list tree
         gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -337,7 +297,6 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
         GetParticle(id)->SetChild(1, d_num2);
 
         // add a track related to this particle
-        AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
         // add a particle related list tree item to the event list tree
         gTmpLTI = gEventListTree->AddItem(gLTI[id],part->GetName());
@@ -443,7 +402,6 @@ again:
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(i, d_num[i]);
       // add a track related to this child
-      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a child related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -498,19 +456,8 @@ void MyEvent::DefineDecay(Int_t id)
 //______________________________________________________________________________
 void MyEvent::DeleteParticle(Int_t id)
 {
-   // in the case of the particle has been created and died
-   // before to can take a step, there is only one point on
-   // its track...then set second point before marking its
-   // status as dead.
-   // it should not append, but who knows...
+   // Delete the particle id
 
-   if(GetTrack(id)->GetN() == 2) {
-      Float_t *pts = GetTrack(id)->GetP();
-      // check if track's second point is not set
-      if(TMath::IsNaN(pts[4])) {
-         GetTrack(id)->SetPoint(1,pts[0], pts[1], pts[2]);
-      }
-   }
    // Add this particle's energy loss at the total
    // energy loss into the detector
    fDetector.AddELoss(GetParticle(id)->GetELoss());
@@ -651,9 +598,7 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
          (GetParticle(id)->GetPdgCode() != ANTINEUTRINO_E) &&
          (GetParticle(id)->GetPdgCode() != ANTINEUTRINO_MUON) &&
          (GetParticle(id)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
-         GetTrack(id)->SetNextPoint(GetParticle(id)->GetvLocation().x(),
-                                    GetParticle(id)->GetvLocation().y(),
-                                    GetParticle(id)->GetvLocation().z());
+         GetParticle(id)->SetNextPoint(ParticleColor(id));
       }
       return(ALIVE);
    }
@@ -710,7 +655,6 @@ Int_t MyEvent::PairCreation(Int_t id)
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(0, d_num1);
       // add a track related to this particle
-      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -730,7 +674,6 @@ Int_t MyEvent::PairCreation(Int_t id)
       part->GenerateTimeOfDecay();
       GetParticle(id)->SetChild(1, d_num2);
       // add a track related to this particle
-      AddTrack(GetParticle(id)->GetvLocation(),ParticleColor(id));
 
       // add a particle related list tree item to the event list tree
       gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
@@ -752,9 +695,9 @@ Int_t MyEvent::ParticleColor(Int_t id)
    // return color index related to particle's energy
    //Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
    Int_t i;
-   for(i=0;i<10;i++)
+   for(i=0;i<16;i++)
       if(GetParticle(id)->Energy() > fEThreshold[i]) break;
-   if(i > 10) i = 10;
+   if(i > 16) i = 16;
    return(gColIndex + i);
    //return ctable[i];
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.6 2004/12/16 11:16:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.7 2005/02/07 14:35:07 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -31,10 +31,14 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 
+Double_t TCurlyLine::fgDefaultWaveLength = 0.02;
+Double_t TCurlyLine::fgDefaultAmplitude  = 0.01; 
+Bool_t   TCurlyLine::fgDefaultIsCurly    = kFALSE;   
+
 ClassImp(TCurlyLine)
 
 //______________________________________________________________________________
-TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t tl, Double_t rad)
+TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t wl, Double_t amp)
 {
  // create a new TCurlyLine with starting point (x1, y1), end point (x2,y2)
  // The wavelength and amplitude are given in percent of the pad height
@@ -43,9 +47,9 @@ TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Doubl
    fY1         = y1;
    fX2         = x2;
    fY2         = y2;
-   fWaveLength = tl;
-   fAmplitude  = rad;
-   fIsCurly    = kTRUE;
+   fWaveLength = wl;
+   fAmplitude  = amp;
+   fIsCurly    = fgDefaultIsCurly;
    Build();
 }
 
@@ -316,3 +320,30 @@ void TCurlyLine::SetEndPoint(Double_t x, Double_t y)
    fY2 = y;
    Build();
 }
+//_____________________________________________________________________________________
+
+void TCurlyLine::SetDefaultWaveLength(Double_t WaveLength)
+{
+   fgDefaultWaveLength = WaveLength;
+}
+void TCurlyLine::SetDefaultAmplitude(Double_t Amplitude)
+{
+   fgDefaultAmplitude  = Amplitude;
+}
+void TCurlyLine::SetDefaultIsCurly(Bool_t IsCurly)
+{
+   fgDefaultIsCurly    = IsCurly;
+}
+Double_t TCurlyLine::GetDefaultWaveLength()
+{
+   return fgDefaultWaveLength;
+}
+Double_t TCurlyLine::GetDefaultAmplitude()
+{
+   return fgDefaultAmplitude;
+}
+Bool_t TCurlyLine::GetDefaultIsCurly()
+{
+   return fgDefaultIsCurly;
+}
+     

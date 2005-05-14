@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.33 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.34 2004/11/03 11:03:04 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -278,6 +278,8 @@ public:
    TString     &Append(const TString &s);
    TString     &Append(const TString &s, Ssiz_t n);
    TString     &Append(char c, Ssiz_t rep = 1);   // Append c rep times
+   Int_t        Atoi();
+   Double_t     Atof();
    Bool_t       BeginsWith(const char *s,      ECaseCompare cmp = kExact) const;
    Bool_t       BeginsWith(const TString &pat, ECaseCompare cmp = kExact) const;
    Ssiz_t       Capacity() const         { return Pref()->Capacity(); }
@@ -401,6 +403,12 @@ extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 
 inline void TStringRef::UnLink()
 { if (RemoveReference() == 0) delete [] (char*)this; }
+
+inline Int_t TString::Atoi()
+{ return std::atoi(fData); }
+
+inline Double_t TString::Atof()
+{ return std::atof(fData); }
 
 inline void TString::Cow()
 { if (Pref()->References() > 1) Clone(); }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.241 2005/03/14 17:09:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.248 2005/04/23 06:13:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -315,6 +315,32 @@ const Int_t kMaxLen = 512;
 ClassImp(TTree)
 
 //______________________________________________________________________________
+//  Helper class to prevent infinite recursion in the usage of TTree Friends.
+
+//______________________________________________________________________________
+TTree::TFriendLock::TFriendLock(TTree *tree) : fTree(tree) 
+{
+   // Record in 'tree' that it has been used while
+   // recursively looks through the friends.
+
+   // We could also add some code to acquire an actual
+   // lock to prevent multi-thread issues
+   if (fTree) {
+      fPrevious = fTree->TestBit(kFriendLock); 
+      fTree->SetBit(kFriendLock);
+   }
+}
+
+TTree::TFriendLock::~TFriendLock() 
+{ 
+   // Restore the state of tree the same as before
+   // we set the 'lock'
+
+   if (fTree) fTree->SetBit(kFriendLock,fPrevious); 
+}
+
+
+//______________________________________________________________________________
 TTree::TTree(): TNamed()
 {
 //*-*-*-*-*-*-*-*-*-*-*Default Tree constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -426,6 +452,7 @@ TTree::~TTree()
 {
 //*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================
+
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory)) {
          if (fDirectory->GetList()) fDirectory->GetList()->Remove(this);
@@ -562,6 +589,8 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 // same values by specifying the tree.
 //
 //  tree.Draw("var:ft1.var:ft2.var")
+
+   //if (TestBit(kFriendLock)) 
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,filename);
@@ -2257,6 +2286,10 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
+//  Sum$(formula): return the sum of the value of the elements of the formula given 
+//                    as a parameter.  For eaxmple the mean for all the elements in 
+//                    one entry can be calculated with:
+//                Sum$(formula)/Length$(formula)
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
@@ -2472,13 +2505,18 @@ Int_t TTree::Fill()
 //   If a leaf is a simple data type, a simple conversion to a machine
 //   independent format has to be done.
 //
-   Int_t i;
-   Int_t nbytes = 0;
+//   The function returns the number of bytes committed to the 
+//   individual branch(es).
+//   If a write error occurs, the number of bytes returned is -1.
+//   If no data are written, because e.g. the branch is disabled,
+//   the number of bytes returned is 0.
+//
+   Int_t i, nbytes = 0, nwrite = 0, nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
-   TBranch *branch;
+   TBranch *branch = 0;
 
-    //case of one single super branch. Automatically update
-    // all the branch addresses if a new object was created
+   //case of one single super branch. Automatically update
+   // all the branch addresses if a new object was created
    if (nb == 1) {
       branch = (TBranch*)fBranches.UncheckedAt(0);
       branch->UpdateAddress();
@@ -2487,8 +2525,12 @@ Int_t TTree::Fill()
 
    for (i=0;i<nb;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
-      if (branch->TestBit(kDoNotProcess)) continue;
-      nbytes += branch->Fill();
+      if ( branch->TestBit(kDoNotProcess) ) continue;
+      nbytes += (nwrite = branch->Fill());
+      if ( nwrite < 0 )  {
+        Error("Fill","Failed filling branch:%s.%s, nbytes=%d",GetName(),branch->GetName(),nwrite);
+        nerror++;
+      }
    }
    if (fBranchRef) fBranchRef->Fill();
 
@@ -2507,12 +2549,16 @@ Int_t TTree::Fill()
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
 
-   return nbytes;
+   return nerror==0 ? nbytes : -1;
 }
 
 //______________________________________________________________________________
 TBranch *TTree::FindBranch(const char* branchname)
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    char name[kMaxLen];
    TIter next(GetListOfBranches());
 
@@ -2538,6 +2584,9 @@ TBranch *TTree::FindBranch(const char* branchname)
 
    //search in list of friends
    if (!fFriends) return 0;
+
+   TFriendLock lock(this);
+
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -2566,6 +2615,10 @@ TBranch *TTree::FindBranch(const char* branchname)
 //______________________________________________________________________________
 TLeaf *TTree::FindLeaf(const char* searchname)
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    char leafname[kMaxLen];
    char leaftitle[kMaxLen];
    char longname[kMaxLen];
@@ -2633,6 +2686,9 @@ TLeaf *TTree::FindLeaf(const char* searchname)
 
    //search in list of friends
    if (!fFriends) return 0;
+
+   TFriendLock lock(this);
+
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -2690,10 +2746,18 @@ const char *TTree::GetAlias(const char *aliasName) const
 {
    // Returns the expanded value of the alias.  Search in the friends if any
 
+
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+      
    if (fAliases) {
       TObject *alias = fAliases->FindObject(aliasName);
       if (alias) return alias->GetTitle();
    }
+
+   if (!fFriends) return 0;
+   TFriendLock lock(const_cast<TTree*>(this));
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -2717,6 +2781,10 @@ TBranch *TTree::GetBranch(const char *name)
 // Return pointer to the branch with name in this Tree or the list
 // of friends of this tree.
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    Int_t i,j,k,nb1,nb2;
    TObjArray *lb, *lb1;
    TBranch *branch, *b1, *b2;
@@ -2739,7 +2807,7 @@ TBranch *TTree::GetBranch(const char *name)
          }
       }
    }
-   TObjArray *leaves = ((TTree*)this)->GetListOfLeaves();
+   TObjArray *leaves = GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    for (i=0;i<nleaves;i++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(i);
@@ -2749,6 +2817,7 @@ TBranch *TTree::GetBranch(const char *name)
 
    //search in list of friends
    if (!fFriends) return 0;
+   TFriendLock lock(this);
    TIter next(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
@@ -2785,7 +2854,7 @@ Bool_t TTree::GetBranchStatus(const char *branchname) const
    // 0 if branch is not activated
    // 1 if branch is activated
 
-   TBranch *br = ((TTree*)this)->GetBranch(branchname);
+   TBranch *br = const_cast<TTree*>(this)->GetBranch(branchname);
    if (br) return (br->TestBit(kDoNotProcess) == 0);
    return 0;
 }
@@ -2921,6 +2990,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 //  calling TTree::GetEntry) will be functional even when the classes in the
 //  file are not available.
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    if (entry < 0 || entry >= fEntries) return 0;
    Int_t i;
    Int_t nbytes = 0;
@@ -2938,6 +3011,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
    // GetEntry in list of friends
    if (!fFriends) return nbytes;
+   TFriendLock lock(this);
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -3012,18 +3086,16 @@ Long64_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 //______________________________________________________________________________
 Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 {
-// Return entry  corresponding to major and minor number
-// For example:
-//     Int_t run   = 1234;
-//     Int_t event = 345;
-//     Long64_t serial= tree.GetEntryNumberWithIndex(run,event);
-//    now the variable serial is in the range [0,nentries] and one can do
-//    tree.GetEntry(serial);
-//
+//  Read entry  corresponding to major and minor number
+//  The function returns the total number of bytes read.
 //  If the Tree has friend trees, the corresponding entry with
 //  the index values (major,minor) is read. Note that the master Tree
 //  and its friend may have different entry serial numbers corresponding
 //  to (major,minor).
+
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
 
    Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
@@ -3043,6 +3115,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 
    // GetEntry in list of friends
    if (!fFriends) return nbytes;
+   TFriendLock lock(this);
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -3064,22 +3137,37 @@ const char *TTree::GetFriendAlias(TTree *tree) const
 // If the the 'tree' is a friend, this method returns its alias name
 // This 'alias' is a an alias for the TTree itself.
 // It can be used in conjunction with a branch or leaf name in a TTreeFormula.
-//  Is can alos be used in conjunction with an alias created using
+//  Is can also be used in conjunction with an alias created using
 //  TTree::SetAlias in a TTreeFormula, eg:
 //     maintree->Draw("treealias.fPx - treealias.myAlias");
 //  where fPx is a branch of the friend tree aliased as 'treealias' and 'myAlias;
 //  was created using TTree::SetAlias on the tree aliases as 'treealias'.
 //
 //  However, note that 'treealias.myAlias' will be expanded literally, without
-//  'remembering' it comes from the aliased friend and thus might the branch
+//  'remembering' it comes from the aliased friend and thus the branch
 //  name might not be disambiguated properly.
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    if (!fFriends) return 0;
+   TFriendLock lock(const_cast<TTree*>(this));
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t==tree) return fe->GetName();
+      if (t->IsA()->InheritsFrom("TChain")) {
+         if (t->GetTree()==tree) return fe->GetName();
+      }
+   }
+   // After looking at the first level, let's see if it is
+   // a friend of friends.
+   nextf.Reset();
+   while ((fe = (TFriendElement*)nextf())) {
+      const char *res = fe->GetTree()->GetFriendAlias(tree);
+      if (res) return res;
    }
    return 0;
 }
@@ -3101,6 +3189,10 @@ TLeaf *TTree::GetLeaf(const char *aname)
 // or any branch in the list of friend trees.
 //
 //  aname may be of the form branchname/leafname
+
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
 
    char *slash = (char*)strchr(aname,'/');
    char *name;
@@ -3135,6 +3227,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
    }
 
    if (!fFriends) return 0;
+   TFriendLock lock(this);
    TIter next(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
@@ -3292,6 +3385,10 @@ Long64_t TTree::LoadTree(Long64_t entry)
 
 // this function is overloaded in TChain
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    if (fNotify) {
       if (fReadEntry < 0) fNotify->Notify();
    }
@@ -3299,34 +3396,45 @@ Long64_t TTree::LoadTree(Long64_t entry)
 
    Bool_t friendHasEntry=kFALSE;
    if (fFriends) {
+
       // The current tree has not changed but some of its friend might.
 
       //An Alternative would move this code to each of the function calling LoadTree
-      //(and to overload a few more).
-      TIter nextf(fFriends);
-      TFriendElement *fe;
+      //(and to overload a few more). 
       Bool_t needUpdate = kFALSE;
-      while ((fe = (TFriendElement*)nextf())) {
-         TTree *t = fe->GetTree();
-         if (t->IsA()!=TTree::Class()) {
-            Int_t oldNumber = t->GetTreeNumber();
-
-            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
-
-            Int_t newNumber = t->GetTreeNumber();
-            if (oldNumber!=newNumber) {
-
+      {
+         // This scope is need to insure the lock is release at the right time
+        
+         TIter nextf(fFriends);
+         TFriendLock lock(this);
+         TFriendElement *fe;
+         while ((fe = (TFriendElement*)nextf())) {
+            if (fe->TestBit(TFriendElement::kFromChain)) {
+               // This friend element was added by the chain that owns this
+               // tree, the chain will deal with load the correct entry.
+               continue;
+            }
+            TTree *t = fe->GetTree();
+            if (t->IsA()!=TTree::Class()) {
+               Int_t oldNumber = t->GetTreeNumber();
+               
+               friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
+               
+               Int_t newNumber = t->GetTreeNumber();
+               if (oldNumber!=newNumber) {
+                  
                // We can not just compare the tree pointers because they could be reused.
                // So we compare the tree number instead.
-               needUpdate = kTRUE;
-
+                  needUpdate = kTRUE;
+                  
+               }
+            } else {
+               // we assume it is a simple tree so we have nothing to do.
+               friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
             }
-         } else {
-            // we assume it is a simple tree so we have nothing to do.
-            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
-         }
-      } // for each friend
+         } // for each friend
 
+      }
       if (needUpdate) {
          //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
          if (fPlayer) fPlayer->UpdateFormulaLeaves();
@@ -3636,7 +3744,7 @@ TTree *TTree::MergeTrees(TList *list)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
-      Long64_t nentries = (Long64_t)tree->GetEntries();
+      Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
@@ -3676,7 +3784,7 @@ Long64_t TTree::Merge(TCollection *list)
          return -1;
       }
 
-      Long64_t nentries = (Long64_t)tree->GetEntries();
+      Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
 
       CopyAddresses(tree);
@@ -3747,6 +3855,10 @@ void TTree::Print(Option_t *option) const
    // Wildcarding can be used to print only a subset of the branches
    // eg, T.Print("Elec*") will print all branches with name starting with "Elec"
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return;
+
   Int_t s = 0;
   Int_t skey = 0;
   if (fDirectory) {
@@ -3768,7 +3880,7 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+  Int_t nl = const_cast<TTree*>(this)->GetListOfLeaves()->GetEntries();
   Int_t l;
   TBranch *br;
   TLeaf *leaf;
@@ -3776,7 +3888,7 @@ void TTree::Print(Option_t *option) const
      Long64_t *count = new Long64_t[nl];
      Int_t keep =0;
      for (l=0;l<nl;l++) {
-        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
         if (strchr(br->GetName(),'.')) {
            count[l] = -1;
@@ -3788,7 +3900,7 @@ void TTree::Print(Option_t *option) const
      }
      for (l=0;l<nl;l++) {
         if (count[l] < 0) continue;
-        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
         br   = leaf->GetBranch();
         printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
      }
@@ -3797,7 +3909,7 @@ void TTree::Print(Option_t *option) const
      TString reg = "*";
      if (strlen(option) && strchr(option,'*')) reg = option;
      TRegexp re(reg,kTRUE);
-     TIter next(((TTree*)this)->GetListOfBranches());
+     TIter next(const_cast<TTree*>(this)->GetListOfBranches());
      TBranch::ResetCount();
      while ((br= (TBranch*)next())) {
         TString s = br->GetName();
@@ -3813,6 +3925,7 @@ void TTree::Print(Option_t *option) const
   //print friends if option "all"
   if (!fFriends || !strstr(option,"all")) return;
   TIter nextf(fFriends);
+  TFriendLock lock(const_cast<TTree*>(this));
   TFriendElement *fr;
   while ((fr = (TFriendElement*)nextf())) {
      TTree * t = fr->GetTree();
@@ -3941,6 +4054,8 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    //     A/D:Table[2]/F:Ntracks/I:astring/C
    //  otherwise branchDescriptor must be specified with the above syntax.
    //
+   // Lines in the input file starting with "#" are ignored.
+   //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
 
@@ -3996,18 +4111,22 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
    Int_t status = 1;
    Long64_t nlines = 0;
    while(status > 0) {
-      //loop on branches and read the branch values into their buffer
-      for (Int_t i=0;i<nbranches;i++) {
+
+     if ( in.peek() != '#' ) {
+       //loop on branches and read the branch values into their buffer
+       for (Int_t i=0;i<nbranches;i++) {
          branch = (TBranch*)fBranches.At(i);
          TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
          leaf->ReadValue(in);
          status = in.good();
          if (status <= 0) break;
-      }
-      if (status <= 0) break;
+       }
+       if (status <= 0) break;
       //we are now ready to fill the tree
-      Fill();
-      nlines++;
+       Fill();
+       nlines++;
+     }
+     in.ignore(8192,'\n');
    }
 
    delete [] bdname;
@@ -4054,7 +4173,12 @@ void TTree::RemoveFriend(TTree *oldFriend)
 //*-*-*-*-*-*-*-*Remove a friend from the list of friend *-*-*
 //*-*            =============================================
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return;
+
    if (!fFriends) return;
+   TFriendLock lock(this);
    TIter nextf(fFriends);
    TFriendElement *fe;
    while ((fe = (TFriendElement*)nextf())) {
@@ -4287,6 +4411,10 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 //  expression is returned in *found AND the error message 'unknown branch'
 //  is suppressed.
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return;
+
    TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
 
@@ -4318,6 +4446,7 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
    //search in list of friends
    UInt_t foundInFriend = 0;
    if (fFriends) {
+      TFriendLock lock(this);
       TIter nextf(fFriends);
       TFriendElement *fe;
       char name[kMaxLen];
@@ -4747,7 +4876,7 @@ ClassImp(TTreeFriendLeafIter)
 
 //______________________________________________________________________________
 TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
-  : fTree((TTree*)tree),fLeafIter(0),fTreeIter(0),fDirection(dir)
+   : fTree(const_cast<TTree*>(tree)),fLeafIter(0),fTreeIter(0),fDirection(dir)
 {
    // Create a new iterator. By default the iteration direction
    // is kIterForward. To go backward use kIterBackward.
@@ -4810,7 +4939,7 @@ TObject *TTreeFriendLeafIter::Next()
       TFriendElement * nextFriend = (TFriendElement*) fTreeIter->Next();
       ///nextTree = (TTree*)fTreeIter->Next();
       if (nextFriend) {
-         nextTree = (TTree*)nextFriend->GetTree();
+         nextTree = const_cast<TTree*>(nextFriend->GetTree());
          if (!nextTree) return Next();
          SafeDelete(fLeafIter);
          fLeafIter = nextTree->GetListOfLeaves()->MakeIterator(fDirection);

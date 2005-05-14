@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.58 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.59 2005/03/18 08:03:27 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -244,7 +244,7 @@ Double_t TGeoTube::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin
    if (dir[2]) {
       sz = (TMath::Sign(dz, dir[2])-point[2])/dir[2];
       if (sz<=0) return 0.0;
-   }   
+   }
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
    if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return sz;
@@ -258,19 +258,19 @@ Double_t TGeoTube::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin
       if (rsq <= rmin*rmin+TGeoShape::Tolerance()) {
          if (rdotn<0) return 0.0;
       } else {
-         if (rdotn<0) {           
+         if (rdotn<0) {
             DistToTube(rsq,nsq,rdotn,rmin,b,d);
             if (d>0) {
                sr=-b-d;
                if (sr>0) return TMath::Min(sz,sr);
             }
          }
-      }   
-   }   
+      }
+   }
    // outer cylinder
    if (rsq >= rmax*rmax-TGeoShape::Tolerance()) {
       if (rdotn>=0) return 0.0;
-   }   
+   }
    DistToTube(rsq,nsq,rdotn,rmax,b,d);
    if (d>0) {
       sr=-b+d;
@@ -326,7 +326,7 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
    if (rsq>=rminsq-TGeoShape::Tolerance()) inrmin = kTRUE;
    in = inz & inrmin & inrmax;
    // If inside, we are most likely on a boundary within machine precision.
-   if (in) {      
+   if (in) {
       Bool_t checkout = kFALSE;
       Double_t r = TMath::Sqrt(rsq);
       if (zi<rmax-r) {
@@ -334,7 +334,7 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
             if (point[2]*dir[2]<0) return 0.0;
             return TGeoShape::Big();
          }
-      }   
+      }
       if ((rmaxsq-rsq) < (rsq-rminsq)) checkout = kTRUE;
       if (checkout) {
          if (rdotn>=0) return TGeoShape::Big();
@@ -351,8 +351,8 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
             zi=point[2]+s*dir[2];
             if (TMath::Abs(zi)<=dz) return s;
          }
-      }   
-      return TGeoShape::Big();   
+      }
+      return TGeoShape::Big();
    }
    // Check outer cylinder (only r>rmax has to be considered)
    if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return TGeoShape::Big();
@@ -591,7 +591,7 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
    Int_t n = gGeoManager->GetNsegments();
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 8*n;
-   Int_t NbPols = 4*n; 
+   Int_t NbPols = 4*n;
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
    if (buff)
@@ -895,8 +895,8 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       buffer.fHalfLength   = fDz;
 
       // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes 
-      // even though rest works in master frame. As no one else uses 
+      // At present OGL viewer wants local -> master matrix for tubes
+      // even though rest works in master frame. As no one else uses
       // buffer.fLocalMaster we can overwrite it here
       // Once OGL goes to local frame this can all be removed
       // (and subclasses)
@@ -916,7 +916,7 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       Int_t n = gGeoManager->GetNsegments();
       Int_t NbPnts = 4*n;
       Int_t NbSegs = 8*n;
-      Int_t NbPols = 4*n;      
+      Int_t NbPols = 4*n;
       if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
@@ -926,10 +926,10 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       if (!buffer.fLocalFrame) {
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
-      SetSegsAndPols(buffer);  
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 
@@ -1127,7 +1127,7 @@ Double_t TGeoTubeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t r
       sfmin = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
       return TMath::Min(stube,sfmin);
    }
-   // Point on the phi boundary or outside   
+   // Point on the phi boundary or outside
    // which one: phi1 or phi2
    Double_t ddotn, xi, yi;
    if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
@@ -1228,7 +1228,7 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
    if (cpsi>r*cdfi-TGeoShape::Tolerance())  inphi = kTRUE;
    in = inz & inrmin & inrmax & inphi;
    // If inside, we are most likely on a boundary within machine precision.
-   if (in) { 
+   if (in) {
       Bool_t checkout = kFALSE;
       Double_t safphi = (cpsi-r*cdfi)*TMath::Sqrt(1.-cdfi*cdfi);
 //      Double_t sch, cch;
@@ -1238,9 +1238,9 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
             if (zi<safphi) {
                if (point[2]*dir[2]<0) return 0.0;
                return TGeoShape::Big();
-            }   
+            }
          }
-      }   
+      }
       if ((rmaxsq-rsq) < (rsq-rminsq)) checkout = kTRUE;
       // check if on Rmax boundary
       if (checkout && (rmax-r<safphi)) {
@@ -1270,9 +1270,9 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
                      if ((rminsq<=r2) && (r2<=rmaxsq)) {
                         if ((yi*cm-xi*sm)>0) return s;
                      }
-                  }   
+                  }
                }
-            }         
+            }
          } else {
             un = -dir[0]*s2+dir[1]*c2;
             if (un < 0) return 0.0;
@@ -1290,14 +1290,14 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
                      if ((rminsq<=r2) && (r2<=rmaxsq)) {
                         if ((yi*cm-xi*sm)<0) return s;
                      }
-                  }   
+                  }
                }
-            }         
-         }      
+            }
+         }
          // We may also cross rmin, (+) solution
          if (rdotn>=0) return TGeoShape::Big();
          if (cdfi>=0) return TGeoShape::Big();
-         DistToTube(rsq, nsq, rdotn, rmin, b, d);         
+         DistToTube(rsq, nsq, rdotn, rmin, b, d);
          if (d>0) {
             s=-b+d;
             if (s>0) {
@@ -1309,10 +1309,10 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
                }
             }
          }
-         return TGeoShape::Big();         
+         return TGeoShape::Big();
       }
       // we are on rmin boundary: we may cross again rmin or a phi facette
-      if (rdotn>=0) return 0.0;      
+      if (rdotn>=0) return 0.0;
       DistToTube(rsq, nsq, rdotn, rmin, b, d);
       if (d>0) {
          s=-b+d;
@@ -1360,11 +1360,11 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
                      }
                   }
                }
-               return snxt;               
+               return snxt;
             }
          }
-      }   
-      return TGeoShape::Big();   
+      }
+      return TGeoShape::Big();
    }
    // only r>rmax has to be considered
    if (TMath::Abs(nsq)<TGeoShape::Tolerance()) return TGeoShape::Big();
@@ -1622,17 +1622,17 @@ TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 2*NbPnts;
-   Int_t NbPols = NbPnts-2; 
-   
+   Int_t NbPols = NbPnts-2;
+
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols);
    if (buff)
    {
-      SetPoints(buff->fPnts);    
+      SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
    }
 
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -1945,8 +1945,8 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
       buffer.fPhiMax       = fPhi2;
 
       // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes 
-      // even though rest works in master frame. As no one else uses 
+      // At present OGL viewer wants local -> master matrix for tubes
+      // even though rest works in master frame. As no one else uses
       // buffer.fLocalMaster we can overwrite it here
       // Once OGL goes to local frame this can all be removed
       // (and subclasses)
@@ -1976,10 +1976,10 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
       if (!buffer.fLocalFrame) {
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
-      SetSegsAndPols(buffer);  
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 
@@ -2449,7 +2449,7 @@ Double_t TGeoCtub::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 
    // Do R
    Double_t nsq=dir[0]*dir[0]+dir[1]*dir[1];
-   // track parralel to Z
+   // track parallel to Z
    if (TMath::Abs(nsq)<1E-10) return sz;
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t sr=TGeoShape::Big();
@@ -2524,7 +2524,7 @@ void TGeoCtub::InspectShape() const
    printf("    tz = %11.5f\n", fNhigh[2]);
    TGeoTubeSeg::InspectShape();
 }
- 
+
 //_____________________________________________________________________________
 Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
 {
@@ -2579,14 +2579,14 @@ void TGeoCtub::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   rmax = " << fRmax << ";" << endl;
    out << "   dz   = " << fDz << ";" << endl;
    out << "   phi1 = " << fPhi1 << ";" << endl;
-   out << "   phi2 = " << fPhi2 << ";" << endl;   
+   out << "   phi2 = " << fPhi2 << ";" << endl;
    out << "   lx   = " << fNlow[0] << ";" << endl;
    out << "   ly   = " << fNlow[1] << ";" << endl;
    out << "   lz   = " << fNlow[2] << ";" << endl;
    out << "   tx   = " << fNhigh[0] << ";" << endl;
    out << "   ty   = " << fNhigh[1] << ";" << endl;
    out << "   tz   = " << fNhigh[2] << ";" << endl;
-   out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
+   out << "   pShape = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -2692,10 +2692,10 @@ Int_t TGeoCtub::GetNmeshVertices() const
 const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
    static TBuffer3DCutTube buffer;
-   
+
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
-   if (reqSections & TBuffer3D::kShapeSpecific) {      
+   if (reqSections & TBuffer3D::kShapeSpecific) {
       // These from TBuffer3DCutTube / TGeoCtub
       buffer.fRadiusInner  = fRmin;
       buffer.fRadiusOuter  = fRmax;
@@ -2709,8 +2709,8 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       }
 
       // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes 
-      // even though rest works in master frame. As no one else uses 
+      // At present OGL viewer wants local -> master matrix for tubes
+      // even though rest works in master frame. As no one else uses
       // buffer.fLocalMaster we can overwrite it here
       // Once OGL goes to local frame this can all be removed
       // (and subclasses)
@@ -2738,9 +2738,9 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       if (!buffer.fLocalFrame) {
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
-      SetSegsAndPols(buffer);  
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }

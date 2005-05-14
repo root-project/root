@@ -1,4 +1,4 @@
-/* @(#)root/asimage:$Name:$:$Id:$ */
+/* @(#)root/asimage:$Name:  $:$Id: LinkDef.h,v 1.1 2002/08/09 14:12:22 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,5 @@
 #pragma link off all functions;
 
 #pragma link C++ class TASImage;
-#pragma link C++ class TASPaletteEditor;
 
 #endif

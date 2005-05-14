@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.8 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.9 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -26,8 +26,21 @@ ClassImp(TAttLine)
 //*-*                      =====================
 //*-*  Line attributes are:
 //*-*    Line Color (see TAttFill for the list of colors)
-//*-*    Line Style 1=solid, 2=dash, 3=dot-dot, 4=dash-dot
 //*-*    Line Width expressed in pixel units
+//*-*    Line Style 1=solid, 2=dash, 3=dot-dot, 4=dash-dot. Additional line
+//*-*               styles can be defined using TStyle::SetLineStyleString.
+//*-*               Example:
+//*-*               gStyle->SetLineStyleString(5,"20 12 4 12");
+//*-*               gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+//*-*               gStyle->SetLineStyleString(7,"20 20");
+//*-*               gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
+//*-*               gStyle->SetLineStyleString(9,"80 20");
+//*-*
+//Begin_Html
+/*
+<img src="gif/userlinestyle.gif">
+*/
+//End_Html
 //*-*
 //*-*  This class is used (in general by secondary inheritance)
 //*-*  by many other classes (graphics, histograms).
@@ -54,7 +67,8 @@ TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
 //*-*                      ===========================
 //*-*  Line attributes are taking from the argument list
 //*-*    color : must be one of the valid color index
-//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot
+//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be 
+//*-*            defined using TStyle::SetLineStyleString.
 //*-*    width : expressed in pixel units
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fLineColor = color;
@@ -149,8 +163,8 @@ void TAttLine::Modify()
    if (!gPad) return;
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineColor(fLineColor);
-      if (fLineStyle > 0 && fLineStyle < 5) gVirtualX->SetLineStyle(fLineStyle);
-      else                                  gVirtualX->SetLineStyle(1);
+      if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
+      else                                   gVirtualX->SetLineStyle(1);
       gVirtualX->SetLineWidth(fLineWidth);
    }
 

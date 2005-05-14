@@ -238,6 +238,10 @@ N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
 
+N: Stanislaw Jadach
+E: Stanislaw.jadach@ifj.edu.pl
+D: the FOAM classes
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
@@ -246,13 +250,17 @@ N: Susan Kasahara
 E: schubert@physics.umn.edu
 D: many contributions to the debuging phase of the I/O system
 
-N: Anna Kreshuk
-E: akrechtc@mail.cern.ch
-D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
+N: Guenter Kickinger
+E: Guenter.Kickinger@cern.ch
+D: PROOF contributions
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
+
+N: Anna Kreshuk
+E: akrechtc@mail.cern.ch
+D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
 
 N: Dmytro Kustov
 E: Dmytro.Kustov@cern.ch
@@ -385,6 +393,10 @@ D: initial event generator interface
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
 D: various contributions to GUI classes
+
+N: Pawel Sawicki
+E: Pawel.Sawicki@ifj.edu.pl
+D: the FOAM classes
 
 N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE

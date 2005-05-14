@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.76 2005/02/14 16:43:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.79 2005/04/19 10:11:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -53,6 +53,86 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
    return counter;
 }  
 
+
+//______________________________________________________________________________
+static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Double_t &factor) 
+{
+   // Parse comments to search for a range specifier of the style: 
+   //  [xmin,xmax] or [xmin,xmax,nbits]
+   //  [0,1]
+   //  [-10,100];
+   //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+   //  [-10,100,16]
+   // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
+   //
+   // Currently the range specifier is used only to stream a Double32_t type
+   // see TBuffer::WriteDouble32
+         
+   factor = xmin = xmax = 0;
+   if (!comments) return;
+   const char *left = strstr(comments,"[");
+   if (!left) return;
+   const char *right = strstr(left,"]");
+   if (!right) return;
+   const char *comma = strstr(left,",");
+   if (!comma || comma > right) {
+      //may be first bracket was a dimension specifier
+      left = strstr(right,"[");
+      if (!left) return;
+      right = strstr(left,"]");
+      if (!right) return;
+      comma = strstr(left,",");
+      if (!comma || comma >right) return;
+   }
+   //search if nbits is specified
+   const char *comma2 = 0;
+   if (comma) comma2 = strstr(comma+1,",");
+   if (comma2 > right) comma2 = 0;
+   Int_t nbits = 32;
+   if (comma2) {
+      TString sbits(comma2+1,right-comma2-1);
+      sscanf(sbits.Data(),"%d",&nbits);
+      if (nbits < 2 || nbits > 32) {
+         printf("illegal specification for the number of bits; %d. reset to 32\n",nbits);
+         nbits = 32;
+      }
+      right = comma2;
+   }
+   TString range(left+1,right-left-1);
+   TString sxmin(left+1,comma-left-1);
+   sxmin.ToLower(); 
+   sxmin.ReplaceAll(" ","");
+   if (sxmin.Contains("pi")) {
+      if      (sxmin.Contains("2pi"))   xmin = TMath::TwoPi();
+      else if (sxmin.Contains("2*pi"))  xmin = TMath::TwoPi();
+      else if (sxmin.Contains("twopi")) xmin = TMath::TwoPi();
+      else if (sxmin.Contains("pi/2"))  xmin = TMath::PiOver2();
+      else if (sxmin.Contains("pi/4"))  xmin = TMath::PiOver4();      
+      else if (sxmin.Contains("pi"))    xmin = TMath::Pi();      
+      if (sxmin.Contains("-"))          xmin = -xmin;
+   } else {
+      sscanf(sxmin.Data(),"%lg",&xmin);
+   }
+   TString sxmax(comma+1,right-comma-1);
+   sxmax.ToLower(); 
+   sxmax.ReplaceAll(" ","");
+   if (sxmax.Contains("pi")) {
+      if      (sxmax.Contains("2pi"))   xmax = TMath::TwoPi();
+      else if (sxmax.Contains("2*pi"))  xmax = TMath::TwoPi();
+      else if (sxmax.Contains("twopi")) xmax = TMath::TwoPi();
+      else if (sxmax.Contains("pi/2"))  xmax = TMath::PiOver2();
+      else if (sxmax.Contains("pi/4"))  xmax = TMath::PiOver4();      
+      else if (sxmax.Contains("pi"))    xmax = TMath::Pi();      
+      if (sxmax.Contains("-"))          xmax = -xmax;
+   } else {
+      sscanf(sxmax.Data(),"%lg",&xmax);
+   }
+   UInt_t bigint;
+   if (nbits < 32)  bigint = 1<<nbits;
+   else             bigint = 0xffffffff;
+   if (xmin < xmax) factor = bigint/(xmax-xmin);
+}
+   
 ClassImp(TStreamerElement)
 
 //______________________________________________________________________________
@@ -70,6 +150,9 @@ TStreamerElement::TStreamerElement()
    fOffset      = 0;
    fClassObject = (TClass*)(-1);
    fTObjectOffset = 0;
+   fFactor      = 0;
+   fXmin        = 0;
+   fXmax        = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
 }
 
@@ -91,6 +174,8 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fClassObject = (TClass*)(-1);
    fTObjectOffset = 0;
    for (Int_t i=0;i<5;i++) fMaxIndex[i] = 0;
+   GetRange(title,fXmin,fXmax,fFactor);
+   if (fFactor > 0) SetBit(kHasRange);
 }
 
 //______________________________________________________________________________
@@ -285,23 +370,31 @@ void TStreamerElement::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         SetUniqueID(0);
-         //check if element is a TRef or TRefArray
-         GetExecID();
-         if (fType==11&&(fTypeName=="Bool_t"||fTypeName=="bool")) fType = 18;
-         return;
-      }
-      //====process old versions before automatic schema evolution
+      //NOTE that when reading, one cannot use Class()->ReadBuffer
       TNamed::Streamer(R__b);
       R__b >> fType;
       R__b >> fSize;
       R__b >> fArrayLength;
       R__b >> fArrayDim;
-      R__b.ReadStaticArray(fMaxIndex);
+      if (R__v == 1) R__b.ReadStaticArray(fMaxIndex);
+      else           R__b.ReadFastArray(fMaxIndex,5);
       fTypeName.Streamer(R__b);
       if (fType==11&&(fTypeName=="Bool_t"||fTypeName=="bool")) fType = 18;
+      if (R__v > 1) {
+         SetUniqueID(0);
+         //check if element is a TRef or TRefArray
+         GetExecID();
+      }
+      if (R__v == 3) {
+         R__b >> fXmin;
+         R__b >> fXmax;
+         R__b >> fFactor;
+         if (fFactor > 0) SetBit(kHasRange);
+      }
+      if (R__v > 3) {
+         if (TestBit(kHasRange)) GetRange(GetTitle(),fXmin,fXmax,fFactor);
+      }
+      //R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerElement::Class()->WriteBuffer(R__b,this);

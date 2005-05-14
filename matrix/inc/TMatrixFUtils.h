@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.9 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.10 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -59,6 +59,7 @@ friend class TMatrixFSym;
 friend class TVectorF;
 
 protected:
+  virtual ~TElementActionF() { }
   virtual void Operation(Float_t  &element) const = 0;
 
 private:
@@ -87,6 +88,7 @@ friend class TVectorF;
 protected:
   mutable Int_t fI; // i position of element being passed to Operation()
   mutable Int_t fJ; // j position of element being passed to Operation()
+  virtual ~TElementPosActionF() { }
   virtual void Operation(Float_t  &element) const = 0;
 
 private:
@@ -113,6 +115,7 @@ public:
   TMatrixFRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
   TMatrixFRow_const(const TMatrixF    &matrix,Int_t row);
   TMatrixFRow_const(const TMatrixFSym &matrix,Int_t row);
+  virtual ~TMatrixFRow_const() { }
 
   inline const TMatrixFBase *GetMatrix  () const { return fMatrix; }
   inline       Int_t         GetRowIndex() const { return fRowInd; }
@@ -182,6 +185,7 @@ public:
   TMatrixFColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
   TMatrixFColumn_const(const TMatrixF    &matrix,Int_t col);
   TMatrixFColumn_const(const TMatrixFSym &matrix,Int_t col);
+  virtual ~TMatrixFColumn_const() { }
 
   inline const TMatrixFBase *GetMatrix  () const { return fMatrix; }
   inline       Int_t         GetColIndex() const { return fColInd; }
@@ -251,6 +255,7 @@ public:
   TMatrixFDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
   TMatrixFDiag_const(const TMatrixF    &matrix);
   TMatrixFDiag_const(const TMatrixFSym &matrix);
+  virtual ~TMatrixFDiag_const() { }
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -315,6 +320,7 @@ public:
   TMatrixFFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
   TMatrixFFlat_const(const TMatrixF    &matrix);
   TMatrixFFlat_const(const TMatrixFSym &matrix);
+  virtual ~TMatrixFFlat_const() { }
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline const Float_t      *GetPtr   () const { return fPtr; }
@@ -380,6 +386,7 @@ public:
   TMatrixFSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
   TMatrixFSub_const(const TMatrixF    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixFSub_const(const TMatrixFSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+  virtual ~TMatrixFSub_const() { }
 
   inline const TMatrixFBase *GetMatrix() const { return fMatrix; }
   inline       Int_t         GetRowOff() const { return fRowOff; }
@@ -434,7 +441,7 @@ public:
 
 class TMatrixRow : public TMatrixFRow {
 public :
-  TMatrixRow() {}                                                      
+  TMatrixRow() {}
   TMatrixRow(TMatrixF    &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
   TMatrixRow(TMatrixFSym &matrix,Int_t row) : TMatrixFRow(matrix,row) {}
   TMatrixRow(const TMatrixFRow &mr) : TMatrixFRow(mr) {}
@@ -444,7 +451,7 @@ public :
 
 class TMatrixColumn : public TMatrixFColumn {
 public :
-  TMatrixColumn() {}                                                      
+  TMatrixColumn() {}
   TMatrixColumn(TMatrixF    &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
   TMatrixColumn(TMatrixFSym &matrix,Int_t column) : TMatrixFColumn(matrix,column) {}
   TMatrixColumn(const TMatrixFColumn &mc) : TMatrixFColumn(mc) {}

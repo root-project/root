@@ -53,38 +53,12 @@ THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH))
 ALLLIBS      += $(THREADLIB)
-ifeq ($(PLATFORM),linux)
-ifneq ($(ARCH),win32gcc)
-CXXFLAGS     += -pthread
-CFLAGS       += -pthread
-CINTCXXFLAGS += -pthread
-CINTCFLAGS   += -pthread
-else
-CXXFLAGS     += -D_REENTRANT
-CFLAGS       += -D_REENTRANT
-CINTCXXFLAGS += -D_REENTRANT
-CINTCFLAGS   += -D_REENTRANT
-endif
-else
-ifeq ($(PLATFORM),fbsd)
-CXXFLAGS     += -pthread
-CFLAGS       += -pthread
-CINTCXXFLAGS += -pthread
-CINTCFLAGS   += -pthread
-else
-ifeq ($(PLATFORM),obsd)
-CXXFLAGS     += -pthread
-CFLAGS       += -pthread
-CINTCXXFLAGS += -pthread
-CINTCFLAGS   += -pthread
-else
-CXXFLAGS     += -D_REENTRANT
-CFLAGS       += -D_REENTRANT
-CINTCXXFLAGS += -D_REENTRANT
-CINTCFLAGS   += -D_REENTRANT
-endif
-endif
-endif
+
+CXXFLAGS     += $(OSTHREADFLAG)
+CFLAGS       += $(OSTHREADFLAG)
+CINTCXXFLAGS += $(OSTHREADFLAG)
+CINTCFLAGS   += $(OSTHREADFLAG)
+
 ifeq ($(PLATFORM),win32)
 CXXFLAGS     += -D_WIN32_WINNT=0x0400
 endif

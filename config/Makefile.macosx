@@ -14,9 +14,6 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 
-# OS version
-MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
-
 # Compiler:
 # if you want to compile for 10.1 you just have to change those
 # 3 variables to:
@@ -26,10 +23,9 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
-                -DR__MACOSX_VERS=$(MACOSX_MINOR) -fsigned-char -fno-common \
+                -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
-                -DR__MACOSX_VERS=$(MACOSX_MINOR) \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
                 -fsigned-char -fno-common \
@@ -41,6 +37,9 @@ CINTCFLAGS    = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
 		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
 COMPILER      = gnu
+
+# OS version
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 
 # Linker:
 LD            = g++

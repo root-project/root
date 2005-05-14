@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.4 2005/03/08 05:48:55 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.5 2005/03/24 07:16:02 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -140,6 +140,7 @@ static KeyQSymbolMap_t gKeyQMap[] = {
 //______________________________________________________________________________________
 static inline UInt_t MapKeySym(const QKeyEvent &qev)
 {
+   UInt_t text = 0;;
    Qt::Key key = Qt::Key(qev.key());
    for (int i = 0; gKeyQMap[i].fKeySym; i++) {	// any other keys
       if (key ==  gKeyQMap[i].fQKeySym) {
@@ -147,12 +148,23 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
       }
    }
 #if 0
-   UInt_t text;
    QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
 #else
-   return UInt_t(qev.ascii());
+   text = UInt_t(qev.ascii());
+   // Regenerate the ascii code (Qt bug I guess)
+   if ( (qev.state() & Qt::KeyButtonMask) ) {
+      if (  ( Qt::Key_A <= key && key <= Qt::Key_Z)  ) 
+            text =  (( qev.state() & Qt::ShiftButton )?  'A' : 'a') + (key - Qt::Key_A) ;
+      else if (  ( Qt::Key_0 <= key && key <= Qt::Key_9)  ) 
+            text =    '0'  + (key - Qt::Key_0);
+   }
+            
+    // we have to accomodate the new ROOT GUI logic.
+    // the information about the "ctrl" key should provided TWICE nowadays 12.04.2005 vf.
+//   }
+   return text;
 #endif
 }
 //______________________________________________________________________________________
@@ -162,7 +174,7 @@ static inline void MapEvent(const QKeyEvent  &qev, Event_t &ev)
    ev.fState = MapModifierState(qev.state());
    ev.fCount = qev.count();
    ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
-//   qev.accept();
+   // qev.accept();
 }
 //______________________________________________________________________________________
 static inline void MapEvent(const QMoveEvent &qev, Event_t &ev)
@@ -282,7 +294,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    TQtClientWidget *frame = dynamic_cast<TQtClientWidget *>(qWidget);
    if (!frame)    {
          if (filterTime) filterTime->Stop();
-         return kFALSE; // it is a desktop, it is NOT ROOOT gui object
+         return kFALSE; // it is a desktop, it is NOT ROOT gui object
    }
    QPaintDevice *paintDev = (QPaintDevice *)frame;
 
@@ -299,6 +311,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 
    QMouseEvent *mouseEvent = 0;
    QKeyEvent   *keyEvent   = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
+   QFocusEvent *focusEvent = 0; //     Q Event::KeyPress or QEvent::KeyRelease.
    switch ( e->type() ) {
       case QEvent::MouseButtonPress:     // mouse button pressed
          event.fType   = kButtonPress;
@@ -395,27 +408,54 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          keyEvent = (QKeyEvent *)e;
          MapEvent(*keyEvent,event);
          selectEventMask |=  kKeyPressMask;
-         // fprintf(stderr, " accepted: case QEvent::KeyPress: <%c>\n",event.fCode);
-         ((QKeyEvent *)e)->ignore();
+         {
+            TQtClientWidget *grabber = 0;
+           if (fKeyGrabber) grabber = fKeyGrabber->IsKeyGrabbed(event);
+           if (!grabber)    grabber = frame->      IsKeyGrabbed(event);
+           if (grabber) {
+              grabber->GrabEvent(event,false);
+              grabEvent = kTRUE;
+              ((QKeyEvent *)e)->accept();
+           } else {
+              ((QKeyEvent *)e)->ignore();
+           }
+         //  fprintf(stderr, " accepted: case QEvent::KeyPress: <%c><%d>: frame = %x; grabber = %x grabbed = %d\n",event.fCode,event.fCode,TGQt::wid(frame), TGQt::wid(grabber),grabEvent);
+         //  fprintf(stderr, "  QEvent::KeyPress: <%s>: key = %d, key_f=%d\n",(const char *)keyEvent->text(),keyEvent->key(),Qt::Key_F);
+         //  fprintf(stderr, "  QEvent::KeyPress: Current focus %p\n",(QPaintDevice *) qApp->focusWidget () );
+         //  fprintf(stderr, "---------------\n\n");
+         }
          break;
       case QEvent::KeyRelease:           // key released
          event.fType   = kKeyRelease;
          keyEvent = (QKeyEvent *)e;
          MapEvent(*keyEvent,event);
          selectEventMask |=  kKeyReleaseMask;
-         ((QKeyEvent *)e)->ignore();
+         {
+           TQtClientWidget *grabber = frame->IsKeyGrabbed(event);
+           if (grabber) {
+              grabber->GrabEvent(event,false);
+              grabEvent = kTRUE;
+              ((QKeyEvent *)e)->accept();
+           } else {
+              ((QKeyEvent *)e)->ignore();
+           }
+         }
          break;
       case QEvent::FocusIn:              // keyboard focus received
+         focusEvent   = (QFocusEvent *)e;
          event.fCode  = kNotifyNormal;
          event.fState = 0;
          event.fType  = kFocusIn;
          selectEventMask |=  kFocusChangeMask;
-         break;
+         // fprintf(stderr, "       case IN QEvent::FocusEvent:frame = %x; \n",TGQt::wid(frame));
+       break;
       case QEvent::FocusOut:             // keyboard focus lost
+         focusEvent   = (QFocusEvent *)e;
          event.fCode  = kNotifyNormal;
          event.fState = 0;
          event.fType  = kFocusOut;
          selectEventMask |=  kFocusChangeMask;
+         // fprintf(stderr, "       case OUT QEvent::FocusEvent:frame = %x; \n",TGQt::wid(frame));
          break;
       case QEvent::Enter:                // mouse enters widget
          event.fType   = kEnterNotify;
@@ -557,6 +597,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    // However non-accepted mouse event should be propagated further
    if (mouseEvent && !mouseEvent->isAccepted () ) return kFALSE;
    if (keyEvent   && !keyEvent->isAccepted ()   ) return kFALSE;
+   if (focusEvent                               ) return kFALSE;
    switch (e->type() ) {
       case QEvent::Show:                 // Widget was shown on screen,
       case QEvent::ShowWindowRequest:    //  (obsolete)  widget's window should be mapped

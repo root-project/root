@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.174 2005/03/28 21:06:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.178 2005/04/22 19:04:43 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -713,6 +713,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
    TTree *realtree = fTree->GetTree();
    const char* alias = 0;
    if (realtree) alias = realtree->GetFriendAlias(leaf->GetBranch()->GetTree());
+   if (!alias && realtree!=fTree) {
+      // Let's try on the chain
+      alias = fTree->GetFriendAlias(leaf->GetBranch()->GetTree());
+   }
    if (alias) sprintf(scratch,"%s.%s",alias,leaf->GetName());
    else strcpy(scratch,leaf->GetName());
 
@@ -1183,7 +1187,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                if (maininfo==0) {
                   TFormLeafInfo* collectioninfo=0;
                   if (useLeafCollectionObject) {
-                     collectioninfo = new TFormLeafInfoCollectionObject(cl);
+                     
+                     Bool_t top = (branch==((TBranchElement*)branch)->GetMother()
+                                 || !leaf->IsOnTerminalBranch());
+                     collectioninfo = new TFormLeafInfoCollectionObject(cl,top);
                   }
                   maininfo=previnfo=collectioninfo;
                }
@@ -2198,6 +2205,19 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fLookupType[code] = kLengthFunc;
       return code;
    }
+   static const char *sumfunc = "Sum$(";
+   if (strncmp(name.Data(),"Sum$(",strlen(sumfunc))==0
+       && name[name.Length()-1]==')') {
+
+      TString subform = name.Data()+strlen(sumfunc);
+      subform.Remove( subform.Length() - 1 );
+      TTreeFormula *sumForm = new TTreeFormula("sumForm",subform,fTree);
+      fAliases.AddAtAndExpand(sumForm,fNoper);
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kSum;
+      return code;
+   }
    
    // Check for $Alt(expression1,expression2)
    Int_t res = DefineAlternate(name.Data());
@@ -3078,6 +3098,15 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (real_instance>fNdata[code]) return 0;                                                 \
    }
 
+namespace {
+   Double_t Summing(TTreeFormula *sum) {
+      Int_t len = sum->GetNdata();
+      Double_t res = 0;
+      for (int i=0; i<len; ++i) res += sum->EvalInstance(i);
+      return res;
+   }
+}
+
 //______________________________________________________________________________
 Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
@@ -3104,7 +3133,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kLength:       return fManager->fNdata;
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
-
+         case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
          case -1: break;
       }
       switch (fCodes[0]) {
@@ -3328,8 +3357,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kIndexOfEntry: tab[pos++] = fTree->GetReadEntry(); continue;
                case kEntries:      tab[pos++] = fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
-               case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata();
+               case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
+               case kSum:          tab[pos++] = Summing((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
 
                case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
                case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
@@ -3628,6 +3658,7 @@ Bool_t TTreeFormula::IsInteger() const
          case kLengthFunc:
          case kIteration:
            return kTRUE;
+         case kSum:
          default:
            return kFALSE;
       }
@@ -3654,6 +3685,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kLengthFunc:
          case kIteration:
            return kTRUE;
+         case kSum:
          default:
            return kFALSE;
       }
@@ -3945,7 +3977,20 @@ void TTreeFormula::UpdateFormulaLeaves()
          case kAlias:
          case kAliasString:
          case kAlternate:
-         case kAlternateString:  {
+         case kAlternateString: 
+         {
+            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+            Assert(subform);
+            subform->UpdateFormulaLeaves();
+            break;
+         }
+         default:
+            break;
+      }
+      if (fCodes[k]==0) switch(fLookupType[k]) {
+         case kLengthFunc:
+         case kSum:
+         {
             TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
             Assert(subform);
             subform->UpdateFormulaLeaves();

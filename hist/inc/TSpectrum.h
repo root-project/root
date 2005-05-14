@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.9 2003/07/11 09:42:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.10 2004/01/27 13:28:23 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -90,57 +90,58 @@ const int TRANSFORM1_INVERSE =1;
 
 const int MAX_NUMBER_OF_PEAKS1= 1000;
 
-	class TSpectrumOneDimFit{
-        public:
-		int number_of_peaks;//input parameter, should be>0
-		int number_of_iterations;//input parameter, should be >0
-                int xmin;//first fitted channel
-                int xmax;//last fitted channel
-        	double alpha;//convergence coefficient, input parameter, it should be positive number and <=1
-        	double chi; //here the function returns resulting chi square
-                int statistic_type; //type of statistics, possible values FIT1_OPTIM_CHI_COUNTS (chi square statistics with counts as weighting coefficients), FIT1_OPTIM_CHI_FUNC_VALUES (chi square statistics with function values as weighting coefficients),FIT1_OPTIM_MAX_LIKELIHOOD
-                int alpha_optim;//optimization of convergence coefficients, possible values FIT1_ALPHA_HALVING, FIT1_ALPHA_OPTIMAL, see manual
-                int power;//possible values FIT1_FIT_POWER2,4,6,8,10,12, see manual
-                int fit_taylor;//order of Taylor expansion, possible values FIT1_TAYLOR_ORDER_FIRST, FIT1_TAYLOR_ORDER_SECOND
-		double position_init[MAX_NUMBER_OF_PEAKS1];//initial values of peaks positions, input parameters
-		double position_calc[MAX_NUMBER_OF_PEAKS1];//calculated values of fitted positions, output parameters
-		double position_err[MAX_NUMBER_OF_PEAKS1];//position errors
-                bool fix_position[MAX_NUMBER_OF_PEAKS1];//logical vector which allows to fix appropriate positions (not fit). However they are present in the estimated functional
-        	double amp_init[MAX_NUMBER_OF_PEAKS1];//initial values of peaks amplitudes, input parameters
-	        double amp_calc[MAX_NUMBER_OF_PEAKS1];//calculated values of fitted amplitudes, output parameters
-        	double amp_err[MAX_NUMBER_OF_PEAKS1];//amplitude errors
-	        bool fix_amp[MAX_NUMBER_OF_PEAKS1];//logical vector which allows to fix appropriate amplitudes (not fit). However they are present in the estimated functional
-        	double area[MAX_NUMBER_OF_PEAKS1];//calculated areas of peaks
-	        double area_err[MAX_NUMBER_OF_PEAKS1];//errors of peak areas
-        	double sigma_init;//sigma parameter, meaning analogical to the above given parameters, see manual
-	        double sigma_calc;
-        	double sigma_err;
-	        bool fix_sigma;
-        	double t_init;//t parameter, meaning analogical to the above given parameters, see manual
-	        double t_calc;
-        	double t_err;
-	        bool fix_t;
-        	double b_init;//b parameter, meaning analogical to the above given parameters, see manual
-	        double b_calc;
-        	double b_err;
-	        bool fix_b;
-        	double s_init;//s parameter, meaning analogical to the above given parameters, see manual
-	        double s_calc;
-        	double s_err;
-	        bool fix_s;
-        	double a0_init;//backgroud is estimated as a0+a1*x+a2*x*x
-	        double a0_calc;
-        	double a0_err;
-	        bool fix_a0;
-        	double a1_init;
-	        double a1_calc;
-        	double a1_err;
-	        bool fix_a1;
-        	double a2_init;
-	        double a2_calc;
-        	double a2_err;
-	        bool fix_a2;
-	};
+//note that this class does not follow the ROOT naming conventions
+class TSpectrumOneDimFit{
+public:
+   int    number_of_peaks;                     //input parameter, should be>0
+   int    number_of_iterations;                //input parameter, should be >0
+   int    xmin;                                //first fitted channel
+   int    xmax;                                //last fitted channel
+   double alpha;                               //convergence coefficient, input parameter, it should be positive number and <=1
+   double chi;                                 //here the function returns resulting chi square
+   int    statistic_type;                      //type of statistics, possible values FIT1_OPTIM_CHI_COUNTS (chi square statistics with counts as weighting coefficients), FIT1_OPTIM_CHI_FUNC_VALUES (chi square statistics with function values as weighting coefficients),FIT1_OPTIM_MAX_LIKELIHOOD
+   int    alpha_optim;                         //optimization of convergence coefficients, possible values FIT1_ALPHA_HALVING, FIT1_ALPHA_OPTIMAL, see manual
+   int    power;                               //possible values FIT1_FIT_POWER2,4,6,8,10,12, see manual
+   int    fit_taylor;                          //order of Taylor expansion, possible values FIT1_TAYLOR_ORDER_FIRST, FIT1_TAYLOR_ORDER_SECOND
+   double position_init[MAX_NUMBER_OF_PEAKS1]; //initial values of peaks positions, input parameters
+   double position_calc[MAX_NUMBER_OF_PEAKS1]; //calculated values of fitted positions, output parameters
+   double position_err[MAX_NUMBER_OF_PEAKS1];  //position errors
+   bool   fix_position[MAX_NUMBER_OF_PEAKS1];  //logical vector which allows to fix appropriate positions (not fit). However they are present in the estimated functional
+   double amp_init[MAX_NUMBER_OF_PEAKS1];      //initial values of peaks amplitudes, input parameters
+   double amp_calc[MAX_NUMBER_OF_PEAKS1];      //calculated values of fitted amplitudes, output parameters
+   double amp_err[MAX_NUMBER_OF_PEAKS1];       //amplitude errors
+   bool   fix_amp[MAX_NUMBER_OF_PEAKS1];       //logical vector which allows to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+   double area[MAX_NUMBER_OF_PEAKS1];          //calculated areas of peaks
+   double area_err[MAX_NUMBER_OF_PEAKS1];      //errors of peak areas
+   double sigma_init; //sigma parameter, meaning analogical to the above given parameters, see manual
+   double sigma_calc;
+   double sigma_err;
+   bool   fix_sigma;
+   double t_init;    //t parameter, meaning analogical to the above given parameters, see manual
+   double t_calc;
+   double t_err;
+   bool   fix_t;
+   double b_init;    //b parameter, meaning analogical to the above given parameters, see manual
+   double b_calc;
+   double b_err;
+   bool   fix_b;
+   double s_init;    //s parameter, meaning analogical to the above given parameters, see manual
+   double s_calc;
+   double s_err;
+   bool   fix_s;
+   double a0_init;   //backgroud is estimated as a0+a1*x+a2*x*x
+   double a0_calc;
+   double a0_err;
+   bool   fix_a0;
+   double a1_init;
+   double a1_calc;
+   double a1_err;
+   bool   fix_a1;
+   double a2_init;
+   double a2_calc;
+   double a2_err;
+   bool   fix_a2;
+};
 
 class TSpectrum : public TNamed {
 protected:

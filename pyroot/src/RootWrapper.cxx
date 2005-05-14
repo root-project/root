@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.22 2005/03/30 19:20:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.24 2005/04/13 05:04:50 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -147,7 +147,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          if ( mtName == clName )             // don't expose private ctors
             continue;
          else                                // mangle private methods
-            mtName = "__" + clName + "__" + mtName;
+            mtName = "_" + clName + "__" + mtName;
 
    // construct the holder
       PyCallable* pycall = 0;
@@ -353,6 +353,11 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
       }
    }
 
+// still here ... try functions
+   TFunction* func = gROOT->GetGlobalFunction( name.c_str(), 0, kTRUE );
+   if ( func )
+      return BindRootObject( func, TFunction::Class() );
+
 // nothing found
    Py_INCREF( Py_None );
    return Py_None;
@@ -441,6 +446,13 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
+// should return "null pointer" ... for now, None will do
+   if ( ! gbl ) {
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+// determine type and cast as appropriate
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
    if ( ! klass ) {
       switch ( Utility::effectiveType( gbl->GetFullTypeName() ) ) {

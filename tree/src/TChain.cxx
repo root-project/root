@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.101 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.105 2005/04/28 07:29:24 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TCut.h"
+#include "TError.h"
 #include "TFile.h"
 #include "TSelector.h"
 #include "TBranch.h"
@@ -41,7 +42,7 @@
 #include "TRegexp.h"
 #include "TObjString.h"
 #include "TChainProof.h"
-#include "TProof.h"
+#include "TVirtualProof.h"
 #include "TDSet.h"
 
 
@@ -419,24 +420,18 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
-   if (fe) {
-      fFriends->Add(fe);
 
-      // We need to invalidate the loading of the current because if list
-      // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1;
+   Assert(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
 
-      TTree *t = fe->GetTree();
-      if (t) {
-         if (t->GetEntries() < fEntries) {
-            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
-            //         chain,filename,t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","Unknown TChain %s",chain);
-      }
-   } else {
-      Warning("AddFriend","Cannot add FriendElement %s",chain);
+   fFriends->Add(fe);
+
+   // We need to invalidate the loading of the current tree because its list
+   // of real friend is now obsolete.  It is repairable only from LoadTree
+   fTreeNumber = -1;
+
+   TTree *t = fe->GetTree();
+   if (!t) {
+      Warning("AddFriend","Unknown TChain %s",chain);
    }
    return fe;
 }
@@ -446,24 +441,18 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 {
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
-   if (fe) {
-      fFriends->Add(fe);
 
-      // We need to invalidate the loading of the current because if list
-      // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1;
+   Assert(fe); // There used to be a "if (fe)" test ... Keep this assert until we are sure that fe is never null
 
-      TTree *t = fe->GetTree();
-      if (t) {
-         if (t->GetEntries() < fEntries) {
-            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
-            //         chain,filename,t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","Unknown TChain %s",chain);
-      }
-   } else {
-      Warning("AddFriend","Cannot add FriendElement %s",chain);
+   fFriends->Add(fe);
+
+   // We need to invalidate the loading of the current tree because its list
+   // of real friend is now obsolete.  It is repairable only from LoadTree
+   fTreeNumber = -1;
+
+   TTree *t = fe->GetTree();
+   if (!t) {
+      Warning("AddFriend","Unknown TChain %s",chain);
    }
    return fe;
 }
@@ -474,24 +463,17 @@ TFriendElement *TChain::AddFriend(TTree *chain, const char* alias,
 {
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
-   if (fe) {
-      fFriends->Add(fe);
+   Assert(fe);
 
-      // We need to invalidate the loading of the current because if list
-      // of real friend is now obsolete.  It is repairable only from LoadTree
-      fTreeNumber = -1;
+   fFriends->Add(fe);
 
-      TTree *t = fe->GetTree();
-      if (t) {
-         if (t->GetEntries() < fEntries) {
-            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
-            //         chain,filename,t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","Unknown TChain %s",chain->GetName());
-      }
-   } else {
-      Warning("AddFriend","Cannot add FriendElement %s",chain->GetName());
+   // We need to invalidate the loading of the current tree because its list
+   // of real friend is now obsolete.  It is repairable only from LoadTree
+   fTreeNumber = -1;
+
+   TTree *t = fe->GetTree();
+   if (!t) {
+      Warning("AddFriend","Unknown TChain %s",chain->GetName());
    }
    return fe;
 }
@@ -596,8 +578,8 @@ Long64_t TChain::GetEntries() const
 
    if (fChainProof)
       return fChainProof->GetEntries();
-   if (fEntries >= (Stat_t)kBigNumber) {
-      ((TChain*)this)->LoadTree(fEntries-1);
+   if (fEntries >= kBigNumber) {
+      const_cast<TChain*>(this)->LoadTree(fEntries-1);
    }
    return fEntries;
 }
@@ -643,7 +625,7 @@ TFile *TChain::GetFile() const
 //  if no file is connected, the first file is automatically loaded.
 
    if (fFile) return fFile;
-   ((TChain*)this)->LoadTree(0); //force reading first entry
+   const_cast<TChain*>(this)->LoadTree(0); //force reading first entry
    return fFile;
 }
 
@@ -759,7 +741,7 @@ Double_t TChain::GetWeight() const
    if (TestBit(kGlobalWeight)) return fWeight;
    else {
       if (fTree) return fTree->GetWeight();
-      ((TChain*)this)->LoadTree(0);
+      const_cast<TChain*>(this)->LoadTree(0);
       if (fTree) return fTree->GetWeight();
       return 0;
    }
@@ -785,6 +767,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
 //  The function finds the corresponding Tree and returns the entry number
 //  in this tree.
 
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (TestBit(kFriendLock)) return 0;
+
    if (!fNtrees) return 1;
    if (entry < 0 || (entry > 0 && entry >= fEntries)) return -2;
 
@@ -803,39 +789,51 @@ Long64_t TChain::LoadTree(Long64_t entry)
    fReadEntry = entry - fTreeOffset[t];
    // If entry belongs to the current tree return entry
    if (t == fTreeNumber) {
-      // This need to be done first because it will set the friend tree's
-      // fReadEntry to the current one (which is possibly wrong).  The
-      // call to t->LoadTree inside the chain would fix that.
+      // First set the entry the tree on its owns friends
+      // (the friends of the chain will be updated in the
+      // next loop).
       fTree->LoadTree(fReadEntry);
       if (fFriends) {
+
          // The current tree has not changed but some of its friend might.
 
          //An Alternative would move this code to each of the function calling LoadTree
          //(and to overload a few more).
          TIter next(fFriends);
+         TIter nexttree(fTree->GetListOfFriends());
+         TFriendLock lock(this);
          TFriendElement *fe;
+         TFriendElement *fetree;
          Bool_t needUpdate = kFALSE;
          while ((fe = (TFriendElement*)next())) {
+            do {
+               fetree = (TFriendElement*)nexttree();
+            } while( fetree && !fetree->TestBit(TFriendElement::kFromChain) );
+
             TTree *t = fe->GetTree();
             if (t->InheritsFrom(TChain::Class())) {
                Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
                TTree* old = t->GetTree();
+               TTree* oldintree = fetree->GetTree();
 
                t->LoadTree(entry);
 
                Int_t newNumber = ((TChain*)t)->GetTreeNumber();
-               if (oldNumber!=newNumber) {
-                  // We can not compare the tree pointers because they could be reused.
-                  // so we compare the tree number instead.
+               if (oldNumber!=newNumber || old!=t->GetTree()
+                   || oldintree != t->GetTree()) {
+                  // We can not compare just the tree pointers because
+                  // they could be reused. So we compare the tree
+                  // number instead.
                   needUpdate = kTRUE;
-                  fTree->RemoveFriend(old);
-                  fTree->AddFriend(t->GetTree(),fe->GetName());
+                  fTree->RemoveFriend(oldintree);
+                  fTree->AddFriend(t->GetTree(),fe->GetName())
+                     ->SetBit(TFriendElement::kFromChain);
                }
             } else {
-               // else we assume it is a simple tree
-               // If the tree is a direct friend of the chain, it should be scanned
-               // used the chain entry number and NOT the tree entry number (fReadEntry)
-               // hence we redo:
+               // else we assume it is a simple tree If the tree is a
+               // direct friend of the chain, it should be scanned
+               // used the chain entry number and NOT the tree entry
+               // number (fReadEntry) hence we redo:
                t->LoadTree(entry);
             }
          }
@@ -943,12 +941,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
       //An Alternative would move this code to each of the function calling LoadTree
       //(and to overload a few more).
       TIter next(fFriends);
+      TFriendLock lock(this);
       TFriendElement *fe;
       while ((fe = (TFriendElement*)next())) {
          TTree *t = fe->GetTree();
          t->LoadTree(entry);
          TTree *friend_t = t->GetTree();
-         if (friend_t) fTree->AddFriend(friend_t,fe->GetName());
+         if (friend_t) {
+            fTree->AddFriend(friend_t,fe->GetName())
+               ->SetBit(TFriendElement::kFromChain);
+         }
       }
    }
 
@@ -1222,6 +1224,19 @@ void TChain::Reset(Option_t *)
 }
 
 //_______________________________________________________________________
+Long64_t  TChain::Scan(const char *varexp, const char *selection,
+                       Option_t *option, Long64_t nentries, Long64_t firstentry)
+{
+   // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
+   // then print only first 8 columns. If varexp = "*" print all columns.
+   // Otherwise a columns selection can be made using "var1:var2:var3".
+   // see TTreePlayer::Scan for more information
+
+   if (LoadTree(firstentry) < 0) return 0;
+   return TTree::Scan(varexp,selection,option,nentries,firstentry);
+}
+
+//_______________________________________________________________________
 void TChain::SetAutoDelete(Bool_t autodelete)
 {
 //  Set the global branch kAutoDelete bit
@@ -1446,7 +1461,7 @@ void TChain::ReleaseChainProof()
 //______________________________________________________________________________
 void TChain::SetProof(TVirtualProof *proof)
 {
-   // Sets the proof to be used for processing. "Draw" and "Processed" commands
+   // Sets the PROOF to be used for processing. "Draw" and "Processed" commands
    // will be handled by the proof.
    // If proof == (TVirtualProof*) -1 then the gProof is used.
    // If proof == 0 no proof is connected and the previously connected

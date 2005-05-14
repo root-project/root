@@ -1,9 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.3 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyReturn.cxx,v 1.4 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "TPyReturn.h"
+#include "ObjectProxy.h"
 
 // ROOT
 #include "TObject.h"
@@ -28,18 +29,8 @@
 ClassImp(TPyReturn)
 
 
-//- private helpers ----------------------------------------------------------
-void TPyReturn::AutoDestruct_() const
-{
-// Private harakiri method.
-   if ( gInterpreter != 0 )
-      gInterpreter->DeleteGlobal( (void*) this );
-   delete this;
-}
-
-
 //- constructors/destructor --------------------------------------------------
-TPyReturn::TPyReturn() : fClass( (TClass*)0 )
+TPyReturn::TPyReturn()
 {
 // Construct a TPyReturn object from Py_None.
    Py_INCREF( Py_None );
@@ -47,26 +38,34 @@ TPyReturn::TPyReturn() : fClass( (TClass*)0 )
 }
 
 //____________________________________________________________________________
-TPyReturn::TPyReturn( PyObject* pyobject, TClass* klass ) :
-   fPyObject( pyobject ), fClass( klass )
+TPyReturn::TPyReturn( PyObject* pyobject )
 {
-// Construct a TPyReturn from a python object. If the python object holds on to
-// a ROOT object, the TClass should be given. Reference counting for the python
-// object is in effect.
+// Construct a TPyReturn from a python object. The python object may represent
+// a ROOT object. Steals reference to given python object.
+   if ( ! pyobject ) {
+      Py_INCREF( Py_None );
+      fPyObject = Py_None;
+   } else
+      fPyObject = pyobject;
 }
 
 //____________________________________________________________________________
-TPyReturn::TPyReturn( const TPyReturn& other ) : TObject( other )
+TPyReturn::TPyReturn( const TPyReturn& other )
 {
-// Private copy constructor; throws if called.
-   throw std::runtime_error( "TPyReturn objects may not be copied!" );
+// Copy constructor. Applies python object reference counting.
+   Py_INCREF( other.fPyObject );
+   fPyObject = other.fPyObject;
 }
 
 //____________________________________________________________________________
-TPyReturn& TPyReturn::operator=( const TPyReturn& )
+TPyReturn& TPyReturn::operator=( const TPyReturn& other )
 {
-// Private assignment operator; throws if called.
-   throw std::runtime_error( "TPyReturn objects may not be assigned to!" );
+// Assignment operator. Applies python object reference counting.
+   if ( this != & other ) {
+      Py_INCREF( other.fPyObject );
+      fPyObject = other.fPyObject;
+   }
+   
    return *this;
 }
 
@@ -74,36 +73,37 @@ TPyReturn& TPyReturn::operator=( const TPyReturn& )
 TPyReturn::~TPyReturn()
 {
 // Destructor. Reference counting for the held python object is in effect.
-   Py_XDECREF( fPyObject );
+   Py_DECREF( fPyObject );
 }
 
 
 //- public members -----------------------------------------------------------
-TClass* TPyReturn::IsA() const
-{
-// Return the held object TClass (not the TPyReturn TClass).
-   return fClass.GetClass();
-}
-
-//____________________________________________________________________________
 TPyReturn::operator const char*() const
 {
    const char* s = PyString_AsString( fPyObject );
-   AutoDestruct_();
 
    if ( PyErr_Occurred() ) {
       PyErr_Print();
-      return "";
+      return "";                   // returning 0 may be better?
    }
 
    return s;
 }
 
 //____________________________________________________________________________
-TPyReturn::operator long() const
+TPyReturn::operator Char_t() const
 {
-   long l = PyLong_AsLong( fPyObject );
-   AutoDestruct_();
+   std::string s = operator const char*();
+   if ( s.size() )
+      return s[0];
+
+   return '\0';
+}
+
+//____________________________________________________________________________
+TPyReturn::operator Long_t() const
+{
+   Long_t l = PyLong_AsLong( fPyObject );
 
    if ( PyErr_Occurred() )
       PyErr_Print();
@@ -112,16 +112,21 @@ TPyReturn::operator long() const
 }
 
 //____________________________________________________________________________
-TPyReturn::operator int() const
+TPyReturn::operator ULong_t() const
 {
-   return (int) operator long();
+   ULong_t ul = PyLong_AsUnsignedLong( fPyObject );
+
+   if ( PyErr_Occurred() )
+      PyErr_Print();
+
+   return ul;
 }
 
+
 //____________________________________________________________________________
-TPyReturn::operator double() const
+TPyReturn::operator Double_t() const
 {
-   double d = PyFloat_AsDouble( fPyObject );
-   AutoDestruct_();
+   Double_t d = PyFloat_AsDouble( fPyObject );
 
    if ( PyErr_Occurred() )
       PyErr_Print();
@@ -130,13 +135,14 @@ TPyReturn::operator double() const
 }
 
 //____________________________________________________________________________
-TPyReturn::operator float() const
+TPyReturn::operator void*() const
 {
-   return (float) operator double();
-}
+   if ( fPyObject == Py_None )
+      return 0;
 
-//____________________________________________________________________________
-TPyReturn::operator TObject*() const
-{
-   return (TObject*) this;
+   Py_INCREF( fPyObject );
+   if ( PyROOT::ObjectProxy_Check( fPyObject ) )
+      return ((PyROOT::ObjectProxy*)fPyObject)->GetObject();
+   else 
+      return fPyObject;
 }

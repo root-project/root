@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.32 2005/03/18 08:03:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.34 2005/04/07 14:43:35 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -211,7 +211,7 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, TObject *obj)
+TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
 							: fColor(),
 							  fIsSelected(kFALSE),
 							  fGLName(glName),
@@ -219,7 +219,7 @@ TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, TObject *obj
 							  fRealObject(obj)
 {
    SetColor(color, kTRUE);
-   fColor[3] = 1.f;
+   fColor[3] = 1.f - trans / 100.f;
 }
 
 //______________________________________________________________________________
@@ -334,7 +334,7 @@ void TGLSceneObject::SetBBox()
 			zmin = TMath::Min(zmin, fVertices[nv + 2]);
 			zmax = TMath::Max(zmax, fVertices[nv + 2]);
 		}
-		
+
 		fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
 	}
 }
@@ -409,18 +409,18 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
 }
 
 //______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, TObject *r)
-					:TGLSceneObject(n, c, r)
+TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t trans, UInt_t n, TObject *r)
+					:TGLSceneObject(n, c, trans, r)
 {
 	UInt_t nv = m->NumberOfVertices();
 	fVertices.reserve(3 * nv);
 	fNormals.resize(m->NumberOfPolys() * 3);
-	
+
 	for (UInt_t i = 0; i < nv; ++i) {
 		const Double_t *v = m->GetVertex(i);
 		fVertices.insert(fVertices.end(), v, v + 3);
 	}
-	
+
 	fNbPols = m->NumberOfPolys();
 
    UInt_t descSize = 0;
@@ -877,6 +877,7 @@ public:
    TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
                    const Vertex3d &center, const Vertex3d &l = lowNormal,
                    const Vertex3d &h = highNormal);
+   virtual ~TGLMesh() { }
 
    void Shift(Double_t xs, Double_t ys, Double_t zs)
    {

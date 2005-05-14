@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.3 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.4 2005/03/09 18:19:25 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -60,11 +60,11 @@ class TTUBE : public TShape {
 
         virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
         virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
-        virtual Float_t GetRmin()  {return fRmin;}
-        virtual Float_t GetRmax()  {return fRmax;}
-        virtual Float_t GetDz()    {return fDz;}
-        virtual Int_t   GetNdiv()  {return fNdiv;}
-        virtual Float_t GetAspectRatio(){return fAspectRatio;}
+        virtual Float_t GetRmin() const  {return fRmin;}
+        virtual Float_t GetRmax() const  {return fRmax;}
+        virtual Float_t GetDz()   const  {return fDz;}
+        virtual Int_t   GetNdiv() const  {return fNdiv;}
+        virtual Float_t GetAspectRatio() const {return fAspectRatio;}
         virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDivNum;}
         virtual void    SetNumberOfDivisions (Int_t ndiv);
         virtual void    SetAspectRatio(Float_t factor=1){fAspectRatio = factor;}

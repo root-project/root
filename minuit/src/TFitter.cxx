@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.28 2005/03/04 09:06:37 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.29 2005/03/07 09:15:45 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -297,6 +297,7 @@ void TFitter::SetFitMethod(const char *name)
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquare);
    if (!strcmp(name,"Graph2DFitChisquare")) SetFCN(Graph2DFitChisquare);
+   if (!strcmp(name, "MultiGraphFitChisquare")) SetFCN(MultiGraphFitChisquare);
 }
       
 //______________________________________________________________________________
@@ -567,6 +568,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       f += fsum*fsum/eu;
    }
    f1->SetNumberFitPoints(npfits);
+   //
 }
 
 

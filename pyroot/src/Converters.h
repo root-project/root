@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.4 2005/04/15 17:37:10 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -7,6 +7,7 @@
 #include "Rtypes.h"
 #include "DllImport.h"
 #include "TString.h"
+#include "TClassRef.h"
 
 // CINT
 class G__CallFunc;
@@ -58,12 +59,19 @@ namespace PyROOT {
       VoidArrayConverter( bool isConst = false ) { fIsConst = isConst; }
       virtual bool SetArg( PyObject*, G__CallFunc* );
 
+   protected:
+      bool IsConst() { return fIsConst; }
+
    private:
       bool fIsConst;
    };
 
+   PYROOT_BASIC_CONVERTER( ShortArrayConverter );
+   PYROOT_BASIC_CONVERTER( UShortArrayConverter );
    PYROOT_BASIC_CONVERTER( IntArrayConverter );
+   PYROOT_BASIC_CONVERTER( UIntArrayConverter );
    PYROOT_BASIC_CONVERTER( LongArrayConverter );
+   PYROOT_BASIC_CONVERTER( ULongArrayConverter );
    PYROOT_BASIC_CONVERTER( FloatArrayConverter );
    PYROOT_BASIC_CONVERTER( DoubleArrayConverter );
 
@@ -74,6 +82,23 @@ namespace PyROOT {
 
    private:
       TString fBuffer;
+   };
+
+   class KnownClassConverter: public VoidArrayConverter {
+   public:
+      KnownClassConverter( const TClassRef& klass, bool isConst = false ) :
+         VoidArrayConverter( isConst ), fClass( klass ) {}
+      KnownClassConverter( TClass* klass, bool isConst = false ) :
+         VoidArrayConverter( isConst ), fClass( klass ) {}
+      virtual bool SetArg( PyObject*, G__CallFunc* );
+
+   private:
+      TClassRef fClass;
+   };
+
+   class LongLongArrayConverter : public VoidArrayConverter {
+   public:
+      virtual bool SetArg( PyObject*, G__CallFunc* );
    };
 
    PYROOT_BASIC_CONVERTER( PyObjectConverter );

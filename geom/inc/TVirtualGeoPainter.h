@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.28 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.29 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -59,7 +59,7 @@ enum EGeoBombOption {
 };
 
 public:
-   TVirtualGeoPainter();
+   TVirtualGeoPainter(TGeoManager *manager);
    virtual ~TVirtualGeoPainter();
 
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys) = 0;
@@ -111,6 +111,7 @@ public:
                                      Double_t bombr=1.3) = 0;
    virtual void       SetClippingShape(TGeoShape *shape) = 0;
    virtual void       SetExplodedView(Int_t iopt=0) = 0;
+   virtual void       SetGeoManager(TGeoManager *geom) = 0;
    virtual void       SetNsegments(Int_t nseg=20) = 0;    
    virtual void       SetRaytracing(Bool_t flag=kTRUE) = 0;
    static  TVirtualGeoPainter *GeoPainter();

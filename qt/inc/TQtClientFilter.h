@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.23 2005/02/24 22:20:19 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.16 2005/04/06 09:32:11 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifndef ROOT_TQClientFilter
 #define ROOT_TQClientFilter
 
@@ -42,6 +41,7 @@ class TQtClientFilter : public QObject {
    Q_OBJECT
 #endif
    friend class TGQt;
+   friend class TQtClientWidget;
 private:
          void operator=(const TQtClientFilter &){}
          void operator=(const TQtClientFilter &) const {}
@@ -51,15 +51,18 @@ protected:
    TQtNextEventMessage       *fNotifyClient;
    QPtrList<TQtClientWidget>  fButtonGrabList;
    TQtClientWidget           *fPointerGrabber;
+   TQtClientWidget           *fKeyGrabber;
    Bool_t                     fIsGrabbing;
 
 protected:
    bool eventFilter( QObject *o, QEvent *e );
    TQtEventQueue *Queue();
-   TQtClientWidget    *GetPointerGrabber() const { return fPointerGrabber;}
-   void SetPointerGrabber(TQtClientWidget *grabber) {fPointerGrabber = grabber;}
+   TQtClientWidget    *GetPointerGrabber() const    { return fPointerGrabber;}
+   void SetPointerGrabber(TQtClientWidget *grabber) { fPointerGrabber = grabber;}
+   void SetKeyGrabber(TQtClientWidget *grabber)     { fKeyGrabber = grabber;}
+   void UnSetKeyGrabber(TQtClientWidget *grabber)   { if (fKeyGrabber == grabber) fKeyGrabber = 0; }
 public:
-   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fPointerGrabber(0),fIsGrabbing(kFALSE ){;}
+   TQtClientFilter():fRootEventQueue(0),fNotifyClient(0),fPointerGrabber(0),fKeyGrabber(0),fIsGrabbing(kFALSE ){;}
    virtual ~TQtClientFilter();
 public slots:
    void AppendButtonGrab (TQtClientWidget *);

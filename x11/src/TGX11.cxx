@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.44 2004/11/09 17:18:08 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.45 2005/02/11 16:38:46 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -31,6 +31,9 @@
 #include "TStyle.h"
 #include "TExMap.h"
 #include "TEnv.h"
+#include "TString.h"
+#include "TObjString.h"
+#include "TObjArray.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -109,9 +112,10 @@ static int  gLineWidth = 0;
 static int  gLineStyle = LineSolid;
 static int  gCapStyle  = CapButt;
 static int  gJoinStyle = JoinMiter;
-static char gDashList[4];
+static char gDashList[10];
 static int  gDashLength = 0;
 static int  gDashOffset = 0;
+static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -647,7 +651,7 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
    if (gLineStyle == LineSolid)
       XDrawLine(fDisplay, gCws->drawing, *gGCline, x1, y1, x2, y2);
    else {
-      XSetDashes(fDisplay, *gGCdash, gDashOffset, gDashList, sizeof(gDashList));
+      XSetDashes(fDisplay, *gGCdash, gDashOffset, gDashList, gDashSize);
       XDrawLine(fDisplay, gCws->drawing, *gGCdash, x1, y1, x2, y2);
    }
 }
@@ -681,7 +685,7 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
       else {
          int i;
          XSetDashes(fDisplay, *gGCdash,
-                    gDashOffset, gDashList, sizeof(gDashList));
+                    gDashOffset, gDashList, gDashSize);
          XDrawLines(fDisplay, gCws->drawing, *gGCdash, xy, n, CoordModeOrigin);
 
          // calculate length of line to update dash offset
@@ -2409,12 +2413,11 @@ void TGX11::SetLineType(int n, int *dash)
       XSetLineAttributes(fDisplay, *gGCline, gLineWidth,
                          gLineStyle, gCapStyle, gJoinStyle);
    } else {
-     int i, j;
+     gDashSize = TMath::Min((int)sizeof(gDashList),n);
      gDashLength = 0;
-     for (i = 0, j = 0; i < (int)sizeof(gDashList); i++ ) {
-        gDashList[i] = dash[j];
+     for (int i = 0; i < gDashSize; i++ ) {
+        gDashList[i] = dash[i];
         gDashLength += gDashList[i];
-        if (++j >= n) j = 0;
      }
      gDashOffset = 0;
      gLineStyle = LineOnOffDash;
@@ -2430,16 +2433,35 @@ void TGX11::SetLineStyle(Style_t lstyle)
 {
    // Set line style.
 
-   static Int_t dashed[2] = {5,5};
-   static Int_t dotted[2] = {1,3};
-   static Int_t dasheddotted[4] = {5,3,1,3};
+   static Int_t dashed[2] = {3,3};
+   static Int_t dotted[2] = {1,2};
+   static Int_t dasheddotted[4] = {3,4,1,4};
 
    if (fLineStyle != lstyle) { //set style index only if different
       fLineStyle = lstyle;
-      if (lstyle <= 1) SetLineType(0,0);
-      if (lstyle == 2) SetLineType(2,dashed);
-      if (lstyle == 3) SetLineType(2,dotted);
-      if (lstyle == 4) SetLineType(4,dasheddotted);
+      if (lstyle <= 1 ) {
+         SetLineType(0,0);
+      } else if (lstyle == 2 ) {
+         SetLineType(2,dashed);
+      } else if (lstyle == 3 ) {
+         SetLineType(2,dotted);
+      } else if (lstyle == 4 ) {
+         SetLineType(4,dasheddotted);
+      } else {
+         TString st = (TString)gStyle->GetLineStyleString(lstyle);
+         TObjArray *tokens = st.Tokenize(" ");
+         Int_t nt;
+         nt = tokens->GetEntries();
+         Int_t *linestyle = new Int_t[nt];
+         for (Int_t j = 0; j<nt; j++) {
+            Int_t it;
+            sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+            linestyle[j] = (Int_t)(it/4);
+         }
+         SetLineType(nt,linestyle);
+         delete [] linestyle;
+         delete tokens;
+      }
    }
 }
 

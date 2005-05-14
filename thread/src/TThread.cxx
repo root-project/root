@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.33 2005/01/18 16:58:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.34 2005/02/11 18:40:09 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -234,6 +234,10 @@ void TThread::Init()
       gAllocMutex = new TMutex(kTRUE);
    if (!gCINTMutex)
       gCINTMutex = new TMutex(kTRUE);
+   if (!gErrPrintMutex)
+      gErrPrintMutex = new TMutex(kTRUE);
+   if (!gAuthMutex)
+      gAuthMutex = new TMutex(kTRUE);
 }
 
 //______________________________________________________________________________

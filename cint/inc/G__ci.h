@@ -2811,8 +2811,10 @@ G__signaltype G__signal G__P((int sgnl,void (*f)(int)));
 /***********************************************************************
  * Native long long support
  ***********************************************************************/
+#ifndef __CINT__
 extern G__EXPORT G__int64 G__expr_strtoll G__P((const char *nptr,char **endptr, register int base));
 extern G__EXPORT G__uint64 G__expr_strtoull G__P((const char *nptr, char **endptr, register int base));
+#endif
 #endif
 
 

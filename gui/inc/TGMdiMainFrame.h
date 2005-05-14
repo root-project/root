@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.5 2004/10/26 09:39:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.h,v 1.6 2004/12/09 22:55:06 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -69,7 +69,7 @@ enum EMdiHints {
    kMdiMaximize      = 128,
    kMdiHelp          = 256,
    kMdiMenu          = 512,
-   kMdiDefaultHints  = kMdiMenu | kMdiMinimize | kMdiRestore | 
+   kMdiDefaultHints  = kMdiMenu | kMdiMinimize | kMdiRestore |
                        kMdiMaximize | kMdiSize | kMdiClose
 };
 
@@ -107,6 +107,8 @@ protected:
    TGMdiFrameList   *fCyclePrev, *fCycleNext;
 
 public:
+   virtual ~TGMdiFrameList() { }
+
    UInt_t            GetFrameId() const { return fFrameId; }
    TGMdiDecorFrame  *GetDecorFrame() const { return fDecor; }
    TGMdiFrameList   *GetPrev() const { return fPrev; }
@@ -192,7 +194,7 @@ public:
    virtual Int_t    Close(TGMdiFrame *frame);
    virtual Int_t    ContextHelp(TGMdiFrame *frame);
    virtual void     CloseAll();
-  
+
    virtual void     Cascade() { ArrangeFrames(kMdiCascade); }
    virtual void     TileHorizontal() { ArrangeFrames(kMdiTileHorizontal); }
    virtual void     TileVertical() { ArrangeFrames(kMdiTileVertical); }

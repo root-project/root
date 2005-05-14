@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.204 2005/03/23 06:16:46 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.205 2005/03/28 21:17:39 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3868,8 +3868,8 @@ void ReplaceFile(const char *tmpdictname, const char *dictname)
       }
    }
    if (!success)
-      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict() after %d tries\n",
-               tmpdictname, dictname, tries);
+      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict() after %d tries (error is %d)\n",
+               tmpdictname, dictname, tries, errno);
 #else
    if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
       Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",

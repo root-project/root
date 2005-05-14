@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.4 2001/09/29 13:00:59 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.5 2003/06/05 14:22:51 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -62,6 +62,7 @@ class TTabCom {
 
 public: // constructors
    TTabCom();
+   virtual ~TTabCom() { }
 
 public: // typedefs
    typedef TList     TContainer;

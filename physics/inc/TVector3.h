@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.13 2004/04/29 17:43:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.14 2004/07/07 17:44:44 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -317,7 +317,10 @@ inline Double_t TVector3::Pt() const { return Perp(); }
 inline Double_t TVector3::Perp2(const TVector3 & p)  const {
   Double_t tot = p.Mag2();
   Double_t ss  = Dot(p);
-  return tot > 0.0 ? Mag2()-ss*ss/tot : Mag2();
+  Double_t per = Mag2();
+  if (tot > 0.0) per -= ss*ss/tot;
+  if (per < 0)   per = 0;
+  return per;
 }
 
 

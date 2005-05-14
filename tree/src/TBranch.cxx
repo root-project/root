@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.85 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.86 2005/03/19 16:39:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -390,6 +390,12 @@ Int_t TBranch::Fill()
 {
 //*-*-*-*-*-*-*-*Loop on all leaves of this branch to fill Basket buffer*-*-*
 //*-*            =======================================================
+//
+// The function returns the number of bytes committed to the memory basket.
+// If a write error occurs, the number of bytes returned is -1.
+// If no data are written, because e.g. the branch is disabled,
+// the number of bytes returned is 0.
+//
 
    if (TestBit(kDoNotProcess)) return 0;
 
@@ -548,6 +554,7 @@ Int_t TBranch::Fill()
          fBasketSeek[i]  = 0;
       }
       fBasketEntry[fWriteBasket] = fEntryNumber;
+      return (nout >= 0) ? nbytes : -1;
    }
    return nbytes;
 }

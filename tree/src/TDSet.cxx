@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.15 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.17 2005/04/14 21:30:11 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -58,7 +58,6 @@
 #include "TUrl.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualProof.h"
-#include "TProof.h"
 #include "TChainProof.h"
 #include "TPluginManager.h"
 #include "TChain.h"
@@ -746,7 +745,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
          delete file;
          return -1;
       }
-      entries = (Long64_t) tree->GetEntries();
+      entries = tree->GetEntries();
       delete tree;
 
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.4 2005/02/28 15:42:03 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.5 2005/03/03 08:04:16 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -71,6 +71,7 @@ protected:
 
 public:
    TPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h);
+   virtual ~TPaletteEditor() { }
 
    virtual void CloseWindow();
 

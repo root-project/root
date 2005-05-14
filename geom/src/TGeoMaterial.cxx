@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.19 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.20 2005/02/28 20:52:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -208,7 +208,7 @@ Int_t TGeoMaterial::GetDefaultColor() const
 //-----------------------------------------------------------------------------
 TGeoElement *TGeoMaterial::GetElement(Int_t) const
 {
-   TGeoElementTable *table = TGeoElementTable::Instance();
+   TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
 
@@ -316,7 +316,7 @@ void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
       Error("DefineElement", "wrong index iel=%i in mixture %s, max is %d", iel, GetName(), fNelements);
       return;
    }
-   TGeoElementTable *table = TGeoElementTable::Instance();
+   TGeoElementTable *table = gGeoManager->GetElementTable();
    TGeoElement *elem = table->GetElement(z);
    if (!elem) Fatal("DefineElement", "In mixture %s, element with Z=%i not found",GetName(),z);
    fZmixture[iel] = elem->Z();
@@ -340,7 +340,7 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
       Error("GetElement", "Mixture %s has only %d elements", GetName(), fNelements);
       return 0;
    }   
-   TGeoElementTable *table = TGeoElementTable::Instance();
+   TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZmixture[i]));
 }
 

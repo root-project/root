@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.123 2005/03/22 16:23:51 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.132 2005/05/02 10:59:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -66,7 +66,7 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) || defined(R__HURD)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
@@ -170,7 +170,8 @@
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4 || \
+      (defined(R__SUNGCC3) && defined(__arch64__)) || \
+      defined(MAC_OS_X_VERSION_10_4) || \
       (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif
@@ -186,9 +187,6 @@ extern "C" {
 #include <utmpx.h>
 #define STRUCT_UTMP struct utmpx
 #else
-#if defined(R__MKLINUX) && !defined(R__PPCEGCS)
-        extern "C" {
-#endif
 #include <utmp.h>
 #define STRUCT_UTMP struct utmp
 #endif
@@ -210,7 +208,7 @@ extern "C" {
 #if defined(R__AIX)
 // #   define HAVE_XL_TRBK   // does not work as expected
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) || defined(R__HURD)
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #   endif
@@ -281,7 +279,7 @@ const char *kProtocolName   = "tcp";
 #   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
 #endif
 
-const Int_t kNFDBITS = (sizeof(Int_t) * 8);   // 8 bits per byte
+const Int_t kNFDBITS = (sizeof(Long_t) * 8);  // 8 bits per byte
 #ifdef FD_SETSIZE
 const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
 #else
@@ -291,7 +289,7 @@ const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
 
 class TFdSet {
 private:
-   Int_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
+   Long_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
    TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
@@ -300,7 +298,7 @@ public:
    void   Set(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] |= (1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Set","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -308,7 +306,7 @@ public:
    void   Clr(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS));
+         fds_bits[n/kNFDBITS] &= ~(1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::Clr","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
       }
@@ -316,13 +314,13 @@ public:
    Int_t  IsSet(Int_t n)
    {
       if (n >= 0 && n < kFDSETSIZE) {
-         return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS));
+         return fds_bits[n/kNFDBITS] & (1L << (n % kNFDBITS));
       } else {
          ::Fatal("TFdSet::IsSet","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
          return 0;
       }
    }
-   Int_t *GetBits() { return (Int_t *)fds_bits; }
+   Long_t *GetBits() { return (Long_t *)fds_bits; }
 };
 
 //______________________________________________________________________________
@@ -491,7 +489,8 @@ const char *TUnixSystem::HostName()
 //______________________________________________________________________________
 void TUnixSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers.
+   // Add a file handler to the list of system file handlers. Only adds
+   // the handler if it is not already in the list of file handlers.
 
    TSystem::AddFileHandler(h);
    if (h) {
@@ -510,7 +509,8 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers.
+   // Remove a file handler from the list of file handlers. Returns
+   // the handler or 0 if the handler was not in the list of file handlers.
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -538,7 +538,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 //______________________________________________________________________________
 void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers.
+   // Add a signal handler to list of system signal handlers. Only adds
+   // the handler if it is not already in the list of signal handlers.
 
    TSystem::AddSignalHandler(h);
    UnixSignal(h->GetSignal(), SigHandler);
@@ -547,11 +548,23 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 //______________________________________________________________________________
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers.
+   // Remove a signal handler from list of signal handlers. Returns
+   // the handler or 0 if the handler was not in the list of signal handlers.
 
-   // if last handler of specific signal need to reset sighandler to default
+   TSignalHandler *oh = TSystem::RemoveSignalHandler(h);
 
-   return TSystem::RemoveSignalHandler(h);
+   Bool_t last = kTRUE;
+   TSignalHandler *hs;
+   TIter next(fSignalHandler);
+
+   while ((hs = (TSignalHandler*) next())) {
+      if (hs->GetSignal() == h->GetSignal())
+         last = kFALSE;
+   }
+   if (last)
+      ResetSignal(h->GetSignal(), kTRUE);
+
+   return oh;
 }
 
 //______________________________________________________________________________
@@ -680,6 +693,8 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event.
 
+   Bool_t pollOnce = pendingOnly;
+
    while (1) {
       // first handle any X11 events
       if (gXDisplay && gXDisplay->Notify()) {
@@ -714,14 +729,22 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
                return;
          }
 
-      if (pendingOnly) return;
+      // if in pendingOnly mode poll once file descriptor activity
+      Long_t nextto = NextTimeOut(kTRUE);
+      if (pendingOnly) {
+         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
+            nextto = 0;
+            pollOnce = kFALSE;
+         } else
+            return;
+      }
 
       // nothing ready, so setup select call
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
       int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
-      fNfd = UnixSelect(mxfd, fReadready, fWriteready, NextTimeOut(kTRUE));
+      fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
       if (fNfd < 0 && fNfd != -2) {
          int fd, rc;
          TFdSet t;
@@ -908,8 +931,8 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
                   sigdone = sig;
                   fSigcnt--;
                }
-              if (sh->IsActive())
-                 sh->Notify();
+               if (sh->IsActive())
+                  sh->Notify();
             }
          }
       }
@@ -1087,7 +1110,8 @@ const char *TUnixSystem::TempDirectory() const
    // temporary files in.
 
    const char *dir =  gSystem->Getenv("TMPDIR");
-   if (!dir) dir = "/tmp";
+   if (!dir || gSystem->AccessPathName(dir, kWritePermission))
+      dir = "/tmp";
 
    return dir;
 }
@@ -3140,8 +3164,19 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
 
    int retcode;
 
+#if (defined(R__HPUX) && defined(R__B64))
+   fd_set frd;
+   fd_set fwr;
+   for (int i = 0; i < nfds; i++) {
+      if (readready)  FD_SET(readready->IsSet(i),  &frd);
+      if (writeready) FD_SET(writeready->IsSet(i), &fwr);
+   }
+   fd_set *rd = (readready)  ? &frd : 0;
+   fd_set *wr = (writeready) ? &fwr : 0;
+#else
    fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
    fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
+#endif
 
    if (timeout >= 0) {
       struct timeval tv;
@@ -3729,20 +3764,16 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
    int ext = 0, len = strlen(lib);
    if (len > 3 && (!strcmp(lib+len-3, ".sl") ||
                    !strcmp(lib+len-3, ".dl") ||
-#ifdef R__WINGCC
                    !strcmp(lib+len-4, ".dll")||
                    !strcmp(lib+len-4, ".DLL")||
-#endif
                    !strcmp(lib+len-3, ".so") ||
                    !strcmp(lib+len-2, ".a"))) {
       name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
       ext  = 1;
    } else {
-#ifdef R__WINGCC
       name = Form("%s.dll", lib);
       name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
       if (!name) {
-#endif
          name = Form("%s.so", lib);
          name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
          if (!name) {
@@ -3756,9 +3787,7 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
                    name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
                 }
             }
-#ifdef R__WINGCC
          }
-#endif
       }
    }
 
@@ -3767,13 +3796,8 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
          Error("DynamicPathName",
                "%s does not exist in %s", lib, GetDynamicPath());
       else
-#ifdef R__WINGCC
          Error("DynamicPathName",
                "%s[.so | .sl | .dl | .a | .dll] does not exist in %s", lib, GetDynamicPath());
-#else
-         Error("DynamicPathName",
-               "%s[.so | .sl | .dl | .a] does not exist in %s", lib, GetDynamicPath());
-#endif
    }
 
    return name;

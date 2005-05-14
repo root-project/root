@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.30 2004/08/02 08:52:54 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.31 2005/03/29 13:10:21 rdm Exp $ */
 /* Author: */
 
 /*
@@ -348,14 +348,14 @@ static void     search_forw(int s);     /* look forw for current string */
 #endif
 
 #if defined(__linux__) && defined(__powerpc__)
-#   define R__MKLINUX       // = linux on PowerMac
+#   define R__PPCLINUX      // = linux on PPC(64)
 #endif
 #if defined(__linux__) && defined(__alpha__)
 #   define R__ALPHALINUX    // = linux on Alpha
 #endif
 
-#if defined(TIOCGETP) && !defined(__sgi) && !defined(R__MKLINUX) && \
-   !defined(R__ALPHALINUX)  /* use BSD interface if possible */
+#if defined(TIOCGETP) && !defined(__sgi) && !defined(R__PPCLINUX) && \
+    !defined(R__ALPHALINUX)  /* use BSD interface if possible */
 #include <sgtty.h>
 struct sgttyb   new_tty, old_tty;
 struct tchars   tch;
@@ -363,7 +363,7 @@ struct ltchars  ltch;
 #else
 #ifdef SIGTSTP          /* need POSIX interface to handle SUSP */
 #include <termios.h>
-#if defined(__sun) || defined(__sgi) || defined(R__MKLINUX) || \
+#if defined(__sun) || defined(__sgi) || defined(R__PPCLINUX) || \
     defined(R__ALPHALINUX)
 #undef TIOCGETP         /* Solaris and SGI define TIOCGETP in <termios.h> */
 #undef TIOCSETP

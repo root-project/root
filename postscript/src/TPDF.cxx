@@ -36,6 +36,7 @@
 #include "TStorage.h"
 #include "TText.h"
 #include "zlib.h"
+#include "TObjString.h"
 
 // To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
@@ -1389,10 +1390,16 @@ void TPDF::SetLineStyle(Style_t linestyle)
 
    if ( linestyle == fLineStyle) return;
    fLineStyle = linestyle;
-   if      (linestyle == 2) {PrintStr(" [3 3] 0 d");}
-   else if (linestyle == 3) {PrintStr(" [1 2] 0 d");}
-   else if (linestyle == 4) {PrintStr(" [3 4 1 4] 0 d");}
-   else                     {PrintStr(" [] 0 d");}
+   TString st = (TString)gStyle->GetLineStyleString(linestyle);
+   PrintFast(2," [");
+   TObjArray *tokens = st.Tokenize(" ");
+   for (Int_t j = 0; j<tokens->GetEntries(); j++) {
+      Int_t it;
+      sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+      WriteInteger((Int_t)(it/4));
+   }
+   delete tokens;
+   PrintFast(5,"] 0 d");
 }
 
 

@@ -60,7 +60,7 @@ private:
    TGeoNode          *fCheckedNode;      // checked node
    TGeoOverlap       *fOverlap;          // current overlap
    TGeoMatrix        *fMatrix;           // current local matrix in case of overlaps
-   TGeoManager       *fGeom;             // geometry to which applies
+   TGeoManager       *fGeoManager;       // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TGeoShape         *fClippingShape;    // clipping shape
    TGeoVolume        *fLastVolume;       // last drawn volume
@@ -73,7 +73,7 @@ protected:
    virtual void       ClearVisibleVolumes();
 
 public:
-   TGeoPainter();
+   TGeoPainter(TGeoManager *manager);
    virtual ~TGeoPainter();
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys);
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *part);
@@ -129,7 +129,7 @@ public:
    virtual void       SetClippingShape(TGeoShape *shape) {fClippingShape = shape;}
    virtual void       SetExplodedView(Int_t iopt=0);
    virtual void       SetNsegments(Int_t nseg=20);
-   virtual void       SetGeoManager(TGeoManager *geom) {fGeom=geom;}
+   virtual void       SetGeoManager(TGeoManager *geom) {fGeoManager=geom;}
    virtual void       SetRaytracing(Bool_t flag=kTRUE) {fIsRaytracing = flag;}
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
    virtual void       SetVisLevel(Int_t level=3);

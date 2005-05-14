@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.145 2005/03/11 15:32:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.146 2005/03/14 17:23:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -606,6 +606,8 @@ TObject *TROOT::FindObject(const char *name) const
 {
    // Returns address of a ROOT object if it exists
    //
+   // If name contains at least one "/" the function calls FindObjectany
+   // else
    // This function looks in the following order in the ROOT lists:
    //     - List of files
    //     - List of memory mapped files
@@ -621,6 +623,8 @@ TObject *TROOT::FindObject(const char *name) const
    //     - Current Directory in memory
    //     - Current Directory on file
 
+   if (name && strstr(name,"/")) return FindObjectAny(name);
+   
    TObject *temp = 0;
 
    temp   = fFiles->FindObject(name);       if (temp) return temp;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.4 2004/04/22 16:28:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.5 2004/09/08 08:13:11 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
       kNSSHuge = 3           // Huge step
    };
 
+   virtual ~TGNumberFormat() { }
    ClassDef(TGNumberFormat,0)  // Class defining namespace for several enums used by TGNumberEntry
 };
 

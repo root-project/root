@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.28 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.29 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -62,10 +62,11 @@ friend class TMatrixDSparse;
 friend class TVectorD;
 
 protected:
-  virtual void Operation(Double_t &element) const = 0;
+   virtual ~TElementActionD() { }
+   virtual void Operation(Double_t &element) const = 0;
 
 private:
-  void operator=(const TElementActionD &) { }
+   void operator=(const TElementActionD &) { }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -89,12 +90,13 @@ friend class TMatrixDSparse;
 friend class TVectorD;
 
 protected:
-  mutable Int_t fI; // i position of element being passed to Operation()
-  mutable Int_t fJ; // j position of element being passed to Operation()
-  virtual void Operation(Double_t &element) const = 0;
+   mutable Int_t fI; // i position of element being passed to Operation()
+   mutable Int_t fJ; // j position of element being passed to Operation()
+   virtual ~TElementPosActionD() { }
+   virtual void Operation(Double_t &element) const = 0;
 
 private:
-  void operator=(const TElementPosActionD &) { }
+   void operator=(const TElementPosActionD &) { }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,6 +119,7 @@ public:
   TMatrixDRow_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
   TMatrixDRow_const(const TMatrixD    &matrix,Int_t row);
   TMatrixDRow_const(const TMatrixDSym &matrix,Int_t row);
+  virtual ~TMatrixDRow_const() { }
 
   inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
   inline       Int_t         GetRowIndex() const { return fRowInd; }
@@ -186,6 +189,7 @@ public:
   TMatrixDColumn_const() { fMatrix = 0; fInc = 0; fPtr = 0; }
   TMatrixDColumn_const(const TMatrixD    &matrix,Int_t col);
   TMatrixDColumn_const(const TMatrixDSym &matrix,Int_t col);
+  virtual ~TMatrixDColumn_const() { }
 
   inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
   inline       Int_t         GetColIndex() const { return fColInd; }
@@ -255,6 +259,7 @@ public:
   TMatrixDDiag_const() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
   TMatrixDDiag_const(const TMatrixD    &matrix);
   TMatrixDDiag_const(const TMatrixDSym &matrix);
+  virtual ~TMatrixDDiag_const() { }
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -319,6 +324,7 @@ public:
   TMatrixDFlat_const() { fMatrix = 0; fNelems = 0; fPtr = 0; }
   TMatrixDFlat_const(const TMatrixD    &matrix);
   TMatrixDFlat_const(const TMatrixDSym &matrix);
+  virtual ~TMatrixDFlat_const() { }
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
@@ -384,6 +390,7 @@ public:
   TMatrixDSub_const() { fRowOff = fColOff = fNrowsSub = fNcolsSub = 0; fMatrix = 0; }
   TMatrixDSub_const(const TMatrixD    &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixDSub_const(const TMatrixDSym &matrix,Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
+  virtual ~TMatrixDSub_const() { }
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline       Int_t         GetRowOff() const { return fRowOff; }
@@ -458,6 +465,7 @@ protected:
 public:
   TMatrixDSparseRow_const() { fMatrix = 0; fRowInd = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
   TMatrixDSparseRow_const(const TMatrixDSparse &matrix,Int_t row);
+  virtual ~TMatrixDSparseRow_const() { }
 
   inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
   inline const Double_t     *GetDataPtr () const { return fDataPtr; }
@@ -527,6 +535,7 @@ protected:
 public:
   TMatrixDSparseDiag_const() { fMatrix = 0; fNdiag = 0; fDataPtr = 0; }
   TMatrixDSparseDiag_const(const TMatrixDSparse &matrix);
+  virtual ~TMatrixDSparseDiag_const() { }
 
   inline const TMatrixDBase *GetMatrix () const { return fMatrix; }
   inline const Double_t     *GetDataPtr() const { return fDataPtr; }
@@ -556,7 +565,7 @@ public:
   TMatrixDSparseDiag(const TMatrixDSparseDiag &md);
 
   inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
-  
+
   inline       Double_t  operator()(Int_t i) const { Assert(fMatrix->IsValid());
                                                      Assert(i < fNdiag && i >= 0);
                                                      const Int_t    * const pR = fMatrix->GetRowIndexArray();

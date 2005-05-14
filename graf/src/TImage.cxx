@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.1 2002/08/09 13:56:00 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.2 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -23,7 +23,6 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
-#include "TH2.h"
 
 ClassImp(TImage)
 

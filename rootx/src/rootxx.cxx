@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.6 2004/01/10 00:53:28 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.7 2004/01/15 18:14:06 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -269,6 +269,8 @@ static int DrawCredits(bool draw, bool extended)
    // If extended is true draw or returns size for extended full
    // credits list.
 
+   if (!gFont) return 150;  // size not important no text will be drawn anyway
+
    int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    int y = lineSpacing;
 
@@ -380,7 +382,17 @@ void PopupLogo(bool about)
 
    gGC = XCreateGC(gDisplay, gLogoWindow, 0, 0);
    gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
-   XSetFont(gDisplay, gGC, gFont->fid);
+   if (!gFont) {
+      printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
+             "trying \"fixed\". Please fix your system so helvetica can be found, \n"
+             "this font typically is in the rpm (or pkg equivalent) package \n"
+             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");
+      gFont = XLoadQueryFont(gDisplay, "fixed");
+      if (!gFont)
+         printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
+   }
+   if (gFont)
+      XSetFont(gDisplay, gGC, gFont->fid);
    XSetForeground(gDisplay, gGC, fore);
    XSetBackground(gDisplay, gGC, back);
 

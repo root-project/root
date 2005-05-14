@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.12 2004/11/05 09:05:45 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.13 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -14,6 +14,8 @@
 
 
 //- data _____________________________________________________________________
+bool PyROOT::gDictLookupActive = false;
+
 PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
 
 namespace {

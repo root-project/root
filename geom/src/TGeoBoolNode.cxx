@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.18 2005/04/04 09:29:30 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.19 2005/04/05 10:17:00 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -361,8 +361,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
    TGeoBoolNode *node = (TGeoBoolNode*)this;
-   Double_t d1=0., d2=0., snxt=0., dd=0.;
-   Double_t epsil = 1.E-8;
+   Double_t d1=0., d2=0., snxt=0.;
    fLeftMat->MasterToLocalVect(dir, ldir);
    fRightMat->MasterToLocalVect(dir, rdir);
    fLeftMat->MasterToLocal(point, local);
@@ -371,32 +370,54 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
    fRightMat->MasterToLocal(point, local);
    Bool_t inside2 = fRight->Contains(local);
    if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
-   if (inside1 && inside2) {
-      if (d1<d2) {
-         snxt = d1;
-         node->SetSelected(1);
-      } else {
-         snxt = d2;
-         node->SetSelected(2);
-      }      
-   } else {
-      if (inside1) {
-         snxt = d1;   
-         node->SetSelected(1);
-      } else {
-         if (inside2) {
-            snxt = d2;
-            node->SetSelected(2);
-         } else {
-            return 0.;
-         }
-      }
-   }         
 
-   for (i=0; i<3; i++) master[i] += (snxt+epsil)*dir[i];
-   dd = DistFromInside(&master[0], dir, 3);
-   if (dd > 0.) dd += epsil;
-   snxt += dd;
+   while (inside1 || inside2) {
+      if (inside1 && inside2) {
+         if (d1<d2) {      
+            snxt += d1;
+            node->SetSelected(1);
+            // propagate to exit of left shape
+            inside1 = kFALSE;
+            for (i=0; i<3; i++) master[i] += d1*dir[i];
+            // check if propagated point is in right shape        
+            fRightMat->MasterToLocal(master, local);
+            inside2 = fRight->Contains(local);
+            if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
+         } else {
+            snxt += d2;
+            node->SetSelected(2);
+            // propagate to exit of right shape
+            inside2 = kFALSE;
+            for (i=0; i<3; i++) master[i] += d2*dir[i];
+            // check if propagated point is in left shape        
+            fLeftMat->MasterToLocal(master, local);
+            inside1 = fLeft->Contains(local);
+            if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+         }
+      } 
+      if (inside1) {
+         snxt += d1;   
+         node->SetSelected(1);
+         // propagate to exit of left shape
+         inside1 = kFALSE;
+         for (i=0; i<3; i++) master[i] += d1*dir[i];
+         // check if propagated point is in right shape        
+         fRightMat->MasterToLocal(master, local);
+         inside2 = fRight->Contains(local);
+         if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
+      }   
+      if (inside2) {
+         snxt += d2;
+         node->SetSelected(2);
+         // propagate to exit of right shape
+         inside2 = kFALSE;
+         for (i=0; i<3; i++) master[i] += d2*dir[i];
+         // check if propagated point is in left shape        
+         fLeftMat->MasterToLocal(master, local);
+         inside1 = fLeft->Contains(local);
+         if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+      }
+   }      
    return snxt;
 }
 //-----------------------------------------------------------------------------
@@ -999,8 +1020,6 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
    Int_t i;
    Double_t d1 = 0.;
    Double_t d2 = 0.;
-   Double_t dd = 0.;
-   Double_t epsil = 1.E-8;
    fLeftMat->MasterToLocal(point, lpt);
    fRightMat->MasterToLocal(point, rpt);
    fLeftMat->MasterToLocalVect(dir, ldir);
@@ -1008,30 +1027,44 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
    Bool_t inleft = fLeft->Contains(lpt);
    Bool_t inright = fRight->Contains(rpt);
    node->SetSelected(0);
-   if (inleft && inright) return 0.;
+   Double_t snext = 0.0;
+   if (inleft && inright) return snext;
 
-   if (!inleft)  {
-      d1 = fLeft->DistFromOutside(lpt,ldir,iact,step,safe);
-      if (d1>1E20) return TGeoShape::Big();
-   }
+   while (1) {
+      d1 = d2 = 0.0;
+      if (!inleft)  {
+         d1 = fLeft->DistFromOutside(lpt,ldir,3);
+         if (d1>1E20) return TGeoShape::Big();
+      }
+      if (!inright) {  
+         d2 = fRight->DistFromOutside(rpt,rdir,3);
+         if (d2>1E20) return TGeoShape::Big();
+      }
    
-   if (!inright) {  
-      d2 = fRight->DistFromOutside(rpt,rdir,iact,step,safe);
-      if (d2>1E20) return TGeoShape::Big();
-   }
-   Double_t snext;
-   if (d1>d2) {
-      snext = d1;
-      node->SetSelected(1);
-   } else {
-      snext = d2;
-      node->SetSelected(2);
+      if (d1>d2) {
+         // propagate to left shape
+         snext += d1;
+         node->SetSelected(1);
+         inleft = kTRUE;
+         for (i=0; i<3; i++) master[i] += d1*dir[i];
+         fRightMat->MasterToLocal(master,rpt);
+         // check if propagated point is inside right shape
+         inright = fRight->Contains(rpt);
+         if (inright) return snext;
+         // here inleft=true, inright=false         
+      } else {
+         // propagate to right shape
+         snext += d2;
+         node->SetSelected(2);
+         inright = kTRUE;
+         for (i=0; i<3; i++) master[i] += d2*dir[i];
+         fLeftMat->MasterToLocal(master,lpt);
+         // check if propagated point is inside left shape
+         inleft = fLeft->Contains(lpt);
+         if (inleft) return snext;
+         // here inleft=false, inright=true
+      }            
    }   
-   for (i=0; i<3; i++) master[i] += (snext+epsil)*dir[i];
-   if (Contains(master)) return snext;
-   dd = DistFromOutside(master,dir,iact,step,safe);
-   if (dd > 0.) dd += epsil;
-   snext += dd;
    return snext;
 }      
 

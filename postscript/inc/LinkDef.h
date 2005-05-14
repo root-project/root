@@ -1,4 +1,4 @@
-/* @(#)root/postscript:$Name:  $:$Id: LinkDef.h,v 1.3 2002/02/14 18:04:15 brun Exp $ */
+/* @(#)root/postscript:$Name:  $:$Id: LinkDef.h,v 1.4 2004/02/13 17:04:35 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,5 +17,6 @@
 #pragma link C++ class TPostScript+;
 #pragma link C++ class TSVG+;
 #pragma link C++ class TPDF+;
+#pragma link C++ class TImageDump+;
 
 #endif

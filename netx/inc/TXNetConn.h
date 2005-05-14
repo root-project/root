@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.h,v 1.3 2004/12/08 14:34:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.h,v 1.4 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -72,7 +72,9 @@ public:
    Int_t             fLastDataBytesRecv;
    Int_t             fLastDataBytesSent;
    XErrorCode        fOpenError;
+   TString           fOpenErrorMsg;
 
+   ServerResponseHeader fLastServerResp;
 
    TXNetConn();
    virtual ~TXNetConn();
@@ -145,7 +147,7 @@ private:
    TXMessage          *ClientServerCmd(ClientRequest *req, const void *reqMoreData,
                                    void **answMoreDataAllocated, void *answMoreData,
                                    Bool_t HasToAlloc);
-   Bool_t              DoAuthentication(const char *usr, char *list);
+   Bool_t              DoAuthentication(char *list, int lsiz);
    ServerType          DoHandShake(Short_t log);
    Bool_t              DoLogin();
 

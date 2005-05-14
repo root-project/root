@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.42 2005/04/01 05:06:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.43 2005/04/01 13:51:31 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -259,9 +259,16 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
 {
    // The linstyle corresponds to TPad line style
 
-   static const char* dashed = "\x5\x5";
-   static const char* dotted= "\x1\x3";
-   static const char* dasheddotted = "\x5\x3\x1\x3";
+   static const char* dashed = "\x3\x3";
+   static const char* dotted= "\x1\x2";
+   static const char* dasheddotted = "\x3\x4\x1\x4";
+   static const char* ls05 = "\x5\x3\x1\x3";
+   static const char* ls06 = "\x5\x3\x1\x3\x1\x3\x1\x3";
+   static const char* ls07 = "\x5\x5";
+   static const char* ls08 = "\x5\x3\x1\x3\x1\x3";
+   static const char* ls09 = "\x20\x5";
+   static const char* ls10 = "\x20\x10\x1\x10";
+
 
    if (linestyle <= 1)  {
       fLineGC->SetLineStyle(kLineSolid);
@@ -275,6 +282,24 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
             break;
          case 4:
             fLineGC->SetDashList(dasheddotted, 4);
+            break;
+         case 5:
+            fLineGC->SetDashList(ls05, 4);
+            break;
+         case 6:
+            fLineGC->SetDashList(ls06, 8);
+            break;
+         case 7:
+            fLineGC->SetDashList(ls07, 2);
+            break;
+         case 8:
+            fLineGC->SetDashList(ls08, 6);
+            break;
+         case 9:
+            fLineGC->SetDashList(ls09, 2);
+            break;
+         case 10:
+            fLineGC->SetDashList(ls10, 4);
             break;
       }
    }

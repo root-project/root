@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.22 2005/03/10 17:30:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.26 2005/04/20 14:08:05 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 #include "TPluginManager.h"
 
 // Remove when TViewer3DPad fix in ExecuteRotateView() is removed
-#include "TViewer3DPad.h"
+#include "TVirtualViewer3D.h"
 
 ClassImp(TView)
 
@@ -103,9 +103,9 @@ TView::TView(Int_t system)
           h->ExecPlugin(0);
       }
    }
-         
+
    SetBit(kMustCleanup);
-   
+
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
@@ -167,7 +167,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
           h->ExecPlugin(0);
       }
    }
-         
+
    SetBit(kMustCleanup);
 
    fSystem = system;
@@ -230,7 +230,7 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
           h->ExecPlugin(0);
       }
    }
-         
+
    SetBit(kMustCleanup);
 
    fSystem = system;
@@ -414,13 +414,13 @@ void TView::DefinePerspectiveView()
 //   Output :
 //      nper[16] - normalizing transformation
 // compute tr+rot to get COV in origin, view vector parallel to -Z axis, up vector
-// parralel to Y.
+// parallel to Y.
 //                      ^Yv   UP ^  proj. plane
 //                     |        |   /|
 //                    |        |  /  |
 //                   |   dproj  /  x--- center of window (COW)
 //              COV |----------|--x--|------------> Zv
-//		             /           | VRP'z 
+//		             /           | VRP'z
 //	              /   --->      |  /
 //             /     VPN       |/
 //            Xv
@@ -428,87 +428,87 @@ void TView::DefinePerspectiveView()
 //   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
 //   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
 //   3 - left-handed screen reference to right-handed one of MARS : Trl
-//   
+//
 //   T12 = Tper*R*Trl
 //
    Double_t t12[16];
    Double_t cov[3];
    Int_t i;
    for (i=0; i<3; i++) cov[i] = 0.5*(fRmax[i]+fRmin[i]);
-   
+
    Double_t c1 = TMath::Cos(fPsi*kRad);
    Double_t s1 = TMath::Sin(fPsi*kRad);
    Double_t c2 = TMath::Cos(fLatitude*kRad);
    Double_t s2 = TMath::Sin(fLatitude*kRad);
    Double_t s3 = TMath::Cos(fLongitude*kRad);
    Double_t c3 = -TMath::Sin(fLongitude*kRad);
-   
+
    t12[0] =  c1*c3 - s1*c2*s3;
    t12[4] =  c1*s3 + s1*c2*c3;
    t12[8] =  s1*s2;
    t12[3] =  0;
-   
+
    t12[1] =  -s1*c3 - c1*c2*s3;
    t12[5] = -s1*s3 + c1*c2*c3;
    t12[9] =  c1*s2;
    t12[7] =  0;
-   
+
    t12[2] =  s2*s3;
    t12[6] =  -s2*c3;
    t12[10] = c2;      // contains Trl
    t12[11] =  0;
-   
+
    // translate with -COP (before rotation):
    t12[12] = -(cov[0]*t12[0]+cov[1]*t12[4]+cov[2]*t12[8]);
    t12[13] = -(cov[0]*t12[1]+cov[1]*t12[5]+cov[2]*t12[9]);
    t12[14] = -(cov[0]*t12[2]+cov[1]*t12[6]+cov[2]*t12[10]);
    t12[15] =  1;
-   
+
    // translate with (0, 0, -dview) after rotation
-   
+
    t12[14] -= fDview;
-   
+
    // reflection on Z :
    t12[2]  *= -1;
    t12[6]  *= -1;
    t12[10] *= -1;
-   t12[14] *= -1; 
-   
+   t12[14] *= -1;
+
    // Now we shear the center of window from (0.5*(umin+umax), 0.5*(vmin+vmax), dproj)
    //                                     to (0, 0, dproj)
-   
-   Double_t a2 = -fUVcoord[0]/fDproj;   // shear coef. on x  
-   Double_t b2 = -fUVcoord[1]/fDproj;   // shear coef. on y   
-   
+
+   Double_t a2 = -fUVcoord[0]/fDproj;   // shear coef. on x
+   Double_t b2 = -fUVcoord[1]/fDproj;   // shear coef. on y
+
    //               | 1  0  0  0 |
    //  SHz(a2,b2) = | 0  1  0  0 |
    //               | a2 b2 1  0 |
    //               | 0  0  0  1 |
-   
+
    fTnorm[0] = t12[0] + a2*t12[2];
    fTnorm[1] = t12[1] + b2*t12[2];
    fTnorm[2] = t12[2];
    fTnorm[3] = 0;
-   
+
    fTnorm[4] = t12[4] + a2*t12[6];
    fTnorm[5] = t12[5] + b2*t12[6];
    fTnorm[6] = t12[6];
    fTnorm[7] = 0;
-      
+
    fTnorm[8]  = t12[8] + a2*t12[10];
    fTnorm[9]  = t12[9] + b2*t12[10];
    fTnorm[10] = t12[10];
    fTnorm[11] = 0;
-   
+
    fTnorm[12] = t12[12] + a2*t12[14];
    fTnorm[13] = t12[13] + b2*t12[14];
    fTnorm[14] = t12[14];
    fTnorm[15] = 1;
-   
+
    // Scale so that the view volume becomes the canonical one
    //
    // Sper = (2/(umax-umin), 2/(vmax-vmin), 1/dproj
-   // 
+   //
    Double_t sz = 1./fDproj;
    Double_t sx = 1./fUVcoord[2];
    Double_t sy = 1./fUVcoord[3];
@@ -556,7 +556,7 @@ void TView::DefineViewDirection(const Double_t *s, const Double_t *c,
     if (IsPerspective()) {
        DefinePerspectiveView();
        return;
-    }   
+    }
     Int_t i, k;
     Double_t tran[16]   /* was [4][4] */, rota[16]      /* was [4][4] */;
     Double_t c1, c2, c3, s1, s2, s3, scalex, scaley, scalez;
@@ -702,7 +702,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
 
-//*-*-    Remember position of the cube
+      // remember position of the cube
       xmin   = gPad->GetX1();
       ymin   = gPad->GetY1();
       xrange = gPad->GetX2() - xmin;
@@ -722,15 +722,15 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       newlatitude  = oldlatitude  =  90 - gPad->GetTheta();
       psideg       = GetPsi();
 
-      //if outline isn't set, make it look like a cube
+      // if outline isn't set, make it look like a cube
       if(!fOutline)
           SetOutlineToCube();
       break;
 
    case kButton1Motion:
    {
-//*-*-    Draw the surrounding frame for the current mouse position
-//*-*-       First: Erase old frame
+      // draw the surrounding frame for the current mouse position
+      // first: Erase old frame
       fChanged = kTRUE;
       if (framewasdrawn) fOutline->Paint();
       framewasdrawn = 1;
@@ -751,35 +751,34 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       ResetView(newlongitude, newlatitude, psideg, irep);
       fOutline->Paint();
 
+      break;
+   }
+   case kButton1Up:
+
       // Temporary fix for 2D drawing problems on pad. fOutline contains
       // a TPolyLine3D object for the rotation box. This will be painted
-      // through a newly created TViewer3DPad instance, which is left 
+      // through a newly created TViewer3DPad instance, which is left
       // behind on pad. This remaining creates 2D drawing problems.
       //
       // This is a TEMPORARY fix - will be removed when proper multiple viewers
       // on pad problems are resolved.
       if (gPad) {
-         TViewer3DPad * viewer3DPad = dynamic_cast<TViewer3DPad *>(gPad->GetViewer3D());
-         if (viewer3DPad) {
+         TVirtualViewer3D *viewer = gPad->GetViewer3D();
+         if (viewer && !strcmp(viewer->IsA()->GetName(),"TViewer3DPad")) {
             gPad->ReleaseViewer3D();
-            delete viewer3DPad;
+            delete viewer;
          }
       }
       // End fix
-      
-      break;
-   }
-   case kButton1Up:
 
-//*-*-   Recompute new view matrix and redraw
-
+      // Recompute new view matrix and redraw
       psideg = GetPsi();
       SetView(newlongitude, newlatitude, psideg, irep);
       gPad->SetPhi(-90-newlongitude);
       gPad->SetTheta(90-newlatitude);
       gPad->Modified(kTRUE);
 
-//*-*-    Set line color, style and width
+      // Set line color, style and width
       gVirtualX->SetLineColor(-1);
       gVirtualX->SetLineStyle(-1);
       gVirtualX->SetLineWidth(-1);
@@ -1051,7 +1050,7 @@ Double_t TView::GetExtent() const
    Double_t dz = 0.5*(fRmax[2]-fRmin[2]);
    Double_t extent = TMath::Sqrt(dx*dx+dy*dy+dz*dz);
    return extent;
-}   
+}
 
 
 //______________________________________________________________________________
@@ -1081,7 +1080,7 @@ void TView::GetWindow(Double_t &u0, Double_t &v0, Double_t &du, Double_t &dv) co
    v0 = fUVcoord[1];
    du = fUVcoord[2];
    dv = fUVcoord[3];
-}   
+}
 
 //______________________________________________________________________________
 Bool_t TView::IsClippedNDC(Double_t *p) const
@@ -1092,7 +1091,7 @@ Bool_t TView::IsClippedNDC(Double_t *p) const
    if (TMath::Abs(p[0])>p[2]) return kTRUE;
    if (TMath::Abs(p[1])>p[2]) return kTRUE;
    return kFALSE;
-}   
+}
 
 //______________________________________________________________________________
 void TView::NDCtoWC(const Float_t* pn, Float_t* pw)
@@ -1304,7 +1303,7 @@ void TView::SetDefaultWindow()
    fDview = 3*extent;
    fDproj = 0.5*extent;
    // widh in pixels
-   fUpix = gPad->GetWw()*gPad->GetAbsWNDC(); 
+   fUpix = gPad->GetWw()*gPad->GetAbsWNDC();
    // height in pixels
    fVpix = gPad->GetWh()*gPad->GetAbsHNDC();
    du = 0.5*screen_factor*fDproj;
@@ -1348,7 +1347,7 @@ void TView::SetOutlineToCube()
 }
 
 //______________________________________________________________________________
-void TView::SetParralel()
+void TView::SetParallel()
 {
    if (!IsPerspective()) return;
    SetBit(kPerspective, kFALSE);
@@ -1436,7 +1435,7 @@ void TView::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
    fUVcoord[1] = v0;
    fUVcoord[2] = du;
    fUVcoord[3] = dv;
-}   
+}
 
 //______________________________________________________________________________
 void TView::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
@@ -1453,7 +1452,7 @@ void TView::ResizePad()
    Double_t upix = fUpix;
    Double_t vpix = fVpix;
    // widh in pixels
-   fUpix = gPad->GetWw()*gPad->GetAbsWNDC(); 
+   fUpix = gPad->GetWw()*gPad->GetAbsWNDC();
    // height in pixels
    fVpix = gPad->GetWh()*gPad->GetAbsHNDC();
    Double_t u0 = fUVcoord[0]*fUpix/upix;
@@ -1463,7 +1462,7 @@ void TView::ResizePad()
    SetWindow(u0, v0, du, dv);
    DefinePerspectiveView();
 }
-   
+
 //______________________________________________________________________________
 void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
@@ -1502,7 +1501,7 @@ void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
     if (IsPerspective()) {
        DefinePerspectiveView();
        return;
-    }   
+    }
 
     c1 = TMath::Cos(longitude*kRad);
     s1 = TMath::Sin(longitude*kRad);
@@ -1538,10 +1537,10 @@ void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
        } else {
           pn[0] *= 1000.;
           pn[1] *= 1000.;
-       }      
+       }
        return;
     }
-    // parralel view   
+    // parallel view
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
@@ -1569,15 +1568,15 @@ void TView::WCtoNDC(const Double_t *pw, Double_t *pn)
        } else {
           pn[0] *= 1000.;
           pn[1] *= 1000.;
-       }      
+       }
        return;
     }
-    // parralel view   
+    // parallel view
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
-} 
-    
+}
+
 //_______________________________________________________________________________________
 void TView::AdjustPad(TVirtualPad *pad)
 {
@@ -1702,7 +1701,7 @@ void TView::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
   AdjustPad(pad);
 }
 //_______________________________________________________________________________________
-void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps, 
+void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps,
                       Double_t dlong, Double_t dlat, Double_t dpsi)
 {
 // Move focus to a different box position and extent in nsteps. Perform rotation
@@ -1722,21 +1721,21 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
    Double_t dox = cov[0]-oc[0];
    Double_t doy = cov[1]-oc[1];
    Double_t doz = cov[2]-oc[2];
-   
+
    Double_t dd = TMath::Sqrt(dox*dox+doy*doy+doz*doz);
    if (dd!=0) {;
       dir[0] = dox/dd;
       dir[1] = doy/dd;
       dir[2] = doz/dd;
-   }      
+   }
    dd *= fc;
-   dox = fc*(dx-od[0]);            
-   doy = fc*(dy-od[1]);            
-   doz = fc*(dz-od[2]);    
+   dox = fc*(dx-od[0]);
+   doy = fc*(dy-od[1]);
+   doz = fc*(dz-od[2]);
    for (i=0; i<nsteps; i++) {
-      oc[0] += dd*dir[0];       
-      oc[1] += dd*dir[1];       
-      oc[2] += dd*dir[2];       
+      oc[0] += dd*dir[0];
+      oc[1] += dd*dir[1];
+      oc[2] += dd*dir[2];
       od[0]  += dox;
       od[1]  += doy;
       od[2]  += doz;
@@ -1754,8 +1753,8 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
          gPad->Update();
       }
    }
-}            
-      	 
+}
+
 //_______________________________________________________________________________________
 void TView::MoveViewCommand(Char_t option, Int_t count)
 {
@@ -1832,12 +1831,12 @@ void TView::MoveWindow(Char_t option)
            break;
        default:
           return;
-   }       
+   }
    DefinePerspectiveView();
    if (gPad) {
       gPad->Modified();
       gPad->Update();
-   }   
+   }
 }
 
 //_______________________________________________________________________________________
@@ -1850,12 +1849,12 @@ void TView::ZoomIn()
       fDview -= fc*extent;
    } else {
       fDview /= 1.25;
-   }            
+   }
    DefinePerspectiveView();
    if (gPad) {
       gPad->Modified();
       gPad->Update();
-   }   
+   }
 }
 
 //_______________________________________________________________________________________
@@ -1868,12 +1867,12 @@ void TView::ZoomOut()
       fDview += fc*extent;
    } else {
       fDview *= 1.25;
-   }            
+   }
    DefinePerspectiveView();
    if (gPad) {
       gPad->Modified();
       gPad->Update();
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -1941,7 +1940,7 @@ void TView::Streamer(TBuffer &R__b)
          R__b >> fAutoRange;
       }
       //====end of old versions
-      
+
    } else {
       TView::Class()->WriteBuffer(R__b,this);
    }

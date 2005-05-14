@@ -87,9 +87,16 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Up:
       x1 = gPad->AbsPixeltoX(px);
       y1 = gPad->AbsPixeltoY(py);
+      if (gPad->GetLogx()) {
+         x0 = TMath::Power(10,x0);
+         x1 = TMath::Power(10,x1);
+      }
+      if (gPad->GetLogy()) {
+         y0 = TMath::Power(10,y0);
+         y1 = TMath::Power(10,y1);
+      }
       xc = 0.5*(x0+x1);
       yc = 0.5*(y0+y1);
-
       if (mode == kArc) {
          r1 = 0.5*TMath::Abs(x1-x0);
          el = new TArc(xc, yc, r1);
@@ -152,20 +159,30 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       x1 = gPad->AbsPixeltoX(px);
       y1 = gPad->AbsPixeltoY(py);
       gPad->Modified(kTRUE);
-
+      if (gPad->GetLogx()) {
+         x0 = TMath::Power(10,x0);
+         x1 = TMath::Power(10,x1);
+      }
+      if (gPad->GetLogy()) {
+         y0 = TMath::Power(10,y0);
+         y1 = TMath::Power(10,y1);
+      }
       if (mode == kLine) {
          line = new TLine(x0,y0,x1,y1);
          line->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
-         arrow = new TArrow(x0,y0,x1,y1,0.03,"|>");
-         arrow->SetFillColor(1);
+         arrow = new TArrow(x0,y0,x1,y1 
+                            , TArrow::GetDefaultArrowSize()
+                            , TArrow::GetDefaultOption());
          arrow->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
       }
       if (mode == kCurlyLine) {
-         cline = new TCurlyLine(x0,y0,x1,y1);
+         cline = new TCurlyLine(x0,y0,x1,y1
+                                , TCurlyLine::GetDefaultWaveLength()
+                                , TCurlyLine::GetDefaultAmplitude());
          cline->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
@@ -174,7 +191,9 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))));
          phimin = 0;
          phimax = 360;
-         cline = new TCurlyArc(x0,y0,radius,phimin,phimax);
+         cline = new TCurlyArc(x0,y0,radius,phimin,phimax
+                                , TCurlyArc::GetDefaultWaveLength()
+                                , TCurlyArc::GetDefaultAmplitude());
          cline->Draw();
          gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
       }
@@ -401,7 +420,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          if (mode == kPolyLine) {
             gr = new TGraph(2);
             gr->ResetBit(TGraph::kClipFrame);
-      
+
          } else {
             gr = (TGraph*)gROOT->ProcessLineFast(
                  Form("new %s(\"CUTG\",%d",
@@ -466,6 +485,8 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Down:
       x = gPad->AbsPixeltoX(px);
       y = gPad->AbsPixeltoY(py);
+      if (gPad->GetLogx()) x = TMath::Power(10,x);
+      if (gPad->GetLogy()) y = TMath::Power(10,y);
       if (mode == kMarker) {
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
          marker->Draw();

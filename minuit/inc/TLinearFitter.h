@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.2 2005/03/04 09:14:26 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.h,v 1.3 2005/03/04 15:32:26 rdm Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -164,21 +164,21 @@ private:
    TVectorD     fTValues;        //T-Values of parameters
    TVectorD     fParSign;        //significance levels of parameters
    TMatrixDSym  fDesign;         //matrix AtA
-   TMatrixDSym  fDesignTemp;     //temporary matrix, used for num.stability
-   TMatrixDSym  fDesignTemp2;
-   TMatrixDSym  fDesignTemp3;
+   TMatrixDSym  fDesignTemp;     //! temporary matrix, used for num.stability
+   TMatrixDSym  fDesignTemp2;    //!
+   TMatrixDSym  fDesignTemp3;    //!
 
    TVectorD     fAtb;            //vector Atb
-   TVectorD     fAtbTemp;        //temporary vector, used for num.stability
-   TVectorD     fAtbTemp2;
-   TVectorD     fAtbTemp3;
+   TVectorD     fAtbTemp;        //! temporary vector, used for num.stability
+   TVectorD     fAtbTemp2;       //!
+   TVectorD     fAtbTemp3;       //!
 
    Bool_t       *fFixedParams;   //array of fixed/released params
 
    TObjArray    fFunctions;      //array of basis functions
    TVectorD     fY;              //the values being fit
    Double_t     fY2;             //sum of square of y, used for chisquare
-   Double_t     fY2Temp;         //temporary variable used for num.stability
+   Double_t     fY2Temp;         //! temporary variable used for num.stability
    TMatrixD     fX;              //values of x
    TVectorD     fE;              //the errors if they are known
    TFormula     *fInputFunction; //the function being fit
@@ -193,11 +193,9 @@ private:
    char         *fFormula;       //the formula
    Bool_t       fIsSet;          //Has the formula been set?
    Bool_t       fStoreData;      //Is the data stored?
+   Bool_t       fCorrect;        //correcting for the case y>>e
 
    Double_t     fChisquare;      //Chisquare of the fit
-
-   Double_t     fEsum;           //used to check the num.stability of chisquare
-   Double_t     fEcorsum;        //used to check the num.stability of chisquare
 
    void AddToDesign(Double_t *x, Double_t y, Double_t e);
    void GraphLinearFitter();

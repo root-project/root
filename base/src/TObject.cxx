@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.67 2005/01/17 19:37:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.69 2005/04/12 13:45:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -417,7 +417,9 @@ TObject *TObject::FindObject(const TObject *) const
 Option_t *TObject::GetDrawOption() const
 {
    // Get option used by the graphics system to draw this object.
-
+   // Note that before calling object.GetDrawOption(), you must
+   // have called object.Draw(..) before in the current pad.
+   
    if (!gPad) return "";
 
    TListIter next(gPad->GetListOfPrimitives());
@@ -654,7 +656,9 @@ void TObject::SetDrawOption(Option_t *option)
    // Set drawing option for object. This option only affects
    // the drawing style and is stored in the option field of the
    // TObjOptLink supporting a TPad's primitive list (TList).
-
+   // Note that it does not make sense to call object.SetDrawOption(option)
+   // before having called object.Draw().
+   
    if (!gPad || !option) return;
 
    TListIter next(gPad->GetListOfPrimitives());

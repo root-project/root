@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.26 2005/03/13 15:06:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.27 2005/03/30 04:07:29 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -58,17 +58,22 @@ class TStatus;
 
 class TProofPlayer : public TObject, public TQObject {
 
+public:
+   enum EExitStatus { kFinished, kStopped, kAborted };
+
 private:
    TList      *fAutoBins;  // Map of min/max values by name for slaves
 
 protected:
-   TList      *fInput;         //-> list with input objects
-   TList      *fOutput;        //   list with output objects
-   TSelector  *fSelector;      //!  the latest selector
-   TClass     *fSelectorClass; //!  class of the latest selector
-   TTimer     *fFeedbackTimer; //!  timer for sending intermediate results
-   TEventIter *fEvIter;        //!  iterator on events or objects
-   TStatus    *fSelStatus;     //!  status of query in progress
+   TList      *fInput;           //-> list with input objects
+   TList      *fOutput;          //   list with output objects
+   TSelector  *fSelector;        //!  the latest selector
+   TClass     *fSelectorClass;   //!  class of the latest selector
+   TTimer     *fFeedbackTimer;   //!  timer for sending intermediate results
+   TEventIter *fEvIter;          //!  iterator on events or objects
+   TStatus    *fSelStatus;       //!  status of query in progress
+   EExitStatus fExitStatus;      //   exit status
+   Long64_t    fEventsProcessed; //   number of events processed
 
    void       *GetSender() { return this; }  //used to set gTQSender
 
@@ -119,6 +124,10 @@ public:
                                    Double_t& zmin, Double_t& zmax);
 
    virtual Bool_t    IsClient() const { return kFALSE; }
+
+   virtual EExitStatus GetExitStatus() const { return fExitStatus; }
+   virtual Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
+   virtual void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
@@ -173,7 +182,7 @@ public:
    void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
    void           MergeOutput();
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
-   void           Progress(TSlave *, Long64_t total, Long64_t processed)
+   void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }
    void           Feedback(TList *objs); // *SIGNAL*
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);

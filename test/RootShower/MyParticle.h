@@ -20,6 +20,10 @@
 
 #include "TGListTree.h"
 #include "TVector3.h"
+#include "TClonesArray.h"
+#include "TRefArray.h"
+#include "TRef.h"
+#include "TPolyLine3D.h"
 #include "TParticle.h"
 
 class MyParticle : public TParticle {
@@ -37,12 +41,17 @@ private:
     Double_t    fTimeOfDecay;   // Generated decay time
     Int_t       fChild[6];      // Array of children indexes
 
+    Int_t       fNtrack;    
+    TObjArray   *fTracks;       // ->array with all tracks
+    
 public :
 
     MyParticle();
     ~MyParticle();
     MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &, Double_t, Double_t, Double_t);
     MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &);
+    TPolyLine3D *AddTrack(const TVector3 &, Int_t);
+    TPolyLine3D *AddTrack(Double_t, Double_t, Double_t, Int_t);
     Int_t       GetId() { return fId; }
     Int_t       GetStatus() { return fStatus; }
     Int_t       GetDecayType() { return fDecayType; }
@@ -55,7 +64,9 @@ public :
     Int_t       GetChildId(Int_t id) { return fChild[id]; }
     Double_t    GetTimeOfDecay() { return fTimeOfDecay; }
     Int_t       GetNChildren() { return fNChildren; }
+    Int_t       GetNTracks() { return fNtrack+1; }
     Char_t     *GetObjectInfo(Int_t px, Int_t py) const;
+    TPolyLine3D *GetTrack(Int_t at) const {return (TPolyLine3D*)fTracks->At(at);}
     const Char_t *GetName() const;
 
     void        SetId(Int_t id) { fId = id; }
@@ -70,6 +81,7 @@ public :
     void        SetMoment(const TVector3 &mom);
     void        SetMoment(const TVector3 &mom, Double_t energy) {
                     SetMomentum(mom.x(), mom.y(), mom.z(), energy); }
+    void        SetNextPoint(Int_t color);
     void        SetPassed(Double_t pass) { fPassed = pass; }
     void        AddELoss(Double_t eloss) { fEloss += eloss; }
     void        SetDecayLength(Double_t len) { fDecayLength = len; }

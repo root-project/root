@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.27 2004/12/16 19:33:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.28 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
    fCompress  = 0;
+   fTcpWindowSize = tcpwindowsize;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -107,6 +108,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
    fCompress  = 0;
+   fTcpWindowSize = tcpwindowsize;
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
@@ -146,6 +148,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
    fCompress  = 0;
+   fTcpWindowSize = tcpwindowsize;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
@@ -192,6 +195,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
    fCompress  = 0;
+   fTcpWindowSize = tcpwindowsize;
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
    if (fSocket == -1) {
@@ -835,11 +839,23 @@ Bool_t TSocket::Authenticate(const char *user)
          }
       }
 
+      // No control on credential forwarding in case of SSH authentication;
+      // switched it off on PROOF servers, unless the user knows what (s)he
+      // is doing
+      if (gROOT->IsProofServ()) {
+         if (!(gEnv->GetValue("ProofServ.UseSSH",0)))
+            auth->GetHostAuth()->RemoveMethod(TAuthenticate::kSSH);
+      }
+
       // Attempt authentication
       if (!auth->Authenticate()) {
          // Close the socket if unsuccessful
-         Error("Authenticate",
-               "authentication failed for %s@%s",auth->GetUser(),Host.Data());
+         if (auth->HasTimedOut() > 0)
+            Error("Authenticate",
+                  "timeout expired for %s@%s",auth->GetUser(),Host.Data());
+         else
+            Error("Authenticate",
+                  "authentication failed for %s@%s",auth->GetUser(),Host.Data());
          // This is to terminate properly remote proofd in case of failure
          if (fServType == kPROOFD)
             Send(Form("%d %s", gSystem->GetPid(), Host.Data()), kROOTD_CLEANUP);
