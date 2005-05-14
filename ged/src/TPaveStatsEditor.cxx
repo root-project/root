@@ -34,10 +34,9 @@
 #include "TGButtonGroup.h"
 #include "TVirtualPad.h"
 
-ClassImp(TGedFrame)
 ClassImp(TPaveStatsEditor)
 
-enum {
+enum EPaveStatsWid {
    kSTAT_NAME,
    kSTAT_ENTRIES,
    kSTAT_MEAN,

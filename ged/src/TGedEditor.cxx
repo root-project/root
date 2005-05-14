@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.17 2005/03/03 22:06:49 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.18 2005/05/12 13:57:32 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -73,10 +73,13 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       SetWindowName("Global Editor");
    }
    MapSubwindows();
-   Resize(GetDefaultSize());
+   if (canvas) {
+      UInt_t ch = fCanvas->GetWindowHeight();
+      Resize(GetWidth(), ch > 500 ? 500 : ch);
+   } else {
+      Resize(GetDefaultSize());
+   }
    MapWindow();
-   if (canvas) 
-      Resize(GetWidth(), canvas->GetWindowHeight());
 
    gROOT->GetListOfCleanups()->Add(this);
 }
@@ -283,13 +286,25 @@ void TGedEditor::Show()
       fCanvas->ToggleEditor();
 
    if (fGlobal) {
-      Int_t gedx = 0, gedy = fCanvas->GetWindowTopY() - 20;
+      UInt_t dw = fClient->GetDisplayWidth();
+      UInt_t cw = fCanvas->GetWindowWidth();
+      UInt_t ch = fCanvas->GetWindowHeight();
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
-      if (cx > GetWidth())
-         gedx = cx - GetWidth() - 20;
-      else
-         gedx = cx + fCanvas->GetWindowWidth() + 10;
-      MoveResize(gedx, gedy, GetWidth(), fCanvas->GetWindowHeight());
+      UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
+      
+      Int_t gedx = 0, gedy = 0;
+
+      if (cw + GetWidth() > dw) {
+          gedx = cx + cw - GetWidth();
+          gedy = ch - GetHeight();
+      } else {
+         if (cx > GetWidth())
+            gedx = cx - GetWidth() - 20;
+         else
+            gedx = cx + cw + 10;
+         gedy = cy - 20;
+      }
+      MoveResize(gedx, gedy, GetWidth(), ch > 500 ? 500 : ch);
       SetWMPosition(gedx, gedy);
    }
    MapWindow();

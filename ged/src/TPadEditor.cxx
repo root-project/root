@@ -40,10 +40,9 @@
 #include "TColor.h"
 #include "TCanvas.h"
 
-ClassImp(TGedFrame)
 ClassImp(TPadEditor)
 
-enum {
+enum EPadWid {
    kCOLOR,
    kPAD_FAR,
    kPAD_EDIT,

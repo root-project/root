@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.6 2004/08/10 09:39:56 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.7 2004/10/21 10:01:27 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -49,10 +49,9 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 
-ClassImp(TGedFrame)
 ClassImp(TAxisEditor)
 
-enum {
+enum EAxisWid {
    kCOL_AXIS,
    kCOL_TIT,
    kCOL_LBL,

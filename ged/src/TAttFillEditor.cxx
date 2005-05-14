@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.6 2004/12/15 20:18:25 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.7 2004/12/16 09:04:49 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -31,10 +31,9 @@
 #include "TColor.h"
 #include "TVirtualPad.h"
 
-ClassImp(TGedFrame)
 ClassImp(TAttFillEditor)
 
-enum {
+enum EFillWid {
    kCOLOR,
    kPATTERN
 };

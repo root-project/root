@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.6 2004/06/16 08:58:35 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.7 2004/10/18 10:13:46 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -39,13 +39,13 @@
 ClassImp(TGedMarkerSelect)
 ClassImp(TGedMarkerPopup)
 
-struct markerDescription_t {
+struct MarkerDescription_t {
    const char* filename;
    const char* name;
    int number;
 };
 
-static markerDescription_t  Markers[] = {
+static MarkerDescription_t  gMarkers[] = {
 
    {"marker1.xpm", "1", 1},
    {"marker2.xpm", "2", 2},
@@ -71,11 +71,11 @@ static markerDescription_t  Markers[] = {
    {0, 0, 0},
 };
 
-static markerDescription_t* GetMarkerByNumber(int number)
+static MarkerDescription_t* GetMarkerByNumber(int number)
 {
-   for (int i = 0; Markers[i].filename != 0; i++) {
-      if (Markers[i].number == number)
-          return &Markers[i];
+   for (int i = 0; gMarkers[i].filename != 0; i++) {
+      if (gMarkers[i].number == number)
+          return &gMarkers[i];
    }
    return 0;
 }
@@ -94,11 +94,11 @@ TGedMarkerPopup::TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t m
 
    SetLayoutManager(new TGTileLayout(this, 1));
 
-   for (int i = 0; Markers[i].filename != 0; i++) {
-      AddFrame(b = new TGPictureButton(this, Markers[i].filename,
-               Markers[i].number, TGButton::GetDefaultGC()(), kSunkenFrame),
+   for (int i = 0; gMarkers[i].filename != 0; i++) {
+      AddFrame(b = new TGPictureButton(this, gMarkers[i].filename,
+               gMarkers[i].number, TGButton::GetDefaultGC()(), kSunkenFrame),
                new TGLayoutHints(kLHintsLeft, 14, 14, 14, 14));
-      b->SetToolTipText(Markers[i].name);
+      b->SetToolTipText(gMarkers[i].name);
    }
 
    Resize(74, 90);
@@ -192,7 +192,7 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
       fPicture = 0;
    }
 
-   markerDescription_t *md = GetMarkerByNumber(fMarkerStyle);
+   MarkerDescription_t *md = GetMarkerByNumber(fMarkerStyle);
 
    if (md)  fPicture = gClient->GetPicture(md->filename);
 

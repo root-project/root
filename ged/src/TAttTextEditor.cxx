@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -35,10 +35,9 @@
 #include "snprintf.h"
 
 
-ClassImp(TGedFrame)
 ClassImp(TAttTextEditor)
 
-enum {
+enum ETextWid {
    kCOLOR,
    kFONT_SIZE,
    kFONT_STYLE,
@@ -159,16 +158,17 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       if (parm1 == kFONT_SIZE) {
 
          Float_t dy = fPad->AbsPixeltoY(0) - fPad->AbsPixeltoY(parm2);
-         Float_t TextSize;
+         Float_t textSize;
 
          if (fModel->InheritsFrom("TPaveLabel")) {
             TBox *pl = (TBox*) fModel;
-            TextSize = dy/(pl->GetY2() - pl->GetY1());
+            textSize = dy/(pl->GetY2() - pl->GetY1());
          }
          else
-            TextSize = dy/(fPad->GetY2() - fPad->GetY1());
+            textSize = dy/(fPad->GetY2() - fPad->GetY1());
 
-         fAttText->SetTextSize(TextSize);
+         fAttText->SetTextSize(textSize);
+         
          b = kTRUE;
       } else if (parm1 == kFONT_STYLE) {
          Int_t fontPrec = fAttText->GetTextFont()%10;

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.4 2004/07/02 15:43:56 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -35,10 +35,9 @@
 #include "snprintf.h"
 
 
-ClassImp(TGedFrame)
 ClassImp(TAttMarkerEditor)
 
-enum {
+enum EMarkerWid {
    kCOLOR,
    kMARKER,
    kMARKER_SIZE

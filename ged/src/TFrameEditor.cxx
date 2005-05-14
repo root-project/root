@@ -37,7 +37,7 @@
 
 ClassImp(TFrameEditor)
 
-enum {
+enum EFrameWid {
    kFR_BSIZE,
    kFR_BMODE
 };

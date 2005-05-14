@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.4 2004/07/05 06:42:05 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.5 2005/03/03 22:06:49 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -33,10 +33,9 @@
 #include "TAttLine.h"
 #include "TVirtualPad.h"
 
-ClassImp(TGedFrame)
 ClassImp(TAttLineEditor)
 
-enum {
+enum ELineWid {
    kCOLOR,
    kLINE_WIDTH,
    kLINE_STYLE

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.3 2004/02/22 11:50:29 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedToolBox.cxx,v 1.4 2004/04/22 16:28:28 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 17/07/2003
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 ClassImp(TGedToolBox)
 
-enum {
+enum EToolBox {
    kToolModify,
    kToolArc,
    kToolLine,
