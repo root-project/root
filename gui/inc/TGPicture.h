@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.6 2004/10/18 12:47:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.7 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -68,8 +68,6 @@ protected:
    // override default of TObject
    void Draw(Option_t * = "") { MayNotUse("Draw(Option_t*)"); }
 
-   static const char *HashName(const char *name, Int_t width, Int_t height);
-
 public:
    virtual ~TGPicture();
 
@@ -80,6 +78,7 @@ public:
    Pixmap_t    GetMask() const { return fMask; }
    Bool_t      IsScaled() const { return fScaled; }
    ULong_t     Hash() const { return fName.Hash(); }
+   static const char *HashName(const char *name, Int_t width, Int_t height);
 
    virtual void Draw(Handle_t id, GContext_t gc, Int_t x, Int_t y) const;
    void         Print(Option_t *option="") const;

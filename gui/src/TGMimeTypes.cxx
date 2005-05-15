@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.2 2000/12/13 15:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.3 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -178,10 +178,14 @@ const TGPicture *TGMimeTypes::GetIcon(const char *filename, Bool_t small_icon)
    const TGPicture  *mypic;
 
    if ((mime = Find(filename))) {
-      if (small_icon)
-         mypic = fClient->GetPicture(mime->fSIcon.Data(), 16, 16);
-      else
-         mypic = fClient->GetPicture(mime->fIcon.Data(), 32, 32);
+      Bool_t thumb = (mime->fType == "[thumbnail]");
+      if (small_icon) {
+         mypic = thumb ? fClient->GetPicture(mime->fSIcon.Data(), 32, 32) : 
+                         fClient->GetPicture(mime->fSIcon.Data(), 16, 16);
+      } else {
+         mypic = thumb ? fClient->GetPicture(mime->fIcon.Data(), 64, 64) :
+                         fClient->GetPicture(mime->fSIcon.Data(), 32, 32);
+      }
       return mypic;
    }
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.22 2005/05/03 13:11:32 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.24 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -141,11 +141,11 @@ void TASImage::SetDefaults()
    fScaledImage   = 0;
    fEditable      = kFALSE;
    fPaintMode     = 1;
-   fZoomUpdate    = kNoZoom;
    fZoomOffX      = 0;
    fZoomOffY      = 0;
    fZoomWidth     = 0;
    fZoomHeight    = 0;
+   fZoomUpdate    = kZoomOps;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -4696,6 +4696,7 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    if (!use_cache) {
       delete [] matrix;
    }
+asim_circle( ctx, 100, 100, 20, 1 );
 }
 
 //______________________________________________________________________________
@@ -4800,7 +4801,7 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 {
    // Returns in-memory buffer compressed according image type
    // Buffer must be deallocated after usage.
-   // Often this method is used for sending images over network. 
+   // This method can be used for sending images over network. 
 
    if (!fImage) return;
 
@@ -4900,6 +4901,7 @@ void TASImage::CreateThumbnail()
    // creates image thumbnail
 
    int size;
+   const int sz = 64;
 
    if (!fImage) {
       return;
@@ -4914,11 +4916,11 @@ void TASImage::CreateThumbnail()
    ASImage *img = 0;
 
    if (fImage->width > fImage->height) {
-      w = 32;
-      h = fImage->height/(fImage->width >> 5);
+      w = sz;
+      h = fImage->height/(fImage->width/sz);
    } else {
-      h = 32;
-      w = fImage->width/(fImage->height >> 5);
+      h = sz;
+      w = fImage->width/(fImage->height/sz);
    }
 
    img = scale_asimage(fgVisual, fImage, w, h, ASA_ASImage, 
@@ -4930,13 +4932,13 @@ void TASImage::CreateThumbnail()
    ASImage *padimg = 0;
    int d = 0;
 
-   if (w == 32) {
-      d = (32 - h) >> 1;
-      padimg = pad_asimage(fgVisual, img, 0, d, 32, 32, 0x00ffffff, 
+   if (w == sz) {
+      d = (sz - h) >> 1;
+      padimg = pad_asimage(fgVisual, img, 0, d, sz, sz, 0x00ffffff, 
                            ASA_ASImage, GetImageCompression(), GetImageQuality());
    } else {
-      d = (32 - w) >> 1;
-      padimg = pad_asimage(fgVisual, img, d, 0, 32, 32, 0x00ffffff, 
+      d = (sz - w) >> 1;
+      padimg = pad_asimage(fgVisual, img, d, 0, sz, sz, 0x00ffffff, 
                            ASA_ASImage, GetImageCompression(), GetImageQuality());
    }
 

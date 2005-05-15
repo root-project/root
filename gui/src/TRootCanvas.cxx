@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.75 2005/04/23 10:55:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.76 2005/05/12 12:07:07 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -158,6 +158,7 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "XPM",          "*.xpm",
                                       "JPEG",         "*.jpg",
                                       "TIFF",         "*.tiff",
+                                      "XCF",          "*.xcf",
                                       "All files",    "*",
                                       0,              0 };
 
@@ -796,6 +797,7 @@ again:
                             fn.EndsWith(".xpm")  ||
                             fn.EndsWith(".jpg")  ||
                             fn.EndsWith(".png")  ||
+                            fn.EndsWith(".xcf")  ||
                             fn.EndsWith(".tiff")) {
                            gSystem->Sleep(60); // give X server time to refresh
                            fCanvas->SaveAs(fn);

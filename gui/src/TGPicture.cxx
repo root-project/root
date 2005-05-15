@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.14 2004/12/07 15:34:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.15 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -270,11 +270,10 @@ const char *TGPicture::HashName(const char *name, Int_t width, Int_t height)
    // Static function returning a unique name used to look up a picture.
    // The unique name has the form "name__widthxheight".
 
-   static char hashName[256];
+   static TString hashName;
 
-   sprintf(hashName, "%s__%dx%d", name, width, height);
-
-   return hashName;
+   hashName.Form("%s__%dx%d", name, width, height);
+   return hashName.Data();
 }
 
 //______________________________________________________________________________

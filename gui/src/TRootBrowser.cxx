@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.64 2005/01/04 16:21:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.65 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -335,13 +335,14 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
 
    if (!(*pic) && xpm) {
       if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
-         *pic = gClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
+         *pic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
                                                       im->GetMask());
          im->Scale(im->GetWidth()/2, im->GetHeight()/2);
-         *spic = gClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
+         *spic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
                                                       im->GetMask());
       }
-      gClient->GetMimeTypeList()->AddType(iconname, iconname, iconname, iconname, "->Browse");
+
+      fClient->GetMimeTypeList()->AddType("[thumbnail]", iconname, iconname, iconname, "->Browse()");
       return;
    }
 
