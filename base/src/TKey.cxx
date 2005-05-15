@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.46 2004/09/10 09:40:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.47 2005/04/07 13:28:30 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -995,3 +995,29 @@ Int_t TKey::WriteFile(Int_t cycle)
   DeleteBuffer();
   return result==kTRUE ? -1 : nsize;
 }
+
+//______________________________________________________________________________
+const char *TKey::GetIconName() const
+{
+   // title can keep 32x32 xpm thumbnail/icon of the parent object.
+
+   return (!fTitle.IsNull() && fTitle.BeginsWith("/* ") ?  fTitle.Data() : 0);
+}
+
+//______________________________________________________________________________
+const char *TKey::GetTitle() const
+{
+   // returns title (title can contain 32x32 xpm thumbnail/icon)
+
+   if (!fTitle.IsNull() && fTitle.BeginsWith("/* ")) { // title contains xpm thumbnail
+      static TString ret;
+      int start = fTitle.Index("/*") + 3;
+      int stop = fTitle.Index("*/") - 1;
+      ret = fTitle(start, stop - start);
+      return ret.Data();
+   }
+   return fTitle.Data();
+}
+
+
+

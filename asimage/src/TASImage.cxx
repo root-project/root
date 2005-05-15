@@ -70,7 +70,7 @@
 #include "TPoint.h"
 #include "TFrame.h"
 #include "TTF.h"
-
+#include "TRandom.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -132,16 +132,20 @@ static __argb32__ *b = new __argb32__;
 
 ClassImp(TASImage)
 
-
 //______________________________________________________________________________
-TASImage::TASImage()
+void TASImage::SetDefaults()
 {
-   // Default image ctor.
+   // set default parameters
 
    fImage         = 0;
    fScaledImage   = 0;
    fEditable      = kFALSE;
    fPaintMode     = 1;
+   fZoomUpdate    = kNoZoom;
+   fZoomOffX      = 0;
+   fZoomOffY      = 0;
+   fZoomWidth     = 0;
+   fZoomHeight    = 0;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -150,19 +154,19 @@ TASImage::TASImage()
 }
 
 //______________________________________________________________________________
+TASImage::TASImage()
+{
+   // Default image ctor.
+
+   SetDefaults();
+}
+
+//______________________________________________________________________________
 TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
 {
    // create an empty image
 
-   fScaledImage   = 0;
-   fEditable      = kFALSE;
-   fPaintMode     = 1;
-
-   if (!fgInit) {
-      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
-   }
-
+   SetDefaults();
    fImage = fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
 }
 
@@ -173,16 +177,7 @@ TASImage::TASImage(const char *file, EImageFileTypes) : TImage(file)
    // For more information see description of function ReadImage()
    // which is called by this constructor.
 
-   fImage         = 0;
-   fScaledImage   = 0;
-   fEditable      = kFALSE;
-   fPaintMode     = 1;
-
-   if (!fgInit) {
-      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
-   }
-
+   SetDefaults();
    ReadImage(file);
 }
 
@@ -194,16 +189,7 @@ TASImage::TASImage(const char *name, const Double_t *imageData, UInt_t width,
    // For more information see function SetImage() which is called
    // by this constructor.
 
-   fImage         = 0;
-   fScaledImage   = 0;
-   fEditable      = kFALSE;
-   fPaintMode     = 1;
-
-   if (!fgInit) {
-      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
-   }
-
+   SetDefaults();
    SetImage(imageData, width, height, palette);
 }
 
@@ -216,16 +202,7 @@ TASImage::TASImage(const char *name, const TArrayD &imageData, UInt_t width,
    // For more information see function SetImage() which is called by
    // this constructor.
 
-   fImage         = 0;
-   fScaledImage   = 0;
-   fEditable      = kFALSE; 
-   fPaintMode     = 1;
-
-   if (!fgInit) {
-      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
-   }
-
+   SetDefaults();
    SetImage(imageData, width, palette);
 }
 
@@ -238,16 +215,7 @@ TASImage::TASImage(const char *name, const TVectorD &imageData, UInt_t width,
    // For more information see function SetImage() which is called by
    // this constructor.
 
-   fImage         = 0;
-   fScaledImage   = 0;
-   fEditable      = kFALSE;
-   fPaintMode     = 1;
-
-   if (!fgInit) {
-      set_application_name((char*)(gProgName ? gProgName : "ROOT"));
-      fgInit = kTRUE;
-   }
-
+   SetDefaults();
    SetImage(imageData, width, palette);
 }
 
@@ -269,7 +237,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
          memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
       }
 
-      fZoomUpdate = kZoom;
+      fZoomUpdate = kNoZoom;
       fZoomOffX   = img.fZoomOffX;
       fZoomOffY   = img.fZoomOffY;
       fZoomWidth  = img.fZoomWidth;
@@ -298,7 +266,7 @@ TASImage &TASImage::operator=(const TASImage &img)
       }
 
       fScaledImage = img.fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : 0;
-      fZoomUpdate = kZoom;
+      fZoomUpdate = kNoZoom;
       fZoomOffX   = img.fZoomOffX;
       fZoomOffY   = img.fZoomOffY;
       fZoomWidth  = img.fZoomWidth;
@@ -349,7 +317,7 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    fZoomHeight = fImage ? fImage->height : 0;
    fPaintMode     = 1;
 
-   SetName(file);
+   fName.Form("%s.", gSystem->BaseName(file));
 }
 
 //______________________________________________________________________________
@@ -778,22 +746,20 @@ void TASImage::Draw(Option_t *option)
    //
    // The default is to display the image in the current gPad.
 
-   static Bool_t calcBorder = kTRUE;
    static UInt_t bw = 0;
    static UInt_t bh = 0;
+
+   if (!fImage) {
+      Error("Draw", "no image set");
+      return;
+   }
 
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
-      TCanvas *c = new TCanvas(GetName(), Form("%s (%d x %d)", GetName(),
-                               fImage->width, fImage->height),
-                               fImage->width+bw, fImage->height+bh);
-      if (calcBorder) {
-         bw = c->GetWindowWidth() - c->GetWw();
-         bh = c->GetWindowHeight() - c->GetWh();
-         c->SetWindowSize(fImage->width+bw, fImage->height);
-         calcBorder = kFALSE;
-      }
+      new TCanvas(GetName(), Form("%s (%d x %d)", GetName(),
+                  fImage->width, fImage->height),
+                  fImage->width+bw, fImage->height+bh);
    }
 
    if (!opt.Contains("xxx")) {
@@ -938,11 +904,11 @@ void TASImage::Paint(Option_t *option)
                                           to_w, to_h, tile_tint, ASA_ASImage,
                                           GetImageCompression(), GetImageQuality());
       image = fScaledImage->fImage;
+
    } else if (fZoomUpdate == kZoomOps) {
       image = fImage;
 
    } else {
-
       // Scale and zoom image if needed
       if (Int_t(fImage->width) != to_w || Int_t(fImage->height) != to_h ||
           fImage->width != fZoomWidth || fImage->height != fZoomHeight) {
@@ -998,6 +964,7 @@ void TASImage::Paint(Option_t *option)
       static GContext_t gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gval);
       asimage2drawable(fgVisual, wid, image, (GC)gc, 0, 0, tox, toy,
                        image->width, image->height, 1);
+
 #else
       // Convert ASImage into DIB: 
       bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits );
@@ -1701,8 +1668,6 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    delete fScaledImage;
    fScaledImage = 0;
 
-   SetName("unknown");
-
    Int_t xy;
    UInt_t w, h;
 
@@ -1713,6 +1678,8 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(pxm, w, h) : 0;
    fImage = bitmap2asimage (bits, w, h, 0);
 #endif
+
+   fName.Form("img_%dx%d", fImage->width, fImage->height);
 }
 
 //______________________________________________________________________________
@@ -3243,6 +3210,25 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
                              const char *col, UInt_t thick)
 {
    // draw rectangle
+
+   if (!InitVisual()) {
+      Warning("DrawRectangle", "Visual not initiated");
+      return;
+   }
+
+   if (!fImage) {
+      Warning("DrawRectangle", "no image");
+      return;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!fImage->alt.argb32) {
+      Warning("DrawRectangle", "Failed to get pixel array");
+      return;
+   }
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -4808,13 +4794,264 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    }
 }
 
+/////////////////////////////////////////////////////////////////////////
+//_______________________________________________________________________
+void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
+{
+   // Returns in-memory buffer compressed according image type
+   // Buffer must be deallocated after usage.
+   // Often this method is used for sending images over network. 
+
+   if (!fImage) return;
+
+   ASImageExportParams params;
+   Bool_t ret = kFALSE;
+   int   isize = 0;
+   char *ibuff = 0;
+
+   switch (type) {
+      case TImage::kXpm:
+         ret = ASImage2xpmRawBuff(fImage, (CARD8 **)buffer, size, 0);
+         break;
+      default:
+         ret = ASImage2PNGBuff(fImage, (CARD8 **)buffer, size, &params);
+   }
+
+   if (!ret) {
+      *size = isize;
+      *buffer = ibuff;
+   }
+}
+
+//_______________________________________________________________________
+Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
+{
+   // create image from  compressed buffer
+   // Supported formats:
+   //
+   //    PNG - by default
+   //    XPM - two options exist:
+   //      1.  xpm as a single string (raw buffer). Such string 
+   //          is returned by GetImageBuffer method.
+   //
+   //    For example:
+   //       char *buf;
+   //       int sz;
+   //       im1->GetImageBuffer(&buf, &int, TImage::kXpm); /*raw buffer*/
+   //       TImage *im2 = TImage::Create();
+   //       im2->SetImageBuffer(&buf, TImage::kXpm);
+   //
+   //      2.  xpm as an array of strigs (preparsed)
+   //
+   //    For example:
+   //       char *xpm[] = {
+   //          "64 28 58 1",
+   //          "  c #0A030C",
+   //          ". c #1C171B"
+   //             ...
+   //    TImage *im = TImage::Create();
+   //    im->SetImageBuffer(xpm, TImage::kXpm);
+
+   if (fImage) destroy_asimage(&fImage);
+
+	ASImageImportParams params; 
+	params.flags = 0;
+	params.width = 0;
+	params.height = 0 ;
+	params.filter = SCL_DO_ALL ;
+	params.gamma = 0;
+	params.gamma_table = 0;
+	params.compression = 0;
+	params.format = ASA_ASImage;
+	params.search_path = 0;
+	params.subimage = 0;
+
+   switch (type) {
+      case TImage::kXpm:
+      {
+         char *ptr = buffer[0];
+         while (isspace((int)*ptr)) ++ptr;
+         if (atoi(ptr)) {  // preparsed and preloaded data
+            fImage = xpm_data2ASImage((const char**)buffer, &params);
+         } else {
+            fImage = xpmRawBuff2ASImage((const char*)*buffer, &params);
+         }
+         break;
+      }
+      default:
+         fImage = PNGBuff2ASimage((CARD8 *)*buffer, &params);
+         break;
+   }
+
+   if (!fImage) {
+      return kFALSE;
+   }
+ 
+   if (fName.IsNull()) { 
+      fName.Form("img_%dx%d.%d", fImage->width, fImage->height, gRandom->Integer(1000));
+   }
+   UnZoom();
+   return kTRUE;
+}
+
+//_______________________________________________________________________
+void TASImage::CreateThumbnail()
+{
+   // creates image thumbnail
+
+   int size;
+
+   if (!fImage) {
+      return;
+   }
+
+   if (!InitVisual()) {
+      return;
+   }
+
+   static char *buf = 0;
+   int w, h;
+   ASImage *img = 0;
+
+   if (fImage->width > fImage->height) {
+      w = 32;
+      h = fImage->height/(fImage->width >> 5);
+   } else {
+      h = 32;
+      w = fImage->width/(fImage->height >> 5);
+   }
+
+   img = scale_asimage(fgVisual, fImage, w, h, ASA_ASImage, 
+                       GetImageCompression(), GetImageQuality());
+   if (!img) {
+      return;
+   }
+
+   ASImage *padimg = 0;
+   int d = 0;
+
+   if (w == 32) {
+      d = (32 - h) >> 1;
+      padimg = pad_asimage(fgVisual, img, 0, d, 32, 32, 0x00ffffff, 
+                           ASA_ASImage, GetImageCompression(), GetImageQuality());
+   } else {
+      d = (32 - w) >> 1;
+      padimg = pad_asimage(fgVisual, img, d, 0, 32, 32, 0x00ffffff, 
+                           ASA_ASImage, GetImageCompression(), GetImageQuality());
+   }
+
+   if (!padimg) {
+      destroy_asimage(&img);
+      return;
+   }
+
+   ASImage2xpmRawBuff(padimg, (CARD8 **)&buf, &size, 0);
+   fTitle = buf;
+
+   destroy_asimage(&padimg);
+}
+
 //_______________________________________________________________________
 void TASImage::Streamer(TBuffer &b)
 {
-   // streamer
+   // streamer for ROOT I/O
+
+   Bool_t vec = kFALSE;
+   char *buffer = 0;
+   int size = 0;
+   int w, h;
 
    if (b.IsReading()) {
+      TNamed::Streamer(b);
+
+      b >> vec;
+      if (!vec) {                // read PNG compressed image
+         b >> size;
+         buffer = new char[size];
+         b.ReadFastArray(buffer, size);
+         SetImageBuffer(&buffer, TImage::kPng);
+         delete buffer;
+      } else {                   // read vector with palette
+         TAttImage::Streamer(b);
+         b >> w;
+         b >> h;
+         size = w*h;
+         Double_t *v = new Double_t[size];
+         b.ReadFastArray(v, size);
+         SetImage(v, w, h, &fPalette);
+      }
    } else {
+      if (!fImage) {
+         return;
+      }
+      if (fName.IsNull()) { 
+         fName.Form("img_%dx%d.%d", fImage->width, fImage->height, gRandom->Integer(1000));
+      }
+
+      TNamed::Streamer(b);
+
+      vec = fImage->alt.vector != 0;
+      b << vec;
+      if (!vec) {                // write PNG compressed image
+         GetImageBuffer(&buffer, &size, TImage::kPng);
+         b << size;
+         b.WriteFastArray(buffer, size);
+         delete buffer;
+      } else {                   // write vector  with palette
+         TAttImage::Streamer(b);
+         b << fImage->width;
+         b << fImage->height;
+         b.WriteFastArray(fImage->alt.vector, fImage->width*fImage->height);
+      }
    }
 }
+
+//_______________________________________________________________________
+void TASImage::Browse(TBrowser *)
+{
+   // browse image
+
+   if (fImage->alt.vector) {
+      Draw("n");
+   } else {
+      Draw("nxxx");
+   }
+   CreateThumbnail();
+}
+
+//_______________________________________________________________________
+const char *TASImage::GetTitle() const
+{
+   // title is used to keep 32x32 xpm image's thumbnail
+
+   TASImage *mutble = (TASImage *)this;
+
+   if (fTitle.IsNull()) {
+      mutble->SetTitle(fName.Data());
+   }
+
+   return fTitle.Data();
+}
+
+//_______________________________________________________________________
+void TASImage::SetTitle(const char *title)
+{
+   // set a title for an image
+
+   if (fTitle.IsNull()) {
+      CreateThumbnail();
+   }
+
+   if (fTitle.IsNull()) {
+      return;
+   }
+
+   int start = fTitle.Index("/*") + 3;
+   int stop = fTitle.Index("*/") - 1;
+
+   if ((start > 0) && (stop - start > 0)) {
+      fTitle.Replace(start, stop - start, title);
+   }
+}
+
 

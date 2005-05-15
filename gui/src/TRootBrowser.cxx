@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.63 2004/10/21 12:07:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.64 2005/01/04 16:21:29 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TSystemFile.h"
 #include "TInterpreter.h"
 #include "TGuiBuilder.h"
+#include "TImage.h"
 
 #include "HelpText.h"
 
@@ -315,23 +316,45 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    // Retrieve icons associated with class "name". Association is made
    // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
-   if(fCachedPicName==name) {
+   static TImage *im = 0;
+
+   TString xpm_magic(name, 3);
+   Bool_t xpm = xpm_magic == "/* ";
+   const char *iconname = xpm ? obj->GetName() : name; 
+
+   if(fCachedPicName == iconname) {
       *pic = fLargeCachedPic;
       *spic = fSmallCachedPic;
       return;
    }
 
-   *pic = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
+   if (!im) {
+      im = TImage::Create();
+   }
+   *pic = fClient->GetMimeTypeList()->GetIcon(iconname, kFALSE);
+
+   if (!(*pic) && xpm) {
+      if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
+         *pic = gClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
+                                                      im->GetMask());
+         im->Scale(im->GetWidth()/2, im->GetHeight()/2);
+         *spic = gClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
+                                                      im->GetMask());
+      }
+      gClient->GetMimeTypeList()->AddType(iconname, iconname, iconname, iconname, "->Browse");
+      return;
+   }
 
    if (*pic == 0) {
-      if (obj->IsFolder())
+      if (obj->IsFolder()) {
          *pic = fFolder_s;
-      else
+      } else {
          *pic = fDoc_s;
+      }
    }
    fLargeCachedPic = *pic;
 
-   *spic = fClient->GetMimeTypeList()->GetIcon(name, kTRUE);
+   *spic = fClient->GetMimeTypeList()->GetIcon(iconname, kTRUE);
 
    if (*spic == 0) {
       if (obj->IsFolder())
@@ -340,7 +363,7 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
          *spic = fDoc_t;
    }
    fSmallCachedPic = *spic;
-   fCachedPicName = name;
+   fCachedPicName = iconname;
 }
 
 //______________________________________________________________________________

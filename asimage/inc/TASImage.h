@@ -41,6 +41,7 @@
 
 struct ASImage;
 struct ASVisual;
+class TBrowser;
 
 class TASImage : public TImage {
 
@@ -60,6 +61,8 @@ private:
    void FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size, UInt_t color, const char *font_name, Float_t angle);
    void DrawGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y);
+   void SetDefaults();
+   void CreateThumbnail();
 
 protected:
    ASImage  *fImage;        //! pointer to image structure of original image
@@ -100,6 +103,10 @@ public:
 
    void  SetEditable(Bool_t on = kTRUE) { fEditable = on; }             //*TOGGLE*
    Bool_t IsEditable() const { return fEditable; }
+   void  Browse(TBrowser *);
+   void  SetTitle(const char *title="");                                // *MENU*
+   const char *GetTitle() const;
+   const char *GetIconName() const {  return GetTitle(); }
 
    // Pad conversions
    void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0,
@@ -181,11 +188,13 @@ public:
    TArrayD         *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette);
    UInt_t          *GetArgbArray();
    UInt_t          *GetScanline(UInt_t y);
+   void             GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
+   Bool_t           SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
 
-   ClassDef(TASImage,1)  // Image display class
+   ClassDef(TASImage,1)  // image processing class
 };
 
 #endif

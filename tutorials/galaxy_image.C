@@ -10,25 +10,9 @@ void galaxy_image()
    // read the pixel data from file "galaxy.root"
    // the size of the image is 401 X 401 pixels
    TFile *gal = new TFile("galaxy.root", "READ");
-   TVectorD *data = (TVectorD*)gal->Get("galaxy");
-   delete gal;
-
-   // read a color palette, it was written to the file via the
-   // color editor (Save button)
-   TFile *fpal = new TFile("galaxy.pal.root", "READ");
-   TImagePalette *palette = (TImagePalette*)fpal->Get("TImagePalette");
-   delete fpal;
-
-   // create an image and set the pixel data and the color palette
-   TImage *img = TImage::Create();
-   if (!img) {
-      printf("Could not create an image... exit\n");
-      return;
-   }
-   img->SetImage(*data, 401, palette);
-   delete palette;
-
+   TImage *img = (TImage*)gal->Get("n4254");
    img->Draw();
+   img->SetName("n4254");
 
    // open the color editor
    img->StartPaletteEditor();

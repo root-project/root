@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMimeTypes.cxx,v 1.2 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -293,7 +293,7 @@ void TGMimeTypes::AddType(const char *type, const char *pattern, const char *ico
 
   mime->fReg = new TRegexp(pattern, kTRUE);
 
-  fList->Add(mime);
+  fList->AddFirst(mime);
 
   fChanged = kTRUE;
 }

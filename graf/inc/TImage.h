@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.5 2005/04/29 16:16:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.6 2005/05/02 21:30:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -211,6 +211,8 @@ public:
    virtual Pixmap_t  GetMask() { return 0; }
    virtual UInt_t   *GetArgbArray() { return 0; }
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return 0; }
+   virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
+   virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
 
    static TImage *Create();
    static TImage *Open(const char *file, EImageFileTypes type = kUnknown);

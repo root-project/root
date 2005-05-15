@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.12 2004/05/14 08:18:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.13 2004/06/02 17:03:51 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -66,6 +66,8 @@ public:
     virtual void      DeleteBuffer();
     virtual void      FillBuffer(char *&buffer);
     virtual const char *GetClassName() const {return fClassName.Data();}
+    virtual const char *GetIconName() const;
+    virtual const char *GetTitle() const;
     virtual char     *GetBuffer() const {return fBuffer+fKeylen;}
          TBuffer     *GetBufferRef() const {return fBufferRef;}
          Short_t      GetCycle() const ;
