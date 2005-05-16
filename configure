@@ -1615,6 +1615,13 @@ fi
 # Check for graphics libraries used by libAfterImage, like libjpeg, etc.
 #
 if test ! "x$enable_asimage" = "xno" ; then
+   # Currently our libAfterImage is completely out of sync with the official
+   # libAfterImage due to many new features, use always the builtin_afterimage
+   if test "x$enable_builtin_afterimage" = "xno" ||
+      test "x$enable_builtin_afterimage" = "" ; then
+      echo "#### Can currently not use the system libAfterImage ####"
+      enable_builtin_afterimage="yes"
+   fi
    if test "x$enable_builtin_afterimage" = "xno" ||
       test "x$enable_builtin_afterimage" = "" ; then
       # Figure out if libAfterImage is on the system, and if so, if it usable
@@ -1663,7 +1670,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
        unset asimagelibdirtmp
     fi
-    # If we didn't ind the system libAfterImage, or the user didn't ask
+    # If we didn't find the system libAfterImage, or the user didn't ask
     # for a system library, then see if we have various headers needed.
     if test "x$enable_builtin_afterimage" = "xyes" ; then
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
