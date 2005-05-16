@@ -556,12 +556,12 @@ distclean:: clean
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.so
 endif
-	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
+	-@mv -f tutorials/gallery.root tutorials/gallery.roott
 	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
 	-@mv -f tutorials/stock.root tutorials/stock.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
-	-@mv -f tutorials/galaxy.pal.roott tutorials/galaxy.pal.root
+	-@mv -f tutorials/gallery.roott tutorials/gallery.root
 	-@mv -f tutorials/galaxy.roott tutorials/galaxy.root
 	-@mv -f tutorials/mlpHiggs.roott tutorials/mlpHiggs.root
 	-@mv -f tutorials/stock.roott tutorials/stock.root
