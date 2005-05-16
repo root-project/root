@@ -60,6 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
+primary.log: multi.zip
 
 primary: primary.log
 	$(TestDiff)
