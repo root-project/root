@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.79 2005/04/28 07:29:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.80 2005/05/13 16:26:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -152,6 +152,7 @@ protected:
        TFriendLock(TTree *tree, UInt_t methodbit);
        ~TFriendLock();
     };
+    friend class TFriendLock;
 
     enum {
        kFindBranch        = BIT(0),
