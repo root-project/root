@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.135 2004/09/21 15:41:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.136 2005/05/12 12:31:35 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -199,7 +199,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    // don't append URL options into the file name used inside the TFile
    TString sName = fname1;
-   char *optionstart;
+   const char *optionstart;
 
    if ((optionstart = strrchr(fname1, '?'))) {
       sName = sName(0, optionstart-fname1);
