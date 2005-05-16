@@ -1,55 +1,5 @@
 
 Processing runtreefriend.C...
-******************************************************************************
-*Tree    :T         : test friend trees                                      *
-*Entries :    10000 : Total =          203630 bytes  File  Size =      94820 *
-*        :          : Tree compression factor =   1.69                       *
-******************************************************************************
-*Br    0 :Run       : Run/I                                                  *
-*Entries :    10000 : Total  Size=      40679 bytes  File Size  =        259 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression= 123.55     *
-*............................................................................*
-*Br    1 :Event     : Event/I                                                *
-*Entries :    10000 : Total  Size=      40693 bytes  File Size  =      11225 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   2.85     *
-*............................................................................*
-*Br    2 :x         : x/F                                                    *
-*Entries :    10000 : Total  Size=      40665 bytes  File Size  =      27170 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.18     *
-*............................................................................*
-*Br    3 :y         : y/F                                                    *
-*Entries :    10000 : Total  Size=      40665 bytes  File Size  =      27053 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.18     *
-*............................................................................*
-*Br    4 :z         : z/F                                                    *
-*Entries :    10000 : Total  Size=      40665 bytes  File Size  =      29113 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.10     *
-*............................................................................*
-******************************************************************************
-*Tree    :TF        : test friend trees                                      *
-*Entries :     8557 : Total =          375939 bytes  File  Size =     143910 *
-*        :          : Tree compression factor =   1.69                       *
-******************************************************************************
-*Br    0 :Run       : Run/I                                                  *
-*Entries :     8557 : Total  Size=      66977 bytes  File Size  =        257 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression= 124.51     *
-*............................................................................*
-*Br    1 :Event     : Event/I                                                *
-*Entries :     8557 : Total  Size=      66991 bytes  File Size  =      11312 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   2.83     *
-*............................................................................*
-*Br    2 :x         : x/F                                                    *
-*Entries :     8557 : Total  Size=      34893 bytes  File Size  =      27164 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.18     *
-*............................................................................*
-*Br    3 :y         : y/F                                                    *
-*Entries :     8557 : Total  Size=      34893 bytes  File Size  =      27069 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.18     *
-*............................................................................*
-*Br    4 :z         : z/F                                                    *
-*Entries :     8557 : Total  Size=      34893 bytes  File Size  =      28818 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.11     *
-*............................................................................*
 nok = 8557, fentries=8557
 ************************************
 *    Row   *         x *      TF.x *

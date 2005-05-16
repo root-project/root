@@ -48,7 +48,7 @@ void CreateParentTree() {
       z = r.Landau(2,1);
       T->Fill();
    }
-   T->Print();
+   //T->Print();
    T->Write();
    delete f;
 }
@@ -60,13 +60,13 @@ void CreateFriendTree() {
    // Write the new TTree (including its index)
    
    TFile *f = new TFile("treeparent.root");
-   TTree *T = (TTree*)f->Get("T");
+   TTree *T; f->GetObject("T",T);
    TFile *ff = new TFile("treefriend.root","recreate");
    TTree *TF = T->CopyTree("z<10");
    TF->SetName("TF");
    TF->BuildIndex("Run","Event");
    TF->Write();
-   TF->Print();
+   //TF->Print();
    delete ff;
 }
 
@@ -105,7 +105,7 @@ void CompareTrees() {
          }   
       }   
    }
-   printf("nok = %d, fentries=%g\n",nok,TF->GetEntries());
+   printf("nok = %d, fentries=%lld\n",nok,TF->GetEntries());
    delete f;
    delete ff;
 }
