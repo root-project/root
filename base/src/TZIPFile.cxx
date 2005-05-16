@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.3 2004/07/19 09:42:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.4 2004/09/30 10:14:30 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************
@@ -509,5 +509,8 @@ void TZIPMember::Print(Option_t *) const
 {
    // Pretty print basic ZIP member info.
 
-   printf("%-20lld %s   %s\n", fDsize, fModTime.AsSQLString(), fName.Data());
+   //printf("%-20lld %s   %s\n", fDsize, fModTime.AsSQLString(), fName.Data());
+   // above statement does not work with VC++7.1, spurious (null)
+   printf("%-20lld", fDsize);
+   printf(" %s   %s\n", fModTime.AsSQLString(), fName.Data());
 }
