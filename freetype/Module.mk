@@ -112,7 +112,7 @@ else
 			FREEZLIB="--without-zlib"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --with-pic $$FREEZLIB \
-		CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O2\"; \
+		CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O\"; \
 		$(MAKE))
 endif
 
