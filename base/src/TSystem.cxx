@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.121 2005/04/11 15:55:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.122 2005/05/03 13:17:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2122,8 +2122,11 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
             // Generate the dependency via standard output, not searching the
             // standard include directories,
-            TString touch = "echo > ";
-            touch += depfilename;
+#ifdef WIN32
+            TString touch = "echo # > "; touch += depfilename;
+#else
+            TString touch = "echo > "; touch += depfilename;
+#endif
             TString builddep = "rmkdepend -f";
             builddep += depfilename;
             builddep += " -Y -- ";
