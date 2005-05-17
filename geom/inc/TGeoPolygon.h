@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.1 2004/01/20 15:43:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.h,v 1.2 2004/01/29 11:59:10 brun Exp $
 // Author: Mihaela Gheata   05/01/04
 
 /*************************************************************************
@@ -40,8 +40,8 @@ protected :
    Int_t               fNconvex;          // number of points of the outscribed convex polygon 
    Int_t              *fInd;              //[fNvert] list of vertex indices
    Int_t              *fIndc;             //[fNconvex] indices of vertices of the outscribed convex polygon
-   Double_t           *fX;                // pointer to list of current X coordinates of vertices
-   Double_t           *fY;                // pointer to list of current Y coordinates of vertices
+   Double_t           *fX;                //! pointer to list of current X coordinates of vertices
+   Double_t           *fY;                //! pointer to list of current Y coordinates of vertices
    TObjArray          *fDaughters;        // list of concave daughters
 private:
    void                ConvexCheck(); // force convexity checking
@@ -64,10 +64,10 @@ public:
    Bool_t              IsFinished() const {return TObject::TestBit(kGeoFinishPolygon);}
    Double_t            Safety(Double_t *point, Int_t &isegment) const;
    void                SetConvex(Bool_t flag=kTRUE) {TObject::SetBit(kGeoConvex,flag);}
-   void                SetXY(Double_t *x, Double_t *y) {fX=x; fY=y;}   
+   void                SetXY(Double_t *x, Double_t *y);   
    void                SetNextIndex(Int_t index=-1);
 
-  ClassDef(TGeoPolygon, 1)         // class for handling arbitrary polygons
+  ClassDef(TGeoPolygon, 2)         // class for handling arbitrary polygons
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.2 2004/01/29 11:59:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.3 2004/04/22 14:07:14 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -329,7 +329,17 @@ void TGeoPolygon::SetNextIndex(Int_t index)
 //   if (fNconvex == fNvert) printf ("\n");   
 }
 
-
-
-
-   
+//_____________________________________________________________________________
+void TGeoPolygon::SetXY(Double_t *x, Double_t *y)
+{
+// Set X/Y array pointer for the polygon and daughters.
+   fX = x;
+   fY = y;
+   if (!fDaughters) return;
+   TGeoPolygon *poly;
+   Int_t nd = fDaughters->GetEntriesFast();
+   for (Int_t i=0; i<nd; i++) {
+      poly = (TGeoPolygon*)fDaughters->At(i);
+      if (poly) poly->SetXY(x,y);
+   }
+}

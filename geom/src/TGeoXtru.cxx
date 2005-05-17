@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.24 2005/04/05 08:54:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -983,6 +983,18 @@ void TGeoXtru::Sizeof3D() const
 ///   Int_t numSegs   = fNvert*(2*fNz-1);
 ///   Int_t numPolys  = fNvert*(fNz-1)+2;
 ///   painter->AddSize3D(numPoints, numSegs, numPolys);
+}
+
+//_____________________________________________________________________________
+void TGeoXtru::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoVolume.
+   if (R__b.IsReading()) {
+      TGeoXtru::Class()->ReadBuffer(R__b, this);
+      if (fPoly) fPoly->SetXY(fXc,fYc); // initialize with current coordinates   
+   } else {
+      TGeoXtru::Class()->WriteBuffer(R__b, this);
+   }
 }
 
 //_____________________________________________________________________________
