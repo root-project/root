@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name: v4-03-02 $:$Id: TVirtualMCApplication.h,v 1.2 2003/09/23 14:02:38 brun Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 #ifndef ROOT_TVirtualMCApplication
@@ -23,6 +23,7 @@ class TVirtualMCApplication : public TNamed {
 
     // methods
     virtual void ConstructGeometry() = 0;
+    virtual void ConstructOpGeometry() {}
     virtual void InitGeometry() = 0;
     virtual void AddParticles() {}
     virtual void GeneratePrimaries() = 0;

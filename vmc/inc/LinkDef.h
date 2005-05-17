@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: LinkDef.h,v 1.1 2003/07/15 09:56:57 brun Exp $
+// @(#)root/vmc:$Name: v4-03-04 $:$Id: LinkDef.h,v 1.2 2003/09/23 14:01:36 brun Exp $
 #ifdef __CINT__
 
 #pragma link off all globals;
@@ -10,6 +10,9 @@
 #pragma link C++ enum PDG_t;
 #pragma link C++ enum TMCProcess;
 #pragma link C++ enum TMCParticleType;
+#pragma link C++ enum TMCOpSurfaceModel;
+#pragma link C++ enum TMCOpSurfaceType;
+#pragma link C++ enum TMCOpSurfaceFinish;
 
 #pragma link C++ class  TVirtualMC+;
 #pragma link C++ class  TVirtualMCGeometry+;

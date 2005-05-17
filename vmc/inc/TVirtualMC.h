@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name: v4-02-00 $:$Id: TVirtualMC.h,v 1.10 2004/11/24 14:07:39 brun Exp $
+// @(#)root/vmc:$Name: v4-03-02 $:$Id: TVirtualMC.h,v 1.11 2005/02/08 11:20:15 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -14,6 +14,7 @@
 
 #include "TMCProcess.h"
 #include "TMCParticleType.h"
+#include "TMCOptical.h"
 #include "TVirtualMCApplication.h"
 #include "TVirtualMCStack.h"
 #include "TVirtualMCDecayer.h"
@@ -108,6 +109,29 @@ class TVirtualMC : public TNamed {
     virtual void  SetCerenkov(Int_t itmed, Int_t npckov, Double_t *ppckov,
                                Double_t *absco, Double_t *effic, Double_t *rindex) = 0;
   
+    // functions for definition of surfaces
+    // and material properties for optical physics
+    virtual void  DefineOpSurface(const char* name,
+                         TMCOpSurfaceModel model,
+			 TMCOpSurfaceType surfaceType,
+			 TMCOpSurfaceFinish surfaceFinish,
+			 Double_t sigmaAlpha);
+    virtual void  SetBorderSurface(const char* name,
+                         const char* vol1Name, int vol1CopyNo,
+                         const char* vol2Name, int vol2CopyNo,
+			 const char* opSurfaceName);
+    virtual void  SetSkinSurface(const char* name,
+                         const char* volName,
+			 const char* opSurfaceName);
+    virtual void  SetMaterialProperty(
+                         Int_t itmed, const char* propertyName, 
+			 Int_t np, Double_t* pp, Double_t* values);
+    virtual void  SetMaterialProperty(
+                         Int_t itmed, const char* propertyName,
+			 Double_t value);
+    virtual void  SetMaterialProperty(
+                         const char* surfaceName, const char* propertyName, 
+			 Int_t np, Double_t* pp, Double_t* values);
     
     // functions for drawing
     // to be removed with complete move to TGeo
@@ -278,6 +302,46 @@ class TVirtualMC : public TNamed {
 
   ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
+
+// new functions
+
+inline void  TVirtualMC::DefineOpSurface(const char* /*name*/,
+                TMCOpSurfaceModel /*model*/, TMCOpSurfaceType /*surfaceType*/,
+	        TMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
+   
+   Warning("DefineOpSurface", "New function - not yet implemented.");
+}   
+		
+inline void  TVirtualMC::SetBorderSurface(const char* /*name*/,
+                const char* /*vol1Name*/, int /*vol1CopyNo*/,
+                const char* /*vol2Name*/, int /*vol2CopyNo*/,
+		const char* /*opSurfaceName*/) {
+   Warning("SetBorderSurface", "New function - not yet implemented.");
+}   
+		
+inline void  TVirtualMC::SetSkinSurface(const char* /*name*/,
+                const char* /*volName*/,
+		const char* /*opSurfaceName*/) {
+   Warning("SetSkinSurface", "New function - not yet implemented.");
+}   
+		
+inline void  TVirtualMC::SetMaterialProperty(
+                Int_t /*itmed*/, const char* /*propertyName*/, 
+		Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
+   Warning("SetMaterialProperty", "New function - not yet implemented.");
+}   
+		
+inline void  TVirtualMC::SetMaterialProperty(
+                Int_t /*itmed*/, const char* /*propertyName*/, 
+		Double_t /*value*/) {
+   Warning("SetMaterialProperty", "New function - not yet implemented.");
+}   
+		
+inline void  TVirtualMC::SetMaterialProperty(
+                const char* /*surfaceName*/, const char* /*propertyName*/, 
+	        Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
+   Warning("SetMaterialProperty", "New function - not yet implemented.");
+}   
 
 R__EXTERN TVirtualMC *gMC;
 

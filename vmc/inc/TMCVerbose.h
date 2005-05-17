@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name: v4-03-02 $:$Id: TMCVerbose.h,v 1.2 2003/09/23 14:03:15 brun Exp $
 // Author: Ivana Hrivnacova; 24/02/2003
 
 #ifndef ROOT_TMCVerbose
@@ -31,7 +31,9 @@ class TMCVerbose : public TObject
     virtual void FinishRun();
  
     virtual void ConstructGeometry();
+    virtual void ConstructOpGeometry();
     virtual void InitGeometry();
+    virtual void AddParticles();
     virtual void GeneratePrimaries();
     virtual void BeginEvent();
     virtual void BeginPrimary();

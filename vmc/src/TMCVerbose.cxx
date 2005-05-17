@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name: v4-04-02 $:$Id: TMCVerbose.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "Riostream.h"
@@ -155,6 +155,16 @@ void TMCVerbose::ConstructGeometry()
 }
 
 //_____________________________________________________________________________
+void TMCVerbose::ConstructOpGeometry()
+{    
+// Construct geometry for optical physics info
+// ---
+
+  if (fLevel>0) 
+    cout << "--- Construct geometry for optical processes" << endl; 
+}
+
+//_____________________________________________________________________________
 void TMCVerbose::InitGeometry()
 {    
 // Initialize geometry info
@@ -162,6 +172,16 @@ void TMCVerbose::InitGeometry()
   
   if (fLevel>0) 
     cout << "--- Init geometry " << endl; 
+}
+
+//_____________________________________________________________________________
+void TMCVerbose::AddParticles()
+{    
+// Add particles info
+// ---
+  
+  if (fLevel>0) 
+    cout << "--- Add particles " << endl; 
 }
 
 //_____________________________________________________________________________
@@ -260,7 +280,10 @@ void TMCVerbose::Stepping()
 
     // Volume
     //	 
-    cout << setw(4) << gMC->CurrentVolName() << "  ";
+    if (gMC->CurrentVolName() != 0)
+      cout << setw(4) << gMC->CurrentVolName() << "  ";
+    else  
+      cout << setw(4) << "None"  << "  ";
 
     // Process  
     //	 
