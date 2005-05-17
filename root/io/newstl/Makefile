@@ -1,18 +1,5 @@
 SHELL=/bin/bash
 
-#Set the list of files to be delete by clean:
-CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
-
-#Set the list of target to make while testing
-TEST_TARGETS += emptyCollection stlIoTest 
-#stlNoLibTest
-
-ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
-endif
-
-include $(ROOTTEST_HOME)/scripts/Rules.mk
-
 # adjust the location of Rules.mk as needed.
 RULES_DIR=$(ROOTTEST_HOME)/scripts
 
@@ -27,6 +14,22 @@ LIBDIR := $(LIBDIRTOP)$(LPWD)/
 FILEDIR := $(VERSION)
 #debug := $(shell echo $(PLATFORM) $(LPWD) 1>&2 )
 #debug := $(shell echo $(LIBDIR) 1>&2 )
+
+
+
+#Set the list of files to be delete by clean:
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
+
+#Set the list of target to make while testing
+TEST_TARGETS += emptyCollection stlIoTest 
+#stlNoLibTest
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 $(FILEDIR):
 	$(CMDECHO)mkdir -p $(FILEDIR)
@@ -55,7 +58,7 @@ DEPENDENCY_FILES = $(TEST_DLL:.so=.df)
 #debug := $(shell echo $(DEPENDENCY_FILES) 1>&2 )
 
 ifneq ($(MAKECMDGOALS),clean)
-#-include $(DEPENDENCY_FILES)
+-include $(DEPENDENCY_FILES)
 endif
 
 #.PRECIOUS :  $(addprefix $(LIBDIR),$(subst .C,o.$(DllSuf),$(HOLDER) $(FTEST) $(LIBDIR)TestHelpers_C))
@@ -126,8 +129,8 @@ endif
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 
-$(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C 
-	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+$(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
 
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
@@ -152,7 +155,7 @@ endif
 samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l sample_writer.C > samplerootfile.log
 
-emptyCollection.log: samplerootfile.root $(LIBDIR)/sample_bx_classes_C.$(DllSuf) sample_reader.C
+emptyCollection.log: directories samplerootfile.root $(LIBDIR)sample_bx_classes_C.$(DllSuf) sample_reader.C
 
 emptyCollection: emptyCollection.log
 	$(TestDiff)
