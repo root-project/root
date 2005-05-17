@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.60 2005/04/25 21:12:08 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.61 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -229,7 +229,8 @@ Int_t TGeoTube::DistancetoPrimitive(Int_t px, Int_t py)
 {
 // compute closest distance from point px,py to each corner
    Int_t n = gGeoManager->GetNsegments();
-   const Int_t numPoints = 4*n;
+   Int_t numPoints = 4*n;
+   if (!HasRmin()) numPoints = 2*(n+1);
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
@@ -607,79 +608,153 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
 void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
 {
 // Fill TBuffer3D structure for segments and polygons.
-   Int_t i, j;
+   Int_t i, j,indx;
    Int_t n = gGeoManager->GetNsegments();
    Int_t c = (((buffer.fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
-   for (i = 0; i < 4; i++) {
-      for (j = 0; j < n; j++) {
-         buffer.fSegs[(i*n+j)*3  ] = c;
-         buffer.fSegs[(i*n+j)*3+1] = i*n+j;
-         buffer.fSegs[(i*n+j)*3+2] = i*n+j+1;
+   if (HasRmin()) {
+      // circle segments:
+      // lower rmin circle: i=0, (0, n-1)
+      // lower rmax circle: i=1, (n, 2n-1)
+      // upper rmin circle: i=2, (2n, 3n-1)
+      // upper rmax circle: i=1, (3n, 4n-1)
+      for (i = 0; i < 4; i++) {
+         for (j = 0; j < n; j++) {
+            indx = 3*(i*n+j);
+            buffer.fSegs[indx  ] = c;
+            buffer.fSegs[indx+1] = i*n+j;
+            buffer.fSegs[indx+2] = i*n+(j+1)%n;
+         }
       }
-      buffer.fSegs[(i*n+j-1)*3+2] = i*n;
-   }
-   for (i = 4; i < 6; i++) {
+      // Z-parallel segments
+      // inner: i=4, (4n, 5n-1)
+      // outer: i=5, (5n, 6n-1)
+      for (i = 4; i < 6; i++) {
+         for (j = 0; j < n; j++) {
+            indx = 3*(i*n+j);
+            buffer.fSegs[indx  ] = c+1;
+            buffer.fSegs[indx+1] = (i-4)*n+j;
+            buffer.fSegs[indx+2] = (i-2)*n+j;
+         }
+      }
+      // Radial segments
+      // lower: i=6, (6n, 7n-1)
+      // upper: i=7, (7n, 8n-1)
+      for (i = 6; i < 8; i++) {
+         for (j = 0; j < n; j++) {
+            indx = 3*(i*n+j);
+            buffer.fSegs[indx  ] = c;
+            buffer.fSegs[indx+1] = 2*(i-6)*n+j;
+            buffer.fSegs[indx+2] = (2*(i-6)+1)*n+j;
+         }
+      }
+      // Polygons
+      i=0;
+      // Inner lateral (0, n-1)
       for (j = 0; j < n; j++) {
-         buffer.fSegs[(i*n+j)*3  ] = c+1;
-         buffer.fSegs[(i*n+j)*3+1] = (i-4)*n+j;
-         buffer.fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+         indx = 6*(i*n+j);
+         buffer.fPols[indx  ] = c;
+         buffer.fPols[indx+1] = 4;
+         buffer.fPols[indx+2] = j;
+         buffer.fPols[indx+3] = 4*n+(j+1)%n;
+         buffer.fPols[indx+4] = 2*n+j;
+         buffer.fPols[indx+5] = 4*n+j;
+      }
+      i=1;
+      // Outer lateral (n,2n-1)
+      for (j = 0; j < n; j++) {
+         indx = 6*(i*n+j);
+         buffer.fPols[indx  ] = c+1;
+         buffer.fPols[indx+1] = 4;
+         buffer.fPols[indx+2] = n+j;
+         buffer.fPols[indx+3] = 5*n+j;
+         buffer.fPols[indx+4] = 3*n+j;
+         buffer.fPols[indx+5] = 5*n+(j+1)%n;
+      }
+      i=2;
+      // lower disc (2n, 3n-1)
+      for (j = 0; j < n; j++) {
+         indx = 6*(i*n+j);
+         buffer.fPols[indx  ] = c;
+         buffer.fPols[indx+1] = 4;
+         buffer.fPols[indx+2] = j;
+         buffer.fPols[indx+3] = 6*n+j;
+         buffer.fPols[indx+4] = n+j;
+         buffer.fPols[indx+5] = 6*n+(j+1)%n;
+      }
+      i=3;
+      // upper disc (3n, 4n-1)
+      for (j = 0; j < n; j++) {
+         indx = 6*(i*n+j);
+         buffer.fPols[indx  ] = c;
+         buffer.fPols[indx+1] = 4;
+         buffer.fPols[indx+2] = 2*n+j;
+         buffer.fPols[indx+3] = 7*n+(j+1)%n;
+         buffer.fPols[indx+4] = 3*n+j;
+         buffer.fPols[indx+5] = 7*n+j;
+      }
+      return;
+   }
+   // Rmin=0 tubes
+   // circle segments
+   // lower rmax circle: i=0, (0, n-1)
+   // upper rmax circle: i=1, (n, 2n-1)
+   for (i = 0; i < 2; i++) {
+      for (j = 0; j < n; j++) {
+         indx = 3*(i*n+j);
+         buffer.fSegs[indx  ] = c;
+         buffer.fSegs[indx+1] = 2+i*n+j;
+         buffer.fSegs[indx+2] = 2+i*n+(j+1)%n;
       }
    }
-   for (i = 6; i < 8; i++) {
-      for (j = 0; j < n; j++) {
-         buffer.fSegs[(i*n+j)*3  ] = c;
-         buffer.fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
-         buffer.fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
-      }
-   }
-
-   Int_t indx = 0;
-   i=0;
+   // Z-parallel segments (2n,3n-1)
    for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
+      indx = 3*(2*n+j);
+      buffer.fSegs[indx  ] = c+1;
+      buffer.fSegs[indx+1] = 2+j;
+      buffer.fSegs[indx+2] = 2+n+j;
+   }
+   // Radial segments
+   // Lower circle: i=3, (3n,4n-1)
+   // Upper circle: i=4, (4n,5n-1)
+   for (i = 3; i < 5; i++) {
+      for (j = 0; j < n; j++) {
+         indx = 3*(i*n+j);
+         buffer.fSegs[indx  ] = c;
+         buffer.fSegs[indx+1] = i-3;
+         buffer.fSegs[indx+2] = 2+(i-3)*n+j;
+      }
+   }
+   // Polygons
+   // lateral (0,n-1)
+   for (j = 0; j < n; j++) {
+      indx = 6*j;
+      buffer.fPols[indx  ] = c+1;
+      buffer.fPols[indx+1] = 4;
+      buffer.fPols[indx+2] = j;
+      buffer.fPols[indx+3] = 2*n+j;
+      buffer.fPols[indx+4] = n+j;
+      buffer.fPols[indx+5] = 2*n+(j+1)%n;
+   }
+   // bottom triangles (n,2n-1)
+   for (j = 0; j < n; j++) {
+      indx = 6*n + 5*j;
       buffer.fPols[indx  ] = c;
-      buffer.fPols[indx+1] = 4;
-      buffer.fPols[indx+5] = i*n+j;
-      buffer.fPols[indx+4] = (4+i)*n+j;
-      buffer.fPols[indx+3] = (2+i)*n+j;
-      buffer.fPols[indx+2] = (4+i)*n+j+1;
+      buffer.fPols[indx+1] = 3;
+      buffer.fPols[indx+2] = j;
+      buffer.fPols[indx+3] = 3*n+(j+1)%n;
+      buffer.fPols[indx+4] = 3*n+j;
    }
-   buffer.fPols[indx+2] = (4+i)*n;
-   i=1;
+   // top triangles (2n,3n-1)  
    for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
+      indx = 6*n + 5*n + 5*j;
       buffer.fPols[indx  ] = c;
-      buffer.fPols[indx+1] = 4;
-      buffer.fPols[indx+2] = i*n+j;
-      buffer.fPols[indx+3] = (4+i)*n+j;
-      buffer.fPols[indx+4] = (2+i)*n+j;
-      buffer.fPols[indx+5] = (4+i)*n+j+1;
+      buffer.fPols[indx+1] = 3;
+      buffer.fPols[indx+2] = n+j;
+      buffer.fPols[indx+3] = 4*n+j;
+      buffer.fPols[indx+4] = 4*n+(j+1)%n;
    }
-   buffer.fPols[indx+5] = (4+i)*n;
-   i=2;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buffer.fPols[indx  ] = c+i;
-      buffer.fPols[indx+1] = 4;
-      buffer.fPols[indx+2] = (i-2)*2*n+j;
-      buffer.fPols[indx+3] = (4+i)*n+j;
-      buffer.fPols[indx+4] = ((i-2)*2+1)*n+j;
-      buffer.fPols[indx+5] = (4+i)*n+j+1;
-   }
-   buffer.fPols[indx+5] = (4+i)*n;
-   i=3;
-   for (j = 0; j < n; j++) {
-      indx = 6*(i*n+j);
-      buffer.fPols[indx  ] = c+i;
-      buffer.fPols[indx+1] = 4;
-      buffer.fPols[indx+5] = (i-2)*2*n+j;
-      buffer.fPols[indx+4] = (4+i)*n+j;
-      buffer.fPols[indx+3] = ((i-2)*2+1)*n+j;
-      buffer.fPols[indx+2] = (4+i)*n+j+1;
-   }
-   buffer.fPols[indx+2] = (4+i)*n;
 }
 
 //_____________________________________________________________________________
@@ -786,20 +861,19 @@ void TGeoTube::SetDimensions(Double_t *param)
 void TGeoTube::SetPoints(Double_t *points) const
 {
 // create tube mesh points
-    Double_t dz;
-    Int_t j, n;
-
-    n = gGeoManager->GetNsegments();
-    Double_t dphi = 360./n;
-    Double_t phi = 0;
-    dz = fDz;
-
-    Int_t indx = 0;
-
-
-    if (points) {
-
-        for (j = 0; j < n; j++) {
+   Double_t dz;
+   Int_t j, n;
+   n = gGeoManager->GetNsegments();
+   Double_t dphi = 360./n;
+   Double_t phi = 0;
+   dz = fDz;
+   Int_t indx = 0;
+   if (points) {
+      if (HasRmin()) {
+         // 4*n points
+         // (0,n-1) lower rmin circle
+         // (2n, 3n-1) upper rmin circle
+         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
             points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
             indx++;
@@ -808,8 +882,10 @@ void TGeoTube::SetPoints(Double_t *points) const
             points[indx+6*n] = dz;
             points[indx]     =-dz;
             indx++;
-        }
-        for (j = 0; j < n; j++) {
+         }   
+         // (n, 2n-1) lower rmax circle
+         // (3n, 4n-1) upper rmax circle
+         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
             points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
             indx++;
@@ -818,27 +894,48 @@ void TGeoTube::SetPoints(Double_t *points) const
             points[indx+6*n]= dz;
             points[indx]    =-dz;
             indx++;
-        }
-    }
+         }
+      } else {
+         // centers of lower/upper circles (0,1)
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = -dz;
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = dz;
+         // lower rmax circle (2, 2+n-1)
+         // upper rmax circle (2+n, 2+2n-1)
+         for (j = 0; j < n; j++) {
+            phi = j*dphi*TMath::DegToRad();
+            points[indx+3*n] = points[indx] = fRmax * TMath::Cos(phi);
+            indx++;
+            points[indx+3*n] = points[indx] = fRmax * TMath::Sin(phi);
+            indx++;
+            points[indx+3*n]= dz;
+            points[indx]    =-dz;
+            indx++;
+         }
+      }   
+   }
 }
 
 //_____________________________________________________________________________
 void TGeoTube::SetPoints(Float_t *points) const
 {
 // create tube mesh points
-    Double_t dz;
-    Int_t j, n;
-
-    n = gGeoManager->GetNsegments();
-    Double_t dphi = 360./n;
-    Double_t phi = 0;
-    dz = fDz;
-
-    Int_t indx = 0;
-
-    if (points) {
-
-        for (j = 0; j < n; j++) {
+   Double_t dz;
+   Int_t j, n;
+   n = gGeoManager->GetNsegments();
+   Double_t dphi = 360./n;
+   Double_t phi = 0;
+   dz = fDz;
+   Int_t indx = 0;
+   if (points) {
+      if (HasRmin()) {
+         // 4*n points
+         // (0,n-1) lower rmin circle
+         // (2n, 3n-1) upper rmin circle
+         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
             points[indx+6*n] = points[indx] = fRmin * TMath::Cos(phi);
             indx++;
@@ -847,8 +944,10 @@ void TGeoTube::SetPoints(Float_t *points) const
             points[indx+6*n] = dz;
             points[indx]     =-dz;
             indx++;
-        }
-        for (j = 0; j < n; j++) {
+         }   
+         // (n, 2n-1) lower rmax circle
+         // (3n, 4n-1) upper rmax circle
+         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
             points[indx+6*n] = points[indx] = fRmax * TMath::Cos(phi);
             indx++;
@@ -857,8 +956,29 @@ void TGeoTube::SetPoints(Float_t *points) const
             points[indx+6*n]= dz;
             points[indx]    =-dz;
             indx++;
-        }
-    }
+         }
+      } else {
+         // centers of lower/upper circles (0,1)
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = -dz;
+         points[indx++] = 0.;
+         points[indx++] = 0.;
+         points[indx++] = dz;
+         // lower rmax circle (2, 2+n-1)
+         // upper rmax circle (2+n, 2+2n-1)
+         for (j = 0; j < n; j++) {
+            phi = j*dphi*TMath::DegToRad();
+            points[indx+3*n] = points[indx] = fRmax * TMath::Cos(phi);
+            indx++;
+            points[indx+3*n] = points[indx] = fRmax * TMath::Sin(phi);
+            indx++;
+            points[indx+3*n]= dz;
+            points[indx]    =-dz;
+            indx++;
+         }
+      }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -867,6 +987,7 @@ Int_t TGeoTube::GetNmeshVertices() const
 // Return number of vertices of the mesh representation
    Int_t n = gGeoManager->GetNsegments();
    Int_t numPoints = n*4;
+   if (!HasRmin()) numPoints = 2*(n+1);
    return numPoints;
 }
 
@@ -917,6 +1038,11 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       Int_t NbPnts = 4*n;
       Int_t NbSegs = 8*n;
       Int_t NbPols = 4*n;
+      if (!HasRmin()) {
+         NbPnts = 2*(n+1);
+         NbSegs = 5*n;
+         NbPols = 3*n;
+      }   
       if (buffer.SetRawSizes(NbPnts, 3*NbPnts, NbSegs, 3*NbSegs, NbPols, 6*NbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
