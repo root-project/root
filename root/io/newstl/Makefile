@@ -4,6 +4,10 @@ SHELL=/bin/bash
 RULES_DIR=$(ROOTTEST_HOME)/scripts
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
+ifeq ($(ARCH),)
+   ARCH       = $(shell root-config --arch)
+endif
+PLATFORM      = $(ARCH)
 ifeq ($(PLATFORM),win32)
 LPWD := $(shell echo `cygpath -m $$PWD | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
 else
@@ -14,8 +18,6 @@ LIBDIR := $(LIBDIRTOP)$(LPWD)/
 FILEDIR := $(VERSION)
 #debug := $(shell echo $(PLATFORM) $(LPWD) 1>&2 )
 #debug := $(shell echo $(LIBDIR) 1>&2 )
-
-
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log $(LIBDIRTOP)
