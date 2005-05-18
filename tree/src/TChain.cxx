@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.105 2005/04/28 07:29:24 brun Exp $
+// @(#)root/tree:$Name: v4-04-02 $:$Id: TChain.cxx,v 1.106 2005/05/02 10:57:32 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -769,7 +769,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
-   if (TestBit(kFriendLock)) return 0;
+   if (kLoadTree & fFriendLockStatus) return 0;
 
    if (!fNtrees) return 1;
    if (entry < 0 || (entry > 0 && entry >= fEntries)) return -2;
@@ -800,27 +800,34 @@ Long64_t TChain::LoadTree(Long64_t entry)
          //An Alternative would move this code to each of the function calling LoadTree
          //(and to overload a few more).
          TIter next(fFriends);
-         TIter nexttree(fTree->GetListOfFriends());
-         TFriendLock lock(this);
+         TFriendLock lock(this,kLoadTree);
          TFriendElement *fe;
          TFriendElement *fetree;
          Bool_t needUpdate = kFALSE;
          while ((fe = (TFriendElement*)next())) {
-            do {
-               fetree = (TFriendElement*)nexttree();
-            } while( fetree && !fetree->TestBit(TFriendElement::kFromChain) );
+            TObjLink *lnk = fTree->GetListOfFriends()->FirstLink();
+            fetree = 0;
+            while (lnk) {
+               TObject *obj = lnk->GetObject();
+               if (obj->TestBit(TFriendElement::kFromChain)
+                   && obj->GetName() && !strcmp(fe->GetName(), obj->GetName())) {
+                  fetree = (TFriendElement*)obj;
+                  break;
+               }
+               lnk = lnk->Next();
+            }
 
             TTree *t = fe->GetTree();
             if (t->InheritsFrom(TChain::Class())) {
                Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
                TTree* old = t->GetTree();
-               TTree* oldintree = fetree->GetTree();
+               TTree* oldintree = fetree ? fetree->GetTree() : 0;
 
                t->LoadTree(entry);
 
                Int_t newNumber = ((TChain*)t)->GetTreeNumber();
                if (oldNumber!=newNumber || old!=t->GetTree()
-                   || oldintree != t->GetTree()) {
+                   || (oldintree && oldintree != t->GetTree())) {
                   // We can not compare just the tree pointers because
                   // they could be reused. So we compare the tree
                   // number instead.
@@ -941,7 +948,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       //An Alternative would move this code to each of the function calling LoadTree
       //(and to overload a few more).
       TIter next(fFriends);
-      TFriendLock lock(this);
+      TFriendLock lock(this,kLoadTree);
       TFriendElement *fe;
       while ((fe = (TFriendElement*)next())) {
          TTree *t = fe->GetTree();
