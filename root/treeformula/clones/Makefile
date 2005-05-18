@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += nestedClones nestedClones2
+TEST_TARGETS += nestedClones3 nestedClones nestedClones2
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -31,3 +31,6 @@ ifeq ($(FAIL),)
 else
 	$(CMDECHO) root.exe -b -q -l runNestedClones.C
 endif
+
+nestedClones3: nestedClones3.log
+	$(TestDiff)
