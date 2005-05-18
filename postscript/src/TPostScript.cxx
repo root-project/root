@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.54 2005/04/26 16:36:47 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.55 2005/05/09 17:00:15 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -929,7 +929,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle >= 32) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
-   Double_t msize = 0.92*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   Double_t msize = 0.80*fMarkerSize;
+   if (gPad->GetWh() < 600) msize *= (1 + 600./gPad->GetWh());
    markersize     = CMtoPS(msize);
    if (markerstyle == 1) markersize *= 0.1;
    if (markerstyle == 6) markersize *= 0.2;
@@ -989,7 +990,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle >= 32) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
-   Double_t msize = 0.92*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   Double_t msize = 0.80*fMarkerSize;
+   if (gPad->GetWh() < 600) msize *= (1 + 600./gPad->GetWh());
    markersize     = CMtoPS(msize);
    if (markerstyle == 1) markersize *= 0.1;
    if (markerstyle == 6) markersize *= 0.2;

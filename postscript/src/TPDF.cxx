@@ -439,7 +439,8 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   Double_t msize = 0.20*fMarkerSize;
+   if (gPad->GetWh() < 600) msize *= (1 + 400./gPad->GetWh());
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = CMtoPDF(msize);
@@ -569,7 +570,8 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
+   Double_t msize = 0.20*fMarkerSize;
+   if (gPad->GetWh() < 600) msize *= (1 + 400./gPad->GetWh());
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = CMtoPDF(msize);
