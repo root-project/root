@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.88 2005/04/15 17:26:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.89 2005/05/02 11:00:39 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1362,7 +1362,6 @@ void TProofServ::HandleSocketInputDuringProcess()
    PDB(kGlobal,1) Info("HandleSocketInputDuringProcess", "enter");
 
    TMessage *mess;
-   char      str[2048];
    Int_t     what;
    Bool_t    aborted = kFALSE;
 
