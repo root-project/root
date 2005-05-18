@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.3 2005/03/11 21:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.4 2005/04/22 19:04:43 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -366,10 +366,10 @@ public:
 
 //______________________________________________________________________________
 //
-// TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
-// a data member on a variable size array inside a TClonesArray object stored
-// in a TTree.  This is the version used for split access
-
+// TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
+// a data member which is a collection inside a TClonesArray or collection object 
+// stored in a TTree.  This is the version used for split access
+//
 class TFormLeafInfoMultiVarDimCollection : public TFormLeafInfoMultiVarDim {
 public:
    TFormLeafInfoMultiVarDimCollection(TClass* motherclassptr, Long_t offset,
@@ -378,6 +378,29 @@ public:
       TStreamerElement* element, TFormLeafInfo* parent);
    TFormLeafInfoMultiVarDimCollection();
    TFormLeafInfoMultiVarDimCollection(const TFormLeafInfoMultiVarDimCollection& orig);
+
+   virtual TFormLeafInfo* DeepCopy() const;
+
+   virtual Int_t GetArrayLength() { return 0; }
+   virtual void      LoadSizes(TBranch* branch);
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
+};
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
+// a data member which is a TClonesArray inside a TClonesArray or collection object 
+// stored in a TTree.  This is the version used for split access
+//
+class TFormLeafInfoMultiVarDimClones : public TFormLeafInfoMultiVarDim {
+public:
+   TFormLeafInfoMultiVarDimClones(TClass* motherclassptr, Long_t offset,
+      TClass* elementclassptr, TFormLeafInfo *parent);
+   TFormLeafInfoMultiVarDimClones(TClass* classptr, Long_t offset,
+      TStreamerElement* element, TFormLeafInfo* parent);
+   TFormLeafInfoMultiVarDimClones();
+   TFormLeafInfoMultiVarDimClones(const TFormLeafInfoMultiVarDimClones& orig);
 
    virtual TFormLeafInfo* DeepCopy() const;
 

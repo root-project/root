@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.3 2005/04/22 19:29:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.4 2005/05/18 12:31:09 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -207,6 +207,27 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       TObject* objContainer=lo->GetObject();
       if (lo && objContainer && objContainer->IsA()==TClonesArray::Class())
          contained=((TClonesArray*)objContainer)->GetClass();
+      return type;
+   } else    if (type->InheritsFrom(TClonesArray::Class()) 
+      && branch->IsA()==TBranchElement::Class()
+      && branchNonCost->GetListOfLeaves()
+      && branchNonCost->GetListOfLeaves()->GetEntriesFast()==1) {
+      // load first entry of the branch. Yes, this is bad, and might have
+      // unexpected side effects for the user, esp as already looking at
+      // (and not just drawing) a branch triggeres it.
+      // To prove just how ugly it is, we'll also have to const_cast the
+      // branch...
+      
+      //if (branch->GetReadEntry()==-1) branchNonCost->GetEntry(0);
+      // now get element
+      //TLeafObject* lo=(TLeafElement*)branchNonCost->GetListOfLeaves()->First();
+      //TObject* objContainer=(TObject*)((TBranchElement*)branch)->GetValuePointer();
+
+      //if (objContainer && objContainer->IsA()==TClonesArray::Class())
+      //   contained=((TClonesArray*)objContainer)->GetClass();
+
+      // Currently we can peer into the nested TClonesArray, we need
+      // to update TBranchElement::GetValuePointer.
       return type;
    } else if (type->InheritsFrom(TCollection::Class())) {
       // some other container, and we don't know what the contained type is
@@ -538,7 +559,8 @@ TNonSplitBrowsable::TNonSplitBrowsable(const TStreamerElement* element, const TB
 
 //______________________________________________________________________________
 Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
-                                        const TVirtualBranchBrowsable* parent /* =0 */) {
+                                        const TVirtualBranchBrowsable* parent /* =0 */) 
+{
 // Given either a branch "branch" or a "parent" TVirtualBranchBrowsable, we fill
 // "list" with objects of type TNonSplitBrowsable which represent the members
 // of class "cl" (and its base classes' members).
@@ -726,8 +748,8 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
       // generic TCollection - we'll build size() ourselves, by mapping
       // it to the proper member function of the collection
       if (clCollection->InheritsFrom(TObjArray::Class()))
-         scope+=".GetEntries()";
-      else scope+=".GetSize()";
+         scope+="@.GetEntries()";
+      else scope+="@.GetSize()";
       TCollectionPropertyBrowsable* cpb=
          new TCollectionPropertyBrowsable("@size", "size of the collection", scope, branch, parent);
       li.Add(cpb);

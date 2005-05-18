@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.178 2005/04/22 19:04:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.179 2005/04/23 06:13:09 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1044,6 +1044,16 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                   new TFormLeafInfoNumerical(cl->GetCollectionProxy()->GetType());
                previnfo = previnfo->fNext;
             }
+         } else if (!useLeafCollectionObject && cl == TClonesArray::Class()) {
+
+            TFormLeafInfo *multi = 
+               new TFormLeafInfoMultiVarDimClones(cl, 0, cl, maininfo);
+            fHasMultipleVarDim[code] = kTRUE;
+            numberOfVarDim += RegisterDimensions(code,multi,kFALSE);
+            previnfo->fNext = multi;
+
+            multi->fNext =  new TFormLeafInfoClones(cl, 0, false);
+            previnfo = multi->fNext;
          }
       }
       Int_t offset;
@@ -1312,7 +1322,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                R__LoadBranch(branch,readentry,fQuickLoad);
                TClonesArray * clones;
                if (maininfo) {
-                  clones = (TClonesArray*)maininfo->GetLocalValuePointer(leaf,0);
+                  clones = (TClonesArray*)maininfo->GetValuePointer(leaf,0);
                } else {
                   // we have a unsplit TClonesArray leaves
                   // or we did not yet match any of the sub-branches!
@@ -1570,7 +1580,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
                         mustderef = kTRUE;
 
                      } else if (!useCollectionObject &&  element->GetClassPointer() 
-                        && element->GetClassPointer()->GetCollectionProxy()) {
+                                && element->GetClassPointer()->GetCollectionProxy()) {
 
                         mustderef = kTRUE;
                         if (numberOfVarDim>1) {
@@ -2458,6 +2468,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
 
       // Here since we are interested in data member, we want to consider only
       // 'terminal' branch and leaf.
+      cl = 0;
       if (leafcur->InheritsFrom("TLeafObject") &&
           leafcur->GetBranch()->GetListOfBranches()->Last()==0) {
          TLeafObject *lobj = (TLeafObject*)leafcur;

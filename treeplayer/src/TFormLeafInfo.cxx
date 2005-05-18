@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.19 2005/03/30 21:09:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.20 2005/04/22 19:04:43 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -2145,6 +2145,107 @@ void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
    
 //______________________________________________________________________________
 Double_t TFormLeafInfoMultiVarDimCollection::ReadValue(char *where, Int_t instance)
+{
+   return fNext->ReadValue(where,instance);
+}
+
+//______________________________________________________________________________
+//
+// TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
+// a data member on a variable size array inside a TClonesArray object stored
+// in a TTree.  This is the version used for split access
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
+   TClass* motherclassptr,
+   Long_t offset,
+   TClass* elementclassptr,
+   TFormLeafInfo *parent) :
+   TFormLeafInfoMultiVarDim(motherclassptr,offset,
+                 new TStreamerElement("clones","in class",
+                                      0,
+                                      TStreamerInfo::kAny,
+                                      elementclassptr
+                                      ? elementclassptr->GetName()
+                                      : ( motherclassptr
+                                          ? motherclassptr->GetName()
+                                          : "Unknwon")
+                                          )
+                                          )
+{
+   Assert(parent);
+   fCounter = parent->DeepCopy();
+   fCounter2 = parent->DeepCopy();
+   TFormLeafInfo ** next = &(fCounter2->fNext);
+   while(*next != 0) next = &( (*next)->fNext);
+   *next = new TFormLeafInfoClones(elementclassptr);
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
+   TClass* motherclassptr,
+   Long_t offset,
+   TStreamerElement* element,
+   TFormLeafInfo *parent) :
+   TFormLeafInfoMultiVarDim(motherclassptr,offset,element)
+{
+   Assert(parent && element);
+   fCounter = parent->DeepCopy();
+   fCounter2 = parent->DeepCopy();
+   TFormLeafInfo ** next = &(fCounter2->fNext);
+   while(*next != 0) next = &( (*next)->fNext);
+   *next = new TFormLeafInfoClones(motherclassptr,offset,element);
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones() :
+   TFormLeafInfoMultiVarDim()
+{
+}
+
+//______________________________________________________________________________
+TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
+   const TFormLeafInfoMultiVarDimClones& orig) :
+   TFormLeafInfoMultiVarDim(orig)
+{
+}
+
+//______________________________________________________________________________
+TFormLeafInfo* TFormLeafInfoMultiVarDimClones::DeepCopy() const
+{
+   return new TFormLeafInfoMultiVarDimClones(*this);
+}
+
+//______________________________________________________________________________
+Double_t TFormLeafInfoMultiVarDimClones::GetValue(TLeaf * /* leaf */, 
+                                                      Int_t /* instance */)
+{
+   /* The proper indexing and unwinding of index need to be done by prior leafinfo in the chain. */
+   Error("GetValue","This should never be called");
+   return 0;
+}
+
+//______________________________________________________________________________
+void TFormLeafInfoMultiVarDimClones::LoadSizes(TBranch* branch)
+{
+   Assert(fCounter2);
+
+   TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+   fNsize = (Int_t)fCounter->GetCounterValue(leaf);
+
+   if (fNsize > fSizes.GetSize()) fSizes.Set(fNsize);
+   fSumOfSizes = 0;
+   for (Int_t i=0; i<fNsize; i++) {
+      TClonesArray *clones = (TClonesArray*)fCounter2->GetValuePointer(leaf,i);
+      Int_t size = clones->GetEntries();
+      fSumOfSizes += size;
+      fSizes.AddAt( size, i );
+   }
+   return;
+}
+   
+//______________________________________________________________________________
+Double_t TFormLeafInfoMultiVarDimClones::ReadValue(char *where, Int_t instance)
 {
    return fNext->ReadValue(where,instance);
 }
