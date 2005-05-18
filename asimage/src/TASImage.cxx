@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.25 2005/05/15 07:30:17 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.26 2005/05/18 12:31:08 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -710,20 +710,15 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
       return;      
    }
 
-   if (w == 0)
+   if (w == 0) {
       w = pad->UtoPixel(1.);
-   if (h == 0)
+   }
+
+   if (h == 0) {
       h = pad->VtoPixel(0.);
+   }
 
-   TCanvas *canvas = pad->GetCanvas();
-   canvas->Show();
-   pad->Modified();
-   canvas->Update();
-   gVirtualX->Update(1);
-
-   Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
-   Window wd = (Window) gVirtualX->GetWindowID(wid);
-
+   Window wd = gVirtualX->GetCurrentWindow();
 #ifndef WIN32
    fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, AllPlanes, 0, 0);
 #else
@@ -731,7 +726,6 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    fImage = bitmap2asimage (bits, w, h, 0);
 #endif
 }
-
 
 //______________________________________________________________________________
 void TASImage::Draw(Option_t *option)

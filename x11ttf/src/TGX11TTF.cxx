@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.11 2003/04/03 14:51:47 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.12 2003/06/04 11:03:59 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -257,7 +257,11 @@ XImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Get the background of the current window in an XImage.
 
-   XWindow_t *cws = GetCurrentWindow();
+   Window_t cws = GetCurrentWindow();
+   UInt_t width;
+   UInt_t height;
+   Int_t xy;
+   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -268,10 +272,10 @@ XImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
       y  = 0;
    }
 
-   if (x+w > cws->width)  w = cws->width - x;
-   if (y+h > cws->height) h = cws->height - y;
+   if (x+w > width)  w = width - x;
+   if (y+h > height) h = height - y;
 
-   return XGetImage(fDisplay, cws->drawing, x, y, w, h, AllPlanes, ZPixmap);
+   return XGetImage(fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
 //______________________________________________________________________________
@@ -279,14 +283,18 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Test if there is really something to render
 
-   XWindow_t *cws = GetCurrentWindow();
+   Window_t cws = GetCurrentWindow();
+   UInt_t width;
+   UInt_t height;
+   Int_t xy;
+   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
 
    // If w or h is 0, very likely the string is only blank characters
    if ((int)w == 0 || (int)h == 0)  return kFALSE;
 
    // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)cws->width)  return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)cws->height) return kFALSE;
+   if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
+   if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
 
    return kTRUE;
 }
@@ -369,9 +377,9 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    }
 
    // put the Ximage on the screen
-   XWindow_t *cws = GetCurrentWindow();
+   Window_t cws = GetCurrentWindow();
    GC *gc = GetGC(6);      // gGCpxmp
-   XPutImage(fDisplay, cws->drawing, *gc, xim, 0, 0, x1, y1, w, h);
+   XPutImage(fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
    XDestroyImage(xim);
 }
 

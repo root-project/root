@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.93 2005/04/23 10:27:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.94 2005/04/26 16:36:48 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1476,7 +1476,11 @@ GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Get the background of the current window in an XImage.
 
-   XWindow_t *cws = GetCurrentWindow();
+   Window_t cws = GetCurrentWindow();
+   UInt_t width;
+   UInt_t height;
+   Int_t xy;
+   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -1487,10 +1491,10 @@ GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
       y  = 0;
    }
 
-   if (x+w > cws->width)  w = cws->width - x;
-   if (y+h > cws->height) h = cws->height - y;
+   if (x+w > width)  w = width - x;
+   if (y+h > height) h = height - y;
 
-   return gdk_image_get((GdkDrawable*)cws->drawing, x, y, w, h);
+   return gdk_image_get((GdkDrawable*)cws, x, y, w, h);
 }
 
 //______________________________________________________________________________
@@ -1498,14 +1502,18 @@ Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Test if there is really something to render
 
-   XWindow_t *cws = GetCurrentWindow();
+   Window_t cws = GetCurrentWindow();
+   UInt_t width;
+   UInt_t height;
+   Int_t xy;
+   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
 
    // If w or h is 0, very likely the string is only blank characters
    if ((int)w == 0 || (int)h == 0)  return kFALSE;
 
    // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)cws->width)  return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)cws->height) return kFALSE;
+   if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
+   if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
 
    return kTRUE;
 }
@@ -1611,8 +1619,8 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    }
 
    // put the Ximage on the screen
-   XWindow_t *cws = GetCurrentWindow();
-   gdk_draw_image(cws->drawing, GetGC(6), xim, 0, 0, x1, y1, w, h);
+   Window_t cws = GetCurrentWindow();
+   gdk_draw_image((GdkDrawable *)cws, GetGC(6), xim, 0, 0, x1, y1, w, h);
 
    gdk_image_unref(xim);
 }
@@ -2019,11 +2027,11 @@ void TGWin32::GetCharacterUp(Float_t & chupx, Float_t & chupy)
 }
 
 //______________________________________________________________________________
-XWindow_t *TGWin32::GetCurrentWindow() const
+Window_t TGWin32::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGWin32TTF.
 
-   return gCws;
+   return (Window_t)gCws->drawing;
 }
 
 //______________________________________________________________________________

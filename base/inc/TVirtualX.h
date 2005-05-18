@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.31 2004/10/20 13:11:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.32 2004/10/20 22:32:45 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -153,6 +153,7 @@ public:
    virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    virtual Int_t     WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
+   virtual Window_t  GetCurrentWindow() const;
 
    //---- Methods used for GUI -----
    virtual void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr);

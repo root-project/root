@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.45 2005/02/11 16:38:46 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.46 2005/04/26 16:36:48 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -955,11 +955,11 @@ XColor_t &TGX11::GetColor(Int_t cid)
 }
 
 //______________________________________________________________________________
-XWindow_t *TGX11::GetCurrentWindow() const
+Window_t TGX11::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGX11TTF.
 
-   return gCws;
+   return (Window_t)gCws->drawing;
 }
 
 //______________________________________________________________________________

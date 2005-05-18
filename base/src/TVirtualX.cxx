@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.11 2004/10/20 13:11:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.12 2004/10/20 22:32:45 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -2009,4 +2009,12 @@ void TVirtualX::PutImage(Drawable_t /*id*/, GContext_t /*gc*/,
 void TVirtualX::DeleteImage(Drawable_t /*img*/)
 {
    // Deallocates the memory associated with the image img
+}
+
+//______________________________________________________________________________
+Window_t TVirtualX::GetCurrentWindow() const
+{
+   // pointer to the current internal window used in canvas graphics
+
+   return (Window_t)0;
 }

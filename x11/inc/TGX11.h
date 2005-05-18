@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.22 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.23 2004/08/09 15:35:52 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -158,7 +158,6 @@ protected:
    // needed by TGX11TTF
    Bool_t     AllocColor(Colormap cmap, XColor *color);
    void       QueryColors(Colormap cmap, XColor *colors, Int_t ncolors);
-   XWindow_t *GetCurrentWindow() const;
    GC        *GetGC(Int_t which) const;
    XColor_t  &GetColor(Int_t cid);
 
@@ -236,6 +235,7 @@ public:
    void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
+   Window_t  GetCurrentWindow() const;
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr);

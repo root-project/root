@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.25 2004/10/20 13:11:39 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.26 2004/10/20 22:32:45 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -149,7 +149,6 @@ protected:
    // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
    void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
-   XWindow_t *GetCurrentWindow() const;
    GdkGC     *GetGC(Int_t which) const;
 
 public:
@@ -224,6 +223,7 @@ public:
    void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
    Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
+   Window_t  GetCurrentWindow() const;
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr);
