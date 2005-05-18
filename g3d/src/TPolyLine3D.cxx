@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.21 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.22 2005/03/21 17:22:59 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -429,12 +429,12 @@ void TPolyLine3D::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TPolyLine3D::Merge(TCollection *list)
+Int_t TPolyLine3D::Merge(TCollection *li)
 {
 // Merge polylines in the collection in this polyline
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
 
    //first loop to count the number of entries
    TPolyLine3D *pl;
@@ -467,6 +467,8 @@ Int_t TPolyLine3D::Merge(TCollection *list)
 void TPolyLine3D::Paint(Option_t * /* option */ )
 {
    // Paint a TPolyLine3D. 
+
+   UInt_t i;
 
    // No need to continue if there is nothing to paint
    if (Size() <= 0) return;
@@ -502,7 +504,7 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
 
    if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
       // Points
-      for (UInt_t i=0; i<3*buffer.NbPnts(); i++) {
+      for (i=0; i<3*buffer.NbPnts(); i++) {
          buffer.fPnts[i] = (Double_t)fP[i];
       }
 
@@ -526,7 +528,7 @@ void TPolyLine3D::Paint(Option_t * /* option */ )
       if (c < 0) c = 0;
 
       // Segments
-      for (UInt_t i = 0; i < buffer.NbSegs(); i++) {
+      for (i = 0; i < buffer.NbSegs(); i++) {
           buffer.fSegs[3*i  ] = c;
           buffer.fSegs[3*i+1] = i;
           buffer.fSegs[3*i+2] = i+1;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.34 2005/04/07 14:43:35 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.35 2005/04/28 13:54:04 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -415,8 +415,9 @@ TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t tra
 	UInt_t nv = m->NumberOfVertices();
 	fVertices.reserve(3 * nv);
 	fNormals.resize(m->NumberOfPolys() * 3);
+    UInt_t i;
 
-	for (UInt_t i = 0; i < nv; ++i) {
+	for (i = 0; i < nv; ++i) {
 		const Double_t *v = m->GetVertex(i);
 		fVertices.insert(fVertices.end(), v, v + 3);
 	}
@@ -425,7 +426,7 @@ TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t tra
 
    UInt_t descSize = 0;
 
-   for (UInt_t i = 0; i < fNbPols; ++i) descSize += m->SizeOfPoly(i) + 1;
+   for (i = 0; i < fNbPols; ++i) descSize += m->SizeOfPoly(i) + 1;
 
    fPolyDesc.reserve(descSize);
 

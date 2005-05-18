@@ -642,6 +642,14 @@ int mask_dollar;
   sprintf(string+len,"%s",G__struct.name[tagnum]+os);
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+   {
+      char *ptr = strstr(string, "long long");
+      if (ptr) {
+         memcpy(ptr, " __int64 ", strlen( " __int64 "));
+      }
+   }
+#endif
   return(string);
 }
 
@@ -1890,7 +1898,7 @@ int noerror;
     break;
 #ifndef G__OLDIMPLEMENTATION2189
   case 9:
-    if(strcmp(typenam,"long long")==0) {
+    if((strcmp(typenam,"long long")==0) || (strcmp(typenam,"__int64")==0)) {
       result.type='n';
       break;
     }
@@ -1972,7 +1980,7 @@ int noerror;
     }
     break;
   case 18:
-    if(strcmp(typenam,"unsigned long long")==0) {
+    if((strcmp(typenam,"unsigned long long")==0) || (strcmp(typenam,"unsigned __in64")==0)) {
       result.type='m';
       break;
     }

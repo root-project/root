@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.35 2005/03/24 07:11:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.36 2005/04/20 19:35:31 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1261,7 +1261,7 @@ void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
 }
 
 //______________________________________________________________________________
-Long64_t TProfile2D::Merge(TCollection *list)
+Long64_t TProfile2D::Merge(TCollection *li)
 {
    //Merge all histograms in the collection in this histogram.
    //This function computes the min/max for the axes,
@@ -1276,8 +1276,8 @@ Long64_t TProfile2D::Merge(TCollection *list)
    //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
 
-   if (!list) return 0;
-   if (list->IsEmpty()) return (Int_t) GetEntries();
+   if (!li) return 0;
+   if (li->IsEmpty()) return (Int_t) GetEntries();
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
@@ -1285,7 +1285,7 @@ Long64_t TProfile2D::Merge(TCollection *list)
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
    inlist.Add(hclone);
-   inlist.AddAll(list);
+   inlist.AddAll(li);
 
    TAxis newXAxis;
    TAxis newYAxis;

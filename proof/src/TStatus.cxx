@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.1 2004/07/09 01:34:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.2 2005/01/12 03:02:48 rdm Exp $
 // Author: Maarten Ballintijn   7/06/2004
 
 /*************************************************************************
@@ -46,11 +46,11 @@ void TStatus::Add(const char *mesg)
 }
 
 //______________________________________________________________________________
-Int_t TStatus::Merge(TCollection *list)
+Int_t TStatus::Merge(TCollection *li)
 {
    // PROOF Merge() function.
 
-   TIter stats(list);
+   TIter stats(li);
    while (TObject *obj = stats()) {
       TStatus *s = dynamic_cast<TStatus*>(obj);
       if (s == 0) continue;

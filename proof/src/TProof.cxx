@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.86 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.87 2005/05/03 13:13:02 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -98,9 +98,9 @@ public:
                    proof = prf; cslave = 0; claims = 0;}
 
    virtual ~TProofThreadArg() {
-                  if (host) delete[] host; if (ord) delete[] ord;
-                  if (image) delete[] image; if (msd) delete[] msd;
-                  if (workdir) delete[] workdir;}
+                  delete (char*)host; delete (char*)ord;
+                  delete (char*)image; delete (char*)msd;
+                  delete (char*)workdir;}
 };
 
 class TProofThread {

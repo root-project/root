@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.14 2004/12/13 16:56:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.15 2005/01/03 10:49:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -189,12 +189,12 @@ void TPolyMarker::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-Int_t TPolyMarker::Merge(TCollection *list)
+Int_t TPolyMarker::Merge(TCollection *li)
 {
 // Merge polymarkers in the collection in this polymarker
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
 
    //first loop to count the number of entries
    TPolyMarker *pm;

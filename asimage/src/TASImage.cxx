@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.24 2005/05/15 05:53:44 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.25 2005/05/15 07:30:17 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -167,7 +167,7 @@ TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
    // create an empty image
 
    SetDefaults();
-   fImage = fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+   fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
 }
 
 //______________________________________________________________________________
@@ -967,7 +967,7 @@ void TASImage::Paint(Option_t *option)
 
 #else
       // Convert ASImage into DIB: 
-      bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits );
+      bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits, 0);
       if(gDrawDIB != 0) {
          gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, tox, toy);
          free(bmbits);
@@ -982,7 +982,7 @@ void TASImage::Paint(Option_t *option)
                           grad_im->width, grad_im->height, 1);
 #else
          // Convert ASImage into DIB: 
-         bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits );
+         bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits, 0 );
 
          if(gDrawDIB != 0) {
             gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, pal_x, pal_y);
@@ -1595,11 +1595,6 @@ Pixmap_t TASImage::GetPixmap()
 {
    // returns image pixmap
 
-#ifdef WIN32
-   void *bmbits = NULL ;
-   BITMAPINFO *bmi = NULL ;
-#endif
-
    Pixmap_t pxmap;
 
    if (!InitVisual()) {
@@ -1613,7 +1608,10 @@ Pixmap_t TASImage::GetPixmap()
    pxmap = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
                                     img, 0, kTRUE);
 #else
-   bmi = ASImage2DBI( fgVisual, img, 0, 0, img->width, img->height, &bmbits );
+   void *bmbits = NULL ;
+   BITMAPINFO *bmi = NULL ;
+
+   bmi = ASImage2DBI( fgVisual, img, 0, 0, img->width, img->height, &bmbits, 0 );
    if(gDIB2Pixmap != 0) {
        pxmap = gDIB2Pixmap((ULong_t)bmi, (ULong_t)bmbits);
        free(bmbits);
@@ -1643,11 +1641,39 @@ Pixmap_t TASImage::GetMask()
       return pxmap;
    }
 
-#ifndef WIN32
-   pxmap = (Pixmap_t)asimage2mask(fgVisual, gVirtualX->GetDefaultRootWindow(), 
-                                  img, 0, kTRUE);
-#endif
-   
+   char *bits = new char[(img->width*img->height)/8 + 1]; //an array of bits
+
+   ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
+                                                0, 0, img->width, 0, 0);
+   if(!imdec) {
+      return 0;
+   }
+
+   CARD32 *a = imdec->buffer.alpha;
+   UInt_t bit = 0;
+   int i = 0;
+   Bool_t xx = gVirtualX->InheritsFrom("TGX11");
+
+   for (UInt_t y = 0; y < img->height; y++) {
+      imdec->decode_image_scanline(imdec);
+      for (UInt_t x = 0; x < img->width; x++) {
+         Bool_t setclr = xx ? a[x] : !a[x];
+         if (setclr) {
+            SETBIT(bits[i], bit);
+         } else {
+            CLRBIT(bits[i], bit);
+         }
+         bit++;
+         if (bit == 8) {
+            bit = 0;
+            i++;
+         }
+      }
+   }
+   stop_image_decoding( &imdec );
+   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
+                                  img->width, img->height);
+   delete [] bits;
    return pxmap;
 }
 
@@ -4696,7 +4722,6 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    if (!use_cache) {
       delete [] matrix;
    }
-asim_circle( ctx, 100, 100, 20, 1 );
 }
 
 //______________________________________________________________________________
@@ -4958,16 +4983,22 @@ void TASImage::Streamer(TBuffer &b)
 {
    // streamer for ROOT I/O
 
-   Bool_t vec = kFALSE;
+   Bool_t image_type = 0;
    char *buffer = 0;
    int size = 0;
    int w, h;
+   UInt_t R__s, R__c;
 
    if (b.IsReading()) {
-      TNamed::Streamer(b);
+      Version_t version = b.ReadVersion(&R__s, &R__c);
+      if (version == 0) { //dumb prototype for scheema evolution
+         return;
+      }
 
-      b >> vec;
-      if (!vec) {                // read PNG compressed image
+      TNamed::Streamer(b);
+      b >> image_type;
+
+      if (image_type != 0) {     // read PNG compressed image
          b >> size;
          buffer = new char[size];
          b.ReadFastArray(buffer, size);
@@ -4978,23 +5009,26 @@ void TASImage::Streamer(TBuffer &b)
          b >> w;
          b >> h;
          size = w*h;
-         Double_t *v = new Double_t[size];
-         b.ReadFastArray(v, size);
-         SetImage(v, w, h, &fPalette);
+         Double_t *vec = new Double_t[size];
+         b.ReadFastArray(vec, size);
+         SetImage(vec, w, h, &fPalette);
       }
+      b.CheckByteCount(R__s, R__c, TASImage::IsA());
    } else {
       if (!fImage) {
          return;
       }
+      R__c = b.WriteVersion(TASImage::IsA(), kTRUE);
+
       if (fName.IsNull()) { 
          fName.Form("img_%dx%d.%d", fImage->width, fImage->height, gRandom->Integer(1000));
       }
-
       TNamed::Streamer(b);
 
-      vec = fImage->alt.vector != 0;
-      b << vec;
-      if (!vec) {                // write PNG compressed image
+      image_type = fImage->alt.vector ? 0 : 1;
+      b << image_type;
+
+      if (image_type != 0) {     // write PNG compressed image
          GetImageBuffer(&buffer, &size, TImage::kPng);
          b << size;
          b.WriteFastArray(buffer, size);
@@ -5005,6 +5039,7 @@ void TASImage::Streamer(TBuffer &b)
          b << fImage->height;
          b.WriteFastArray(fImage->alt.vector, fImage->width*fImage->height);
       }
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 

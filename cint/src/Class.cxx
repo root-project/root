@@ -84,6 +84,12 @@ const char* G__ClassInfo::Fullname()
   if(IsValid()) {
 #ifndef G__OLDIMPLEMENTATION1586
     strcpy(G__buf,G__fulltagname((int)tagnum,1));
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+   char *ptr = strstr(G__buf, "long long");
+   if (ptr) {
+      memcpy(ptr, " __int64 ", strlen( " __int64 "));
+   }
+#endif
     return(G__buf);
 #else
     return(G__fulltagname((int)tagnum,1));

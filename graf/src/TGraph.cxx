@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.161 2005/05/06 15:40:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.162 2005/05/13 19:58:50 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4326,12 +4326,12 @@ L170:
 
 
 //______________________________________________________________________________
-Int_t TGraph::Merge(TCollection* list)
+Int_t TGraph::Merge(TCollection* li)
 {
    // Adds all graphs from the collection to this graph.
    // Returns the total number of poins in the result or -1 in case of an error.
 
-   TIter next(list);
+   TIter next(li);
    while (TObject* o = next()) {
       TGraph *g = dynamic_cast<TGraph*> (o);
       if (!g) {

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.23 2005/03/18 22:41:26 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.24 2005/03/21 17:22:59 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -268,12 +268,12 @@ void TPolyMarker3D::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TPolyMarker3D::Merge(TCollection *list)
+Int_t TPolyMarker3D::Merge(TCollection *li)
 {
 // Merge polymarkers in the collection in this polymarker
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
 
    //first loop to count the number of entries
    TPolyMarker3D *pm;

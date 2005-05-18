@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.34 2004/11/03 11:03:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.35 2005/04/30 06:44:01 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -405,10 +405,10 @@ inline void TStringRef::UnLink()
 { if (RemoveReference() == 0) delete [] (char*)this; }
 
 inline Int_t TString::Atoi()
-{ return std::atoi(fData); }
+{ return atoi(fData); }
 
 inline Double_t TString::Atof()
-{ return std::atof(fData); }
+{ return atof(fData); }
 
 inline void TString::Cow()
 { if (Pref()->References() > 1) Clone(); }

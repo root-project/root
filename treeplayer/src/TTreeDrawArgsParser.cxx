@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.1 2005/03/21 15:14:39 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.2 2005/03/21 16:14:33 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -59,13 +59,14 @@ void TTreeDrawArgsParser::ClearPrevious()
    fSelection = "";
    fOption = "";
    fDimension = -1;
-   for (int i = 0; i < fgMaxDimension; i++) {
+   int i;
+   for (i = 0; i < fgMaxDimension; i++) {
       fVarExp[i] = "";
    }
    fAdd = kFALSE;
    fName = "";
    fNoParameters = 0;
-   for (int i = 0; i < fgMaxParameters; i++) {
+   for (i = 0; i < fgMaxParameters; i++) {
       fParameterGiven[i] = kFALSE;
       fParameters[i] = 0;
    }

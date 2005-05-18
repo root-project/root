@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.86 2005/03/19 16:39:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.87 2005/04/07 13:28:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -813,7 +813,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 
 //______________________________________________________________________________
 Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/,
-                              TClonesArray *list, Int_t nentries)
+                              TClonesArray *li, Int_t nentries)
 {
 //*-*-*-*-*-*Read all leaves of entry and return total number of bytes*-*-*
 //*-* export buffers to real objects in the TClonesArray list.
@@ -853,7 +853,7 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/,
    else buf->SetBufferDisplacement();
 
    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-   leaf->ReadBasketExport(*buf,list,nentries);
+   leaf->ReadBasketExport(*buf,li,nentries);
 
    nbytes = buf->Length() - bufbegin;
    fReadEntry = entry;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.2 2005/04/22 19:04:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.3 2005/04/22 19:29:05 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -113,7 +113,7 @@ void TVirtualBranchBrowsable::Browse(TBrowser *b) {
 }
 
 //______________________________________________________________________________
-Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& list, const TBranch* branch, 
+Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& li, const TBranch* branch, 
    const TVirtualBranchBrowsable* parent /* =0 */) {
 // Askes all registered generators to fill their browsables into
 // the list. The browsables are generated for a given parent,
@@ -124,7 +124,7 @@ Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& list, const TBranch* 
    std::list<MethodCreateListOfBrowsables_t>::iterator iGenerator;
    Int_t numCreated=0;
    for (iGenerator=fgGenerators.begin(); iGenerator!=fgGenerators.end(); iGenerator++)
-      numCreated+=(*(*iGenerator))(list, branch, parent);
+      numCreated+=(*(*iGenerator))(li, branch, parent);
    return numCreated;
 }
 
@@ -368,7 +368,7 @@ TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
 }
 
 //______________________________________________________________________________
-void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& list) {
+void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li) {
 // Given a class, this methods fills list with TMethodBrowsables
 // for the class and its base classes, and returns the number of 
 // added elements. If called from a TBranch::Browse overload, "branch" 
@@ -408,12 +408,12 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& list) {
    TMethod* m=0;
    while ((m=(TMethod*)iM()))
       if (TMethodBrowsable::IsMethodBrowsable(m))
-         list.Add(m);
+         li.Add(m);
 }
 
 
 //______________________________________________________________________________
-Int_t TMethodBrowsable::GetBrowsables(TList& list, const TBranch* branch, 
+Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
                                       const TVirtualBranchBrowsable* parent /*=0*/) {
 // This methods fills list with TMethodBrowsables
 // for the branch's or parent's class and its base classes, and returns 
@@ -431,7 +431,7 @@ Int_t TMethodBrowsable::GetBrowsables(TList& list, const TBranch* branch,
    TMethod* method=0;
    TIter iMethods(&listMethods);
    while ((method=(TMethod*)iMethods()))
-      list.Add(new TMethodBrowsable(branch, method, parent));
+      li.Add(new TMethodBrowsable(branch, method, parent));
    return listMethods.GetSize();
 }
 
@@ -537,7 +537,7 @@ TNonSplitBrowsable::TNonSplitBrowsable(const TStreamerElement* element, const TB
 
 
 //______________________________________________________________________________
-Int_t TNonSplitBrowsable::GetBrowsables(TList& list, const TBranch* branch,
+Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
                                         const TVirtualBranchBrowsable* parent /* =0 */) {
 // Given either a branch "branch" or a "parent" TVirtualBranchBrowsable, we fill
 // "list" with objects of type TNonSplitBrowsable which represent the members
@@ -598,13 +598,13 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& list, const TBranch* branch,
          TStreamerElement* elem=0;
          while ((elem=(TStreamerElement*)iElem())) {
             TNonSplitBrowsable* nsb=new TNonSplitBrowsable(elem, branch, parent);
-            list.Add(nsb);
+            li.Add(nsb);
             numAdded++;
          }
       } else {
          // we have a basic streamer element
          TNonSplitBrowsable* nsb=new TNonSplitBrowsable(streamerElement, branch, parent);
-         list.Add(nsb);
+         li.Add(nsb);
          numAdded++;
       }
    }
@@ -656,7 +656,7 @@ void TCollectionPropertyBrowsable::Browse(TBrowser *b) {
 }
 
 //______________________________________________________________________________
-Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& list, const TBranch* branch, 
+Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
                                                   const TVirtualBranchBrowsable* parent /* =0 */) {
 // If the element to browse (given by either parent of branch) contains
 // a collection (TClonesArray or something for which a TVirtualCollectionProxy
@@ -719,7 +719,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& list, const TBranch* br
       TCollectionPropertyBrowsable* cpb=
          new TCollectionPropertyBrowsable("@size", "size of the collection", 
          scope+".size()", branch, parent);
-      list.Add(cpb);
+      li.Add(cpb);
       return 1;
    } // if a collection proxy or TClonesArray
    else if (clCollection->InheritsFrom(TCollection::Class())) {
@@ -730,7 +730,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& list, const TBranch* br
       else scope+=".GetSize()";
       TCollectionPropertyBrowsable* cpb=
          new TCollectionPropertyBrowsable("@size", "size of the collection", scope, branch, parent);
-      list.Add(cpb);
+      li.Add(cpb);
       return 1;
    }
    return 0;
@@ -783,7 +783,7 @@ TMethodBrowsable(branch, m, parent) {
 }
 
 //______________________________________________________________________________
-Int_t TCollectionMethodBrowsable::GetBrowsables(TList& list, const TBranch* branch, 
+Int_t TCollectionMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
                                                 const TVirtualBranchBrowsable* parent /*=0*/) {
 // This methods fills list with TMethodBrowsables
 // for the branch's or parent's collection class and its base classes, 
@@ -800,7 +800,7 @@ Int_t TCollectionMethodBrowsable::GetBrowsables(TList& list, const TBranch* bran
    TMethod* method=0;
    TIter iMethods(&listMethods);
    while ((method=(TMethod*)iMethods()))
-      list.Add(new TCollectionMethodBrowsable(branch, method, parent));
+      li.Add(new TCollectionMethodBrowsable(branch, method, parent));
 
    // if we have no methods, and if the class has a collection proxy, just add
    // the corresponding TCollectionPropertyBrowsable instead.
@@ -811,7 +811,7 @@ Int_t TCollectionMethodBrowsable::GetBrowsables(TList& list, const TBranch* bran
       std::list<MethodCreateListOfBrowsables_t>::iterator iIsRegistered
          = std::find(listGenerators.begin(), listGenerators.end(), &TCollectionPropertyBrowsable::GetBrowsables);
       if (iIsRegistered==listGenerators.end()) {
-         TCollectionPropertyBrowsable::GetBrowsables(list, branch, parent);
+         TCollectionPropertyBrowsable::GetBrowsables(li, branch, parent);
          return 1;
       }
    }

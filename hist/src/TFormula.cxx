@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.94 2005/05/01 19:10:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.95 2005/05/14 16:20:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3417,6 +3417,9 @@ void TFormula::Optimize()
    //
    // Initialize data members
    //
+
+   Int_t i;
+
    if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
    if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = 0;}
    if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = 0;}
@@ -3426,7 +3429,7 @@ void TFormula::Optimize()
    fOperOptimized   = new Int_t[fNoper];
    fPredefined      = new TFormulaPrimitive*[fNoper];
    fOperOffset      = new TOperOffset[fNoper];
-   for (Int_t i=0; i<fNoper; i++) {
+   for (i=0; i<fNoper; i++) {
       fExprOptimized[i]   = fExpr[i] ;
       fOperOptimized[i]   = fOper[i];
       fPredefined[i]= 0;
@@ -3435,7 +3438,7 @@ void TFormula::Optimize()
    //
    //Make primitives
    //
-   for (Int_t i=0;i<fNoper;i++){   
+   for (i=0;i<fNoper;i++){   
       if (fExprOptimized[i].Data()) {
          //printf("%s\n",fExprOptimized[i].Data());
          MakePrimitive(fExprOptimized[i].Data(), i);
@@ -3460,9 +3463,9 @@ void TFormula::Optimize()
    //
    // set data pointers
    //
-   for (Int_t i=0;i<fNoper;i++) optimized[i]=0;    
+   for (i=0;i<fNoper;i++) optimized[i]=0;    
    //
-   for (Int_t i=0;i<fNoper;i++){        
+   for (i=0;i<fNoper;i++){        
       Int_t actionparam = GetActionParamOptimized(i);
       Int_t action = GetActionOptimized(i);
 
@@ -3508,7 +3511,7 @@ void TFormula::Optimize()
    //
    fNOperOptimized = fNoper;
    //
-   for (Int_t i=0; i<fNoper; ++i)
+   for (i=0; i<fNoper; ++i)
    {
       //
       if (!(GetActionOptimized(i)== kData)) continue;
@@ -3640,7 +3643,7 @@ void TFormula::Optimize()
    TString expr="";
    Int_t map0[kMAXFOUND];      //remapping of the operands
    Int_t map1[kMAXFOUND];      //remapping of the operands
-   for (Int_t i=0;i<fNoper;i++){
+   for (i=0;i<fNoper;i++){
       map0[i]     =  operO;
       map1[operO] =  i;
       fOperOptimized[operO] = fOperOptimized[i];
@@ -3658,7 +3661,7 @@ void TFormula::Optimize()
    //
    // Recalculate long jump for  Boolen optimize
    //  
-   for (Int_t i=0; i<fNOperOptimized; i++){
+   for (i=0; i<fNOperOptimized; i++){
       if (GetActionOptimized(i)==kBoolOptimize){
          Int_t oldpos = fOperOffset[i].fToJump;
          Int_t newpos = map0[oldpos];

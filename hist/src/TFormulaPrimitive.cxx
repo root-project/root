@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.81 2004/09/01 10:20:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormulaPrimitive.cxx,v 1.1 2005/05/14 16:20:51 brun Exp $
 // Author: Marian Ivanov, 2005
 
 /*************************************************************************
@@ -296,7 +296,7 @@ namespace TFastFun {
    Double_t Pow4(Double_t x){return x*x*x*x;}
    Double_t Pow5(Double_t x){return x*x*x*x*x;}
    inline   Double_t FPoln(Double_t *x, Double_t *param, Int_t npar);
-   Double_t FPol0(Double_t */*x*/, Double_t *param){ return param[0];}
+   Double_t FPol0(Double_t * /*x*/, Double_t *param){ return param[0];}
    Double_t FPol1(Double_t *x, Double_t *param){ return param[0]+param[1]*x[0];}
    Double_t FPol2(Double_t *x, Double_t *param){ return param[0]+x[0]*(param[1]+param[2]*x[0]);} 
    Double_t FPol3(Double_t *x, Double_t *param){ return param[0]+x[0]*(param[1]+x[0]*(param[2]+param[3]*x[0]));}

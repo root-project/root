@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.11 2005/04/06 11:03:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.12 2005/04/06 15:56:14 brun Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -264,13 +264,13 @@ public:
 
 #ifndef __CINT__
 template <typename T>
-Long64_t TProofVectorContainer<T>::Merge(TCollection* list)
+Long64_t TProofVectorContainer<T>::Merge(TCollection* li)
 {
    // Adds all vectors holded by all TProofVectorContainers in the collection
    // the vector holded by this TProofVectorContainer.
    // Returns the total number of poins in the result or -1 in case of an error.
 
-   TIter next(list);
+   TIter next(li);
 
    std::back_insert_iterator<std::vector<T> > ii(*fVector);
    while (TObject* o = next()) {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.58 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.59 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1163,7 +1163,7 @@ void TProfile::LabelsOption(Option_t *option, Option_t * /*ax*/)
 }
 
 //______________________________________________________________________________
-Long64_t TProfile::Merge(TCollection *list)
+Long64_t TProfile::Merge(TCollection *li)
 {
    //Merge all histograms in the collection in this histogram.
    //This function computes the min/max for the x axis,
@@ -1178,8 +1178,8 @@ Long64_t TProfile::Merge(TCollection *list)
    //a multiple of the smallest bin width and the upper limit must also 
    //be a multiple of the bin width.
 
-   if (!list) return 0;
-   if (list->IsEmpty()) return (Int_t) GetEntries();
+   if (!li) return 0;
+   if (li->IsEmpty()) return (Int_t) GetEntries();
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
@@ -1187,7 +1187,7 @@ Long64_t TProfile::Merge(TCollection *list)
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
    inlist.Add(hclone);
-   inlist.AddAll(list);
+   inlist.AddAll(li);
 
    TAxis newXAxis;
    Bool_t initialLimitsFound = kFALSE;

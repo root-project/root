@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.250 2005/05/06 08:57:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.251 2005/05/13 16:26:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -833,14 +833,14 @@ TBranch* TTree::BranchImp(const char *branchname, TClass *ptrClass, void *addobj
 }
 
 //______________________________________________________________________________
-Int_t TTree::Branch(TList *list, Int_t bufsize, Int_t splitlevel)
+Int_t TTree::Branch(TList *li, Int_t bufsize, Int_t splitlevel)
 {
 //   Deprecated function. Use next function instead.
-   return Branch((TCollection*)list,bufsize,splitlevel);
+   return Branch((TCollection*)li,bufsize,splitlevel);
 }
 
 //______________________________________________________________________________
-Int_t TTree::Branch(TCollection *list, Int_t bufsize, Int_t splitlevel, const char *name)
+Int_t TTree::Branch(TCollection *li, Int_t bufsize, Int_t splitlevel, const char *name)
 {
 //   This function creates one branch for each element in the collection.
 //   Each entry in the collection becomes a top level branch if the
@@ -904,17 +904,17 @@ Int_t TTree::Branch(TCollection *list, Int_t bufsize, Int_t splitlevel, const ch
 }
 */
 //----------------------------------------------------------------------
-   if (list == 0) return 0;
+   if (li == 0) return 0;
    TObject *obj;
    Int_t nbranches = GetListOfBranches()->GetEntries();
-   if (list->InheritsFrom(TClonesArray::Class())) {
+   if (li->InheritsFrom(TClonesArray::Class())) {
          Error("Branch", "Cannot call this constructor for a TClonesArray");
          return 0;
    }
 
    Int_t nch = strlen(name);
    char branchname[kMaxLen];
-   TIter next(list);
+   TIter next(li);
 
    while ((obj = next())) {
       if (splitlevel > 1 &&  obj->InheritsFrom(TCollection::Class())
@@ -931,7 +931,7 @@ Int_t TTree::Branch(TCollection *list, Int_t bufsize, Int_t splitlevel, const ch
          }
          if (splitlevel > 1) strcat(branchname,".");
          Bronch(branchname,obj->ClassName(),
-                list->GetObjectRef(obj),bufsize,splitlevel-1);
+                li->GetObjectRef(obj),bufsize,splitlevel-1);
       }
    }
    return GetListOfBranches()->GetEntries() - nbranches;
@@ -3737,14 +3737,14 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TTree *TTree::MergeTrees(TList *list)
+TTree *TTree::MergeTrees(TList *li)
 {
    //static function merging the Trees in the TList into a new Tree.
    //Trees in the list can be memory or disk-resident trees
    //The new tree is created in the current directory (memory if gROOT)
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
    TTree *newtree = 0;
    TObject *obj;
 
@@ -3775,13 +3775,13 @@ TTree *TTree::MergeTrees(TList *list)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::Merge(TCollection *list)
+Long64_t TTree::Merge(TCollection *li)
 {
    //function merging the Trees in the TList into this Tree.
    // return the total number of entries in the merged Tree
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
    TTree *tree;
    while ((tree = (TTree*)next())) {
       if (tree==this) continue;

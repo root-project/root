@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.9 2005/04/15 12:39:34 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.10 2005/04/19 11:03:43 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -741,6 +741,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
   Int_t    jLow,jUp,iLow,iUp;
   Double_t TheBin;
   Int_t    jDivi; // TEST
+  Int_t j;
 
   Double_t *Bins  = new Double_t[fNBin];      // bins of histogram for single  PROJECTION
   if(Bins==0)    Error("Carver", "Cannot initialize buffer Bins \n" );
@@ -780,7 +781,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
       TheBin = Bins[iBin];
       //-----  walk to the left and find first bin > TheBin
       iLow = iBin;
-      for(Int_t j=iBin; j>-1; j-- ) {
+      for(j=iBin; j>-1; j-- ) {
         if(TheBin< Bins[j]) break;
         iLow = j;
       }
@@ -788,7 +789,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
       //if(iLow>0)     while( (TheBin >= Bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
       //------ walk to the right and find first bin > TheBin
       iUp  = iBin;
-      for(Int_t j=iBin; j<fNBin; j++){
+      for(j=iBin; j<fNBin; j++){
         if(TheBin< Bins[j]) break;
         iUp = j;
       }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.6 2005/04/12 09:29:32 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.7 2005/04/26 16:46:51 rdm Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1141,8 +1141,10 @@ namespace RootCsg {
 	void MeshWrapper<TMesh>::SplitPolygon(Int_t p1Index, const Plane3 &plane,
 													  Int_t &inPiece,	Int_t &outPiece,
 													  Double_t onEpsilon)
-	{DefaultSplitFunctionBinder<typename TMesh::Polygon::TVProp> defaultSplitFunction;
-	 SplitFunction<MyType,DefaultSplitFunctionBinder<typename TMesh::Polygon::TVProp> >
+	{
+      typedef typename TMesh::Polygon::TVProp mesh;
+      DefaultSplitFunctionBinder<mesh> defaultSplitFunction;
+	 SplitFunction<MyType,DefaultSplitFunctionBinder<mesh> >
 			splitFunction(*this,defaultSplitFunction);
 	 splitFunction.SplitPolygon(p1Index,plane,inPiece,outPiece,onEpsilon);}
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id$
+// @(#)root/tree:$Name:  $:$Id: TSelectorScalar.h,v 1.1 2005/02/21 09:44:47 rdm Exp $
 // Author: Maarten Ballintijn   13/02/2005
 
 /*************************************************************************
@@ -36,8 +36,7 @@
 
 class TCollection;
 
-
-class TSelectorScalar : public TParameter<Long64_t> {
+class TSelectorScalar :  public TParameter<Long64_t> {
 
 public:
    TSelectorScalar(const char *name = "", Long64_t val = 0)
@@ -49,5 +48,6 @@ public:
 
    ClassDef(TSelectorScalar,1)  //Mergable scalar
 };
+
 
 #endif

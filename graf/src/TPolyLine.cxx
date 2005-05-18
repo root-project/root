@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.19 2004/12/13 16:56:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.20 2005/01/03 10:49:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -409,12 +409,12 @@ void TPolyLine::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-Int_t TPolyLine::Merge(TCollection *list)
+Int_t TPolyLine::Merge(TCollection *li)
 {
 // Merge polylines in the collection in this polyline
 
-   if (!list) return 0;
-   TIter next(list);
+   if (!li) return 0;
+   TIter next(li);
 
    //first loop to count the number of entries
    TPolyLine *pl;

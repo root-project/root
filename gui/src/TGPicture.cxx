@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.15 2005/05/15 05:53:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.16 2005/05/15 07:30:17 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -81,13 +81,34 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return 0;
    }
 
-   TImage *img = TImage::Open(picnam);
-   if (!img) return 0;
+   if (ext != ".xpm") {
+      TImage *img = TImage::Open(picnam);
+      if (!img) return 0;
 
-   pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
+      pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
+      delete [] picnam;
+      delete img;
+      fPicList->Add(pic);
+      return pic;
+   }
+
+   pic = new TGPicture(pname);
+   pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
+   pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
+   pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+
+   if (gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
+                                        pic->fPic, pic->fMask,
+                                        pic->fAttributes)) {
+      fPicList->Add(pic);
+   } else {
+      delete pic;
+      pic = new TGPicture(name);
+      fPicList->Add(pic);
+      pic = 0;
+   }
+
    delete [] picnam;
-   delete img;
-   fPicList->Add(pic);
    return pic;
 }
 
@@ -132,15 +153,102 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return 0;
    }
 
-   img = TImage::Open(picnam);
-   if (!img) return 0;
+   if (ext != ".xpm") {
+      img = TImage::Open(picnam);
+      if (!img) return 0;
 
-   if ((new_width != img->GetWidth()) || (new_height != img->GetHeight())) {
       img->Scale(new_width, new_height);
+      pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
+      delete [] picnam;
+      delete img;
+      fPicList->Add(pic);
+      return pic;
    }
-   pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
-   delete [] picnam;
-   delete img;
+
+   pic = new TGPicture(hname, kTRUE);
+   pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
+   pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
+   pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+
+   Bool_t retc = kFALSE;
+   if (!gVirtualX->InheritsFrom("TGX11")) {
+      // case of win32gdk and qt drivers
+      retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
+                                              picnam, pic->fPic, pic->fMask,
+                                              pic->fAttributes);
+      delete [] picnam;
+   } else {
+      // case supported by X11 driver
+      char **data;
+      if (!gVirtualX->ReadPictureDataFromFile(picnam, &data)) {
+         delete pic;
+         delete [] picnam;
+         return 0;
+      }
+      delete [] picnam;
+
+      Int_t    colors, chars, headersize, totalheight;
+      UInt_t   width, height;
+      Double_t xscale, yscale;
+
+      sscanf(data[0], "%u %u %d %d", &width, &height, &colors, &chars);
+      headersize = colors + 1;
+      yscale = (Double_t) new_height / (Double_t) height;
+      xscale = (Double_t) new_width / (Double_t) width;
+      totalheight = (colors + new_height + 1);
+
+      if ((width != new_width) || (height != new_height)) {
+         char **smalldata;
+         Int_t    i, x1, y1, pixels;
+         Double_t x, y;
+
+         smalldata = new char* [totalheight + 1];
+
+         smalldata[0] = new char[30];
+         for (i = 1; i < headersize; i++)
+            smalldata[i] = new char [strlen(data[i]) + 1];
+
+         for (i = headersize; i < totalheight + 1; i++)
+            smalldata[i] = new char[(new_width * chars) + 1];
+
+         sprintf(smalldata[0], "%u %u %d %d", new_width, new_height, colors, chars);
+
+         for (i = 1; i < headersize; i++) strcpy(smalldata[i], data[i]);
+
+         y = headersize;
+         for (y1 = headersize; y1 < (Int_t)new_height + headersize; y1++) {
+            x = 0;
+            for (x1 = 0; x1 < (Int_t)new_width; x1++) {
+               for (pixels = 0; pixels < chars; pixels++)
+                  smalldata[y1][x1+pixels] = data[(Int_t)y][(Int_t)x + pixels];
+               x += 1.0 / xscale;
+            }
+            smalldata[y1][x1] = '\0';
+            y += 1.0 / yscale;
+         }
+
+         retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), smalldata,
+                                                 pic->fPic, pic->fMask,
+                                                 pic->fAttributes);
+
+         for (i = 0; i < totalheight + 1; i++)
+            delete [] smalldata[i];
+         delete [] smalldata;
+
+      } else {
+         retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), data,
+                                                 pic->fPic, pic->fMask,
+                                                 pic->fAttributes);
+      }
+
+      gVirtualX->DeletePictureData(data);
+   }
+
+   if (!retc) {
+      delete pic;
+      return 0;
+   }
+
    fPicList->Add(pic);
    return pic;
 }

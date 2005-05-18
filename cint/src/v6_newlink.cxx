@@ -4865,7 +4865,8 @@ char *endoffunc;
 #ifndef G__OLDIMPLEMENTATION1503
   int deftyp = -1;
 #endif
-
+  char *typestring;
+  char *ptr;
   type = ifunc->type[ifn];
   tagnum = ifunc->p_tagtable[ifn];
   typenum = ifunc->p_typetable[ifn];
@@ -4897,10 +4898,17 @@ char *endoffunc;
       else              isconst |= G__CONSTVAR;
     }
 #ifndef G__OLDIMPLEMENTATION1761
-    if(islower(type) && !isconst) 
-      fprintf(fp,"const %s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
+   typestring = G__type2string(type,tagnum,typenum,reftype,isconst);
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+   ptr = strstr(typestring, "long long");
+   if (ptr) {
+      memcpy(ptr, " __int64 ", strlen( " __int64 "));
+   }
+#endif
+    if(islower(type) && !isconst)
+      fprintf(fp,"const %s obj=", typestring);
     else
-      fprintf(fp,"%s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
+      fprintf(fp,"%s obj=",typestring);
 #else
     fprintf(fp,"%s obj=",G__type2string(type,tagnum,typenum,reftype,isconst));
 #endif
@@ -5019,9 +5027,14 @@ char *endoffunc;
 	if(isconst&G__CONSTFUNC) fprintf(fp,"const ");
 #endif
 #ifndef G__OLDIMPLEMENTATION1761
-	fprintf(fp,"         const %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
-#else
-	fprintf(fp,"         %s& obj=",G__type2string('u',tagnum,deftyp,0,0));
+   typestring = G__type2string('u',tagnum,deftyp,0,0);
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+   ptr = strstr(typestring, "long long");
+   if (ptr) {
+      memcpy(ptr, " __int64 ", strlen( " __int64 "));
+   }
+#endif
+	fprintf(fp,"         const %s& obj=",typestring);
 #endif
 	sprintf(endoffunc,";\n        result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);\n      }");
       }
@@ -5118,6 +5131,7 @@ int k;
 #ifndef G__SMALLOBJECT
   int type,tagnum,typenum,reftype;
   int isconst;
+  char *typestring;
 
   type=ifunc->para_type[ifn][k];
   tagnum=ifunc->para_p_tagtable[ifn][k];
@@ -5244,11 +5258,19 @@ int k;
 #ifndef G__OLDIMPLEMENTATION2189
         case 'n':
 	  fprintf(fp,"*(%s*)G__Longlongref(&libp->para[%d])"
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+        ,"__int64",k);
+#else
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
+#endif
 	  break;
         case 'm':
 	  fprintf(fp,"*(%s*)G__ULonglongref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
+        ,"unsigned __int64",k);
+#else
+        ,G__type2string(type,tagnum,typenum,0,0),k);
+#endif
 	  break;
         case 'q':
 	  fprintf(fp,"*(%s*)G__Longdoubleref(&libp->para[%d])"

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.239 2005/05/04 10:37:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.240 2005/05/06 15:40:22 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3655,7 +3655,7 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 }
 
 //______________________________________________________________________________
-Long64_t TH1::Merge(TCollection *list)
+Long64_t TH1::Merge(TCollection *li)
 {
 // Add all histograms in the collection to this histogram.
 // This function computes the min/max for the x axis,
@@ -3693,8 +3693,8 @@ Long64_t TH1::Merge(TCollection *list)
 //    h->Draw();
 // }
 
-   if (!list) return 0;
-   if (list->IsEmpty()) return (Int_t) GetEntries();
+   if (!li) return 0;
+   if (li->IsEmpty()) return (Int_t) GetEntries();
 
    TList inlist;
    TH1* hclone = (TH1*)Clone("FirstClone");
@@ -3702,7 +3702,7 @@ Long64_t TH1::Merge(TCollection *list)
    Reset();                // BufferEmpty sets limits so we can't use it later.
    SetEntries(0);
    inlist.Add(hclone);
-   inlist.AddAll(list);
+   inlist.AddAll(li);
 
    THashList allLabels;
    THashList* labels=GetXaxis()->GetLabels();

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.6 2004/12/07 15:34:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.7 2005/02/18 11:22:28 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -937,7 +937,7 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
    gVirtualX->DeletePixmap(pxmap);
 #else
    bmi = ASImage2DBI((ASVisual*)TASImage::GetVisual(), grad_im, 0, 0,
-                     grad_im->width, grad_im->height, &bmbits );
+                     grad_im->width, grad_im->height, &bmbits, 0 );
    gPad->cd();
    if(gDrawDIB != 0) {
       gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, 0, 0);
