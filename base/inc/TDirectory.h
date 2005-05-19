@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.25 2004/07/01 04:55:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.26 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -67,6 +67,32 @@ private:
 public:
    // TDirectory status bits
    enum { kCloseDirectory = BIT(7) };
+
+   /** @class Context
+     *
+     *  Small helper to keep current directory context.
+     *  Automatically reverts to "old" directory
+     */
+   class TContext  {
+   private:
+      TDirectory* fPrevious;   // Pointer to the previous current directory.
+      void CdNull(); 
+   public:
+      TContext(TDirectory* previous, TDirectory* newCurrent) 
+         : fPrevious(previous)
+      {
+         // Store the current directory so we can restore it
+         // later and cd to the new directory.
+         if ( newCurrent ) newCurrent->cd();
+      } 
+      ~TContext() 
+      {
+         // Destructor.   Reset the current directory to its
+         // previous state.
+         if ( fPrevious ) fPrevious->cd();
+         else CdNull();
+      }
+   };
 
    TDirectory();
    TDirectory(const char *name, const char *title, Option_t *option="");

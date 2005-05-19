@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.61 2004/12/22 21:23:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.62 2005/01/12 18:02:28 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -593,10 +593,8 @@ void TDirectory::Delete(const char *namecycle)
 //     *;*   : delete all objects from memory and file
 //    T*;*   : delete all objects from memory and file and all subdirectories
 //
-
-   TDirectory *cursav = gDirectory;
-   cd();
-
+   
+   TDirectory::TContext ctxt(gDirectory, this);
    Short_t  cycle;
    char     name[kMaxLen];
    DecodeNameCycle(namecycle, name, cycle);
@@ -658,10 +656,6 @@ void TDirectory::Delete(const char *namecycle)
          }
       }
    }
-
-   cursav->cd();
-
-   return;
 }
 
 //______________________________________________________________________________
@@ -1600,8 +1594,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  The function returns the total number of bytes written to the directory.
    //  It returns 0 if the object cannot be written.
 
-   // BE CAREFUL! When this function is called, gDirectory may not be equal to this!
-
+   TDirectory::TContext ctxt(gDirectory, this);
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
@@ -1709,6 +1702,8 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    //    TClass *cl = gROOT->GetClass("classname");
    // An alternative is to call the function WriteObjectAny above.
    // see TDirectory::WriteObject for comments
+
+   TDirectory::TContext ctxt(gDirectory, this);
 
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
@@ -1867,3 +1862,15 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
    }
    name[nch] = 0;
 }
+
+ 
+//______________________________________________________________________________
+void TDirectory::TContext::CdNull()
+{
+   // Set the current directory to null.
+   // This is called from the TContext destructor.  Since the destructor is
+   // inline, we do no want to have it use directly a global variable.
+
+   gDirectory = 0;
+}
+

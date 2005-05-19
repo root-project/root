@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.69 2005/04/12 13:45:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.70 2005/04/12 16:58:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -756,7 +756,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    if (option & kOverwrite)   opt += "OverWrite";
    if (option & kWriteDelete) opt += "WriteDelete";
 
-   Int_t nbytes = gFile->WriteTObject(this,name,opt.Data());
+   Int_t nbytes = gDirectory->WriteTObject(this,name,opt.Data());
    if (bufsize) gFile->SetBufferSize(0);
    return nbytes;
 }
