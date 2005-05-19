@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.6 2001/06/05 13:13:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.7 2001/06/08 06:52:14 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -365,8 +365,8 @@ void TGeometry::Local2Master(Double_t *local, Double_t *master)
        + local[2]*matrix[8];
      master[0] = x; master[1] = y; master[2] = z;
   }
-  else
-     memcpy(master,local,sizeof(Double_t)* kVectorSize);
+  else 
+     for (Int_t i=0;i<3;i++) master[i] = local[i];
 }
 
 //______________________________________________________________________________
@@ -405,7 +405,7 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
      master[0] = x; master[1] = y; master[2] = z;
   }
   else
-     memcpy(master,local,sizeof(Float_t)* kVectorSize);
+     for (Int_t i=0;i<3;i++) master[i] = local[i];
 }
 
 //______________________________________________________________________________
