@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.146 2005/03/14 17:23:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.147 2005/04/10 08:05:32 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -624,7 +624,7 @@ TObject *TROOT::FindObject(const char *name) const
    //     - Current Directory on file
 
    if (name && strstr(name,"/")) return FindObjectAny(name);
-   
+
    TObject *temp = 0;
 
    temp   = fFiles->FindObject(name);       if (temp) return temp;
@@ -1564,7 +1564,7 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 }
 
 //______________________________________________________________________________
-Int_t TROOT::Macro(const char *filename, int *error)
+Long_t TROOT::Macro(const char *filename, int *error)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
    // command ".x filename". If the filename has "+" or "++" appended
@@ -1572,7 +1572,7 @@ Int_t TROOT::Macro(const char *filename, int *error)
    // [path/]macro.C[+|++[g|O]][(args)].
    // The possible error codes are defined by TInterpreter::EErrorCode.
 
-   Int_t result = 0;
+   Long_t result = 0;
 
    if (fInterpreter) {
       TString aclicMode;

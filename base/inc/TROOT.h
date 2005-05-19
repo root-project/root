@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.42 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -203,7 +203,7 @@ public:
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Int_t             Macro(const char *filename, Int_t *error = 0);
+   Long_t            Macro(const char *filename, Int_t *error = 0);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
    void              ProcessLine(const char *line, Int_t *error = 0);
