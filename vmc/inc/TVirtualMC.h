@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name: v4-03-02 $:$Id: TVirtualMC.h,v 1.11 2005/02/08 11:20:15 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.12 2005/05/17 12:44:52 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -112,9 +112,9 @@ class TVirtualMC : public TNamed {
     // functions for definition of surfaces
     // and material properties for optical physics
     virtual void  DefineOpSurface(const char* name,
-                         TMCOpSurfaceModel model,
-			 TMCOpSurfaceType surfaceType,
-			 TMCOpSurfaceFinish surfaceFinish,
+                         EMCOpSurfaceModel model,
+			 EMCOpSurfaceType surfaceType,
+			 EMCOpSurfaceFinish surfaceFinish,
 			 Double_t sigmaAlpha);
     virtual void  SetBorderSurface(const char* name,
                          const char* vol1Name, int vol1CopyNo,
@@ -306,8 +306,8 @@ class TVirtualMC : public TNamed {
 // new functions
 
 inline void  TVirtualMC::DefineOpSurface(const char* /*name*/,
-                TMCOpSurfaceModel /*model*/, TMCOpSurfaceType /*surfaceType*/,
-	        TMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
+                EMCOpSurfaceModel /*model*/, EMCOpSurfaceType /*surfaceType*/,
+	        EMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
    
    Warning("DefineOpSurface", "New function - not yet implemented.");
 }   
