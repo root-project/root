@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.26 2005/05/18 12:31:08 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.27 2005/05/18 16:58:42 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -1646,12 +1646,11 @@ Pixmap_t TASImage::GetMask()
    CARD32 *a = imdec->buffer.alpha;
    UInt_t bit = 0;
    int i = 0;
-   Bool_t xx = gVirtualX->InheritsFrom("TGX11");
 
    for (UInt_t y = 0; y < img->height; y++) {
       imdec->decode_image_scanline(imdec);
       for (UInt_t x = 0; x < img->width; x++) {
-         Bool_t setclr = xx ? a[x] : !a[x];
+         Bool_t setclr = a[x];
          if (setclr) {
             SETBIT(bits[i], bit);
          } else {
