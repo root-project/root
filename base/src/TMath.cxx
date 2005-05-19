@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.96 2005/04/08 16:45:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.97 2005/04/29 17:08:34 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -196,7 +196,7 @@ Int_t TMath::Nint(Double_t x)
 }
 
 //______________________________________________________________________________
-Float_t *TMath::Cross(Float_t v1[3],Float_t v2[3],Float_t out[3])
+Float_t *TMath::Cross(const Float_t v1[3],const Float_t v2[3],Float_t out[3])
 {
    // Calculate the Cross Product of two vectors:
    //         out = [v1 x v2]
@@ -209,7 +209,7 @@ Float_t *TMath::Cross(Float_t v1[3],Float_t v2[3],Float_t out[3])
 }
 
 //______________________________________________________________________________
-Double_t *TMath::Cross(Double_t v1[3],Double_t v2[3],Double_t out[3])
+Double_t *TMath::Cross(const Double_t v1[3],const Double_t v2[3],Double_t out[3])
 {
    // Calculate the Cross Product of two vectors:
    //   out = [v1 x v2]
@@ -743,7 +743,7 @@ Double_t TMath::Normalize(Double_t v[3])
 }
 
 //______________________________________________________________________________
-Float_t *TMath::Normal2Plane(Float_t p1[3],Float_t p2[3],Float_t p3[3], Float_t normal[3])
+Float_t *TMath::Normal2Plane(const Float_t p1[3],const Float_t p2[3],const Float_t p3[3], Float_t normal[3])
 {
    // Calculate a normal vector of a plane.
    //
@@ -768,7 +768,7 @@ Float_t *TMath::Normal2Plane(Float_t p1[3],Float_t p2[3],Float_t p3[3], Float_t 
 }
 
 //______________________________________________________________________________
-Double_t *TMath::Normal2Plane(Double_t p1[3],Double_t p2[3],Double_t p3[3], Double_t normal[3])
+Double_t *TMath::Normal2Plane(const Double_t p1[3],const Double_t p2[3],const Double_t p3[3], Double_t normal[3])
 {
    // Calculate a normal vector of a plane.
    //
@@ -1163,7 +1163,7 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 }
 
 //______________________________________________________________________________
-void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
+void TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
 {
    // Computes the roots of a cubic polynomial
    // coef: Coefficients

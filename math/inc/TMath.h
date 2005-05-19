@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.60 2005/04/08 16:45:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.61 2005/04/29 17:08:34 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -127,7 +127,9 @@ namespace TMath {
    // Misc
    inline Double_t Sqrt(Double_t x);
    inline Double_t Ceil(Double_t x);
+   inline Int_t    CeilNint(Double_t x);
    inline Double_t Floor(Double_t x);
+   inline Int_t    FloorNint(Double_t x);
    inline Double_t Exp(Double_t x);
    inline Double_t Ldexp(Double_t x, Int_t exp);
           Double_t Factorial(Int_t i);
@@ -303,15 +305,15 @@ namespace TMath {
 
 
    // Advanced
-          Float_t  *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
-          Double_t *Cross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Cross Product of two vectors
+          Float_t  *Cross(const Float_t v1[3],const Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
+          Double_t *Cross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]); // Calculate the Cross Product of two vectors
           Float_t   Normalize(Float_t v[3]);                              // Normalize a vector
           Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
-   inline Float_t   NormCross(Float_t v1[3],Float_t v2[3],Float_t out[3]);    // Calculate the Normalized Cross Product of two vectors
-   inline Double_t  NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
-          Float_t  *Normal2Plane(Float_t v1[3],Float_t v2[3],Float_t v3[3], Float_t normal[3]);     // Calculate a normal vector of a plane
-          Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
-          void      RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
+   inline Float_t   NormCross(const Float_t v1[3],const Float_t v2[3],Float_t out[3]);    // Calculate the Normalized Cross Product of two vectors
+   inline Double_t  NormCross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
+          Float_t  *Normal2Plane(const Float_t v1[3],const Float_t v2[3],const Float_t v3[3], Float_t normal[3]);     // Calculate a normal vector of a plane
+          Double_t *Normal2Plane(const Double_t v1[3],const Double_t v2[3],const Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
+          void      RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
 
           Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
           Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
@@ -610,8 +612,14 @@ inline Double_t TMath::Sqrt(Double_t x)
 inline Double_t TMath::Ceil(Double_t x)
    { return ceil(x); }
 
+inline Int_t TMath::CeilNint(Double_t x)
+   { return TMath::Nint(ceil(x)); }
+
 inline Double_t TMath::Floor(Double_t x)
    { return floor(x); }
+
+inline Int_t TMath::FloorNint(Double_t x)
+   { return TMath::Nint(floor(x)); }
 
 inline Double_t TMath::Exp(Double_t x)
    { return exp(x); }
@@ -641,13 +649,13 @@ inline Int_t TMath::IsNaN(Double_t x)
 
 //-------- Advanced -------------
 
-inline Float_t TMath::NormCross(Float_t v1[3],Float_t v2[3],Float_t out[3])
+inline Float_t TMath::NormCross(const Float_t v1[3],const Float_t v2[3],Float_t out[3])
 {
    // Calculate the Normalized Cross Product of two vectors
    return Normalize(Cross(v1,v2,out));
 }
 
-inline Double_t TMath::NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3])
+inline Double_t TMath::NormCross(const Double_t v1[3],const Double_t v2[3],Double_t out[3])
 {
    // Calculate the Normalized Cross Product of two vectors
    return Normalize(Cross(v1,v2,out));
