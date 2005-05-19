@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name: v4-03-02 $:$Id: TMCProcess.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TMCOptical.h,v 1.1 2005/05/17 12:49:05 brun Exp $
 // Author: Alice collaboration  
 
 #ifndef ROOT_TMCOptical
@@ -8,13 +8,13 @@
 //
 #include "Rtypes.h"
    
-enum TMCOpSurfaceModel
+enum EMCOpSurfaceModel
 {
    kGlisur,                      // original GEANT3 model
    kUnified                      // UNIFIED model
 };
 
-enum TMCOpSurfaceType
+enum EMCOpSurfaceType
 {
    kDielectric_metal,            // dielectric-metal interface
    kDielectric_dielectric,       // dielectric-dielectric interface
@@ -22,7 +22,7 @@ enum TMCOpSurfaceType
    kXray                         // for x-ray mirror process
 };
 
-enum TMCOpSurfaceFinish
+enum EMCOpSurfaceFinish
 {
    kPolished,                    // smooth perfectly polished surface
    kPolishedfrontpainted,        // smooth top-layer (front) paint
