@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.31 2005/04/07 13:28:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.32 2005/04/19 20:05:28 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -287,7 +287,7 @@ AfterBuffer:
    if (!fEntryOffset) {
       fEntryOffset = new Int_t[fNevBuf+1];
       fEntryOffset[0] = fKeylen;
-      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d, but fEntryOffset=0, trying to repair",GetName(),fNevBuf);
+      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
       return badread;
    }
    delete [] fDisplacement;
