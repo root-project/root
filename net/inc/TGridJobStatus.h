@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJobStatus.h,v 1.3 2004/11/01 17:38:09 jgrosseo Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJobStatus.h,v 1.1 2005/05/12 13:19:39 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -37,9 +37,9 @@ public:
   // These functions reduces the possible job states to the subset given above
   // in EGridJobStatus, for detailed status information query the specific
   // implementation
-  virtual EGridJobStatus GetStatus() = 0;
+  virtual EGridJobStatus GetStatus() const = 0;
 
-  ClassDef(TGridJobStatus,0)  // ABC defining status of a Grid job
+  ClassDef(TGridJobStatus,1)  // ABC defining status of a Grid job
 };
 
 #endif

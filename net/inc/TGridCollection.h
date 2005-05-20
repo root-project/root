@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAlienCollection.h,v 1.3 2004/11/01 17:38:08 jgrosseo Exp $
+// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.1 2005/05/12 13:19:39 rdm Exp $
 // Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************
@@ -30,7 +30,7 @@ public:
    TGridCollection() { }
    virtual ~TGridCollection() { }
 
-   ClassDef(TGridCollection,0)  // ABC managing collection of files on the Grid
+   ClassDef(TGridCollection,1)  // ABC managing collection of files on the Grid
 };
 
 #endif
