@@ -1,8 +1,8 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.3 2003/11/13 15:15:11 rdm Exp $
-// Author: Andreas Peters 04/09/2003
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.2 2004/10/01 12:45:23 jgrosseo Exp $
+// Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,118 +13,44 @@
 //                                                                      //
 // TAlienResult                                                         //
 //                                                                      //
-// Class defining interface to an AliEn grid result.                    //
+// Class defining interface to a Alien result set.                      //
+// Objects of this class are created by TGrid methods.                  //
 //                                                                      //
-// Related class is TAlien.                                             //
+// Related classes are TAlien.                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TAlienResult.h"
-
+#include "TObjString.h"
+#include "TMap.h"
+#include "Riostream.h"
 
 ClassImp(TAlienResult)
 
 //______________________________________________________________________________
-TAlienResult::TAlienResult(Grid_ResultHandle_t result)
+void TAlienResult::DumpResult()
 {
-   // Create a result object and initialize it with the AliEn result struct.
+   // Dump result set.
 
-   fResult  = result;
+   cout << "BEGIN DUMP" << endl;
+   TIter next(this);
+   TMap *map;
+   while ((map = (TMap*) next())) {
+      TIter next2(map->GetTable());
+      TPair *pair;
+      while ((pair = (TPair*) next2())) {
+         TObjString *keyStr = dynamic_cast<TObjString*>(pair->Key());
+         TObjString* valueStr = dynamic_cast<TObjString*>(pair->Value());
 
-   if (!gGrid) {
-      Error("TAlienResult", "no instance of gGrid");
-      return;
-   }
-
-   if (fResult) {
-      gGrid->ResetResult(fResult);
-      while (gGrid->ReadResult(fResult))
-         fResults++;
-      gGrid->ResetResult(fResult);
-   }
-}
-
-//______________________________________________________________________________
-TAlienResult::~TAlienResult()
-{
-   // Clean up alien guery result.
-
-   Close();
-}
-
-//______________________________________________________________________________
-void TAlienResult::Close()
-{
-   // Close result object.
-
-   if (!gGrid) {
-      Error("Close", "no instance of gGrid");
-      return;
-   }
-
-   if (fResult)
-      gGrid->CloseResult(fResult);
-   fResult = 0;
-
-   TGridResult::Close();
-}
-
-//______________________________________________________________________________
-Grid_Result_t *TAlienResult::Next()
-{
-   // Returns next result. Returns 0 when end of result set is reached.
-
-   if (!gGrid) {
-      Error("Next", "no instance of gGrid");
-      return 0;
-   }
-
-   if (!fResult)
-      return 0;
-
-   fCurrent++;
-   return gGrid->ReadResult(fResult);
-}
-
-//______________________________________________________________________________
-void TAlienResult::Reset()
-{
-   // Reset result iterator, i.e. Next() returns first result.
-
-   if (!gGrid) {
-      Error("Reset", "no instance of gGrid");
-      return;
-   }
-
-   if (fResult)
-      gGrid->ResetResult(fResult);
-   fCurrent = 0;
-}
-
-//______________________________________________________________________________
-void TAlienResult::Print(Option_t *opt) const
-{
-   // List contents of result.
-
-   if (!opt) opt = "";
-
-   const_cast<TAlienResult*>(this)->Reset();
-   int cnt = 0;
-   Grid_Result_t *result;
-   while ((result = (Grid_Result_t *) const_cast<TAlienResult*>(this)->Next())) {
-      cnt++;
-      printf("%s", opt);
-      if (strlen(opt))
-         printf("     - %-32s %-32s\n", result->name.c_str(),
-                result->name2.c_str());
-      else
-         printf(" [%2d] %-32s %-32s\n", cnt, result->name.c_str(),
-                result->name2.c_str());
-      if (result->data) {
-         TString indentation = opt;
-         indentation += "   ";
-         TAlienResult subresult(result->data);
-         subresult.Print(indentation);
+         if (keyStr) {
+	    cout << "Key: " << keyStr->GetString() << "   ";
+         }
+         if (valueStr) {
+	    cout << "Value: " << valueStr->GetString();
+         }
+         cout << endl;
       }
    }
+
+   cout << "END DUMP" << endl;
 }

@@ -1,37 +1,42 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.2 2004/10/01 12:45:23 jgrosseo Exp $
-// Author: Fons Rademakers   3/1/2002
+// @(#)root/alien:$Name:  $:$Id: TAlienMasterJob.h,v 1.4 2004/11/01 17:38:08 jgrosseo Exp $
+// Author: Jan Fiete Grosse-Oetringhaus  27/10/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TAlienResult
-#define ROOT_TAlienResult
+#ifndef ROOT_TAlienMasterJob
+#define ROOT_TAlienMasterJob
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAlienResult                                                         //
+// TAlienMasterJob                                                      //
 //                                                                      //
-// Class defining interface to a Alien result set.                      //
-// Objects of this class are created by TGrid methods.                  //
+// Special Grid job which contains a master job which controls          //
+// underlying jobs resulting from job splitting.                        //
 //                                                                      //
-// Related classes are TAlien.                                          //
+// Related classes are TAlienJobStatus.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridResult
-#include "TGridResult.h"
+#ifndef ROOT_TGridJob
+#include "TGridJob.h"
 #endif
 
-class TAlienResult : public TGridResult {
-public:
-   void DumpResult();
 
-   ClassDef(TAlienResult,0)  // Alien query result set
+class TAlienMasterJob : public TGridJob {
+
+public:
+   TAlienMasterJob(GridJobID_t jobID) : TGridJob(jobID) { }
+   virtual ~TAlienMasterJob() { }
+
+   virtual TGridJobStatus *GetJobStatus() const;
+
+   ClassDef(TAlienMasterJob,1) // Special Alien grid job controlling results of job splitting
 };
 
 #endif

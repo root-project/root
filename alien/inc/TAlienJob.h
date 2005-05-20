@@ -1,37 +1,41 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.h,v 1.2 2004/10/01 12:45:23 jgrosseo Exp $
-// Author: Fons Rademakers   3/1/2002
+// @(#)root/alien:$Name:  $:$Id: TAlienJob.h,v 1.4 2004/10/28 08:58:54 jgrosseo Exp $
+// Author: Jan Fiete Grosse-Oetringhaus  06/10/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TAlienResult
-#define ROOT_TAlienResult
+#ifndef ROOT_TAlienJob
+#define ROOT_TAlienJob
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TAlienResult                                                         //
+// TAlienJob                                                            //
 //                                                                      //
-// Class defining interface to a Alien result set.                      //
-// Objects of this class are created by TGrid methods.                  //
+// Alien implentation of TGridJob                                       //
 //                                                                      //
-// Related classes are TAlien.                                          //
+// Related classes are TAlienJobStatus.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridResult
-#include "TGridResult.h"
+#ifndef ROOT_TGridJob
+#include "TGridJob.h"
 #endif
 
-class TAlienResult : public TGridResult {
-public:
-   void DumpResult();
 
-   ClassDef(TAlienResult,0)  // Alien query result set
+class TAlienJob : public TGridJob {
+
+public:
+   TAlienJob(GridJobID_t jobID) : TGridJob(jobID) { }
+   virtual ~TAlienJob() { }
+
+   virtual TGridJobStatus *GetJobStatus() const;
+
+   ClassDef(TAlienJob,1)  // Alien implementation of TGridJob
 };
 
 #endif

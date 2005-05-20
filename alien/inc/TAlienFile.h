@@ -1,8 +1,8 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.4 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.5 2004/10/15 16:55:06 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_TAlienFile
 #define ROOT_TAlienFile
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -43,52 +42,43 @@ class TAlienFile : public TFile {
 private:
    TUrl      fUrl;                 //URL of file
    TFile    *fSubFile;             //sub file (PFN)
+   TString   fAuthz;               //authorization envelope
+   TString   fLfn;                 //logical filename
 
    TAlienFile() : fUrl("dummy") { }
-
-   // Interface to basic system I/O routines
-   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t    SysClose(Int_t fd);
-   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
-   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
-   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
-                    Long_t *modtime);
-   Int_t    SysSync(Int_t);
 
 public:
    TAlienFile(const char *url, Option_t * option = "",
               const char *ftitle = "", Int_t compress = 1);
    virtual ~TAlienFile();
 
-   Bool_t ReadBuffer(char *buf, Int_t len);
-   Bool_t WriteBuffer(const char *buf, Int_t len);
+   TString   AccessURL(const char *url, Option_t *option = "",
+                       const char *ftitle = "", Int_t compress = 1);
 
-   Int_t GetErrno() const;
-   void ResetErrno() const;
+   Bool_t    ReadBuffer(char *buf, Int_t len);
+   Bool_t    WriteBuffer(const char *buf, Int_t len);
 
-   ClassDef(TAlienFile,1)  //A ROOT file that reads/writes via AliEn Services
+   void      Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   void      Close(Option_t *option="");
+
+   Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const
+                { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
+   Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0)
+                { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
+   Double_t  GetBytesRead() const
+                { return ((fSubFile)?fSubFile->GetBytesRead():-1); }
+   Double_t  GetBytesWritten() const
+                { return ((fSubFile)?fSubFile->GetBytesWritten():-1); }
+   Long64_t  GetSize() const
+                { return ((fSubFile)?fSubFile->GetSize():-1); }
+   Bool_t    cd(const char *path)
+                { return ((fSubFile)?fSubFile->cd(path):kFALSE); }
+   const char *GetPath() const
+                { return ((fSubFile)?fSubFile->GetPath():0); }
+
+   ClassDef(TAlienFile,1)  //A ROOT file that reads/writes via AliEn services and sub protocols
 };
 
 
-class TAlienSystem : public TSystem {
-
-private:
-   void     *fDirp;       // directory handler
-
-   void *GetDirPtr() const { return fDirp; }
-
-public:
-   TAlienSystem();
-   virtual ~TAlienSystem() { }
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp);
-   const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
-
-   ClassDef(TAlienSystem,0)  // Directory handler for AliEn
-};
 
 #endif
