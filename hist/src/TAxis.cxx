@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.63 2004/12/10 22:22:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.64 2005/03/21 09:15:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -788,7 +788,7 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fNbins   = nbins;
    fXmin    = xlow;
    fXmax    = xup;
-   SetDefaults();
+   if (!fParent) SetDefaults();
 }
 
 //______________________________________________________________________________
@@ -806,7 +806,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
-   SetDefaults();
+   if (!fParent) SetDefaults();
 }
 
 //______________________________________________________________________________
@@ -824,7 +824,7 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
-   SetDefaults();
+   if (!fParent) SetDefaults();
 }
 
 //______________________________________________________________________________
