@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.9 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.10 2005/05/20 10:33:00 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 #include "TError.h"
 #include "TUUID.h"
 #include "TSystem.h"
-#include "TH1.h"
+//#include "TH1.h"
 #include "TChain.h"
 #include "TKey.h"
 
@@ -344,6 +344,11 @@ Bool_t TGrid::MergerMergeRecursive(TDirectory *target, TList *sourcelist)
 {
    // Recursively merge objects in the ROOT files.
 
+#if 1
+   // TO BE FIXEd
+   if (target || sourcelist) { }
+   return kFALSE;
+#else
    TString path(strstr(target->GetPath(), ":"));
    path.Remove(0, 2);
 
@@ -422,4 +427,5 @@ Bool_t TGrid::MergerMergeRecursive(TDirectory *target, TList *sourcelist)
    TH1::AddDirectory(kTRUE);
 
    return success;
+#endif
 }
