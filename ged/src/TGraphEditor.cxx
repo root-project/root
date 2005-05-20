@@ -230,7 +230,13 @@ void TGraphEditor::DoShape(Int_t s)
 {
    // Slot connected to the draw options.
 
-   TString opt = fGraph->GetDrawOption();
+   TString opt;
+   
+   if (fGraph->InheritsFrom("TGraphErrors"))
+      opt = fGraph->GetDrawOption();
+   else
+      opt = GetDrawOption();
+      
    opt.ToUpper();
    
    switch (s) {

@@ -76,7 +76,7 @@
    // see the canvas begin_html <a href="gif/h2_lego.gif" >lego</a> end_html
    
    //surface options
-   TCanvas surf("Surfaces","surface options",200,200,800,600);
+   TCanvas surf("surfopt","surface options",200,200,800,600);
    surf.Divide(2,2);
    surf.SetFillColor(cancolor);
    surf.cd(1);

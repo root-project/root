@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.19 2005/05/14 00:19:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.20 2005/05/20 14:39:22 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -304,7 +304,7 @@ void TGedEditor::Show()
             gedx = cx + cw + 10;
          gedy = cy - 20;
       }
-      MoveResize(gedx, gedy, GetWidth(), ch > 500 ? 500 : ch);
+      MoveResize(gedx, gedy, GetWidth(), ch > 700 ? 700 : ch);
       SetWMPosition(gedx, gedy);
    }
    MapWindow();
