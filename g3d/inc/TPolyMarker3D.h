@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.10 2004/08/03 16:01:17 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.11 2005/03/18 22:41:26 rdm Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -42,7 +42,8 @@ protected:
    TString          fOption;       //options
    UInt_t           fGLList;       //!The list number for OpenGL view
    Int_t            fLastPoint;    //The index of the last filled point
-
+   TString          fName;         //name of polymarker
+   
 public:
    TPolyMarker3D();
    TPolyMarker3D(Int_t n, Marker_t marker=1, Option_t *option="");
@@ -57,6 +58,7 @@ public:
    virtual void      DrawPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t     GetLastPoint() const { return fLastPoint;}
+   virtual const char  *GetName() const {return fName.Data();}
    virtual Int_t     GetN() const { return fN;}
    virtual Float_t  *GetP() const { return fP;}
    virtual void      GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const;
@@ -66,6 +68,7 @@ public:
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
+   virtual void      SetName(const char *name); // *MENU*
    void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option="");
@@ -74,7 +77,7 @@ public:
 
    static  void      PaintH3(TH1 *h, Option_t *option);
 
-   ClassDef(TPolyMarker3D,1)  //An array of 3-D points with the same marker
+   ClassDef(TPolyMarker3D,2)  //An array of 3-D points with the same marker
 };
 
 #endif

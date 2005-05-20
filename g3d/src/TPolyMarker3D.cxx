@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.24 2005/03/21 17:22:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.25 2005/05/18 12:31:08 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TPolyMarker3D::TPolyMarker3D()
    fN = 0;
    fP = 0;
    fLastPoint = -1;
+   fName = "TPolyMarker3D";
 }
 
 //______________________________________________________________________________
@@ -74,6 +75,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
 {
    // 3-D polymarker normal constructor with initialization to 0.
 
+   fName = "TPolyMarker3D";
    fOption = option;
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
@@ -95,6 +97,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
 {
    // 3-D polymarker constructor. Polymarker is initialized with p.
 
+   fName = "TPolyMarker3D";
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
@@ -122,6 +125,7 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
    // 3-D polymarker constructor. Polymarker is initialized with p
    // (cast to float).
 
+   fName = "TPolyMarker3D";
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
@@ -177,6 +181,7 @@ void TPolyMarker3D::Copy(TObject &obj) const
    ((TPolyMarker3D&)obj).SetMarkerStyle(GetMarkerStyle());
    ((TPolyMarker3D&)obj).fOption = fOption;
    ((TPolyMarker3D&)obj).fLastPoint = fLastPoint;
+   ((TPolyMarker3D&)obj).fName   = fName;
 }
 
 //______________________________________________________________________________
@@ -477,6 +482,7 @@ void TPolyMarker3D::SavePrimitive(ofstream &out, Option_t *)
       out<<"   TPolyMarker3D *";
    }
    out<<"pmarker3D = new TPolyMarker3D("<<fN<<","<<GetMarkerStyle()<<","<<quote<<fOption<<quote<<");"<<endl;
+   out<<"   pmarker3D->SetName("<<quote<<GetName()<<quote<<");"<<endl;
 
    SaveMarkerAttributes(out,"pmarker3D",1,1,1);
 
@@ -484,6 +490,18 @@ void TPolyMarker3D::SavePrimitive(ofstream &out, Option_t *)
       out<<"   pmarker3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<endl;
    }
    out<<"   pmarker3D->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TPolyMarker3D::SetName(const char *name)
+{
+   // Change (i.e. set) the name of the TNamed.
+   // WARNING: if the object is a member of a THashTable or THashList container
+   // the container must be Rehash()'ed after SetName(). For example the list
+   // of objects in the current directory is a THashList.
+
+   fName = name;
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -590,7 +608,7 @@ void TPolyMarker3D::Streamer(TBuffer &b)
 
    UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(b);
       TAttMarker::Streamer(b);
       b >> fN;
@@ -600,6 +618,7 @@ void TPolyMarker3D::Streamer(TBuffer &b)
       }
       fLastPoint = fN-1;
       fOption.Streamer(b);
+      if (R__v > 1) fName.Streamer(b);
       b.CheckByteCount(R__s, R__c, TPolyMarker3D::IsA());
    } else {
       R__c = b.WriteVersion(TPolyMarker3D::IsA(), kTRUE);
@@ -609,6 +628,7 @@ void TPolyMarker3D::Streamer(TBuffer &b)
       b << size;
       if (size) b.WriteFastArray(fP, kDimension*size);
       fOption.Streamer(b);
+      fName.Streamer(b);
       b.SetByteCount(R__c, kTRUE);
    }
 }
