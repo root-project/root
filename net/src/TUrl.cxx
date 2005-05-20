@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.18 2004/07/19 09:43:58 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.19 2005/05/12 12:40:53 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -56,51 +56,60 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    }
 
    // Set defaults
-   fUrl      = "";
-   fProtocol = "http";
-   fUser     = "";
-   fPasswd   = "";
-   fHost     = "";
-   fPort     = 80;
-   fFile     = "/";
-   fAnchor   = "";
-   fOptions  = "";
+   fUrl       = "";
+   fProtocol  = "http";
+   fUser      = "";
+   fPasswd    = "";
+   fHost      = "";
+   fPort      = 80;
+   fFile      = "/";
+   fAnchor    = "";
+   fOptions   = "";
 
    // Find protocol
    char *s, sav;
 
+   char *u, *u0 = StrDup(url);
+tryfile:
+   u = u0;
+
    // Handle special protocol cases: "file:", "rfio:", etc.
    for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
       TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
-      TString &s = os->String();
-      int l = s.Length();
-      if (!strncmp(url, s, l)) {
-         if (s(0) == '/' && s(l-1) == '/') {
+      TString s1 = os->GetString();
+      int l = s1.Length();
+      Bool_t stripoff = kFALSE;
+      if (s1.EndsWith("/-")) {
+         stripoff = kTRUE;
+         s1 = s1.Strip(TString::kTrailing, '-');
+         l--;
+      }
+      if (!strncmp(u, s1, l)) {
+         if (s1(0) == '/' && s1(l-1) == '/') {
             // case whith file namespace like: /alien/user/file.root
-            fProtocol = s(1, l-2);
-            l--;
+            fProtocol = s1(1, l-2);
+            if (stripoff)
+               l--;    // strip off namespace prefix from file name
+            else
+               l = 0;  // leave namespace prefix as part of file name
          } else {
             // case with protocol, like: rfio:machine:/data/file.root
-            fProtocol = s(0, l-1);
+            fProtocol = s1(0, l-1);
          }
-         if (!strncmp(url+l, "//", 2))
-            fFile = url+l+2;
+         if (!strncmp(u+l, "//", 2))
+            u += l+2;
          else
-            fFile = url+l;
+            u += l;
          fPort = 0;
-         // look for an anchor so we can get the desired member in case
-         // of an archive file url
-         if ((i = fFile.Last('#')) != kNPOS) {
-            TString ff = fFile;
-            fFile = ff(0, i);
-            fAnchor = ff(i+1, ff.Length()-1);
-         }
+
+         FindFile(u);
+
+         delete [] u0;
          return;
       }
    }
 
-   char *u0, *u = StrDup(url);
-   u0 = u;
+   u = u0;
 
    Bool_t isWin32File = kFALSE;
 #ifdef R__WIN32
@@ -140,10 +149,11 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
       }
    } else {
       if (defaultIsFile) {
-         fProtocol = "file";
-         fFile = u;
-         fPort = 0;
-         goto cleanup;
+         char *newu = new char [strlen("file:") + strlen(u0) + 1];
+         sprintf(newu, "file:%s", u0);
+         delete [] u0;
+         u0 = newu;
+         goto tryfile;
       }
       s = u;
    }
@@ -211,6 +221,20 @@ again:
 
    // Find file
    u = s;
+
+   FindFile(u);
+
+cleanup:
+   delete [] u0;
+}
+
+//______________________________________________________________________________
+void TUrl::FindFile(char *u)
+{
+   // Find file and optionally anchor and options.
+
+   char *s, sav;
+
    if ((s = strchr(u, '#')) || (s = strchr(u, '?'))) {
       sav = *s;
       *s = 0;
@@ -220,8 +244,9 @@ again:
       if (sav == '#') {
          // Get anchor
          if (!*s) {
+         // error if we are at end of string
             fPort = -1;
-            goto cleanup;
+            return;
          }
          u = s;
          if ((s = strchr(u, '?'))) {
@@ -232,24 +257,21 @@ again:
             s++;
          } else {
             fAnchor = u;
-            goto cleanup;
+            return;
          }
       }
       if (!*s) {
          // error if we are at end of string
          fPort = -1;
-         goto cleanup;
+         return;
       }
    } else {
       fFile = u;
-      goto cleanup;
+      return;
    }
 
    // Set option
    fOptions = s;
-
-cleanup:
-   delete [] u0;
 }
 
 //______________________________________________________________________________
@@ -301,6 +323,14 @@ const char *TUrl::GetUrl()
          int l = s.Length();
          if (fProtocol == s(0, l-1)) {
             fUrl = fProtocol + ":" + fFile;
+            if (fAnchor != "") {
+               fUrl += "#";
+               fUrl += fAnchor;
+            }
+            if (fOptions != "") {
+               fUrl += "?";
+               fUrl += fOptions;
+            }
             return fUrl;
          }
       }
@@ -356,6 +386,10 @@ const char *TUrl::GetFileAndOptions() const
    // authetication/access information for the specified file.
 
    fFileAO = fFile;
+   if (fAnchor != "") {
+      fFileAO += "#";
+      fFileAO += fAnchor;
+   }
    if (fOptions != "") {
       fFileAO += "?";
       fFileAO += fOptions;
@@ -382,13 +416,24 @@ TObjArray *TUrl::GetSpecialProtocols()
    // no host or other info will be determined. This is typically
    // used for legacy file descriptions like: rfio:host:/path/file.root.
 
+   static Bool_t usedEnv = kFALSE;
+
    if (!fgSpecialProtocols)
       fgSpecialProtocols = new TObjArray;
 
-   if (fgSpecialProtocols->GetEntries() > 0 || !gEnv)
+   if (!gEnv) {
+      if (fgSpecialProtocols->GetEntries() == 0)
+         fgSpecialProtocols->Add(new TObjString("file:"));
+      return fgSpecialProtocols;
+   }
+
+   if (fgSpecialProtocols->GetEntries() > 0 && usedEnv)
       return fgSpecialProtocols;
 
+   fgSpecialProtocols->Delete();
+
    const char *protos = gEnv->GetValue("Url.Special", "file: rfio: hpss: castor: dcache: dcap:");
+   usedEnv = kTRUE;
 
    if (protos) {
       Int_t cnt = 0;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.6 2005/04/08 13:42:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.h,v 1.7 2005/05/12 12:40:53 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@ private:
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
 
    TUrl() { fPort = -1; }
+   void FindFile(char *u);
 
 public:
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
