@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.8 2005/05/13 08:49:54 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.9 2005/05/20 09:59:35 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -170,16 +170,17 @@ Bool_t TGrid::Cp(const char *src, const char *dst, Bool_t progressbar,
    Long64_t written;
    Long64_t totalread;
    Long64_t filesize;
+   Long64_t b00;
    filesize  = sfile->GetSize();
    totalread = 0;
    fWatch.Start();
 
-   Long64_t b00 = sfile->GetBytesRead();
+   b00 = (Long64_t)sfile->GetBytesRead();
 
    do {
       if (progressbar) PrintProgress(totalread, filesize);
 
-      Long64_t b1 = sfile->GetBytesRead() - b00;
+      Long64_t b1 = (Long64_t)sfile->GetBytesRead() - b00;
 
       Long64_t readsize;
       if (filesize - b1 > (Long64_t)buffersize) {
@@ -188,17 +189,17 @@ Bool_t TGrid::Cp(const char *src, const char *dst, Bool_t progressbar,
          readsize = filesize - b1;
       }
 
-      Long64_t b0 = sfile->GetBytesRead();
+      Long64_t b0 = (Long64_t)sfile->GetBytesRead();
       readop = sfile->ReadBuffer(copybuffer, readsize);
-      read   = sfile->GetBytesRead() - b0;
+      read   = (Long64_t)sfile->GetBytesRead() - b0;
       if (read < 0) {
          Error("Cp", "cannot read from source file %s", src);
          goto copyout;
       }
 
-      Long64_t w0 = dfile->GetBytesWritten();
+      Long64_t w0 = (Long64_t)dfile->GetBytesWritten();
       writeop = dfile->WriteBuffer(copybuffer, read);
-      written = dfile->GetBytesWritten() - w0;
+      written = (Long64_t)dfile->GetBytesWritten() - w0;
       if (written != read) {
          Error("Cp", "cannot write %d bytes to destination file %s", read, dst);
          goto copyout;
