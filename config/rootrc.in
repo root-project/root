@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.102 2005/04/30 08:59:19 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.103 2005/05/12 12:40:53 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -171,6 +171,16 @@ ACLiC.Linkdef:          _linkdef
 # Proof.DebugLevel:	0
 # Proof.DebugMask:	-1
 #
+# PROOF GDB hooks
+# allows a debugger to be attached early in the startup phase of proofserv
+#  0 - don't wait
+#  1 - master proofserv enters wait loop
+#  2 - slave proofserv enters wait loop
+#  3 - any proofserv enters wait loop
+#
+# Proof.GdbHook: 0
+#
+#
 # On the master enable parallel startup of workers using threads
 # Proof.ParallelStartup: yes
 #
@@ -314,8 +324,10 @@ RSA.KeyType:  1
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/path/file.root,
 # castor:/path/file.root or /alien/path/file.root.
+# In case the file namespace descriptor ends with - the namespace
+# is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: rfio: hpss: castor: dcache: dcap: alien: /alien/
+Url.Special:         file: rfio: hpss: castor: dcache: dcap: /alien/- /castor/
 
 # The following env vars are handled by TXNetFile and related classes
 # (module netx, libNetx.so).

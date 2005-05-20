@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.89 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.90 2005/05/18 13:18:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -91,7 +91,12 @@ const char* const kUNTAR  = "...";
 const char* const kGUNZIP = "gunzip";
 #endif
 
+// global proofserv handle
 TProofServ *gProofServ;
+
+// debug hook
+static volatile int gProofServDebug = 0;
+
 
 //______________________________________________________________________________
 static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
@@ -230,12 +235,12 @@ TProofServ::TProofServ(int *argc, char **argv)
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
 
-   // debug hook
-#ifdef R__DEBUG
-   int debug = 1;
-   while (debug)
-      ;
-#endif
+
+   // wait (loop) to allow debugger to connect
+   if (gEnv->GetValue("Proof.GdbHook",0) == 3) {
+      while (gProofServDebug)
+         ;
+   }
 
    // get socket to be used (setup in proofd)
    Int_t sock = atoi(argv[8]);
@@ -266,17 +271,17 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // debug hooks
    if (IsMaster()) {
-#ifdef R__MASTERDEBUG
-      int debug = 1;
-      while (debug)
-         ;
-#endif
+      // wait (loop) in master to allow debugger to connect
+      if (gEnv->GetValue("Proof.GdbHook",0) == 1) {
+         while (gProofServDebug)
+            ;
+      }
    } else {
-#ifdef R__SLAVEDEBUG
-      int debug = 1;
-      while (debug)
-         ;
-#endif
+      // wait (loop) in slave to allow debugger to connect
+      if (gEnv->GetValue("Proof.GdbHook",0) == 2) {
+         while (gProofServDebug)
+            ;
+      }
    }
 
    Setup();
