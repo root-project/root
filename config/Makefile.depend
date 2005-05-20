@@ -94,6 +94,8 @@ GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = lib/libGui.lib
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = lib/libHist.lib
+ALIENLIBDEP         = $(XMLLIB)
+ALIENLIBEXTRA       = lib/libXMLIO.lib
 
 else
 
@@ -181,5 +183,7 @@ GUIBLDLIBDEP        = $(GUILIB)
 GUIBLDLIBEXTRA      = -Llib -lGui
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = -Llib -lHist
+ALIENLIBDEP         = $(XMLLIB)
+ALIENLIBEXTRA       = -Llib -lXMLIO
 
 endif
