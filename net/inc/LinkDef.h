@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.13 2004/10/11 12:34:34 rdm Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.14 2005/05/12 13:19:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,11 +41,11 @@
 #pragma link C++ class TSQLResult;
 #pragma link C++ class TSQLRow;
 #pragma link C++ class TGrid;
-#pragma link C++ class TGridResult;
-#pragma link C++ class TGridJDL;
-#pragma link C++ class TGridJob;
-#pragma link C++ class TGridJobStatus;
-#pragma link C++ class TGridCollection;
+#pragma link C++ class TGridResult+;
+#pragma link C++ class TGridJDL+;
+#pragma link C++ class TGridJob+;
+#pragma link C++ class TGridJobStatus+;
+#pragma link C++ class TGridCollection+;
 #pragma link C++ class THostAuth;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
