@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.27 2004/12/02 11:52:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.28 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -56,8 +56,8 @@
 #endif
 
 
-Double_t TFTP::fgBytesWrite = 0;
-Double_t TFTP::fgBytesRead  = 0;
+Long64_t TFTP::fgBytesWrite = 0;
+Long64_t TFTP::fgBytesRead  = 0;
 
 
 ClassImp(TFTP)
@@ -162,12 +162,12 @@ void TFTP::Print(Option_t *) const
    if (fParallel > 1) {
       Printf("Parallel sockets:     %d", fParallel);
    }
-   Printf("TCP window size:      %d", fWindowSize);
-   Printf("Rootd protocol:       %d", fProtocol);
-   Printf("Transfer block size:  %d", fBlockSize);
-   Printf("Transfer mode:        %s", fMode ? "ascii" : "binary");
-   Printf("Bytes sent:           %g", fBytesWrite);
-   Printf("Bytes received:       %g", fBytesRead);
+   Printf("TCP window size:      %d",   fWindowSize);
+   Printf("Rootd protocol:       %d",   fProtocol);
+   Printf("Transfer block size:  %d",   fBlockSize);
+   Printf("Transfer mode:        %s",   fMode ? "ascii" : "binary");
+   Printf("Bytes sent:           %lld", fBytesWrite);
+   Printf("Bytes received:       %lld", fBytesRead);
 }
 
 //______________________________________________________________________________
@@ -572,8 +572,8 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
          return -1;
       }
 
-      fBytesRead  += Int_t(left-skip);
-      fgBytesRead += Int_t(left-skip);
+      fBytesRead  += left-skip;
+      fgBytesRead += left-skip;
 
       fRestartAt = pos;   // bytes correctly received up till now
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.9 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.10 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -54,8 +54,8 @@ private:
    Long64_t   fRestartAt;   // restart transmission at specified offset
    TString    fCurrentFile; // file currently being get or put
    TSocket   *fSocket;      //! connection to rootd
-   Double_t   fBytesWrite;  // number of bytes sent
-   Double_t   fBytesRead;   // number of bytes received
+   Long64_t   fBytesWrite;  // number of bytes sent
+   Long64_t   fBytesRead;   // number of bytes received
    Bool_t     fDir;         // Indicates if a remote directory is open
 
    TFTP() { fSocket = 0; }
@@ -66,8 +66,8 @@ private:
    Int_t  Recv(Int_t &status, EMessageTypes &kind) const;
    void   SetMode(Int_t mode) { fMode = mode; }
 
-   static Double_t fgBytesWrite;  //number of bytes sent by all TFTP objects
-   static Double_t fgBytesRead;   //number of bytes received by all TFTP objects
+   static Long64_t fgBytesWrite;  //number of bytes sent by all TFTP objects
+   static Long64_t fgBytesRead;   //number of bytes received by all TFTP objects
 
 public:
    enum {
