@@ -1,6 +1,8 @@
 {
 //   example of macro to read data from an ascii file and
 //   create a root file with an histogram and an ntuple.
+//   see a variant of this macro in basic2.C
+   
    gROOT->Reset();
 #include "Riostream.h"
 
