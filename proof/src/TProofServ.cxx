@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.90 2005/05/18 13:18:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.91 2005/05/20 09:56:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -95,7 +95,7 @@ const char* const kGUNZIP = "gunzip";
 TProofServ *gProofServ;
 
 // debug hook
-static volatile int gProofServDebug = 0;
+static volatile int gProofServDebug = 1;
 
 
 //______________________________________________________________________________
