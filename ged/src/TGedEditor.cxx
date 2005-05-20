@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.18 2005/05/12 13:57:32 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.19 2005/05/14 00:19:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -75,7 +75,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    MapSubwindows();
    if (canvas) {
       UInt_t ch = fCanvas->GetWindowHeight();
-      Resize(GetWidth(), ch > 500 ? 500 : ch);
+      Resize(GetWidth(), ch > 700 ? 700 : ch);
    } else {
       Resize(GetDefaultSize());
    }
