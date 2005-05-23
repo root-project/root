@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.205 2005/03/28 21:17:39 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.206 2005/04/18 15:31:08 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4111,6 +4111,31 @@ int main(int argc, char **argv)
             return 1;
          }
       }
+      string header( argv[ic] );
+      int loc = strrchr(argv[ic],'.') - argv[ic];
+      header[loc+1] = 'h';
+      header[loc+2] = '\0';
+      if ((fp = fopen(header.c_str(), "r")) != 0) {
+         fclose(fp);
+         if (!force) {
+            Error(0, "%s: output file %s already exists\n", argv[0], header.c_str());
+            return 1;
+         } else {
+            for (int k = ic+1; k < argc; ++k) {
+               if (*argv[k] != '-' && *argv[k] != '+') {
+                  if (strcmp(header.c_str(),argv[k])==0) {
+                     Error(0, "%s: output file %s would overwrite one of the input files!\n", argv[0], header.c_str());
+                     return 1;
+                  }
+                  if (strcmp(argv[ic],argv[k])==0) {
+                     Error(0, "%s: output file %s would overwrite one of the input files!\n", argv[0],argv[ic]);
+                     return 1;
+                  }
+               }
+            }
+         }
+      }
+
       fp = fopen(argv[ic], "w");
       if (fp) fclose(fp);    // make sure file is created and empty
       ifl = ic;
