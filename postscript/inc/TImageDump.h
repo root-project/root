@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.4 2005/05/15 05:53:45 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.5 2005/05/20 11:12:54 brun Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -30,13 +30,8 @@ class TImage;
 class TColor;
 class TImageDump : public TVirtualPS {
 protected:
-   TImage  *fImage;     // image
-	Int_t    fType;      // PostScript workstation type
-
-   void Add2PixelBuffer(Short_t x, Short_t y, TColor *c);
-   void Add2HLinesBuffer(Short_t x, Short_t y1, Short_t y2, TColor *c);
-   void Add2VLinesBuffer(Short_t y, Short_t x1, Short_t x2, TColor *c);
-   void FlushBuffers();
+   TImage           *fImage;     // image
+	Int_t             fType;      // PostScript workstation type
 
 public:
    TImageDump();

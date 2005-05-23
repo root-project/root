@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.28 2005/05/19 20:39:38 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.29 2005/05/20 11:12:53 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -2994,7 +2994,6 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
    // vertical line
 
    ARGB32 color = (ARGB32)col;
-
    UInt_t half = 0;
 
    if (thick > 1) {
@@ -3028,7 +3027,6 @@ void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thic
    // horizontal line
 
    ARGB32 color = (ARGB32)col;
-
    UInt_t half = 0;
 
    if (thick > 1) {
@@ -3272,6 +3270,21 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
    Int_t h = TMath::Abs(y2 - y1);
+
+   ARGB32 color;
+
+   if (x1 == x2) {
+      parse_argb_color(col, &color);
+      DrawVLine(x1, y1, y2, color, 1);
+      return;
+   }
+
+   if (y1 == y2) {
+      parse_argb_color(col, &color);
+      DrawHLine(y1, x1, x2, color, 1);
+      return;
+   }
+
 
    switch (mode) {
       case TVirtualX::kHollow:
@@ -4595,7 +4608,7 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
 
    if (ratio != 0 && x_to >= 0 && x_from < cw && y >= 0 && y < ctx->canvas_height) {	
       CARD32 value = ratio;
-      CARD32 *dst = ctx->canvas + y*cw; 
+      CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw); 
       int x1 = x_from;
       int x2 = x_to; 
 
@@ -4617,7 +4630,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
 {
    //
 
-   CARD32 *src = ctx->tool->matrix;
+   CARD32 *src = (CARD32 *)ctx->tool->matrix;
    int corner_x = curr_x - ctx->tool->center_x;
    int corner_y = curr_y - ctx->tool->center_y; 
    int tw = ctx->tool->width;
@@ -4626,7 +4639,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
    int ch = ctx->canvas_height;
    int aw = tw; 
    int ah = th;
-   CARD32 *dst = ctx->canvas; 
+   CARD32 *dst = (CARD32 *)ctx->canvas; 
    int x, y;
 
    if (corner_x+tw <= 0 || corner_x >= cw || corner_y+th <= 0 || corner_y >= ch) {

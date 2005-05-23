@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.7 2005/05/19 20:39:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.8 2005/05/20 11:12:54 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -42,8 +42,11 @@
 #include "TSystem.h"
 #include "TText.h"
 #include "RStipples.h"
+#include "TList.h"
+
 
 ClassImp(TImageDump)
+
 
 //______________________________________________________________________________
 TImageDump::TImageDump() : TVirtualPS()
@@ -77,9 +80,9 @@ void TImageDump::Open(const char *fname, Int_t type)
    // Open a image file
 
    fStream = 0;
-   fImage = TImage::Create();
+   fImage  = TImage::Create();
+   fType   = type;
    SetName(fname);
-   fType = type;
 }
 
 //______________________________________________________________________________
@@ -102,7 +105,6 @@ void TImageDump::Close(Option_t *)
 
    if (!fImage) return;
 
-   FlushBuffers();
    if (fType == 112) fImage->Flip(90);
    if (fType < 114) fImage->WriteImage(GetName());
 }
@@ -372,8 +374,10 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
          switch (fLineStyle) {
             case 1:
+            {
                fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
                break;
+            }
             case 2:
                fImage->DrawDashLine(px1, py1, px2, py2, 2, "\x5\x5", col->AsHexString(), fLineWidth);
                break;
@@ -673,30 +677,4 @@ void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
    //  b: % of blue in [0,1]
 
 }
-
-//______________________________________________________________________________
-void TImageDump::Add2PixelBuffer(Short_t /*x*/, Short_t /*y*/, TColor * /*c*/)
-{
-   //
-}
-
-//______________________________________________________________________________
-void TImageDump::Add2HLinesBuffer(Short_t /*x*/, Short_t /*y1*/, Short_t /*y2*/, TColor * /*c*/)
-{
-   //
-}
-
-//______________________________________________________________________________
-void TImageDump::Add2VLinesBuffer(Short_t /*y*/, Short_t /*x1*/, Short_t /*x2*/, TColor * /*c*/)
-{
-   //
-}
-
-//______________________________________________________________________________
-void TImageDump::FlushBuffers()
-{
-   //
-}
-
-
 
