@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.163 2005/02/25 17:06:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.165 2005/03/20 19:35:50 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -688,7 +688,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
-   if ( stl ) {
+   if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
      fCollectionProxy = TCollectionProxy::genEmulatedProxy( GetName() );
      fSizeof = fCollectionProxy->Sizeof();
      if (fStreamer==0) {
@@ -856,9 +856,8 @@ void TClass::BuildRealData(void *pointer)
 
    if (fRealData) return;
 
-   fRealData = new TList;
-
    if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0)) {
+      fRealData = new TList;
       BuildEmulatedRealData("",0,this);
       return;
    }
@@ -878,6 +877,8 @@ void TClass::BuildRealData(void *pointer)
    if (realDataObject) {
       char parent[256];
       parent[0] = 0;
+      fRealData = new TList;
+
       TBuildRealData brd(realDataObject, this);
 
       //Force a call to InheritsFrom. This function indirectly calls gROOT->GetClass
