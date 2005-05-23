@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.222 2005/03/31 18:56:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.223 2005/04/18 19:14:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -801,7 +801,7 @@ void TStreamerInfo::BuildOld()
 
       // Now let's deal with Schema evolution
       Int_t newType = kNoType_t;
-      TClass *newClass = 0;
+      TClassRef newClass;
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
             newType = dm->GetDataType()->GetType();
@@ -829,7 +829,7 @@ void TStreamerInfo::BuildOld()
                }
             } else {
                newClass = element->GetClassPointer();
-               if (newClass==0) {
+               if (newClass.GetClass()==0) {
                   newType = element->GetType();
                   if (! (newType<kObject) ) newType = kNoType_t; // sanity check. 
                }
@@ -845,19 +845,19 @@ void TStreamerInfo::BuildOld()
                                     GetName(),element->GetTypeName(),element->GetName(),
                                     dm->GetFullTypeName(),newType);
          }
-      } else if (newClass) {
+      } else if (newClass.GetClass()) {
          // Sometime BuildOld is called again.
          // In that case we migth already have fix up the streamer element.
          // So we need to go back to the original information!
+         newClass.Reset();
          TClass *oldClass = gROOT->GetClass(
             TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropTrailStar).c_str());
-
-         if (oldClass == newClass) {
+         if (oldClass == newClass.GetClass()) {
             // Nothing to do :)
 
-         } else if ( ClassWasMovedToNamespace(oldClass,newClass) ) {
+         } else if ( ClassWasMovedToNamespace(oldClass,newClass.GetClass()) ) {
             Int_t oldv;
-            if (0 != (oldv=ImportStreamerInfo(oldClass,newClass))) {
+            if (0 != (oldv=ImportStreamerInfo(oldClass,newClass.GetClass()))) {
                 Warning("BuildOld","Can not properly load the TStreamerInfo from %s into %s due to a conflict for the class version %d",
                         oldClass->GetName(), newClass->GetName(), oldv);
             } else {
@@ -870,13 +870,13 @@ void TStreamerInfo::BuildOld()
 
          } else if ( oldClass == TClonesArray::Class() ) {
 
-            if ( ContainerMatchTClonesArray( newClass ) ) {
+            if ( ContainerMatchTClonesArray( newClass.GetClass() ) ) {
 
                Int_t elemType = element->GetType();
                Bool_t isPrealloc = elemType==kObjectp || elemType==kAnyp
                   || elemType==kObjectp+kOffsetL || elemType==kAnyp+kOffsetL;
 
-               element->Update( oldClass, newClass );
+               element->Update( oldClass, newClass.GetClass() );
                element->SetStreamer( 
                   new TConvertClonesArrayToProxy(newClass->GetCollectionProxy(),
                                                  element->IsaPointer(),
@@ -899,7 +899,7 @@ void TStreamerInfo::BuildOld()
                      newClass->GetCollectionProxy() ) {
             if ( CollectionMatch ( oldClass, newClass ) ) {
 
-               element->Update( oldClass, newClass );
+               element->Update( oldClass, newClass.GetClass() );
                // Is this needed ? : element->SetSTLtype(newelement->GetSTLtype()); 
 
                if (gDebug>0) Warning("BuildOld","element: %s::%s %s has new type %s",
