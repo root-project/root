@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.38 2005/03/19 16:39:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.39 2005/03/30 21:09:19 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -51,8 +51,9 @@ TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
-    
+    Bool_t              fInit;          //!Initialization flag for branch assignment
 private:
+    Bool_t              CheckBranchID();
     Bool_t              IsMissingCollection() const; 
     TVirtualCollectionProxy *GetCollectionProxy();
 

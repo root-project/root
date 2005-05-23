@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.167 2005/04/07 13:28:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.168 2005/04/14 21:30:11 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -62,6 +62,7 @@ TBranchElement::TBranchElement(): TBranch()
    fSTLtype = TClassEdit::kNotSTL;
    fCollProxy = 0;
    fCheckSum = 0;
+   fInit = kFALSE;
 }
 
 
@@ -101,6 +102,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    fMaximum      = 0;
+   fInit         = kFALSE;
    ULong_t *elems = sinfo->GetElems();
    TStreamerElement *element = 0;
    TBranchElement *brcount = 0;
@@ -345,6 +347,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBranchPointer= 0;
    fMaximum      = 0;
    fSTLtype      = TClassEdit::kNotSTL;
+   fInit         = kFALSE;
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -429,6 +432,7 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    char name[kMaxLen];
    strcpy(name,bname);
    if (name[strlen(name)-1]=='.') name[strlen(name)-1]=0;
+   fInit         = kFALSE;
    fSplitLevel   = splitlevel;
    fInfo         = 0;
    fID           = -1;
@@ -1254,6 +1258,39 @@ const char *TBranchElement::GetIconName() const
 }
 
 //______________________________________________________________________________
+Bool_t TBranchElement::CheckBranchID()  
+{
+   // Need to reassign branches in case schema evolution has scrambled leaf list.
+
+   if ( GetID() >= 0 ) {
+      int offset = 0;
+      std::string s = GetName();
+      if ( s.rfind('.') != std::string::npos )  {
+         std::string tmp = s;
+         s = tmp.substr(s.rfind('.')+1);
+      }
+      while ( s.rfind('[') != std::string::npos ) {
+         s = s.substr(0,s.rfind('['));
+      }
+      TStreamerElement* elt = fInfo->GetStreamerElement(s.c_str(),offset);
+      if ( elt )   {
+         TObjArray* arr = fInfo->GetElements();
+         for(size_t i=0, num=arr->GetSize(); i < num; ++i )  {
+            if ( (TStreamerElement*)arr->At(i) == elt )  {
+               fID = i;
+               break;
+            }
+         }
+      }
+      else  {
+         // Element may be missing, if data member got removed.
+         // Warning("CheckBranchID","Cannot find streamer element:%s",s.c_str());
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 TStreamerInfo *TBranchElement::GetInfo()
 {
   //return pointer to TStreamerinfo object for the class of this branch
@@ -1266,6 +1303,7 @@ TStreamerInfo *TBranchElement::GetInfo()
          fInfo->Compile();
          TStreamerInfo::Optimize(optim);
       }
+      if (!fInit) fInit = CheckBranchID();
       return fInfo;
    }
    TClass *cl = gROOT->GetClass(fClassName.Data());
@@ -1293,6 +1331,7 @@ TStreamerInfo *TBranchElement::GetInfo()
          fInfo->Compile();
       }
       TStreamerInfo::Optimize(optim);
+      if ( !fInit ) fInit = CheckBranchID();
    }
    return fInfo;
 }
