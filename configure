@@ -651,7 +651,7 @@ enable/disable options, prefix with either --enable- or --disable-
   ldap               LDAP support, requires (Open)LDAP libs
   mysql              MySQL support, requires libmysqlclient
   opengl             OpenGL support, requires libGL and libGLU
-  oracle             Oracle support, requires libclntsh
+  oracle             Oracle support, requires libocci
   peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
   pythia             Pythia5 EG support, requires libPythia
@@ -694,7 +694,7 @@ with options, prefix with --with-, enables corresponding support
   opengl-incdir      OpenGL support, location of GL/gl.h
   opengl-libdir      OpenGL support, location of libGL
   oracle-incdir      Oracle support, location of occi.h
-  oracle-libdir      Oracle support, location of libclntsh
+  oracle-libdir      Oracle support, location of libocci
   pgsql-incdir       PostgreSQL support, location of libpq-fe.h
   pgsql-libdir       PostgreSQL support, location of libpq
   pythia-libdir      PYHTIA support, location of libPythia
@@ -1227,13 +1227,13 @@ if test ! "x$enable_oracle" = "xno"; then
     oracleincdir=$found_dir
 
     keeplibdir=$oraclelibdir
-    check_library "libclntsh" "$enable_shared" "$oraclelibdir" \
+    check_library "libclntsh oci" "$enable_shared" "$oraclelibdir" \
        $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
 	/usr/lib/oracle/*/client/lib
     oraclelib=$found_lib
     oraclelibdir=$found_dir
 
-    check_library "libocci" "$enable_shared" "$keeplibdir" \
+    check_library "libocci oraocci10" "$enable_shared" "$keeplibdir" \
        $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
     oraclelib="$oraclelib $found_lib"
 
