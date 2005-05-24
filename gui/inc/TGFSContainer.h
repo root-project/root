@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.11 2004/10/15 17:07:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.12 2004/10/15 17:44:20 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -103,6 +103,7 @@ protected:
    const TGPicture  *fDoc_s;          // big document icon
    const TGPicture  *fSlink_t;        // small symbolic link icon
    const TGPicture  *fSlink_s;        // big symbolic link icon
+   Bool_t fCachePictures;             // kTRUE use caching
 
    void CreateFileList();
 

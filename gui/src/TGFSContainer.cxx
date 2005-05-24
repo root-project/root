@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.24 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.25 2005/03/10 19:17:11 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -296,6 +296,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
    gSystem->AddTimer(fRefresh);
+   fCachePictures = kTRUE;
 
    fFolder_s = fClient->GetPicture("folder_s.xpm");
    fFolder_t = fClient->GetPicture("folder_t.xpm");
@@ -327,6 +328,7 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
    gSystem->AddTimer(fRefresh);
+   fCachePictures = kTRUE;
 
    fFolder_s = fClient->GetPicture("folder_s.xpm");
    fFolder_t = fClient->GetPicture("folder_t.xpm");
@@ -417,26 +419,61 @@ void TGFileContainer::Sort(EFSSortMode sortType)
 //______________________________________________________________________________
 void TGFileContainer::GetFilePictures(const TGPicture **pic,
              const TGPicture **lpic, Int_t file_type, Bool_t is_link,
-             const char *name, Bool_t small)
+             const char *name, Bool_t /*small*/)
 {
    // Determine the file picture for the given file type.
 
-   if (R_ISREG(file_type))
-      *pic = fClient->GetMimeTypeList()->GetIcon(name, small);
-   else 
+   static TString cached_ext;
+   static const TGPicture *cached_spic = 0;
+   static const TGPicture *cached_lpic = 0;
+   const char *ext = name ? strrchr(name, '.') : 0;
+   *pic = 0;
+   *lpic = 0;
+
+   if (fCachePictures && ext && cached_spic && cached_lpic && (cached_ext == ext)) {
+      *pic = cached_spic;
+      *lpic = cached_lpic;
+      return;
+   }
+
+   if (R_ISREG(file_type)) {
+      *pic = fClient->GetMimeTypeList()->GetIcon(name, kTRUE);
+      *lpic = fClient->GetMimeTypeList()->GetIcon(name, kFALSE);
+
+      if (*pic) {
+         if (!*lpic) *lpic = *pic;
+         if (ext) {
+            cached_ext = ext;
+            cached_spic = *pic;
+            cached_lpic = *lpic;
+            return;
+         }
+      }
+   } else {
       *pic = 0;
+   }
 
    if (*pic == 0) {
-      *pic = small ? fDoc_t : fDoc_s;
-      if (R_ISREG(file_type) && (file_type) & kS_IXUSR)
-         *pic = small ? fApp_t : fApp_s;
-      if (R_ISDIR(file_type))
-         *pic = small ? fFolder_t : fFolder_s;
+      *pic = fDoc_t;
+      *lpic = fDoc_s;
+
+      if (R_ISREG(file_type) && (file_type) & kS_IXUSR) {
+         *pic = fApp_t;
+         *lpic = fApp_s;
+      }
+      if (R_ISDIR(file_type)) {
+         *pic = fFolder_t;
+         *lpic = fFolder_s;
+      }
    }
-   if (is_link)
-      *lpic = small ? fSlink_t : fSlink_s;
-   else
-      *lpic = 0;
+   if (is_link) {
+      *pic = fSlink_t;
+      *lpic = fSlink_s;
+   }
+
+   cached_lpic = 0;
+   cached_spic = 0;
+   cached_ext = "";
 }
 
 //______________________________________________________________________________
@@ -510,7 +547,8 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
    Long64_t    size;
    TString     filename;
    TGFileItem *item = 0;
-   const TGPicture *pic, *lpic, *spic, *slpic;
+   const TGPicture *spic, *slpic;
+   TGPicture *pic, *lpic;
 
    FileStat_t sbuf;
 
@@ -539,9 +577,13 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
    filename = name;
    if (R_ISDIR(type) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
-      GetFilePictures(&pic, &lpic, type, is_link, name, kFALSE);
+
       GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
-      item = new TGFileItem(this, pic, lpic, spic, slpic, new TGString(name),
+
+      pic = (TGPicture*)spic; pic->AddReference();
+      lpic = (TGPicture*)slpic; lpic->AddReference();
+
+      item = new TGFileItem(this, lpic, slpic, spic, pic, new TGString(name),
                             type, size, uid, gid, fViewMode);
       AddItem(item);
    }

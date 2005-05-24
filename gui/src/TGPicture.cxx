@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.16 2005/05/15 07:30:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.17 2005/05/18 12:31:09 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -78,6 +78,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
 
    char *picnam = gSystem->Which(fPath, pname, kReadPermission);
    if (!picnam) {
+      fPicList->Add(pic);
       return 0;
    }
 
@@ -148,12 +149,11 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return pic;
    }
 
-   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
-   if (!picnam) {
-      return 0;
-   }
+   char *picnam = 0;
 
    if (ext != ".xpm") {
+      picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
+
       img = TImage::Open(picnam);
       if (!img) return 0;
 
@@ -169,6 +169,14 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+
+   picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
+   if (!picnam) {
+      pic->fAttributes.fWidth  = new_width;
+      pic->fAttributes.fHeight = new_height;
+      fPicList->Add(pic);
+      return 0;
+   }
 
    Bool_t retc = kFALSE;
    if (!gVirtualX->InheritsFrom("TGX11")) {

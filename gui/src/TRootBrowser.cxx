@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.65 2005/05/15 05:53:44 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.66 2005/05/15 07:30:17 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -56,6 +56,8 @@
 #include "TInterpreter.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
+#include "TVirtualPad.h"
+#include "KeySymbols.h"
 
 #include "HelpText.h"
 
@@ -236,6 +238,7 @@ void TRootIconList::UpdateName()
 
 class TRootIconBox : public TGFileContainer {
 friend class TRootIconList;
+friend class TRootBrowser;
 
 private:
    Bool_t           fCheckHeaders;   // if true check headers
@@ -250,6 +253,7 @@ private:
    const TGPicture *fSmallCachedPic; //
    Bool_t           fWasGrouped;
    TObject         *fActiveObject;   //
+   Bool_t           fIsEmpty;  
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -293,6 +297,7 @@ TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
    fCurrentName = 0;
    fWasGrouped = kFALSE;
    fActiveObject = 0;
+   fIsEmpty = kTRUE;
 
    // Don't use timer HERE (timer is set in TBrowser).
    StopRefreshTimer();
@@ -317,6 +322,9 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
    static TImage *im = 0;
+   if (!im) {
+      im = TImage::Create();
+   }
 
    TString xpm_magic(name, 3);
    Bool_t xpm = xpm_magic == "/* ";
@@ -328,9 +336,6 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
       return;
    }
 
-   if (!im) {
-      im = TImage::Create();
-   }
    *pic = fClient->GetMimeTypeList()->GetIcon(iconname, kFALSE);
 
    if (!(*pic) && xpm) {
@@ -401,6 +406,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       }
       fi = AddFile(name);
       if (fi) fi->SetUserData(obj);
+      fIsEmpty = kFALSE;
       return;
    }
 
@@ -411,12 +417,12 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
    fCurrentList->Add(obj);
    fCurrentList->UpdateName();
+   fIsEmpty = kFALSE;
 
    if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
       fCurrentName->SetString(fCurrentList->GetName());
    }
 
-   //
    if ((fCurrentList->GetSize()<fGroupSize) && !fGrouped) {
       const TGPicture *pic = 0;
       const TGPicture *spic = 0;
@@ -646,11 +652,14 @@ void TRootIconBox::RemoveAll()
 {
    // Remove all items from icon box
 
+   if (fIsEmpty) return;
+
    fCheckHeaders = kTRUE;
    TGFileContainer::RemoveAll();
    fGrouped = kFALSE;
    fCurrentItem = 0;
    fCurrentList = 0;
+   fIsEmpty = kTRUE;
 }
 
 
@@ -942,7 +951,6 @@ void TRootBrowser::CreateBrowser(const char *name)
    AddFrame(fStatusBar, lo);
 
    // Misc
-
    SetWindowName(name);
    SetIconName(name);
    SetIconPixmap("rootdb_s.xpm");
@@ -954,12 +962,28 @@ void TRootBrowser::CreateBrowser(const char *name)
    fListLevel = 0;
    fTreeLock  = kFALSE;
 
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F5), 0, kTRUE);
    MapSubwindows();
-
    SetDefaults();
+   Resize();
+}
 
-   // we need to use GetDefaultSize() to initialize the layout algorithm...
-   Resize(GetDefaultSize());
+//______________________________________________________________________________
+Bool_t TRootBrowser::HandleKey(Event_t *event)
+{
+   // handle keys
+
+   if ((event->fType == kGKeyPress) && !event->fState) {
+      UInt_t keysym;
+      char input[10];
+      gVirtualX->LookupString(event, input, sizeof(input), keysym);
+
+      if ((EKeySym)keysym == kKey_F5) {
+         Refresh(kTRUE);
+         return kTRUE;
+      }
+   }
+   return TGMainFrame::HandleKey(event);
 }
 
 //______________________________________________________________________________
@@ -1025,15 +1049,25 @@ void TRootBrowser::BrowseObj(TObject *obj)
    // TRootBrowser::Add() which will fill the IconBox and the tree.
    // Emits signal "BrowseObj(TObject*)".
 
+   TGPosition pos = fIconBox->GetPagePosition();
+
    Emit("BrowseObj(TObject*)", (Long_t)obj);
-   fIconBox->RemoveAll();
+
+   if (obj->IsFolder()) fIconBox->RemoveAll();
 
    obj->Browse(fBrowser);
-   fIconBox->Refresh();
+
+   if ((fListLevel && obj->IsFolder()) || (!fListLevel && (obj == gROOT))) {
+      fIconBox->Refresh();
+   }
+
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
 
    UpdateDrawOption();
+
+   fIconBox->SetHsbPosition(pos.fX);
+   fIconBox->SetVsbPosition(pos.fY);
 }
 
 //______________________________________________________________________________
@@ -1136,20 +1170,42 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
    char action[512];
    fBrowser->SetDrawOption(GetDrawOption());
+   //TVirtualPad *before = gPad;
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
       Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+      TString act;
 
       if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
-         TString act = action;
+         act = action;
          act.ReplaceAll("%s", obj->GetName());
+
          if (act[0] == '!') {
-            act.Remove(0,1);
+            act.Remove(0, 1);
             gSystem->Exec(act.Data());
-         } else
+         } else {
             gApplication->ProcessLine(act.Data());
+         }
       }
+      /*TGLVEntry *entry = (TGLVEntry *)fIconBox->GetLastActive();
+
+      if (gPad && (gPad != before) && entry) {
+         TSystemFile *sf = (TSystemFile*)obj;
+         const TGPicture *pic, *spic;
+         TImage *img = TImage::Create();
+         img->FromPad(gPad);
+         const char *xpm = img->GetTitle();
+         img->SetImageBuffer((char**)&xpm, TImage::kXpm);
+         pic = fClient->GetPicturePool()->GetPicture(sf->GetName(), img->GetPixmap(),
+                                                     img->GetMask());
+         img->Scale(32, 32);
+         spic = fClient->GetPicturePool()->GetPicture(sf->GetName(), img->GetPixmap(),
+                                                      img->GetMask());
+         fClient->GetMimeTypeList()->AddType("[thumbnail]", sf->GetName(), pic->GetName(), 
+                                             spic->GetName(), action);
+         Refresh();
+      }*/
       return;
    }
 
@@ -1420,7 +1476,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         obj = (TObject *) fListLevel->GetUserData();
                         fLt->ClearHighlighted();
                         fLt->HighlightItem(fListLevel);
-                        if (obj) BrowseObj(obj);
+                        if (obj) {
+                           BrowseObj(obj);
+                        }
                      }
                      break;
                   }
@@ -1756,10 +1814,8 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    // don't delete fIconBox items here (it's status will be updated
    // via TBrowser::Refresh() which should be called once all objects have
    // been removed.
-   //fIconBox->RemoveItemWithData(obj);
-   //fIconBox->Refresh();
-   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
 
+   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
    if (fListLevel && (fListLevel->GetUserData() == obj)) {
       fListLevel = 0;
    }
@@ -1774,19 +1830,20 @@ void TRootBrowser::Refresh(Bool_t force)
       && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
 
-      TGListTreeItem *sav;
+      static UInt_t prev = 0;
+      UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
+      if (!prev) prev = curr;
 
-      sav = fListLevel;
-
-      // Refresh gROOT
-      fListLevel = 0;
-      BrowseObj(gROOT);
-      fListLevel = sav;
+      if (prev != curr) { // refresh gROOT
+         TGListTreeItem *sav = fListLevel;
+         fListLevel = 0;
+         BrowseObj(gROOT);
+         fListLevel = sav;
+         prev = curr;
+      }
 
       // Refresh the IconBox
       if (fListLevel) {
-         fIconBox->RemoveAll();
-
          TObject *obj = (TObject *) fListLevel->GetUserData();
 
          if (obj) {
@@ -1795,7 +1852,6 @@ void TRootBrowser::Refresh(Bool_t force)
             fTreeLock = kFALSE;
          }
       }
-      fClient->NeedRedraw(fLt);
    }
 }
 

@@ -38,22 +38,22 @@ action = !xanim %s
 [image/gif]
 pattern = *.gif
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/jpeg]
 pattern = *.jpeg *.jp[ge]
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/png]
 pattern = *.png
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/tiff]
 pattern = *.tiff?
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/x-xpixmap]
 pattern = *.x[bp]m
@@ -63,7 +63,7 @@ action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWi
 [image/bmp]
 pattern = *.bmp
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/ico]
 pattern = *.ico
@@ -78,12 +78,12 @@ action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWi
 [image/xcf]
 pattern = *.xcf
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [image/ppm]
 pattern = *.p[n]m
 icon = psp_s.xpm psp_t.xpm
-action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+action = TImage::Open("%s")->Draw("nxxx")
 
 [text/html]
 pattern = *.html

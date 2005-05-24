@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.2 2003/07/01 11:39:44 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -29,14 +29,18 @@
 class TBrowser;
 
 class TSystemFile : public TNamed {
+private:
+   TString fIconName;   // icon name
 
 public:
    TSystemFile();
    TSystemFile(const char *filename, const char *dirname);
    virtual ~TSystemFile();
    virtual void     Browse(TBrowser *b);
-   virtual void     Edit(); // *MENU*
+   virtual void     Edit();                  // *MENU*
    virtual Bool_t   IsDirectory() const;
+   virtual void     SetIconName(const char *name) { fIconName = name; }
+   const char      *GetIconName() const { return fIconName.Data(); }
 
    ClassDef(TSystemFile,0)  //A system file
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.26 2004/12/10 17:35:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.27 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -279,6 +279,24 @@ void TGLVEntry::SetViewMode(EListViewMode viewMode)
       Resize(GetDefaultSize());
       if(fClient) fClient->NeedRedraw(this);
    }
+}
+
+//______________________________________________________________________________
+void TGLVEntry::SetPictures(const TGPicture *bigpic, const TGPicture *smallpic)
+{
+   // change pictures
+
+   if (!bigpic || !smallpic) return;
+   
+   fBigPic = bigpic;
+   fSmallPic = smallpic;
+   fCurrent = fViewMode == kLVLargeIcons ? fBigPic : fSmallPic;
+
+   if (fSelPic) delete fSelPic;
+   fSelPic = new TGSelectedPicture(gClient, fCurrent);
+
+   gVirtualX->ClearWindow(fId);
+   Resize();
 }
 
 //______________________________________________________________________________

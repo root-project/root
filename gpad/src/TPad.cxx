@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.175 2005/04/29 16:16:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.176 2005/05/02 18:00:51 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3536,8 +3536,18 @@ void TPad::Print(const char *filenam, Option_t *option)
    }
 
    if (!gROOT->IsBatch() && image) {
-      if (gtype != TImage::kUnknown) {
+      if (gtype == TImage::kGif) {
+         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
 
+         gVirtualX->SelectWindow(wid);
+         if (gVirtualX->WriteGIF((char*)psname.Data())) {
+            if (!gSystem->AccessPathName(psname.Data())) {
+               Info("Print", "GIF file %s has been created", psname.Data());
+            }
+         }
+         return;
+      }
+      if (gtype != TImage::kUnknown) {
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
          TImage *img = TImage::Create();

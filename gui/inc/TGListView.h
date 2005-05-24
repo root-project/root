@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.22 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.23 2004/12/08 17:13:41 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -111,8 +111,8 @@ public:
                                    const char* n4="",const char* n5="",const char* n6="",
                                    const char* n7="",const char* n8="",const char* n9="",
                                    const char* n10="",const char* n11="",const char* n12="");
-
-   void SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
+   virtual void        SetPictures(const TGPicture *bigpic = 0, const TGPicture *smallpic = 0);
+   virtual void        SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
 
    virtual TGDimension GetDefaultSize() const;
    virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }
