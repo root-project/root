@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.5 2003/11/29 01:47:13 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TCastorFile.cxx,v 1.6 2005/03/16 16:10:19 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -201,9 +201,9 @@ void TCastorFile::FindServerAndPath()
    TInetAddress addr = gSystem->GetHostByName(fDiskServer);
    if (addr.IsValid()) {
       fqdn = addr.GetHostName();
-      if (fqdn == "UnNamedHost") 
+      if (fqdn == "UnNamedHost")
          fqdn = addr.GetHostAddress();
-      if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138.")) 
+      if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
          r = "rootug://";
       else
          r = "root://";
