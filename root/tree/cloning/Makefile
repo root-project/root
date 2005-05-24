@@ -15,16 +15,16 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 
-$(ROOTSYS)/test/Event.new.split0.root: $(ROOTCORELIBS)
-	$(CMDECHO) (cd $(ROOT_LOC)/test; $(MAKE) -f dt_Makefile files)
+$(ROOTTEST_HOME)/root/io/event/Event.new.split0.root: $(ROOTCORELIBS)
+	$(CMDECHO) (cd $(ROOTTEST_HOME)/root/io/event; $(MAKE) --no-print-directory -f dt_Makefile files)
 
 hsimple1.root: hsimple.C
 	$(CMDECHO) root.exe -q -l -b hsimple.C > hsimple.out
 	$(CMDECHO) mv hsimple.root hsimple1.root
 	$(CMDECHO) cp hsimple1.root hsimple2.root
 
-event1.root: $(ROOTSYS)/test/Event.new.split0.root
-	$(CMDECHO) cp $(ROOTSYS)/test/Event.new.split0.root event1.root
+event1.root: $(ROOTTEST_HOME)/root/io/event/Event.new.split0.root
+	$(CMDECHO) cp $(ROOTTEST_HOME)/root/io/event/Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
 
 treeCloneTest.log: hsimple1.root event1.root runEvent.C

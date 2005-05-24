@@ -8,14 +8,14 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-$(ROOT_LOC)/test/Event$(ExeSuf):
-	(cd $(ROOT_LOC)/test; $(MAKE) Event$(ExeSuf))
+$(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf):
+	(cd $(ROOTTEST_HOME)/root/io/event; $(MAKE) Event$(ExeSuf))
 
-libEvent.$(DllSuf): $(ROOT_LOC)/test/libEvent.$(DllSuf)
-	$(CMDECHO) cp $(ROOT_LOC)/test/Event$(ExeSuf) $(ROOT_LOC)/test/libEvent.* $(ROOT_LOC)/test/Event.h .
+libEvent.$(DllSuf): $(ROOTTEST_HOME)/root/io/event/libEvent.$(DllSuf)
+	$(CMDECHO) cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf) $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
 
-Event$(ExeSuf): $(ROOT_LOC)/test/Event$(ExeSuf)
-	$(CMDECHO)cp $(ROOT_LOC)/test/Event$(ExeSuf) $(ROOT_LOC)/test/libEvent.* $(ROOT_LOC)/test/Event.h .
+Event$(ExeSuf): $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)
+	$(CMDECHO)cp $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf) $(ROOTTEST_HOME)/root/io/event/libEvent.* $(ROOTTEST_HOME)/root/io/event/Event.h .
 
 Event.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 	$(CMDECHO) ./Event 20 1 9 1 > createfile.out

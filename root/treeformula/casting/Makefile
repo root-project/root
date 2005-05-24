@@ -10,13 +10,13 @@ SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-$(ROOTSYS)/test/Event:
-	(cd $ROOTSYS/test; $(MAKE) Event)
+$(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf):
+	(cd $(ROOTTEST_HOME)/root/io/event; $(MAKE) Event$(ExeSuf))
 
-Event: $(ROOTSYS)/test/Event
-	$(CMDECHO) cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .
+Event$(ExeSuf): $(ROOTTEST_HOME)/root/io/event/Event$(ExeSuf)
+	$(CMDECHO) cp $(ROOTSYS)/test/Event$(ExeSuf) $(ROOTSYS)/test/libEvent.$(DllSuf) $(ROOTSYS)/test/Event.h .
 
-Event.root:
+Event.root: Event$(ExeSuf)
 	$(CMDECHO) ./Event 20 1 9 1
 
 Simple.log: Simple_cxx.$(DllSuf)

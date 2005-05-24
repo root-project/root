@@ -1,5 +1,5 @@
 CLEAN_TARGETS += Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
-     treeChainFriend.log $(ALL_LIBRARIES) [a-d][0-4].root treeparent.root treefriend.root
+     treeChainFriend.log $(ALL_LIBRARIES) [a-d][0-4].root treeparent.root treefriend.root *.log
 TEST_TARGETS += treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -25,16 +25,16 @@ unevenFriend.out:  unevenFriend.C unevenFriend.ref
 	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
 
 ifeq ($(ARCH),win32)
-ROOTFILE = $(shell cygpath -u '$(ROOTSYS)/test/Event.root')
+ROOTFILE = $(shell cygpath -u '$(ROOTTEST_HOME)/root/io/event/Event.root')
 ROOTDIR = $(shell cygpath -u '$(ROOTSYS)')
 else
-ROOTFILE = $(ROOTSYS)/test/Event.root
+ROOTFILE = $(ROOTTEST_HOME)/root/io/event/Event.root
 ROOTDIR = $(ROOTSYS)
 endif
 
-$(ROOTFILE): $(ROOTSYS)/test/Event.h
+$(ROOTFILE): $(ROOTTEST_HOME)/root/io/event/Event.h
 	$(CMDECHO) ( \
-		cd $(ROOTDIR)/test; \
+		cd $(ROOTTEST_HOME)/root/io/event; \
 		$(MAKE) Event$(ExeSuf); \
 		./Event 10 1 9 1; \
 	) 2>&1 > createfile.out
