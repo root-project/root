@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.3 2003/01/13 16:57:35 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.1 2005/05/24 09:27:25 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
