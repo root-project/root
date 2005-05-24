@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.5 2005/02/28 15:42:42 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.6 2005/02/28 16:40:03 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -44,9 +44,9 @@
 //                                                                      //
 //  We provide few predifined palettes:                                 //
 //                                                                      //
-//    o gHistPalette - palette used in TH2::Draw("col")                 //
+//    o gHistImagePalette - palette used in TH2::Draw("col")            //
 //                                                                      //
-//    o gWebPalette                                                     //
+//    o gWebImagePalette                                                //
 //       The web palette is a set of 216 colors that will not dither or //
 //       shift on PCs or Macs. Browsers use this built-in palette when  //
 //       they need to render colors on monitors with only 256 colors    //
