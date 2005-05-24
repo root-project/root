@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.9 2005/03/08 05:33:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.10 2005/04/12 09:26:27 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -107,7 +107,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    fMajorName          = majorname;
    fMinorName          = minorname;
    if (!T) return;
-   fN = (Long64_t)T->GetEntries();
+   fN = T->GetEntries();
    if (fN <= 0) {
       MakeZombie();
       Error("TreeIndex","Cannot build a TreeIndex with a Tree having no entries");
@@ -136,8 +136,15 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    Long64_t *w = new Long64_t[fN];
    Long64_t i;
    Long64_t oldEntry = fTree->GetReadEntry();
+   Int_t current = -1;
    for (i=0;i<fN;i++) {
-      fTree->LoadTree(i);
+      Long64_t centry = fTree->LoadTree(i);
+      if (centry < 0) break;
+      if (fTree->GetTreeNumber() != current) {
+         current = fTree->GetTreeNumber();
+         fMajorFormula->UpdateFormulaLeaves();
+         fMinorFormula->UpdateFormulaLeaves();
+      }
       Double_t majord = fMajorFormula->EvalInstance();
       Double_t minord = fMinorFormula->EvalInstance();
       Long64_t majorv = (Long64_t)majord;
