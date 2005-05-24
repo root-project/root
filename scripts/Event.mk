@@ -15,7 +15,27 @@ endif
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
 
-$(EVENTO) : Event.h
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+-include Event.d
+-include MainEvent.d
+-include EventDict.d
+endif
+
+Event.d: Event.cxx Event.h
+	@touch Event.dd; rmkdepend -f Event.dd -I$(ROOTSYS)/include Event.cxx 2>/dev/null && \
+	cat Event.dd | sed -e s/Event\\\.o/Event\\\.$(ObjSuf)/g > Event.d; rm Event.dd Event.dd.bak
+
+MainEvent.d: MainEvent.cxx Event.h
+	@touch MainEvent.dd; rmkdepend -f MainEvent.dd -I$(ROOTSYS)/include MainEvent.cxx 2>/dev/null && \
+	cat MainEvent.dd | sed -e s/MainEvent\\\.o/MainEvent\\\.$(ObjSuf)/g > MainEvent.d; rm MainEvent.dd MainEvent.dd.bak
+
+EventDict.d: EventDict.cxx Event.h
+	@touch EventDict.dd; rmkdepend -f EventDict.dd -I$(ROOTSYS)/include EventDict.cxx 2>/dev/null && \
+	cat EventDict.dd | sed -e s/EventDict\\\.o/EventDict\\\.$(ObjSuf)/g > EventDict.d; rm EventDict.dd EventDict.dd.bak
+
+$(EVENTO): Event.d EventDict.d
+
+$(MAINEVENTO): MainEvent.d
 
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)
