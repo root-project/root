@@ -72,9 +72,10 @@ G__CallFunc {
 #endif
   // end old interface
 
-  void Exec(void *pobject) ;
-  long ExecInt(void *pobject) ;
-  double ExecDouble(void *pobject) ;
+  G__value Execute(void *pobject );
+  void Exec(void *pobject) { Execute(pobject); }
+  long ExecInt(void *pobject) { return G__int(Execute(pobject)); }
+  double ExecDouble(void *pobject) { return G__double(Execute(pobject)); }
 
 #ifndef G__FONS50
   G__InterfaceMethod InterfaceMethod() { return pfunc; }

@@ -402,7 +402,7 @@ void G__CallFunc::SetFunc(G__ClassInfo* cls
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::Exec(void *pobject)
+G__value G__CallFunc::Execute(void *pobject)
 {
   int ret;
   long store_struct_offset;
@@ -447,90 +447,7 @@ void G__CallFunc::Exec(void *pobject)
 #ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
 #endif
-}
-///////////////////////////////////////////////////////////////////////////
-long G__CallFunc::ExecInt(void *pobject)
-{
-  int ret;
-  long store_struct_offset;
-  // Set object address
-  store_struct_offset = G__store_struct_offset;
-  G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
-  // Call function
-#ifndef G__OLDIMPLEMENTATION1749
-  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
-#endif
-#ifdef G__ASM_WHOLEFUNC
-  if(pfunc) {
-#ifndef G__OLDIMPLEMENTATION2205
-    if(pfunc == G__DLL_direct_globalfunc) 
-      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
-    else 
-      ret = (*pfunc)(&result,(char*)bytecode,&para,0);
-#else
-    ret = (*pfunc)(&result,(char*)bytecode,&para,0);
-#endif
-  }
-#else
-  if(pfunc) ret = (*pfunc)(&result,(char*)NULL,&para,0);
-#endif
-#ifndef G__OLDIMPLEMENTATION823
-  else ret = ExecInterpretedFunc(&result);
-#endif
-#ifndef G__OLDIMPLEMENTATION1749
-  G__CurrentCall(G__NOP, 0, 0);
-#endif
-  // Restore  object address
-  G__store_struct_offset = store_struct_offset;
-  if(0==ret) {
-    /* error */
-  }
-  return(G__int(result));
-}
-///////////////////////////////////////////////////////////////////////////
-double G__CallFunc::ExecDouble(void *pobject)
-{
-  int ret;
-  long store_struct_offset;
-  // Set object address
-  store_struct_offset = G__store_struct_offset;
-  G__store_struct_offset = (long)pobject;
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif
-  // Call function
-#ifndef G__OLDIMPLEMENTATION1749
-  G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
-#endif
-#ifdef G__ASM_WHOLEFUNC
-  if(pfunc) {
-#ifndef G__OLDIMPLEMENTATION2205
-    if(pfunc == G__DLL_direct_globalfunc) 
-      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
-    else 
-      ret = (*pfunc)(&result,(char*)bytecode,&para,0);
-#else
-    ret = (*pfunc)(&result,(char*)bytecode,&para,0);
-#endif
-  }
-#else
-  if(pfunc) ret = (*pfunc)(&result,(char*)NULL,&para,0);
-#endif
-#ifndef G__OLDIMPLEMENTATION823
-  else ret = ExecInterpretedFunc(&result);
-#endif
-#ifndef G__OLDIMPLEMENTATION1749
-  G__CurrentCall(G__NOP, 0, 0);
-#endif
-  // Restore  object address
-  G__store_struct_offset = store_struct_offset;
-  if(0==ret) {
-    /* error */
-  }
-  return(G__double(result));
+  return result;
 }
 ///////////////////////////////////////////////////////////////////////////
 int G__CallFunc::ExecInterpretedFunc(G__value* presult)
