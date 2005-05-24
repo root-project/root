@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.206 2005/04/18 15:31:08 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.207 2005/05/23 15:34:28 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4060,6 +4060,7 @@ int main(int argc, char **argv)
 
    const char* libprefix = "--lib-list-prefix=";
 
+   ifl = 0;
    while (strncmp(argv[ic], "-",1)==0
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
