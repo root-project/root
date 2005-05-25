@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.20 2005/04/13 05:04:49 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.21 2005/05/06 10:08:53 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 05/04/05
@@ -65,6 +65,12 @@ def split( str ):
    else:
       return str, ''
 
+def safeLookupCall( func, arg ):
+   try:
+      return func( arg )
+   except:
+      return None
+
 
 ### special case for gPad (is a C++ macro) --------------------------------------
 TVirtualPad = makeRootClass( "TVirtualPad" )
@@ -100,6 +106,8 @@ def _excepthook( exctype, value, traceb ):
          fn = os.path.expanduser( os.path.expandvars( arg ) )
          execfile( fn, __main__.__dict__, __main__.__dict__ )
          return
+      elif cmd == '.L' and 3 < len(arg) and arg[-3:] == '.so':
+         return gSystem.Load( arg )
       elif cmd == '.cd' and arg:
          os.chdir( arg )
          return

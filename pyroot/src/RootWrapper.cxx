@@ -1,8 +1,9 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.25 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.26 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
+#include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
@@ -122,6 +123,10 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
    // retrieve method name
       std::string mtName = method->GetName();
 
+   // filter empty names (happens for namespaces, is bug?)
+      if ( mtName == "" )
+         continue;
+
    // filter C++ destructors
       if ( mtName[0] == '~' )
          continue;
@@ -169,8 +174,8 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       md.push_back( pycall );
    }
 
-// special case if there's no constructor defined
-   if ( ! hasConstructor )
+// add a pseudo-default ctor, if none defined
+   if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new ConstructorHolder( klass, 0 ) );
 
 // add the methods to the class dictionary
@@ -279,7 +284,9 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
       return 0;
    }
 
-   PyObject* pyname = PyString_FromString( const_cast< char* >( name.c_str() ) );
+   G__TypeInfo ti( name.c_str() );
+   const std::string trueName = ti.TrueName();
+   PyObject* pyname = PyString_FromString( const_cast< char* >( trueName.c_str() ) );
 
 // first try to retrieve the class representation from the ROOT module
    PyObject* pyclass = PyObject_GetAttr( gRootModule, pyname );
@@ -294,7 +301,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
          PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pyname, pybases );
-         pyclass = PyType_Type.tp_new( &PyType_Type, args, NULL );
+         pyclass = PyType_Type.tp_new( &PyRootType_Type, args, NULL );
 
          Py_DECREF( args );
          Py_DECREF( pybases );
@@ -309,15 +316,21 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
          }
          else {
             Py_INCREF( pyclass );            // PyModule_AddObject steals reference
-            PyModule_AddObject( gRootModule, const_cast< char* >( name.c_str() ), pyclass );
+            PyModule_AddObject( gRootModule, const_cast< char* >( trueName.c_str() ), pyclass );
          }
       }
+   }
+
+   if ( pyclass && name != trueName ) {
+   // class exists, but is typedef-ed: simply map reference
+      Py_INCREF( pyclass );                  // PyModule_AddObject steals reference
+      PyModule_AddObject( gRootModule, const_cast< char* >( name.c_str() ), pyclass );
    }
 
    Py_DECREF( pyname );
 
 // add python-style features
-   if ( ! Pythonize( pyclass, name ) ) {
+   if ( ! Pythonize( pyclass, trueName ) ) {
       Py_XDECREF( pyclass );
       pyclass = 0;
    }
@@ -362,8 +375,8 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
       return BindRootObject( func, TFunction::Class() );
 
 // nothing found
-   Py_INCREF( Py_None );
-   return Py_None;
+   PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );
+   return 0;
 }
 
 //____________________________________________________________________________
@@ -374,10 +387,10 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef
       return 0;
    }
 
-// retriev python class
+// retrieve python class
    PyObject* pyclass = MakeRootClassFromString( klass->GetName() );
    if ( ! pyclass )
-      return 0;                    // error set in make ROOT class
+      return 0;                    // error has been set in MakeRootClass
 
 // instantiate an object of this class
    PyObject* args = PyTuple_New(0);
@@ -458,22 +471,13 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 // determine type and cast as appropriate
    TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
    if ( ! klass ) {
-      switch ( Utility::effectiveType( gbl->GetFullTypeName() ) ) {
-      case Utility::kBool:
-         return PyInt_FromLong( (long) *(Bool_t*)gbl->GetAddress() );
-      case Utility::kChar:
-         return PyInt_FromLong( (long) *(Char_t*)gbl->GetAddress() );
-      case Utility::kShort:
-      case Utility::kEnum:
-      case Utility::kInt:
-         return PyInt_FromLong( (long) *(Int_t*)gbl->GetAddress() );
-      case Utility::kLong:
-         return PyLong_FromLong( (long) *(Long_t*)gbl->GetAddress() );
-      case Utility::kFloat:
-         return PyFloat_FromDouble( (double) *(Float_t*)gbl->GetAddress() );
-      case Utility::kDouble:
-         return PyFloat_FromDouble( (double) *(Double_t*)gbl->GetAddress() );
-      case Utility::kMacro: {
+      Converter* pcnv = CreateConverter( gbl->GetFullTypeName() );
+
+      if ( pcnv ) {
+         PyObject* result = pcnv->FromMemory( (void*)gbl->GetAddress() );
+         delete pcnv;
+         return result;
+      } else if ( Utility::effectiveType( gbl->GetFullTypeName() ) == Utility::kMacro ) {
          std::string gblName = gbl->GetName();    // == macro label
 
       // TGlobal offers no specifics; go directly to CINT for the type info
@@ -493,15 +497,13 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
                   return 0;
                }
             }
-
          }
 
       // type unknown; this will be reported as if the TGlobal doesn't exist
          return 0;
       }
-      default:
+      else
          klass = TGlobal::Class();
-      }
    }
 
    if ( Utility::isPointer( gbl->GetFullTypeName() ) )

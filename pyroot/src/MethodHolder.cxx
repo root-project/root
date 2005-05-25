@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.31 2005/04/14 21:53:47 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.32 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -98,34 +98,12 @@ bool PyROOT::MethodHolder::InitCallFunc_( std::string& callString )
    int iarg = 0;
    TIter nextarg( fMethod->GetListOfMethodArgs() );
    while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
-      G__TypeInfo argType = arg->GetTypeName();
-
       std::string fullType = arg->GetFullTypeName();
-      std::string realType = argType.TrueName();
+      fConverters[ iarg ] = CreateConverter( fullType );
 
-      if ( Utility::isPointer( fullType ) ) {
-         ConvFactories_t::iterator h = gConvFactories.find( realType + "*" );
-         if ( h == gConvFactories.end() ) {
-            bool isConst = fullType.find( "const" ) != std::string::npos;
-            if ( TClass* klass = gROOT->GetClass( realType.c_str() ) )
-               fConverters[ iarg ] = new KnownClassConverter( klass, isConst );
-            else {
-               h = isConst ? gConvFactories.find( "const void*" ) : gConvFactories.find( "void*" );
-               fConverters[ iarg ] = (h->second)();
-            }
-         }
-         else
-            fConverters[ iarg ] = (h->second)();
-      } else if ( argType.Property() & G__BIT_ISENUM ) {
-         fConverters[ iarg ] = (gConvFactories.find( "UInt_t" )->second)();
-      } else {
-         ConvFactories_t::iterator h = gConvFactories.find( realType );
-         if ( h != gConvFactories.end() ) {
-            fConverters[ iarg ] = (h->second)();
-         } else {
-            PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
-            return false;
-         }
+      if ( ! fConverters[ iarg ] ) {
+         PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
+         return false;
       }
 
    // setup call string
@@ -292,8 +270,10 @@ bool PyROOT::MethodHolder::Initialize()
 bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyObject*& )
 {
 // verify self
-   if ( self != 0 )
+   if ( self != 0 ) {
+      Py_INCREF( args );
       return true;
+   }
 
 // otherwise, check for a suitable 'self' in args and update accordingly
    if ( PyTuple_GET_SIZE( args ) != 0 ) {
@@ -343,7 +323,7 @@ bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
 // convert the arguments to the method call array
    for ( int i = 0; i < argc; i++ ) {
       if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fMethodCall ) ) {
-         SetPyError_( PyString_FromFormat( "could not convert argument %d", i ) );
+         SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
          return false;
       }
    }
@@ -391,6 +371,9 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
 // translate the arguments
    if ( ! SetMethodArgs( args ) )
       return 0;                              // important: 0, not Py_None
+
+// done with filtered args
+   Py_DECREF( args );
 
 // get the ROOT object that this object proxy is a handle for
    void* object = self->GetObject();

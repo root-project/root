@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.14 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.15 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -654,7 +654,7 @@ namespace {
             PyObject* tname = callPyObjMethod( leaf, "GetTypeName" );
             std::string stname( PyString_AS_STRING( tname ) );
 
-            PyBufferFactory* fac = PyBufferFactory::Instance();
+            BufFac_t* fac = BufFac_t::Instance();
             PyObject* scb = PyObject_GetAttrString( leaf, const_cast< char* >( "GetNdata" ) );
 
             Utility::EDataType eType = Utility::effectiveType( stname );
@@ -712,11 +712,11 @@ namespace {
 
       if ( gLastCallInfo->first != 0 ) {
       // prepare arguments and call
-         PyObject* arg1 = PyBufferFactory::Instance()->PyBuffer_FromMemory(
+         PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
             (double*)G__int(libp->para[0]), 4 );
 
          if ( gLastCallInfo->second != 0 ) {
-            PyObject* arg2 = PyBufferFactory::Instance()->PyBuffer_FromMemory(
+            PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
                (double*)G__int(libp->para[1]), gLastCallInfo->second );
 
             result = PyObject_CallFunction(

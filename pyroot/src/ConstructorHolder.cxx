@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.2 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.3 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -70,6 +70,9 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
    // CAUTION: creating an interpreted class doesn't work if it has STL type data
    // members that are initialized or otherwise touched in the ctor!
    }
+
+// done with filtered args
+   Py_DECREF( args );
 
 // return object if successful, lament if not
    if ( address != 0 ) {

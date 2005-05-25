@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.12 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.13 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -14,7 +14,9 @@
 
 namespace PyROOT {
 
-   extern bool gDictLookupActive;
+   typedef PyDictEntry* (*dictlookup) ( PyDictObject*, PyObject*, long );
+   R__EXTERN dictlookup gDictLookupOrg;
+   R__EXTERN bool gDictLookupActive;
 
    namespace Utility {
 

@@ -27,6 +27,9 @@ PyObject* PyROOT::FunctionHolder::operator()( ObjectProxy* self, PyObject* args,
    if ( ! SetMethodArgs( args ) )
       return 0;                              // important: 0, not Py_None
 
+// done with filtered args
+   Py_DECREF( args );
+
 // execute function
    return Execute( 0 );
 }

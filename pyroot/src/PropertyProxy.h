@@ -1,11 +1,11 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
 #define PYROOT_PROPERTYPROXY_H
 
 // Bindings
-#include "Utility.h"
+#include "Converters.h"
 
 // ROOT
 #include "DllImport.h"
@@ -20,20 +20,23 @@ namespace PyROOT {
 /** Proxy to ROOT data presented as python property
       @author  WLAV
       @date    02/12/2005
-      @version 1.0
+      @version 1.1
  */
+
+   class ObjectProxy;
 
    class PropertyProxy {
    public:
       void Set( TDataMember* );
  
       const std::string& GetName() const { return fName; }
+      long GetAddress( ObjectProxy* pyobj /* owner */ );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      std::string        fName;
-      TDataMember*       fDataMember;
-      Utility::EDataType fDataType;
+      std::string    fName;
+      TDataMember*   fDataMember;
+      Converter*     fConverter;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}

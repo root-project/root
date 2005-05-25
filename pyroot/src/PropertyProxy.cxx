@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -26,123 +26,61 @@ namespace {
 //= PyROOT property proxy property behaviour =================================
    PyObject* pp_get( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* )
    {
-      if ( pyprop->fDataMember->Property() & G__BIT_ISSTATIC ) {
-         long offset = 0;
-         G__DataMemberInfo dmi = pyprop->fDataMember->GetClass()->GetClassInfo()->GetDataMember(
-               pyprop->GetName().c_str(), &offset );
-
-         switch ( pyprop->fDataType ) {
-         case Utility::kShort:
-            return PyInt_FromLong( (long) *((int*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
-         case Utility::kEnum:
-         case Utility::kInt:
-            return PyInt_FromLong( *((int*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
-         case Utility::kLong:
-            return PyLong_FromLong( *((long*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
-         case Utility::kFloat:
-            return PyFloat_FromDouble( *((float*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
-         case Utility::kDouble:
-            return PyFloat_FromDouble( *((double*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
-         default:
-            PyErr_SetString( PyExc_RuntimeError, "no converter available for this property" );
-         }
-         
+      long address = pyprop->GetAddress( pyobj );
+      if ( address < 0 )
          return 0;
-      }
 
-      int offset = pyprop->fDataMember->GetOffsetCint();
-      void* obj = pyobj->GetObject();
-      if ( ! obj ) {
-         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-         return 0;
-      }
+   // for fixed size arrays
+      void* ptr = (void*)address;
+      if ( pyprop->fDataMember->GetArrayDim() != 0 )
+         ptr = &address;
 
-      switch ( pyprop->fDataType ) {
-      case Utility::kShort:
-         return PyInt_FromLong( (long) *((Short_t*)((long)obj+offset)) );
-      case Utility::kEnum:
-      case Utility::kInt:
-         return PyInt_FromLong( *((Long_t*)((long)obj+offset)) );
-      case Utility::kLong:
-         return PyLong_FromLong( *((Long_t*)((long)obj+offset)) );
-      case Utility::kUInt:
-      case Utility::kULong:
-         return PyLong_FromLong( *((ULong_t*)((long)obj+offset)) );
-      case Utility::kFloat:
-         return PyFloat_FromDouble( *((Float_t*)((long)obj+offset)) );
-      case Utility::kDouble:
-         return PyFloat_FromDouble( *((Double_t*)((long)obj+offset)) );
-      case Utility::kIntPtr:
-         return PyBufferFactory::Instance()->PyBuffer_FromMemory( *((Int_t**)((long)obj+offset)) );
-      case Utility::kLongPtr:
-         return PyBufferFactory::Instance()->PyBuffer_FromMemory( *((Long_t**)((long)obj+offset)) );
-      case Utility::kFloatPtr:
-         return PyBufferFactory::Instance()->PyBuffer_FromMemory( *((Float_t**)((long)obj+offset)) );
-      case Utility::kDoublePtr:
-         return PyBufferFactory::Instance()->PyBuffer_FromMemory( *((Double_t**)((long)obj+offset)) );
+      return pyprop->fConverter->FromMemory( ptr );
+
+   /*
       case Utility::kOther: {
       // TODO: refactor this code with TMethodHolder returns
          std::string sname = TClassEdit::ShortType(
             G__TypeInfo( pyprop->fDataMember->GetFullTypeName() ).TrueName(), 1 );
 
          TClass* klass = gROOT->GetClass( sname.c_str(), 1 );
-         long* address = *((long**)((int)obj+offset));
+         long* ref = *((long**)address);
 
-         if ( klass && address ) {
+         if ( klass && ref ) {
          // special case: cross-cast to real class for TGlobal returns
             if ( sname == "TGlobal" )
-               return BindRootGlobal( (TGlobal*)address );
+               return BindRootGlobal( (TGlobal*)ref );
 
-            return BindRootObject( (void*)address, klass );
+            return BindRootObject( (void*)ref, klass );
          }
-
-      // fall through ...
       }
-      default:
-         PyErr_SetString( PyExc_RuntimeError, "no converter available for this property" );
-      }
-
-      return 0;
+   */
    }
 
 //____________________________________________________________________________
-   PyObject* pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
+   int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
-      int offset = pyprop->fDataMember->GetOffsetCint();
-      void* obj = pyobj->GetObject();
-      if ( ! obj ) {
-         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-         return 0;
-      }
+      const int errret = -1;
 
-      switch( pyprop->fDataType ) {
-      case Utility::kShort: {
-         *((Short_t*)((int)obj+offset))  = (Short_t) PyLong_AsLong( value );
-         break;
-      }
-      case Utility::kInt:
-      case Utility::kLong:
-      case Utility::kEnum: {
-         *((Long_t*)((int)obj+offset))   = PyLong_AsLong( value );
-         break;
-      }
-      case Utility::kFloat: {
-         *((Float_t*)((int)obj+offset))  = PyFloat_AsDouble( value );
-         break;
-      }
-      case Utility::kDouble: {
-         *((Double_t*)((int)obj+offset)) = PyFloat_AsDouble( value );
-         break;
-      }
-      default:
-         PyErr_SetString( PyExc_RuntimeError, "this property doesn't allow assignment" );
-      }
+      long address = pyprop->GetAddress( pyobj );
+      if ( address < 0 )
+         return errret;
 
-      if ( PyErr_Occurred() )
+   // for fixed size arrays
+      void* ptr = (void*)address;
+      if ( pyprop->fDataMember->GetArrayDim() != 0 )
+         ptr = &address;
+
+   // actual conversion; return on success
+      if ( pyprop->fConverter->ToMemory( value, ptr ) )
          return 0;
 
-      Py_INCREF( Py_None );
-      return Py_None;
+   // set a python error, if not already done
+      if ( ! PyErr_Occurred() )
+         PyErr_SetString( PyExc_RuntimeError, "property type mismatch or assignment not allowed" );
+
+   // failure ...
+      return errret;
    }
 
 
@@ -220,5 +158,37 @@ void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
 {
    fName       = dataMember->GetName();
    fDataMember = dataMember;
-   fDataType   = Utility::effectiveType( dataMember->GetFullTypeName() );
+
+   std::string fullType = fDataMember->GetFullTypeName();
+   if ( (int)fDataMember->GetArrayDim() != 0 )
+      fullType.append( "*" );
+   fConverter  = CreateConverter( fullType, fDataMember->GetMaxIndex( 0 ) );
+}
+
+//____________________________________________________________________________
+long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
+   const int errret = -1;
+
+// class attributes
+   if ( fDataMember->Property() & G__BIT_ISSTATIC ) {
+      long offset = 0;
+      G__DataMemberInfo dmi =
+         fDataMember->GetClass()->GetClassInfo()->GetDataMember( fName.c_str(), &offset );
+      return (long)((G__var_array*)dmi.Handle())->p[dmi.Index()];
+   }
+
+// instance attributes; requires object for full address
+   if ( ! ObjectProxy_Check( pyobj ) ) {
+      PyErr_Format( PyExc_TypeError,
+         "object instance required for access to property \"%s\"", fName.c_str() );
+      return errret;
+   }
+
+   void* obj = pyobj->GetObject();
+   if ( ! obj ) {
+      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+      return errret;
+   }
+
+   return (long)obj + fDataMember->GetOffsetCint();
 }

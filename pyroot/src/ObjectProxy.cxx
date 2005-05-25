@@ -1,9 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.3 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
 #include "PyROOT.h"
 #include "ObjectProxy.h"
+#include "PyRootType.h"
 
 // ROOT
 #include "TObject.h"
@@ -87,7 +88,7 @@ namespace {
 
 //= PyROOT object proxy type =================================================
 PyTypeObject ObjectProxy_Type = {
-   PyObject_HEAD_INIT( &PyType_Type )
+   PyObject_HEAD_INIT( &PyRootType_Type )
    0,                         // ob_size
    (char*)"ROOT.ObjectProxy", // tp_name
    sizeof(ObjectProxy),       // tp_basicsize

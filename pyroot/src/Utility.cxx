@@ -1,10 +1,11 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.15 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.16 2005/05/06 15:02:52 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "Utility.h"
 #include "ObjectProxy.h"
+#include "RootWrapper.h"
 
 // ROOT
 #include "TClassEdit.h"
@@ -18,7 +19,9 @@
 
 
 //- data _____________________________________________________________________
+PyROOT::dictlookup PyROOT::gDictLookupOrg = 0;
 bool PyROOT::gDictLookupActive = false;
+
 
 PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
 
@@ -104,6 +107,9 @@ bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const c
 // finalize proxy type
    if ( PyType_Ready( pytype ) < 0 )
       return false;
+
+   if ( PyErr_Occurred() )
+      PyErr_Print();
 
 // add proxy type to the given (ROOT) module
    Py_INCREF( pytype );         // PyModule_AddObject steals reference

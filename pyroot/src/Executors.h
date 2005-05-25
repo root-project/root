@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.1 2005/03/04 07:44:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.2 2005/03/30 05:16:19 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -40,8 +40,8 @@ namespace PyROOT {
 // executors for built-ins
    PYROOT_BASIC_EXECUTOR( CharExecutor );
    PYROOT_BASIC_EXECUTOR( IntExecutor );
-   PYROOT_BASIC_EXECUTOR( UnsignedExecutor );
    PYROOT_BASIC_EXECUTOR( LongExecutor );
+   PYROOT_BASIC_EXECUTOR( ULongExecutor );
    PYROOT_BASIC_EXECUTOR( DoubleExecutor );
    PYROOT_BASIC_EXECUTOR( VoidExecutor );
    PYROOT_BASIC_EXECUTOR( LongLongExecutor );
@@ -49,8 +49,12 @@ namespace PyROOT {
 
 // pointer/array executors
    PYROOT_BASIC_EXECUTOR( VoidArrayExecutor );
+   PYROOT_BASIC_EXECUTOR( ShortArrayExecutor );
+   PYROOT_BASIC_EXECUTOR( UShortArrayExecutor );
    PYROOT_BASIC_EXECUTOR( IntArrayExecutor );
+   PYROOT_BASIC_EXECUTOR( UIntArrayExecutor );
    PYROOT_BASIC_EXECUTOR( LongArrayExecutor );
+   PYROOT_BASIC_EXECUTOR( ULongArrayExecutor );
    PYROOT_BASIC_EXECUTOR( FloatArrayExecutor );
    PYROOT_BASIC_EXECUTOR( DoubleArrayExecutor );
 

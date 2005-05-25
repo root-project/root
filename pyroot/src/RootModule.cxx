@@ -1,8 +1,9 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.7 2005/03/04 19:41:29 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.8 2005/04/28 07:33:55 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
+#include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
@@ -20,13 +21,12 @@ PyObject* gRootModule = 0;
 //- private helpers ------------------------------------------------------------
 namespace {
 
-   typedef PyDictEntry* (*dictlookup) ( PyDictObject*, PyObject*, long );
-   dictlookup dictLookupOrg = 0;
+   using namespace PyROOT;
 
    PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, long hash )
    {
    // first search dictionary itself
-      PyDictEntry* ep = (*dictLookupOrg)( mp, key, hash );
+      PyDictEntry* ep = (*gDictLookupOrg)( mp, key, hash );
       if ( ! ep || ep->me_value != 0 )
          return ep;
 
@@ -44,22 +44,29 @@ namespace {
          return ep;
 
    // all failed, start calling into ROOT
-      PyROOT::gDictLookupActive = true;
+      gDictLookupActive = true;
 
    // attempt to get ROOT enum/global/class
       PyObject* val = PyObject_GetAttr( gRootModule, key );
 
       if ( ! val ) {
          PyErr_Clear();
-         val = PyROOT::MakeRootClassFromString( strkey );
+         val = MakeRootClassFromString( strkey );
       }
 
       if ( ! val ) {
          PyErr_Clear();
-         val = PyROOT::GetRootGlobalFromString( strkey );
+         val = GetRootGlobalFromString( strkey );
       }
 
-      if ( val != Py_None ) {
+      if ( ! val ) {
+         PyErr_Clear();
+         TObject* object = gROOT->FindObject( strkey.c_str() );
+         if ( object != 0 )
+            val = BindRootObject( object, object->IsA() );
+      }
+
+      if ( val != 0 ) {
       // success ... store reference to ROOT entity in the dictionary
          Py_INCREF( key );
 
@@ -71,12 +78,10 @@ namespace {
          ep->me_hash  = hash;
          ep->me_value = val;
          mp->ma_used++;
-      } else
-      // failure ...
-         Py_DECREF( val );
+      }
 
    // stopped calling into ROOT
-      PyROOT::gDictLookupActive = false;
+      gDictLookupActive = false;
 
       return ep;
    }
@@ -94,6 +99,51 @@ namespace {
       return Py_None;
    }
 
+//____________________________________________________________________________
+   PyObject* AddressOf( PyObject*, PyObject* args )
+   {
+      ObjectProxy* pyobj = 0;
+      PyObject* pyname = 0;
+      if ( PyArg_ParseTuple( args, const_cast< char* >( "O|S" ), &pyobj, &pyname ) &&
+           ObjectProxy_Check( pyobj ) && pyobj->fObject ) {
+
+         if ( pyname != 0 ) {
+         // locate property proxy for offset info
+            PropertyProxy* pyprop = 0;
+
+            PyObject* pyclass = PyObject_GetAttrString(
+               (PyObject*)pyobj, const_cast< char* >( "__class__" ) );
+
+            if ( pyclass ) {
+               PyObject* dict = PyObject_GetAttrString( pyclass, const_cast< char* >( "__dict__" ) );
+               pyprop = (PropertyProxy*)PyObject_GetItem( dict, pyname );
+               Py_DECREF( dict );
+            }
+            Py_XDECREF( pyclass );
+
+            if ( PropertyProxy_Check( pyprop ) ) {
+            // this is an address of a value (i.e. &myobj->prop)
+               PyObject* pybuf = PyBuffer_FromReadWriteMemory(
+                  (void*)pyprop->GetAddress( pyobj ), sizeof(void*) );
+               Py_DECREF( pyprop );
+               return pybuf;
+            }
+
+            Py_XDECREF( pyprop );
+
+            PyErr_Format( PyExc_TypeError,
+               "%s is not a valid data member", PyString_AS_STRING( pyname ) );
+            return 0;
+         }
+
+      // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
+         return PyBuffer_FromReadWriteMemory( &pyobj->fObject, 1 );
+      }
+
+      PyErr_SetString( PyExc_ValueError, "invalid argument for AddressOf()" );
+      return 0;
+   }
+
 } // unnamed namespace
 
 
@@ -105,6 +155,8 @@ static PyMethodDef PyROOTMethods[] = {
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "setRootLazyLookup", (PyCFunction) SetRootLazyLookup,
      METH_VARARGS, (char*) "PyROOT internal function" },
+   { (char*) "AddressOf", (PyCFunction)AddressOf,
+     METH_VARARGS, (char*) "Retrieve address of held object" },
    { NULL, NULL, 0, NULL }
 };
 
@@ -116,7 +168,7 @@ extern "C" void initlibPyROOT()
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();
-   dictLookupOrg = (dictlookup)((PyDictObject*)dict)->ma_lookup;
+   gDictLookupOrg = (dictlookup)((PyDictObject*)dict)->ma_lookup;
    Py_DECREF( dict );
 
 // setup PyROOT
@@ -124,6 +176,10 @@ extern "C" void initlibPyROOT()
    if ( ! gRootModule )
       return;
    Py_INCREF( gRootModule );
+
+// inject meta type
+   if ( ! Utility::InitProxy( gRootModule, &PyRootType_Type, "PyRootType" ) )
+      return;
 
 // inject object proxy type
    if ( ! Utility::InitProxy( gRootModule, &ObjectProxy_Type, "ObjectProxy" ) )
