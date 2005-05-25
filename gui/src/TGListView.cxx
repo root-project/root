@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.28 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.29 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -554,7 +554,17 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
       }
 
       TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
+
+      // adjust position after layout
+      UInt_t height = fHeight;
+      UInt_t width = fWidth;
+      TGPosition pos = GetPagePosition();
+      TGDimension dim = GetPageDimension();
       canvas->Layout();
+      pos.fX = (pos.fX*fWidth)/width;
+      pos.fY = (pos.fY*fHeight)/height;
+      SetVsbPosition(pos.fY);
+      SetHsbPosition(pos.fX);
    }
 }
 
