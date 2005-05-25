@@ -16,6 +16,12 @@ public:
    }
 
    void Dummy() {}
+
+public:
+   static void CallRef( MemTester& ) {}
+   static void CallConstRef( const MemTester& ) {}
+   static void CallPtr( MemTester* ) {}
+   static void CallConstPtr( const MemTester* ) {}
 };
 
 int MemTester::counter = 0;
