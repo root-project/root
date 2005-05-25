@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 03/18/05
+# Last: 05/11/05
 
 """Basic unit tests for PyROOT package."""
 
@@ -48,11 +48,14 @@ class Basic2SetupTestCase( unittest.TestCase ):
 
       gROOT.LoadMacro( 'SimpleClass.C' )
 
+      self.assert_( issubclass( SimpleClass, TheBase ) )
+      self.assertEqual( SimpleClass, SimpleClass_t )
+
       c = SimpleClass()
-      self.assertEqual( c.m_data, c.GetData() )
+      self.assertEqual( c.fData, c.GetData() )
 
       c.SetData( 13 )
-      self.assertEqual( c.m_data, 13 )
+      self.assertEqual( c.fData, 13 )
       self.assertEqual( c.GetData(), 13 )
 
 

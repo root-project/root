@@ -28,3 +28,8 @@ PyROOT_overloadtests.log: Overloads_C.$(DllSuf)
 
 PyROOT_overloadtests: PyROOT_overloadtests.log
 	$(TestDiff)
+
+PyROOT_datatypetests.log: DataType_C.$(DllSuf)
+
+PyROOT_datatypetests: PyROOT_datatypetests.log
+	$(TestDiff)

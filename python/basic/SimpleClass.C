@@ -6,18 +6,23 @@ public:
 
 class SimpleClass : public TheBase {
 public:
-   SimpleClass() {
-      m_data = -42;
+   SimpleClass()
+   {
+      fData = -42;
    }
 
-   int GetData() {
-      return m_data;
+   int GetData()
+   {
+      return fData;
    }
 
-   void SetData( int data ) {
-      m_data = data;
+   void SetData( int data )
+   {
+      fData = data;
    }
 
 public:
-   int m_data;
+   int fData;
 };
+
+typedef SimpleClass SimpleClass_t;

@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 04/15/05
+# Last: 05/11/05
 
 """Overload unit tests for PyROOT package."""
 
@@ -10,7 +10,7 @@ from array import array
 from ROOT import *
 
 __all__ = [
-   'Overloads1ClassTestCase',
+   'Overloads1ClassArrayTestCase',
    'Overloads2TMathTestCase'
 ]
 
