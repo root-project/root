@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.68 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.69 2005/05/25 17:57:00 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -625,8 +625,6 @@ void *TRootIconBox::FindItem(const TString& name, Bool_t direction,
    TList* li = 0;
 
    while (el) {
-      //if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
-
       lv = (TGLVEntry*)el->fFrame;
       li = (TList*)lv->GetUserData();
 
@@ -1392,7 +1390,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         TString gv = gEnv->GetValue("Browser.GroupView", "10000");
                         Int_t igv = atoi(gv.Data());
 
-                        if (igv>10) {
+                        if (igv > 10) {
                            fIconBox->SetGroupSize(igv);
                         }
                      } else {
@@ -1407,10 +1405,15 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
 
                   case kOptionAutoThumbnail:
-                     fOptionMenu->IsEntryChecked(kOptionAutoThumbnail) ? 
-                              fOptionMenu->UnCheckEntry(kOptionAutoThumbnail) : 
-                              fOptionMenu->CheckEntry(kOptionAutoThumbnail);
-                     fIconBox->fAutoThumbnail = !fIconBox->fAutoThumbnail;
+                     if (fOptionMenu->IsEntryChecked(kOptionAutoThumbnail)) { 
+                        fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
+                        fIconBox->fThumbnails->Delete();
+                        fIconBox->fAutoThumbnail = kFALSE;
+                        Refresh(kTRUE);
+                     } else {
+                        fOptionMenu->CheckEntry(kOptionAutoThumbnail);
+                        fIconBox->fAutoThumbnail = kTRUE;
+                     }
                      break;
 
                   // Handle toolbar button...
