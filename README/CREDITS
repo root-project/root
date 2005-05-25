@@ -282,6 +282,10 @@ N: Jose Lo
 E: Jose.Lo@cern.ch
 D: SAX and DOM XML parser interfaces
 
+N: Constantin Loizides
+E: loizides@MIT.EDU
+D: PROOF testing and debugging
+
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
 D: Numerous contributions to the system
