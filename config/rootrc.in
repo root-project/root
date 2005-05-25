@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.103 2005/05/12 12:40:53 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.104 2005/05/20 09:56:56 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -146,8 +146,9 @@ Gui.MimeTypeFile:            $(HOME)/.root.mimes
 Browser.IconStyle:           small
 # Can be either name, type, size, date
 Browser.SortBy:              name
-Browser.GroupView:           1000
+Browser.GroupView:           10000
 Browser.ShowHidden:          no
+Browser.AutoThumbnail:       yes
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros.
 Rint.Load:               rootalias.C

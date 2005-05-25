@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.66 2005/05/15 07:30:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.67 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TImage.h"
 #include "TVirtualPad.h"
 #include "KeySymbols.h"
+#include "THashTable.h"
 
 #include "HelpText.h"
 
@@ -147,9 +148,28 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
 
+
+////////////////////////////////////////////////////////////////////////////////////
+class TIconBoxThumb : public TObject {
+public:
+   TString fName;
+   const TGPicture *fSmall;
+   const TGPicture *fLarge;
+
+   TIconBoxThumb(const char *name, const TGPicture *spic, const TGPicture *pic) {
+      fName = name;
+      fSmall = spic;
+      fLarge = pic;
+   }
+   ULong_t Hash() const { return fName.Hash(); }
+   const char *GetName() const { return fName.Data(); }
+};
+
+
+
 //----- Special ROOT object item (this are items in the icon box, see
 //----- TRootIconBox)
-
+////////////////////////////////////////////////////////////////////////////////////
 class TRootObjItem : public TGFileItem {
 public:
    TRootObjItem(const TGWindow *p, const TGPicture *bpic,
@@ -182,6 +202,7 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
 }
 
 class TRootIconBox;
+////////////////////////////////////////////////////////////////////////////////////
 class TRootIconList : public TList {
 
 private:
@@ -235,7 +256,7 @@ void TRootIconList::UpdateName()
 
 //----- Special ROOT object container (this is the icon box on the
 //----- right side of the browser)
-
+////////////////////////////////////////////////////////////////////////////////////
 class TRootIconBox : public TGFileContainer {
 friend class TRootIconList;
 friend class TRootBrowser;
@@ -254,6 +275,8 @@ private:
    Bool_t           fWasGrouped;
    TObject         *fActiveObject;   //
    Bool_t           fIsEmpty;  
+   THashTable      *fThumbnails;     // hash table with thumbnailed pictures
+   Bool_t           fAutoThumbnail;  // 
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -302,6 +325,8 @@ TRootIconBox::TRootIconBox(TGListView *lv, UInt_t options, ULong_t back) :
    // Don't use timer HERE (timer is set in TBrowser).
    StopRefreshTimer();
    fRefresh = 0;
+   fThumbnails = new THashTable(50);
+   fAutoThumbnail = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -312,6 +337,7 @@ TRootIconBox::~TRootIconBox()
    RemoveAll();
    RemoveGarbage();
    delete fGarbage;
+   delete fThumbnails;
 }
 
 //______________________________________________________________________________
@@ -396,6 +422,8 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
    TGFileItem *fi;
    fWasGrouped = kFALSE;
+   const TGPicture *pic = 0;
+   const TGPicture *spic = 0;
 
    if (obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
@@ -404,7 +432,17 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
             fListView->SetDefaultHeaders();
          fCheckHeaders = kFALSE;
       }
-      fi = AddFile(name);
+ 
+      TIconBoxThumb *thumb = 0;
+      thumb = (TIconBoxThumb *)fThumbnails->FindObject(gSystem->IsAbsoluteFileName(name) ? name : 
+                                      gSystem->ConcatFileName(gSystem->WorkingDirectory(), name));
+
+      if (thumb) {
+         spic = thumb->fSmall;
+         pic =  thumb->fLarge;
+      }
+
+      fi = AddFile(name, spic, pic);
       if (fi) fi->SetUserData(obj);
       fIsEmpty = kFALSE;
       return;
@@ -423,16 +461,14 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       fCurrentName->SetString(fCurrentList->GetName());
    }
 
-   if ((fCurrentList->GetSize()<fGroupSize) && !fGrouped) {
-      const TGPicture *pic = 0;
-      const TGPicture *spic = 0;
-
+   if ((fCurrentList->GetSize() < fGroupSize) && !fGrouped) {
       GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
                      obj->GetIconName() : cl->GetName());
 
       if (fCheckHeaders) {
-         if (strcmp(fListView->GetHeader(1), "Title"))
+         if (strcmp(fListView->GetHeader(1), "Title")) {
             SetObjHeaders();
+         }
          fCheckHeaders = kFALSE;
       }
 
@@ -786,7 +822,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->AddEntry("&Group Icons",        kViewGroupLV);
 
    fViewMenu->AddSeparator();
-   fViewMenu->AddEntry("&Refresh",            kViewRefresh);
+   fViewMenu->AddEntry("&Refresh F5",         kViewRefresh);
 
    fViewMenu->CheckEntry(kViewToolBar);
    fViewMenu->CheckEntry(kViewStatusBar);
@@ -929,8 +965,12 @@ void TRootBrowser::CreateBrowser(const char *name)
    fIconBox = new TRootIconBox(fListView,kHorizontalFrame, fgWhitePixel); // container
    fIconBox->Associate(this);
 
-   TString gv = gEnv->GetValue("Browser.GroupView","1000");
-   Int_t igv = atoi(gv.Data());
+   TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
+   str.ToLower();
+   fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
+
+   str = gEnv->GetValue("Browser.GroupView","1000");
+   Int_t igv = atoi(str.Data());
 
    if (igv>10) {
       fViewMenu->CheckEntry(kViewGroupLV);
@@ -1170,12 +1210,15 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
    char action[512];
    fBrowser->SetDrawOption(GetDrawOption());
-   //TVirtualPad *before = gPad;
+   TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
+   TFile *wasf = gFile;
+   TString ext;
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
       Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       TString act;
+      ext = strrchr(obj->GetName(), '.');
 
       if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
          act = action;
@@ -1188,24 +1231,56 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             gApplication->ProcessLine(act.Data());
          }
       }
-      /*TGLVEntry *entry = (TGLVEntry *)fIconBox->GetLastActive();
 
-      if (gPad && (gPad != before) && entry) {
+      ////////// new TFile was opened. Add it to the browser /////
+      if (gFile && (wasf != gFile) && (ext == ".root")) {
+         TGListTreeItem *itm = fLt->FindItemByPathname("ROOT Files");
+         if (itm) {
+            fListLevel = itm;
+            ListTreeHighlight(fListLevel);
+            fLt->OpenItem(fListLevel);
+            itm = fLt->AddItem(fListLevel, gFile->GetName());
+            itm->SetUserData(gFile);
+            fClient->NeedRedraw(fLt);
+            return;
+         }
+      }
+
+      /////////////// cache and change file's icon ///////////////////////
+      TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
+
+      if (fIconBox->fAutoThumbnail && nowp && (nowp != wasp)) {
          TSystemFile *sf = (TSystemFile*)obj;
          const TGPicture *pic, *spic;
-         TImage *img = TImage::Create();
-         img->FromPad(gPad);
-         const char *xpm = img->GetTitle();
-         img->SetImageBuffer((char**)&xpm, TImage::kXpm);
-         pic = fClient->GetPicturePool()->GetPicture(sf->GetName(), img->GetPixmap(),
-                                                     img->GetMask());
-         img->Scale(32, 32);
-         spic = fClient->GetPicturePool()->GetPicture(sf->GetName(), img->GetPixmap(),
-                                                      img->GetMask());
-         fClient->GetMimeTypeList()->AddType("[thumbnail]", sf->GetName(), pic->GetName(), 
-                                             spic->GetName(), action);
-         Refresh();
-      }*/
+
+         TIconBoxThumb *thumb = 0;
+         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() : 
+                        gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
+
+         thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path);
+
+         if (thumb) {
+            spic = thumb->fSmall;
+            pic = thumb->fLarge; 
+         } else {
+            TImage *img = TImage::Create();
+            nowp->Modified();
+            nowp->Update();
+            img->FromPad(nowp);
+
+            const char *xpm = img->GetTitle(); // 64x64 xpm string
+            img->SetImageBuffer((char**)&xpm, TImage::kXpm);
+            pic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(),
+                                                         img->GetMask());
+            img->Scale(32, 32);
+            spic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(),
+                                                         img->GetMask());
+
+            thumb = new TIconBoxThumb(path.Data(), spic, pic);
+            fIconBox->fThumbnails->Add(thumb);
+            delete img;
+         }
+      }
       return;
    }
 
@@ -1554,8 +1629,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      void *p = 0;
                      TGFileItem *item;
                      if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                        gVirtualX->SetCursor(fIconBox->GetId(),gVirtualX->CreateCursor(kPointer));
-                        gVirtualX->SetCursor(fLt->GetId(),gVirtualX->CreateCursor(kPointer));
+                        gVirtualX->SetCursor(fIconBox->GetId(), gVirtualX->CreateCursor(kPointer));
+                        gVirtualX->SetCursor(fLt->GetId(), gVirtualX->CreateCursor(kPointer));
                         TObject *obj = (TObject *)item->GetUserData();
                         DoubleClicked(obj);
                         IconBoxAction(obj);
@@ -1577,8 +1652,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
    fClient->NeedRedraw(fIconBox);
-   gVirtualX->SetCursor(fIconBox->GetId(),gVirtualX->CreateCursor(kPointer));
-   gVirtualX->SetCursor(fLt->GetId(),gVirtualX->CreateCursor(kPointer));
+   gVirtualX->SetCursor(fIconBox->GetId(), gVirtualX->CreateCursor(kPointer));
+   gVirtualX->SetCursor(fLt->GetId(), gVirtualX->CreateCursor(kPointer));
    return kTRUE;
 }
 

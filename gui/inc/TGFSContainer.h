@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.12 2004/10/15 17:44:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.13 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -120,7 +120,7 @@ public:
    void StopRefreshTimer();
    void StartRefreshTimer(ULong_t msec=1000);
 
-   virtual TGFileItem *AddFile(const char *name);
+   virtual TGFileItem *AddFile(const char *name, const TGPicture *pic = 0, const TGPicture *lpic = 0);
    virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void Sort(EFSSortMode sortType);
    virtual void SetFilter(const char *filter);

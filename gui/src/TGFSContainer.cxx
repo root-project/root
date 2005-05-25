@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.25 2005/03/10 19:17:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.26 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -538,7 +538,8 @@ void TGFileContainer::CreateFileList()
 }
 
 //______________________________________________________________________________
-TGFileItem *TGFileContainer::AddFile(const char *name)
+TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
+                                     const TGPicture *ilpic)
 {
    // Add file in container.
 
@@ -578,7 +579,12 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
    if (R_ISDIR(type) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
 
-      GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
+      if (ipic && ilpic) { // dynamic icons
+         spic = ipic;
+         slpic = ilpic;
+      } else {
+         GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
+      }
 
       pic = (TGPicture*)spic; pic->AddReference();
       lpic = (TGPicture*)slpic; lpic->AddReference();

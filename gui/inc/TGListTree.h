@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.14 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.15 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -131,11 +131,6 @@ protected:
                   UInt_t *retwidth, UInt_t *retheight);
    void  DrawItemName(TGListTreeItem *item);
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
-   void  SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms);
-
-   void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
-   void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
-   void  UnselectAll(Bool_t draw);
 
    void  RemoveReference(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
@@ -150,14 +145,6 @@ protected:
                   Bool_t beginWith = kFALSE)
       { return TGContainer::FindItem(name, direction, caseSensitive, beginWith); }
 
-   // overwrite TGContainer's methods
-   virtual void Home(Bool_t select = kFALSE);
-   virtual void End(Bool_t select = kFALSE);
-   virtual void PageUp(Bool_t select = kFALSE);
-   virtual void PageDown(Bool_t select = kFALSE);
-   virtual void LineUp(Bool_t select = kFALSE);
-   virtual void LineDown(Bool_t select = kFALSE);
-   virtual void Search();
    virtual void Layout() {}
 
    void OnMouseOver(TGFrame*) { }
@@ -209,12 +196,25 @@ public:
    void  AdjustPosition(TGListTreeItem *item);
    void  AdjustPosition() { TGContainer::AdjustPosition(); }
 
+   // overwrite TGContainer's methods
+   void Home(Bool_t select = kFALSE);
+   void End(Bool_t select = kFALSE);
+   void PageUp(Bool_t select = kFALSE);
+   void PageDown(Bool_t select = kFALSE);
+   void LineUp(Bool_t select = kFALSE);
+   void LineDown(Bool_t select = kFALSE);
+   void Search();
+
    Int_t Sort(TGListTreeItem *item);
    Int_t SortSiblings(TGListTreeItem *item);
    Int_t SortChildren(TGListTreeItem *item);
    void  HighlightItem(TGListTreeItem *item);
    void  ClearHighlighted();
    void  GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t depth = 0);
+   void  UnselectAll(Bool_t draw);
+   void  SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms);
+   void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
+   void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
 
    TGListTreeItem *GetFirstItem() const { return fFirst; }
    TGListTreeItem *GetSelected() const { return fSelected; }
