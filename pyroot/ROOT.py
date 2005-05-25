@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.21 2005/05/06 10:08:53 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.22 2005/05/25 06:23:36 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/04/05
+# Last: 05/16/05
 
 """PyROOT user module.
 
@@ -52,7 +52,7 @@ sys.setcheckinterval( 100 )
 __version__ = '3.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad' ]
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'AddressOf' ]
 
 _orig_ehook = sys.excepthook
 
@@ -179,12 +179,15 @@ class ModuleFacade:
       if name[0:2] == '__':
          raise AttributeError( name )
 
-      try:
-       # attempt to construct "name" as a ROOT class
-         attr = makeRootClass( name )
-      except:
+    # attempt to construct "name" as a ROOT class
+      attr = safeLookupCall( makeRootClass, name )
+      if ( attr == None ):
        # no such class ... try global variable or global enum
-         attr = getRootGlobal( name )
+         attr = safeLookupCall( getRootGlobal, name )
+      
+      if ( attr == None ):
+       # no global either ... try through gROOT (e.g. objects from files)
+         attr = gROOT.FindObject( name )
 
     # cache value locally so that we don't come back here
       if attr != None:

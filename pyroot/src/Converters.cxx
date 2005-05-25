@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.7 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.8 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -55,6 +55,21 @@ bool PyROOT::name##Converter::ToMemory( PyObject* value, void* address )     \
 
 //____________________________________________________________________________
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type )                  \
+bool PyROOT::name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func )\
+{                                                                            \
+   if ( PyString_Check( pyobject ) ) {                                       \
+      if ( PyString_GET_SIZE( pyobject ) == 1 )                              \
+         func->SetArg( (long)PyString_AS_STRING( pyobject )[0] );            \
+      else                                                                   \
+         PyErr_Format( PyExc_ValueError,                                     \
+            #type" expected, got string of size %d", PyString_GET_SIZE( pyobject ) );\
+   } else                                                                    \
+      func->SetArg( PyLong_AsLong( pyobject ) );                             \
+   if ( PyErr_Occurred() )                                                   \
+      return false;                                                          \
+   return true;                                                              \
+}                                                                            \
+                                                                             \
 PyObject* PyROOT::name##Converter::FromMemory( void* address )               \
 {                                                                            \
    type buf[2]; buf[1] = (type)'\0';                                         \

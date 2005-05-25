@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.5 2005/04/16 05:46:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.6 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -65,8 +65,8 @@ namespace PyROOT {
 // converters for built-ins
    PYROOT_BASIC_CONVERTER( Long );
    PYROOT_BASIC_CONVERTER2( Bool, Long );
-   PYROOT_BASIC_CONVERTER2( Char, Long );
-   PYROOT_BASIC_CONVERTER2( UChar, Long );
+   PYROOT_BASIC_CONVERTER( Char );
+   PYROOT_BASIC_CONVERTER( UChar );
    PYROOT_BASIC_CONVERTER2( Short, Long );
    PYROOT_BASIC_CONVERTER2( UShort, Long );
    PYROOT_BASIC_CONVERTER2( Int, Long );
