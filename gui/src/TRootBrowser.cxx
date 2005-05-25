@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.67 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.68 2005/05/25 16:20:54 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -96,6 +96,7 @@ enum ERootBrowserCommands {
    kViewGroupLV,
 
    kOptionShowCycles,
+   kOptionAutoThumbnail,
 
    kOneLevelUp,            // One level up toolbar button
    kFSComboBox,            // File system combobox in toolbar
@@ -837,6 +838,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fOptionMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fOptionMenu->AddEntry("&Show Cycles",        kOptionShowCycles);
+   fOptionMenu->AddEntry("&AutoThumbnail",      kOptionAutoThumbnail);
 
    fHelpMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fHelpMenu->AddEntry("&About ROOT...",        kHelpAbout);
@@ -968,8 +970,10 @@ void TRootBrowser::CreateBrowser(const char *name)
    TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
    str.ToLower();
    fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
+   fIconBox->fAutoThumbnail ? fOptionMenu->CheckEntry(kOptionAutoThumbnail) : 
+                              fOptionMenu->UnCheckEntry(kOptionAutoThumbnail);
 
-   str = gEnv->GetValue("Browser.GroupView","1000");
+   str = gEnv->GetValue("Browser.GroupView", "10000");
    Int_t igv = atoi(str.Data());
 
    if (igv>10) {
@@ -1385,7 +1389,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kViewGroupLV:
                      if (!fViewMenu->IsEntryChecked(kViewGroupLV)) {
                         fViewMenu->CheckEntry(kViewGroupLV);
-                        TString gv = gEnv->GetValue("Browser.GroupView","1000");
+                        TString gv = gEnv->GetValue("Browser.GroupView", "10000");
                         Int_t igv = atoi(gv.Data());
 
                         if (igv>10) {
@@ -1400,6 +1404,13 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   // Handle Option menu items...
                   case kOptionShowCycles:
                      printf("Currently the browser always shows all cycles\n");
+                     break;
+
+                  case kOptionAutoThumbnail:
+                     fOptionMenu->IsEntryChecked(kOptionAutoThumbnail) ? 
+                              fOptionMenu->UnCheckEntry(kOptionAutoThumbnail) : 
+                              fOptionMenu->CheckEntry(kOptionAutoThumbnail);
+                     fIconBox->fAutoThumbnail = !fIconBox->fAutoThumbnail;
                      break;
 
                   // Handle toolbar button...
