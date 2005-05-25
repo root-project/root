@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.16 2003/12/27 16:14:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.17 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -233,6 +233,9 @@ Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
      fList->ExpandCreateFast(fN);
      for (Int_t i=0;i<nbranches;i++)  {
          branch = (TBranch*)fBranches.UncheckedAt(i);
+         if (((TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0))->GetOffset()<0) {
+            continue;
+         }
          nbytes += branch->GetEntryExport(entry, getall, fList, fN);
       }
    } else {
@@ -350,13 +353,14 @@ void TBranchClones::Streamer(TBuffer &b)
          branch = (TBranch*)fBranches[i];
          branch->SetBit(kIsClone);
          leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
-         leaf->SetOffset(0);
+         leaf->SetOffset(-1);
       }
       fRead = 1;
       TClass *cl = gROOT->GetClass((const char*)fClassName);
       if (!cl) {
          Warning("Streamer","Unknow class: %s. Cannot read BranchClones: %s",
             fClassName.Data(),GetName());
+         SetBit(kDoNotProcess);
          return;
       }
       if (!cl->GetListOfRealData())  cl->BuildRealData();
