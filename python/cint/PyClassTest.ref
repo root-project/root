@@ -1,0 +1,6 @@
+
+Processing runPyClassTest.C...
+creating class MyPyClass ... 
+in MyPyClass.__init__
+string (aap): aap
+double (0.123): 0.123
