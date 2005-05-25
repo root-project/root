@@ -1,4 +1,9 @@
-#include <TGFrame.h>
+//  This macro shows how to use a TGImageMap class.
+//
+// A TGImageMap provides the functionality like a clickable image in    
+// with sensitive regions (similar to MAP HTML tag).                 
+//                                                                     
+
 #include <TGPicture.h>
 #include <TGMenu.h>
 #include <TGImageMap.h>
@@ -24,11 +29,11 @@ public:
    // the name corresponds to TLD code (http://www.iana.org/cctld/cctld-whois.htm)
    // the value to "country phone code" (http://www.att.com/traveler/tools/codes.html)
    enum ECountryCode {
-      kRU=7, kUS=1, kFR=33, kDE=49, kCH=41, kCN=86, kAU=61,
-      kUK=44, kUA=380, kBR=55
+      kRU = 7, kUS = 1, kFR = 33, kDE = 49, kCH = 41, kCN = 86, kAU = 61,
+      kUK = 44, kUA = 380, kBR = 55
     };
 
-   WorldMap(const char* picName="worldmap.jpg");
+   WorldMap(const char *picName = "worldmap.jpg");
    virtual ~WorldMap() {}
 
    virtual void Show() { fMain->MapRaised(); }
@@ -47,7 +52,7 @@ WorldMap::WorldMap(const char* picName)
 
    fMain = new TGMainFrame(gClient->GetRoot(), 750, 420);
 
-   fImageMap = new TGImageMap(fMain, "worldmap.xpm");
+   fImageMap = new TGImageMap(fMain, picName);
    fMain->AddFrame(fImageMap);
    fMain->SetWindowName(GetTitle().Data());
    fMain->SetIconName("World Map");
