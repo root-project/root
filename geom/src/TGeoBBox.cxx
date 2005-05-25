@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.42 2005/04/01 13:53:17 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.43 2005/05/13 16:20:38 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -664,19 +664,16 @@ const TBuffer3D & TGeoBBox::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
 //_____________________________________________________________________________
 void TGeoBBox::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
 {
+   // Fill the supplied buffer, with sections in desired frame
+   // See TBuffer3D.h for explanation of sections, frame etc.
    TGeoShape::FillBuffer3D(buffer, reqSections, localFrame);
 
    if (reqSections & TBuffer3D::kBoundingBox) {
-		buffer.fBBLowVertex[0]  = fOrigin[0] - fDX;
-		buffer.fBBLowVertex[1]  = fOrigin[1] - fDY;
-		buffer.fBBLowVertex[2]  = fOrigin[2] - fDZ;
-		buffer.fBBHighVertex[0] = fOrigin[0] + fDX;
-		buffer.fBBHighVertex[1] = fOrigin[1] + fDY;
-		buffer.fBBHighVertex[2] = fOrigin[2] + fDZ;
+      Double_t halfLengths[3] = { fDX, fDY, fDZ };
+      buffer.SetAABoundingBox(fOrigin, halfLengths);
 
       if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fBBLowVertex, 1);
-         TransformPoints(buffer.fBBHighVertex, 1);
+         TransformPoints(buffer.fBBVertex[0], 8);
       }
       buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
     }

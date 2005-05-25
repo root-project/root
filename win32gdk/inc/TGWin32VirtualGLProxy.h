@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.7 2004/09/29 06:55:13 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.8 2005/01/27 14:51:49 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -120,14 +120,11 @@ public:
    void DrawFaceSet(const Double_t * pnts, const Int_t * pols,
                     const Double_t * normals, const Float_t * mat,
                     UInt_t size);
-   void TraverseGraph(TGLRender *render);
-   TGLSceneObject *SelectObject(TGLRender *render, Int_t x, Int_t y, Int_t camera);
-   void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z);
-   void EndMovement(TGLRender *render);
-   void Invalidate(TGLRender *render);
    void DrawSphere(const Float_t *color);
-   void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
-                     Float_t rad, Float_t yc, Float_t zc);
+   virtual void   DrawViewer(TGLViewer * viewer);
+   virtual Bool_t SelectViewer(TGLViewer * viewer, const TGLRect * rect);
+   virtual void   PrintObjects(Int_t format, Int_t sort, TGLViewer * viewer, 
+                               TGLWindow *glWin, Float_t rad, Float_t yc, Float_t zc);
 
    static TVirtualGL *ProxyObject();
    static TVirtualGL *RealObject();

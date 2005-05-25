@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.h,v 1.4 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -27,7 +27,8 @@ public:
    Bool_t HandleKey(Event_t *event);//*SIGNAL*
    Bool_t HandleMotion(Event_t *event);//*SIGNAL*
    Bool_t HandleExpose(Event_t *event);//*SIGNAL*
-   void Refresh();
+   Bool_t HandleDoubleClick(Event_t *event);//*SIGNAL*
+   void SwapBuffers();
    void MakeCurrent();
 private:
    TGLWindow(const TGLWindow &);

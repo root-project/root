@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRenderArea.cxx,v 1.2 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -25,7 +25,7 @@ TGLWindow::TGLWindow(Window_t id, const TGWindow *parent)
    fCtx = gVirtualGL->CreateContext(fId);
    //here add diagnostic
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask | kButtonReleaseMask, kNone, kNone);
-   gVirtualX->SelectInput(fId, kKeyPressMask | kExposureMask | kPointerMotionMask | kStructureNotifyMask);
+   gVirtualX->SelectInput(fId, kKeyPressMask | kExposureMask | kPointerMotionMask | kStructureNotifyMask | kFocusChangeMask);
    gVirtualX->SetInputFocus(fId);
 }
 
@@ -51,6 +51,13 @@ Bool_t TGLWindow::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGLWindow::HandleDoubleClick(Event_t *event)
+{
+   Emit("HandleDoubleClick(Event_t*)", (Long_t)event);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGLWindow::HandleKey(Event_t *event)
 {
    Emit("HandleKey(Event_t*)", (Long_t)event);
@@ -72,7 +79,7 @@ Bool_t TGLWindow::HandleExpose(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGLWindow::Refresh()
+void TGLWindow::SwapBuffers()
 {
    gVirtualGL->SwapBuffers(fId);
 }

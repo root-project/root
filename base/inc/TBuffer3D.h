@@ -78,6 +78,11 @@ public:
    Bool_t SectionsValid(UInt_t mask) const   { return (Bool_t) (GetSections(mask) == mask); }
    UInt_t GetSections(UInt_t mask)   const   { return (UInt_t) (fSections & mask); }
       
+   // Convenience functions
+   void   SetLocalMasterIdentity();                  // Set fLocalMaster in kCore to identity
+   void   SetAABoundingBox(const Double_t origin[3], // Set fBBVertex in kBoundingBox to axis aligned BB
+                           const Double_t halfLengths[3]); 
+
    // SECTION: kRawSize get/set
    Bool_t SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
                       UInt_t reqSegs, UInt_t reqSegsCapacity, 
@@ -89,7 +94,6 @@ public:
    
    // SECTION: kCore
    Int_t  Type() const { return fType; }
-   void   SetLocalMasterIdentity();
 
    TObject    *fID;              // ID/object generating buffer - see TVirtualViewer3D for setting
    Int_t       fColor;           // Color index
@@ -99,8 +103,19 @@ public:
    Double_t    fLocalMaster[16]; // Local->Master Matrix - identity if master frame
    
    // SECTION: kBoundingBox
-   Double_t    fBBLowVertex[3];  // Low x,y,z vertex
-   Double_t    fBBHighVertex[3]; // High x,y,z vertex
+   //
+   // Local frame (fLocalFrame true) axis aligned
+   // Master frame (fLocalFrame false) orientated
+   // Could be more compact (2 and 3 verticies respectively) and rest
+   // calculated as needed - but not worth it
+   //   7-------6
+   //  /|      /|
+   // 3-------2 |
+   // | 4-----|-5
+   // |/      |/
+   // 0-------1 
+   //
+   Double_t    fBBVertex[8][3];  // 8 verticies defining bounding box. 
    
    // SECTION: kShapeSpecific - none for base class
       

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.17 2004/11/24 15:06:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.18 2005/01/27 14:51:49 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -136,13 +136,10 @@ public:
    void SetTrueColorMode(Bool_t flag=kTRUE) { fTrueColorMode = flag; }
    Bool_t GetRootLight() {return fRootLight;}
    Bool_t GetTrueColorMode() {return fTrueColorMode;}
-   void TraverseGraph(TGLRender *graph);
-   TGLSceneObject *SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_t camera);
-   void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z);
-   void EndMovement(TGLRender *render);
-   void Invalidate(TGLRender *render);
+   void DrawViewer(TGLViewer *viewer);
+   Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect);
    void DrawSphere(const Float_t *rgba);
-   void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
+   void PrintObjects(Int_t format, Int_t sort, TGLViewer *viewer, TGLWindow *glWin,
                      Float_t rad, Float_t yc, Float_t zc);
 
 private:

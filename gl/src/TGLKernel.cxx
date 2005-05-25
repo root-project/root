@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.29 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.30 2005/01/27 14:51:49 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "TPoints3DABC.h"
-#include "TGLRender.h"
+#include "TGLViewer.h"
 #include "TGLRenderArea.h"
 #include "TSystem.h"
 
@@ -1453,32 +1453,18 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
 }
 
 //______________________________________________________________________________
-void TGLKernel::TraverseGraph(TGLRender *graph)
+void TGLKernel::DrawViewer(TGLViewer *viewer)
 {
-   graph->Traverse();
+   viewer->Draw();
 }
 
 //______________________________________________________________________________
-TGLSceneObject *TGLKernel::SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_t cam)
+Bool_t TGLKernel::SelectViewer(TGLViewer *viewer, const TGLRect * rect)
 {
-   return graph->SelectObject(x, y, cam);
+   return viewer->Select(*rect);
 }
 
 //______________________________________________________________________________
-void TGLKernel::MoveSelected(TGLRender *, Double_t, Double_t, Double_t)
-{
-}
-
-//______________________________________________________________________________
-void TGLKernel::EndMovement(TGLRender *)
-{
-}
-
-//______________________________________________________________________________
-void TGLKernel::Invalidate(TGLRender *)
-{
-}
-
 static GLUquadric *GetQuadric1()
 {
    static struct Init {
@@ -1541,7 +1527,7 @@ void TGLKernel::DrawSphere(const Float_t *rgba)
 }
 
 //______________________________________________________________________________
-void TGLKernel::PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin, 
+void TGLKernel::PrintObjects(Int_t format, Int_t sort, TGLViewer *viewer, TGLWindow *glWin, 
                              Float_t rad, Float_t yc, Float_t zc)
 {
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
@@ -1574,8 +1560,7 @@ void TGLKernel::PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWin
          gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
          gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
          gVirtualGL->PopGLMatrix();
-         gVirtualGL->TraverseGraph(render);
-         glWin->Refresh();
+         DrawViewer(viewer);
          state = gl2psEndPage();
       }
       fclose (output);

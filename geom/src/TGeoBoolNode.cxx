@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.20 2005/04/20 15:22:54 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.21 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -158,7 +158,10 @@ void TGeoBoolNode::Paint(Option_t * option)
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
    if (!viewer) return;
 
-   Bool_t localFrame = viewer->PreferLocalFrame();
+   // Components of composite shape hierarchies for local frame viewers are painted 
+   // in coordinate frame of the top level composite shape. So we force 
+   // conversion to this.  See TGeoPainter::PaintNode for loading of GLMatrix.
+   Bool_t localFrame = kFALSE; //viewer->PreferLocalFrame();
 
    TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
    TGeoHMatrix mat;

@@ -1,5 +1,5 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.4 2004/11/15 14:59:02 brun Exp $
-// Author:  Timur Pocheptsov  03/08/2004
+// Author:  Richard Maunder  25/05/2005
+// Parts taken from original by Timur Pocheptsov
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -12,83 +12,90 @@
 #ifndef ROOT_TGLCamera
 #define ROOT_TGLCamera
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TGLUtil
+#include "TGLUtil.h"
+#endif
+#ifndef ROOT_TGLBoundingBox
+#include "TGLBoundingBox.h"
 #endif
 
+#include <assert.h>
+#include <math.h>
 
-class TGLCamera : public TObject{
-protected:
-   const Double_t *fViewVolume;
-   const Int_t *fViewPort;
-   Double_t fZoom;
-   Bool_t fDrawFrame;
-
-public:
-   TGLCamera(const Double_t *viewvolume, const Int_t *viewport);
-   const Int_t *GetViewport()const
-   {
-      return fViewPort;
-   }
-   virtual void TurnOn()const = 0;
-   virtual void TurnOn(Int_t x, Int_t y)const = 0;
-   void Zoom(Double_t zoom)
-   {
-      fZoom = zoom;
-   }
-   void Select()
-   {
-      fDrawFrame = kTRUE;
-   }
+/*************************************************************************
+ * TGLCamera - TODO
+ *
+ *
+ *
+ *************************************************************************/
+class TGLCamera 
+{
 private:
-   TGLCamera(const TGLCamera &);
-   TGLCamera & operator = (const TGLCamera &);
+   // Fields
+   enum
+   {
+      kNEAR    = 0,
+      kLEFT    = 1,
+      kRIGHT   = 2,
+      kTOP     = 3,
+      kBOTTOM  = 4,
+      kFAR     = 5,
+      kPLANESPERFRUSTUM
+   };
    
-   ClassDef(TGLCamera,0)
-};
+   // Frustum planes (cached)
+   mutable TGLPlane fFrustumPlanes[kPLANESPERFRUSTUM]; //!
 
-class TGLTransformation {
+   // Methods
+   TGLBoundingBox FrustumBox() const; // bounding box encapsulating frustum
+     
+   // Non-copyable class
+   TGLCamera(const TGLCamera &);
+   TGLCamera & operator=(const TGLCamera &);
+
+protected:
+   // Fields
+   TGLRect   fViewport;    //! viewport (GL coords - origin bottom left)
+   TGLMatrix fProjM;       //! projection matrix        (cached)
+   TGLMatrix fModVM;       //! modelView matrix         (cached)
+   TGLMatrix fClipM;       //! object space clip matrix (cached)
+   Bool_t    fCacheDirty;  //! cached items dirty?
+
+   TGLBoundingBox   fInterestBox; //!
+   mutable Double_t fLargestInterest;
+
+   // Methods
+   Bool_t AdjustAndClampVal(Double_t & val, Double_t min, Double_t max, 
+                            Int_t shift, Int_t shiftRange) const;   
+   void UpdateCache();
+
 public:
-   virtual ~TGLTransformation();
-   virtual void Apply()const = 0;
+   TGLCamera();
+   virtual ~TGLCamera();
+     
+   void SetViewport(const TGLRect & viewport);
+
+   // Camera manipulation interface (GL coord - origin bottom left)
+   virtual void   Setup(const TGLBoundingBox & box) = 0; 
+   virtual void   Reset() = 0;
+   // virtual void   Frame(const TGLBoundingBox & box) = 0; // TODO
+   virtual Bool_t Dolly(Int_t delta) = 0;
+   virtual Bool_t Zoom (Int_t delta) = 0;
+   virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
+   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
+   virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) = 0;
+  
+   EOverlap FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
+   EOverlap ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
+   TGLRect  ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
+   //Double_t NearVertexDistance(const TGLBoundingBox & box) const;
+   //Double_t FarVertexDistance(const TGLBoundingBox & box) const;
+
+   Bool_t OfInterest(const TGLBoundingBox & box) const;
+   Bool_t UpdateInterest();
+   void   ResetInterest();
+   
+   ClassDef(TGLCamera,0); // abstract camera base class
 };
 
-
-class TGLSimpleTransform : public TGLTransformation {
-private:
-   const Double_t *fRotMatrix;
-   Double_t       fShift;
-   //modifications
-   const Double_t *fX;
-   const Double_t *fY;
-   const Double_t *fZ;
-public:
-/*
-   TGLSimpleTransform(const Double_t *rm, Double_t s, Double_t x,
-                      Double_t y, Double_t z);*/
-   TGLSimpleTransform(const Double_t *rm, Double_t s, const Double_t *x,
-                      const Double_t *y, const Double_t *z);
-   void Apply()const;
-};
-
-class TGLPerspectiveCamera : public TGLCamera {
-private:
-   TGLSimpleTransform fTransformation;
-public:
-   TGLPerspectiveCamera(const Double_t *vv, const Int_t *vp,
-                        const TGLSimpleTransform &tr);
-   void TurnOn()const;
-   void TurnOn(Int_t x, Int_t y)const;
-};
-
-class TGLOrthoCamera : public TGLCamera {
-private:
-   TGLSimpleTransform fTransformation;
-public:
-   TGLOrthoCamera(const Double_t *viewvolume, const Int_t *viewport,
-                  const TGLSimpleTransform &tr);
-   void TurnOn()const;
-   void TurnOn(Int_t x, Int_t y)const;
-};
-
-#endif
+#endif // ROOT_TGLCamera

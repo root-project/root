@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.29 2005/03/11 11:05:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.30 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -388,6 +388,9 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 //_____________________________________________________________________________
 void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
 {
+   // Fill the supplied buffer, with sections in desired frame
+   // See TBuffer3D.h for explanation of sections, frame etc.
+  
    // Catch this common potential error here
    // We have to set kRawSize (unless already done) to allocate buffer space 
    // before kRaw can be filled
@@ -425,21 +428,10 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
 
       buffer.fLocalFrame = localFrame;
       buffer.fReflection = gGeoManager->IsMatrixReflection();
-
+      
       // Set up local -> master translation matrix
       if (localFrame) {
-         TGeoMatrix * localMasterMat = 0;
-         
-         // Internal hierarchy of a composite shape sits on top of the current 
-         // matrix (as for below)
-         if (gGeoManager->IsMatrixTransform()) {
-            localMasterMat = gGeoManager->GetGLMatrix();
-         }
-         // Geometry hierarchy is developed normally from top level downwards 
-         // by PaintNode
-         else {
-            localMasterMat = gGeoManager->GetCurrentMatrix();
-         }
+         TGeoMatrix * localMasterMat = gGeoManager->GetCurrentMatrix();
          if (!localMasterMat) { 
             assert(kFALSE); 
             return; 

@@ -17,19 +17,21 @@ GLDS         := $(MODDIRS)/G__GL.cxx
 GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 
-GLH          := $(wildcard $(MODDIRI)/*.h)
-GLH1         := $(MODDIRI)/TViewerOpenGL.h $(MODDIRI)/TGLRenderArea.h \
-                $(MODDIRI)/TGLEditor.h $(MODDIRI)/TArcBall.h \
-                $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLSceneObject.h
-GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx TGLRenderArea.cxx \
-                TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx \
-                TGLFrustum.cxx CsgOps.cxx
-
+GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GLS1         := $(wildcard $(MODDIRS)/*.c)
-ifneq ($(ARCH),win32)
-GLS          += TX11GL.cxx
-GLH1         += $(MODDIRI)/TX11GL.h
+
+
+# Excluded from win32 builds
+ifeq ($(ARCH),win32)
+GLS          := $(filter-out $(MODDIRS)/TX11GL.cxx, $(GLS))
+GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
+
+# Excluded from CINT
+GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h $(MODDIRI)/TGLKernel.h $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TRootGLU.h $(MODDIRI)/TRootGLX.h
+# CINT
+GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
@@ -39,7 +41,6 @@ ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib
 endif
 
-GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
 GLO          := $(GLS:.cxx=.o)
 GLO1         := $(GLS1:.c=.o)
 
@@ -63,9 +64,9 @@ $(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(GLLIBS)"
 
-$(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
+$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GLH1) $(GLL)
+		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 
 ifeq ($(ARCH),win32)
 $(GLDO):        $(GLDS)

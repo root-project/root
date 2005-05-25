@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.8 2005/04/01 13:53:18 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.9 2005/04/07 14:43:35 rdm Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of component shapes
-   virtual void   OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * =0) {};
+   virtual Bool_t OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * =0) { return kTRUE; }
    virtual void   CloseComposite() {};
    virtual void   AddCompositeOp(UInt_t /*operation*/) {};
 

@@ -15,8 +15,12 @@
 #include <utility>
 #include <vector>
 
+
 #ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
+#endif
+#ifndef ROOT_TGLViewer
+#include "TGLViewer.h"
 #endif
 #ifndef ROOT_RQ_OBJECT
 #include "RQ_OBJECT.h"
@@ -27,12 +31,11 @@
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
-#ifndef ROOT_TGLRender
-#include "TGLRender.h"
-#endif
+
 #ifndef ROOT_CsgOps
 #include "CsgOps.h"
 #endif
+
 
 class TGLGeometryEditor;
 class TGShutterItem;
@@ -45,77 +48,88 @@ class TGPopupMenu;
 class TGLColorEditor;
 class TGLSceneEditor;
 class TGLLightEditor;
-class TGLCamera;
+//class TGLCamera;
 class TBuffer3D;
 class TGMenuBar;
 class TGCanvas;
-class TArcBall;
+//class TArcBall;
+class TGLFaceSet;
 
-class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
+// TODO: Derv from TGLViewer or ag. as viewport?
+class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame, public TGLViewer 
+{
 private:
+   // GUI components
    TGCompositeFrame  *fMainFrame;
    TGVerticalFrame   *fV1;
    TGVerticalFrame   *fV2;
+   TGShutter         *fShutter;
+   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3, *fShutItem4;
+   TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
+   TGLayoutHints     *fCanvasLayout;
+   TGMenuBar         *fMenuBar;
+   TGPopupMenu       *fFileMenu, *fViewMenu, *fHelpMenu;
+   TGLayoutHints     *fMenuBarLayout;
+   TGLayoutHints     *fMenuBarItemLayout;
+   TGLayoutHints     *fMenuBarHelpLayout;
+   TContextMenu      *fContextMenu;
+
+   TGCanvas          *fCanvasWindow;
+   TGLRenderArea     *fCanvasContainer;
+
+   // Editors
    TGLColorEditor    *fColorEditor;
    TGLGeometryEditor *fGeomEditor;
    TGLSceneEditor    *fSceneEditor;
    TGLLightEditor    *fLightEditor;
-   TGCanvas          *fCanvasWindow;
-   TGLRenderArea     *fCanvasContainer;
-   TGLRender         *fRender;
-   TGShutter         *fShutter;
-   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3, *fShutItem4;
 
-   TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
-   TGLayoutHints     *fCanvasLayout;
+   // Interaction
+   enum EAction      { kNone, kRotate, kTruck, kDolly, kZoom };
+   EAction           fAction;
+   TPoint            fStartPos;
+   TPoint            fLastPos;
+   UInt_t            fActiveButtonID;
 
-   TGMenuBar         *fMenuBar;
-   TGPopupMenu       *fFileMenu, *fViewMenu, *fHelpMenu;
+   // Scene management
+   Bool_t            fInternalRebuild;
+   Bool_t            fBuildingScene;
 
-   TGLayoutHints     *fMenuBarLayout;
-   TGLayoutHints     *fMenuBarItemLayout;
-   TGLayoutHints     *fMenuBarHelpLayout;
+   // External handles
+   TVirtualPad      *fPad;
 
-   TGLCamera         *fCamera[4];
-   Double_t          fViewVolume[4];
-   Double_t          fZoom[4];
-   Int_t             fActiveViewport[4];
+   //TGLRender         *fRender;
+
+
+   //TGLCamera         *fCamera[4];
+   //Double_t          fViewVolume[4];
+   //Double_t          fZoom[4];
+   //Int_t             fActiveViewport[4];
    Int_t             fLightMask;
 
-   typedef std::pair<Double_t, Double_t> PDD_t;
-   PDD_t             fRangeX, fRangeY, fRangeZ, fLastPosRot;
-   Double_t          fXc, fYc, fZc;
-   Double_t          fRad;
+   //typedef std::pair<Double_t, Double_t> PDD_t;
+   //PDD_t             fRangeX, fRangeY, fRangeZ, fLastPosRot;
+   //Double_t          fXc, fYc, fZc;
+   //Double_t          fRad;
 
-   Bool_t            fPressed;
-   TArcBall          *fArcBall;
+   //TArcBall          *fArcBall;
 
-   UInt_t            fNbShapes;
-   TPoint            fLastPos;
+   UInt_t              fNextPhysicalID; // Remove in end
 
-   enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
-   EViews            fConf;
+   //enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
+   //EViews            fConf;
 
-   TContextMenu      *fContextMenu;
-   TGLSceneObject    *fSelectedObj;
-   enum EAction{kNoAction, kRotating, kPicking, kZooming};
-   EAction fAction;
-   Bool_t            fBuildingScene;
-   TVirtualPad      *fPad;
-   Bool_t            fFirstScene;
+   //TGLSceneObject    *fSelectedObj;
 
-   //CS specific
+   static const Int_t fgInitX;
+   static const Int_t fgInitY;
+   static const Int_t fgInitW;
+   static const Int_t fgInitH;
+
+   // Composite Shape specific
+   mutable TGLFaceSet     *fComposite; //! Paritally created composite
    typedef std::pair<UInt_t, RootCsg::BaseMesh *> CSPART_t;
-
-   Bool_t                  fInsideComposite;
    UInt_t                  fCSLevel;
    std::vector<CSPART_t>   fCSTokens;
-   // Defered composite creation
-   struct {
-      TObject             *fRealObject;
-      Float_t              fColor[3];
-      Short_t              fTrans;
-   } fNewComposite;
 
    RootCsg::BaseMesh *BuildComposite();
 
@@ -129,12 +143,14 @@ public:
    virtual Bool_t BuildingScene() const { return fBuildingScene; }
    virtual void   EndScene();
    virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 
+   Bool_t HandleContainerEvent(Event_t *ev);
    Bool_t HandleContainerButton(Event_t *ev);
+   Bool_t HandleContainerDoubleClick(Event_t *ev);
    Bool_t HandleContainerConfigure(Event_t *ev);
    Bool_t HandleContainerKey(Event_t *ev);
    Bool_t HandleContainerMotion(Event_t *ev);
@@ -142,28 +158,42 @@ public:
    void ModifyScene(Int_t id);
 
 private:
-   void AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren);
+   // Setup
    void CreateViewer();
-   void DrawObjects()const;
-   void PrintObjects()const;
-   void MakeCurrent()const;
-   void SwapBuffers()const;
-   void Show();
-   void UpdateRange(const TGLSelection *box);
-   TGLSceneObject *TestSelection(Event_t *);
-   void CalculateViewports();
-   void CalculateViewvolumes();
-   void CreateCameras();
-   //
-   void MoveCenter(Int_t key);
+
+   // TGLViewer overloads
+   virtual void InitGL();
+   virtual void Invalidate(UInt_t redrawLOD = kMed);
+   virtual void MakeCurrent() const;
+   virtual void SwapBuffers() const;
+   virtual void RebuildScene();
+
+   // Scene Object Management
+   Int_t  ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const;
+   TGLLogicalShape * CreateNewLogical(const TBuffer3D & buffer) const;
+   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer, 
+                                        const TGLLogicalShape & logical) const;
+   void DoSelect(Event_t *event, Bool_t invokeContext);
+
    // final overriders from TGMainFrame
+   void DoRedraw();
+   
+   //void DrawObjects()const;
+   //void MakeCurrent()const;
+   //void SwapBuffers() const;
+   void Show();
+   //void UpdateRange(const TGLSelection *box);
+   //TGLSceneObject *TestSelection(Event_t *);
+   //void CalculateViewports();
+   //void CalculateViewvolumes();
+   //void CreateCameras();
+   //
+   //void MoveCenter(Int_t key);
    void CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   static const Int_t fgInitX;
-   static const Int_t fgInitY;
-   static const Int_t fgInitW;
-   static const Int_t fgInitH;
+   void PrintObjects();
+
    //non-copyable class
    TViewerOpenGL(const TViewerOpenGL &);
    TViewerOpenGL & operator = (const TViewerOpenGL &);

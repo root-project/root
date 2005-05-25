@@ -50,11 +50,11 @@ public:
    // Simple object addition - buffer represents a unique single positioned object
    virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;               
 
-   // Complex object addition - for adding placed objects which have common template 
+   // Complex object addition - for adding physical objects which have common logical 
    // shapes. In this case buffer describes template shape (aside from kCore). 
-   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    
-   virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.61 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.62 2005/05/17 13:23:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -1014,23 +1014,6 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       buffer.fRadiusInner  = fRmin;
       buffer.fRadiusOuter  = fRmax;
       buffer.fHalfLength   = fDz;
-
-      // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes
-      // even though rest works in master frame. As no one else uses
-      // buffer.fLocalMaster we can overwrite it here
-      // Once OGL goes to local frame this can all be removed
-      // (and subclasses)
-      TGeoMatrix * localMasterMat = 0;
-      if (gGeoManager->IsMatrixTransform()) {
-         localMasterMat = gGeoManager->GetGLMatrix();
-      }
-      else {
-         localMasterMat = gGeoManager->GetCurrentMatrix();
-      }
-      localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
-      // End of HACK
-
       buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
    }
    if (reqSections & TBuffer3D::kRawSizes) {
@@ -2066,26 +2049,8 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
       buffer.fRadiusInner  = fRmin;
       buffer.fRadiusOuter  = fRmax;
       buffer.fHalfLength   = fDz;
-
       buffer.fPhiMin       = fPhi1;
       buffer.fPhiMax       = fPhi2;
-
-      // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes
-      // even though rest works in master frame. As no one else uses
-      // buffer.fLocalMaster we can overwrite it here
-      // Once OGL goes to local frame this can all be removed
-      // (and subclasses)
-      TGeoMatrix * localMasterMat = 0;
-      if (gGeoManager->IsMatrixTransform()) {
-         localMasterMat = gGeoManager->GetGLMatrix();
-      }
-      else {
-         localMasterMat = gGeoManager->GetCurrentMatrix();
-      }
-      localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
-      // End of HACK
-
       buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
    }
    if (reqSections & TBuffer3D::kRawSizes) {
@@ -2833,22 +2798,7 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          buffer.fLowPlaneNorm[i] = fNlow[i];
          buffer.fHighPlaneNorm[i] = fNhigh[i];
       }
-
-      // TODO: HACK
-      // At present OGL viewer wants local -> master matrix for tubes
-      // even though rest works in master frame. As no one else uses
-      // buffer.fLocalMaster we can overwrite it here
-      // Once OGL goes to local frame this can all be removed
-      // (and subclasses)
-      TGeoMatrix * localMasterMat = 0;
-      if (gGeoManager->IsMatrixTransform()) {
-         localMasterMat = gGeoManager->GetGLMatrix();
-      }
-      else {
-         localMasterMat = gGeoManager->GetCurrentMatrix();
-      }
-      localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
-      // End of HACK
+      buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
    }
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t n = gGeoManager->GetNsegments()+1;

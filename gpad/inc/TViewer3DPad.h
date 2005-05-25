@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.5 2005/04/04 07:06:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.6 2005/04/11 08:40:59 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of individual component shapes
-   virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 

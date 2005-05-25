@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.35 2005/04/28 13:54:04 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.36 2005/05/18 12:31:08 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,12 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  **********************************************TF***************************/
-#ifdef GDK_WIN32
-#include "Windows4Root.h"
-#endif
-
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "TGLIncludes.h"
 
 #include "TAttMarker.h"
 #include "TBuffer3D.h"
@@ -21,10 +16,9 @@
 #include "TError.h"
 
 #include "TGLSceneObject.h"
-#include "TGLFrustum.h"
+#include "TContextMenu.h"
 
 #include <assert.h>
-
 
 ClassImp(TGLSceneObject)
 
@@ -84,152 +78,42 @@ static GLUquadric *GetQuadric()
 }
 
 //______________________________________________________________________________
-TGLSelection::TGLSelection()
-{
-   fBBox[0] = fBBox[1] = fBBox[2] =
-   fBBox[3] = fBBox[4] = fBBox[5] = 0.;
-}
-
-//______________________________________________________________________________
-TGLSelection::TGLSelection(const Double_t *bbox)
-{
-   for (Int_t i= 0; i < 6; ++i) fBBox[i] = bbox[i];
-}
-
-//______________________________________________________________________________
-TGLSelection::TGLSelection(Double_t xmin, Double_t xmax, Double_t ymin,
-                           Double_t ymax, Double_t zmin, Double_t zmax)
-{
-   fBBox[0] = xmin, fBBox[1] = xmax;
-   fBBox[2] = ymin, fBBox[3] = ymax;
-   fBBox[4] = zmin, fBBox[5] = zmax;
-}
-
-//______________________________________________________________________________
-void TGLSelection::DrawBox()const
-{
-   Double_t xmin = fBBox[0], xmax = fBBox[1];
-   Double_t ymin = fBBox[2], ymax = fBBox[3];
-   Double_t zmin = fBBox[4], zmax = fBBox[5];
-
-   glDisable(GL_DEPTH_TEST);
-   glDisable(GL_LIGHTING);
-
-   glColor3d(1., 1., 1.);
-   glBegin(GL_LINE_LOOP);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymax, zmin);
-   glVertex3d(xmax, ymax, zmin);
-   glVertex3d(xmax, ymin, zmin);
-   glEnd();
-   glBegin(GL_LINE_LOOP);
-   glVertex3d(xmin, ymin, zmax);
-   glVertex3d(xmin, ymax, zmax);
-   glVertex3d(xmax, ymax, zmax);
-   glVertex3d(xmax, ymin, zmax);
-   glEnd();
-   glBegin(GL_LINES);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymin, zmax);
-   glVertex3d(xmin, ymax, zmin);
-   glVertex3d(xmin, ymax, zmax);
-   glVertex3d(xmax, ymax, zmin);
-   glVertex3d(xmax, ymax, zmax);
-   glVertex3d(xmax, ymin, zmin);
-   glVertex3d(xmax, ymin, zmax);
-   glEnd();
-
-   glEnable(GL_DEPTH_TEST);
-   glEnable(GL_LIGHTING);
-}
-
-//______________________________________________________________________________
-void TGLSelection::SetBBox(const Double_t *newBBox)
-{
-   for (Int_t i= 0; i < 6; ++i) fBBox[i] = newBBox[i];
-}
-
-//______________________________________________________________________________
-void TGLSelection::SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
-                          Double_t ymax, Double_t zmin, Double_t zmax)
-{
-   fBBox[0] = xmin, fBBox[1] = xmax;
-   fBBox[2] = ymin, fBBox[3] = ymax;
-   fBBox[4] = zmin, fBBox[5] = zmax;
-}
-
-//______________________________________________________________________________
-void TGLSelection::Shift(Double_t x, Double_t y, Double_t z)
-{
-   fBBox[0] += x, fBBox[1] += x;
-   fBBox[2] += y, fBBox[3] += y;
-   fBBox[4] += z, fBBox[5] += z;
-}
-
-//______________________________________________________________________________
-void TGLSelection::Stretch(Double_t xs, Double_t ys, Double_t zs)
-{
-   Double_t xC = fBBox[0] + (fBBox[1] - fBBox[0]) / 2;
-   Double_t yC = fBBox[2] + (fBBox[3] - fBBox[2]) / 2;
-   Double_t zC = fBBox[4] + (fBBox[5] - fBBox[4]) / 2;
-
-   Shift(-xC, -yC, -zC);
-   fBBox[0] *= xs, fBBox[1] *= xs;
-   fBBox[2] *= ys, fBBox[3] *= ys;
-   fBBox[4] *= zs, fBBox[5] *= zs;
-   Shift(xC, yC, zC);
-}
-
-//______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color,
-                               UInt_t glName, TObject *obj) :
+TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, TObject *obj) :
+   TGLLogicalShape(reinterpret_cast<UInt_t>(obj)), // TODO: Clean up more
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
-   fColor(),
-   fIsSelected(kFALSE),
-   fGLName(glName),
-   fNextT(0),
    fRealObject(obj)
 {
-   SetColor(color, kTRUE);
-   fColor[3] = 1.f - buffer.fTransparency / 100.f;
-   SetBBox(buffer);
+   // Use the bounding box in buffer if set
+   if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
+      fBoundingBox.Set(buffer.fBBVertex);
+   } else {
+   // otherwise use the raw points to generate one   
+      assert(buffer.SectionsValid(TBuffer3D::kRaw));
+      fBoundingBox.SetAligned(buffer.NbPnts(), buffer.fPnts);
+   }
 }
 
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
-                               const Float_t *color, UInt_t glName, TObject *obj) :
+                               TObject *obj) :
+   TGLLogicalShape(reinterpret_cast<UInt_t>(obj)), // TODO: Clean up more
    fVertices(verticesReserve, 0.),
-   fColor(),
-   fIsSelected(kFALSE),
-   fGLName(glName),
-   fNextT(0),
    fRealObject(obj)
 {
-   SetColor(color, kTRUE);
-   fColor[3] = 1.f - buffer.fTransparency / 100.f;
-   SetBBox(buffer);
+   assert(buffer.SectionsValid(TBuffer3D::kBoundingBox));
+   fBoundingBox.Set(buffer.fBBVertex);
 }
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, Short_t trans, TObject *obj)
-							: fColor(),
-							  fIsSelected(kFALSE),
-							  fGLName(glName),
-							  fNextT(0),
-							  fRealObject(obj)
+void TGLSceneObject::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const
 {
-   SetColor(color, kTRUE);
-   fColor[3] = 1.f - trans / 100.f;
+   if (fRealObject) {
+      menu.Popup(x, y, fRealObject);
+   }
 }
 
 //______________________________________________________________________________
-Bool_t TGLSceneObject::IsTransparent()const
-{
-   return fColor[3] < 1.f;
-}
-
-//______________________________________________________________________________
-void TGLSceneObject::Shift(Double_t x, Double_t y, Double_t z)
+/*void TGLSceneObject::Shift(Double_t x, Double_t y, Double_t z)
 {
    fSelectionBox.Shift(x, y, z);
    for (UInt_t i = 0, e = fVertices.size(); i < e; i += 3) {
@@ -256,99 +140,17 @@ void TGLSceneObject::Stretch(Double_t xs, Double_t ys, Double_t zs)
       fVertices[i + 2] *= zs;
    }
    Shift(xC, yC, zC);
-}
+}*/
 
 //______________________________________________________________________________
-void TGLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
-{
-   if (!fromCtor) {
-      for (Int_t i = 0; i < 17; ++i) fColor[i] = color[i];
-   } else {
-      if (color) {
-         //diffuse and specular
-         fColor[0] = color[0];
-         fColor[1] = color[1];
-         fColor[2] = color[2];
-      } else {
-         //for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
-			fColor[0] = 1.f;
-			fColor[1] = .3f;
-			fColor[2] = .0f;
-      }
-      //ambient
-      fColor[4] = fColor[5] = fColor[6] = 0.f;
-      //specular
-      fColor[8] = fColor[9] = fColor[10] = 0.7f;
-      //emission
-      fColor[12] = fColor[13] = fColor[14] = 0.f;
-      //alpha
-      fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
-      //shininess
-      if (color) fColor[16] = 60.f;
-		else fColor[16] = 10.f;
-   }
-}
-
-//______________________________________________________________________________
-void TGLSceneObject::SetBBox(const TBuffer3D & buffer)
-{
-   // Use the buffer bounding box if provided
-   if (buffer.SectionsValid(TBuffer3D::kBoundingBox))  {
-      fSelectionBox.SetBBox(buffer.fBBLowVertex[0], buffer.fBBHighVertex[0],
-                            buffer.fBBLowVertex[1], buffer.fBBHighVertex[1],
-                            buffer.fBBLowVertex[2], buffer.fBBHighVertex[2]);
-   }
-   // otherwise build a bounding box based on extent of points
-   else {
-      Double_t xmin = buffer.fPnts[0], xmax = xmin;
-      Double_t ymin = buffer.fPnts[1], ymax = ymin;
-      Double_t zmin = buffer.fPnts[2], zmax = zmin;
-
-      for (UInt_t nv = 3; nv < buffer.NbPnts()*3; nv += 3) {
-         xmin = TMath::Min(xmin, buffer.fPnts[nv]);
-         xmax = TMath::Max(xmax, buffer.fPnts[nv]);
-         ymin = TMath::Min(ymin, buffer.fPnts[nv + 1]);
-         ymax = TMath::Max(ymax, buffer.fPnts[nv + 1]);
-         zmin = TMath::Min(zmin, buffer.fPnts[nv + 2]);
-         zmax = TMath::Max(zmax, buffer.fPnts[nv + 2]);
-      }
-
-      fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
-   }
-}
-
-//______________________________________________________________________________
-void TGLSceneObject::SetBBox()
-{
-   // Use the buffer bounding box if provided
-   if (fVertices.size() >= 3) {
-		Double_t xmin = fVertices[0], xmax = xmin;
-		Double_t ymin = fVertices[1], ymax = ymin;
-		Double_t zmin = fVertices[2], zmax = zmin;
-
-		for (UInt_t nv = 3; nv < fVertices.size(); nv += 3) {
-			xmin = TMath::Min(xmin, fVertices[nv]);
-			xmax = TMath::Max(xmax, fVertices[nv]);
-			ymin = TMath::Min(ymin, fVertices[nv + 1]);
-			ymax = TMath::Max(ymax, fVertices[nv + 1]);
-			zmin = TMath::Min(zmin, fVertices[nv + 2]);
-			zmax = TMath::Max(zmax, fVertices[nv + 2]);
-		}
-
-		fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
-	}
-}
-
-//______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glname, TObject *realobj)
-               :TGLSceneObject(buff, color, glname, realobj),
+TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, TObject *realobj)
+               :TGLSceneObject(buff, realobj),
                 fNormals(3 * buff.NbPols())
 {
    fNbPols = buff.NbPols();
 
    Int_t *segs = buff.fSegs;
    Int_t *pols = buff.fPols;
-   Int_t shiftInd = buff.fReflection ? 1 : -1;
 
    Int_t descSize = 0;
 
@@ -361,12 +163,12 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
    fPolyDesc.resize(descSize);
    {//fix for scope
    for (UInt_t numPol = 0, currInd = 0, j = 1; numPol < fNbPols; ++numPol) {
-      Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
+      Int_t segmentInd = pols[j] + j;
       Int_t segmentCol = pols[j];
       Int_t s1 = pols[segmentInd];
-      segmentInd += shiftInd;
+      segmentInd--;
       Int_t s2 = pols[segmentInd];
-      segmentInd += shiftInd;
+      segmentInd--;
       Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
                          segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
       Int_t numPnts[3] = {0};
@@ -388,8 +190,8 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
       fPolyDesc[currInd++] = numPnts[2];
       Int_t lastAdded = numPnts[2];
 
-      Int_t end = shiftInd < 0 ? j + 1 : j + segmentCol;
-      for (; segmentInd != end; segmentInd += shiftInd) {
+      Int_t end = j + 1;
+      for (; segmentInd != end; segmentInd--) {
          segEnds[0] = segs[pols[segmentInd] * 3 + 1];
          segEnds[1] = segs[pols[segmentInd] * 3 + 2];
          if (segEnds[0] == lastAdded) {
@@ -409,81 +211,47 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
 }
 
 //______________________________________________________________________________
-TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, Short_t trans, UInt_t n, TObject *r)
-					:TGLSceneObject(n, c, trans, r)
+void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
 {
-	UInt_t nv = m->NumberOfVertices();
+   // Should only be done on an empty faceset object
+   assert(fNbPols == 0);
+   
+	UInt_t nv = mesh->NumberOfVertices();
 	fVertices.reserve(3 * nv);
-	fNormals.resize(m->NumberOfPolys() * 3);
-    UInt_t i;
+	fNormals.resize(mesh->NumberOfPolys() * 3);
+   UInt_t i;
 
 	for (i = 0; i < nv; ++i) {
-		const Double_t *v = m->GetVertex(i);
+		const Double_t *v = mesh->GetVertex(i);
 		fVertices.insert(fVertices.end(), v, v + 3);
 	}
 
-	fNbPols = m->NumberOfPolys();
+   fNbPols = mesh->NumberOfPolys();
 
    UInt_t descSize = 0;
 
-   for (i = 0; i < fNbPols; ++i) descSize += m->SizeOfPoly(i) + 1;
+   for (i = 0; i < fNbPols; ++i) descSize += mesh->SizeOfPoly(i) + 1;
 
    fPolyDesc.reserve(descSize);
 
    for (UInt_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex) {
-		UInt_t polySize = m->SizeOfPoly(polyIndex);
+      UInt_t polySize = mesh->SizeOfPoly(polyIndex);
 
 		fPolyDesc.push_back(polySize);
 
-		for(UInt_t i = 0; i < polySize; ++i) fPolyDesc.push_back(m->GetVertexIndex(polyIndex, i));
+      for(UInt_t i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
 
    CalculateNormals();
-   SetBBox();
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
+void TGLFaceSet::DirectDraw(UInt_t /*LOD*/) const
 {
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
-
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-/*
-   glDisable(GL_CULL_FACE);
-   glDisable(GL_LIGHTING);
-   glColor3d(1., 1., 1.);*/
-   glLoadName(GetGLName());
-   GLDrawPolys();
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
-   }
-}
-
-//______________________________________________________________________________
-void TGLFaceSet::GLDrawPolys()const
-{
-  GLUtriangulatorObj *tessObj = GetTesselator();
-  const Double_t *pnts = &fVertices[0];
-  const Double_t *normals = &fNormals[0];
-  const Int_t *pols = &fPolyDesc[0];
+   GLUtriangulatorObj *tessObj = GetTesselator();
+   const Double_t *pnts = &fVertices[0];
+   const Double_t *normals = &fNormals[0];
+   const Int_t *pols = &fPolyDesc[0];
 
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
@@ -580,15 +348,15 @@ void TGLFaceSet::CalculateNormals()
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
+/*void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
 {
    TGLSceneObject::Stretch(xs, ys, zs);
    CalculateNormals();
-}
+}*/
 
 //______________________________________________________________________________
-TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, const Float_t *c, UInt_t n, TObject *r)
-                  :TGLSceneObject(buffer, c, n, r),
+TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
+                  :TGLSceneObject(buffer, r),
                    fStyle(7)
 {
    //TAttMarker is not TObject descendant, so I need dynamic_cast
@@ -597,21 +365,14 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, const Float_t *c, UInt_t n
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::GLDraw(const TGLFrustum *fr)const
+void TGLPolyMarker::DirectDraw(UInt_t /*LOD*/) const
 {
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
    Float_t pointSize = 6.f;
    Double_t topRadius = 5.;
    GLUquadric *quadObj = GetQuadric();
-
-   glLoadName(GetGLName());
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
 
    switch (fStyle) {
    case 27:
@@ -669,17 +430,13 @@ void TGLPolyMarker::GLDraw(const TGLFrustum *fr)const
       glEnd();
       glPointSize(1.f);
    }
-
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
-   }
 }
 
 //______________________________________________________________________________
 void TGLPolyMarker::DrawStars()const
 {
    glDisable(GL_LIGHTING);
-   glColor3fv(fColor);
+   
    for (UInt_t i = 0; i < fVertices.size(); i += 3) {
       Double_t x = fVertices[i];
       Double_t y = fVertices[i + 1];
@@ -709,46 +466,32 @@ void TGLPolyMarker::DrawStars()const
 }
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, const Float_t *c, UInt_t n, TObject *r)
-                :TGLSceneObject(buffer, c, n, r)
+TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
+                :TGLSceneObject(buffer, r)
 {
 }
 
 //______________________________________________________________________________
-void TGLPolyLine::GLDraw(const TGLFrustum *fr)const
+void TGLPolyLine::DirectDraw(UInt_t /*LOD*/) const
 {
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-
-   glLoadName(GetGLName());
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glBegin(GL_LINE_STRIP);
 
    for (UInt_t i = 0; i < fVertices.size(); i += 3)
       glVertex3d(fVertices[i], fVertices[i + 1], fVertices[i + 2]);
 
    glEnd();
-
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
-   }
 }
 
-UInt_t TGLSphere::fSphereList = 0;
-
 //______________________________________________________________________________
-TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, const Float_t *c, UInt_t n, TObject *r)
-                :TGLSceneObject(buffer, c, n, r)
+TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
+                :TGLSceneObject(buffer, r)
 {
    // Default ctor
-   // TODO: Can get origin from BB at present as we know it is full
-   // sphere. When cut we need to extract translation from local master matrix
-   fX      = (buffer.fBBHighVertex[0] + buffer.fBBLowVertex[0])/2.0;
-   fY      = (buffer.fBBHighVertex[1] + buffer.fBBLowVertex[1])/2.0;
-   fZ      = (buffer.fBBHighVertex[2] + buffer.fBBLowVertex[2])/2.0;
    fRadius = buffer.fRadiusOuter;
 
+   // TGLSphere is only current shape which can take advantage of LOD and hence
+   // makes sense for DL caching to be enabled for
+   SetDLCache(kTRUE);
    // TODO:
    // Support hollow & cut spheres
    // buffer.fRadiusInner;
@@ -756,76 +499,28 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, const Float_t *c, UInt_t n, 
    // buffer.fThetaMax;
    // buffer.fPhiMin;
    // buffer.fPhiMax;
-
-   fNdiv   = 20; // Same hardcoded value as passed through buffer previously
-                 // This will come from viewer LOD scheme on draw in future
 }
 
 //______________________________________________________________________________
-void TGLSphere::BuildList()
+void TGLSphere::DirectDraw(UInt_t LOD) const
 {
-   if (!(fSphereList = glGenLists(1))) {
-      ::Error("TGLSphere::BuildList", "Could not build display list for sphere\n");
-      return;
-   }
-
-   if (GLUquadric *quadObj = GetQuadric()) {
-      glNewList(fSphereList, GL_COMPILE);
-      gluSphere(quadObj, 1, 20, 20);
-      glEndList();
+   if (LOD == 0) {
+      glPointSize(fRadius*2.0);
+      glBegin(GL_POINTS);
+      glVertex3d(0.0, 0.0, 0.0);
+      glEnd();
    } else {
-      fSphereList = 0;
-   }
-}
-
-
-//______________________________________________________________________________
-void TGLSphere::GLDraw(const TGLFrustum *fr)const
-{
-   if (!fSphereList) {
-      BuildList();
-      if(!fSphereList) return;
-   }
-
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
-
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-
-   glEnable(GL_NORMALIZE);
-
-   glLoadName(GetGLName());
-   glPushMatrix();
-   glTranslated(fX, fY, fZ);
-   if (fRadius > 1.) glScaled(fRadius, fRadius, fRadius);
-   glCallList(fSphereList);
-   glPopMatrix();
-
-   glDisable(GL_NORMALIZE);
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
+      // 4 stack/slice min for gluSphere to work
+      UInt_t divisions = LOD;
+      if (divisions < 4) {
+         divisions = 4;
+      }
+      gluSphere(GetQuadric(),fRadius, divisions, divisions);
    }
 }
 
 //______________________________________________________________________________
-void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
+/*void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
 {
    fX += x;
    fY += y;
@@ -836,7 +531,7 @@ void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
 //______________________________________________________________________________
 void TGLSphere::Stretch(Double_t, Double_t, Double_t)
 {
-}
+}*/
 
 ////////////////////////////////////////////////////////////
 namespace GL{
@@ -863,7 +558,7 @@ class TGLMesh {
 protected:
    Double_t fRmin1, fRmax1, fRmin2, fRmax2;
    Double_t fDz;
-   Vertex3d fCenter;
+   //Vertex3d fCenter; // All shapes now work in local frame so this is not required - check with Timur
    //normals for top and bottom (for cuts)
    Vertex3d fNlow;
    Vertex3d fNhigh;
@@ -879,12 +574,6 @@ public:
                    const Vertex3d &center, const Vertex3d &l = lowNormal,
                    const Vertex3d &h = highNormal);
    virtual ~TGLMesh() { }
-
-   void Shift(Double_t xs, Double_t ys, Double_t zs)
-   {
-      fCenter[0] += xs; fCenter[1] += ys; fCenter[2] += zs;
-   }
-
    virtual void Draw(const Double_t *rot)const = 0;
 };
 
@@ -948,9 +637,9 @@ public:
 
 //______________________________________________________________________________
 TGLMesh::TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
-                               const Vertex3d &c, const Vertex3d &l, const Vertex3d &h)
+                 const Vertex3d & /*c*/, const Vertex3d &l, const Vertex3d &h)
                      :fRmin1(r1), fRmax1(r2), fRmin2(r3), fRmax2(r4),
-                      fDz(dz), fCenter(c), fNlow(l), fNhigh(h)
+                      fDz(dz), fNlow(l), fNhigh(h)
 {
 }
 
@@ -1061,12 +750,8 @@ TubeSegMesh::TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Dou
 }
 
 //______________________________________________________________________________
-void TubeSegMesh::Draw(const Double_t *rot)const
+void TubeSegMesh::Draw(const Double_t * /*rot*/)const
 {
-   glPushMatrix();
-   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
-   glMultMatrixd(rot);
-
    //Tube segment is drawn as three quad strips
    //1. enabling vertex arrays
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -1082,8 +767,6 @@ void TubeSegMesh::Draw(const Double_t *rot)const
 
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
-
-   glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -1133,12 +816,8 @@ TubeMesh::TubeMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t 
 }
 
 //______________________________________________________________________________
-void TubeMesh::Draw(const Double_t *rot)const
+void TubeMesh::Draw(const Double_t * /*rot*/)const
 {
-   glPushMatrix();
-   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
-   glMultMatrixd(rot);
-
    //Tube is drawn as four quad strips
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
@@ -1154,8 +833,6 @@ void TubeMesh::Draw(const Double_t *rot)const
    //5. disabling vertex arrays
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
-
-   glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -1205,12 +882,8 @@ CylinderMesh::CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d
 }
 
 //______________________________________________________________________________
-void CylinderMesh::Draw(const Double_t *rot)const
+void CylinderMesh::Draw(const Double_t * /*rot*/)const
 {
-   glPushMatrix();
-   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
-   glMultMatrixd(rot);
-
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -1225,12 +898,10 @@ void CylinderMesh::Draw(const Double_t *rot)const
 
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
-
-   glPopMatrix();
 }
 
 //______________________________________________________________________________
-   CylinderSegMesh::CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1,
+CylinderSegMesh::CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1,
                                     Double_t phi2, const Vertex3d &center, const Vertex3d &l,
                                     const Vertex3d &h)
                      :TGLMesh(0., r1, 0., r2, dz, center, l, h), fMesh(), fNorm()
@@ -1310,12 +981,8 @@ void CylinderMesh::Draw(const Double_t *rot)const
 }
 
 //______________________________________________________________________________
-void CylinderSegMesh::Draw(const Double_t *rot)const
+void CylinderSegMesh::Draw(const Double_t * /*rot*/)const
 {
-   glPushMatrix();
-   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
-   glMultMatrixd(rot);
-
    //Cylinder segment is drawn as one quad strip and
    //two triangle fans
    //1. enabling vertex arrays
@@ -1332,15 +999,12 @@ void CylinderSegMesh::Draw(const Double_t *rot)const
    //5. disabling vertex arrays
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
-
-   glPopMatrix();
 }
 
 //______________________________________________________________________________
-TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer, const Float_t *c, UInt_t n, TObject *r)
-            :TGLSceneObject(buffer, 16, c, n, r)
+TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer, TObject *r)
+            :TGLSceneObject(buffer, 16, r)
 {
-   fInv = buffer.fReflection;
    CreateParts(buffer);
 }
 
@@ -1362,22 +1026,8 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
    Double_t r4 = buffer.fRadiusOuter;
    Double_t dz = buffer.fHalfLength;
 
-   // Stuff the transposed rotation component of the local -> master
-   // translation matrix into verticies array
-   // Then stuff the translation component in to 'center' - as before
-   // TODO: Clean this up - will be tidied as part of local frame conversion
-   // of whole viewer - don't forget to remove the hack on TGeo side
-   // Shapes which can't provide local frame + trans matrix will not be able
-   // to use these tube drawing routines -> raw tesselation
+   // TODO: Check with Timur if this is still required - seems not...?
    const Double_t * lm = buffer.fLocalMaster;
-
-   // Note buffer contains row major matrix currently
-   // TODO: Decide on column or row major and comment in TBuffer3D
-   fVertices[0] =  lm[0]; fVertices[1] =  lm[4]; fVertices[2] =  lm[8];  fVertices[3] =  0.0;
-   fVertices[4] =  lm[1]; fVertices[5] =  lm[5]; fVertices[6] =  lm[9];  fVertices[7] =  0.0;
-   fVertices[8] =  lm[2]; fVertices[9] =  lm[6]; fVertices[10] = lm[10]; fVertices[11] = 0.0;
-   fVertices[12] = 0.0;   fVertices[13] = 0.0;   fVertices[14] = 0.0;    fVertices[15] = 1.0;
-
    Vertex3d center = {{lm[12], lm[13], lm[14]}};
    Vertex3d lowPlaneNorm = {{0., 0., -1.}};
    Vertex3d highPlaneNorm = {{0., 0., 1.}};
@@ -1425,42 +1075,14 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 }
 
 //______________________________________________________________________________
-void TGLCylinder::GLDraw(const TGLFrustum *fr)const
+void TGLCylinder::DirectDraw(UInt_t /*LOD*/) const
 {
-   if (fr) {
-      if (!fr->ClipOnBoundingBox(*this)) return;
-   }
-
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
-   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
-   glLoadName(GetGLName());
-
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-
-   if (fInv) glFrontFace(GL_CW);
    //draw here
    for (UInt_t i = 0; i < fParts.size(); ++i) fParts[i]->Draw(&fVertices[0]);
-   if (fInv) glFrontFace(GL_CCW);
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-
-   if (fIsSelected) {
-      fSelectionBox.DrawBox();
-   }
 }
 
 //______________________________________________________________________________
-void TGLCylinder::Shift(Double_t xs, Double_t ys, Double_t zs)
+/*void TGLCylinder::Shift(Double_t xs, Double_t ys, Double_t zs)
 {
    fSelectionBox.Shift(xs, ys, zs);
    for (UInt_t i = 0; i < fParts.size(); ++i)
@@ -1471,5 +1093,5 @@ void TGLCylinder::Shift(Double_t xs, Double_t ys, Double_t zs)
 void TGLCylinder::Stretch(Double_t, Double_t, Double_t)
 {
    //non-stretchable now
-}
+}*/
 

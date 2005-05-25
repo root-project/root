@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.8 2004/11/23 15:51:38 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.9 2005/01/27 14:51:49 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -114,11 +114,9 @@ RETURN_METHOD_ARG0(VirtualGL, Int_t, ExitSelectionMode)
 VOID_METHOD_ARG4(VirtualGL, EnterSelectionMode, UInt_t *, buff, Int_t, size, Event_t *, ev, Int_t *, viewport, 1)
 VOID_METHOD_ARG1(VirtualGL, GLLoadName, UInt_t, name, 1)
 VOID_METHOD_ARG5(VirtualGL, DrawFaceSet, const Double_t *, pnts, const Int_t *, pols, const Double_t *, normals, const Float_t *, mat, UInt_t, size, 1)
-VOID_METHOD_ARG1(VirtualGL, TraverseGraph, TGLRender *, render, 1)
-RETURN_METHOD_ARG4(VirtualGL, TGLSceneObject *, SelectObject, TGLRender *, render, Int_t, x, Int_t, y, Int_t, camera)
-VOID_METHOD_ARG4(VirtualGL, MoveSelected, TGLRender *, render, Double_t, x, Double_t, y, Double_t, z, 1)
-VOID_METHOD_ARG1(VirtualGL, EndMovement, TGLRender *, render, 1)
-VOID_METHOD_ARG1(VirtualGL, Invalidate, TGLRender *, render, 1)
+VOID_METHOD_ARG1(VirtualGL, DrawViewer, TGLViewer *, viewer, 1)
+RETURN_METHOD_ARG2(VirtualGL, Bool_t, SelectViewer, TGLViewer *, viewer, const TGLRect *, rect)
 VOID_METHOD_ARG1(VirtualGL, DrawSphere, const Float_t *, color, 1)
-VOID_METHOD_ARG7(VirtualGL, PrintObjects, Int_t, format, Int_t, sort, TGLRender *, render, TGLWindow *, glWin, Float_t, rad, Float_t, yc, Float_t, zc, 1)
+VOID_METHOD_ARG7(VirtualGL, PrintObjects, Int_t, format, Int_t, sort, TGLViewer *, viewer, 
+                            TGLWindow *, glWin, Float_t, rad, Float_t, yc, Float_t, zc, 1)
 

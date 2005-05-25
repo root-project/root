@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.13 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.14 2005/03/18 08:03:27 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -323,17 +323,14 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
    }
    // We only provide the bounding box for uncut spheres
    if (reqSections & TBuffer3D::kBoundingBox &&
-       fThemin == 0 && fThemax == 180 &&
-       fPhimin == 0 && fPhimax == 360) {
-      buffer.fBBLowVertex[0]  = -fRmax;
-      buffer.fBBLowVertex[1]  = -fRmax;
-      buffer.fBBLowVertex[2]  = -fRmax;
-      buffer.fBBHighVertex[0] = fRmax;
-      buffer.fBBHighVertex[1] = fRmax;
-      buffer.fBBHighVertex[2] = fRmax;
+      fThemin == 0 && fThemax == 180 &&
+      fPhimin == 0 && fPhimax == 360) {
+
+      Double_t origin[3] = { 0.0, 0.0, 0.0 };
+      Double_t halfLengths[3] = { fRmax, fRmax, fRmax };
+      buffer.SetAABoundingBox(origin, halfLengths);
       if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fBBLowVertex, 1);
-         TransformPoints(buffer.fBBHighVertex, 1);
+         TransformPoints(buffer.fBBVertex[0], 8);
       }
       buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
    }

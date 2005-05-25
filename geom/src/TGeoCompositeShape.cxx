@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.30 2005/04/05 08:54:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.31 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -332,14 +332,16 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
       FillBuffer3D(buffer, TBuffer3D::kCore|TBuffer3D::kBoundingBox,
                    viewer->PreferLocalFrame());
 
+      Bool_t paintComponents = kTRUE;
+      
       // Start a composite shape, identified by this buffer
       if (!TBuffer3D::GetCSLevel())
-         viewer->OpenComposite(buffer, &addChildren);
+         paintComponents = viewer->OpenComposite(buffer, &addChildren);
 
       TBuffer3D::IncCSLevel();
 
       // Paint the boolean node - will add more buffers to viewer
-      fNode->Paint(option);
+      if (paintComponents) fNode->Paint(option);
 
       // Close the composite shape
       if (!TBuffer3D::DecCSLevel())

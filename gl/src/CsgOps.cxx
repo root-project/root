@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.7 2005/04/26 16:46:51 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: CsgOps.cxx,v 1.8 2005/05/18 12:31:08 brun Exp $
 // Author:  Timur Pocheptsov  01/04/2005
 /*
   CSGLib - Software Library for Constructive Solid Geometry
@@ -1678,18 +1678,17 @@ namespace RootCsg {
 
       const Int_t *segs = buff.fSegs;
       const Int_t *pols = buff.fPols;
-      Int_t shiftInd = buff.fReflection ? 1 : -1;
 
       newMesh->Polys().resize(buff.NbPols());
 
       for (UInt_t numPol = 0, j = 1; numPol < buff.NbPols(); ++numPol) {
          TestPolygon &currPoly = newMesh->Polys()[numPol];
-         Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
+         Int_t segmentInd = pols[j] + j;
          Int_t segmentCol = pols[j];
          Int_t s1 = pols[segmentInd];
-         segmentInd += shiftInd;
+         segmentInd--;
          Int_t s2 = pols[segmentInd];
-         segmentInd += shiftInd;
+         segmentInd--;
          Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
                             segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
          Int_t numPnts[3] = {0};
@@ -1710,8 +1709,8 @@ namespace RootCsg {
 
          Int_t lastAdded = numPnts[2];
 
-         Int_t end = shiftInd < 0 ? j + 1 : j + segmentCol;
-         for (; segmentInd != end; segmentInd += shiftInd) {
+         Int_t end = j + 1;
+         for (; segmentInd != end; segmentInd--) {
             segEnds[0] = segs[pols[segmentInd] * 3 + 1];
             segEnds[1] = segs[pols[segmentInd] * 3 + 2];
             if (segEnds[0] == lastAdded) {

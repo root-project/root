@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.62 2005/04/21 08:13:25 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.63 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -935,7 +935,14 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    fGeoManager->SetMatrixReflection(currentMatrix->IsReflection());
    if (vol->GetShape()->IsComposite()) {
       TGeoHMatrix *glmat = fGeoManager->GetGLMatrix();
-      *glmat = currentMatrix;
+      // Components of composite shape for a local frame viewer are 
+      // painted in frame of the top level composite shape - so load
+      // identity matrix in this case
+      if (gPad->GetViewer3D()->PreferLocalFrame()) {
+         *glmat = gGeoIdentity;
+      } else {
+         *glmat = currentMatrix;
+      }
       fGeoManager->SetMatrixTransform(kTRUE);
    } else {
 //      if (fGeoManager->GetCurrentMatrix()->IsReflection()) printf("matrix for node %s is reflection\n", node->GetName());
@@ -1047,7 +1054,7 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
       // and add again
       if (reqSections != TBuffer3D::kNone) {
          shape.GetBuffer3D(reqSections, localFrame);
-         viewer->AddObject(buffer);
+         viewer->AddObject(buffer, &addDaughters);
       }
    }
    // Composite shapes have their own internal hierarchy of shapes, each

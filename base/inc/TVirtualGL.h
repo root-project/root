@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.15 2005/01/27 14:51:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.16 2005/04/07 14:43:35 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -43,7 +43,8 @@
 
 class TGLSceneObject;
 class TPoints3DABC;
-class TGLRender;
+class TGLViewer;
+class TGLRect;
 class TGLWindow;
 
 class TVirtualGLImp {
@@ -155,13 +156,10 @@ public:
    virtual void SetRootLight(Bool_t flag=kTRUE)  = 0;
    virtual Bool_t GetTrueColorMode() = 0;
    virtual void SetTrueColorMode(Bool_t flag=kTRUE) = 0;
-   virtual void TraverseGraph(TGLRender *render) = 0;
-   virtual TGLSceneObject *SelectObject(TGLRender *render, Int_t x, Int_t y, Int_t camera) = 0;
-   virtual void MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z) = 0;
-   virtual void EndMovement(TGLRender *render) = 0;
-   virtual void Invalidate(TGLRender *render) = 0;
+   virtual void DrawViewer(TGLViewer *viewer) = 0;
+   virtual Bool_t SelectViewer(TGLViewer *viewer, const TGLRect * rect) = 0;
    virtual void DrawSphere(const Float_t *rgba) = 0;
-   virtual void PrintObjects(Int_t format, Int_t sort, TGLRender *render, TGLWindow *glWin,
+   virtual void PrintObjects(Int_t format, Int_t sort, TGLViewer *viewer, TGLWindow *glWin,
                              Float_t rad, Float_t yc, Float_t zc) = 0;
 
    static TVirtualGL *&Instance();

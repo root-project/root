@@ -12,7 +12,45 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3D                                                            //
+//                                                                      //
+// Generic 3D primitive description class - see TBuffer3DTypes for      //
+// producer classes                                                     //
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBuffer3D                                                            //
+//                                                                      //
+// Generic 3D primitive description class - see TBuffer3DTypes for      //
+// producer classes                                                     //
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+   // Construct from supplied shape type and raw sizes
+//                                                                      //
+// TBuffer3D                                                            //
+//                                                                      //
+// Generic 3D primitive description class - see TBuffer3DTypes for      //
+// producer classes                                                     //
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+   // Destructor
+   // Construct from supplied shape type and raw sizes
+//                                                                      //
+// TBuffer3D                                                            //
+//                                                                      //
+// Generic 3D primitive description class - see TBuffer3DTypes for      //
+// producer classes                                                     //
+//////////////////////////////////////////////////////////////////////////
+
+   // Initialise buffer
 ClassImp(TBuffer3D)
+   // Destructor
+   // Construct from supplied shape type and raw sizes
 
 //______________________________________________________________________________
 TBuffer3D::TBuffer3D(Int_t type,
@@ -20,7 +58,10 @@ TBuffer3D::TBuffer3D(Int_t type,
                      UInt_t reqSegs, UInt_t reqSegsCapacity, 
                      UInt_t reqPols, UInt_t reqPolsCapacity) :
       fType(type)
+   // Initialise buffer
 {
+   // Destructor
+   // Construct from supplied shape type and raw sizes
 	Init();
    SetRawSizes(reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity);
 }
@@ -28,28 +69,36 @@ TBuffer3D::TBuffer3D(Int_t type,
 
 //______________________________________________________________________________
 TBuffer3D::~TBuffer3D()
+   // Initialise buffer
 {
+   // Destructor
    if (fPnts) delete [] fPnts;
    if (fSegs) delete [] fSegs;
    if (fPols) delete [] fPols;
+//______________________________________________________________________________
 }
 
 //______________________________________________________________________________
 void TBuffer3D::Init()
 {
+   // Initialise buffer
    fID            = 0;
    fColor         = 0;
+   // Set fLocalMaster in section kCore to identity
    fTransparency  = 0;
    fLocalFrame	   = kFALSE;
    fReflection    = kFALSE;
    SetLocalMasterIdentity();
 
    // Reset bounding box
-   for (UInt_t i=0; i<3; i++) {
-      fBBLowVertex[i] = 0.0;
-      fBBHighVertex[i] = 0.0;
+   for (UInt_t v=0; v<8; v++) {
+      for (UInt_t i=0; i<3; i++) {
+         fBBVertex[v][i] = 0.0;
+      }
    }
+   // Set fLocalMaster in section kCore to identity
 
+   // Set kRaw tesselation section of buffer with supplied sizes
    fPnts          = 0;
    fSegs          = 0;
    fPols          = 0;
@@ -60,18 +109,25 @@ void TBuffer3D::Init()
    fPntsCapacity  = 0;  
    fSegsCapacity  = 0;  
    fPolsCapacity  = 0;  
+   // Set fLocalMaster in section kCore to identity
 
+   // Set kRaw tesselation section of buffer with supplied sizes
    ClearSectionsValid();
 }
 
+//______________________________________________________________________________
 void TBuffer3D::ClearSectionsValid()
-{ 
+{
+   // Clear any sections marked valid
    fSections = 0U; 
    SetRawSizes(0, 0, 0, 0, 0, 0);
 }
 
+//______________________________________________________________________________
 void TBuffer3D::SetLocalMasterIdentity()
 {
+   // Set kRaw tesselation section of buffer with supplied sizes
+   // Set fLocalMaster in section kCore to identity
    for (UInt_t i=0; i<16; i++) {
       if (i%5) {
          fLocalMaster[i] = 0.0;
@@ -82,11 +138,60 @@ void TBuffer3D::SetLocalMasterIdentity()
    }
 }
 
- //______________________________________________________________________________
+//______________________________________________________________________________
+void TBuffer3D::SetAABoundingBox(const Double_t origin[3], const Double_t halfLengths[3])
+{
+   // Set fBBVertex in kBoundingBox section to a axis aligned (local) BB
+   // using supplied origin and box half lengths
+   //
+   //   7-------6
+   //  /|      /|
+   // 3-------2 |
+   // | 4-----|-5
+   // |/      |/
+   // 0-------1 
+   //
+
+   // Vertex 0
+   fBBVertex[0][0] = origin[0] - halfLengths[0];   // x
+   fBBVertex[0][1] = origin[1] - halfLengths[1];   // y
+   fBBVertex[0][2] = origin[2] - halfLengths[2];   // z
+   // Vertex 1
+   fBBVertex[1][0] = origin[0] + halfLengths[0];   // x
+   fBBVertex[1][1] = origin[1] - halfLengths[1];   // y
+   fBBVertex[1][2] = origin[2] - halfLengths[2];   // z
+   // Vertex 2
+   fBBVertex[2][0] = origin[0] + halfLengths[0];   // x
+   fBBVertex[2][1] = origin[1] + halfLengths[1];   // y
+   fBBVertex[2][2] = origin[2] - halfLengths[2];   // z
+   // Vertex 3
+   fBBVertex[3][0] = origin[0] - halfLengths[0];   // x
+   fBBVertex[3][1] = origin[1] + halfLengths[1];   // y
+   fBBVertex[3][2] = origin[2] - halfLengths[2];   // z
+   // Vertex 4
+   fBBVertex[4][0] = origin[0] - halfLengths[0];   // x
+   fBBVertex[4][1] = origin[1] - halfLengths[1];   // y
+   fBBVertex[4][2] = origin[2] + halfLengths[2];   // z
+   // Vertex 5
+   fBBVertex[5][0] = origin[0] + halfLengths[0];   // x
+   fBBVertex[5][1] = origin[1] - halfLengths[1];   // y
+   fBBVertex[5][2] = origin[2] + halfLengths[2];   // z
+   // Vertex 6
+   fBBVertex[6][0] = origin[0] + halfLengths[0];   // x
+   fBBVertex[6][1] = origin[1] + halfLengths[1];   // y
+   fBBVertex[6][2] = origin[2] + halfLengths[2];   // z
+   // Vertex 7
+   fBBVertex[7][0] = origin[0] - halfLengths[0];   // x
+   fBBVertex[7][1] = origin[1] + halfLengths[1];   // y
+   fBBVertex[7][2] = origin[2] + halfLengths[2];   // z
+}
+
+//______________________________________________________________________________
 Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
                               UInt_t reqSegs, UInt_t reqSegsCapacity, 
                               UInt_t reqPols, UInt_t reqPolsCapacity)
 {
+   // Set kRaw tesselation section of buffer with supplied sizes
    Bool_t allocateOK = kTRUE;
 
    fNbPnts = reqPnts;
@@ -141,7 +246,7 @@ TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
 //______________________________________________________________________________
 Bool_t TBuffer3DSphere::IsSolidUncut() const
 {
-   // TODO: Rounding errors?
+   // Test if buffer represents a solid uncut sphere
    if (fRadiusInner   != 0.0   ||
        fThetaMin      != 0.0   ||
        fThetaMax      != 180.0 ||

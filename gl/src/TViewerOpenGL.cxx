@@ -8,13 +8,15 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include "TViewerOpenGL.h"
+
 #include "TPluginManager.h"
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
 #include "KeySymbols.h"
 #include "TGShutter.h"
-#include "TBuffer3D.h"
 #include "TGLKernel.h"
+#include "TVirtualGL.h"
 #include "TGButton.h"
 #include "TGClient.h"
 #include "TGCanvas.h"
@@ -27,19 +29,24 @@
 #include "TSystem.h"
 
 #include "TGLSceneObject.h"
-#include "TViewerOpenGL.h"
 #include "TGLRenderArea.h"
 #include "TGLEditor.h"
-#include "TGLRender.h"
+//#include "TGLRender.h"
 #include "TGLCamera.h"
-#include "TArcBall.h"
+//#include "TArcBall.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
 #include "TVirtualPad.h"
 
+#include "TGLLogicalShape.h"
+#include "TGLPhysicalShape.h"
+#include "TObject.h"
+
 #include "gl2ps.h"
+
+#include "Riostream.h" // TODO: Remove
 
 #include <assert.h>
 
@@ -49,11 +56,17 @@ const char gHelpViewerOpenGL[] = "\
      \tr\t--- filled polygons mode\n\
      \tj\t--- zoom in\n\
      \tk\t--- zoom out\n\n\
-     You can ROTATE the scene by holding the left \n\
-     mouse button and moving the mouse or\n\
-     SELECT an object with right mouse button click.\n\
-     You can select and move an object with the middle\n\
-     mouse button (light sources are pickable too).\n\n\
+	  \tArrow Keys\tpan (truck) across scene\n\
+     You can ROTATE (ORBIT) the scene by holding the left \n\
+     mouse button and moving the mouse (pespective camera only).\n\
+     You can PAN (TRUCK) the camera using the middle mouse\n\
+     button or arrow keys.\n\
+     You can ZOOM (DOLLY) the camera by dragging side\n\
+     to side holding the right mouse button or using the\n\
+     mouse wheel.\n\
+     RESET the camera by double clicking any button\n\
+     SELECT an object with Shift+Left mouse button click.\n\
+     Invoked the CONTEXT menu with Shift+Right mouse click.\n\
      PROJECTIONS\n\n\
      You can select the different plane projections\n\
      in \"Projections\" menu.\n\n\
@@ -103,19 +116,6 @@ const char gHelpViewerOpenGL[] = "\
      You can add clipping plane by clicking the checkbox and\n\
      specifying the plane's equation A*x+B*y+C*z+D=0.";
 
-
-const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., 1., 0.,
-                                  0., -1., 0., 0., 0., 0., 0., 1.};
-
-const Double_t gRotMatrixYOZ[] = {0., 0., -1., 0., 1., 0., 0., 0.,
-                                  0., -1., 0., 0., 0., 0., 0., 1.};
-
-const Double_t gRotMatrixXOZ[] = {0., 1., 0., 0., 1., 0., 0., 0.,
-                                  0., 0., -1., 0., 0., 0., 0., 1.};
-
-
-
-
 enum EGLViewerCommands {
    kGLHelpAbout,
    kGLHelpOnViewer,
@@ -143,14 +143,15 @@ int sortgl = GL2PS_BSP_SORT;
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
                    TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
-                   fCamera(), fViewVolume(), fZoom(),
-                   fActiveViewport(), fBuildingScene(kFALSE),
-                   fPad(pad), fFirstScene(kTRUE), fInsideComposite(kFALSE)
+                   fInternalRebuild(kFALSE), fBuildingScene(kFALSE),
+                   fPad(pad), fComposite(0)
 {
    // Create OpenGL viewer.
 
    //good compiler (not VC 6.0) will initialize our
    //arrays in ctor-init-list with zeroes (default initialization)
+
+   // TODO: Resort !!
    fMainFrame = 0;
    fV2 = 0;
    fV1 = 0;
@@ -165,14 +166,14 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
    fFileMenu = fViewMenu = fHelpMenu = 0;
    fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
    fLightMask = 0x1b;
-   fXc = fYc = fZc = fRad = 0.;
-   fPressed = kFALSE;
-   fNbShapes = 0;
-   fConf = kPERSP;
+   //fXc = fYc = fZc = fRad = 0.;
+   fAction = kNone;
+   fActiveButtonID = 0;
+   //fConf = kPERSP;
    fContextMenu = 0;
-   fSelectedObj = 0;
-   fAction = kNoAction;
-   fNewComposite.fRealObject = 0;
+   //fSelectedObj = 0;
+
+   fNextPhysicalID = 1;
 
    static Bool_t init = kFALSE;
    if (!init) {
@@ -180,15 +181,13 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp"))) {
          if (h->LoadPlugin() == -1)
             return;
-         TVirtualGLImp *imp = (TVirtualGLImp *) h->ExecPlugin(0);
+         TVirtualGLImp * imp = (TVirtualGLImp *) h->ExecPlugin(0);
          new TGLKernel(imp);
       }
       init = kTRUE;
    }
 
    CreateViewer();
-   fArcBall = new TArcBall(fgInitH, fgInitH);
-   CalculateViewports();
 }
 
 //______________________________________________________________________________
@@ -269,10 +268,10 @@ void TViewerOpenGL::CreateViewer()
 
    fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
    fCanvasContainer = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
-   fRender = new TGLRender;
 
    TGLWindow * glWin = fCanvasContainer->GetGLWindow();
    glWin->Connect("HandleButton(Event_t*)", "TViewerOpenGL", this, "HandleContainerButton(Event_t*)");
+   glWin->Connect("HandleDoubleClick(Event_t*)", "TViewerOpenGL", this, "HandleContainerDoubleClick(Event_t*)");
    glWin->Connect("HandleKey(Event_t*)", "TViewerOpenGL", this, "HandleContainerKey(Event_t*)");
    glWin->Connect("HandleMotion(Event_t*)", "TViewerOpenGL", this, "HandleContainerMotion(Event_t*)");
    glWin->Connect("HandleExpose(Event_t*)", "TViewerOpenGL", this, "HandleContainerExpose(Event_t*)");
@@ -288,9 +287,10 @@ void TViewerOpenGL::CreateViewer()
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
    MapSubwindows();
    Resize(GetDefaultSize());
+   MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+   SetWMPosition(fgInitX, fgInitY);
    Show();
-
-   fZoom[0] = fZoom[1] = fZoom[2] = fZoom[3] = 1.;
+   TGLUtil::CheckError();
 }
 
 //______________________________________________________________________________
@@ -303,8 +303,8 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fMenuBarLayout;
    delete fMenuBarHelpLayout;
    delete fMenuBarItemLayout;
-   delete fArcBall;
-   delete fRender;
+   //delete fArcBall;
+   //delete fRender;
    delete fCanvasContainer;
    delete fCanvasWindow;
    delete fCanvasLayout;
@@ -321,92 +321,205 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fShutItem2;
    delete fShutItem3;
    delete fShutItem4;
-   //temporary, fix ASAP!!!
-   TGLSphere::fSphereList = 0;
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::MakeCurrent()const
+void TViewerOpenGL::InitGL()
 {
+   // Actual GL window/context creation should have already been done in CreateViewer()
+   assert(!fInitGL && fCanvasContainer && fCanvasContainer->GetGLWindow());
+
+   // GL initialisation 
+   glEnable(GL_LIGHTING);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_BLEND);
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glClearColor(0.0, 0.0, 0.0, 0.0);
+   glClearDepth(1.0);
+
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+   Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
+   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelAmb);
+   
+   // Calculate light source positions
+   // Arrange round an expanded sphere of scene BB
+   // TODO: These need to be positioned before each scene draw, after the camera MV translation so that they don't shift relative to objects.
+   TGLBoundingBox box = fScene.BoundingBox();
+   Double_t radius = box.Extents().Mag() * 4.0;
+   
+   // 0: Front
+   // 1: Right
+   // 2: Bottom
+   // 3: Left
+   // 4: Top   
+   Float_t pos0[] = {0.0, 0.0, 0.0, 1.0};
+   Float_t pos1[] = {box.Center().X() + radius, box.Center().Y()         , -box.Center().Z() - radius, 1.0};
+   Float_t pos2[] = {box.Center().X()         , box.Center().Y() - radius, -box.Center().Z() - radius, 1.0};
+   Float_t pos3[] = {box.Center().X() - radius, box.Center().Y()         , -box.Center().Z() - radius, 1.0};
+   Float_t pos4[] = {box.Center().X()         , box.Center().Y() + radius, -box.Center().Z() - radius, 1.0};
+
+   Float_t whiteCol[] = {0.7, 0.7, 0.7, 1.0};
+   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos0);
+   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos1);
+   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos2);
+   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos3);
+   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos4);
+   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
+   
+   if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
+   if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
+   if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
+   if (fLightMask & 8) gVirtualGL->EnableGL(kLIGHT3);
+   if (fLightMask & 16) gVirtualGL->EnableGL(kLIGHT0);
+
+   TGLUtil::CheckError();
+   fInitGL = kTRUE;
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::Invalidate(UInt_t redrawLOD)
+{
+   TGLViewer::Invalidate(redrawLOD);
+   
+   // Mark the window as requiring a redraw - the GUI thread
+   // will call our DoRedraw() method
+   fClient->NeedRedraw(this);
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::MakeCurrent() const
+{
+   assert(!fBuildingScene);
    fCanvasContainer->GetGLWindow()->MakeCurrent();
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::SwapBuffers()const
+void TViewerOpenGL::SwapBuffers() const
 {
    assert(!fBuildingScene);
-   fCanvasContainer->GetGLWindow()->Refresh();
+   fCanvasContainer->GetGLWindow()->SwapBuffers();
 }
 
 //______________________________________________________________________________
-Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
+Bool_t TViewerOpenGL::HandleContainerEvent(Event_t *event)
 {
-   // Handle mouse button events.
-   // Buttons 4 and 5 are from the mouse scroll wheel
-#ifdef R__WIN32
-   if (event->fType == 3) {
-#else
-   if (event->fType == kButtonPress) {
-#endif
-      if (event->fCode == kButton4) {
-         // zoom out
-         fZoom[fConf] *= 1.2;
-         fCamera[fConf]->Zoom(fZoom[fConf]);
-         DrawObjects();
-         return kTRUE;
-      }
-      if (event->fCode == kButton5) {
-         // zoom in
-         fRender->SetNeedFrustum();
-         fZoom[fConf] /= 1.2;
-         fCamera[fConf]->Zoom(fZoom[fConf]);
-         DrawObjects();
-         return kTRUE;
-      }
+   if (event->fType == kFocusIn) {
+      assert(fAction == kNone);
+      fAction = kNone;
    }
-   if (event->fType == kButtonPress) {
-      if(event->fCode == kButton1 && fConf == kPERSP) {
-         TPoint pnt(event->fX, event->fY);
-         fArcBall->Click(pnt);
-         fPressed = kTRUE;
-         fAction = kRotating;
-      } else {
-         if ((fSelectedObj = TestSelection(event))) {
-            fColorEditor->SetRGBA(fSelectedObj->GetColor());
-            fGeomEditor->SetCenter(fSelectedObj->GetBBox()->GetData());
-            if (event->fCode == kButton2) {
-               fPressed = kTRUE;
-               fLastPos.fX = event->fX;
-               fLastPos.fY = event->fY;
-               fAction = kPicking;
-            } else if (TObject *ro = fSelectedObj->GetRealObject()){
-               if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
-               fContextMenu->Popup(event->fXRoot, event->fYRoot, ro);
-            }
-         } else {
-            fColorEditor->Disable();
-            fGeomEditor->Disable();
-         }
-      }
-   } else if (event->fType == kButtonRelease) {
-      if (event->fCode == kButton2) {
-         DrawObjects();
-         if (fSelectedObj)fGeomEditor->SetCenter(fSelectedObj->GetBBox()->GetData());
-         fAction = kNoAction;
-      }
-      fPressed = kFALSE;
+   if (event->fType == kFocusOut) {
+      fAction = kNone;
    }
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
+Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
+{
+   // Only process one action/button down/up pairing - block others
+   if (fAction != kNone) {
+      if (event->fType == kButtonPress ||
+          (event->fType == kButtonRelease && event->fCode != fActiveButtonID)) {
+         return kFALSE;
+      }
+   }
+   
+   // Button DOWN
+   if (event->fType == kButtonPress) {
+      Bool_t grabPointer = kFALSE;
+
+      // Record active button for release
+      fActiveButtonID = event->fCode;
+
+      // Record mouse start
+      fStartPos.fX = fLastPos.fX = event->fX;
+      fStartPos.fY = fLastPos.fY = event->fY;
+      
+      switch(event->fCode) {
+         // LEFT mouse button
+         case(kButton1): {
+            if (event->fState & kKeyShiftMask) {
+               DoSelect(event, kFALSE); // without context menu
+            } else {
+               fAction = kRotate;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+         // MID mouse button
+         case(kButton2): {
+            if (!(event->fState & kKeyShiftMask)) {
+               fAction = kTruck;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+         // RIGHT mouse button
+         case(kButton3): {
+            if (event->fState & kKeyShiftMask) {
+               DoSelect(event, kTRUE); // with context menu
+            } else {
+               fAction = kDolly;
+               grabPointer = kTRUE;
+            }
+            break;
+         }
+      }
+   }
+   // Button UP
+   else if (event->fType == kButtonRelease) {
+      // TODO: Check on Linux - on Win32 only see button release events
+      // for mouse wheel
+      switch(event->fCode) {
+         // Buttons 4/5 are mouse wheel
+         case(kButton4): {
+            // Dolly out
+            if (CurrentCamera().Dolly(-30)) { //TODO : val static const somewhere
+               Invalidate();
+            }
+            break;
+         }
+         case(kButton5): {
+            // Dolly in
+            if (CurrentCamera().Dolly(+30)) { //TODO : val static const somewhere
+               Invalidate();
+            }
+            break;
+         }
+      }
+
+      fAction = kNone;
+   }
+   
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TViewerOpenGL::HandleContainerDoubleClick(Event_t *event)
+{
+   // Reset interactive camera mode on button double
+   // click (unless mouse wheel)
+   if (event->fCode != kButton4 && event->fCode != kButton5) {
+      CurrentCamera().Reset();
+      fStartPos.fX = fLastPos.fX = event->fX;
+      fStartPos.fY = fLastPos.fY = event->fY;
+      Invalidate();
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t *event)
 {
-   fArcBall->SetBounds(event->fWidth, event->fHeight);
-   CalculateViewports();
-   CalculateViewvolumes();
-   DrawObjects();
+   if (event) {
+      SetViewport(event->fX, event->fY, event->fWidth, event->fHeight);
+   }
    return kTRUE;
 }
 
@@ -417,109 +530,117 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    UInt_t keysym = 0;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
+   
+   Bool_t invalidate = kFALSE;
 
    switch (keysym) {
    case kKey_Plus:
    case kKey_J:
    case kKey_j:
-      fRender->SetNeedFrustum();
-      fZoom[fConf] /= 1.2;
-      fCamera[fConf]->Zoom(fZoom[fConf]);
-      DrawObjects();
+      invalidate = CurrentCamera().Dolly(10); //TODO : val static const somewhere
       break;
    case kKey_Minus:
    case kKey_K:
    case kKey_k:
-      fZoom[fConf] *= 1.2;
-      fCamera[fConf]->Zoom(fZoom[fConf]);
-      DrawObjects();
+      invalidate = CurrentCamera().Dolly(-10); //TODO : val static const somewhere
       break;
    case kKey_R:
    case kKey_r:
       gVirtualGL->PolygonGLMode(kFRONT, kFILL);
       gVirtualGL->EnableGL(kCULL_FACE);
       gVirtualGL->SetGLLineWidth(1.f);
-      DrawObjects();
+      invalidate = kTRUE;
       break;
    case kKey_W:
    case kKey_w:
       gVirtualGL->DisableGL(kCULL_FACE);
       gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE);
       gVirtualGL->SetGLLineWidth(1.5f);
-      DrawObjects();
+      invalidate = kTRUE;
       break;
    case kKey_Up:
-      MoveCenter(kKey_Up);
+      invalidate = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 0, 5);
       break;
    case kKey_Down:
-      MoveCenter(kKey_Down);
+      invalidate = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 0, -5);
       break;
    case kKey_Left:
-      MoveCenter(kKey_Left);
+      invalidate = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), -5, 0);
       break;
    case kKey_Right:
-      MoveCenter(kKey_Right);
+      invalidate = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 5, 0);
       break;
    }
 
+   if (invalidate) {
+      Invalidate();
+   }
+   
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
-   if (fPressed) {
-      if (fAction == kRotating) {
-         TPoint pnt(event->fX, event->fY);
-         fArcBall->Drag(pnt);
-      } else if (fAction == kPicking) {
-         TGLWindow *glWin = fCanvasContainer->GetGLWindow();
-         Double_t xshift = (event->fX - fLastPos.fX) / Double_t(glWin->GetWidth());
-         Double_t yshift = (event->fY - fLastPos.fY) / Double_t(glWin->GetHeight());
-         xshift *= fViewVolume[0] * 1.9 * fZoom[fConf];
-         yshift *= fViewVolume[1] * 1.9 * fZoom[fConf];
-
-         if (fConf != kPERSP) {
-            switch (fConf) {
-            case kXOY:
-               fSelectedObj->Shift(xshift, -yshift, 0.);
-               break;
-            case kXOZ:
-               fSelectedObj->Shift(-yshift, 0., xshift);
-               break;
-            case kYOZ:
-               fSelectedObj->Shift(0., -yshift, xshift);
-               break;
-            default:
-               break;
-            }
-         } else {
-            const Double_t *rotM = fArcBall->GetRotMatrix();
-            Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], xshift},
-                                     {rotM[1], -rotM[9], rotM[5], -yshift},
-                                     {rotM[2], -rotM[10], rotM[6], 0.}};
-
-            TToySolver tr(*matrix);
-            Double_t shift[3] = {0.};
-            tr.GetSolution(shift);
-            fSelectedObj->Shift(shift[0], shift[1], shift[2]);
-         }
-
-         fLastPos.fX = event->fX;
-         fLastPos.fY = event->fY;
-      }
-
-      DrawObjects();
+   if (!event) {
+      return kFALSE;
    }
+   
+   Bool_t invalidate = kFALSE;
+   
+   Int_t xDelta = event->fX - fLastPos.fX;
+   Int_t yDelta = event->fY - fLastPos.fY;
+   
+   // Camera interface requires GL coords - Y inverted
+   if (fAction == kRotate) {
+      invalidate = CurrentCamera().Rotate(xDelta, -yDelta);
+   } else if (fAction == kTruck) {
+      invalidate = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
+   } else if (fAction == kDolly) {
+      invalidate = CurrentCamera().Dolly(xDelta);
+   } 
 
+   fLastPos.fX = event->fX;
+   fLastPos.fY = event->fY;
+   
+   if (invalidate) {
+      Invalidate();
+   }
+   
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerExpose(Event_t *)
 {
-   DrawObjects();
+   Invalidate(kHigh);
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::DoSelect(Event_t *event, Bool_t invokeContext)
+{
+   // TODO: Check only the GUI thread ever enters here & DoSelect.
+   // Then TVirtualGL and TGLKernel can be obsoleted.
+   TGLRect selectRect(event->fX, event->fY, 3, 3); // TODO: Constant somewhere
+   gVirtualGL->SelectViewer(this, &selectRect); 
+      
+   // Do this regardless of whether selection actually changed - safe and 
+   // the context menu may need to be invoked anyway
+   TGLPhysicalShape * selected = fScene.GetSelected();
+   if (selected) {
+      fColorEditor->SetRGBA(selected->GetColor());
+      fGeomEditor->SetCenter(selected->BoundingBox().Center().CArr());
+      if (invokeContext) {
+         if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
+         
+         // Defer creating the context menu to the actual object
+         selected->InvokeContextMenu(*fContextMenu, event->fXRoot, event->fYRoot);
+      }
+   } else { // No selection
+      fColorEditor->Disable();
+      fGeomEditor->Disable();
+   }
 }
 
 //______________________________________________________________________________
@@ -527,6 +648,10 @@ void TViewerOpenGL::Show()
 {
    assert(!fBuildingScene);
    MapRaised();
+
+   // Must NOT Invalidate() here as for some reason it throws the win32
+   // GL kernel impl into a blank locked state? Poss related to having an
+   // empty viewer - nothing drawn. TODO: Investigate why....
 }
 
 //______________________________________________________________________________
@@ -537,29 +662,37 @@ void TViewerOpenGL::CloseWindow()
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::DrawObjects()const
+void TViewerOpenGL::DoRedraw()
+{
+   //TGMainFrame::DoRedraw();
+   // TODO: Check only the GUI thread ever enters here, DoSelect() and PrintObjects().
+   // Then TVirtualGL and TGLKernel can be obsoleted and all GL context work done
+   // in GUI thread.
+   gVirtualGL->DrawViewer(this);
+}
+
+//______________________________________________________________________________
+/*void TViewerOpenGL::DrawObjects()const
 {
    assert(!fBuildingScene);
    MakeCurrent();
    gVirtualGL->NewMVGL();
    gVirtualGL->TraverseGraph((TGLRender *)fRender);
    SwapBuffers();
-}
+}*/
 
 //______________________________________________________________________________
-void TViewerOpenGL::PrintObjects() const
+void TViewerOpenGL::PrintObjects()
 {
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
    // graphics files and can be huge and long to generate.
-    MakeCurrent();
-    gVirtualGL->PrintObjects(format, sortgl, fRender, fCanvasContainer->GetGLWindow(),
-                             fRad, fYc, fZc);
-    SwapBuffers();
+    TGLBoundingBox sceneBox = fScene.BoundingBox();
+    gVirtualGL->PrintObjects(format, sortgl, this, fCanvasContainer->GetGLWindow(),
+                             sceneBox.Extents().Mag(), sceneBox.Center().Y(), sceneBox.Center().Z());
 }
 
-
 //______________________________________________________________________________
-void TViewerOpenGL::UpdateRange(const TGLSelection *box)
+/*void TViewerOpenGL::UpdateRange(const TGLSelection *box)
 {
    assert(fBuildingScene);
    const Double_t *X = box->GetRangeX();
@@ -585,7 +718,7 @@ void TViewerOpenGL::UpdateRange(const TGLSelection *box)
       fRangeZ.first = Z[0];
    if (fRangeZ.second < Z[1])
       fRangeZ.second = Z[1];
-}
+}*/
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -612,56 +745,36 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          }
          case kGLPrintEPS_SIMPLE:
             format = GL2PS_EPS;
-	    sortgl = GL2PS_SIMPLE_SORT;
+	         sortgl = GL2PS_SIMPLE_SORT;
             PrintObjects();
             break;
          case kGLPrintEPS_BSP:
             format = GL2PS_EPS;
-	    sortgl = GL2PS_BSP_SORT;
+	         sortgl = GL2PS_BSP_SORT;
             PrintObjects();
             break;
          case kGLPrintPDF_SIMPLE:
             format = GL2PS_PDF;
-	    sortgl = GL2PS_SIMPLE_SORT;
+	         sortgl = GL2PS_SIMPLE_SORT;
             PrintObjects();
             break;
          case kGLPrintPDF_BSP:
             format = GL2PS_PDF;
-	    sortgl = GL2PS_BSP_SORT;
+	         sortgl = GL2PS_BSP_SORT;
             PrintObjects();
             break;
-         case kGLXOY:
-            if (fConf != kXOY) {
-            //set active camera
-               fConf = kXOY;
-               fRender->SetActive(fConf);
-               DrawObjects();
-            }
+            case kGLXOY:
+            SetCurrentCamera(kXOY);
             break;
          case kGLXOZ:
-            if (fConf != kXOZ) {
-            //set active camera
-               fConf = kXOZ;
-               fRender->SetActive(fConf);
-               DrawObjects();
-            }
+            SetCurrentCamera(kXOZ);
             break;
          case kGLYOZ:
-            if (fConf != kYOZ) {
-            //set active camera
-               fConf = kYOZ;
-               fRender->SetActive(fConf);
-               DrawObjects();
-            }
+            SetCurrentCamera(kYOZ);
             break;
-         case kGLPersp:
-            if (fConf != kPERSP) {
-            //set active camera
-               fConf = kPERSP;
-               fRender->SetActive(fConf);
-               DrawObjects();
-            }
-            break;
+        case kGLPersp:
+           SetCurrentCamera(kPerspective);
+           break;
          case kGLExit:
             CloseWindow();
             break;
@@ -679,26 +792,26 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 }
 
 //______________________________________________________________________________
-TGLSceneObject *TViewerOpenGL::TestSelection(Event_t *event)
+/*TGLSceneObject *TViewerOpenGL::TestSelection(Event_t *event)
 {
    MakeCurrent();
    TGLSceneObject *obj = gVirtualGL->SelectObject(fRender, event->fX, event->fY, fConf);
    SwapBuffers();
 
    return obj;
-}
+}*/
 
 //______________________________________________________________________________
-void TViewerOpenGL::CalculateViewports()
+/*void TViewerOpenGL::CalculateViewports()
 {
    fActiveViewport[0] = 0;
    fActiveViewport[1] = 0;
    fActiveViewport[2] = fCanvasWindow->GetWidth();
    fActiveViewport[3] = fCanvasWindow->GetHeight();
-}
+}*/
 
 //______________________________________________________________________________
-void TViewerOpenGL::CalculateViewvolumes()
+/*void TViewerOpenGL::CalculateViewvolumes()
 {
    if (fRender->GetSize()) {
       Double_t xdiff = fRangeX.second - fRangeX.first;
@@ -721,10 +834,10 @@ void TViewerOpenGL::CalculateViewvolumes()
       fViewVolume[3] = 3 * max;
       fRad = max * 1.7;
    }
-}
+}*/
 
 //______________________________________________________________________________
-void TViewerOpenGL::CreateCameras()
+/*void TViewerOpenGL::CreateCameras()
 {
    if (!fRender->GetSize())
       return;
@@ -743,39 +856,40 @@ void TViewerOpenGL::CreateCameras()
    fRender->AddNewCamera(fCamera[kXOZ]);
    fRender->AddNewCamera(fCamera[kYOZ]);
    fRender->AddNewCamera(fCamera[kPERSP]);
-}
+}*/
 
 //______________________________________________________________________________
 void TViewerOpenGL::ModifyScene(Int_t wid)
 {
+   // TODO: Re-enable these bits
    MakeCurrent();
    switch (wid) {
    case kTBa:
-      fSelectedObj->SetColor(fColorEditor->GetRGBA());
+      fScene.GetSelected()->SetColor(fColorEditor->GetRGBA());
       break;
    case kTBaf:
-      fRender->SetFamilyColor(fColorEditor->GetRGBA());
+      //fRender->SetFamilyColor(fColorEditor->GetRGBA());
       break;
    case kTBa1:
       {
          Double_t c[3] = {0.};
          Double_t s[] = {1., 1., 1.};
          fGeomEditor->GetObjectData(c, s);
-         fSelectedObj->Stretch(s[0], s[1], s[2]);
-         fSelectedObj->Shift(c[0], c[1], c[2]);
+         //fSelectedObj->Stretch(s[0], s[1], s[2]);
+         //fSelectedObj->Shift(c[0], c[1], c[2]);
       }
       break;
    case kTBda:
-      fRender->ResetAxes();
+      //fRender->ResetAxes();
       break;
    case kTBcp:
-      if (fRender->ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
-      else gVirtualGL->DisableGL(kCLIP_PLANE0);
+      //if (fRender->ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
+      //else gVirtualGL->DisableGL(kCLIP_PLANE0);
    case kTBcpm:
       {
-         Double_t eqn[4] = {0.};
-         fSceneEditor->GetPlaneEqn(eqn);
-         fRender->SetPlane(eqn);
+         //Double_t eqn[4] = {0.};
+         //fSceneEditor->GetPlaneEqn(eqn);
+         //fRender->SetPlane(eqn);
       }
    case kTBTop:
       if ((fLightMask ^= 1) & 1) gVirtualGL->EnableGL(kLIGHT4);
@@ -799,11 +913,11 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       break;
    }
 
-   DrawObjects();
+   Invalidate();
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::MoveCenter(Int_t key)
+/*void TViewerOpenGL::MoveCenter(Int_t key)
 {
    fRender->SetNeedFrustum();
    Double_t shift[3] = {0.};
@@ -836,122 +950,233 @@ void TViewerOpenGL::MoveCenter(Int_t key)
    fZc += shift[2];
 
    DrawObjects();
-}
+}*/
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::PreferLocalFrame() const
 {
-   // Not at present - but in the future....
-   return kFALSE;
+   return kTRUE;
 }
 
+//______________________________________________________________________________
 void TViewerOpenGL::BeginScene()
 {
+   TGLUtil::CheckError();
+
    // Scene builds can't be nested
    if (fBuildingScene) {
       assert(kFALSE);
       return;
    }
    
-   // Clear any existing scene contents
-   fRender->RemoveAllObjects();
-   fNbShapes = 0;
+   if (!fInternalRebuild) {
+      CurrentCamera().ResetInterest();
+      fScene.DestroyAllPhysicals();
+   }
+      
    fBuildingScene = kTRUE;
+
+   TGLUtil::CheckError();
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::EndScene()
 {
-   assert(fBuildingScene);
-  
-   // Only do this once
-   // TODO: Will all be cleaned up later 
-   if (fFirstScene) {
-      CalculateViewvolumes();
-   
-      // Calculate light sources positions
-      Double_t xdiff = fRangeX.second - fRangeX.first;
-      Double_t ydiff = fRangeY.second - fRangeY.first;
-      Double_t zdiff = fRangeZ.second - fRangeZ.first;
-   
-      fXc = fRangeX.first + xdiff / 2;
-      fYc = fRangeY.first + ydiff / 2;
-      fZc = fRangeZ.first + zdiff / 2;
-      fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
-   
-      Float_t pos1[] = {0., fRad + fYc, -fRad - fZc, 1.f};
-      Float_t pos2[] = {fRad + fXc, 0.f, -fRad - fZc, 1.f};
-      Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
-      Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
-      Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
-   
-      Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
-   
-      MakeCurrent();
-      gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos1);
-      gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
-      gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos2);
-      gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
-      gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos3);
-      gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
-      gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos4);
-      gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
-      gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos5);
-      gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
-   
-      if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
-      if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
-      if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
-      if (fLightMask & 8) gVirtualGL->EnableGL(kLIGHT3);
-      if (fLightMask & 16) gVirtualGL->EnableGL(kLIGHT0);
-   
-      MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
-      SetWMPosition(fgInitX, fgInitY);
-      CreateCameras();
-      fRender->SetActive(kPERSP);
-      fFirstScene = kFALSE;
-   }
-   
-   fBuildingScene = kFALSE;
+   TGLUtil::CheckError();
 
-   DrawObjects();
+   assert(fBuildingScene);
+   fBuildingScene = kFALSE;
+  
+   if (!fInternalRebuild && !fScene.BoundingBox().IsEmpty()) {
+      SetupCameras(fScene.BoundingBox());
+   } else {
+      fInternalRebuild = kFALSE;
+   }      
+    
+   Invalidate();
+   
+   TGLUtil::CheckError();
+}
+
+//______________________________________________________________________________
+void TViewerOpenGL::RebuildScene()
+{   
+   fInternalRebuild = kTRUE;
+   
+   // Destroy physicals no longer of interest to current camera
+   // TODO: Only do this if above a certain number of physicals (or mem size)
+   // otherwise why not just keep them all?
+   //fScene.DestroyPhysicals(CurrentCamera());
+   fScene.DestroyAllPhysicals();
+   fNextPhysicalID = 1;
+      
+   // TODO: Just marking modified doesn't seem to result in pad repaint - need to check on
+   //fPad->Modified();
+   fPad->Paint();
 }
 
 //______________________________________________________________________________
 Int_t TViewerOpenGL::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   return AddObject(fNbShapes, buffer, addChildren);
+   Int_t sections = AddObject(fNextPhysicalID, buffer, addChildren);   
+   return sections;
 }
 
 //______________________________________________________________________________
-Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
+// TODO: Cleanup addChildren to UInt_t flag for full termination - how returned?
+Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
+   if (addChildren) {
+      *addChildren = kFALSE;
+   }
+   
+   // 0 reserved for detecting re-entry
+   assert(physicalID != 0);
+   
    // Currently we protect against add objects being added outside a scene build 
    // as there are problems with mutliple 3D viewers on pad
    if (!fBuildingScene) {
        return TBuffer3D::kNone;
    }
-   // Check buffer sections for valid state and request extra filling if required.
 
+   // Note that 'object' here is really a physical/logical pair described
+   // in buffer + physical ID.
+
+   // If adding component to a current partial composite do this now
+   if (fComposite) {
+      RootCsg::BaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
+      // Solaris CC can't create stl pair with enumerate type
+      fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
+      return TBuffer3D::kNone;
+   }
+
+   // TODO: Could be static and save possible double lookup?
+   TGLLogicalShape * logical = fScene.FindLogical(reinterpret_cast<UInt_t>(buffer.fID));
+   TGLPhysicalShape * physical = fScene.FindPhysical(physicalID);
+
+   // Function can be called twice if extra buffer filling for logical 
+   // is required. TODO: Could mess up as rebuild scene starting with last used physical...
+   static UInt_t lastPhysicalID = 0;
+
+   // First attempt to add this object
+   if (physicalID != lastPhysicalID) {
+      
+      // If we already have physical we do not need this object
+      if (physical) {
+         assert(logical); // Have physical - should have logical
+         
+         // We still check child interest as we may have reject children previously
+         // with a different camera configuration
+         if (addChildren) {
+            *addChildren = CurrentCamera().OfInterest(physical->BoundingBox());
+         }
+         
+         // Either way we don't need anything more for this object
+         return TBuffer3D::kNone; 
+      }
+      // New physical 
+      else {
+         // First test interest in camera - requires a bounding box
+         TGLBoundingBox box;
+         
+         // If already have logical use it's BB
+         if (logical) {
+            box = logical->BoundingBox();
+         }
+         // else if bounding box in buffer valid use this
+         else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
+            box.Set(buffer.fBBVertex);
+         // otherwise we need to use raw points to build a bounding box with
+         // If raw sections not set it will be requested by ValidateObjectBuffer
+         // below and we will re-enter here
+         } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
+            box.SetAligned(buffer.NbPnts(), buffer.fPnts);
+         }
+      
+         // Box is valid?
+         if (!box.IsEmpty()) {
+            // Test transformed box with camera
+            box.Transform(TGLMatrix(buffer.fLocalMaster));
+            Bool_t ofInterest = CurrentCamera().OfInterest(box);
+            if (addChildren) {
+               *addChildren = ofInterest;
+            }            
+            if (!ofInterest) {
+               return TBuffer3D::kNone;
+            } 
+         }
+      }
+
+      // Need any extra sections in buffer?
+      Int_t extraSections = ValidateObjectBuffer(buffer, 
+                                                 logical == 0); // Need logical?
+      if (extraSections != TBuffer3D::kNone) {         
+         return extraSections;
+      } else {
+         lastPhysicalID = physicalID;
+      }  
+   }
+
+   assert(lastPhysicalID == physicalID);
+   
+   // By now we should need to add a physical at least
+   if (physical) {
+      assert(kFALSE);
+      return TBuffer3D::kNone; 
+   }
+
+   // Create logical if required
+   if (!logical) {
+      assert(ValidateObjectBuffer(buffer,true) == TBuffer3D::kNone); // Buffer should be ready
+      logical = CreateNewLogical(buffer);
+      if (!logical) { 
+         assert(kFALSE);
+         return TBuffer3D::kNone;
+      }
+      // Add logical to scene
+      fScene.AdoptLogical(*logical);
+   }
+
+   // Finally create the physical, binding it to the logical, and add to scene
+   physical = CreateNewPhysical(physicalID, buffer, *logical);
+   fNextPhysicalID++;
+   
+   if (physical) { 
+      fScene.AdoptPhysical(*physical);
+   } else {
+      assert(kFALSE);
+   }
+
+   lastPhysicalID = 0;
+   return TBuffer3D::kNone;
+}
+
+//______________________________________________________________________________
+Int_t TViewerOpenGL::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t logical) const
+{
    // kCore: Should always be filled
    if (!buffer.SectionsValid(TBuffer3D::kCore)) {
       assert(kFALSE);
       return TBuffer3D::kNone;
    }
 
-   // kBoundingBox / kShapeSpecific: Currently we expect producer to 
-   // fill these if they can automatically - no need to ask. 
+   // Currently all physical parts (kBoundingBox / kShapeSpecific) of buffer are 
+   // filled automatically if producer can - no need to ask 
+   if (!logical) {
+      return TBuffer3D::kNone;
+   }
 
    // kRawSizes / kRaw: These are on demand based on shape type
    Bool_t needRaw = kFALSE;
 
    // We need raw tesselation in these cases:
    //
-   // 1. Shape type is NOT kSphere / kTube / kTubeSeg / kCutTube
+   // 1. Shape type is NOT kSphere / kTube / kTubeSeg / kCutTube / kComposite
    if (buffer.Type() != TBuffer3DTypes::kSphere  &&
        buffer.Type() != TBuffer3DTypes::kTube    &&
        buffer.Type() != TBuffer3DTypes::kTubeSeg &&
-       buffer.Type() != TBuffer3DTypes::kCutTube) {
+       buffer.Type() != TBuffer3DTypes::kCutTube && 
+       buffer.Type() != TBuffer3DTypes::kComposite) {
       needRaw = kTRUE;
    }
    // 2. Sphere type is kSPHE, but the sphere is hollow and/or cut - we
@@ -967,67 +1192,50 @@ Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t
          return TBuffer3D::kNone;
       }
    }
-   // 3. kBoundingBox/kShapeSpecific were not filled for some reason
-   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific)) {
+   // 3. kBoundingBox is not filled - we generate a bounding box from 
+   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
       needRaw = kTRUE;
    }
-   // 4. We are inside a composite shape addition
-   else if (fInsideComposite) {
+   // 3. kShapeSpecific is not filled - except in case of top level composite 
+   else if (!buffer.SectionsValid(TBuffer3D::kShapeSpecific) && 
+             buffer.Type() != TBuffer3DTypes::kComposite) {
+      needRaw = kTRUE;
+   }
+   // 5. We are a component (not the top level) of a composite shape
+   else if (fComposite) {
       needRaw = kTRUE;
    }
 
    if (needRaw && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
       return TBuffer3D::kRawSizes|TBuffer3D::kRaw;
+   } else {
+      return TBuffer3D::kNone;
    }
- 
-   // The buffer is now validated and ready to actually add
-   AddValidatedObject(placedID, buffer, addChildren);
-   return TBuffer3D::kNone;
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
+TGLLogicalShape * TViewerOpenGL::CreateNewLogical(const TBuffer3D & buffer) const
 {
-   if (fInsideComposite) {
-      RootCsg::BaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
-      // Solaris CC can't create stl pair with enumerate type
-      fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
-      return;
-   }
+   // Buffer should now be correctly filled
+   assert(ValidateObjectBuffer(buffer,true) == TBuffer3D::kNone);
 
-   // Accept any children producer is willing to pass at present
-   if (addChildren) {
-      *addChildren = kTRUE;
-   }
-
-   // TODO: Cleanup color parts
-   Int_t colorIndex = buffer.fColor;
-   if (colorIndex <= 1) colorIndex = 42; //temporary
-
-   Float_t colorRGB[3] = {0.f};
-   TColor *rcol = gROOT->GetColor(colorIndex);
-
-   if (rcol) {
-      rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
-   }
-
-   TGLSceneObject *addObj = 0;
+   TGLLogicalShape * newLogical = 0;
 
    switch (buffer.Type()) {
    case TBuffer3DTypes::kLine:
-      addObj = new TGLPolyLine(buffer, colorRGB, placedID, buffer.fID);
+      newLogical = new TGLPolyLine(buffer, buffer.fID);
       break;
    case TBuffer3DTypes::kMarker:
-      addObj = new TGLPolyMarker(buffer, colorRGB, placedID, buffer.fID);
+      newLogical = new TGLPolyMarker(buffer, buffer.fID);
       break;
    case TBuffer3DTypes::kSphere: {
       const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
       if (sphereBuffer) {
          // We can only draw solid uncut spheres natively at present
          if (sphereBuffer->IsSolidUncut()) {
-            addObj = new TGLSphere(*sphereBuffer, colorRGB, placedID, buffer.fID);
+            newLogical = new TGLSphere(*sphereBuffer, sphereBuffer->fID);
          } else {
-            addObj = new TGLFaceSet(buffer, colorRGB, placedID, buffer.fID);
+            newLogical = new TGLFaceSet(buffer, buffer.fID);
          }
       }
       else {
@@ -1041,83 +1249,96 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
       const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
       if (tubeBuffer)
       {
-         addObj = new TGLCylinder(*tubeBuffer, colorRGB, placedID, buffer.fID);
+         newLogical = new TGLCylinder(*tubeBuffer, tubeBuffer->fID);
       }
       else {
          assert(kFALSE);
       }
       break;
    }
+   case TBuffer3DTypes::kComposite: {
+      // Create empty faceset and record partial complete composite object
+      // Will be populated with mesh in CloseComposite()
+      assert(!fComposite);
+      fComposite = new TGLFaceSet(buffer, buffer.fID);
+      newLogical = fComposite;
+      break;
+   }
    default:
-      addObj = new TGLFaceSet(buffer, colorRGB, placedID, buffer.fID);
+      newLogical = new TGLFaceSet(buffer, buffer.fID);
       break;
    }
 
-   if (addObj)
-   {
-      UpdateRange(addObj->GetBBox());
-      fRender->AddNewObject(addObj);
-      fNbShapes++;
-   }
-   else
-   {
-      assert(kFALSE);
-   }
+   return newLogical;
 }
 
-void TViewerOpenGL::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
+//______________________________________________________________________________
+TGLPhysicalShape * TViewerOpenGL::CreateNewPhysical(UInt_t ID, 
+                                                    const TBuffer3D & buffer, 
+                                                    const TGLLogicalShape & logical) const
 {
-   if (addChildren) {
-      *addChildren = kTRUE;
+   TGLPhysicalShape * newPhysical = new TGLPhysicalShape(ID, logical, buffer.fLocalMaster, buffer.fReflection);
+   if (newPhysical) {
+      // Extract indexed color from buffer
+      // TODO: Still required? Better use proper color triplet in buffer?
+      Int_t colorIndex = buffer.fColor;
+      if (colorIndex <= 1) colorIndex = 42; //temporary
+      Float_t rgba[4] = { 0.0 };
+      TColor *rcol = gROOT->GetColor(colorIndex);
+
+      if (rcol) {
+         rcol->GetRGB(rgba[0], rgba[1], rgba[2]);
+      }
+      
+      // Extract transparency component - convert to opacity (alpha)
+      rgba[3] = 1.f - buffer.fTransparency / 100.f;
+
+      // Setup the colors on new physical
+      newPhysical->SetColor(rgba);
    }
-
-   fInsideComposite = kTRUE;
-
-   // TODO: Cleanup color parts
-   Int_t colorIndex = buffer.fColor;
-   if (colorIndex <= 1) colorIndex = 42; //temporary
-
-   Float_t colorRGB[3] = {0.f};
-   TColor *rcol = gROOT->GetColor(colorIndex);
-
-   if (rcol) {
-      rcol->GetRGB(colorRGB[0], colorRGB[1], colorRGB[2]);
-   }
-
-   // These values need to be retained until composite creation in
-   // CloseComposite()
-   fNewComposite.fColor[0] = colorRGB[0];
-   fNewComposite.fColor[1] = colorRGB[1];
-   fNewComposite.fColor[2] = colorRGB[2];
-   fNewComposite.fTrans = buffer.fTransparency;
-   fNewComposite.fRealObject = buffer.fID;
+   return newPhysical;
 }
 
+//______________________________________________________________________________
+Bool_t TViewerOpenGL::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
+{
+   assert(!fComposite);
+   UInt_t extraSections = AddObject(buffer, addChildren);
+   assert(extraSections == TBuffer3D::kNone);
+   
+   // If composite was created it is of interest - we want the rest of the
+   // child components   
+   if (fComposite) {
+      return kTRUE;
+   } else {
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
 void TViewerOpenGL::CloseComposite()
 {
-   fInsideComposite = kFALSE;
-   fCSLevel = 0;
+   // If we have a partially complete composite build it now
+   if (fComposite) {
+      // TODO: Why is this member and here - only used in BuildComposite()
+      fCSLevel = 0;
 
-   assert(fNewComposite.fRealObject);
-   RootCsg::BaseMesh *resultMesh = BuildComposite();
-   TGLFaceSet *addObj = new TGLFaceSet(resultMesh, fNewComposite.fColor, fNewComposite.fTrans, fNbShapes++, 
-                                       fNewComposite.fRealObject);
-
-   UpdateRange(addObj->GetBBox());
-   fRender->AddNewObject(addObj);
-
-   delete resultMesh;
-   for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
-   fCSTokens.clear();
-
-   fNewComposite.fRealObject = 0;
+      RootCsg::BaseMesh *resultMesh = BuildComposite();
+      fComposite->SetFromMesh(resultMesh);
+      delete resultMesh;
+      for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
+      fCSTokens.clear();
+      fComposite = 0;
+   }
 }
 
+//______________________________________________________________________________
 void TViewerOpenGL::AddCompositeOp(UInt_t operation)
 {
    fCSTokens.push_back(std::make_pair(operation, (RootCsg::BaseMesh *)0));
 }
 
+//______________________________________________________________________________
 RootCsg::BaseMesh *TViewerOpenGL::BuildComposite()
 {
    const CSPART_t &currToken = fCSTokens[fCSLevel];
