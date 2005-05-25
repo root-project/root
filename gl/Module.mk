@@ -21,16 +21,17 @@ GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GLS1         := $(wildcard $(MODDIRS)/*.c)
 
-
 # Excluded from win32 builds
 ifeq ($(ARCH),win32)
 GLS          := $(filter-out $(MODDIRS)/TX11GL.cxx, $(GLS))
 GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
 
-# Excluded from CINT
-GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h $(MODDIRI)/TGLKernel.h $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TRootGLU.h $(MODDIRI)/TRootGLX.h
-# CINT
+# Excluded from rootcint
+GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h $(MODDIRI)/TGLKernel.h \
+                $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TRootGLU.h \
+                $(MODDIRI)/TRootGLX.h
+# Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifneq ($(OPENGLLIB),)
