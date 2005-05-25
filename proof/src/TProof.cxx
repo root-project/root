@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.87 2005/05/03 13:13:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.88 2005/05/18 12:31:09 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -341,18 +341,13 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fSecContext     = 0;
    fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
+   delete u;
 
    fPlayer   = MakePlayer();
    fFeedback = new TList;
    fFeedback->SetOwner();
    fFeedback->SetName("FeedbackList");
    AddInput(fFeedback);
-
-   delete u;
-
-   // global logging
-   gProofDebugLevel = fLogLevel;
-   gProofDebugMask  = TProofDebug::kAll;
 
    // sort slaves by descending performance index
    fSlaves           = new TSortedList(kSortDescending);
@@ -3886,8 +3881,7 @@ Int_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *opt
 
    if (!IsValid()) return -1;
 
-   if (!GetPlayer())
-      SetPlayer(new TProofPlayerSuperMaster(this));
+   Assert(GetPlayer());
 
    if (GetProgressDialog())
       GetProgressDialog()->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
