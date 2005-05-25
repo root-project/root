@@ -162,6 +162,7 @@ TGraph2D::TGraph2D()
    fMaxIter   = 100000;
    fPainter   = 0;
    fFunctions = new TList;
+   kUserHisto = kFALSE;
 }
 
 
@@ -413,6 +414,7 @@ void TGraph2D::Build(Int_t n)
    fMaxIter   = 100000;
    fFunctions = new TList;
    fPainter   = 0;
+   kUserHisto = kFALSE;
 
    Bool_t add = TH1::AddDirectoryStatus();
    if (add && gDirectory) {
@@ -982,29 +984,40 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
 
    if (fHistogram) {
       if (!empty && fHistogram->GetEntries()==0) {
-         delete fHistogram; fHistogram = 0;
+         if (!kUserHisto) {
+            delete fHistogram;
+            fHistogram = 0;
+         }
       } else {
          return fHistogram;
       }
    }
 
-   Double_t xmax  = GetXmax();
-   Double_t ymax  = GetYmax();
-   Double_t xmin  = GetXmin();
-   Double_t ymin  = GetYmin();
-   Double_t hxmax = xmax+fMargin*(xmax-xmin);
-   Double_t hymax = ymax+fMargin*(ymax-ymin);
-   Double_t hxmin = xmin-fMargin*(xmax-xmin);
-   Double_t hymin = ymin-fMargin*(ymax-ymin);
+   Double_t hxmax, hymax, hxmin, hymin;
 
-   // Book fHistogram. It is not added in the current directory
-   Bool_t add = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fHistogram = new TH2D(GetName(),GetTitle(),
-                         fNpx ,hxmin, hxmax,
-                         fNpy, hymin, hymax);
-   TH1::AddDirectory(add);
-   fHistogram->SetBit(TH1::kNoStats);
+   // Book fHistogram if needed. It is not added in the current directory
+   if (!kUserHisto) {
+      Bool_t add = TH1::AddDirectoryStatus();
+      TH1::AddDirectory(kFALSE);
+      Double_t xmax  = GetXmax();
+      Double_t ymax  = GetYmax();
+      Double_t xmin  = GetXmin();
+      Double_t ymin  = GetYmin();
+      hxmin = xmin-fMargin*(xmax-xmin);
+      hymin = ymin-fMargin*(ymax-ymin);
+      hxmax = xmax+fMargin*(xmax-xmin);
+      hymax = ymax+fMargin*(ymax-ymin);
+      fHistogram = new TH2D(GetName(),GetTitle(),
+                            fNpx ,hxmin, hxmax,
+                            fNpy, hymin, hymax);
+      TH1::AddDirectory(add);
+      fHistogram->SetBit(TH1::kNoStats);
+   } else {
+      hxmin = fHistogram->GetXaxis()->GetXmin();
+      hymin = fHistogram->GetYaxis()->GetXmin();
+      hxmax = fHistogram->GetXaxis()->GetXmax();
+      hymax = fHistogram->GetYaxis()->GetXmax();
+   }
 
    // Add a TGraphDelaunay in the list of the fHistogram's functions
    TGraphDelaunay *dt = new TGraphDelaunay(this);
@@ -1356,6 +1369,18 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 
 
 //______________________________________________________________________________
+void TGraph2D::SetHistogram(TH2 *h)
+{
+   // Sets the histogram to be filled
+	                                                                                   
+   kUserHisto = kTRUE;
+   fHistogram = (TH2D*)h;
+   fNpx       = h->GetNbinsX();
+   fNpy       = h->GetNbinsY();
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::SetMargin(Double_t m)
 {
    // Sets the extra space (in %) around interpolated area for the 2D histogram
@@ -1420,7 +1445,7 @@ void TGraph2D::SetNpx(Int_t npx)
       fNpx = 4;
    } else if(npx > 500) {
       Warning("SetNpx","Number of points must be >4 && < 500, fNpx set to 500");
-      fNpx = 100000;
+      fNpx = 500;
    } else {
       fNpx = npx;
    }
@@ -1438,7 +1463,7 @@ void TGraph2D::SetNpy(Int_t npy)
       fNpy = 4;
    } else if(npy > 500) {
       Warning("SetNpy","Number of points must be >4 && < 500, fNpy set to 500");
-      fNpy = 100000;
+      fNpy = 500;
    } else {
       fNpy = npy;
    }

@@ -63,6 +63,10 @@ protected:
    
    void     Build(Int_t n);
 
+private:
+
+   Bool_t      kUserHisto;   // True when SetHistogram has been called
+
 public:
 
    TGraph2D();
@@ -115,6 +119,7 @@ public:
    Int_t            RemovePoint(Int_t ipoint); // *MENU*
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetDirectory(TDirectory *dir);
+   virtual void     SetHistogram(TH2 *h);
    void             SetMargin(Double_t m=0.1); // *MENU*
    void             SetMarginBinsContent(Double_t z=0.); // *MENU*
    void             SetMaximum(Double_t maximum=-1111); // *MENU*
