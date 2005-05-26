@@ -46,12 +46,14 @@ for d in * ; do
 	pyroot)     lib=root-plugin-python  ; dev=$lib       ; bin=$lib ;;  
 	rfio)       lib=root-plugin-castor  ; dev=$lib       ; bin=$lib ;;  
 	cint)       lib=root-cint; dev=$lib ; bin=$lib 
-	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
+	    	    extra="ALLLIBS=/usr/lib/root/libCint.so" ;;  	
 	srputils)   lib=root-plugin-srp     ; dev=$lib       ; bin=$lib ;;  
 	xmlparser)  lib=root-plugin-xml     ; dev=$lib       ; bin=$lib ;;
 	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
-	rootd|proofd|xrootd) 
+	rootd|proofd) 
 	    	    lib=root-$d             ; dev=$lib       ; bin=$lib ;;
+	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib 
+	    	    extra="ALLLIBS= NOVERS=1" ;;  	
 	build|freetype|win*|main) continue ;; 			
 	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
     esac 
@@ -60,6 +62,7 @@ for d in * ; do
     # Update package list for based on the Module.mk in thie currenly
     # investiaged directory 
     #
+    echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
     build/package/lib/makelist DIRS=$d DEV=$dev LIB=$lib BIN=$bin  \
 	VERSION=$version PREFIX=$prefix OUT=$outdir $extra  \
 	--no-print-directory all

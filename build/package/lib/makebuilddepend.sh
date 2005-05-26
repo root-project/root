@@ -11,7 +11,7 @@ if test "x$1" = "xrpm" ; then
 	    root-cint)							;;
 	    root-doc)							;;
 	    *alien)	echo -n ", AliEn-Client" 			;;
-#	    *asimage)	echo -n ", AfterStep-devel"			;;
+	    *asimage)	echo -n ", AfterStep-devel"			;;
 	    *asimage)							;;
 	    *castor)	echo -n ", CASTOR-client"			;;
 	    *chirp)							;;

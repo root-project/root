@@ -24,8 +24,12 @@ endif
 all:	liblist devlist binlist
 
 ifneq ($(LIB),)
+ifneq ($(NOVERS),1)
 PKGLIBS	:= $(ALLLIBS) $(ALLLIBS:%.so=%.so.$(MAJOR)) \
 	   $(ALLLIBS:%.so=%.so.$(MAJOR).$(MINOR))
+else 
+PKGLIBS	:= $(ALLLIBS) 
+endif 
 liblist:
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(LIB).install
 else
