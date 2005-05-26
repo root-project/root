@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:  $:$Id: TProofPEAC.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/peac:$Name:  $:$Id: TProofPEAC.cxx,v 1.2 2005/02/08 22:40:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -191,7 +191,7 @@ Bool_t TProofPEAC::StartSlaves()
       fHeartbeatTimer->Connect("Timeout()", "TProofPEAC", this, "SendHeartbeat()");
       fHeartbeatTimer->Start(fHBPeriod*1000, kFALSE);
    } else {
-      return TProof::StartSlaves();
+      return TProof::StartSlaves(kTRUE);
    }
 
    return kTRUE;
