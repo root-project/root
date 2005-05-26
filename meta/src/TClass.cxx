@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.165 2005/03/20 19:35:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.166 2005/05/23 17:00:27 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2273,8 +2273,8 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    G__CallFunc func;
    void *address;
    long  offset;
-   char  dtor[512];
-   sprintf(dtor, "~%s", GetName());
+   TString dtor("~");
+   dtor += fClassInfo->Name(); // Use just the name (as opposed to the fully qualified name).
    R__LOCKGUARD(gCINTMutex);
    func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset));
    address = (void*)((long)obj + offset);
