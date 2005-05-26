@@ -76,6 +76,7 @@ public:
       }
    }
 
+// getters
    Char_t   GetChar()   { return fChar; }
    UChar_t  GetUChar()  { return fUChar; }
    Short_t  GetShort()  { return fShort; }
@@ -104,6 +105,18 @@ public:
    Float_t*  GetFloatArray2()  { return fFloatArray2; }
    Double_t* GetDoubleArray()  { return fDoubleArray; }
    Double_t* GetDoubleArray2() { return fDoubleArray2; }
+
+// setters
+   void SetChar( Char_t c )      { fChar   = c;  }
+   void SetUChar( UChar_t uc )   { fUChar  = uc; }
+   void SetShort( Short_t s )    { fShort  = s;  }
+   void SetUShort( UShort_t us ) { fUShort = us; }
+   void SetInt( Int_t i )        { fInt    = i;  }
+   void SetUInt( UInt_t ui )     { fUInt   = ui; }
+   void SetLong( Long_t l )      { fLong   = l;  }
+   void SetULong( ULong_t ul )   { fULong  = ul; }
+   void SetFloat( Float_t f )    { fFloat  = f;  }
+   void SetDouble( Double_t d )  { fDouble = d;  }
 
 public:
 // basic types

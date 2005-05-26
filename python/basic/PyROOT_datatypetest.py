@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 05/23/05
+# Last: 05/26/05
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -82,24 +82,26 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
       c = ClassWithData()
 
     # char types
-      c.fChar = 'b'
-      self.assertEqual( c.GetChar(),  'b' )
-      c.fUChar = 'd'
-      self.assertEqual( c.GetUChar(), 'd' )
+      c.fChar = 'b';     self.assertEqual( c.GetChar(),  'b' )
+      c.SetChar( 'c' );  self.assertEqual( c.fChar,      'c' )
+      c.fUChar = 'd';    self.assertEqual( c.GetUChar(), 'd' )
+      c.SetUChar( 'e' ); self.assertEqual( c.fUChar,     'e' )
 
     # integer types
       names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong' ]
       for i in range(len(names)):
          exec 'c.f%s = %d' % (names[i],i)
-
-      for j in range(len(names)):
          self.assertEqual( eval( 'c.Get%s()' % names[i] ), i )
 
+      for i in range(len(names)):
+         exec 'c.Set%s = %d' % (names[i],2*i)
+         self.assertEqual( eval( 'c.f%s' % names[i] ), i )
+
     # float types
-      c.fFloat = 0.123
-      self.assertEqual( round( c.GetFloat()  - 0.123, 5 ), 0 )
-      c.fDouble = 0.456
-      self.assertEqual( round( c.GetDouble() - 0.456, 8 ), 0 )
+      c.fFloat = 0.123;     self.assertEqual( round( c.GetFloat()  - 0.123, 5 ), 0 )
+      c.SetFloat( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
+      c.fDouble = 0.456;    self.assertEqual( round( c.GetDouble() - 0.456, 8 ), 0 )
+      c.SetDouble( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
 
     # arrays; there will be pointer copies, so destroy the current ones
       c.DestroyArrays()
