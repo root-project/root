@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.33 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.34 2005/05/26 12:54:56 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -378,8 +378,8 @@ void TGeoNodeCache::CleanCache()
    fCountLimit = Int_t(fGeoCacheUsageRatio*(Double_t)fCount);
    // save level and node branch
    Int_t level = fLevel;
-   Int_t branch[fGeoCacheMaxLevels]; //should be the same as fGeoCacheMaxLevels
-   Bool_t flags[fGeoCacheMaxLevels];
+   Int_t *branch = new Int_t[fGeoCacheMaxLevels];
+   Bool_t *flags = new Bool_t[fGeoCacheMaxLevels];
    memcpy(&branch[0], fBranch, fGeoCacheMaxLevels*sizeof(Int_t));
    // mark all nodes in the current branch as not-dumpable
    Int_t i;
@@ -409,6 +409,8 @@ void TGeoNodeCache::CleanCache()
    fCurrentIndex = Index(fCurrentNode);
 //   Compact();
    Status();
+   delete [] branch;
+   delete [] flags;
 }
 
 //_____________________________________________________________________________
