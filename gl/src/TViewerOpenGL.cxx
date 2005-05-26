@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.55 2005/04/06 09:43:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.57 2005/05/25 14:25:17 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -31,7 +31,6 @@
 #include "TGLSceneObject.h"
 #include "TGLRenderArea.h"
 #include "TGLEditor.h"
-//#include "TGLRender.h"
 #include "TGLCamera.h"
 //#include "TArcBall.h"
 
@@ -45,8 +44,6 @@
 #include "TObject.h"
 
 #include "gl2ps.h"
-
-#include "Riostream.h" // TODO: Remove
 
 #include <assert.h>
 
@@ -672,16 +669,6 @@ void TViewerOpenGL::DoRedraw()
 }
 
 //______________________________________________________________________________
-/*void TViewerOpenGL::DrawObjects()const
-{
-   assert(!fBuildingScene);
-   MakeCurrent();
-   gVirtualGL->NewMVGL();
-   gVirtualGL->TraverseGraph((TGLRender *)fRender);
-   SwapBuffers();
-}*/
-
-//______________________________________________________________________________
 void TViewerOpenGL::PrintObjects()
 {
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
@@ -690,35 +677,6 @@ void TViewerOpenGL::PrintObjects()
     gVirtualGL->PrintObjects(format, sortgl, this, fCanvasContainer->GetGLWindow(),
                              sceneBox.Extents().Mag(), sceneBox.Center().Y(), sceneBox.Center().Z());
 }
-
-//______________________________________________________________________________
-/*void TViewerOpenGL::UpdateRange(const TGLSelection *box)
-{
-   assert(fBuildingScene);
-   const Double_t *X = box->GetRangeX();
-   const Double_t *Y = box->GetRangeY();
-   const Double_t *Z = box->GetRangeZ();
-
-   if (!fRender->GetSize()) {
-      fRangeX.first = X[0], fRangeX.second = X[1];
-      fRangeY.first = Y[0], fRangeY.second = Y[1];
-      fRangeZ.first = Z[0], fRangeZ.second = Z[1];
-      return;
-   }
-
-   if (fRangeX.first > X[0])
-      fRangeX.first = X[0];
-   if (fRangeX.second < X[1])
-      fRangeX.second = X[1];
-   if (fRangeY.first > Y[0])
-      fRangeY.first = Y[0];
-   if (fRangeY.second < Y[1])
-      fRangeY.second = Y[1];
-   if (fRangeZ.first > Z[0])
-      fRangeZ.first = Z[0];
-   if (fRangeZ.second < Z[1])
-      fRangeZ.second = Z[1];
-}*/
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -792,76 +750,8 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 }
 
 //______________________________________________________________________________
-/*TGLSceneObject *TViewerOpenGL::TestSelection(Event_t *event)
-{
-   MakeCurrent();
-   TGLSceneObject *obj = gVirtualGL->SelectObject(fRender, event->fX, event->fY, fConf);
-   SwapBuffers();
-
-   return obj;
-}*/
-
-//______________________________________________________________________________
-/*void TViewerOpenGL::CalculateViewports()
-{
-   fActiveViewport[0] = 0;
-   fActiveViewport[1] = 0;
-   fActiveViewport[2] = fCanvasWindow->GetWidth();
-   fActiveViewport[3] = fCanvasWindow->GetHeight();
-}*/
-
-//______________________________________________________________________________
-/*void TViewerOpenGL::CalculateViewvolumes()
-{
-   if (fRender->GetSize()) {
-      Double_t xdiff = fRangeX.second - fRangeX.first;
-      Double_t ydiff = fRangeY.second - fRangeY.first;
-      Double_t zdiff = fRangeZ.second - fRangeZ.first;
-      Double_t max = xdiff > ydiff ? xdiff > zdiff ? xdiff : zdiff : ydiff > zdiff ? ydiff : zdiff;
-
-      Int_t w = fCanvasWindow->GetWidth() / 2;
-      Int_t h = (fCanvasWindow->GetHeight()) / 2;
-      Double_t frx = 1., fry = 1.;
-
-      if (w > h)
-         frx = w / double(h);
-      else if (w < h)
-         fry = h / double(w);
-
-      fViewVolume[0] = max / 1.9 * frx;
-      fViewVolume[1] = max / 1.9 * fry;
-      fViewVolume[2] = max * 0.707;
-      fViewVolume[3] = 3 * max;
-      fRad = max * 1.7;
-   }
-}*/
-
-//______________________________________________________________________________
-/*void TViewerOpenGL::CreateCameras()
-{
-   if (!fRender->GetSize())
-      return;
-
-   TGLSimpleTransform trXOY(gRotMatrixXOY, fRad, &fXc, &fYc, &fZc);
-   TGLSimpleTransform trXOZ(gRotMatrixXOZ, fRad, &fXc, &fYc, &fZc);
-   TGLSimpleTransform trYOZ(gRotMatrixYOZ, fRad, &fXc, &fYc, &fZc);
-   TGLSimpleTransform trPersp(fArcBall->GetRotMatrix(), fRad, &fXc, &fYc, &fZc);
-
-   fCamera[kXOY]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trXOY);
-   fCamera[kXOZ]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trXOZ);
-   fCamera[kYOZ]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trYOZ);
-   fCamera[kPERSP] = new TGLPerspectiveCamera(fViewVolume, fActiveViewport, trPersp);
-
-   fRender->AddNewCamera(fCamera[kXOY]);
-   fRender->AddNewCamera(fCamera[kXOZ]);
-   fRender->AddNewCamera(fCamera[kYOZ]);
-   fRender->AddNewCamera(fCamera[kPERSP]);
-}*/
-
-//______________________________________________________________________________
 void TViewerOpenGL::ModifyScene(Int_t wid)
 {
-   // TODO: Re-enable these bits
    MakeCurrent();
    switch (wid) {
    case kTBa:
@@ -880,16 +770,16 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       }
       break;
    case kTBda:
-      //fRender->ResetAxes();
+      fDrawAxes = !fDrawAxes;
       break;
    case kTBcp:
-      //if (fRender->ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
-      //else gVirtualGL->DisableGL(kCLIP_PLANE0);
+      fUseClipPlane = !fUseClipPlane;
    case kTBcpm:
       {
-         //Double_t eqn[4] = {0.};
-         //fSceneEditor->GetPlaneEqn(eqn);
-         //fRender->SetPlane(eqn);
+         Double_t eqn[4] = {0.};
+         fSceneEditor->GetPlaneEqn(eqn);
+         fClipPlane.Set(eqn, kFALSE); // Don't normalise
+         break;
       }
    case kTBTop:
       if ((fLightMask ^= 1) & 1) gVirtualGL->EnableGL(kLIGHT4);
@@ -915,42 +805,6 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
 
    Invalidate();
 }
-
-//______________________________________________________________________________
-/*void TViewerOpenGL::MoveCenter(Int_t key)
-{
-   fRender->SetNeedFrustum();
-   Double_t shift[3] = {0.};
-   Double_t steps[2] = {fViewVolume[0] * fZoom[0] / 40, fViewVolume[0] * fZoom[0] / 40};
-
-   switch (key) {
-   case kKey_Left:
-      shift[0] = steps[0];
-      break;
-   case kKey_Right:
-      shift[0] = -steps[0];
-      break;
-   case kKey_Up:
-      shift[1] = -steps[1];
-      break;
-   case kKey_Down:
-      shift[1] = steps[1];
-      break;
-   }
-
-   const Double_t *rotM = fArcBall->GetRotMatrix();
-   Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], shift[0]},
-                            {rotM[1], -rotM[9], rotM[5], shift[1]},
-                            {rotM[2], -rotM[10], rotM[6], 0.}};
-
-   TToySolver tr(*matrix);
-   tr.GetSolution(shift);
-   fXc += shift[0];
-   fYc += shift[1];
-   fZc += shift[2];
-
-   DrawObjects();
-}*/
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::PreferLocalFrame() const
