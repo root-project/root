@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.4 2003/02/04 23:35:19 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.4 2003/05/28 15:17:03 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 //
-// $Id: TCL.h,v 1.4 2003/02/04 23:35:19 fine Exp $
+// $Id: TCL.h,v 1.4 2003/05/28 15:17:03 brun Exp $
 
 #include "Rtypes.h"
 #include <string.h>
@@ -38,7 +38,8 @@ class TArrayD;
 
 class TCL  {
   public:
- 
+    virtual ~TCL() { }
+
     static int    *ucopy(const int    *a, int    *b, int n);
     static float  *ucopy(const float  *a, float  *b, int n);
     static double *ucopy(const float  *a, double *b, int n);
@@ -63,7 +64,7 @@ class TCL  {
     static double *vsub(const double *a, const double *b, double *x, int n);
     static float  *vsub(const float  *b, const double *c, float  *a, int n);
     static double *vsub(const double *b, const float  *c, double *a, int n);
- 
+
     static float  *vcopyn(const float *a,  float *x, int n);
     static double *vcopyn(const double *a, double *x, int n);
 
@@ -120,7 +121,7 @@ class TCL  {
     static double *mxtrp(const double *a, double *b, int i, int j);
 
 // * TR pack
-  
+
     static float *traat(const float *a, float *s, int m, int n);
     static float *tral(const float *a, const float *u, float *b, int m, int n);
     static float *tralt(const float *a, const float *u, float *b, int m, int n);
@@ -500,76 +501,76 @@ inline void **TCL::vzero(void **a, int n1)
 
 //________________________________________________________
 inline float *TCL::vscale(const float *a, float scale, float *b, int n)
-{ 
-  for (int i=0;i<n;i++) b[i]=scale*a[i]; 
+{
+  for (int i=0;i<n;i++) b[i]=scale*a[i];
   return b;
 }
 
 //________________________________________________________
 inline double *TCL::vscale(const double *a, double scale, double *b, int n)
-{ 
-  for (int i=0;i<n;i++) b[i]=scale*a[i]; 
+{
+  for (int i=0;i<n;i++) b[i]=scale*a[i];
   return b;
 }
 
 //________________________________________________________
 inline float *TCL::vlinco(const float *a, float fa, const float *b, float fb, float *x, int n)
-{ 
-  for (int i=0;i<n;i++){x[i]=a[i]*fa+b[i]*fb;}; 
+{
+  for (int i=0;i<n;i++){x[i]=a[i]*fa+b[i]*fb;};
   return x;
 }
 
 //________________________________________________________
 inline double *TCL::vlinco(const double *a, double fa, const double *b, double fb,double *x, int n)
-{ 
-  for (int i=0;i<n;i++) x[i]=a[i]*fa+b[i]*fb; 
+{
+  for (int i=0;i<n;i++) x[i]=a[i]*fa+b[i]*fb;
   return x;
 }
 
 //_____________________________________________________________________________
 inline float *TCL::vmatl(const float *G, const float *c, float *x, int n,int m)
 {
-  //  x = G*c                                                
+  //  x = G*c
   for (int i=0; i<n; i++) {
     double sum = 0;
     for (int j=0; j<m; j++) sum += G[j + m*i]*c[j];
-    x[i] = sum; }  
+    x[i] = sum; }
   return x;
-}      
+}
 
 //_____________________________________________________________________________
 inline double *TCL::vmatl(const double *G, const double *c, double *x, int n,int m)
 {
-  //  x = G*c                                                
-  for (int i=0; i<n; i++) 
+  //  x = G*c
+  for (int i=0; i<n; i++)
   {
     double sum = 0;
     for (int j=0; j<m; j++) sum += G[j + m*i]*c[j];
-    x[i] = sum; 
-  }  
+    x[i] = sum;
+  }
   return x;
-}      
+}
 
 //_____________________________________________________________________________
 inline float *TCL::vmatr(const float *c, const float *G, float *x, int n,int m)
 {
-  //  x = c*G                                                
+  //  x = c*G
   for (int j=0; j<m; j++) {
     double sum = 0;
     for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
-    x[j] = sum; }  
+    x[j] = sum; }
   return x;
-}     
+}
 
 //_____________________________________________________________________________
 inline double *TCL::vmatr(const double *c, const double *G, double *x, int n,int m)
 {
-  //  x = c*G                                                
+  //  x = c*G
   for (int j=0; j<m; j++) {
     double sum = 0;
     for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
-    x[j] = sum; }  
+    x[j] = sum; }
   return x;
-}     
+}
 
 #endif
