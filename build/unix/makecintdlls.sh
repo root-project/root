@@ -65,6 +65,15 @@ clean() {
    rm -f $CINTDIRS/valarray.dll         $CINTDIRS/valarray.so.*
    rm -f $CINTDIRS/exception.dll        $CINTDIRS/exception.so.*
    rm -f $CINTDIRS/complex.dll          $CINTDIRS/complex.so.*
+   rm -f lib/libdequeDict.$SOEXT
+   rm -f lib/liblistDict.$SOEXT
+   rm -f lib/libmap2Dict.$SOEXT
+   rm -f lib/libmapDict.$SOEXT
+   rm -f lib/libmultimap2Dict.$SOEXT
+   rm -f lib/libmultimapDict.$SOEXT
+   rm -f lib/libmultisetDict.$SOEXT
+   rm -f lib/libsetDict.$SOEXT
+   rm -f lib/libvectorDict.$SOEXT
 }
 
 execute() {
