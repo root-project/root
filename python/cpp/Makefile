@@ -17,6 +17,7 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+PyROOT_cpptests.log: Namespace_C.$(DllSuf)
 
 PyROOT_cpptests: PyROOT_cpptests.log
 	$(TestDiff)

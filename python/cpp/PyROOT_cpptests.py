@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 03/18/05
+# Last: 05/26/05
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -91,6 +91,22 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
 
       old = TString.InitialCapacity( 20 )
       self.assertEqual( 20, s.InitialCapacity( old ) )
+
+   def test7Namespaces( self ):
+      """Test access to namespaces and inner classes"""
+
+      gROOT.LoadMacro( "Namespace.C+" )
+
+      self.assertEqual( A.sa,          1 )
+      self.assertEqual( A.B.sb,        2 )
+      self.assertEqual( A.B().fb,     -2 )
+      self.assertEqual( A.B.C.sc,      3 )
+      self.assertEqual( A.B.C().fc,   -3 )
+      self.assertEqual( A.D.sd,        4 )
+      self.assertEqual( A.D.E.se,      5 )
+      self.assertEqual( A.D.E().fe,   -5 )
+      self.assertEqual( A.D.E.F.sf,    6 )
+      self.assertEqual( A.D.E.F().ff, -6 )
 
 
 ## actual test run
