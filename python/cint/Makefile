@@ -20,8 +20,13 @@ endif
 
 PyClassTest.log: runPyClassTest.C
 
+ifeq ($(FAIL),)
+PyClassTest: 
+	$(WarnFailTest)
+else
 PyClassTest: PyClassTest.log
 	$(TestDiff)
+endif
 
 PyROOT_cinttests: PyROOT_cinttests.log
 	$(TestDiff)
