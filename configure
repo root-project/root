@@ -887,7 +887,6 @@ if test $# -gt 0 ; then
 	;;
       --disable-*)
 	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
-	echo "Disabling $f"
 	eval $f=no
 	for c in $options ; do
 	   if test "x$c" = "x$f" ; then
@@ -1615,114 +1614,82 @@ fi
 # Check for graphics libraries used by libAfterImage, like libjpeg, etc.
 #
 if test ! "x$enable_asimage" = "xno" ; then
-   # Currently our libAfterImage is completely out of sync with the official
-   # libAfterImage due to many new features, use always the builtin_afterimage
-   if test "x$enable_builtin_afterimage" = "xno" ||
-      test "x$enable_builtin_afterimage" = "" ; then
-      echo "#### Can currently not use the system libAfterImage ####"
-      enable_builtin_afterimage="yes"
-   fi
-   if test "x$enable_builtin_afterimage" = "xno" ||
-      test "x$enable_builtin_afterimage" = "" ; then
-      # Figure out if libAfterImage is on the system, and if so, if it usable
-      asimage_libdirs="$ASIMAGE $ASIMAGE/include \
-            /usr/lib               /usr/local/lib               \
-            /usr/lib/libAfterImage /usr/local/lib/libAfterImage \
-            /usr/lib/libAfterBase  /usr/local/lib/libAfterBase  \
-            /usr/lib/afterstep     /usr/local/lib/afterstep     \
-            /usr/lib/libAfter      /usr/local/lib/libAfter      \
-            /opt/libAfter"
-      asimage_incdirs="$ASIMAGE $ASIMAGE/include \
-            /usr/include               /usr/local/include               \
-            /usr/include/libAfterImage /usr/local/include/libAfterImage \
-            /usr/include/libAfterBase  /usr/local/include/libAfterBase  \
-            /usr/include/afterstep     /usr/local/include/afterstep     \
-            /usr/include/libAfter      /usr/local/include/libAfter      \
-            /opt/libAfter"
-
-      asimageincdirtmp=$asimageincdir
-      check_header "astypes.h" "$asimageincdirtmp" $asimage_incdirs
-      asimageincdir=$found_dir
-      asimagetypes=$found_hdr
-      check_header "afterimage.h" "$asimageincdirtmp" $asimage_incdirs
-      asimageincdir="$asimageincdir $found_dir"
-      asimageimage=$found_hdr
-
-      asimagelibdirtmp=$asimagelibdir
-      check_library "libAfterBase" "$enable_shared" "$asimagelibdirtmp" \
-          $asimage_libdirs
-      asimagelib=$found_lib
-      asimagelibdir=$found_dir
-
-      check_library "libAfterImage" "$enable_shared" "$asimagelibdirtmp" \
-          $asimage_libdirs
-      asimagelib="$asimagelib $found_lib"
-      asimagelibdir="$asimagelibdir $found_dir"
-
-      if test "x$asimageincdir" = "x" \
- 	  || test "x$asimagelib" = "x" \
- 	  || test "x$asimagetypes" = "x" \
- 	  || test "x$asimageimage" = "x" ; then
-         asimagelib=
-         asimagelibdir=
-         asimageincdir=
-         enable_builtin_afterimage="yes"
+    # Currently our libAfterImage is completely out of sync with the official
+    # libAfterImage due to many new features, use always the builtin_afterimage
+    if test "x$enable_builtin_afterimage" = "xno" ||
+       test "x$enable_builtin_afterimage" = "x" ; then
+       # Assume failure
+       enable_builtin_afterimage="yes"
+       checking_msg "afterimage-config"
+       if `which afterimage-config > /dev/null 2>&1` ; then
+          which afterimage-config
+          # we found afterimage-config - now check the version number
+          asimage_version=`afterimage-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+          #if test $asimage_version -gt 1003 ; then
+          if test $asimage_version -gt 0 ; then
+             echo "WARNING: System libAfterImage is too new, using built-in"
+          else
+             enable_builtin_afterimage="no"
+             asextralib=`afterimage-config --libs`
+             asimageincdir=`afterimage-config --cflags | sed 's/-I//g'`
+          fi
+       else
+          echo "not found"
        fi
-       unset asimagelibdirtmp
     fi
     # If we didn't find the system libAfterImage, or the user didn't ask
     # for a system library, then see if we have various headers needed.
     if test "x$enable_builtin_afterimage" = "xyes" ; then
-    check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include $finkdir/include
-    asjpegincdir=$found_dir
-    check_header "png.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /usr/local/include/libpng \
-       /opt/include $finkdir/include
-    aspngincdir=$found_dir
-    check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include $finkdir/include
-    astiffincdir=$found_dir
-    check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include $finkdir/include
-    asgifincdir=$found_dir
+       check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
+          /usr/local/include /usr/include /opt/include $finkdir/include
+       asjpegincdir=$found_dir
+       check_header "png.h" "" $ASIMAGE $ASIMAGE/include \
+          /usr/local/include /usr/include /usr/local/include/libpng \
+          /opt/include $finkdir/include
+       aspngincdir=$found_dir
+       check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
+          /usr/local/include /usr/include /opt/include $finkdir/include
+       astiffincdir=$found_dir
+       check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
+          /usr/local/include /usr/include /opt/include $finkdir/include
+       asgifincdir=$found_dir
 
-    asextralib=""
-    asextralibdir=""
-    found_libz=""
-    found_dirz=""
-    # libz must be before libpng, if libz is not found don't
-    # add libpng which needs libz
-    # don't look for libungif since we use the one built-in in libAfterImage
-    #for k in libjpeg libtiff libungif libz libpng ; do
-    for k in libjpeg libtiff libz libpng ; do
-        check_library $k "$enable_shared" "" \
-            $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib $finkdir/lib
-        if test "x$k" = "xlibz" ; then
-            found_libz=$found_lib
-            found_dirz=$found_dir
-            continue;
-        fi
-        if test "x$k" = "xlibpng" && test "x$found_libz" = "x" ; then
-            break;
-        fi
-        if test ! "x$found_lib" = "x" ; then
-            asextralib="$asextralib $found_lib"
-            asextralibdir="$asextralibdir $found_dir"
-        fi
-    done
-    if test "x$asextralib" = "x" ; then
-        asextralib=""
-        asextralibdir=""
-        asjpegincdir=""
-        aspngincdir=""
-        astiffincdir=""
-        asgifincdir=""
-    else
-        asextralib="$asextralib $found_libz"
-        asextralibdir="$asextralibdir $found_dirz"
-    fi
-fi
+       asextralib=""
+       asextralibdir=""
+       found_libz=""
+       found_dirz=""
+       # libz must be before libpng, if libz is not found don't
+       # add libpng which needs libz
+       # don't look for libungif since we use the one built-in in libAfterImage
+       #for k in libjpeg libtiff libungif libz libpng ; do
+       for k in libjpeg libtiff libz libpng ; do
+           check_library $k "$enable_shared" "" \
+             $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib $finkdir/lib
+           if test "x$k" = "xlibz" ; then
+               found_libz=$found_lib
+               found_dirz=$found_dir
+               continue;
+           fi
+           if test "x$k" = "xlibpng" && test "x$found_libz" = "x" ; then
+               break;
+           fi
+           if test ! "x$found_lib" = "x" ; then
+               asextralib="$asextralib $found_lib"
+               asextralibdir="$asextralibdir $found_dir"
+           fi
+       done
+       if test "x$asextralib" = "x" ; then
+           asextralib=""
+           asextralibdir=""
+           asjpegincdir=""
+           aspngincdir=""
+           astiffincdir=""
+           asgifincdir=""
+       else
+           asextralib="$asextralib $found_libz"
+           asextralibdir="$asextralibdir $found_dirz"
+       fi
+   fi
    message "Checking whether to build included libAfterImage"
    echo "$enable_builtin_afterimage"
 fi
