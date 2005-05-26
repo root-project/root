@@ -5,3 +5,9 @@ config.status
 work.pc
 work.pcl
 .def
+build-arch-stamp
+build-indep-stamp
+configure-stamp
+debian
+log
+semantic.cache
