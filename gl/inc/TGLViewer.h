@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -39,11 +40,11 @@ class TGLViewer // TODO: Find a better name to avoid confusion with TViewerOpenG
 public:
    enum ECamera { kPerspective, kXOY, kYOZ, kXOZ };
 
-private:   
-          
+private:
+
    // Fields
-   TGLRedrawTimer     * fRedrawTimer;     
-   UInt_t               fNextSceneLOD;       //! 
+   TGLRedrawTimer     * fRedrawTimer;
+   UInt_t               fNextSceneLOD;       //!
    TGLCamera          * fCurrentCamera;      //!
    // TODO: Put in vector and allow external creation
    TGLPerspectiveCamera fPerspectiveCamera;  //!
@@ -61,13 +62,13 @@ private:
 
 protected:
    // Fields
-   // Scene is created/owned internally. 
+   // Scene is created/owned internally.
    // In future it will be shaped between multiple viewers
    TGLScene       fScene;          //! the GL scene - owned by viewer at present
    TGLRect        fViewport;       //! viewport - drawn area
    TGLPlane       fClipPlane;      //! current clip plane
    Bool_t         fUseClipPlane;   //! use current clipping plane
-   Bool_t         fDrawAxes;       //! draw scene axes 
+   Bool_t         fDrawAxes;       //! draw scene axes
    Bool_t         fInitGL;         //! has GL been initialised?
 
    // Methods
@@ -75,8 +76,8 @@ protected:
    virtual void MakeCurrent()  const                = 0;
    virtual void SwapBuffers()  const                = 0;
    virtual void RebuildScene()                      = 0;
-        
-   void   SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height); 
+
+   void   SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
 
    void SetupCameras(const TGLBoundingBox & box);
    void SetCurrentCamera(ECamera camera);
@@ -85,10 +86,10 @@ protected:
 public:
    TGLViewer();
    virtual ~TGLViewer();
-         
+
    void WindowToGL(TGLRect & rect)      const { rect.Y() = fViewport.Height() - rect.Y(); }
    void WindowToGL(TGLVertex3 & vertex) const { vertex.Y() = fViewport.Height() - vertex.Y(); }
-   
+
    // Once TVirtualGL dropped these can move back to protected
    void   Draw();
    Bool_t Select(const TGLRect & rect); // Window coords origin top left
@@ -96,7 +97,7 @@ public:
    // TODO: Once better solution to TGLRedrawTimer found make this
    // protected again.
    virtual void Invalidate(UInt_t redrawLOD = kMed) = 0;
-   
+
    ClassDef(TGLViewer,0) // GL viewer generic base class
 };
 

@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -31,7 +32,7 @@ class TContextMenu;
  *
  *************************************************************************/
 class TGLPhysicalShape : public TGLDrawable
-{ 
+{
 private:
    // Fields
    const TGLLogicalShape & fLogicalShape; //! the associate logical shape
@@ -43,21 +44,21 @@ private:
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
 protected:
    // Methods
-   virtual void DirectDraw(UInt_t LOD) const;   
+   virtual void DirectDraw(UInt_t LOD) const;
 
 public:
-   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape, 
+   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
                     const TGLMatrix & transform, Bool_t invertedWind);
-   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape, 
+   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
                     const double * transform, Bool_t invertedWind);
    virtual ~TGLPhysicalShape();
 
    virtual void Draw(UInt_t LOD) const;
-   
+
    void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    void Select(Bool_t select)  { fSelected = select; }
-   
+
    const Float_t * GetColor() const { return fColor; }
    void SetColor(const Float_t rgba[4]);
 

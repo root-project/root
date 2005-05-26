@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -31,19 +32,19 @@ private:
    Double_t    fDolly;           //!
    Double_t    fVRotate;         //!
    Double_t    fHRotate;         //!
-      
+
    // These calculated based on BBox in Setup()
    Double_t fDollyMin, fDollyDefault, fDollyMax, fVolumeDiag;
 
    // These are fixed for any perspective camera
    static   Double_t fgFOVMin, fgFOVDefault, fgFOVMax;
    static   UInt_t   fgDollyDeltaSens, fgFOVDeltaSens;
-   
+
 public:
    TGLPerspectiveCamera();
    virtual ~TGLPerspectiveCamera();
 
-   virtual void   Setup(const TGLBoundingBox & box); 
+   virtual void   Setup(const TGLBoundingBox & box);
    virtual void   Reset();
    virtual Bool_t Dolly(Int_t delta);
    virtual Bool_t Zoom (Int_t delta);

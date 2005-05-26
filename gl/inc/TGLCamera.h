@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -28,7 +29,7 @@
  *
  *
  *************************************************************************/
-class TGLCamera 
+class TGLCamera
 {
 private:
    // Fields
@@ -42,13 +43,13 @@ private:
       kFAR     = 5,
       kPLANESPERFRUSTUM
    };
-   
+
    // Frustum planes (cached)
    mutable TGLPlane fFrustumPlanes[kPLANESPERFRUSTUM]; //!
 
    // Methods
    TGLBoundingBox FrustumBox() const; // bounding box encapsulating frustum
-     
+
    // Non-copyable class
    TGLCamera(const TGLCamera &);
    TGLCamera & operator=(const TGLCamera &);
@@ -65,18 +66,18 @@ protected:
    mutable Double_t fLargestInterest;
 
    // Methods
-   Bool_t AdjustAndClampVal(Double_t & val, Double_t min, Double_t max, 
-                            Int_t shift, Int_t shiftRange) const;   
+   Bool_t AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
+                            Int_t shift, Int_t shiftRange) const;
    void UpdateCache();
 
 public:
    TGLCamera();
    virtual ~TGLCamera();
-     
+
    void SetViewport(const TGLRect & viewport);
 
    // Camera manipulation interface (GL coord - origin bottom left)
-   virtual void   Setup(const TGLBoundingBox & box) = 0; 
+   virtual void   Setup(const TGLBoundingBox & box) = 0;
    virtual void   Reset() = 0;
    // virtual void   Frame(const TGLBoundingBox & box) = 0; // TODO
    virtual Bool_t Dolly(Int_t delta) = 0;
@@ -84,7 +85,7 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) = 0;
-  
+
    EOverlap FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
    EOverlap ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect  ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
@@ -94,7 +95,7 @@ public:
    Bool_t OfInterest(const TGLBoundingBox & box) const;
    Bool_t UpdateInterest();
    void   ResetInterest();
-   
+
    ClassDef(TGLCamera,0); // abstract camera base class
 };
 

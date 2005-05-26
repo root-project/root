@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -26,7 +27,7 @@ class TGLDrawable;
  *
  *************************************************************************/
 class TGLDisplayListCache {
-private:   
+private:
    typedef std::pair<const TGLDrawable *, const UInt_t> CacheID_t;
    typedef std::map<CacheID_t,UInt_t>                  CacheDLMap_t;
 
@@ -36,9 +37,9 @@ private:
    Bool_t         fEnabled;    //!
    Bool_t         fAddingNew;  //!
    UInt_t         fDLBase;     //!
-   UInt_t         fDLNextFree; //!  
+   UInt_t         fDLNextFree; //!
    CacheDLMap_t   fCacheDLMap; //!
-   
+
    // Static Fields
    static TGLDisplayListCache * fInstance; //! the singleton cache instance
    static const UInt_t INVALID_DL_NAME;
@@ -46,24 +47,24 @@ private:
    // Methods
    TGLDisplayListCache(Bool_t enable = true, UInt_t size = 10000);
    virtual ~TGLDisplayListCache(); // ClassDef introduces virtual fns
-   
+
    // We can be used as common static cache - but we
    // can't call glGenLists before gl context is created (somewhere).
    // So we defer until first use of BeginNew and test fInit flag
    //TODO These may not be required now singleton?
    void Init();
-   
-   CacheID_t MakeCacheID(const TGLDrawable & drawable, UInt_t LOD) const;   
+
+   CacheID_t MakeCacheID(const TGLDrawable & drawable, UInt_t LOD) const;
    UInt_t    Find(CacheID_t cacheID) const;
 
 public:
    static TGLDisplayListCache & Instance();
-   
+
    // Cache manipulators
    void   Enable(Bool_t enable)   { fEnabled = enable; }
    Bool_t IsEnabled()             { return fEnabled; }
    //void   Resize(UInt_t size)     {}; //TODO
-   void   Dump() const; 
+   void   Dump() const;
 
    // Cache entities (TLGDrawable) manipulators
    Bool_t Draw(const TGLDrawable & drawable, UInt_t LOD) const;

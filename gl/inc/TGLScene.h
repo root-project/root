@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -29,18 +30,18 @@ class TGLPhysicalShape;
  *
  *
  *************************************************************************/
-class TGLScene 
+class TGLScene
 {
 private:
    // Fields
 
    // Logical shapes
-   typedef std::map<UInt_t, TGLLogicalShape *> LogicalShapeMap_t;   
+   typedef std::map<UInt_t, TGLLogicalShape *> LogicalShapeMap_t;
    typedef LogicalShapeMap_t::value_type LogicalShapeMapValueType_t;
-   typedef LogicalShapeMap_t::iterator LogicalShapeMapIt_t;      
-   typedef LogicalShapeMap_t::const_iterator LogicalShapeMapCIt_t;      
+   typedef LogicalShapeMap_t::iterator LogicalShapeMapIt_t;
+   typedef LogicalShapeMap_t::const_iterator LogicalShapeMapCIt_t;
    LogicalShapeMap_t fLogicalShapes;
-   
+
    // TODO: Physical may be better as sorted vector - can pre-allocate?
    // Then can sort by size for drawing, with partition() to sort all opaque to front.
    // Look at Meyer's STL Item 23. Logicals will mix lookup + insertions
@@ -49,8 +50,8 @@ private:
    // Physical Shapes
    typedef std::map<UInt_t, TGLPhysicalShape *> PhysicalShapeMap_t;
    typedef PhysicalShapeMap_t::value_type PhysicalShapeMapValueType_t;
-   typedef PhysicalShapeMap_t::iterator PhysicalShapeMapIt_t;      
-   typedef PhysicalShapeMap_t::const_iterator PhysicalShapeMapCIt_t;      
+   typedef PhysicalShapeMap_t::iterator PhysicalShapeMapIt_t;
+   typedef PhysicalShapeMap_t::const_iterator PhysicalShapeMapCIt_t;
    PhysicalShapeMap_t fPhysicalShapes;
 
    mutable TGLBoundingBox fBoundingBox;      //! bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
@@ -60,13 +61,13 @@ private:
 
    // TODO: vector for multiple selection
    TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
-   
+
    // Methods
    void   DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const;
-   UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape, 
-                          const TGLCamera & camera, 
+   UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape,
+                          const TGLCamera & camera,
                           UInt_t sceneLOD) const;
-   
+
    // Non-copyable class
    TGLScene(const TGLScene &);
    TGLScene & operator=(const TGLScene &);

@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -31,7 +32,7 @@ ClassImp(TGLViewer)
 //______________________________________________________________________________
 TGLViewer::TGLViewer() :
    fNextSceneLOD(kHigh),
-   fCurrentCamera(&fPerspectiveCamera), 
+   fCurrentCamera(&fPerspectiveCamera),
    fPerspectiveCamera(),
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
    fOrthoYOZCamera(TGLOrthoCamera::kYOZ),
@@ -54,7 +55,7 @@ void TGLViewer::PreDraw()
 {
    // GL work which must be done before each draw of scene
    MakeCurrent();
-   
+
    // Initialise GL if not done
    if (!fInitGL) {
       InitGL();
@@ -83,8 +84,8 @@ void TGLViewer::Draw()
       if (fDrawAxes) {
          fScene.DrawAxes();
       }
-      
-      // Apply any clipping plane 
+
+      // Apply any clipping plane
       if (fUseClipPlane) {
          glEnable(GL_CLIP_PLANE0);
          glClipPlane(GL_CLIP_PLANE0, fClipPlane.CArr());
@@ -101,7 +102,7 @@ void TGLViewer::Draw()
          fScene.Draw(*fCurrentCamera, fNextSceneLOD, 300.0);
       }
    }
-   
+
    PostDraw();
 }
 
@@ -109,9 +110,9 @@ void TGLViewer::Draw()
 
 //______________________________________________________________________________
 void TGLViewer::PostDraw()
-{   
+{
    // GL work which must be done after each draw of scene
-   SwapBuffers();   
+   SwapBuffers();
 
    // Flush everything in case picking starts
    glFlush();
@@ -121,12 +122,12 @@ void TGLViewer::PostDraw()
       RebuildScene();
    } else if (fNextSceneLOD != kHigh) {
       // Final pass render required
-      // TODO: Should really be another factor on top of scene draw qaulity   
+      // TODO: Should really be another factor on top of scene draw qaulity
       // 100 msec single shot callback to redraw at best quality if no
       // other user action during this time
       fRedrawTimer->Start(100,kTRUE);
    }
-  
+
    TGLUtil::CheckError();
 }
 
@@ -136,14 +137,14 @@ void TGLViewer::Invalidate(UInt_t redrawLOD)
    fNextSceneLOD = redrawLOD;
    fRedrawTimer->Stop();
 }
-      
+
 //______________________________________________________________________________
 Bool_t TGLViewer::Select(const TGLRect & rect)
 {
    TGLRect glRect(rect);
    WindowToGL(glRect);
    fCurrentCamera->Apply(fScene.BoundingBox(), &glRect);
- 
+
    MakeCurrent();
    Bool_t changed = fScene.Select(*fCurrentCamera);
    if (changed) {
@@ -185,7 +186,7 @@ void TGLViewer::SetCurrentCamera(ECamera camera)
          break;
       }
    }
-   
+
    // Ensure any viewport has been propigated to the current camera
    fCurrentCamera->SetViewport(fViewport);
 }

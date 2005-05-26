@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -17,7 +18,7 @@
 ClassImp(TGLLogicalShape)
 
 //______________________________________________________________________________
-TGLLogicalShape::TGLLogicalShape(UInt_t ID) : 
+TGLLogicalShape::TGLLogicalShape(UInt_t ID) :
    TGLDrawable(ID, kFALSE), // Logical shapes not DL cached by default at present
    fRef(0)
 {
@@ -37,6 +38,6 @@ void TGLLogicalShape::Purge()
 {
    // Overload and clear out any costly geometry cache
 
-   // Base work - purge the DL cache 
+   // Base work - purge the DL cache
    TGLDrawable::Purge();
 }

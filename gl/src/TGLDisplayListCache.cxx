@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -123,7 +124,7 @@ Bool_t TGLDisplayListCache::CloseCapture()
       assert(kFALSE);
       return kFALSE;
    }
-   
+
    glEndList();
    TGLUtil::CheckError();
    fAddingNew = kFALSE;
@@ -146,7 +147,7 @@ UInt_t TGLDisplayListCache::Find(CacheID_t cacheID) const
 
 // TODO: Inline this
 //______________________________________________________________________________
-TGLDisplayListCache::CacheID_t TGLDisplayListCache::MakeCacheID(const TGLDrawable & drawable, 
+TGLDisplayListCache::CacheID_t TGLDisplayListCache::MakeCacheID(const TGLDrawable & drawable,
                                                                 const UInt_t LOD) const
 {
    return CacheID_t(&drawable, LOD);

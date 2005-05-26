@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -21,10 +22,10 @@
 /*************************************************************************
  * TGLUtil - A collection of utility classes for GL. Vertex, vector, rect
  * matrix etc. These provide const and non-const accessors Arr() / CArr() to
- * a GL compatible internal field. This means they can be used directly 
+ * a GL compatible internal field. This means they can be used directly
  * with OpenGL C API calls.
  *
- * They are not intended to be fully featured - just provide minimum 
+ * They are not intended to be fully featured - just provide minimum
  * required.
  *
  * Also other various common types, error checking etc.
@@ -32,7 +33,7 @@
  *************************************************************************/
 
 // TODO: Where should these enums live?
-enum  ELODPresets { 
+enum  ELODPresets {
    kLow = 20,
    kMed = 50,
    kHigh = 100
@@ -60,29 +61,29 @@ enum EOverlap
  *
  *
  *************************************************************************/
-class TGLVertex3 
+class TGLVertex3
 {
 protected:
    // Fields
    Bool_t ValidIndex(UInt_t index) const { return (index < 3); }
    Double_t fVals[3];
 
-public:   
+public:
    TGLVertex3();
    TGLVertex3(Double_t x, Double_t y, Double_t z);
    TGLVertex3(const TGLVertex3 & other);
    virtual ~TGLVertex3();
-      
+
    TGLVertex3 & operator=(const TGLVertex3 & rhs) { Set(rhs); return *this; }
    const TGLVertex3 & operator - ()
    { fVals[0] = -fVals[0]; fVals[1] = -fVals[1]; fVals[2] = -fVals[2]; return *this; }
-   
+
    void Fill(Double_t val) { Set(val,val,val); }
    void Set(Double_t x, Double_t y, Double_t z) { fVals[0]=x; fVals[1]=y; fVals[2]=z; }
    void Set(const TGLVertex3 & other) { fVals[0]=other.fVals[0]; fVals[1]=other.fVals[1]; fVals[2]=other.fVals[2]; }
-   
+
    // Accessors
-   Double_t & operator [] (Int_t index) 
+   Double_t & operator [] (Int_t index)
    { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
    const Double_t& operator [] (Int_t index) const
    { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
@@ -92,7 +93,7 @@ public:
    Double_t & Y()       { return fVals[1]; }
    Double_t   Z() const { return fVals[2]; }
    Double_t & Z()       { return fVals[2]; }
-   
+
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
 
@@ -107,14 +108,14 @@ public:
  *
  *
  *************************************************************************/
-class TGLVector3 : public TGLVertex3 
+class TGLVector3 : public TGLVertex3
 {
 public:
    TGLVector3();
    TGLVector3(Double_t x, Double_t y, Double_t z);
    TGLVector3(const TGLVector3 & other);
    virtual ~TGLVector3();
-   
+
    const TGLVector3 & operator -= (const TGLVector3 & val)
    { fVals[0] -= val[0]; fVals[1] -= val[1]; fVals[2] -= val[2]; return *this; }
    const TGLVector3 & operator /= (Double_t val)
@@ -148,28 +149,28 @@ inline void TGLVector3::Normalise()
 }
 
 //______________________________________________________________________________
-inline Double_t Dot(const TGLVector3 & v1, const TGLVector3 & v2) 
+inline Double_t Dot(const TGLVector3 & v1, const TGLVector3 & v2)
 {
   return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 }
 
 //______________________________________________________________________________
-inline TGLVector3 Cross(const TGLVector3 & v1, const TGLVector3 & v2) 
+inline TGLVector3 Cross(const TGLVector3 & v1, const TGLVector3 & v2)
 {
-    return TGLVector3(v1[1]*v2[2] - v2[1]*v1[2], 
-                      v1[2]*v2[0] - v2[2]*v1[0], 
+    return TGLVector3(v1[1]*v2[2] - v2[1]*v1[2],
+                      v1[2]*v2[0] - v2[2]*v1[0],
                       v1[0]*v2[1] - v2[0]*v1[1]);
 }
 
 //______________________________________________________________________________
 inline const TGLVector3 operator / (const TGLVector3 & vector, Double_t val)
-{ 
+{
    return TGLVector3(vector[0] / val, vector[1] / val, vector[2] / val);
 }
 
 //______________________________________________________________________________
 inline const TGLVector3 operator * (const TGLVector3 & vector, Double_t val)
-{    
+{
    return TGLVector3(vector[0] * val, vector[1] * val, vector[2] * val);
 }
 
@@ -218,13 +219,13 @@ public:
    TGLRect();
    TGLRect(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TGLRect(); // ClassDef introduces virtual fns
-      
+
    // Bitwise copy const & =op are ok at present
    inline void Set(Int_t x, Int_t y, UInt_t width, UInt_t height);
    inline void SetCorner(Int_t x, Int_t y);
    inline void Offset(Int_t dX, Int_t dY);
    void Expand(Int_t x, Int_t y);
-   
+
    Int_t    X()       const { return fX; }
    Int_t &  X()             { return fX; }
    Int_t    Y()       const { return fY; }
@@ -235,14 +236,14 @@ public:
    UInt_t & Height()        { return fHeight; }
    Int_t    CenterX() const { return fX + fWidth/2; }
    Int_t    CenterY() const { return fY + fHeight/2; }
-   Int_t    Left()    const { return fX; }     
-   Int_t    Right()   const { return fX + fWidth; }     
-   Int_t    Top()     const { return fY; }     
-   Int_t    Bottom()  const { return fY + fHeight; }     
-   
+   Int_t    Left()    const { return fX; }
+   Int_t    Right()   const { return fX + fWidth; }
+   Int_t    Top()     const { return fY; }
+   Int_t    Bottom()  const { return fY + fHeight; }
+
    UInt_t Diagonal() const { return static_cast<UInt_t>(sqrt(static_cast<Double_t>(fWidth*fWidth + fHeight*fHeight))); }
    UInt_t Longest() const { return fWidth > fHeight ? fWidth:fHeight; }
-   
+
    Double_t Aspect() const;
    EOverlap Overlap(const TGLRect & other) const;
 
@@ -254,26 +255,26 @@ public:
 };
 
 //______________________________________________________________________________
-inline void TGLRect::Set(Int_t x, Int_t y, UInt_t width, UInt_t height) 
-{ 
-   fX = x; 
-   fY = y; 
-   fWidth = width; 
-   fHeight = height; 
+inline void TGLRect::Set(Int_t x, Int_t y, UInt_t width, UInt_t height)
+{
+   fX = x;
+   fY = y;
+   fWidth = width;
+   fHeight = height;
 }
 
 //______________________________________________________________________________
-inline void TGLRect::SetCorner(Int_t x, Int_t y) 
-{ 
-   fX = x; 
-   fY = y; 
+inline void TGLRect::SetCorner(Int_t x, Int_t y)
+{
+   fX = x;
+   fY = y;
 }
 
 //______________________________________________________________________________
 inline void TGLRect::Offset(Int_t dX, Int_t dY)
 {
    fX += dX;
-   fY += dY;   
+   fY += dY;
 }
 
 /*************************************************************************
@@ -296,7 +297,7 @@ public:
    TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
    TGLPlane(Double_t eq[4], Bool_t norm = kTRUE);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
-   
+
    //inline const TGLPlane& operator *= (Double_t val);
    inline void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
    inline void Set(Double_t eq[4], Bool_t norm = kTRUE);
@@ -402,7 +403,7 @@ public:
    const TGLMatrix & operator=(const TGLMatrix & rhs) { Set(rhs.fVals); return *this; }
    //const TGLMatrix & operator*(const TGLMatrix & rhs);
 
-   Double_t & operator [] (Int_t index) 
+   Double_t & operator [] (Int_t index)
    { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
 
    void Set(const Double_t vals[16]);
@@ -411,14 +412,14 @@ public:
    void SetIdentity();
    void SetTranslation(Double_t x, Double_t y, Double_t z);
    void TransformVertex(TGLVertex3 & vertex) const;
-   
+
 	void InvRot();
-	
+
    void Dump() const;
-      
+
    const Double_t * CArr() const { return fVals; }
    Double_t * Arr() { return fVals; }
-   
+
    ClassDef(TGLMatrix,0) // GL matrix helper/wrapper class
 };
 
@@ -431,9 +432,11 @@ public:
 class TGLUtil
 {
 public:
+   virtual ~TGLUtil() { }
+
    static void CheckError();
 
-   ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces 
+   ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
 
 #endif // ROOT_TGLUtil

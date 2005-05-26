@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -47,12 +48,12 @@ TGLPerspectiveCamera::~TGLPerspectiveCamera()
 void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
 {
    // Setup camera limits based on supplied bounding box.
-   
+
    fCenter = box.Center();
-         
+
    // At default FOV, the maximum dolly should just encapsulate the longest side of box with
    // offset for next longetst side
-   
+
    // Find two longest sides
    TGLVector3 extents = box.Extents();
    Int_t sortInd[3];
@@ -65,9 +66,9 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box)
    fDollyDefault *= 1.5;
    fDollyMax = fDollyDefault * 2.0;
    fDollyMin = 0.0;
-   
+
    fVolumeDiag = box.Extents().Mag();
-   
+
    Reset();
 }
 
@@ -81,7 +82,7 @@ void TGLPerspectiveCamera::Reset()
    fDolly = fDollyDefault;
    fCacheDirty = kTRUE;
 }
- 
+
 //______________________________________________________________________________
 Bool_t TGLPerspectiveCamera::Zoom(Int_t shift)
 {
@@ -93,7 +94,7 @@ Bool_t TGLPerspectiveCamera::Zoom(Int_t shift)
    else
    {
       return kFALSE;
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -107,7 +108,7 @@ Bool_t TGLPerspectiveCamera::Dolly(Int_t shift)
    else
    {
       return kFALSE;
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -119,14 +120,14 @@ Bool_t TGLPerspectiveCamera::Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta)
    gluUnProject(x, y, 1.0, fModVM.CArr(), fProjM.CArr(), viewport, &start.X(), &start.Y(), &start.Z());
    gluUnProject(x + xDelta, y + yDelta, 1.0, fModVM.CArr(), fProjM.CArr(), viewport, &end.X(), &end.Y(), &end.Z());
    TGLVector3 truckDelta = end - start;
-   
+
    // TODO: Work out correct scaling for this!
    truckDelta /= 2.0;
    fTruck = fTruck + truckDelta;
    fCacheDirty = kTRUE;
    return kTRUE;
 }
-  
+
 //______________________________________________________________________________
 Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
 {
@@ -138,7 +139,7 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
    if ( fVRotate < -180.0 ) {
       fVRotate = -180.0;
    }
-      
+
    fCacheDirty = kTRUE;
    return kTRUE;
 }
@@ -146,7 +147,7 @@ Bool_t TGLPerspectiveCamera::Rotate(Int_t xShift, Int_t yShift)
 //______________________________________________________________________________
 void TGLPerspectiveCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect * pickRect)
 {
-   glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());   
+   glViewport(fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height());
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -155,7 +156,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect *
    if (pickRect) {
       //TODO: Convert TGLRect so this not required
       GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
-      gluPickMatrix(pickRect->X(), pickRect->Y(), 
+      gluPickMatrix(pickRect->X(), pickRect->Y(),
                     pickRect->Width(), pickRect->Height(),
                     viewport);
    }
@@ -166,10 +167,10 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect *
    } else {
       Double_t nearClip = fDolly - (fVolumeDiag/2.0);
       Double_t farClip = nearClip + fVolumeDiag;
-      
+
       if (nearClip < 3.0) {
          nearClip = 3.0;
-      }   
+      }
       gluPerspective(fFOV, fViewport.Aspect(), nearClip, farClip);
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
@@ -180,7 +181,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & /*box*/, const TGLRect *
       glTranslated(fTruck[0], fTruck[1], fTruck[2]);
    }
 
-   if (fCacheDirty) { 
+   if (fCacheDirty) {
       UpdateCache();
    }
 }

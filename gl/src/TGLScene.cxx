@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -215,9 +216,9 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
    TGLStopwatch stopwatch;
    stopwatch.Start();
 
-   // If the scene bounding box is inside the camera frustum then 
+   // If the scene bounding box is inside the camera frustum then
    // no need to check individual shapes - everything is visible
-   Bool_t doFrustumCheck = doFrustumCheck = camera.FrustumOverlap(BoundingBox()) != kInside;
+   Bool_t doFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
 
    // Loop through all placed shapes in scene
    PhysicalShapeMapCIt_t physicalShapeIt = fPhysicalShapes.begin();
@@ -231,13 +232,13 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
          assert(kFALSE);
          continue;
       }
-      
+
       EOverlap frustumOverlap = kInside;
       if (doFrustumCheck)
       {
          frustumOverlap = camera.FrustumOverlap(physicalShape->BoundingBox());
       }
-      
+
       if (frustumOverlap == kInside || frustumOverlap == kPartial)
       {
          // Get the shape draw quality
@@ -255,25 +256,25 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
       ++physicalShapeIt;
 
       // Terminate the draw is over timeout
-      // TODO: Really need front/back sorting before this can 
+      // TODO: Really need front/back sorting before this can
       // be useful
       if (timeout > 0.0 && stopwatch.Lap() > timeout) {
          run = kFALSE;
       }
    }
-   
+
    // For some reason this gets obscurred if done in TGLPhysicalShape::Draw
    if (fSelectedPhysical) {
       glDisable(GL_DEPTH_TEST);
       fSelectedPhysical->BoundingBox().Draw();
       glEnable(GL_DEPTH_TEST);
    }
-   
+
    // Failed to complete in time? Record flag to cull low LODs next time
    if (timeout > 0.0 && stopwatch.End() > timeout) {
       fCanCullLowLOD = kTRUE;
    }
-   
+
    // Record this so that any Select() draw can be redone at same quality and ensure
    // accuracy of picking
    // TODO: Also record timeout?
@@ -349,7 +350,7 @@ void TGLScene::DrawAxes() const
 //______________________________________________________________________________
 void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const
 {
-   static const UChar_t 
+   static const UChar_t
       digits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
                      {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
                      {0x7c, 0x44, 0x20, 0x18, 0x04, 0x04, 0x44, 0x38},//2
@@ -382,25 +383,25 @@ void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Doub
 }
 
 //______________________________________________________________________________
-UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera, 
+UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera,
                                  UInt_t sceneLOD) const
 {
    // Find diagonal pixel size of projected drawable BB, using camera
    Double_t diagonal = static_cast<Double_t>(camera.ViewportSize(shape.BoundingBox()).Diagonal());
- 
+
    // TODO: Get real screen size - assuming 2000 pixel screen at present
    // Calculate a non-linear sizing hint for this shape. Needs more experimenting with...
    UInt_t sizeLOD = static_cast<UInt_t>(pow(diagonal,0.4) * 100.0 / pow(2000.0,0.4));
 
    // Factor in scene quality
    UInt_t shapeLOD = (sceneLOD * sizeLOD) / 100;
-         
+
    if (shapeLOD > 10) {
       Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.3) / 10;
-      shapeLOD = static_cast<UInt_t>(quant)*10;  
+      shapeLOD = static_cast<UInt_t>(quant)*10;
    } else {
       Double_t quant = ((static_cast<Double_t>(shapeLOD)) + 0.3) / 3;
-      shapeLOD = static_cast<UInt_t>(quant)*3;  
+      shapeLOD = static_cast<UInt_t>(quant)*3;
    }
 
    if (shapeLOD > 100) {
@@ -415,20 +416,20 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
 {
    Bool_t redrawReq = kFALSE;
 
-   // Create the select buffer. This will work as we have a flat set of physical shapes. 
-   // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always 
+   // Create the select buffer. This will work as we have a flat set of physical shapes.
+   // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
    // has same 4 GLuint format
    static std::vector<GLuint> selectBuffer(fPhysicalShapes.size()*4);
    glSelectBuffer(selectBuffer.size(), &selectBuffer[0]);
-   
+
    // Enter picking mode
    glRenderMode(GL_SELECT);
    glInitNames();
    glPushName(0);
-  
+
    // Draw out scene at last visible quality
    Draw(camera, kHigh, kFALSE); // No axes
-    
+
    // Retrieve the hit count and return to render
    GLint hits = glRenderMode(GL_RENDER);
 

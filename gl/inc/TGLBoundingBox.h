@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -22,9 +23,9 @@
  *
  *************************************************************************/
 
-// TODO: Create more compact version + axis aligned version, both with lazy 
+// TODO: Create more compact version + axis aligned version, both with lazy
 // sphere testing.
-class TGLBoundingBox 
+class TGLBoundingBox
 {
 private:
    // Fields
@@ -36,13 +37,13 @@ private:
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
    //
    // 0123 near face
    // 4567 far face
    //
    // This could be more compact: 3 vertices which form plane cutting
-   // box diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix it in space - rest 
+   // box diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix it in space - rest
    // could be calculated on demand - but not worth effort.....
    TGLVertex3 fVertex[8]; //! the 8 bounding box vertices
 
@@ -59,7 +60,7 @@ public:
    TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex);
    TGLBoundingBox(const TGLBoundingBox & other);
    virtual ~TGLBoundingBox(); // ClassDef introduces virtual fns
-   
+
    // Set orientated BB
    TGLBoundingBox & operator=(const TGLBoundingBox & other) { Set(other); return *this; }
    void Set(const TGLVertex3 vertex[8]);
@@ -71,7 +72,7 @@ public:
    void SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex); // axis aligned
    void SetAligned(UInt_t nbPnts, const Double_t * pnts); // axis aligned
 
-   void Transform(const TGLMatrix & matrix);  
+   void Transform(const TGLMatrix & matrix);
    void Scale(Double_t val);
    void Translate(const TGLVector3 & offset);
 
@@ -84,8 +85,8 @@ public:
    Double_t ZMax() const { return Max(2); }
 
    inline TGLVertex3 Center() const;
-   inline TGLVector3 Extents() const; 
-   inline TGLVector3 Axis(UInt_t i, Bool_t normalised = true) const; 
+   inline TGLVector3 Extents() const;
+   inline TGLVector3 Axis(UInt_t i, Bool_t normalised = true) const;
    inline Double_t   Volume() const;
    inline Bool_t     IsEmpty() const;
 
@@ -133,7 +134,7 @@ inline TGLVector3 TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) const
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
 
    TGLVector3 axis;
    if (i == 0) {

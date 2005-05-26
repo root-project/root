@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -26,7 +27,7 @@ class TGLOrthoCamera : public TGLCamera {
 public:
    enum EType { kXOY, kYOZ, kXOZ };
 private:
-   // Fields  
+   // Fields
    EType          fType;      //!
 
    // Set in SetLimits()
@@ -41,13 +42,13 @@ private:
    TGLMatrix      fMatrix;    //!
    Double_t       fZoom;      //!
    TGLVector3     fTruck;     //!
-   
+
    static   UInt_t   fgZoomDeltaSens;
-   
+
    // Methods
    void Init();
 public:
-   
+
    TGLOrthoCamera(EType type);
    virtual ~TGLOrthoCamera();
 
@@ -58,7 +59,7 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0);
-    
+
    ClassDef(TGLOrthoCamera,0) // an orthogonal view camera
 };
 

@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,7 +19,7 @@ ClassImp(TGLDrawable)
 
 //______________________________________________________________________________
 TGLDrawable::TGLDrawable(UInt_t ID, Bool_t DLCache) :
-   fID(ID), fDLCache(DLCache) 
+   fID(ID), fDLCache(DLCache)
 {
 }
 
@@ -35,7 +36,7 @@ Bool_t TGLDrawable::UseDLCache(UInt_t /*LOD*/) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLDrawable::SetDLCache(Bool_t DLCache) 
+Bool_t TGLDrawable::SetDLCache(Bool_t DLCache)
 {
    if (DLCache == fDLCache) {
       return kFALSE;
@@ -63,7 +64,7 @@ void TGLDrawable::Draw(UInt_t LOD) const
       DirectDraw(LOD);
       return;
    }
-   
+
    if (!cache.Draw(*this, LOD))
    {
       // Capture the shape draw into compiled DL
@@ -78,7 +79,7 @@ void TGLDrawable::Draw(UInt_t LOD) const
       // draw it now
       if (cache.CloseCapture()) {
          Bool_t ok = cache.Draw(*this, LOD);
-         assert(ok); 
+         assert(ok);
       }
    }
 }
@@ -86,5 +87,5 @@ void TGLDrawable::Draw(UInt_t LOD) const
 //______________________________________________________________________________
 void TGLDrawable::Purge()
 {
-   TGLDisplayListCache::Instance().Purge(*this);  
+   TGLDisplayListCache::Instance().Purge(*this);
 }

@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -7,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 // TODO: Function descriptions
 // TODO: Class def - same as header!!!
 
@@ -52,7 +53,7 @@ Double_t TGLStopwatch::Lap() const
 {
    //TODO: Investigate what the cost of this is? Don't get
    // accurate time without it but may make who process slower.
-   // Maybe can record total scene drawtime on full draw and just 
+   // Maybe can record total scene drawtime on full draw and just
    // terminate on fraction of this?
    FinishDrawing();
    Double_t current = GetClock();
@@ -75,7 +76,7 @@ Double_t TGLStopwatch::GetClock(void) const
    FILETIME        ft;
    ULARGE_INTEGER  uli;
    __int64         t;
-    
+
    GetSystemTimeAsFileTime(&ft);
    uli.LowPart  = ft.dwLowDateTime;
    uli.HighPart = ft.dwHighDateTime;
@@ -116,23 +117,23 @@ void TGLStopwatch::InitOverhead(void) const
    Double_t start;
    Double_t finish;
    Double_t current;
-   
+
    start = GetClock();
-      
+
    // Next tick
-   while ((finish = GetClock()) == start);   
-           
-   // Test on 100 ticks range to 0.5 sec - 5 sec   
-   runTime = 100.0 * (finish - start);   
-   if (runTime < 500)   
-      runTime = 500;   
-   else if (runTime > 5000)   
-      runTime = 5000;   
-         
+   while ((finish = GetClock()) == start);
+
+   // Test on 100 ticks range to 0.5 sec - 5 sec
+   runTime = 100.0 * (finish - start);
+   if (runTime < 500)
+      runTime = 500;
+   else if (runTime > 5000)
+      runTime = 5000;
+
    // Clear GL pipe
    FinishDrawing();
-   
-   // Overhead for finalization and timing routines 
+
+   // Overhead for finalization and timing routines
    reps = 0;
    start = WaitForTick();
    finish = start + runTime;
@@ -140,7 +141,7 @@ void TGLStopwatch::InitOverhead(void) const
       FinishDrawing();
       ++reps;
    } while ((current = GetClock()) < finish);
-   
+
    fgOverhead = (current - start) / (Double_t) reps;
    fgInitOverhead = true;
 }

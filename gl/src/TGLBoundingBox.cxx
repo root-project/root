@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -24,31 +25,31 @@ TGLBoundingBox::TGLBoundingBox()
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8]) 
-{ 
-   Set(vertex); 
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8])
+{
+   Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3]) 
-{ 
-   Set(vertex); 
+TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3])
+{
+   Set(vertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex) 
-{ 
-   SetAligned(lowVertex, highVertex); 
+TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
+{
+   SetAligned(lowVertex, highVertex);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other) 
-{ 
-   Set(other); 
+TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other)
+{
+   Set(other);
 }
 
 //______________________________________________________________________________
-TGLBoundingBox::~TGLBoundingBox() 
+TGLBoundingBox::~TGLBoundingBox()
 {
 }
 
@@ -95,7 +96,7 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
 
    TGLVector3 diff = highVertex - lowVertex;
    fVertex[0] = lowVertex;
@@ -193,16 +194,16 @@ Bool_t TGLBoundingBox::AlignedContains(const TGLBoundingBox & other) const
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
    // TODO: Rounding errors - need a better test anyway....
    // This can probably be found as part of Intersect() with three overlap
    // cases
-   //assert(fVertex[2].Z() == fVertex[0].Z()); // Front  
-   //assert(fVertex[4].Z() == fVertex[6].Z()); // Back  
-   //assert(fVertex[5].Y() == fVertex[0].Y()); // Bottom  
-   //assert(fVertex[3].Y() == fVertex[6].Y()); // Top  
-   //assert(fVertex[7].X() == fVertex[0].X()); // Left  
-   //assert(fVertex[1].X() == fVertex[6].X()); // Right 
+   //assert(fVertex[2].Z() == fVertex[0].Z()); // Front
+   //assert(fVertex[4].Z() == fVertex[6].Z()); // Back
+   //assert(fVertex[5].Y() == fVertex[0].Y()); // Bottom
+   //assert(fVertex[3].Y() == fVertex[6].Y()); // Top
+   //assert(fVertex[7].X() == fVertex[0].X()); // Left
+   //assert(fVertex[1].X() == fVertex[6].X()); // Right
 
    // Just test the all other's vertexes lie within our axis limits
    for (UInt_t v = 0; v < 8; v++) {
@@ -221,7 +222,7 @@ Bool_t TGLBoundingBox::AlignedContains(const TGLBoundingBox & other) const
 //______________________________________________________________________________
 Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & other) const
 {
-   // TODO: For some reason this intersection test gives incorrect result if first 
+   // TODO: For some reason this intersection test gives incorrect result if first
    // BB is smaller than other - no idea why as should be symetric - need to investigate.
    //assert(Volume() > other.Volume());
 

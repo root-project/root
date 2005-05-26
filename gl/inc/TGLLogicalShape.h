@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -35,7 +36,7 @@ public:
    virtual void Purge();
 
    virtual void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const = 0;
-   
+
    // Physical shape ref counting
    void   AddRef() const { ++fRef; }
    Bool_t SubRef() const { if (--fRef == 0) return kTRUE; return kFALSE; }

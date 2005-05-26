@@ -1,3 +1,5 @@
+// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -21,17 +23,17 @@
  *
  *
  *************************************************************************/
-class TGLStopwatch 
+class TGLStopwatch
 {
 private:
    // Fields
    Double_t        fStart;           //! start time (millisec)
-   
+
    static Bool_t   fgInitOverhead;   //! overhead calculated?
    static Double_t fgOverhead;       //! timing overhead (millisecs)
 
    // Methods
-   void     InitOverhead(void)  const; 
+   void     InitOverhead(void)  const;
    Double_t GetClock(void)      const;
    Double_t WaitForTick(void)   const;
    void     FinishDrawing(void) const;

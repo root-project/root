@@ -1,3 +1,4 @@
+// @(#)root/gl:$Name:$:$Id:$
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -20,10 +21,10 @@
 ClassImp(TObject)
 
 //______________________________________________________________________________
-TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape, 
-                                   const TGLMatrix & transform, Bool_t invertedWind) : 
+TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+                                   const TGLMatrix & transform, Bool_t invertedWind) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
-   fLogicalShape(logicalShape), 
+   fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
    fInvertedWind(invertedWind)
@@ -34,19 +35,19 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalSha
 }
 
 //______________________________________________________________________________
-TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape, 
-                                   const Double_t * transform, Bool_t invertedWind) : 
+TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+                                   const Double_t * transform, Bool_t invertedWind) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
-   fLogicalShape(logicalShape), 
+   fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
    fInvertedWind(invertedWind)
 {
    fLogicalShape.AddRef();
-   // Temporary hack - invert the rotation part of martix as TGeo sends this 
+   // Temporary hack - invert the rotation part of martix as TGeo sends this
    // in opp layout to shear/translation parts. Speak to Andrei about best place
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
-	fTransform.InvRot();	
+	fTransform.InvRot();
    fBoundingBox.Set(fLogicalShape.BoundingBox());
    fBoundingBox.Transform(fTransform);
 }
@@ -88,7 +89,7 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
       glDepthMask(GL_FALSE);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
-      
+
    //TODO: Sorting - Min. state swap for attributes
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
@@ -103,11 +104,11 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
    }
-   
+
    // Selection state drawing is never cached - so outside of DirectDraw()
    if (fSelected) {
       // Selection indicated by bounding box at present
-      // NOTE: This is outside of the glMultMatrixd() for the 
+      // NOTE: This is outside of the glMultMatrixd() for the
       // physical translation as the bounding box is translated when created
       // Done at end of scene draw at present - blend/depth problem...?
       //glColor3d(1.0,1.0,1.0);
