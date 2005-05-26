@@ -63,9 +63,12 @@ protected:
    // Fields
    // Scene is created/owned internally. 
    // In future it will be shaped between multiple viewers
-   TGLScene       fScene;     //! the GL scene - owned by viewer at present
-   TGLRect        fViewport;  //! viewport - drawn area
-   Bool_t         fInitGL;    //! has GL been initialised?
+   TGLScene       fScene;          //! the GL scene - owned by viewer at present
+   TGLRect        fViewport;       //! viewport - drawn area
+   TGLPlane       fClipPlane;      //! current clip plane
+   Bool_t         fUseClipPlane;   //! use current clipping plane
+   Bool_t         fDrawAxes;       //! draw scene axes 
+   Bool_t         fInitGL;         //! has GL been initialised?
 
    // Methods
    virtual void InitGL()                            = 0;

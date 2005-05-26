@@ -293,11 +293,13 @@ private:
 
 public:
    TGLPlane();
-   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d);
+   TGLPlane(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
+   TGLPlane(Double_t eq[4], Bool_t norm = kTRUE);
    virtual ~TGLPlane(); // ClassDef introduces virtual fns
    
    //inline const TGLPlane& operator *= (Double_t val);
-   inline void Set(Double_t a, Double_t b, Double_t c, Double_t d);
+   inline void Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm = kTRUE);
+   inline void Set(Double_t eq[4], Bool_t norm = kTRUE);
 
    Double_t A() const { return fVals[0]; }
    Double_t B() const { return fVals[1]; }
@@ -315,13 +317,27 @@ public:
 };
 
 //______________________________________________________________________________
-inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d)
+inline void TGLPlane::Set(Double_t a, Double_t b, Double_t c, Double_t d, Bool_t norm)
 {
    fVals[0] = a;
    fVals[1] = b;
    fVals[2] = c;
    fVals[3] = d;
-   Normalise();
+   if (norm) {
+      Normalise();
+   }
+}
+
+//______________________________________________________________________________
+inline void TGLPlane::Set(Double_t eq[4], Bool_t norm)
+{
+   fVals[0] = eq[0];
+   fVals[1] = eq[1];
+   fVals[2] = eq[2];
+   fVals[3] = eq[3];
+   if (norm) {
+      Normalise();
+   }
 }
 
 //______________________________________________________________________________

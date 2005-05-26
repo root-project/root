@@ -62,9 +62,10 @@ private:
    TGLPhysicalShape *     fSelectedPhysical; //! current selected physical shape
    
    // Methods
-   UInt_t              CalcPhysicalLOD(const TGLPhysicalShape & shape, 
-                                      const TGLCamera & camera, 
-                                      UInt_t sceneLOD) const;
+   void   DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const;
+   UInt_t CalcPhysicalLOD(const TGLPhysicalShape & shape, 
+                          const TGLCamera & camera, 
+                          UInt_t sceneLOD) const;
    
    // Non-copyable class
    TGLScene(const TGLScene &);
@@ -76,6 +77,7 @@ public:
 
    const TGLBoundingBox & BoundingBox() const;
    void Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout = 0.0) const;
+   void DrawAxes() const;
    Bool_t Select(const TGLCamera & camera);
    TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
 

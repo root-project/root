@@ -19,6 +19,7 @@
 #include "TGLStopwatch.h"
 #include "TGLIncludes.h"
 #include "TError.h"
+#include "TString.h"
 
 #include <vector>
 #include <Riostream.h>
@@ -206,6 +207,7 @@ TGLPhysicalShape * TGLScene::FindPhysical(UInt_t ID) const
 }
 
 //______________________________________________________________________________
+//TODO: Merge axes flag and LOD into general draw flag
 void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout) const
 {
    Bool_t  run = kTRUE;
@@ -279,6 +281,107 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
 }
 
 //______________________________________________________________________________
+void TGLScene::DrawAxes() const
+{
+   // Draw out the scene axes
+   // Taken directly from TGLRender by Timur Pocheptsov
+   static const UChar_t xyz[][8] = {{0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
+                                     {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
+                                     {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}};
+
+   /*if (!fPxs) {
+      fPxs = kTRUE;
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   }*/
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   glPushAttrib(GL_DEPTH_BUFFER_BIT);
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_LIGHTING);
+
+   const Double_t axeColors[][3] = {{1., 0., 0.}, // X axis red
+                                    {0., 1., 0.}, // Y axis green
+                                    {0., 0., 1.}};// Z axis blue
+   //glColor3dv(axeColors[3]);
+
+   const TGLBoundingBox & box = BoundingBox();
+   Double_t xmin = box.XMin(), xmax = box.XMax();
+   Double_t ymin = box.YMin(), ymax = box.YMax();
+   Double_t zmin = box.ZMin(), zmax = box.ZMax();
+
+   glBegin(GL_LINES);
+   glColor3dv(axeColors[0]);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmax, ymin, zmin);
+   glColor3dv(axeColors[1]);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymax, zmin);
+   glColor3dv(axeColors[2]);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymin, zmax);
+   glEnd();
+
+   // X label
+   glColor3dv(axeColors[0]);
+   glRasterPos3d(xmax, ymin + 12, zmin);
+   glBitmap(8, 8, 0., 0., 0., 0., xyz[0]);
+   DrawNumber(xmax, xmax, ymin, zmin, 9.);
+   DrawNumber(xmin, xmin, ymin, zmin, 0.);
+
+   // Y label
+   glColor3dv(axeColors[1]);
+   glRasterPos3d(xmin, ymax + 12, zmin);
+   glBitmap(8, 8, 0, 0, 12., 0, xyz[1]);
+   DrawNumber(ymax, xmin, ymax, zmin, 9.);
+   DrawNumber(ymin, xmin, ymin, zmin, 9.);
+
+   // Z label
+   glColor3dv(axeColors[2]);
+   glRasterPos3d(xmin, ymin, zmax);
+   glBitmap(8, 8, 0, 0, 0., 0, xyz[2]);
+   DrawNumber(zmax, xmin, ymin, zmax, 9.);
+   DrawNumber(zmin, xmin, ymin, zmin, -9.);
+
+   glEnable(GL_LIGHTING);
+   glEnable(GL_DEPTH_TEST);
+   glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const
+{
+   static const UChar_t 
+      digits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
+                     {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
+                     {0x7c, 0x44, 0x20, 0x18, 0x04, 0x04, 0x44, 0x38},//2
+                     {0x38, 0x44, 0x04, 0x04, 0x18, 0x04, 0x44, 0x38},//3
+                     {0x04, 0x04, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x44},//4
+                     {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x40, 0x40, 0x7c},//5
+                     {0x7c, 0x44, 0x44, 0x44, 0x7c, 0x40, 0x40, 0x7c},//6
+                     {0x20, 0x20, 0x20, 0x10, 0x08, 0x04, 0x44, 0x7c},//7
+                     {0x38, 0x44, 0x44, 0x44, 0x38, 0x44, 0x44, 0x38},//8
+                     {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x7c},//9
+                     {0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},//.
+                     {0x00, 0x00, 0x00, 0x00, 0x7c, 0x00, 0x00, 0x00}};//-
+
+   TString str;
+   str+=Long_t(num);
+
+   glRasterPos3i(Int_t(x), Int_t(y), Int_t(z));
+   for (Ssiz_t i = 0, e = str.Length(); i < e; ++i) {
+      if (str[i] == '.') {
+         glBitmap(8, 8, 0., yorig, 7., 0., digits[10]);
+         if (i + 1 < e)
+            glBitmap(8, 8, 0., yorig, 7., 0., digits[str[i + 1] - '0']);
+         break;
+      } else if (str[i] == '-') {
+         glBitmap(8, 8, 0., yorig, 7., 0., digits[11]);
+      } else {
+         glBitmap(8, 8, 0., yorig, 7., 0., digits[str[i] - '0']);
+      }
+   }
+}
+
+//______________________________________________________________________________
 UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamera & camera, 
                                  UInt_t sceneLOD) const
 {
@@ -324,7 +427,7 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
    glPushName(0);
   
    // Draw out scene at last visible quality
-   Draw(camera,kHigh);
+   Draw(camera, kHigh, kFALSE); // No axes
     
    // Retrieve the hit count and return to render
    GLint hits = glRenderMode(GL_RENDER);

@@ -14,9 +14,6 @@
 #include "TGLViewer.h"
 #include "TGLIncludes.h"
 #include "TGLStopwatch.h"
-#include "TGLDisplayListCache.h" // TODO: Testing - remove
-
-#include "Riostream.h" // TODO: Testing - remove
 
 // TODO: Find a better place/way to do this
 class TGLRedrawTimer : public TTimer
@@ -39,6 +36,9 @@ TGLViewer::TGLViewer() :
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
    fOrthoYOZCamera(TGLOrthoCamera::kYOZ),
    fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
+   fClipPlane(1.0, 0.0, 0.0, 0.0),
+   fUseClipPlane(kFALSE),
+   fDrawAxes(kFALSE),
    fInitGL(kFALSE)
 {
    fRedrawTimer = new TGLRedrawTimer(*this);
@@ -78,6 +78,20 @@ void TGLViewer::Draw()
       // Apply current camera projection
       fCurrentCamera->Apply(fScene.BoundingBox());
 
+      // Draw axes. Still get's clipped - need to find a way to disable clips
+      // for this
+      if (fDrawAxes) {
+         fScene.DrawAxes();
+      }
+      
+      // Apply any clipping plane 
+      if (fUseClipPlane) {
+         glEnable(GL_CLIP_PLANE0);
+         glClipPlane(GL_CLIP_PLANE0, fClipPlane.CArr());
+      } else {
+         glDisable(GL_CLIP_PLANE0);
+      }
+
       // TODO: Drop objects below a certain (projected) size?
       if (fNextSceneLOD == kHigh) {
          fScene.Draw(*fCurrentCamera, fNextSceneLOD);
@@ -90,6 +104,8 @@ void TGLViewer::Draw()
    
    PostDraw();
 }
+
+
 
 //______________________________________________________________________________
 void TGLViewer::PostDraw()
