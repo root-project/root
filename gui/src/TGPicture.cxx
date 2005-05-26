@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.17 2005/05/18 12:31:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.18 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -52,8 +52,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    // Get a picture from the picture pool. Picture must be freed using
    // TGPicturePool::FreePicture(). If picture is not found 0 is returned.
 
-   TGPicture *pic;
-
    if (!fPicList)
       fPicList = new THashTable(50);
 
@@ -68,7 +66,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       delete [] pxname;
    }
 
-   pic = (TGPicture *)fPicList->FindObject(pname);
+   TGPicture *pic = (TGPicture *)fPicList->FindObject(pname);
    if (pic && !pic->IsScaled()) {
       if (pic->fPic == kNone)
          return 0;
@@ -77,14 +75,13 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    }
 
    char *picnam = gSystem->Which(fPath, pname, kReadPermission);
-   if (!picnam) {
-      fPicList->Add(pic);
-      return 0;
-   }
 
-   if (ext != ".xpm") {
+   if (picnam && ext != ".xpm") {
       TImage *img = TImage::Open(picnam);
-      if (!img) return 0;
+      if (!img) {
+         delete [] picnam;
+         return 0;
+      }
 
       pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
       delete [] picnam;
@@ -121,13 +118,10 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    // necessary). Picture must be freed using TGPicturePool::FreePicture(). If
    // picture is not found 0 is returned.
 
-   TImage *img = 0;
-
    if (!fPicList)
       fPicList = new THashTable(50);
 
    TString pname = name;
-
    pname.Strip();
    TString ext = strrchr(pname.Data(), '.');
    ext.ToLower();
@@ -138,10 +132,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       delete [] pxname;
    }
 
-   TGPicture *pic;
-
    const char *hname = TGPicture::HashName(pname, new_width, new_height);
-   pic = (TGPicture *)fPicList->FindObject(hname);
+   TGPicture *pic = (TGPicture *)fPicList->FindObject(hname);
    if (pic && pic->GetWidth() == new_width && pic->GetHeight() == new_height) {
       if (pic->fPic == kNone)
          return 0;
@@ -149,15 +141,17 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return pic;
    }
 
-   char *picnam = 0;
+   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
 
-   if (ext != ".xpm") {
-      picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
-
-      img = TImage::Open(picnam);
-      if (!img) return 0;
+   if (picnam && ext != ".xpm") {
+      TImage *img = TImage::Open(picnam);
+      if (!img) {
+         delete [] picnam;
+         return 0;
+      }
 
       img->Scale(new_width, new_height);
+
       pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
       delete [] picnam;
       delete img;
@@ -170,7 +164,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
 
-   picnam = gSystem->Which(fPath.Data(), pname.Data(), kReadPermission);
    if (!picnam) {
       pic->fAttributes.fWidth  = new_width;
       pic->fAttributes.fHeight = new_height;
@@ -253,7 +246,9 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    }
 
    if (!retc) {
-      delete pic;
+      pic->fAttributes.fWidth  = new_width;
+      pic->fAttributes.fHeight = new_height;
+      fPicList->Add(pic);
       return 0;
    }
 
@@ -262,14 +257,15 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 }
 
 //______________________________________________________________________________
-const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap, 
+const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap,
                                            Pixmap_t mask)
 {
-   // ctor
+   // Get picture with specified pixmap and mask from pool.
+   // Picture must be freed using TGPicturePool::FreePicture().
+   // If picture is not found 0 is returned.
 
-   if (!fPicList) {
+   if (!fPicList)
       fPicList = new THashTable(50);
-   }
 
    Int_t xy;
    UInt_t w, h;
@@ -345,7 +341,7 @@ TGPicture::TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask)
    fAttributes.fPixels    = 0;
 
    gVirtualX->GetWindowSize(fPic, xy, xy, fAttributes.fWidth, fAttributes.fHeight);
-   SetRefCount(1);   
+   SetRefCount(1);
 }
 
 //______________________________________________________________________________
