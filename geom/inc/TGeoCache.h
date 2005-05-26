@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.19 2004/01/20 15:44:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.20 2004/05/26 15:11:13 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -42,6 +42,7 @@ class TGeoMatHandler;
 class TGeoCacheState : public TObject
 {
 protected:
+   Int_t                fCapacity;  // maximum level stored
    Int_t                fLevel;     // level in the current branch
    Int_t                fStart;     // start level
    Int_t                fIdBranch[30]; // ID branch
@@ -59,7 +60,7 @@ public:
    virtual void         SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point=0);
    virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
 
-  ClassDef(TGeoCacheState, 1)       // class storing the cache state
+  ClassDef(TGeoCacheState, 2)       // class storing the cache state
 };
 
 /*************************************************************************
@@ -216,7 +217,7 @@ private:
    TGeoNode           **fNodeBranch;    // current branch of nodes
 public:
    TGeoCacheDummy();
-   TGeoCacheDummy(TGeoNode *top, Bool_t nodeid=kFALSE);
+   TGeoCacheDummy(TGeoNode *top, Bool_t nodeid=kFALSE, Int_t capacity=30);
    virtual ~TGeoCacheDummy();
 
    virtual Bool_t       CdDown(Int_t index, Bool_t make=kTRUE);

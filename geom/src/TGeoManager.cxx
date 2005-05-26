@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.113 2005/05/11 11:34:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.114 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -517,6 +517,7 @@ TGeoManager::TGeoManager()
       fVisOption = 1;
       fExplodedView = 0;
       fNsegments = 20;
+      fNLevel = 0;
       fCurrentMatrix = 0;
       fUniqueVolumes = 0;
       fNodeIdArray = 0;
@@ -627,6 +628,7 @@ void TGeoManager::Init()
    fVisOption = 1;
    fExplodedView = 0;
    fNsegments = 20;
+   fNLevel = 0;
    fCurrentMatrix = 0;
    fUniqueVolumes = new TObjArray(256);
    fNodeIdArray = 0;
@@ -823,14 +825,22 @@ void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 void TGeoManager::BuildCache(Bool_t dummy, Bool_t nodeid)
 {
 // Builds the cache for physical nodes and global matrices.
+   static Bool_t first = kTRUE;
    if (!fCache) {
+      if (!fNLevel) {
+         fNLevel = 100;
+         if (first) printf("--- Maximum geometry depth set to 100\n");
+      } else {
+         if (first) printf("--- Maximum geometry depth is %i\n", fNLevel);   
+      }   
       if (fNNodes>5000000 || dummy)  // temporary - works without
          // build dummy cache
-         fCache = new TGeoCacheDummy(fTopNode, nodeid);
+         fCache = new TGeoCacheDummy(fTopNode, nodeid, fNLevel+1);
       else
          // build real cache
-         fCache = new TGeoNodeCache(0,nodeid);
+         fCache = new TGeoNodeCache(fNLevel+1,nodeid);
    }
+   first = kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -1536,6 +1546,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    CheckGeometry();
    printf("Counting nodes...\n");
    fNNodes = CountNodes();
+   fNLevel = fMasterVolume->CountNodes(1,3)+1;
 //   BuildIdArray();
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");

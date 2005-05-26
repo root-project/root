@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.58 2005/04/25 10:05:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.59 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -536,7 +536,12 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 // option = 0 (default) - count only once per volume
 // option = 1           - count every time
 // option = 2           - count volumes on visible branches
-   if (option<0 || option>2) option = 0;
+// option = 3           - return maximum level counted already with option = 0
+   static Int_t maxlevel = 0;
+   static Int_t nlev = 0;
+   static Bool_t isfirst = kTRUE;
+   
+   if (option<0 || option>3) option = 0;
    Int_t visopt = 0;
    Int_t nd = GetNdaughters();
    Bool_t last = (!nlevels || !nd)?kTRUE:kFALSE;
@@ -556,10 +561,18 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
             case TVirtualGeoPainter::kGeoVisLeaves:
                fNtotal = (IsVisible() && last)?1:0;
          }
-            
          if (!IsVisibleDaughters()) return fNtotal;
+         break;
+      case 3:
+         return maxlevel;   
    }      
    if (last) return fNtotal;
+   if (isfirst) {
+      nlev = nlevels;
+      isfirst = kFALSE;
+   }
+   Int_t depth = nlev-nlevels;
+   if (depth>maxlevel) maxlevel = depth;   
    TGeoNode *node;
    TGeoVolume *vol;
    for (Int_t i=0; i<nd; i++) {

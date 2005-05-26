@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.32 2004/12/02 07:22:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.33 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -107,14 +107,14 @@ TGeoNodeCache::TGeoNodeCache(Bool_t nodeid)
 }
 
 //_____________________________________________________________________________
-TGeoNodeCache::TGeoNodeCache(Int_t /*size*/, Bool_t nodeid)
+TGeoNodeCache::TGeoNodeCache(Int_t size, Bool_t nodeid)
 {
 // constructor
    fGeoCacheMaxDaughters = 128;
    fGeoCacheMaxSize      = 1000000;
    fGeoCacheStackSize    = 1000;
    fGeoCacheDefaultLevel = 4;
-   fGeoCacheMaxLevels    = 30;
+   fGeoCacheMaxLevels    = size;
    fGeoCacheObjArrayInd  = 0xFF;
    fGeoCacheUsageRatio   = 0.01;
    gGeoManager->SetCache(this);
@@ -139,7 +139,7 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/, Bool_t nodeid)
       fCurrentCache = fGeoCacheObjArrayInd;
    fBranch = new Int_t[fGeoCacheMaxLevels];
    memset(fBranch, 0, fGeoCacheMaxLevels*sizeof(Int_t));
-   memset(fIdBranch, 0, 30*sizeof(Int_t));
+   memset(fIdBranch, 0, fGeoCacheMaxLevels*sizeof(Int_t));
    fMatrices = new Int_t[fGeoCacheMaxLevels];
    memset(fMatrices, 0, fGeoCacheMaxLevels*sizeof(Int_t));
    fGlobalMatrix = new TGeoHMatrix("current_global");
@@ -149,7 +149,7 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/, Bool_t nodeid)
    fCache[fCurrentCache]->SetPersistency();
    fStack = new TObjArray(fGeoCacheStackSize);
    for (Int_t ist=0; ist<fGeoCacheStackSize; ist++)
-      fStack->Add(new TGeoCacheState(100)); // !obsolete 100
+      fStack->Add(new TGeoCacheState(fGeoCacheMaxLevels)); // !obsolete 100
    printf("### nodes stored in cache %i ###\n", fSize);
    fMatrixPool = new TGeoMatrixCache(0);
    fCurrentID   = 0;
@@ -378,8 +378,8 @@ void TGeoNodeCache::CleanCache()
    fCountLimit = Int_t(fGeoCacheUsageRatio*(Double_t)fCount);
    // save level and node branch
    Int_t level = fLevel;
-   Int_t branch[30]; //should be the same as fGeoCacheMaxLevels
-   Bool_t flags[30];
+   Int_t branch[fGeoCacheMaxLevels]; //should be the same as fGeoCacheMaxLevels
+   Bool_t flags[fGeoCacheMaxLevels];
    memcpy(&branch[0], fBranch, fGeoCacheMaxLevels*sizeof(Int_t));
    // mark all nodes in the current branch as not-dumpable
    Int_t i;
@@ -598,9 +598,10 @@ TGeoCacheDummy::TGeoCacheDummy()
 }
 
 //_____________________________________________________________________________
-TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top, Bool_t nodeid)
+TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top, Bool_t nodeid, Int_t capacity)
                :TGeoNodeCache(nodeid)
 {
+   fGeoCacheMaxLevels = capacity;
    fTop = top;
    fNode = top;
    fNodeBranch = new TGeoNode *[fGeoCacheMaxLevels];
@@ -614,7 +615,7 @@ TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top, Bool_t nodeid)
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fStack = new TObjArray(fGeoCacheStackSize);
    for (Int_t ist=0; ist<fGeoCacheStackSize; ist++)
-      fStack->Add(new TGeoCacheStateDummy(100)); // !obsolete 100
+      fStack->Add(new TGeoCacheStateDummy(fGeoCacheMaxLevels)); // !obsolete 100
    fMatrixPool = 0;
 }
 
@@ -1503,6 +1504,7 @@ ClassImp(TGeoCacheState)
 TGeoCacheState::TGeoCacheState()
 {
 //--- Default ctor
+   fCapacity = 0;
    fLevel = 0;
    fBranch = 0;
    fMatrices = 0;
@@ -1510,12 +1512,13 @@ TGeoCacheState::TGeoCacheState()
 }
 
 //_____________________________________________________________________________
-TGeoCacheState::TGeoCacheState(Int_t /*capacity*/)
+TGeoCacheState::TGeoCacheState(Int_t capacity)
 {
 //--- ctor
+   fCapacity = capacity;
    fLevel = 0;
-   fBranch = new Int_t[30];
-   fMatrices = new Int_t[30];
+   fBranch = new Int_t[capacity];
+   fMatrices = new Int_t[capacity];
    fPoint = new Double_t[3];
 }
 
@@ -1587,13 +1590,14 @@ TGeoCacheStateDummy::TGeoCacheStateDummy()
 }
 
 //_____________________________________________________________________________
-TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t /*capacity*/)
+TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t capacity)
 {
 //--- ctor
-   fNodeBranch = new TGeoNode *[30];
-   fMatrixBranch = new TGeoHMatrix *[30];
-   fMatPtr = new TGeoHMatrix *[30];
-   for (Int_t i=0; i<30; i++)
+   fCapacity = capacity;
+   fNodeBranch = new TGeoNode *[capacity];
+   fMatrixBranch = new TGeoHMatrix *[capacity];
+   fMatPtr = new TGeoHMatrix *[capacity];
+   for (Int_t i=0; i<capacity; i++)
       fMatrixBranch[i] = new TGeoHMatrix("global");
    fPoint = new Double_t[3];
 }
@@ -1604,7 +1608,7 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
 //--- dtor
    if (fNodeBranch) {
       delete [] fNodeBranch;
-      for (Int_t i=0; i<30; i++)
+      for (Int_t i=0; i<fCapacity; i++)
          delete fMatrixBranch[i];
       delete [] fMatrixBranch;
       delete [] fMatPtr;

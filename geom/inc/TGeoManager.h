@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.58 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.59 2005/04/20 15:22:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -123,6 +123,7 @@ private :
    Int_t                 fOverlapMark;      //! current recursive position in fOverlapClusters
    Int_t                *fIntBuffer;        //! transient int buffer
    Int_t                *fOverlapClusters;  //! internal array for overlaps
+   Int_t                 fNLevel;           // maximum accepted level in geometry
    Double_t             *fDblBuffer;        //! transient dbl buffer
    Double_t              fLastPoint[3];     //! last point for which safety was computed
    TGeoVolume           *fPaintVolume;      //! volume currently painted
@@ -378,7 +379,7 @@ public:
 
 
    //--- utilities 
-   Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=1000, Int_t option=0);
+   Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
@@ -487,7 +488,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 9)          // geometry manager
+  ClassDef(TGeoManager, 10)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;
