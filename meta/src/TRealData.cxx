@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.3 2000/11/22 20:57:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.4 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -27,27 +27,25 @@ ClassImp(TRealData)
 //  object.Inspect or object.DrawClass are called.
 
 //______________________________________________________________________________
-TRealData::TRealData() : TObject(), fStreamer(0)
+TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
+   fStreamer(0), fIsObject(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
 
-   fIsObject = kFALSE;
 }
 
 
 //______________________________________________________________________________
 TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
-   : TObject(),fStreamer(0)
+   : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
+     fStreamer(0), fIsObject(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
 //*-*                ================================================
 //*-* datamember is the pointer to the data member descriptor.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   fDataMember = datamember;
-   fThisOffset = offset;
-   fName = name;
-   fIsObject = kFALSE;
+
 }
 
 //______________________________________________________________________________
