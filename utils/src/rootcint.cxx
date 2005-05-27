@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.207 2005/05/23 15:34:28 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.208 2005/05/24 14:13:30 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1322,15 +1322,6 @@ void WriteAuxFunctions(G__ClassInfo &cl)
 
    fprintf(fp, "namespace ROOT {\n");
 
-   fprintf(fp, "   // Return the actual TClass for the object argument\n");
-   fprintf(fp, "   static TClass *%s_IsA(const void *obj) {\n",mappedname.c_str());
-   if (!cl.HasMethod("IsA")) {
-      fprintf(fp, "      return GetROOT()->GetClass(typeid(*(%s*)obj));\n",classname.c_str());
-   } else {
-      fprintf(fp, "      return ((%s*)obj)->IsA();\n",classname.c_str());
-   }
-   fprintf(fp, "   }\n");
-
    if (HasDefaultConstructor(cl)) {
       // write the constructor wrapper only for concrete classes
       fprintf(fp, "   // Wrappers around operator new\n");
@@ -2136,7 +2127,6 @@ void WriteClassInit(G__ClassInfo &cl)
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
       fprintf(fp, "   static void %s_Dictionary();\n",mappedname.c_str());
 
-   fprintf(fp, "   static TClass *%s_IsA(const void*);\n",mappedname.c_str());
    if (HasDefaultConstructor(cl)) {
       fprintf(fp, "   static void *new_%s(void *p = 0);\n",mappedname.c_str());
       fprintf(fp, "   static void *newArray_%s(Long_t size);\n",mappedname.c_str());
@@ -2180,6 +2170,12 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "      %s *ptr = 0;\n",csymbol.c_str());
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
+   if ( cl.HasMethod("IsA") ) {
+     fprintf(fp, "      static ::TVirtualIsaProxy* isa_proxy = new ::TInstrumentedIsaProxy< %s >(0);\n", csymbol.c_str());
+   }
+   else {
+     fprintf(fp, "      static ::TVirtualIsaProxy* isa_proxy = new ::TIsaProxy(typeid(%s),0);\n", csymbol.c_str());
+   }
    fprintf(fp, "      static ::ROOT::TGenericClassInfo \n");
 
    fprintf(fp, "         instance(\"%s\", ",classname.c_str());
@@ -2237,8 +2233,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "&%s_Dictionary, ",mappedname.c_str());
    }
 
-   fprintf(fp, "&%s_IsA, ", mappedname.c_str());
-   fprintf(fp, "%d,\n", cl.RootFlag());
+   fprintf(fp, "isa_proxy, %d,\n", cl.RootFlag());
    fprintf(fp, "                  sizeof(%s) );\n", csymbol.c_str());
    if (HasDefaultConstructor(cl)) {
       fprintf(fp, "      instance.SetNew(&new_%s);\n",mappedname.c_str());
@@ -4461,8 +4456,9 @@ int main(int argc, char **argv)
    fprintf(fp, "#ifndef G__ROOT\n");
    fprintf(fp, "#define G__ROOT\n");
    fprintf(fp, "#endif\n\n");
-   fprintf(fp, "#include \"RtypesImp.h\"\n\n");
-   fprintf(fp, "#include \"TCollectionProxy.h\"\n\n");
+   fprintf(fp, "#include \"RtypesImp.h\"\n");
+   fprintf(fp, "#include \"TCollectionProxy.h\"\n");
+   fprintf(fp, "#include \"TIsaProxy.h\"\n");
 #ifdef R__SOLARIS
    fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
    fprintf(fp, "namespace std {} using namespace std;\n\n");

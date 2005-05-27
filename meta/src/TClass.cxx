@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.166 2005/05/23 17:00:27 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.167 2005/05/26 15:24:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TStreamer.h"
 #include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualIsaProxy.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -503,7 +504,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
-               const type_info &info, IsAFunc_t isa,
+               const type_info &info, TVirtualIsaProxy *isa,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
@@ -519,7 +520,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
-                  const type_info *typeinfo, IsAFunc_t isa,
+                  const type_info *typeinfo, TVirtualIsaProxy *isa,
                   ShowMembersFunc_t showmembers,
                   const char *dfil, const char *ifil, Int_t dl, Int_t il)
 {
@@ -546,6 +547,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fCollectionProxy= 0;
    fTypeInfo       = typeinfo;
    fIsA            = isa;
+   if ( fIsA ) fIsA->SetClass(this);
    fGlobalIsA      = 0;
    fIsAMethod      = 0;
    fShowMembers    = showmembers;
@@ -753,6 +755,7 @@ TClass::~TClass()
    if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
    fInterStreamer=0;
 
+   if ( fIsA ) delete fIsA;
    delete fStreamer;
    delete fCollectionProxy;
    delete fIsAMethod;
@@ -1200,7 +1203,7 @@ TClass *TClass::GetActualClass(const void *object) const
    if (object==0 || !IsLoaded() ) return (TClass*)this;
 
    if (fIsA) {
-      return fIsA(object); // ROOT::IsA((ThisClass*)object);
+      return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
       return fGlobalIsA(this,object);
    } else {
@@ -1367,6 +1370,12 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    return fCollectionProxy;
+}
+
+//______________________________________________________________________________
+TVirtualIsaProxy* TClass::GetIsaProxy() const 
+{
+   return fIsA;
 }
 
 //______________________________________________________________________________
@@ -2330,7 +2339,7 @@ void TClass::Store(TBuffer &b) const
 
 //______________________________________________________________________________
 TClass *ROOT::CreateClass(const char *cname, Version_t id,
-                          const type_info &info, IsAFunc_t isa,
+                          const type_info &info, TVirtualIsaProxy *isa,
                           ShowMembersFunc_t show,
                           const char *dfil, const char *ifil,
                           Int_t dl, Int_t il)

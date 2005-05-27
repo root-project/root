@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.5 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.6 2004/07/30 19:09:51 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -11,6 +11,9 @@
 
 #ifndef ROOT_TGenericClassInfo
 #define ROOT_TGenericClassInfo
+
+// Forward declarations
+class TVirtualIsaProxy;
 
 namespace ROOT {
 
@@ -28,7 +31,7 @@ namespace ROOT {
       const type_info         &fInfo;
       const char              *fImplFileName;
       Int_t                    fImplFileLine;
-      IsAFunc_t                fIsA;
+      TVirtualIsaProxy        *fIsA;
       void                    *fShowMembers;
       Int_t                    fVersion;
       NewFunc_t                fNew;
@@ -45,19 +48,19 @@ namespace ROOT {
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        void *showmembers, VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        void *showmembers,  VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        VoidFuncPtr_t dictionary, 
-                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
@@ -78,7 +81,7 @@ namespace ROOT {
       const char          *GetImplFileName();
       Int_t                GetImplFileLine();
       const type_info     &GetInfo() const;
-      IsAFunc_t            GetIsA() const;
+      TVirtualIsaProxy    *GetIsA() const;
       NewFunc_t            GetNew() const;
       NewArrFunc_t         GetNewArray() const;
       void                *GetShowMembers() const;

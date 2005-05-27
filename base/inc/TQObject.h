@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.23 2003/07/25 17:22:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.24 2005/03/13 15:05:31 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -204,7 +204,7 @@ friend class TQObject;
 
 public:
    TQClass(const char *name, Version_t cversion,
-           const type_info &info, IsAFunc_t isa,
+           const type_info &info, TVirtualIsaProxy *isa,
            ShowMembersFunc_t showmembers,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
@@ -248,7 +248,7 @@ namespace ROOT {
    class TQObjectInitBehavior : public TDefaultInitBehavior {
    public:
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, IsAFunc_t isa,
+                                  const type_info &info, TVirtualIsaProxy *isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
