@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v4-04-02 $:$Id: TTimeStamp.cxx,v 1.16 2005/02/28 17:28:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.17 2005/05/27 08:59:12 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -213,12 +213,12 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
    if (asSQL) format = SQL;
 
    // get the components into a tm struct
-   struct tm buf;
    time_t seconds = (time_t) fSec;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (asLocal) ? localtime_r(&seconds,&buf) : gmtime_r(&seconds,&buf);
 #else
-   struct tm *ptm = (asLocal) ? localtime(&seconds,&buf) : gmtime(&seconds,&buf);
+   struct tm *ptm = (asLocal) ? localtime(&seconds) : gmtime(&seconds);
 #endif
 
    // format all but the nsec field
@@ -252,11 +252,11 @@ UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
    // if non-zero pointers supplied for year, month, day fill those as well.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    if (day)   *day   = ptm->tm_mday;
@@ -274,11 +274,11 @@ UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
    // if non-zero pointers supplied for hour, min, sec fill those as well.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    if (hour) *hour = ptm->tm_hour;
@@ -295,11 +295,11 @@ Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
    // Valid return values range between 1 and 366, where January 1 = 1.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    Int_t day   = ptm->tm_mday;
@@ -316,11 +316,11 @@ Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
    // Valid return values range between 1 and 7, where Monday = 1.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    Int_t day   = ptm->tm_mday;
@@ -336,11 +336,11 @@ Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
    // Get the month of the year. Valid return values are between 1 and 12.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    return ptm->tm_mon + 1;
@@ -354,11 +354,11 @@ Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
    // week of the previous year so the year must be returned too).
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    Int_t day   = ptm->tm_mday;
@@ -382,11 +382,11 @@ Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
    // seasons always occur during the same months each year.
 
    time_t atime = fSec + secOffset;
-   struct tm buf;
 #ifdef _REENTRANT
+   struct tm buf;
    struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
 #else
-   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
 #endif
 
    Int_t year = ptm->tm_year + 1900;
