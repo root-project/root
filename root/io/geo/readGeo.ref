@@ -19,6 +19,7 @@ Warning in <TGeoManager::dtor>: deleting geometry: tesla/tesla.C
 ### Geometry loaded from file...
 Top volume is ALEF. Master volume is ALEF
 ### Voxelization retrieved from file
+--- Maximum geometry depth set to 100
 --- node ID tracking disabled
 ### 8177 nodes/ 227 volume UID's in aleph.C
 ----------------modeler ready----------------
