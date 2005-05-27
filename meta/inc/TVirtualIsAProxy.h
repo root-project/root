@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.49 2005/03/20 21:25:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualIsAProxy.h,v 1.1 2005/05/27 03:00:05 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -9,20 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TVirtualIsaProxy
-#define ROOT_TVirtualIsaProxy
+#ifndef ROOT_TVirtualIsAProxy
+#define ROOT_TVirtualIsAProxy
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TClass                                                               //
 //                                                                      //
-// Virtual IsaProxy base class.                                         //
+// Virtual IsAProxy base class.                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-class TVirtualIsaProxy  {
+class TVirtualIsAProxy  {
 public:
    virtual void SetClass(TClass *cl) = 0;
    virtual TClass* operator()(const void *obj) = 0;
 };
 
-#endif // ROOT_TVirtualIsaProxy
+#endif // ROOT_TVirtualIsAProxy

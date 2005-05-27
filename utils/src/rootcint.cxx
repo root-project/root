@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.208 2005/05/24 14:13:30 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.209 2005/05/27 03:00:05 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2171,10 +2171,10 @@ void WriteClassInit(G__ClassInfo &cl)
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
    if ( cl.HasMethod("IsA") ) {
-     fprintf(fp, "      static ::TVirtualIsaProxy* isa_proxy = new ::TInstrumentedIsaProxy< %s >(0);\n", csymbol.c_str());
+     fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< %s >(0);\n", csymbol.c_str());
    }
    else {
-     fprintf(fp, "      static ::TVirtualIsaProxy* isa_proxy = new ::TIsaProxy(typeid(%s),0);\n", csymbol.c_str());
+     fprintf(fp, "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(%s),0);\n", csymbol.c_str());
    }
    fprintf(fp, "      static ::ROOT::TGenericClassInfo \n");
 
@@ -4458,7 +4458,7 @@ int main(int argc, char **argv)
    fprintf(fp, "#endif\n\n");
    fprintf(fp, "#include \"RtypesImp.h\"\n");
    fprintf(fp, "#include \"TCollectionProxy.h\"\n");
-   fprintf(fp, "#include \"TIsaProxy.h\"\n");
+   fprintf(fp, "#include \"TIsAProxy.h\"\n");
 #ifdef R__SOLARIS
    fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
    fprintf(fp, "namespace std {} using namespace std;\n\n");

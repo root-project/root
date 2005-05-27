@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.8 2005/04/12 06:48:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.9 2005/05/27 03:00:05 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TStreamer.h"
-#include "TVirtualIsaProxy.h"
+#include "TVirtualIsAProxy.h"
 #include "TVirtualCollectionProxy.h"
 
 namespace ROOT {
@@ -32,7 +32,7 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         void *showmembers, VoidFuncPtr_t dictionary,
-                                        TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), 
@@ -49,7 +49,7 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         void* showmembers,  VoidFuncPtr_t dictionary,
-                                        TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), 
@@ -66,7 +66,7 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         VoidFuncPtr_t dictionary,
-                                        TVirtualIsaProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), 
@@ -239,7 +239,7 @@ namespace ROOT {
       return (*GetIsA())(obj);
    }
 
-   TVirtualIsaProxy* TGenericClassInfo::GetIsA() const
+   TVirtualIsAProxy* TGenericClassInfo::GetIsA() const
    {
       return fIsA;
    }

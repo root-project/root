@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.49 2005/03/20 21:25:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.1 2005/05/27 03:00:05 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TIsaProxy
-#define ROOT_TIsaProxy
+#ifndef ROOT_TIsAProxy
+#define ROOT_TIsAProxy
 
-#ifndef ROOT_TVirtualIsaProxy
-#include "TVirtualIsaProxy.h"
+#ifndef ROOT_TVirtualIsAProxy
+#include "TVirtualIsAProxy.h"
 #endif
 
 class TClass;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TIsaProxy implementation class.                                      //
+// TIsAProxy implementation class.                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-class TIsaProxy  : public TVirtualIsaProxy {
+class TIsAProxy  : public TVirtualIsAProxy {
 private:
    const type_info   *fType;         //Actual typeid of the proxy
    const type_info   *fLastType;     //Last used subtype
@@ -31,39 +31,39 @@ private:
    TClass            *fLastClass;    //Last used TClass
    Char_t             fSubTypes[64]; //map of known sub-types
    Bool_t             fVirtual;      //Flag if class is virtual
-   void*              fContext;      //Optional user contex
+   void              *fContext;      //Optional user contex
    Bool_t             fInit;         //Initialization flag
 public:
-   /// Standard initializing constructor
-   TIsaProxy(const type_info &typ, void *ctxt = 0);
-   /// Standard destructor
-   virtual ~TIsaProxy();
-   /// Callbacl to set the class
+   // Standard initializing constructor
+   TIsAProxy(const type_info &typ, void *ctxt = 0);
+   // Standard destructor
+   virtual ~TIsAProxy();
+   // Callbacl to set the class
    virtual void SetClass(TClass *cl);
-   /// IsA callback
+   // IsA callback
    virtual TClass* operator()(const void *obj);
 };
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TInstrumentedIsaProxy implementation class.                          //
+// TInstrumentedIsAProxy implementation class.                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-template <class T> class TInstrumentedIsaProxy : public TVirtualIsaProxy {
+template <class T> class TInstrumentedIsAProxy : public TVirtualIsAProxy {
 private:
    TClass *fClass;        //Actual TClass
 
 public:
-   /// Standard initializing constructor
-   TInstrumentedIsaProxy(TClass *cl) : fClass(cl)      {}
-   /// Standard destructor
-   virtual ~TInstrumentedIsaProxy()                    {}
-   /// Callbacl to set the class
+   // Standard initializing constructor
+   TInstrumentedIsAProxy(TClass *cl) : fClass(cl)      {}
+   // Standard destructor
+   virtual ~TInstrumentedIsAProxy()                    {}
+   // Callbacl to set the class
    virtual void SetClass(TClass *cl)                   { fClass = cl; }
-   /// IsA callback
+   // IsA callback
    virtual TClass* operator()(const void *obj) {
       return obj==0 ? fClass : ((T*)obj)->IsA();
    }
 };
 
-#endif // ROOT_TIsaProxy
+#endif // ROOT_TIsAProxy

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.49 2005/04/07 14:43:35 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.50 2005/05/27 03:00:04 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -143,7 +143,7 @@ R__EXTERN Int_t gDebug;
 //---- ClassDef macros ---------------------------------------------------------
 
 typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R__parent);
-class TVirtualIsaProxy;
+class TVirtualIsAProxy;
 typedef TClass *(*IsAGlobalFunc_t)(const TClass*, const void *obj);
 
 // TBuffer.h declares and implements the following 2 operators
@@ -165,7 +165,7 @@ namespace ROOT {
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
    extern TClass *CreateClass(const char *cname, Version_t id,
-                              const type_info &info, TVirtualIsaProxy *isa,
+                              const type_info &info, TVirtualIsAProxy *isa,
                               ShowMembersFunc_t show,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
@@ -199,7 +199,7 @@ namespace ROOT {
                             VoidFuncPtr_t dict, Int_t pragmabits) const = 0;
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsaProxy *isa,
+                                  const type_info &info, TVirtualIsAProxy *isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const = 0;
@@ -215,7 +215,7 @@ namespace ROOT {
          ROOT::RemoveClass(classname);
       }
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsaProxy *isa,
+                                  const type_info &info, TVirtualIsAProxy *isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {

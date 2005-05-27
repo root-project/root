@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.167 2005/05/26 15:24:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.168 2005/05/27 03:00:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -55,7 +55,7 @@
 #include "TStreamer.h"
 #include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
-#include "TVirtualIsaProxy.h"
+#include "TVirtualIsAProxy.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -504,7 +504,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
-               const type_info &info, TVirtualIsaProxy *isa,
+               const type_info &info, TVirtualIsAProxy *isa,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
@@ -520,7 +520,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
-                  const type_info *typeinfo, TVirtualIsaProxy *isa,
+                  const type_info *typeinfo, TVirtualIsAProxy *isa,
                   ShowMembersFunc_t showmembers,
                   const char *dfil, const char *ifil, Int_t dl, Int_t il)
 {
@@ -1373,7 +1373,7 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 }
 
 //______________________________________________________________________________
-TVirtualIsaProxy* TClass::GetIsaProxy() const 
+TVirtualIsAProxy* TClass::GetIsAProxy() const 
 {
    return fIsA;
 }
@@ -2339,7 +2339,7 @@ void TClass::Store(TBuffer &b) const
 
 //______________________________________________________________________________
 TClass *ROOT::CreateClass(const char *cname, Version_t id,
-                          const type_info &info, TVirtualIsaProxy *isa,
+                          const type_info &info, TVirtualIsAProxy *isa,
                           ShowMembersFunc_t show,
                           const char *dfil, const char *ifil,
                           Int_t dl, Int_t il)

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.166 2005/05/23 17:00:27 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.1 2005/05/27 03:00:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 #endif
 
 #include "Api.h"
-#include "TIsaProxy.h"
+#include "TIsAProxy.h"
 
 #include <map>
 
@@ -27,54 +27,65 @@
 //                                                                      //
 // TClass                                                               //
 //                                                                      //
-// TIsaProxy implementation class.                                      //
+// TIsAProxy implementation class.                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-namespace {  
-   struct DynamicType {    
-      virtual ~DynamicType() {}  
+namespace {
+   struct DynamicType {
+      // Helper class to enable typeid on any address
+      // Used in code similar to:
+      //    typeid( * (DynamicType*) void_ptr );
+      virtual ~DynamicType() {}
    };  
 }
 
-typedef std::map<long, TClass*> ClassMap; // Internal type map
-inline ClassMap& i_map(void* p)  { return *(ClassMap*)p; }
+typedef std::map<long, TClass*> ClassMap_t; // Internal type map
+inline ClassMap_t *GetMap(void* p)
+{ 
+   return (ClassMap_t*)p;
+}
 
 //______________________________________________________________________________
-TIsaProxy::TIsaProxy(const std::type_info& typ, void* ctxt)
+TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
    : fType(&typ), fLastType(&typ), fClass(0), fLastClass(0), 
      fVirtual(false), fContext(ctxt), fInit(false)
 {
    // Standard initializing constructor
-   ::new(fSubTypes) ClassMap();
-   if ( sizeof(ClassMap) > sizeof(fSubTypes) ) {
-      Fatal("TIsaProxy",
+
+   ::new(fSubTypes) ClassMap_t();
+   if ( sizeof(ClassMap_t) > sizeof(fSubTypes) ) {
+      Fatal("TIsAProxy",
          "Classmap size is badly adjusted: it needs %d instead of %d bytes.",
-         sizeof(ClassMap), sizeof(fSubTypes));
+         sizeof(ClassMap_t), sizeof(fSubTypes));
    }
 }
 
 //______________________________________________________________________________
-TIsaProxy::~TIsaProxy()
+TIsAProxy::~TIsAProxy()
 {
    // Standard destructor
-   ClassMap* m = &i_map(fSubTypes);
+
+   ClassMap_t* m = GetMap(fSubTypes);
    m->clear();
-   m->~ClassMap();
+   m->~ClassMap_t();
 }
 
 //______________________________________________________________________________
-void TIsaProxy::SetClass(TClass* cl)  {
+void TIsAProxy::SetClass(TClass *cl)
+{
    // Set class pointer
-   i_map(fSubTypes).clear();
+   GetMap(fSubTypes)->clear();
    fClass = fLastClass = cl;
 }
 
 //______________________________________________________________________________
-TClass* TIsaProxy::operator()(const void* obj)  {
-   /// IsA callback
+TClass* TIsAProxy::operator()(const void *obj)  
+{
+   // IsA callback
+
    if ( !fInit )  {
-      fInit = true;
+      fInit = kTRUE;
       if ( !fClass && fType ) fClass = gROOT->GetClass(*fType);
       fClass->Property();
       if ( fClass->GetClassInfo() )  {
@@ -83,8 +94,7 @@ TClass* TIsaProxy::operator()(const void* obj)  {
    }
    if ( !obj || !fVirtual )  {
       return fClass;
-   }
-   else  {
+   } else  {
       // Avoid the case that the first word is a virtual_base_offset_table instead of
       // a virtual_function_table
       long offset = **(long**)obj;
@@ -100,13 +110,14 @@ TClass* TIsaProxy::operator()(const void* obj)  {
          return fLastClass;
       }
       // Check if type is already in sub-class cache
-      else if ( 0 != (fLastClass=(*(ClassMap*)fSubTypes)[long(typ)]) )  {
+      else if ( 0 != (fLastClass=(*GetMap(fSubTypes))[long(typ)]) )  {
          fLastType = typ;
       }
       // Last resort: lookup root class
       else   {
          fLastClass = ROOT::GetROOT()->GetClass(*typ);
-         (*(ClassMap*)fSubTypes)[long(fLastType=typ)] = fLastClass;
+         fLastType = typ;
+         (*GetMap(fSubTypes))[long(fLastType)] = fLastClass;
       }
    }
    return fLastClass;

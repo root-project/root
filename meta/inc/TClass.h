@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.49 2005/03/20 21:25:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.50 2005/05/27 03:00:05 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -49,7 +49,7 @@ class TBuffer;
 class G__ClassInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
-class TVirtualIsaProxy;
+class TVirtualIsAProxy;
 
 namespace ROOT { class TGenericClassInfo; }
 
@@ -93,7 +93,7 @@ private:
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 
-   TVirtualIsaProxy  *fIsA;             //!pointer to the class's IsA proxy.
+   TVirtualIsAProxy  *fIsA;             //!pointer to the class's IsA proxy.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
    TMethodCall       *fIsAMethod;       //!saved info to call a IsA member function
 
@@ -122,7 +122,7 @@ private:
       else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
    }
    void Init(const char *name, Version_t cversion, const type_info *info,
-             TVirtualIsaProxy *isa, ShowMembersFunc_t showmember,
+             TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il);
 
@@ -144,7 +144,7 @@ public:
           const char *dfil = 0, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0);
    TClass(const char *name, Version_t cversion,
-          const type_info &info, TVirtualIsaProxy *isa,
+          const type_info &info, TVirtualIsAProxy *isa,
           ShowMembersFunc_t showmember,
           const char *dfil, const char *ifil,
           Int_t dl, Int_t il);
@@ -166,7 +166,7 @@ public:
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
-   TVirtualIsaProxy  *GetIsaProxy() const;
+   TVirtualIsAProxy  *GetIsAProxy() const;
    Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return fClassVersion; }
    TDataMember       *GetDataMember(const char *datamember) const;
    Int_t              GetDataMemberOffset(const char *membername) const;

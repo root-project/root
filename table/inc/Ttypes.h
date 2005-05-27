@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.7 2004/07/23 16:52:53 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.8 2005/05/27 03:00:05 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.7 2004/07/23 16:52:53 brun Exp $
+// $Id: Ttypes.h,v 1.8 2005/05/27 03:00:05 pcanal Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -128,7 +128,7 @@ namespace ROOT {
    public:
       static const char* fgStructName; // Need to be instantiated
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsaProxy *isa,
+                                  const type_info &info, TVirtualIsAProxy *isa,
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
