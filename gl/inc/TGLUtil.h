@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -163,29 +163,29 @@ inline TGLVector3 Cross(const TGLVector3 & v1, const TGLVector3 & v2)
 }
 
 //______________________________________________________________________________
-inline const TGLVector3 operator / (const TGLVector3 & vector, Double_t val)
+inline const TGLVector3 operator / (const TGLVector3 & vec, Double_t val)
 {
-   return TGLVector3(vector[0] / val, vector[1] / val, vector[2] / val);
+   return TGLVector3(vec[0] / val, vec[1] / val, vec[2] / val);
 }
 
 //______________________________________________________________________________
-inline const TGLVector3 operator * (const TGLVector3 & vector, Double_t val)
+inline const TGLVector3 operator * (const TGLVector3 & vec, Double_t val)
 {
-   return TGLVector3(vector[0] * val, vector[1] * val, vector[2] * val);
+   return TGLVector3(vec[0] * val, vec[1] * val, vec[2] * val);
 }
 
 //______________________________________________________________________________
 // Vertex + Vector => Vertex
-inline TGLVertex3 operator + (const TGLVertex3 & vertex, const TGLVector3 & vector)
+inline TGLVertex3 operator + (const TGLVertex3 & vertex, const TGLVector3 & vec)
 {
-   return TGLVertex3(vertex[0] + vector[0], vertex[1] + vector[1], vertex[2] + vector[2]);
+   return TGLVertex3(vertex[0] + vec[0], vertex[1] + vec[1], vertex[2] + vec[2]);
 }
 
 //______________________________________________________________________________
 // Vertex - Vertex => Vector
-inline TGLVector3 operator - (const TGLVertex3 & vertex, const TGLVertex3 & vector)
+inline TGLVector3 operator - (const TGLVertex3 & vertex, const TGLVertex3 & vec)
 {
-   return TGLVector3(vertex[0] - vector[0], vertex[1] - vector[1], vertex[2] - vector[2]);
+   return TGLVector3(vertex[0] - vec[0], vertex[1] - vec[1], vertex[2] - vec[2]);
 }
 
 //______________________________________________________________________________
