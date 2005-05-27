@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.189 2005/04/19 19:39:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.190 2005/05/02 09:38:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -455,7 +455,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 
    TTreeProxyGenerator gp(fTree,realname,realcutname,selname,"",3);
 
-   selname = gp.GetFilename();
+   selname = gp.GetFileName();
    if (aclicMode.Length()==0) {
       Warning("DrawScript","TTreeProxy does not work in interpreted mode yet.  The script will to compiled.");
       aclicMode = "+";

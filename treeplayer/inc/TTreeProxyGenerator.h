@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.2 2004/06/25 22:45:41 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.3 2004/07/20 09:40:19 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -39,7 +39,7 @@ namespace ROOT {
       TString  fScript;
       TString  fCutScript;
       TString  fPrefix;
-      TString  fHeaderFilename;
+      TString  fHeaderFileName;
       TString  fOptionStr;
       UInt_t   fOptions;
       UInt_t   fMaxUnrolling;
@@ -74,7 +74,7 @@ namespace ROOT {
       void   AnalyzeTree(TTree *tree);
       void   WriteProxy();
 
-      const char *GetFilename() { return fHeaderFilename; }
+      const char *GetFileName() { return fHeaderFileName; }
    };
 
 }

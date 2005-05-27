@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.16 2005/02/16 20:18:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.17 2005/03/08 05:33:30 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -208,7 +208,7 @@ namespace ROOT {
       fScript(script),
       fCutScript(),
       fPrefix(fileprefix),
-      fHeaderFilename(),
+      fHeaderFileName(),
       fOptionStr(option),
       fOptions(0),
       fMaxUnrolling(maxUnrolling),
@@ -230,7 +230,7 @@ namespace ROOT {
       fScript(script),
       fCutScript(cutscript),
       fPrefix(fileprefix),
-      fHeaderFilename(),
+      fHeaderFileName(),
       fOptionStr(option),
       fOptions(0),
       fMaxUnrolling(maxUnrolling),
@@ -1556,15 +1556,15 @@ namespace ROOT {
          }
       }
 
-      fHeaderFilename = fPrefix;
-      fHeaderFilename.Append(".h");
+      fHeaderFileName = fPrefix;
+      fHeaderFileName.Append(".h");
 
       // Check to see if the target file exist.
       // If they do we will generate the proxy in temporary file and modify the original
       // if and only if it is different.
 
       Bool_t updating = kFALSE;
-      if (gSystem->GetPathInfo( fHeaderFilename, 0, (Long_t*)0, 0, 0 ) == 0) {
+      if (gSystem->GetPathInfo( fHeaderFileName, 0, (Long_t*)0, 0, 0 ) == 0) {
          // file already exist
          updating = kTRUE;
       }
@@ -1631,10 +1631,10 @@ namespace ROOT {
          tmpfilename.Append("_proxy.h");
          hf = fopen(tmpfilename.Data(),"w");
       } else {
-         hf = fopen(fHeaderFilename.Data(),"w");
+         hf = fopen(fHeaderFileName.Data(),"w");
       }
       if (hf == 0) {
-         Error("WriteProxy","Unable to open the file %s for writing.",fHeaderFilename.Data());
+         Error("WriteProxy","Unable to open the file %s for writing.",fHeaderFileName.Data());
          return;
       }
 
@@ -1961,9 +1961,9 @@ namespace ROOT {
 
       if (updating) {
          // over-write existing file only if needed.
-         if (AreDifferent(fHeaderFilename,tmpfilename)) {
-            gSystem->Unlink(fHeaderFilename);
-            gSystem->Rename(tmpfilename,fHeaderFilename);
+         if (AreDifferent(fHeaderFileName,tmpfilename)) {
+            gSystem->Unlink(fHeaderFileName);
+            gSystem->Rename(tmpfilename,fHeaderFileName);
          } else gSystem->Unlink(tmpfilename);
       }
    }
