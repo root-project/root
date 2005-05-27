@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.15 2004/08/31 09:36:49 rdm Exp $
+// @(#)root/base:$Name: v4-04-02 $:$Id: TTimeStamp.cxx,v 1.16 2005/02/28 17:28:11 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -138,7 +138,7 @@ TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDat
 }
 
 //______________________________________________________________________________
-const char *TTimeStamp::AsString(Option_t *option) const
+const Char_t *TTimeStamp::AsString(Option_t *option) const
 {
    // Return the date & time as a string.
    //
@@ -171,12 +171,12 @@ const char *TTimeStamp::AsString(Option_t *option) const
    // Internally uses a circular list of buffers to avoid problems
    // using AsString multiple times in a single statement.
 
-   const int nbuffers = 8;     // # of buffers
+   const Int_t nbuffers = 8;     // # of buffers
 
-   static char formatted[nbuffers][64];  // strftime fields substituted
-   static char formatted2[nbuffers][64]; // nanosec field substituted
+   static Char_t formatted[nbuffers][64];  // strftime fields substituted
+   static Char_t formatted2[nbuffers][64]; // nanosec field substituted
 
-   static int ibuffer = nbuffers;
+   static Int_t ibuffer = nbuffers;
    ibuffer = (ibuffer+1)%nbuffers; // each call moves to next buffer
 
    TString opt = option;
@@ -190,33 +190,36 @@ const char *TTimeStamp::AsString(Option_t *option) const
 
 #ifdef R__LINUX
    // under linux %z is the hour offset and %Z is the timezone name
-   const char *RFC822   = "%a, %d %b %Y %H:%M:%S %z (%Z) +#9ld nsec";
-   const char *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
-   const char *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
+   const Char_t *RFC822   = "%a, %d %b %Y %H:%M:%S %z (%Z) +#9ld nsec";
+   const Char_t *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%z";
+   const Char_t *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
 #else
    // otherwise only %Z is guarenteed to be defind
-   const char *RFC822   = "%a, %d %b %Y %H:%M:%S %Z +#9ld nsec";
-   const char *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%Z";
-   const char *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
+   const Char_t *RFC822   = "%a, %d %b %Y %H:%M:%S %Z +#9ld nsec";
+   const Char_t *ISO8601  = "%Y-%m-%d %H:%M:%S.#9.9ld%Z";
+   const Char_t *ISO8601Z = "%Y-%m-%d %H:%M:%S.#9.9ldZ";
 #endif
-   const char *SQL = "%Y-%m-%d %H:%M:%S";
+   const Char_t *SQL = "%Y-%m-%d %H:%M:%S";
 
    Bool_t asLocal = opt.Contains("l");
    Bool_t asSQL   = opt.Contains("s");
    if (asSQL) asLocal = kFALSE;
 
-   const char *format = RFC822;
+   const Char_t *format = RFC822;
    if (opt.Contains("c")) {
       format = ISO8601;
       if (!asLocal) format = ISO8601Z;
    }
    if (asSQL) format = SQL;
 
-   struct tm *ptm;
-   time_t seconds = (time_t) fSec;
-
    // get the components into a tm struct
-   ptm = (asLocal) ? localtime(&seconds) : gmtime(&seconds);
+   struct tm buf;
+   time_t seconds = (time_t) fSec;
+#ifdef _REENTRANT
+   struct tm *ptm = (asLocal) ? localtime_r(&seconds,&buf) : gmtime_r(&seconds,&buf);
+#else
+   struct tm *ptm = (asLocal) ? localtime(&seconds,&buf) : gmtime(&seconds,&buf);
+#endif
 
    // format all but the nsec field
    // size_t length =
@@ -225,7 +228,7 @@ const char *TTimeStamp::AsString(Option_t *option) const
    if (asSQL) return formatted[ibuffer];
 
    // hack in the nsec part
-   char *ptr = strrchr(formatted[ibuffer], '#');
+   Char_t *ptr = strrchr(formatted[ibuffer], '#');
    if (ptr) *ptr = '%';    // substitute % for #
    sprintf(formatted2[ibuffer], formatted[ibuffer], fNanoSec);
 
@@ -249,7 +252,12 @@ UInt_t TTimeStamp::GetDate(Bool_t inUTC, Int_t secOffset,
    // if non-zero pointers supplied for year, month, day fill those as well.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    if (day)   *day   = ptm->tm_mday;
    if (month) *month = ptm->tm_mon + 1;
@@ -266,7 +274,12 @@ UInt_t TTimeStamp::GetTime(Bool_t inUTC, Int_t secOffset,
    // if non-zero pointers supplied for hour, min, sec fill those as well.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    if (hour) *hour = ptm->tm_hour;
    if (min)  *min  = ptm->tm_min;
@@ -282,7 +295,12 @@ Int_t TTimeStamp::GetDayOfYear(Bool_t inUTC, Int_t secOffset) const
    // Valid return values range between 1 and 366, where January 1 = 1.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    Int_t day   = ptm->tm_mday;
    Int_t month = ptm->tm_mon + 1;
@@ -298,7 +316,12 @@ Int_t TTimeStamp::GetDayOfWeek(Bool_t inUTC, Int_t secOffset) const
    // Valid return values range between 1 and 7, where Monday = 1.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    Int_t day   = ptm->tm_mday;
    Int_t month = ptm->tm_mon + 1;
@@ -313,7 +336,12 @@ Int_t TTimeStamp::GetMonth(Bool_t inUTC, Int_t secOffset) const
    // Get the month of the year. Valid return values are between 1 and 12.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    return ptm->tm_mon + 1;
 }
@@ -326,7 +354,12 @@ Int_t TTimeStamp::GetWeek(Bool_t inUTC, Int_t secOffset) const
    // week of the previous year so the year must be returned too).
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    Int_t day   = ptm->tm_mday;
    Int_t month = ptm->tm_mon + 1;
@@ -349,7 +382,12 @@ Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
    // seasons always occur during the same months each year.
 
    time_t atime = fSec + secOffset;
-   struct tm *ptm = (inUTC) ? gmtime(&atime) : localtime(&atime);
+   struct tm buf;
+#ifdef _REENTRANT
+   struct tm *ptm = (inUTC) ? gmtime_r(&atime,&buf) : localtime_r(&atime,&buf);
+#else
+   struct tm *ptm = (inUTC) ? gmtime(&atime,&buf) : localtime(&atime,&buf);
+#endif
 
    Int_t year = ptm->tm_year + 1900;
 
@@ -427,10 +465,11 @@ void TTimeStamp::Set()
    struct timeval tp;
    gettimeofday(&tp, 0);
    fSec     = tp.tv_sec;
-   fNanoSec = tp.tv_usec * 1000;
+   fNanoSec = tp.tv_usec*1000;
 #endif
-   static Int_t sec = 0, nsec = 0, fake_ns = 0;
 
+   // ?? what to do to make it thread safe?
+   static Int_t sec = 0, nsec = 0, fake_ns = 0;
    if (fSec == sec && fNanoSec == nsec)
       fNanoSec += ++fake_ns;
    else {
@@ -614,8 +653,8 @@ time_t TTimeStamp::MktimeFromUTC(tm_t *tmstruct)
 
    // fill in tmstruct->tm_yday
 
-   int &ref_tm_mon = tmstruct->tm_mon;
-   int &ref_tm_mday = tmstruct->tm_mday;
+   Int_t &ref_tm_mon = tmstruct->tm_mon;
+   Int_t &ref_tm_mday = tmstruct->tm_mday;
    // count days in months past
    tmstruct->tm_yday = 0;
    for (Int_t imonth = 0; imonth < ref_tm_mon; imonth++) {
