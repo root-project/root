@@ -107,6 +107,13 @@ ObjSuf   = o
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON = $(shell root-config --has-python)
 endif
+ifeq ($(HAS_PYTHON),yes)
+   ifeq ($(findstring $(ROOTSYS)/lib, $(PYTHONPATH)),)
+      # The PYTHONPATH does not have ROOTSYS/lib in it yet
+      # let's add it
+      export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
+   endif
+endif
 
 ifeq ($(PLATFORM),win32)
 
