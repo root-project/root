@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.29 2005/05/20 11:12:53 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.30 2005/05/23 07:02:50 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -290,7 +290,7 @@ TASImage::~TASImage()
 }
 
 //______________________________________________________________________________
-void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
+void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
    // Read specified image file. The file type is determined by
    // the file extension (the type argument is ignored). It will
@@ -299,6 +299,12 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    // only, it will attempt to find the file with this extension stripped
    // off. On success this extension will be used to load subimage from
    // the file with that number. Subimage is supported only for GIF files.
+   //
+   // It is also possible to put XPM raw string (see also SetImageBuffer) as 
+   // the first input parameter ("filename"), such string  is returned by 
+   // GetImageBuffer method.
+   // The first input parameter ("filename") also can be 
+   // a pointer to the first ellement of an array of strings (preparsed XPM).
 
    if (fImage) {
       destroy_asimage(&fImage);
@@ -307,7 +313,23 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    delete fScaledImage;
    fScaledImage = 0;
 
-   fImage = file2ASImage(file, 0, SCREEN_GAMMA, GetImageCompression(), 0);
+   static TString xpm_string;
+   xpm_string = filename;
+   char *xpm_data = (char *)xpm_string.Data();
+   Bool_t xpm = xpm_string.BeginsWith("/* "); // XPM raw string
+
+   if (!xpm && atoi(xpm_string.Data()) && (xpm_string.CountChar(' ') == 3)) {
+      Ssiz_t space = xpm_string.Index(" ");
+      if (space != kNPOS) {   // the last check for XPM
+         xpm = atoi(xpm_string(space+1, 6).Data());
+      }
+   }
+
+   if (xpm) {
+      SetImageBuffer((char**)&xpm_data, TImage::kXpm);
+   } else {
+      fImage = file2ASImage(filename, 0, SCREEN_GAMMA, GetImageCompression(), 0);
+   }
 
    fZoomUpdate = kNoZoom;
    fEditable   = kFALSE;
@@ -316,8 +338,7 @@ void TASImage::ReadImage(const char *file, EImageFileTypes /*type*/)
    fZoomWidth  = fImage ? fImage->width : 0;
    fZoomHeight = fImage ? fImage->height : 0;
    fPaintMode     = 1;
-
-   fName.Form("%s.", gSystem->BaseName(file));
+   fName.Form("%s.", gSystem->BaseName(filename));
 }
 
 //______________________________________________________________________________
@@ -1639,7 +1660,16 @@ Pixmap_t TASImage::GetMask()
       return pxmap;
    }
 
-   char *bits = new char[(img->width*img->height)/8 + 1]; //an array of bits
+   UInt_t hh = img->height;
+   UInt_t ow = img->width%8;
+   UInt_t ww = img->width - ow + (ow ? 8 : 0);
+
+   UInt_t bit = 0;
+   int i = 0;
+   UInt_t y = 0;
+   UInt_t x = 0;
+
+   char *bits = new char[ww*hh]; //an array of bits
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
                                                 0, 0, img->width, 0, 0);
@@ -1648,12 +1678,10 @@ Pixmap_t TASImage::GetMask()
    }
 
    CARD32 *a = imdec->buffer.alpha;
-   UInt_t bit = 0;
-   int i = 0;
 
-   for (UInt_t y = 0; y < img->height; y++) {
+   for (y = 0; y < hh; y++) {
       imdec->decode_image_scanline(imdec);
-      for (UInt_t x = 0; x < img->width; x++) {
+      for (x = 0; x < ww; x++) {
          Bool_t setclr = a[x];
          if (setclr) {
             SETBIT(bits[i], bit);
@@ -1667,9 +1695,10 @@ Pixmap_t TASImage::GetMask()
          }
       }
    }
+
    stop_image_decoding( &imdec );
    pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
-                                  img->width, img->height);
+                                   ww, hh);
    delete [] bits;
    return pxmap;
 }
@@ -4964,6 +4993,28 @@ void TASImage::CreateThumbnail()
       return;
    }
 
+   // contrasing
+   ASImage *rendered_im;
+   ASImageLayer layers[2];
+   init_image_layers(&(layers[0]), 2);
+   layers[0].im = img;
+   layers[0].dst_x = 0;
+   layers[0].dst_y = 0;
+   layers[0].clip_width = img->width;
+   layers[0].clip_height = img->height;
+   layers[0].bevel = 0;
+   layers[1].im = img;
+   layers[1].dst_x = 0;
+   layers[1].dst_y = 0;
+   layers[1].clip_width = img->width;
+   layers[1].clip_height = img->height;
+   layers[1].merge_scanlines = blend_scanlines_name2func("tint");
+   rendered_im = merge_layers(fgVisual, &(layers[0]), 2, img->width, img->height,
+                              ASA_ASImage, GetImageCompression(), GetImageQuality());
+   destroy_asimage(&img);
+   img = rendered_im;
+
+   // pad image
    ASImage *padimg = 0;
    int d = 0;
 

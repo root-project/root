@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.14 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.15 2005/05/24 20:05:10 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -69,13 +69,16 @@ private:
    TGLayoutHints       *fMenuBarHelpLayout;
    TGLayoutHints       *fComboLayout;
    TGLayoutHints       *fBarLayout;
-   TGComboBox          *fDrawOption;        //drawing option entry
+   TGComboBox          *fDrawOption;         // drawing option entry
 
    TList               *fWidgets;
-   Cursor_t             fWaitCursor;        // busy cursor
+   TList               *fHistory;            // history of browsing
+   TObject             *fHistoryCursor;      // current hsitory position
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);
+   void  HighlightListLevel();
+   void  AddToHistory(TGListTreeItem *item);
    void  IconBoxAction(TObject *obj);
    void  Chdir(TGListTreeItem *item);
    void  DisplayDirectory();
@@ -84,6 +87,10 @@ private:
    void  SetSortMode(Int_t new_mode);
    void  ToUpSystemDirectory();
    void  UpdateDrawOption();
+
+   Bool_t  HistoryBackward();
+   Bool_t  HistoryForward();
+   void    ClearHistory();
 
 protected:
    TGPopupMenu         *fFileMenu;

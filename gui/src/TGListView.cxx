@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.29 2005/05/25 16:20:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.30 2005/05/25 17:56:34 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -518,6 +518,7 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
    if (fViewMode != viewMode) {
       TGLayoutHints *oldLayout = fItemLayout;
 
+      EListViewMode old = fViewMode;
       fViewMode = viewMode;
       if (fListView) fListView->SetViewMode(viewMode);
 
@@ -555,16 +556,23 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
 
       TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
 
-      // adjust position after layout
+      // layout and adjust position after layout
       UInt_t height = fHeight;
       UInt_t width = fWidth;
       TGPosition pos = GetPagePosition();
-      TGDimension dim = GetPageDimension();
       canvas->Layout();
       pos.fX = (pos.fX*fWidth)/width;
       pos.fY = (pos.fY*fHeight)/height;
-      SetVsbPosition(pos.fY);
-      SetHsbPosition(pos.fX);
+
+      if (old == kLVList) { // switch x <-> y
+         SetVsbPosition(pos.fX);
+         SetHsbPosition(0);
+      } else if (fViewMode == kLVList) {
+         SetHsbPosition(pos.fY);
+      } else {
+         SetVsbPosition(pos.fY);
+         SetHsbPosition(pos.fX);
+      }
    }
 }
 

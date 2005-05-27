@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.69 2005/05/25 17:57:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.70 2005/05/25 20:47:11 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -95,6 +95,9 @@ enum ERootBrowserCommands {
    kViewArrangeAuto,
    kViewGroupLV,
 
+   kHistoryBack,
+   kHistoryForw,
+
    kOptionShowCycles,
    kOptionAutoThumbnail,
 
@@ -139,6 +142,10 @@ static ToolBarData_t gToolBarData[] = {
    { "tb_smicons.xpm",   "Small Icons",    kTRUE,  kViewSmallIcons, 0 },
    { "tb_list.xpm",      "List",           kTRUE,  kViewList, 0 },
    { "tb_details.xpm",   "Details",        kTRUE,  kViewDetails, 0 },
+   { "",                 "",               kFALSE, -1, 0 },
+   { "tb_back.xpm",      "Back",           kFALSE, kHistoryBack, 0 },
+   { "tb_forw.xpm",      "Forward",        kFALSE, kHistoryForw, 0 },
+   { "tb_refresh.xpm",   "Refresh (F5)",   kFALSE, kViewRefresh, 0 },
    { 0,                  0,                kFALSE, 0, 0 }
 };
 
@@ -148,7 +155,30 @@ static ToolBarData_t gToolBarData[] = {
 static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
+////////////////////////////////////////////////////////////////////////////////////
+class TRootBrowserHistoryCursor : public TObject {
+public:
+   TGListTreeItem *fItem;
 
+   TRootBrowserHistoryCursor(TGListTreeItem *item) : fItem(item) {}
+   void Print(Option_t *) const {  if (fItem) printf("%s\n", fItem->GetText()); }
+};
+
+////////////////////////////////////////////////////////////////////////////////////
+class TRootBrowserCursorSwitcher {
+private:
+   TGWindow *fW1;
+   TGWindow *fW2;
+public:
+   TRootBrowserCursorSwitcher(TGWindow *w1, TGWindow *w2) : fW1(w1), fW2(w2) {
+      if (w1) gVirtualX->SetCursor(w1->GetId(), gVirtualX->CreateCursor(kWatch));
+      if (w2) gVirtualX->SetCursor(w2->GetId(), gVirtualX->CreateCursor(kWatch));
+   }
+   ~TRootBrowserCursorSwitcher() {
+      if (fW1) gVirtualX->SetCursor(fW1->GetId(), gVirtualX->CreateCursor(kPointer));
+      if (fW2) gVirtualX->SetCursor(fW2->GetId(), gVirtualX->CreateCursor(kPointer));
+   }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////
 class TIconBoxThumb : public TObject {
@@ -765,6 +795,9 @@ TRootBrowser::~TRootBrowser()
 
    if (fWidgets) fWidgets->Delete();
    delete fWidgets;
+
+   fHistory->Delete();
+   delete fHistory;
 }
 
 //______________________________________________________________________________
@@ -774,6 +807,8 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fWidgets = new TList;
    fEditDisabled = kTRUE;
+   fHistory = new TList;
+   fHistoryCursor = 0;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -821,7 +856,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->AddEntry("&Group Icons",        kViewGroupLV);
 
    fViewMenu->AddSeparator();
-   fViewMenu->AddEntry("&Refresh F5",         kViewRefresh);
+   fViewMenu->AddEntry("&Refresh (F5)",       kViewRefresh);
 
    fViewMenu->CheckEntry(kViewToolBar);
    fViewMenu->CheckEntry(kViewStatusBar);
@@ -1000,11 +1035,12 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
-   fWaitCursor = gVirtualX->CreateCursor(kWatch);
    fListLevel = 0;
    fTreeLock  = kFALSE;
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F5), 0, kTRUE);
+   ClearHistory();
+
    MapSubwindows();
    SetDefaults();
    Resize();
@@ -1187,7 +1223,7 @@ void TRootBrowser::DisplayDirectory()
 
    char *p, path[1024];
 
-   fLt->GetPathnameFromItem(fListLevel, path, 3);
+   fLt->GetPathnameFromItem(fListLevel, path, 7);
    p = path;
    while (*p && *(p+1) == '/') ++p;
    if (strlen(p) == 0)
@@ -1196,11 +1232,12 @@ void TRootBrowser::DisplayDirectory()
       fLbl2->SetText(new TGString(Form("Contents of \"%s\"", p)));
    fListHdr->Layout();
 
-   // Get full pathname for FS combobox (previously truncated to 3 levels deep)
+   // Get full pathname for FS combobox (previously truncated to 7 levels deep)
    fLt->GetPathnameFromItem(fListLevel, path);
    p = path;
    while (*p && *(p+1) == '/') ++p;
    fFSComboBox->Update(p);
+   if (fListLevel) AddToHistory(fListLevel);
 }
 
 //____________________________________________________________________________
@@ -1210,6 +1247,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
    // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
    // Emits signal "ExecuteDefaultAction(TObject*)".
 
+   TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
    char action[512];
    fBrowser->SetDrawOption(GetDrawOption());
    TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
@@ -1238,6 +1276,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
       if (gFile && (wasf != gFile) && (ext == ".root")) {
          TGListTreeItem *itm = fLt->FindItemByPathname("ROOT Files");
          if (itm) {
+            fLt->ClearHighlighted();
             fListLevel = itm;
             ListTreeHighlight(fListLevel);
             fLt->OpenItem(fListLevel);
@@ -1270,13 +1309,24 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
             nowp->Update();
             img->FromPad(nowp);
 
-            const char *xpm = img->GetTitle(); // 64x64 xpm string
-            img->SetImageBuffer((char**)&xpm, TImage::kXpm);
-            pic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(),
-                                                         img->GetMask());
-            img->Scale(32, 32);
-            spic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(),
-                                                         img->GetMask());
+            UInt_t w, h;
+            const UInt_t sz = 72;
+
+            if (img->GetWidth() > img->GetHeight()) {
+               w = sz;
+               h = (img->GetHeight()*sz)/img->GetWidth();
+            } else {
+               h = sz;
+               w = (img->GetWidth()*sz)/img->GetHeight();
+            }
+
+            img->Scale(w, h);
+            img->Merge(img, "tint");   // contrasting
+            img->DrawBox(0, 0, w, h, "#ffff00", 1); // yellow frame
+
+            pic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
+            img->Scale(w/3, h/3);
+            spic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
 
             thumb = new TIconBoxThumb(path.Data(), spic, pic);
             fIconBox->fThumbnails->Add(thumb);
@@ -1296,8 +1346,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    // Handle menu and other command generated by the user.
 
    TRootHelpDialog *hd;
-   gVirtualX->SetCursor(fIconBox->GetId(),fWaitCursor);
-   gVirtualX->SetCursor(fLt->GetId(),fWaitCursor);
+   TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
+
    gVirtualX->Update();
 
    switch (GET_MSG(msg)) {
@@ -1427,11 +1477,8 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (fListLevel) {
                            item = fListLevel->GetParent();
                            if (item) fListLevel = item;
-
                            obj = (TObject *) fListLevel->GetUserData();
-
-                           fLt->ClearHighlighted();
-                           fLt->HighlightItem(fListLevel);
+                           HighlightListLevel();
                            if (obj) BrowseObj(obj);
                         }
 
@@ -1442,9 +1489,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                      if (item) {
                         fListLevel = item;
-
-                        fLt->ClearHighlighted();
-                        fLt->HighlightItem(fListLevel);
+                        HighlightListLevel();
                         DisplayDirectory();
                         obj = (TObject *) fListLevel->GetUserData();
                         BrowseObj(obj);
@@ -1454,6 +1499,15 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   }
+
+                  // toolbar buttons
+                  case kHistoryBack:
+                     HistoryBackward();
+                     break;
+                  case kHistoryForw:
+                     HistoryForward();
+                     break;
+
                   // Handle Help menu items...
                   case kHelpAbout:
                      {
@@ -1516,8 +1570,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   TGTreeLBEntry *e = (TGTreeLBEntry *) fFSComboBox->GetSelectedEntry();
                   if (e) {
                      fListLevel = fLt->FindItemByPathname(e->GetPath()->GetString());
-                     fLt->ClearHighlighted();
-                     fLt->HighlightItem(fListLevel);
+                     HighlightListLevel();
                      DisplayDirectory();
                      Refresh(kTRUE);
                   }
@@ -1563,8 +1616,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (item) fListLevel = item;
 
                         obj = (TObject *) fListLevel->GetUserData();
-                        fLt->ClearHighlighted();
-                        fLt->HighlightItem(fListLevel);
+                        HighlightListLevel();
                         if (obj) {
                            BrowseObj(obj);
                         }
@@ -1643,8 +1695,6 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      void *p = 0;
                      TGFileItem *item;
                      if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                        gVirtualX->SetCursor(fIconBox->GetId(), gVirtualX->CreateCursor(kPointer));
-                        gVirtualX->SetCursor(fLt->GetId(), gVirtualX->CreateCursor(kPointer));
                         TObject *obj = (TObject *)item->GetUserData();
                         DoubleClicked(obj);
                         IconBoxAction(obj);
@@ -1666,8 +1716,6 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
    fClient->NeedRedraw(fIconBox);
-   gVirtualX->SetCursor(fIconBox->GetId(), gVirtualX->CreateCursor(kPointer));
-   gVirtualX->SetCursor(fLt->GetId(), gVirtualX->CreateCursor(kPointer));
    return kTRUE;
 }
 
@@ -1702,6 +1750,115 @@ void TRootBrowser::Chdir(TGListTreeItem *item)
 
       if (gDirectory && dir.Length()) gDirectory->cd(dir.Data());
    }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::HighlightListLevel()
+{
+   // helper method  to track history
+
+   if (!fListLevel) return;
+
+   fLt->ClearHighlighted();
+   fLt->HighlightItem(fListLevel);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::AddToHistory(TGListTreeItem *item)
+{
+   // helper method to track history
+
+   TGButton *btn = fToolBar->GetButton(kHistoryBack);
+
+   if (!item || (fHistoryCursor && 
+       (item == ((TRootBrowserHistoryCursor*)fHistoryCursor)->fItem))) return;
+
+   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistoryCursor;
+
+   while ((cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor))) {
+      fHistory->Remove(cur);
+      delete cur;
+   }
+
+   cur = new TRootBrowserHistoryCursor(item);
+   fHistory->Add(cur);
+   fHistoryCursor = cur;
+   btn->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
+void TRootBrowser::ClearHistory()
+{
+   // clear navigation history
+
+   fHistory->Delete();
+   TGButton *btn = fToolBar->GetButton(kHistoryBack);
+   TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
+   btn->SetState(kButtonDisabled);
+   btn2->SetState(kButtonDisabled);
+}
+
+//______________________________________________________________________________
+Bool_t TRootBrowser::HistoryBackward()
+{
+   // go to the past
+
+   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->Before(fHistoryCursor);
+   TGButton *btn = fToolBar->GetButton(kHistoryBack);
+   TGButton *btn2 = fToolBar->GetButton(kHistoryForw);
+
+   if (!cur) {
+      btn->SetState(kButtonDisabled);
+      return kFALSE;
+   }
+
+   fLt->ClearHighlighted();
+   fHistoryCursor = cur;
+   fListLevel = cur->fItem;
+   ListTreeHighlight(fListLevel);
+   fLt->AdjustPosition();
+   fClient->NeedRedraw(fLt);
+
+   btn2->SetState(kButtonUp);
+   cur = (TRootBrowserHistoryCursor*)fHistory->Before(fHistoryCursor);
+   if (!cur) {
+      btn->SetState(kButtonDisabled);
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TRootBrowser::HistoryForward()
+{
+   //  go to the future
+
+   TRootBrowserHistoryCursor *cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor);
+   TGButton *btn = fToolBar->GetButton(kHistoryForw);
+   TGButton *btn2 = fToolBar->GetButton(kHistoryBack);
+
+   if (!cur) {
+      btn->SetState(kButtonDisabled);
+      return kFALSE;
+   }
+
+   fLt->ClearHighlighted();
+   fHistoryCursor = cur;
+   fListLevel = cur->fItem;
+   ListTreeHighlight(fListLevel);
+   fLt->AdjustPosition();
+   fClient->NeedRedraw(fLt);
+
+   btn2->SetState(kButtonUp);
+
+   cur = (TRootBrowserHistoryCursor*)fHistory->After(fHistoryCursor);
+   if (!cur) {
+      btn->SetState(kButtonDisabled);
+      return kFALSE;
+   }
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1775,6 +1932,7 @@ void TRootBrowser::ToUpSystemDirectory()
          DisplayDirectory();
          gSystem->ChangeDirectory(dirname.Data());
          fStatusBar->SetText(dirname.Data(),1);
+         ClearHistory();   // clear browsing history
       }
    }
    return;
@@ -1809,6 +1967,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
    // Default action when double clicking on icon.
 
    if (obj) {
+      TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
+
       Bool_t useLock = kTRUE;
 
       if (obj->IsA() == TSystemDirectory::Class()) {
@@ -1871,8 +2031,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
                      fListLevel = parent;
                }
             }
-            fLt->ClearHighlighted();
-            fLt->HighlightItem(fListLevel);
+            HighlightListLevel();
          }
       }
 
@@ -1919,6 +2078,7 @@ void TRootBrowser::Refresh(Bool_t force)
       && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
 
+      TRootBrowserCursorSwitcher dummySwitcher(fIconBox, fLt);
       static UInt_t prev = 0;
       UInt_t curr =  gROOT->GetListOfBrowsables()->GetSize();
       if (!prev) prev = curr;
@@ -2090,3 +2250,5 @@ void TRootBrowser::SetSortMode(Int_t new_mode)
 
    fIconBox->Sort(smode);
 }
+
+
