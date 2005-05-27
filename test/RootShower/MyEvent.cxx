@@ -458,6 +458,10 @@ void MyEvent::DeleteParticle(Int_t id)
 {
    // Delete the particle id
 
+   // To be sure that the last track has at least two points
+   if(GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetN() < 2) {
+      GetParticle(id)->SetNextPoint(GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetLineColor());
+   }
    // Add this particle's energy loss at the total
    // energy loss into the detector
    fDetector.AddELoss(GetParticle(id)->GetELoss());

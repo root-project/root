@@ -220,7 +220,9 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
         spacing = 0;
     }
     AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
-
+    fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonDisabled);
+    fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonDisabled);
+    
     // Layout hints
     fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
     fL2 = new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 0, 0, 0, 0);
@@ -916,6 +918,10 @@ void RootShower::produce()
     fEvent->SetHeader(fEventNr, fNRun++, fEventTime, fFirstParticle, fE0);
     fEvent->Init(0, fFirstParticle, fE0, fB);
 
+    fMenuFile->DisableEntry(M_FILE_SAVEAS);
+    fMenuEvent->DisableEntry(M_SHOW_3D);
+    fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonDisabled);
+    fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonDisabled);
     Interrupt(kFALSE);
     first_pass = kTRUE;
     old_num = -1;
@@ -950,8 +956,12 @@ void RootShower::produce()
         }
     }
     fMenuEvent->EnableEntry(M_SHOW_INFOS);
-    fMenuEvent->EnableEntry(M_SHOW_3D);
-    fMenuFile->EnableEntry(M_FILE_SAVEAS);
+    if(!IsInterrupted()) {
+       fMenuEvent->EnableEntry(M_SHOW_3D);
+       fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+       fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonUp);
+       fMenuFile->EnableEntry(M_FILE_SAVEAS);
+    }
 }
 
 //______________________________________________________________________________
@@ -1197,6 +1207,8 @@ void RootShower::OnOpenFile(const Char_t *filename)
     fCA->Update();
     fMenuEvent->EnableEntry(M_SHOW_INFOS);
     fMenuEvent->EnableEntry(M_SHOW_3D);
+    fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+    fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonUp);
     fMenuFile->EnableEntry(M_FILE_SAVEAS);
     fButtonFrame->SetState(GButtonFrame::kAllActive);
     sprintf(strtmp,"Root Shower Event Display - %s",filename);
