@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.24 2005/04/06 10:01:39 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.25 2005/04/06 10:55:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,6 +57,7 @@
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TStatus+;
+#pragma link C++ class TFileMerger+;
 #pragma link C++ class TProofDrawListOfGraphs::Point3D_t+;
 #pragma link C++ class TProofDrawListOfPolyMarkers3D::Point4D_t+;
 #pragma link C++ class std::vector<TProofDrawListOfGraphs::Point3D_t>+;

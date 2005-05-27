@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.11 2005/05/13 08:49:54 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.12 2005/05/20 09:59:35 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -35,17 +35,11 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TStopwatch
-#include "TStopwatch.h"
-#endif
 
 class TGridResult;
 class TGridJDL;
 class TGridJob;
 class TDSet;
-class TFile;
-class TDirectory;
-class TList;
 
 
 class TGrid : public TObject {
@@ -58,17 +52,10 @@ protected:
    TString        fPw;      // user passwd
    TString        fOptions; // options specified
    Int_t          fPort;    // port to which we are connected
-   TStopwatch     fWatch;   // stop watch to measure file copy speed
-   TList         *fMergerFileList;        // a list of files, which shall be merged
-   TFile         *fMergerOutputFile;      // the outputfile for merging
-   TString        fMergerOutputFilename;  // the name of the outputfile for merging
-   TString        fMergerOutputFilename1; // the name of the temporary outputfile for merging
-
-   void           PrintProgress(Long64_t bytesread, Long64_t size);
 
 public:
-   TGrid();
-   virtual ~TGrid();
+   TGrid() : fPort(-1) { }
+   virtual ~TGrid() { }
 
    const char    *GridUrl() const { return fGridUrl; }
    const char    *GetGrid() const { return fGrid; }
@@ -98,20 +85,6 @@ public:
                                 const char * /*conditions*/,
                                 const char * /*options*/)
       { MayNotUse("Query2Dataset"); return kFALSE; }
-
-   //--- file management interface
-   virtual Bool_t Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
-                     UInt_t buffersize = 1000000);
-   virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
-   virtual const char *GetCWD() { MayNotUse("GetCWD"); return 0; }
-
-   //--- file merging interface
-   virtual void   MergerReset();
-   virtual Bool_t MergerAddFile(const char *url);
-   virtual Bool_t MergerOutputFile(const char *url);
-   virtual void   MergerPrintFiles(Option_t *options);
-   virtual Bool_t MergerMerge();
-   virtual Bool_t MergerMergeRecursive(TDirectory *target, TList *sourcelist);
 
    //--- job Submission Interface
    virtual TGridJob *Submit(const char * /*jdl*/) { MayNotUse("Submit"); return 0; }
