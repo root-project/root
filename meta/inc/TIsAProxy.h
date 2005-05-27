@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.1 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.h,v 1.1 2005/05/27 16:42:58 pcanal Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -29,7 +29,7 @@ private:
    const type_info   *fLastType;     //Last used subtype
    TClass            *fClass;        //Actual TClass
    TClass            *fLastClass;    //Last used TClass
-   Char_t             fSubTypes[64]; //map of known sub-types
+   Char_t             fSubTypes[72]; //map of known sub-types
    Bool_t             fVirtual;      //Flag if class is virtual
    void              *fContext;      //Optional user contex
    Bool_t             fInit;         //Initialization flag
