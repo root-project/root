@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -26,7 +26,7 @@ class TGLDrawable
 {
 private:
    // Fields
-   const UInt_t fID;        //! unique drawable ID
+   ULong_t fID;        //! unique drawable ID
 
    // Methods
    // Non-copyable class
@@ -48,7 +48,7 @@ public:
    TGLDrawable(UInt_t ID, bool DLCache);
    virtual ~TGLDrawable();
 
-         UInt_t           ID()          const { return fID; }
+         ULong_t          ID()          const { return fID; }
    const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
 
    virtual void Draw(UInt_t LOD) const;

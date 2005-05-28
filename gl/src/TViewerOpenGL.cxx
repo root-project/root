@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.57 2005/05/25 14:25:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.58 2005/05/26 10:24:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -905,7 +905,7 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
    }
 
    // TODO: Could be static and save possible double lookup?
-   TGLLogicalShape * logical = fScene.FindLogical(reinterpret_cast<UInt_t>(buffer.fID));
+   TGLLogicalShape * logical = fScene.FindLogical(reinterpret_cast<ULong_t>(buffer.fID));
    TGLPhysicalShape * physical = fScene.FindPhysical(physicalID);
 
    // Function can be called twice if extra buffer filling for logical 

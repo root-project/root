@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -27,10 +27,10 @@ class TContextMenu;
 class TGLLogicalShape : public TGLDrawable { // Rename TGLLogicalObject?
 private:
    // Fields
-   mutable unsigned int fRef; //! physical instance ref counting
+   mutable UInt_t fRef; //! physical instance ref counting
 
 public:
-   TGLLogicalShape(UInt_t ID);
+   TGLLogicalShape(ULong_t ID);
    virtual ~TGLLogicalShape();
 
    virtual void Purge();

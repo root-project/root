@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.36 2005/05/18 12:31:08 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.37 2005/05/25 14:25:17 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -79,7 +79,7 @@ static GLUquadric *GetQuadric()
 
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, TObject *obj) :
-   TGLLogicalShape(reinterpret_cast<UInt_t>(obj)), // TODO: Clean up more
+   TGLLogicalShape(reinterpret_cast<ULong_t>(obj)), // TODO: Clean up more
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fRealObject(obj)
 {
@@ -96,7 +96,7 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, TObject *obj) :
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
                                TObject *obj) :
-   TGLLogicalShape(reinterpret_cast<UInt_t>(obj)), // TODO: Clean up more
+   TGLLogicalShape(reinterpret_cast<ULong_t>(obj)), // TODO: Clean up more
    fVertices(verticesReserve, 0.),
    fRealObject(obj)
 {

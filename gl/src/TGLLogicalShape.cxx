@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLLogicalShape.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 ClassImp(TGLLogicalShape)
 
 //______________________________________________________________________________
-TGLLogicalShape::TGLLogicalShape(UInt_t ID) :
+TGLLogicalShape::TGLLogicalShape(ULong_t ID) :
    TGLDrawable(ID, kFALSE), // Logical shapes not DL cached by default at present
    fRef(0)
 {
