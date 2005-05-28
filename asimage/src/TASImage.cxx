@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.30 2005/05/23 07:02:50 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.31 2005/05/27 12:24:44 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -168,6 +168,7 @@ TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
 
    SetDefaults();
    fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -303,8 +304,6 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // It is also possible to put XPM raw string (see also SetImageBuffer) as 
    // the first input parameter ("filename"), such string  is returned by 
    // GetImageBuffer method.
-   // The first input parameter ("filename") also can be 
-   // a pointer to the first ellement of an array of strings (preparsed XPM).
 
    if (fImage) {
       destroy_asimage(&fImage);
@@ -313,22 +312,15 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    delete fScaledImage;
    fScaledImage = 0;
 
-   static TString xpm_string;
-   xpm_string = filename;
-   char *xpm_data = (char *)xpm_string.Data();
-   Bool_t xpm = xpm_string.BeginsWith("/* "); // XPM raw string
-
-   if (!xpm && atoi(xpm_string.Data()) && (xpm_string.CountChar(' ') == 3)) {
-      Ssiz_t space = xpm_string.Index(" ");
-      if (space != kNPOS) {   // the last check for XPM
-         xpm = atoi(xpm_string(space+1, 6).Data());
-      }
-   }
-
+   Bool_t xpm = filename && (filename[0] == '/' &&
+                filename[1] == '*') && filename[2] == ' ';
+   
    if (xpm) {
-      SetImageBuffer((char**)&xpm_data, TImage::kXpm);
+      SetImageBuffer((char**)&filename, TImage::kXpm);
+      fName = "XPM_image";
    } else {
       fImage = file2ASImage(filename, 0, SCREEN_GAMMA, GetImageCompression(), 0);
+      fName.Form("%s.", gSystem->BaseName(filename));
    }
 
    fZoomUpdate = kNoZoom;
@@ -338,7 +330,6 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    fZoomWidth  = fImage ? fImage->width : 0;
    fZoomHeight = fImage ? fImage->height : 0;
    fPaintMode     = 1;
-   fName.Form("%s.", gSystem->BaseName(filename));
 }
 
 //______________________________________________________________________________
@@ -2630,6 +2621,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
 
    if (fImage) destroy_asimage(&fImage);
    fImage = merge_im;
+   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -3015,6 +3007,7 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
    }
 
    FillRectangleInternal((UInt_t)color, x, y, width, height);
+   UnZoom();
 }
 
 //______________________________________________________________________________

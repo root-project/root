@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.52 2005/02/08 11:11:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.53 2005/02/08 13:34:07 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -59,7 +59,8 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TSystem.h"
-
+#include "TImage.h"
+#include "TEnv.h"
 
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;
@@ -619,6 +620,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -650,6 +652,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -674,6 +677,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
+   CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -720,6 +724,27 @@ void TGPictureButton::DoRedraw()
    const TGPicture *pic = (fState == kButtonDisabled) && fPicD ? fPicD : fPic;
 
    pic->Draw(fId, fNormGC, x, y);
+}
+
+//______________________________________________________________________________
+void TGPictureButton::CreateDisabledPicture()
+{
+   // creates disabled picture
+
+   TImage *img = TImage::Create();
+   TImage *img2 = TImage::Create();
+
+   TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
+   img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
+   img->SetImage(fPic->GetPicture());
+   img2->Merge(img, "overlay");
+
+   TString name = fPic->GetName();
+   name += "disabled";
+   fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), img2->GetPixmap(), fPic->GetMask());
+
+   delete img;
+   delete img2;
 }
 
 

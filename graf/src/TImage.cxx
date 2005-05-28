@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.2 2004/12/07 15:34:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.3 2005/04/29 16:16:35 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TImage *TImage::Create()
          return 0;
       img = (TImage *) h->ExecPlugin(0);
    }
+   if (img) img->SetName("dummy_image");
    return img;
 }
 

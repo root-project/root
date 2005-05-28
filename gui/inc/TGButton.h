@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.32 2005/01/31 17:20:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.33 2005/02/07 22:47:43 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -190,6 +190,7 @@ protected:
    const TGPicture   *fPicD;        // picture shown when button disabled
 
    virtual void DoRedraw(); 
+   virtual void CreateDisabledPicture();
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,

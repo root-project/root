@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.70 2005/05/25 20:47:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.71 2005/05/27 12:24:44 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -163,6 +163,24 @@ public:
    TRootBrowserHistoryCursor(TGListTreeItem *item) : fItem(item) {}
    void Print(Option_t *) const {  if (fItem) printf("%s\n", fItem->GetText()); }
 };
+
+
+////////////////////////////////////////////////////////////////////////////////////
+class TRootBrowserHistory : public TList {
+public:
+   void RecursiveRemove(TObject *obj) {
+      TRootBrowserHistoryCursor *cur;
+      TIter next(this);
+
+      while ((cur = (TRootBrowserHistoryCursor*)next())) {
+         if (cur->fItem->GetUserData() == obj) {
+            Remove(cur);
+            delete cur;
+         }
+      }
+   }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 class TRootBrowserCursorSwitcher {
@@ -807,7 +825,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fWidgets = new TList;
    fEditDisabled = kTRUE;
-   fHistory = new TList;
+   fHistory = new TRootBrowserHistory;
    fHistoryCursor = 0;
 
    // Create menus
@@ -1039,6 +1057,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    fTreeLock  = kFALSE;
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_F5), 0, kTRUE);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Right), kKeyMod1Mask, kTRUE);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Left), kKeyMod1Mask, kTRUE);
    ClearHistory();
 
    MapSubwindows();
@@ -1051,14 +1071,27 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
 {
    // handle keys
 
-   if ((event->fType == kGKeyPress) && !event->fState) {
+   if (event->fType == kGKeyPress) {
       UInt_t keysym;
       char input[10];
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
 
-      if ((EKeySym)keysym == kKey_F5) {
+      if (!event->fState && (EKeySym)keysym == kKey_F5) {
          Refresh(kTRUE);
          return kTRUE;
+      }
+
+      if (event->fState & kKeyMod1Mask) {
+         switch ((EKeySym)keysym & ~0x20) {
+            case kKey_Right:
+               HistoryForward();
+               return kTRUE;
+            case kKey_Left:
+               HistoryBackward();
+               return kTRUE;
+            default:
+               break;
+         }
       }
    }
    return TGMainFrame::HandleKey(event);
@@ -1223,7 +1256,8 @@ void TRootBrowser::DisplayDirectory()
 
    char *p, path[1024];
 
-   fLt->GetPathnameFromItem(fListLevel, path, 7);
+
+   fLt->GetPathnameFromItem(fListLevel, path, 12);
    p = path;
    while (*p && *(p+1) == '/') ++p;
    if (strlen(p) == 0)
@@ -1232,7 +1266,7 @@ void TRootBrowser::DisplayDirectory()
       fLbl2->SetText(new TGString(Form("Contents of \"%s\"", p)));
    fListHdr->Layout();
 
-   // Get full pathname for FS combobox (previously truncated to 7 levels deep)
+   // Get full pathname for FS combobox (previously truncated to 12 levels deep)
    fLt->GetPathnameFromItem(fListLevel, path);
    p = path;
    while (*p && *(p+1) == '/') ++p;
@@ -2067,6 +2101,7 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    if (fListLevel && (fListLevel->GetUserData() == obj)) {
       fListLevel = 0;
    }
+   if (fHistory) fHistory->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
