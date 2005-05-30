@@ -1,5 +1,5 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.1 2005/05/27 03:00:05 pcanal Exp $
-// Author: Rene Brun   07/01/95
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.1 2005/05/27 16:42:58 pcanal Exp $
+// Author: Markus Frank 20/05/2005
 
 /*************************************************************************
 * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,14 +9,8 @@
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
 
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
-
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-
 #include "Api.h"
 #include "TIsAProxy.h"
 
@@ -37,25 +31,25 @@ namespace {
       // Used in code similar to:
       //    typeid( * (DynamicType*) void_ptr );
       virtual ~DynamicType() {}
-   };  
+   };
 }
 
 typedef std::map<long, TClass*> ClassMap_t; // Internal type map
 inline ClassMap_t *GetMap(void* p)
-{ 
+{
    return (ClassMap_t*)p;
 }
 
 //______________________________________________________________________________
 TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
-   : fType(&typ), fLastType(&typ), fClass(0), fLastClass(0), 
+   : fType(&typ), fLastType(&typ), fClass(0), fLastClass(0),
      fVirtual(false), fContext(ctxt), fInit(false)
 {
    // Standard initializing constructor
 
    ::new(fSubTypes) ClassMap_t();
    if ( sizeof(ClassMap_t) > sizeof(fSubTypes) ) {
-      Fatal("TIsAProxy",
+      Fatal("TIsAProxy::TIsAProxy",
          "Classmap size is badly adjusted: it needs %d instead of %d bytes.",
          sizeof(ClassMap_t), sizeof(fSubTypes));
    }
@@ -80,7 +74,7 @@ void TIsAProxy::SetClass(TClass *cl)
 }
 
 //______________________________________________________________________________
-TClass* TIsAProxy::operator()(const void *obj)  
+TClass* TIsAProxy::operator()(const void *obj)
 {
    // IsA callback
 
