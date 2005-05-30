@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.6 2002/04/08 15:06:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.7 2002/05/11 14:36:31 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TObjString.h"
 #include "TToggle.h"
 #include "TClassMenuItem.h"
+#include "TBrowser.h"
 
 
 ClassImp(TContextMenu)
@@ -109,6 +110,8 @@ void TContextMenu::Action(TObject *object, TMethod *method)
 #endif
       }
    }
+
+   if (fBrowser) fBrowser->Refresh();
 }
 
 //______________________________________________________________________________
@@ -206,6 +209,8 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
          }
       }
    }
+
+   if (fBrowser) fBrowser->Refresh();
 }
 
 //______________________________________________________________________________
@@ -239,6 +244,8 @@ void TContextMenu::Action(TObject *object, TToggle *toggle)
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
          fSelectedCanvas->GetPadSave()->Update();
    }
+
+   if (fBrowser) fBrowser->Refresh();
 }
 
 //______________________________________________________________________________
@@ -338,6 +345,8 @@ void TContextMenu::Execute(TObject *object, TFunction *method, const char *param
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
          fSelectedCanvas->GetPadSave()->Update();
    }
+
+   if (fBrowser) fBrowser->Refresh();
 }
 
 //______________________________________________________________________________
@@ -381,6 +390,7 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
       if (fSelectedCanvas && fSelectedCanvas->TestBit(kNotDeleted))
          fSelectedCanvas->Update();
    }
+   if (fBrowser) fBrowser->Refresh();
 }
 
 //______________________________________________________________________________

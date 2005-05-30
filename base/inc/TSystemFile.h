@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.2 2003/07/01 11:39:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.3 2005/05/24 20:05:10 brun Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -37,10 +37,27 @@ public:
    TSystemFile(const char *filename, const char *dirname);
    virtual ~TSystemFile();
    virtual void     Browse(TBrowser *b);
-   virtual void     Edit();                  // *MENU*
-   virtual Bool_t   IsDirectory() const;
+   virtual void     Rename(const char *name);      // *MENU*
+   virtual void     Delete();                      // *MENU*
+   virtual void     Copy(const char *to);          // *MENU*
+   virtual void     Move(const char *to);          // *MENU*
+   virtual void     Edit();                        // *MENU*
+
+   virtual Bool_t   IsDirectory(const char *dir = 0) const;
    virtual void     SetIconName(const char *name) { fIconName = name; }
    const char      *GetIconName() const { return fIconName.Data(); }
+
+   // dummy methods from TObject
+   virtual void     Inspect() const;
+   virtual void     Dump() const;
+
+   void        DrawClass() const { }
+   TObject    *DrawClone(Option_t *) const { return 0; }
+   void        SetDrawOption(Option_t *) { }
+   void        SetName(const char *) { }
+   void        SetTitle(const char *) { }
+   void        Delete(Option_t *) { }
+   void        Copy(TObject & ) const { }
 
    ClassDef(TSystemFile,0)  //A system file
 };

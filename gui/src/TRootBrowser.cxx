@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.71 2005/05/27 12:24:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.72 2005/05/28 07:57:52 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -174,6 +174,18 @@ public:
 
       while ((cur = (TRootBrowserHistoryCursor*)next())) {
          if (cur->fItem->GetUserData() == obj) {
+            Remove(cur);
+            delete cur;
+         }
+      }
+   }
+
+   void DeleteItem(TGListTreeItem *item) {
+      TRootBrowserHistoryCursor *cur;
+      TIter next(this);
+
+      while ((cur = (TRootBrowserHistoryCursor*)next())) {
+         if (cur->fItem == item) {
             Remove(cur);
             delete cur;
          }
@@ -1039,7 +1051,7 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    // Statusbar
 
-   int parts[] = { 25, 75 };
+   int parts[] = { 26, 74 };
    fStatusBar = new TGStatusBar(this, 60, 10);
    fStatusBar->SetParts(parts, 2);
    lo = new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0);
@@ -1272,6 +1284,18 @@ void TRootBrowser::DisplayDirectory()
    while (*p && *(p+1) == '/') ++p;
    fFSComboBox->Update(p);
    if (fListLevel) AddToHistory(fListLevel);
+
+   // disable/enable up level navigation
+   TGButton *btn = fToolBar->GetButton(kOneLevelUp);
+   const char *dirname = gSystem->DirName(p);
+   TObject *obj = (TObject*)fListLevel->GetUserData();
+   Bool_t disableUp = (strlen(dirname) == 1) && (*dirname == '/');
+
+   // normal file directory
+   if (disableUp && (obj->IsA() == TSystemDirectory::Class())) {
+      disableUp = strlen(p) == 1;
+   }
+   btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
 }
 
 //____________________________________________________________________________
@@ -1286,13 +1310,12 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
    fBrowser->SetDrawOption(GetDrawOption());
    TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
    TFile *wasf = gFile;
-   TString ext;
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
       Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       TString act;
-      ext = strrchr(obj->GetName(), '.');
+      TString ext = obj->GetName();
 
       if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
          act = action;
@@ -1307,8 +1330,9 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
       }
 
       ////////// new TFile was opened. Add it to the browser /////
-      if (gFile && (wasf != gFile) && (ext == ".root")) {
-         TGListTreeItem *itm = fLt->FindItemByPathname("ROOT Files");
+      if (gFile && (wasf != gFile) && ext.EndsWith(".root")) {
+         TGListTreeItem *itm = fLt->FindChildByData(0, gROOT->GetListOfFiles());
+
          if (itm) {
             fLt->ClearHighlighted();
             fListLevel = itm;
@@ -1686,7 +1710,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
 
                      if (itm) {
-                        if ( (fListLevel && fListLevel->IsOpen()) || !fListLevel) {
+                        if ((fListLevel && fListLevel->IsOpen()) || !fListLevel) {
                            fLt->ClearHighlighted();
                            fLt->HighlightItem(itm);
                            fClient->NeedRedraw(fLt);
@@ -1717,7 +1741,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                        cl->GetName());
                               }
                            }
-                           fBrowser->GetContextMenu()->Popup(x, y, obj);
+                           fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
                         }
                      }
                   }
@@ -1896,6 +1920,15 @@ Bool_t TRootBrowser::HistoryForward()
 }
 
 //______________________________________________________________________________
+void TRootBrowser::DeleteListTreeItem(TGListTreeItem *item)
+{
+   // delete list tree item, remove it from history
+
+   fLt->DeleteItem(item);
+   ((TRootBrowserHistory*)fHistory)->DeleteItem(item);
+}
+
+//______________________________________________________________________________
 void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 {
    // Open tree item and list in iconbox its contents.
@@ -1911,7 +1944,7 @@ void TRootBrowser::ListTreeHighlight(TGListTreeItem *item)
 
             if (k_obj) {
                TGListTreeItem *parent = item->GetParent();
-               fLt->DeleteItem(item);
+               DeleteListTreeItem(item);
                TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName());
                if (itm) {
                   itm->SetUserData(k_obj);
@@ -2006,6 +2039,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       Bool_t useLock = kTRUE;
 
       if (obj->IsA() == TSystemDirectory::Class()) {
+         useLock = kFALSE;
+
          TString t(obj->GetName());
          if (t == ".") goto out;
          if (t == "..") {
@@ -2047,14 +2082,14 @@ void TRootBrowser::IconBoxAction(TObject *obj)
             fListLevel = itm;
             DisplayDirectory();
             TObject *kobj = (TObject *) itm->GetUserData();
+
             if (kobj->IsA() == TKey::Class()) {
                Chdir(fListLevel->GetParent());
-
                kobj = gROOT->FindObject(kobj->GetName());
 
                if (kobj) {
                   TGListTreeItem *parent = fListLevel->GetParent();
-                  fLt->DeleteItem(fListLevel);
+                  DeleteListTreeItem(fListLevel);
                   TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName());
                   if (kitem) {
                      obj = kobj;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.5 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.6 2004/10/15 17:09:52 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -46,11 +46,10 @@ TSystemFile::TSystemFile(const char *filename, const char *dirname)
 TSystemFile::~TSystemFile()
 {
    // Delete TSystemFile object.
-
 }
 
 //______________________________________________________________________________
-Bool_t TSystemFile::IsDirectory() const
+Bool_t TSystemFile::IsDirectory(const char *dir) const
 {
    // Check if object is a directory.
 
@@ -58,7 +57,7 @@ Bool_t TSystemFile::IsDirectory() const
    Long_t id, flags, modtime;
 
    flags = id = size = modtime = 0;
-   gSystem->GetPathInfo(fName, &id, &size, &flags, &modtime);
+   gSystem->GetPathInfo(!dir ? fName.Data() : dir, &id, &size, &flags, &modtime);
    Int_t isdir = (Int_t)flags & 2;
 
    return isdir ? kTRUE : kFALSE;
@@ -95,3 +94,82 @@ void TSystemFile::Edit()
 
    delete [] cmd;
 }
+
+//______________________________________________________________________________
+void TSystemFile::Copy(const char *to)
+{
+   // copy this file
+
+   TString name = to;
+
+   if (IsDirectory(to)) {
+      if (name.EndsWith("/")) name.Chop();
+      name = gSystem->ConcatFileName(name, fName);
+   }
+
+   Int_t status = gSystem->CopyFile(fName, name, kFALSE);
+
+   if (status == -2) {
+      Warning("Copy", "File %s already exists", name.Data());
+   } else if (status == -1) {
+      Warning("Copy", "Failed to move file %s", name.Data());
+   }
+}
+
+//______________________________________________________________________________
+void TSystemFile::Move(const char *to)
+{
+   // move this file
+
+   if (!to) {
+      Warning("Move", "No file/dir name specified");
+      return;
+   }
+
+   TString name = to;
+
+   if (IsDirectory(to)) {
+      if (name.EndsWith("/")) name.Chop();
+      name = gSystem->ConcatFileName(name, fName);
+   }
+   Int_t status = gSystem->CopyFile(fName, name, kFALSE);
+
+   if (!status) {
+      gSystem->Unlink(fName);
+   } else if (status == -2) {
+      Warning("Move", "File %s already exists", name.Data());
+   } else if (status == -1) {
+      Warning("Move", "Failed to move file %s", name.Data());
+   }
+}
+
+//______________________________________________________________________________
+void TSystemFile::Delete()
+{
+   // delete this file
+
+   gSystem->Unlink(fName);
+}
+
+//______________________________________________________________________________
+void TSystemFile::Rename(const char *name)
+{
+   // rename this file
+
+   gSystem->Rename(fName, name);
+}
+
+//______________________________________________________________________________
+void TSystemFile::Inspect() const
+{
+   //
+}
+
+//______________________________________________________________________________
+void TSystemFile::Dump() const
+{
+   //
+}
+
+
+

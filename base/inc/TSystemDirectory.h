@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.4 2003/07/01 11:39:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.5 2003/07/04 10:55:33 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    virtual void   Browse(TBrowser *b);
    virtual void   Edit() { }
    virtual TList *GetListOfFiles() const;
-   virtual void   SetDirectory(const char *name); // *MENU*
+   virtual void   SetDirectory(const char *name);
 
    ClassDef(TSystemDirectory,0)  //A system directory
 };

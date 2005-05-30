@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.15 2005/05/24 20:05:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.16 2005/05/27 12:24:44 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -77,6 +77,7 @@ private:
 
    void  CreateBrowser(const char *name);
    void  ListTreeHighlight(TGListTreeItem *item);
+   void  DeleteListTreeItem(TGListTreeItem *item);
    void  HighlightListLevel();
    void  AddToHistory(TGListTreeItem *item);
    void  IconBoxAction(TObject *obj);
