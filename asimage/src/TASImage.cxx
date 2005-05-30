@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.31 2005/05/27 12:24:44 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.32 2005/05/28 07:57:51 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -254,8 +254,10 @@ TASImage &TASImage::operator=(const TASImage &img)
 
    if (this != &img && img.IsValid()) {
       TImage::operator=(img);
-      if (fImage)
+
+      if (fImage) {
          destroy_asimage(&fImage);
+      }
 
       fPaintMode     = 1;
 
@@ -1716,7 +1718,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
 
    gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
 #ifndef WIN32
-   fImage = pixmap2asimage(fgVisual, pxm, 0, 0, w, h, mask ? mask : AllPlanes, 0, 0);
+   fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, AllPlanes, 1, 0);
 #else
    unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(pxm, w, h) : 0;
    fImage = bitmap2asimage (bits, w, h, 0);
@@ -2737,7 +2739,6 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
 #ifdef HAVE_MMX
    mmx_off();
 #endif
-   stop_image_decoding(&imdec);
 
    if (fImage) destroy_asimage(&fImage);
    fImage = img;
@@ -5143,6 +5144,300 @@ void TASImage::SetTitle(const char *title)
    if ((start > 0) && (stop - start > 0)) {
       fTitle.Replace(start, stop - start, title);
    }
+}
+
+//_______________________________________________________________________
+void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
+                             Int_t x3, Int_t y3, const char *col, UInt_t thick)
+{
+   // draws cubic bezier line
+
+   Int_t sz = thick*thick;
+   CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
+   if (use_cache) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
+
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = 0;
+
+   ctx = create_draw_context_argb32(fImage, brush);
+   asim_cube_bezier(ctx, x1, y1, x2, y2, x3, y3);
+
+   if (!use_cache) {
+      delete [] matrix;
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, 
+                                  const char *col, UInt_t thick)
+{
+   // draws straight ellips
+
+   Int_t sz = thick*thick;
+   CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
+   if (use_cache) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
+
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   asim_straight_ellips(ctx, x, y, rx, ry, 0);
+
+   if (!use_cache) {
+      delete [] matrix;
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thick)
+{
+   // draws circle
+
+   thick = !thick ? 1 : thick;
+   Int_t sz = thick*thick;
+   CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
+   if (use_cache) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
+
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   asim_circle(ctx, x,  y, r, 0);
+
+   if (!use_cache) {
+      delete [] matrix;
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
+                           const char *col, UInt_t thick)
+{ 
+   // draws ellips
+
+   thick = !thick ? 1 : thick;
+   Int_t sz = thick*thick;
+   CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
+   if (use_cache) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
+
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   asim_ellips(ctx, x, y, rx, ry, angle, 0);
+
+   if (!use_cache) {
+      delete [] matrix;
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
+                           const char *col, UInt_t thick)
+{
+   // draws allips
+
+   thick = !thick ? 1 : thick;
+   Int_t sz = thick*thick;
+   CARD32 *matrix;
+   Bool_t use_cache = thick < kBrushCacheSize;
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
+   if (use_cache) {
+      matrix = gBrushCache;
+   } else {
+      matrix = new CARD32[sz];
+   }
+
+   for (int i = 0; i < sz; i++) {
+      matrix[i] = (CARD32)color;
+   };
+
+   static ASDrawTool *brush = new ASDrawTool;
+   brush->matrix = matrix;
+   brush->width = thick;
+   brush->height = thick;
+   brush->center_y = brush->center_x = thick/2;
+
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   asim_ellips2(ctx, x, y, rx, ry, angle, 0);
+
+   if (!use_cache) {
+      delete [] matrix;
+   }
+}
+
+//_______________________________________________________________________
+void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/, 
+                         const char * /*minc*/, const char * /*maxc*/)
+{
+   // flood fill
+
+
+}
+
+//_______________________________________________________________________
+void TASImage::ToGray()
+{
+   // convert RGB image to Gray mage. It can be reverte by UnZoom() 
+
+   if (!IsValid()) {
+      Warning("ToGray", "Image not initiated");
+      return;
+   }
+
+   if (!InitVisual()) {
+      Warning("ToGray", "Visual not initiated");
+      return;
+   }
+
+   delete fScaledImage;
+   fScaledImage = 0;
+
+   ASImage *image = 0;
+
+   UInt_t l, r, g, b, idx;
+   int y = 0;
+   UInt_t i, j;
+
+   if (fImage->alt.argb32) {
+      image = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
+                           0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
+
+      for (i = 0; i < fImage->height; i++) {
+         for (j = 0; j < fImage->width; j++) {
+            idx = y + j;
+
+            r = ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
+            g = ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
+            b = (fImage->alt.argb32[idx] & 0x0000ff);
+            l = (57*r + 181*g + 18*b)/256;
+            image->alt.argb32[idx] = (l << 16) + (l << 8) + l;
+         }
+         y += fImage->width;
+      }
+   } else {
+      image = create_asimage(fImage->width, fImage->height, 0);
+
+      ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
+                                                   0, 0, fImage->width, fImage->height, 0);
+
+      if (!imdec) {
+         return;
+      }
+#ifdef HAVE_MMX
+	mmx_init();
+#endif
+      ASImageOutput *imout = start_image_output(fgVisual, image, ASA_ASImage,
+                                                GetImageCompression(), GetImageQuality());
+      if (!imout) {
+         Warning("ToGray", "Failed to start image output");
+         delete fScaledImage;
+         fScaledImage = 0;
+         return;
+      }
+
+      CARD32 *aa = imdec->buffer.alpha;
+      CARD32 *rr = imdec->buffer.red;
+      CARD32 *gg = imdec->buffer.green;
+      CARD32 *bb = imdec->buffer.blue;
+
+      ASScanline result;
+      prepare_scanline(fImage->width, 0, &result, fgVisual->BGR_mode);
+
+      for (i = 0; i < fImage->height; i++) {
+         imdec->decode_image_scanline(imdec);
+         result.flags = imdec->buffer.flags;
+		   result.back_color = imdec->buffer.back_color; 
+
+		   for (j = 0; j < fImage->width; j++) {
+            l = (57*rr[j] + 181*gg[j]+ 18*bb[j])/256;
+            result.alpha[j] = aa[j];
+	         result.red[j] = l;
+            result.green[j] = l;
+	         result.blue[j] = l;
+         }
+         imout->output_image_scanline(imout, &result, 1);
+      }
+
+      stop_image_decoding(&imdec);
+      stop_image_output(&imout);
+#ifdef HAVE_MMX
+	mmx_off();
+#endif
+   }
+   if (fImage) {
+      destroy_asimage(&fImage);
+   }
+   fImage = image;
 }
 
 

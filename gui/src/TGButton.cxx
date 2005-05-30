@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.53 2005/02/08 13:34:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.54 2005/05/28 07:57:52 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -682,6 +682,14 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
 }
 
 //______________________________________________________________________________
+TGPictureButton::~TGPictureButton()
+{
+   // dtor
+
+   if (fOwnDisabledPic) fClient->FreePicture(fPicD);
+}
+
+//______________________________________________________________________________
 void TGPictureButton::SetPicture(const TGPicture *new_pic)
 {
    // Change a picture in a picture button. The picture is not adopted and
@@ -736,15 +744,29 @@ void TGPictureButton::CreateDisabledPicture()
 
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
-   img->SetImage(fPic->GetPicture());
+   img->SetImage(fPic->GetPicture(), fPic->GetMask());
+   Pixmap_t mask = img->GetMask();
    img2->Merge(img, "overlay");
 
-   TString name = fPic->GetName();
-   name += "disabled";
-   fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), img2->GetPixmap(), fPic->GetMask());
-
+   TString name = "disbl_";
+   name += fPic->GetName();
+   fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), img2->GetPixmap(),
+                                                 mask);
+   fOwnDisabledPic = kTRUE;
    delete img;
    delete img2;
+}
+
+//______________________________________________________________________________
+void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
+{
+   // changes disabled picture
+
+   if (!pic) return;
+
+   if (fOwnDisabledPic) fClient->FreePicture(fPicD);
+   fPicD = pic;
+   fOwnDisabledPic = kFALSE;
 }
 
 

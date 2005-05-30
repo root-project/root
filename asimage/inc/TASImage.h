@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.9 2005/05/03 13:11:32 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.11 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -130,6 +130,7 @@ public:
              UInt_t right = 0, UInt_t top = 0, UInt_t bottom = 0);      //*MENU*
    void  Blur(Double_t hr = 3, Double_t vr = 3);                        //*MENU*
    void  Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);  //*MENU*
+   void  ToGray();                                                      //*MENU*
    void  StartPaletteEditor();                                          //*MENU*
    void  HSV(UInt_t hue = 0, UInt_t radius = 360, Int_t H = 0, Int_t S = 0, Int_t V = 0, 
              Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0);
@@ -165,6 +166,12 @@ public:
    void  CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths);
    void  CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w, UInt_t h, Int_t xdst = 0, Int_t ydst = 0, Int_t gfunc = 3, EColorChan chan = kAllChan);
    void  DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, UInt_t *ic);
+   void  FloodFill(Int_t x, Int_t y, const char *col, const char *min_col, const char *max_col = 0);
+   void  DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t x3, Int_t y3, const char *col = "#000000", UInt_t thick = 1);
+   void  DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, const char *col = "#000000", UInt_t thick = 1);
+   void  DrawCircle(Int_t x, Int_t y, Int_t r, const char *col = "#000000", UInt_t thick = 1);
+   void  DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", UInt_t thick = 1);
+   void  DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", UInt_t thick = 1);
 
    // Input / output
    void  ReadImage(const char *file, EImageFileTypes type = TImage::kUnknown);

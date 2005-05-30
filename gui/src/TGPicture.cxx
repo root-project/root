@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.19 2005/05/26 13:38:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.20 2005/05/27 12:24:44 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -198,6 +198,53 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap,
 }
 
 //______________________________________________________________________________
+const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
+{
+   // create picture from XPM data
+
+   UInt_t w, h;
+
+   if (!xpm || !*xpm) {
+      return 0;
+   }
+
+   if (!fPicList) {
+      fPicList = new THashTable(50);
+   }
+   char *ptr = xpm[0];
+   while( isspace((int)*ptr)) ++ptr;
+   w = atoi(ptr);
+
+   while(isspace((int)*ptr)) ++ptr;
+   h = atoi(ptr);
+
+   const char *hname = TGPicture::HashName(name, w, h);
+   TGPicture *pic = (TGPicture *)fPicList->FindObject(hname);
+
+   if (pic) {
+      pic->AddReference();
+      return pic;
+   }
+
+   TImage *img = TImage::Open(xpm);
+
+   if (!img) {
+      pic = new TGPicture(hname, kTRUE);
+      pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
+      pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
+      pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+      pic->fAttributes.fWidth  = w;
+      pic->fAttributes.fHeight = h;
+      fPicList->Add(pic);
+      return 0;
+   }
+
+   pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
+   delete img;
+   return pic;
+}
+
+//______________________________________________________________________________
 void TGPicturePool::FreePicture(const TGPicture *fpic)
 {
    // Remove picture from cache if nobody is using it anymore.
@@ -238,7 +285,7 @@ void TGPicturePool::Print(Option_t *) const
 //______________________________________________________________________________
 TGPicture::TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask)
 {
-   // ctor
+   // ctor. Important: both pixmaps pxmap and mask must be unique (not shared)
 
    fName   = name;
    fScaled = kFALSE;
@@ -304,8 +351,8 @@ void TGPicture::Print(Option_t *) const
 {
    // Print picture info.
 
-   Printf("TGPicture: %s,%sref cnt = %u", GetName(),
-          fScaled ? " scaled, " : " ", References());
+   Printf("TGPicture: %s,%sref cnt = %u %d", GetName(),
+          fScaled ? " scaled, " : " ", References(), fPic);
 }
 
 

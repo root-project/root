@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.6 2005/05/02 21:30:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.7 2005/05/15 05:53:44 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -141,6 +141,7 @@ public:
    virtual void UnZoom() {}
    virtual void Zoom(UInt_t /*offX*/, UInt_t /*offY*/, UInt_t /*width*/, UInt_t /*height*/) {}
    virtual void Flip(Int_t /*flip*/ = 180) {}
+   virtual void ToGray() {}
    virtual void Mirror(Bool_t /*vert*/ = kTRUE) {}
    virtual void Scale(UInt_t /*width*/, UInt_t /*height*/) {}
    virtual void Tile(UInt_t /*width*/, UInt_t /*height*/) {}
@@ -195,6 +196,12 @@ public:
    virtual void CopyArea(TImage * /*dst*/, Int_t /*xsrc*/, Int_t /*ysrc*/, UInt_t /*w*/, UInt_t /*h*/,
                          Int_t /*xdst*/ = 0, Int_t /*ydst*/ = 0, Int_t /*gfunc*/ = 3, EColorChan /*chan*/ = kAllChan) {}
    virtual void DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, Int_t /*nx*/, Int_t /*ny*/, UInt_t * /*ic*/) {}
+   virtual void FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/, const char * /*min_col*/, const char * /*max_col*/ = 0) {}
+   virtual void DrawCubeBezier(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, Int_t /*x3*/, Int_t /*y3*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
+   virtual void DrawStraightEllips(Int_t /*x*/, Int_t /*y*/, Int_t rx, Int_t ry, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
+   virtual void DrawCircle(Int_t /*x*/, Int_t /*y*/, Int_t /*r*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
+   virtual void DrawEllips(Int_t /*x*/, Int_t /*y*/, Int_t /*rx*/, Int_t /*ry*/, Int_t /*angle*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
+   virtual void DrawEllips2(Int_t /*x*/, Int_t /*y*/, Int_t /*rx*/, Int_t /*ry*/, Int_t /*angle*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
 
    virtual void SetEditable(Bool_t /*on*/ = kTRUE) {}
    virtual Bool_t IsEditable() const { return kFALSE; }
@@ -216,6 +223,7 @@ public:
 
    static TImage *Create();
    static TImage *Open(const char *file, EImageFileTypes type = kUnknown);
+   static TImage *Open(char **data);
    static TImage *Open(const char *name, const Double_t *imageData, UInt_t width, UInt_t height, TImagePalette *palette);
    static TImage *Open(const char *name, const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
    static TImage *Open(const char *name, const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);

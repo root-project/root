@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.5 2005/05/20 11:12:54 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.6 2005/05/23 07:02:51 brun Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
    void *GetStream() const {  return (void*)fImage; }
    void  SetType(Int_t type = -111) { fType = type; }
    Int_t GetType() const { return fType; }
+   TImage *GetImage() const { return fImage; } 
 
    ClassDef(TImageDump,0)  // create image in batch mode
 };

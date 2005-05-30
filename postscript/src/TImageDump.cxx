@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.8 2005/05/20 11:12:54 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.9 2005/05/23 07:02:51 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -254,20 +254,12 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy+m2), UInt_t(ix+m2), UInt_t(iy-m2), col->AsHexString());
          break;
       // Circle
+      case 4:
       case 24:
+         fImage->DrawCircle(ix, iy, Int_t(msize/2), col->AsHexString(), 1);
+         break;
+      // Circle
       case 20:
-         //MoveTo(ix-m2, iy);
-         //WriteReal(ix-m2); WriteReal(iy+m4);
-         //WriteReal(ix+m2); WriteReal(iy+m4);
-         //WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
-         //WriteReal(ix+m2); WriteReal(iy-m4);
-         //WriteReal(ix-m2); WriteReal(iy-m4);
-         //WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
-
-         // temporary
-         ms == 24 ? 
-         fImage->DrawRectangle(UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(m), UInt_t(m), col->AsHexString()) :
-         fImage->FillRectangle(col->AsHexString(), UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(m), UInt_t(m));
          break;
       // Square
       case 21:

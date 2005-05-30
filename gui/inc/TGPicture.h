@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.7 2004/12/07 15:34:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.h,v 1.8 2005/05/15 07:30:17 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
 
    const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);
+   const TGPicture *GetPicture(const char *name, char **xpm);
    const TGPicture *GetPicture(const char *name, UInt_t new_width, UInt_t new_height);
    const TGPicture *GetPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask =  0);
    void             FreePicture(const TGPicture *pic);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.3 2005/04/29 16:16:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.4 2005/05/28 07:57:52 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -101,7 +101,22 @@ TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
    return img;
 }
 
+//______________________________________________________________________________
+TImage *TImage::Open(char **data)
+{
+   // create image from XPM data array
+
+   TImage *img = Create();
+
+   if (img) {
+      img->SetImageBuffer(data, TImage::kXpm);
+      img->SetName("XPM_image");
+   }
+   return img;
+}
+
 
 TImage operator+(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "+"); return ret; }
 TImage operator/(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "/"); return ret; }
+
 
