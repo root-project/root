@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.76 2005/05/12 12:07:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.77 2005/05/15 07:30:17 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1166,6 +1166,14 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    // Set size of canvas( units in pixels).
 
    Resize(w, h);
+}
+
+//______________________________________________________________________________
+void TRootCanvas::RaiseWindow()
+{
+   // Put canvas window on top of the window stack.
+   
+   gVirtualX->RaiseWindow(GetId());
 }
 
 //______________________________________________________________________________

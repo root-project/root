@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.6 2004/05/04 14:41:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.7 2004/05/12 16:19:04 rdm Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
    virtual void   Show() { }
    virtual void   ShowMenuBar(Bool_t show = kTRUE);
    virtual void   ShowStatusBar(Bool_t show = kTRUE);
+   virtual void   RaiseWindow();
    virtual void   ReallyDelete();
 
    virtual void   ShowEditor(Bool_t show = kTRUE);
@@ -78,6 +79,7 @@ inline void TCanvasImp::SetWindowTitle(const char *) { }
 inline void TCanvasImp::SetCanvasSize(UInt_t, UInt_t) { }
 inline void TCanvasImp::ShowMenuBar(Bool_t) { }
 inline void TCanvasImp::ShowStatusBar(Bool_t) { }
+inline void TCanvasImp::RaiseWindow() { }
 inline void TCanvasImp::ReallyDelete() { }
 
 inline void TCanvasImp::ShowEditor(Bool_t) { }

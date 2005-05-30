@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.15 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.16 2004/12/15 09:27:48 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -109,6 +109,7 @@ public:
    void     Iconify() { IconifyWindow(); }
    Int_t    InitWindow();
    void     PrintCanvas();
+   void     RaiseWindow();
    void     SetWindowPosition(Int_t x, Int_t y);
    void     SetWindowSize(UInt_t w, UInt_t h);
    void     SetWindowTitle(const char *newTitle);

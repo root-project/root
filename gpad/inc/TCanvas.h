@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.30 2005/03/14 15:38:33 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.31 2005/04/23 10:55:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -183,6 +183,7 @@ public:
    virtual void      ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *selected); // *SIGNAL*
    virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
    virtual void      Closed();                                                         // *SIGNAL*
+   void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1) { fResizeOpaque = set; }
    void              SaveSource(const char *filename="", Option_t *option="");
