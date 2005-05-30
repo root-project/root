@@ -254,7 +254,12 @@ freebsd)
    auxlibs="-lm -lg++"
    ;;
 freebsd4)
-   # FreeBSD with glibc
+   # FreeBSD 4 with glibc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
+   ;;
+freebsd5)
+   # FreeBSD 5 with glibc
    auxcflags=
    auxlibs="-lm -lstdc++"
    ;;
