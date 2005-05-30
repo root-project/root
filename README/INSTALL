@@ -178,8 +178,8 @@ packages do:
 1) Make a tar-ball of the source tree:
 
         cd ../
-        mv root root-<version>
-        tar -czvf root_v<version>.source.tar.gz root-<version>
+        mv root root-v<version>
+        tar -czvf root-v<version>.source.tar.gz root-v<version>
 
   where <version>=<major>.<minor>.<revision> is the version number of
   ROOT (see the file build/version_number).

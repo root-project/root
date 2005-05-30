@@ -8,3 +8,4 @@
 @prefix@/share/man/man1/root.exe.1
 @prefix@/share/man/man1/rootn.exe.1
 @prefix@/share/man/man1/hadd.1
+@prefix@/share/root/macros/html.C
