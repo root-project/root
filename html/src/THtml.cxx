@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.74 2005/04/21 14:04:33 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.75 2005/05/02 21:46:19 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1152,7 +1152,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                *endOfLine = tempChar;
 
                // if line is composed of the same characters
-               if ((endOfLine == startOfLine) && *(startOfLine + 2)
+               if ((endOfLine == startOfLine+1) && *(startOfLine + 2)
                    && classDescription) {
                   extractComments = kTRUE;
                   classDescription = kFALSE;
@@ -1798,6 +1798,8 @@ void THtml::Convert(const char *filename, const char *title,
 //  NOTE: Output file name is the same as filename, but with extension .html
 //
 
+   gROOT->GetListOfGlobals(kTRUE);	// force update of this list
+
    const char *dir;
    char *ptr;
 
@@ -1843,7 +1845,7 @@ void THtml::Convert(const char *filename, const char *title,
                delete[]tmp1;
             tmp1 = 0;
 
-ofstream tempFile;
+            ofstream tempFile;
             tempFile.open(htmlFilename, ios::out);
 
             if (tempFile.good()) {
@@ -1878,7 +1880,6 @@ ofstream tempFile;
                   // write to a '.html' file
                   if (isCommentedLine)
                      tempFile << "<b>";
-                  gROOT->GetListOfGlobals(kTRUE);	// force update of this list
                   ExpandKeywords(tempFile, fLine, 0, tempFlag, "../");
                   if (isCommentedLine)
                      tempFile << "</b>";
