@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.5 2003/07/04 10:55:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.6 2005/05/30 10:21:14 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -54,7 +54,18 @@ public:
    virtual void   Edit() { }
    virtual TList *GetListOfFiles() const;
    virtual void   SetDirectory(const char *name);
+   virtual void   Delete() {}
+   virtual void   Copy(const char *) {}
+   virtual void   Move(const char *) {}
 
+   // dummy methods from TObject
+   void        DrawClass() const { }
+   TObject    *DrawClone(Option_t *) const { return 0; }
+   void        SetDrawOption(Option_t *) { }
+   void        SetName(const char *) { }
+   void        SetTitle(const char *) { }
+   void        Delete(Option_t *) { }
+   void        Copy(TObject & ) const { }
    ClassDef(TSystemDirectory,0)  //A system directory
 };
 

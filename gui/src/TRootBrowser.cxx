@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.72 2005/05/28 07:57:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.73 2005/05/30 10:21:14 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -956,7 +956,8 @@ void TRootBrowser::CreateBrowser(const char *name)
       spacing = 0;
    }
    fDrawOption = new TGComboBox(fToolBar, "");
-   fDrawOption->GetTextEntry()->SetToolTipText("Object Draw Option", 300);
+   TGTextEntry *dropt_entry = fDrawOption->GetTextEntry();
+   dropt_entry->SetToolTipText("Object Draw Option", 300);
    fDrawOption->Resize(80, 10);
    Int_t dropt = 1;
    fDrawOption->AddEntry("", dropt++);
@@ -1214,7 +1215,9 @@ void TRootBrowser::UpdateDrawOption()
       }
    }
    if (newopt) {
-      fDrawOption->AddEntry(opt.Data(), fDrawOption->GetNumberOfEntries() + 1);
+      Int_t nn = fDrawOption->GetNumberOfEntries() + 1;
+      fDrawOption->AddEntry(opt.Data(), nn);
+      fDrawOption->Select(nn);
    }
 }
 
@@ -2320,5 +2323,4 @@ void TRootBrowser::SetSortMode(Int_t new_mode)
 
    fIconBox->Sort(smode);
 }
-
 
