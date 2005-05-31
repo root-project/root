@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.1 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.2 2004/07/19 09:40:48 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TROOT.h"
 #include "TObjArray.h"
 #include "TError.h"
+#include "TUrl.h"
 
 
 ClassImp(TArchiveFile)
@@ -138,18 +139,18 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
    // Try to determine if url contains an anchor specifying an archive member.
    // Returns kFALSE in case of an error.
 
-   TString u = url;
+   TUrl u(url, kTRUE);
+
    archive   = "";
    member    = "";
 
-   Int_t idx;
-   if ((idx = u.Last('#')) == kNPOS) {
-      archive = url;
+   if (!strlen(u.GetAnchor())) {
+      archive = u.GetFile();
       return kTRUE;
    }
 
-   archive = u(0, idx);
-   member  = u(idx+1, u.Length()-1);
+   archive = u.GetFile();
+   member  = u.GetAnchor();
 
    if (archive == "" || member == "") {
       archive = "";
