@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.7 2005/05/15 05:53:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.8 2005/05/30 22:38:39 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -198,7 +198,7 @@ public:
    virtual void DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, Int_t /*nx*/, Int_t /*ny*/, UInt_t * /*ic*/) {}
    virtual void FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/, const char * /*min_col*/, const char * /*max_col*/ = 0) {}
    virtual void DrawCubeBezier(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, Int_t /*x3*/, Int_t /*y3*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
-   virtual void DrawStraightEllips(Int_t /*x*/, Int_t /*y*/, Int_t rx, Int_t ry, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
+   virtual void DrawStraightEllips(Int_t /*x*/, Int_t /*y*/, Int_t /*rx*/, Int_t /*ry*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
    virtual void DrawCircle(Int_t /*x*/, Int_t /*y*/, Int_t /*r*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
    virtual void DrawEllips(Int_t /*x*/, Int_t /*y*/, Int_t /*rx*/, Int_t /*ry*/, Int_t /*angle*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
    virtual void DrawEllips2(Int_t /*x*/, Int_t /*y*/, Int_t /*rx*/, Int_t /*ry*/, Int_t /*angle*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
