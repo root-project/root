@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.1 2005/05/27 13:47:37 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -92,19 +92,35 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
    TUrl sURL(src, kTRUE);
    TUrl dURL(dst, kTRUE);
 
+   TString raw = "filetype=raw";
+
+   TString opt = sURL.GetOptions();
+   if (opt == "")
+      opt = raw;
+   else
+      opt += "&&" + raw;
+   sURL.SetOptions(opt);
+
+   opt = dURL.GetOptions();
+   if (opt == "")
+      opt = raw;
+   else
+      opt += "&&" + raw;
+   dURL.SetOptions(opt);
+
    char *copybuffer = 0;
 
    TFile *sfile = 0;
    TFile *dfile = 0;
 
-   sfile = TFile::Open(src, "-READ");
+   sfile = TFile::Open(sURL.GetUrl(), "READ");
 
    if (!sfile) {
       Error("Cp", "cannot open source file %s", src);
       goto copyout;
    }
 
-   dfile = TFile::Open(dst, "-RECREATE");
+   dfile = TFile::Open(dURL.GetUrl(), "RECREATE");
 
    if (!dfile) {
       Error("Cp", "cannot open destination file %s", dst);
@@ -255,13 +271,15 @@ void TFileMerger::PrintFiles(Option_t *options)
 //______________________________________________________________________________
 Bool_t TFileMerger::Merge()
 {
-   // Merge the files.
+   // Merge the files. If no output file was specified it will write into
+   // the file "FileMerger.root" in the working directory. Returns true
+   // on success, false in case of error.
 
    if (!fOutputFile) {
       Info("Merge", "will merge the results to the file "
-           "GridMergerMerged.root in your working directory, "
+           "FileMerger.root\nin your working directory, "
            "since you didn't specify a merge filename");
-      if (!OutputFile("GridMergerMerged.root")) {
+      if (!OutputFile("FileMerger.root")) {
          return kFALSE;
       }
    }

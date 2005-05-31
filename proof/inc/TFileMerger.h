@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.h,v 1.1 2005/05/27 13:47:37 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -56,6 +56,8 @@ protected:
 public:
    TFileMerger();
    virtual ~TFileMerger();
+
+   const char *GetOutputFileName() const { return fOutputFilename; }
 
     //--- file management interface
    virtual Bool_t Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
