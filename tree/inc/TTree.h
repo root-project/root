@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.80 2005/05/13 16:26:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.81 2005/05/16 16:01:58 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -213,6 +213,7 @@ public:
     virtual Long64_t     CopyEntries(TTree *tree, Long64_t nentries=-1);
     virtual TTree       *CopyTree(const char *selection, Option_t *option=""
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
+    virtual TBasket     *CreateBasket(TBranch *branch);
     Int_t                Debug() const {return fDebug;}
     virtual void         Delete(Option_t *option=""); // *MENU*
     virtual void         Draw(Option_t *opt);

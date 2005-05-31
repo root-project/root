@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.251 2005/05/13 16:26:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.252 2005/05/18 12:31:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1967,6 +1967,14 @@ TTree *TTree::CopyTree(const char *selection, Option_t *option, Long64_t nentrie
    GetPlayer();
    if (fPlayer) return fPlayer->CopyTree(selection,option,nentries,firstentry);
    return 0;
+}
+
+//______________________________________________________________________________
+TBasket *TTree::CreateBasket(TBranch *branch)
+{
+   // Create a basket for this implementation of TTree.
+   if (branch==0) return 0;
+   return new TBasket(branch->GetName(), GetName(), branch);
 }
 
 //______________________________________________________________________________

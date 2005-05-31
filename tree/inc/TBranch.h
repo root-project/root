@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.25 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.26 2005/03/19 16:39:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -161,6 +161,7 @@ public:
     virtual void      SetBufferAddress(TBuffer *entryBuffer);
     virtual void      SetCompressionLevel(Int_t level=1);
     virtual void      SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
+    virtual void      SetEntries(Long64_t entries);
     virtual void      SetFile(TFile *file=0);
     virtual void      SetFile(const char *filename);
     virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.87 2005/04/07 13:28:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.88 2005/05/18 12:31:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -260,7 +260,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
 
-   TBasket *basket = new TBasket(name,fTree->GetName(),this);
+   TBasket *basket = fTree->CreateBasket(this);
    fBaskets.AddAt(basket,0);
 }
 
@@ -533,7 +533,7 @@ Int_t TBranch::Fill()
       fTotBytes += addbytes;
       fTree->AddTotBytes(addbytes);
       fTree->AddZipBytes(nout);
-      basket = new TBasket(GetName(),fTree->GetName(),this);   //  create a new basket
+      basket = fTree->CreateBasket(this); //  create a new basket
       fWriteBasket++;
       fBaskets.AddAtAndExpand(basket,fWriteBasket);
       if (fWriteBasket >= fMaxBaskets) {
@@ -779,6 +779,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(fReadBasket);
    if (!basket) {
       basket = GetBasket(fReadBasket);
+      basket->PrepareBasket(entry);
       if (!basket) return -1;
    }
    TBuffer *buf    = basket->GetBufferRef();
@@ -1236,7 +1237,7 @@ void TBranch::Reset(Option_t *)
       if (fBasketSeek)  fBasketSeek[i]  = 0;
    }
    if (nbaskets) {
-      TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
+      TBasket *basket = fTree->CreateBasket(this); 
       fBaskets.AddAt(basket,0);
    }
 }
@@ -1336,6 +1337,13 @@ void TBranch::SetCompressionLevel(Int_t level)
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       branch->SetCompressionLevel(level);
    }
+}
+
+//______________________________________________________________________________
+void TBranch::SetEntries(Long64_t entries)
+{
+   fEntries = entries;
+   fEntryNumber = entries;
 }
 
 //______________________________________________________________________________
@@ -1565,7 +1573,7 @@ void TBranch::WriteBasket(TBasket* basket)
    fTotBytes += addbytes;
    fTree->AddTotBytes(addbytes);
    fTree->AddZipBytes(nout);
-   basket = new TBasket(GetName(),fTree->GetName(),this);   //  create a new basket
+   basket = fTree->CreateBasket(this); //  create a new basket
    fWriteBasket++;
    fBaskets.AddAtAndExpand(basket,fWriteBasket);
    if (fWriteBasket >= fMaxBaskets) {
