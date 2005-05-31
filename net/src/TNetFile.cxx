@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.59 2005/03/11 00:49:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.60 2005/03/11 11:06:18 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -618,16 +618,15 @@ void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 {
    // Create a NetFile object using an existing connection (socket s).
    // Provided for use in TXNetFile.
-   // See
-   //  TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
+   // See:
+   //    TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    // for details about the arguments.
 
    // Import socket
    fSocket = s;
 
    // Create the connection
-   Create(s->GetUrl(),option,netopt);
-
+   Create(s->GetUrl(), option, netopt);
 }
 
 //
