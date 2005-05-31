@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.62 2005/01/12 18:02:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.63 2005/05/19 17:28:15 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -252,7 +252,9 @@ void TDirectory::Build()
    // If directory is created via default ctor (when dir is read from file)
    // don't add it here to the directory since its name is not yet known.
    // It will be added to the directory in TKey::ReadObj().
+
    if (gDirectory && strlen(GetName()) != 0) gDirectory->Append(this);
+
    fModified   = kTRUE;
    fWritable   = kFALSE;
    fDatimeC.Set();
@@ -593,7 +595,7 @@ void TDirectory::Delete(const char *namecycle)
 //     *;*   : delete all objects from memory and file
 //    T*;*   : delete all objects from memory and file and all subdirectories
 //
-   
+
    TDirectory::TContext ctxt(gDirectory, this);
    Short_t  cycle;
    char     name[kMaxLen];
@@ -1863,7 +1865,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
    name[nch] = 0;
 }
 
- 
+
 //______________________________________________________________________________
 void TDirectory::TContext::CdNull()
 {
