@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.59 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoVolume.cxx,v 1.60 2005/05/26 12:54:56 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -539,7 +539,6 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 // option = 3           - return maximum level counted already with option = 0
    static Int_t maxlevel = 0;
    static Int_t nlev = 0;
-   static Bool_t isfirst = kTRUE;
    
    if (option<0 || option>3) option = 0;
    Int_t visopt = 0;
@@ -567,19 +566,20 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
          return maxlevel;   
    }      
    if (last) return fNtotal;
-   if (isfirst) {
-      nlev = nlevels;
-      isfirst = kFALSE;
-   }
-   Int_t depth = nlev-nlevels;
-   if (depth>maxlevel) maxlevel = depth;   
+   if (gGeoManager->GetTopVolume() == this) {
+      maxlevel=0;
+      nlev = 0;
+   }   
+   if (nlev>maxlevel) maxlevel = nlev;   
    TGeoNode *node;
    TGeoVolume *vol;
+   nlev++;
    for (Int_t i=0; i<nd; i++) {
       node = GetNode(i);
       vol = node->GetVolume();
       fNtotal += vol->CountNodes(nlevels-1, option);
    }
+   nlev--;
    return fNtotal;
 }
 
