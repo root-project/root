@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.4 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.5 2005/04/15 07:19:50 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -239,7 +239,7 @@ Bool_t TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, int insert)
             }
             QKeySequence keys(key[0],key[1],key[2],key[3]);
             if (fGrabbedKey->findKey(keys) == -1)  {
-              int itemId = fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
+              fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
            //      fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d, evail=%d \n", TGQt::wid(this), modifier, keycode ,fGrabbedKey->count()
            //   , fGrabbedKey->isEnabled() );
             }
