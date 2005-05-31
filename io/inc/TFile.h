@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.35 2004/08/20 14:48:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.36 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -61,7 +61,8 @@ protected:
    TArchiveFile *fArchive;        //!Archive file from which we read this file
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
-   
+   Bool_t        fIsRootFile;     //!True is this is a ROOT file
+
    static Double_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;   //Number of bytes read by all TFile objects
 
@@ -85,14 +86,14 @@ private:
 
 public:
    // TFile status bits
-   enum {
-      kStartBigFile  = 2000000000,
+   enum EStatusBits {
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
       kWriteError    = BIT(14) // BIT(13) is taken up by TObject
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
+   enum { kStartBigFile  = 2000000000 };
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);
@@ -118,8 +119,8 @@ public:
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }
    virtual Int_t     GetNProcessIDs() const { return fNProcessIDs; }
    Option_t         *GetOption() const { return fOption.Data(); }
-   Double_t          GetBytesRead() const { return fBytesRead; }
-   Double_t          GetBytesWritten() const { return fBytesWrite; }
+   virtual Double_t  GetBytesRead() const { return fBytesRead; }
+   virtual Double_t  GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}

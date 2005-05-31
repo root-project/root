@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.136 2005/05/12 12:31:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.137 2005/05/16 16:01:17 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -76,6 +76,7 @@ TFile::TFile() : TDirectory()
    fOffset        = 0;
    fArchive       = 0;
    fArchiveOffset = 0;
+   fIsRootFile    = kTRUE;
    fIsArchive     = kFALSE;
 
    if (gDebug)
@@ -104,6 +105,26 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    //           = UPDATE          open an existing file for writing.
    //                             if no file exists, it is created.
    //           = READ            open an existing file for reading.
+   //           = NET             used by derived remote file access
+   //                             classes, not a user callable option
+   //           = WEB             used by derived remote http access
+   //                             class, not a user callable option
+   //
+   // The file can be specified as a URL of the form:
+   //    file:///user/rdm/bla.root or file:/user/rdm/bla.root
+   //
+   // The file can also be a member of an archive, in which case it is
+   // specified as:
+   //    multi.zip#file.root or multi.zip#0
+   // which will open file.root which is a member of the file multi.zip
+   // archive or member 1 from the archive. For more on archive file
+   // support see the TArchiveFile class.
+   //
+   // TFile and its remote access plugins can also be used to open any
+   // file, i.e. also non ROOT files, using:
+   //    file.tar?filetype=raw
+   // This is convenient because the many remote file access plugins allow
+   // easy access to/from the many different mass storage systems.
    //
    // The title of the file (ftitle) will be shown by the ROOT browsers.
    //
@@ -194,22 +215,19 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
-   if (!strncmp(fname1, "file:", 5))
-      fname1 += 5;
+   // accept also URL like "file:..." syntax
+   TUrl url(fname1, kTRUE);
+   fname1 = url.GetFile();
 
-   // don't append URL options into the file name used inside the TFile
-   TString sName = fname1;
-   const char *optionstart;
-
-   if ((optionstart = strrchr(fname1, '?'))) {
-      sName = sName(0, optionstart-fname1);
-      // change fname1 to the file name without options
-      fname1 = sName;
-   }
+   // if option contains filetype=raw then go into raw file mode
+   fIsRootFile = kTRUE;
+   if (strstr(url.GetOptions(), "filetype=raw"))
+      fIsRootFile = kFALSE;
 
    gDirectory = 0;
    SetName(fname1);
    SetTitle(ftitle);
+
    TDirectory::Build();
 
    fD          = -1;
@@ -236,7 +254,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
-   fArchive = TArchiveFile::Open(fname1, this);
+   fArchive = TArchiveFile::Open(url.GetUrl(), this);
    if (fArchive) {
       fname1 = fArchive->GetArchiveName();
       // if no archive member is specified then this TFile is just used
@@ -291,12 +309,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       delete [] (char*)fname;
       fRealName = GetName();
       fname = fRealName.Data();
-      if (fArchive) {
-         TString full = fname;
-         if (!fIsArchive)
-            full += "#"; full += fArchive->GetMemberName();
-         SetName(full);
-      }
    } else {
       Error("TFile", "error expanding path %s", fname1);
       goto zombie;
@@ -380,8 +392,7 @@ TFile::~TFile()
 {
    // File destructor.
 
-   if (!fIsArchive)
-      Close();
+   Close();
 
    SafeDelete(fProcessIDs);
    SafeDelete(fFree);
@@ -400,6 +411,8 @@ void TFile::Init(Bool_t create)
 {
    // Initialize a TFile object.
 
+   if (!fIsRootFile) return;
+
    if (fArchive) {
       if (fOption != "READ") {
          Error("Init", "archive %s can only be opened in read mode", GetName());
@@ -408,8 +421,15 @@ void TFile::Init(Bool_t create)
          fIsArchive = kFALSE;
          goto zombie;
       }
+
       fArchive->OpenArchive();
+
       if (fIsArchive) return;
+
+      TString full = fRealName != "" ? fRealName.Data() : GetName();
+      full += "#"; full += fArchive->GetMemberName();
+      SetName(full);
+
       if (fArchive->SetCurrentMember() != -1)
          fArchiveOffset = fArchive->GetMemberFilePosition();
       else {
@@ -618,6 +638,12 @@ void TFile::Close(Option_t *option)
    opt.ToLower();
 
    if (!IsOpen()) return;
+
+   if (fIsArchive || !fIsRootFile) {
+      SysClose(fD);
+      fD = -1;
+      return;
+   }
 
    if (IsWritable()) {
       WriteStreamerInfo();
@@ -2074,6 +2100,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 
    TPluginHandler *h;
    TFile *f = 0;
+
+   // change names from e.g. /castor/cern.ch/alice/file.root to
+   // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
+   TUrl urlname(name, kTRUE);
+   name = urlname.GetUrl();
 
    TRegexp re("^root.*:");
    TString sname = name;
