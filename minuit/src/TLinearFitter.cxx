@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.7 2005/04/17 14:12:50 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.8 2005/04/29 16:10:42 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -951,7 +951,7 @@ void TLinearFitter::SetFormula(TFormula *function)
    //
    if (fFixedParams)
       delete [] fFixedParams;
-   fFixedParams=new Bool_t(size);
+   fFixedParams=new Bool_t[size];
    fDesign.Zero();
    fAtb.Zero();
    fDesignTemp.Zero();
