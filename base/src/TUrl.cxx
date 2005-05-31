@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.19 2005/05/12 12:40:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.20 2005/05/20 10:02:45 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -322,7 +322,10 @@ const char *TUrl::GetUrl()
          TString &s = os->String();
          int l = s.Length();
          if (fProtocol == s(0, l-1)) {
-            fUrl = fProtocol + ":" + fFile;
+            if (fFile[0] == '/')
+               fUrl = fProtocol + "://" + fFile;
+            else
+               fUrl = fProtocol + ":" + fFile;
             if (fAnchor != "") {
                fUrl += "#";
                fUrl += fAnchor;
