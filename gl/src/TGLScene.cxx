@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.5 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.6 2005/06/01 14:07:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -230,6 +230,11 @@ void TGLScene::SetColorByLogical(ULong_t logicalID, const Float_t rgba[4])
 void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout) const
 {
    Bool_t  run = kTRUE;
+   void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
+
+   if (fDrawMode)
+      fDrawMode == kWireFrame ? drawPtr = &TGLPhysicalShape::DrawWireFrame :
+                                drawPtr = &TGLPhysicalShape::DrawOutline;
 
    TGLStopwatch stopwatch;
    stopwatch.Start();
@@ -270,13 +275,7 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
          }
          
          //Draw, DrawWireFrame, DrawOutline
-         if (fDrawMode == kFill) 
-            physicalShape->Draw(shapeLOD);
-         else if (fDrawMode == kWireFrame) 
-            physicalShape->DrawWireFrame(shapeLOD);
-         else 
-            physicalShape->DrawOutline(shapeLOD);
-
+         (physicalShape->*drawPtr)(shapeLOD);
       }
       ++physicalShapeIt;
 
@@ -294,13 +293,36 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
       // in loop and recording if it was done
       // TODO: Sort selected to front of draw list
       UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
-      fSelectedPhysical->Draw(shapeLOD);
+
+      (fSelectedPhysical->*drawPtr)(shapeLOD);
       
       // Draw selected object bounding box - for some reason this gets obscurred if done 
       // in TGLPhysicalShape::Draw
+      if (fDrawMode == kFill || fDrawMode == kOutline) {
+         glDisable(GL_LIGHTING);
+      }
+
+      //BBOX is white for wireframe mode and fill,
+      //red for outlines
+      switch (fDrawMode) {
+      case kFill:
+      case kWireFrame :
+         glColor3d(1., 1., 1.);
+
+         break;
+      case kOutline:
+         glColor3d(1., 0., 0.);
+         
+         break;
+      }
+
       glDisable(GL_DEPTH_TEST);
       fSelectedPhysical->BoundingBox().Draw();
       glEnable(GL_DEPTH_TEST);
+
+      if (fDrawMode == kFill || fDrawMode == kOutline) {
+         glEnable(GL_LIGHTING);
+      }
    }
 
    // Failed to complete in time? Record flag to cull low LODs next time

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -343,7 +343,6 @@ Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & other) const
 //______________________________________________________________________________
 void TGLBoundingBox::Draw() const
 {
-   glDisable(GL_LIGHTING);
    glBegin(GL_LINE_LOOP);
    glVertex3dv(fVertex[0].CArr());
    glVertex3dv(fVertex[1].CArr());
@@ -364,7 +363,6 @@ void TGLBoundingBox::Draw() const
    glVertex3dv(fVertex[4].CArr());
    glVertex3dv(fVertex[7].CArr());
    glEnd();
-   glEnable(GL_LIGHTING);
 }
 
 //______________________________________________________________________________
