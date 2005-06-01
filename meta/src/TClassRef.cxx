@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.2 2005/03/21 15:15:47 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.3 2005/03/24 14:27:06 brun Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -76,7 +76,7 @@ TClassRef::~TClassRef()
 }
 
 //______________________________________________________________________________
-TClass *TClassRef::GetClass()  const
+TClass *TClassRef::InternalGetClass()  const
 {
    // Return the current TClass object corresponding to fClassName.
    if (fClassPtr) return fClassPtr;
