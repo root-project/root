@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.5 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+#include "TError.h"
 #include "Riostream.h"
 
 ClassImp(TGLVertex3)
@@ -271,15 +272,43 @@ void TGLMatrix::Shift(const TGLVector3 & shift)
 //______________________________________________________________________________
 TGLVector3 TGLMatrix::GetScale() const
 {
-   return TGLVector3(fVals[0], fVals[5], fVals[10]);
+   // Get local axis scaling factors
+   TGLVector3 x(fVals[0], fVals[1], fVals[2]);
+   TGLVector3 y(fVals[4], fVals[5], fVals[6]);
+   TGLVector3 z(fVals[8], fVals[9], fVals[10]);
+   return TGLVector3(x.Mag(), y.Mag(), z.Mag());
 }
 
 //______________________________________________________________________________
 void TGLMatrix::SetScale(const TGLVector3 & scale)
 {
-   fVals[0] = scale[0];
-   fVals[5] = scale[1];
-   fVals[10] = scale[2];
+   // Set local axis scaling factors
+   TGLVector3 currentScale = GetScale();
+   
+   // x
+   if (currentScale[0] != 0.0) {
+      fVals[0] *= scale[0]/currentScale[0];
+      fVals[1] *= scale[0]/currentScale[0];
+      fVals[2] *= scale[0]/currentScale[0];
+   } else {
+      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+   }
+   // y
+   if (currentScale[1] != 0.0) {
+      fVals[4] *= scale[1]/currentScale[1];
+      fVals[5] *= scale[1]/currentScale[1];
+      fVals[6] *= scale[1]/currentScale[1];
+   } else {
+      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+   }
+   // z
+   if (currentScale[2] != 0.0) {
+      fVals[8] *= scale[2]/currentScale[2];
+      fVals[9] *= scale[2]/currentScale[2];
+      fVals[10] *= scale[2]/currentScale[2];
+   } else {
+      Error("TGLMatrix::SetScale()", "zero scale div by zero");
+   }
 }
 
 // TODO: Move this to the TGeo side and remove
