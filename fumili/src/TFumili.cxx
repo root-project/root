@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.21 2005/03/04 09:06:37 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.22 2005/03/07 09:15:45 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -128,7 +128,7 @@ TFumili::TFumili(Int_t maxpar)
   // maxpar is the maximum number of parameters used with TFumili object
   //
   fMaxParam = TMath::Max(maxpar,25);
-  if (fMaxParam>200) fMaxParam=25;
+  if (fMaxParam>200) fMaxParam=200;
   fMaxParam2 *= fMaxParam;
   BuildArrays();
   
