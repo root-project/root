@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.15 2004/12/06 13:38:53 brun Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.16 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -196,34 +196,43 @@ static void SetLibraryPath()
 #ifndef ROOTLIBDIR
    // Set library path for the different platforms.
 
-   static char msg[4096];
+   char *msg;
 
 #  if defined(__linux) || defined(__alpha) || defined(__sgi) || \
       defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__) || \
       defined(__OpenBSD__)
-   if (getenv("LD_LIBRARY_PATH"))
+   if (getenv("LD_LIBRARY_PATH")) {
+      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LD_LIBRARY_PATH"))+100];
       sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
                                                 getenv("LD_LIBRARY_PATH"));
-   else
+   } else {
+      msg = new char [strlen(getenv("ROOTSYS"))+100];
 #  if defined(__sun)
       sprintf(msg, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", getenv("ROOTSYS"));
 #  else
       sprintf(msg, "LD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
 #  endif
+   }
 #  elif defined(__hpux)  || defined(_HIUX_SOURCE)
-   if (getenv("SHLIB_PATH"))
+   if (getenv("SHLIB_PATH")) {
+      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("SHLIB_PATH"))+100];
       sprintf(msg, "SHLIB_PATH=%s/lib:%s", getenv("ROOTSYS"),
                                            getenv("SHLIB_PATH"));
-   else
+   } else {
+      msg = new char [strlen(getenv("ROOTSYS"))+100];
       sprintf(msg, "SHLIB_PATH=%s/lib", getenv("ROOTSYS"));
+   }
 #  elif defined(_AIX)
-   if (getenv("LIBPATH"))
+   if (getenv("LIBPATH")) {
+      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LIBPATH"))+100];
       sprintf(msg, "LIBPATH=%s/lib:%s", getenv("ROOTSYS"),
                                         getenv("LIBPATH"));
-   else
+   } else {
+      msg = new char [strlen(getenv("ROOTSYS"))+100];
       sprintf(msg, "LIBPATH=%s/lib:/lib:/usr/lib", getenv("ROOTSYS"));
+   }
 #  endif
-   putenv((char *)msg);
+   putenv(msg);
 #endif
 }
 
@@ -290,7 +299,7 @@ int main(int argc, char **argv)
 {
    const int kMAXARGS = 256;
    char *argvv[kMAXARGS];
-   char  arg0[256];
+   char  arg0[2048];
 
 #ifndef ROOTPREFIX
    if (!getenv("ROOTSYS")) {
