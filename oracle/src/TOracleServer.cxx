@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.1 2005/02/28 19:11:00 rdm Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.5 2005/04/25 17:21:11 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -102,6 +102,10 @@ TSQLResult *TOracleServer::Query(const char *sql)
       Error("Query", "not connected");
       return 0;
    }
+   if (!sql || !*sql) {
+      Error("Query", "no query string specified");
+      return 0;
+   }
 
    try {
       if (!fStmt)
@@ -127,7 +131,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
 
       // NOTE: sql should not end with ";" !!!
       int row_count = -1;
-      char sql_chars[strlen(sql)+1],*str;
+      char *str, *sql_chars = new char[strlen(sql)+1];
       strcpy(sql_chars, sql);
       str = sql_chars;
       // skip space and newline chars
@@ -152,6 +156,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
       fStmt->execute();
 
       TOracleResult *res = new TOracleResult(fStmt, row_count);
+      delete [] sql_chars;
       return res;
    } catch (SQLException &oraex)  {
       Error("TOracleServer", "query failed: (error: %s)", (oraex.getMessage()).c_str());
