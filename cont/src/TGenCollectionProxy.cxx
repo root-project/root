@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.18 2005/03/19 23:10:53 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.19 2005/03/24 14:27:06 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -385,36 +385,51 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
   }
 }
 
+namespace {
+   typedef std::vector<ROOT::Environ<char[64]>* > Proxies_t;
+   void clearProxies(Proxies_t& v)
+   {
+      for(Proxies_t::iterator i=v.begin(); i != v.end(); ++i)  {
+         ROOT::Environ<char[64]> *e = *i;
+         if ( e )  {
+            if ( e->temp ) ::free(e->temp);
+            delete e;
+         }
+      }
+      v.clear();
+   }
+}
 //______________________________________________________________________________
-TGenCollectionProxy::~TGenCollectionProxy()   {
+TGenCollectionProxy::~TGenCollectionProxy() 
+{
   // Standard destructor
-  for(Proxies_t::iterator i=fProxyList.begin(); i != fProxyList.end(); ++i)  {
-    if ( (*i) ) delete (*i);
-  }
-  fProxyList.clear();
+  clearProxies(fProxyList);
+  clearProxies(fProxyKept);
+
   if ( fValue ) delete fValue;
   if ( fVal   ) delete fVal;
   if ( fKey   ) delete fKey;
 }
 
 //______________________________________________________________________________
-TVirtualCollectionProxy* TGenCollectionProxy::Generate() const  {
-  // Virtual copy constructor
-  if ( !fClass ) Initialize();
-  switch(fSTL_type)  {
+TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
+{
+   // Virtual copy constructor
+   if ( !fClass ) Initialize();
+   switch(fSTL_type)  {
     case TClassEdit::kVector:
-      return new TGenVectorProxy(*this);
+       return new TGenVectorProxy(*this);
     case TClassEdit::kList:
-      return new TGenListProxy(*this);
+       return new TGenListProxy(*this);
     case TClassEdit::kMap:
     case TClassEdit::kMultiMap:
-      return new TGenMapProxy(*this);
+       return new TGenMapProxy(*this);
     case TClassEdit::kSet:
     case TClassEdit::kMultiSet:
-      return new TGenSetProxy(*this);
+       return new TGenSetProxy(*this);
     default:
-      return new TGenCollectionProxy(*this);
-  }
+       return new TGenCollectionProxy(*this);
+   }
 }
 
 //______________________________________________________________________________
@@ -615,165 +630,181 @@ UInt_t TGenCollectionProxy::Size() const   {
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)  {
-  // Resize the container
-  if ( fEnv && fEnv->object )   {
-    if ( force && fPointers )  {
-      size_t i, nold = *(size_t*)fSize.invoke(fEnv);
-      if ( n != nold )  {
-        for (i=n; i<nold; ++i)
-          DeleteItem(true, *(void**)TGenCollectionProxy::At(i));
+void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
+{
+   // Resize the container
+   if ( fEnv && fEnv->object )   {
+      if ( force && fPointers )  {
+         size_t i, nold = *(size_t*)fSize.invoke(fEnv);
+         if ( n != nold )  {
+            for (i=n; i<nold; ++i)
+               DeleteItem(true, *(void**)TGenCollectionProxy::At(i));
+         }
       }
-    }
-    MESSAGE(3, "Resize(n)" );
-    fEnv->size = n;
-    fResize.invoke(fEnv);
-    return;
-  }
-  Fatal("TGenCollectionProxy","Resize> Logic error - no proxy object set.");
+      MESSAGE(3, "Resize(n)" );
+      fEnv->size = n;
+      fResize.invoke(fEnv);
+      return;
+   }
+   Fatal("TGenCollectionProxy","Resize> Logic error - no proxy object set.");
 }
 
 //______________________________________________________________________________
-void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )  {
-  if ( fEnv && fEnv->object )   {
-    switch ( fSTL_type )  {
+void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
+{
+   if ( fEnv && fEnv->object ) {
+      switch ( fSTL_type )  {
       case TClassEdit::kSet:
       case TClassEdit::kMultiSet:
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-        if ( fPointers )
-          Clear("force");
-        else
-          fClear.invoke(fEnv);
-        ++fEnv->refCount;
-        fEnv->size  = n;
-        fEnv->start = fEnv->temp = ::operator new(fValDiff*n);
-        fConstruct.invoke(fEnv);
-        return fEnv;
+         if ( fPointers )
+            Clear("force");
+         else
+            fClear.invoke(fEnv);
+         ++fEnv->refCount;
+         fEnv->size  = n;
+         if ( fEnv->space < fValDiff*n ) {
+            fEnv->temp = fEnv->temp ? ::realloc(fEnv->temp,fValDiff*n) : ::malloc(fValDiff*n);
+            fEnv->space = fValDiff*n;
+         }
+         fEnv->start = fEnv->temp;
+         fConstruct.invoke(fEnv);
+         return fEnv;
       case TClassEdit::kVector:
       case TClassEdit::kList:
       case TClassEdit::kDeque:
-        if( fPointers )  {
-          Clear("force");
-        }
-        fEnv->size = n;
-        fResize.invoke(fEnv);
-        return fEnv;
-    }
-  }
-  return 0;
+         if( fPointers )  {
+            Clear("force");
+         }
+         fEnv->size = n;
+         fResize.invoke(fEnv);
+         return fEnv;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::Commit(void* env)  {
-  switch (fSTL_type)  {
+void TGenCollectionProxy::Commit(void* env)
+{
+   switch (fSTL_type)  {
     case TClassEdit::kVector:
     case TClassEdit::kList:
     case TClassEdit::kDeque:
-      return;
+       return;
     case TClassEdit::kMap:
     case TClassEdit::kMultiMap:
     case TClassEdit::kSet:
     case TClassEdit::kMultiSet:
-      if ( env )  {
-        Env_t* e = (Env_t*)env;
-        if ( e->object )   {
-          e->start = e->temp;
-          fFeed.invoke(e);
-        }
-        fDestruct.invoke(e);
-        if ( e->temp )   {
-          ::operator delete(e->temp);
-          e->temp = 0;
-        }
-        e->start = 0;
-        --e->refCount;
-      }
-      return;
+       if ( env )  {
+          Env_t* e = (Env_t*)env;
+          if ( e->object )   {
+             e->start = e->temp;
+             fFeed.invoke(e);
+          }
+          fDestruct.invoke(e);
+          e->start = 0;
+          --e->refCount;
+       }
+       return;
     default:
-      return;
-  }
+       return;
+   }
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::PushProxy(void *objstart) {
-  if ( !fClass ) Initialize();
-  if ( !fProxyList.empty() )  {
-    Env_t* back = fProxyList.back();
-    if ( back->object == objstart )  {
-      back->refCount++;
-      fProxyList.push_back(back);
-      fEnv = back;
-      return;
-    }
-  }
-  Env_t* e    = new Env_t();
-  e->size     = 0;
-  e->refCount = 1;
-  e->object   = objstart;
-  e->temp     = e->start = 0;
-  ::memset(e->buff,0,sizeof(e->buff));
-  fProxyList.push_back(e);
-  fEnv = e;
+void TGenCollectionProxy::PushProxy(void *objstart)
+{
+   if ( !fClass ) Initialize();
+   if ( !fProxyList.empty() )  {
+      Env_t* back = fProxyList.back();
+      if ( back->object == objstart )  {
+         back->refCount++;
+         fProxyList.push_back(back);
+         fEnv = back;
+         return;
+      }
+   }
+   Env_t* e    = 0;
+   if ( fProxyKept.empty() )  {
+      e = new Env_t();
+      e->space = 0;
+      e->temp  = 0;
+   }
+   else {
+      e = fProxyKept.back();
+      fProxyKept.pop_back();
+   }
+   e->size     = 0;
+   e->refCount = 1;
+   e->object   = objstart;
+   e->start    = 0;
+   ::memset(e->buff,0,sizeof(e->buff));
+   fProxyList.push_back(e);
+   fEnv = e;
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::PopProxy() {
-  if ( !fProxyList.empty() )  {
-    Env_t* e = fProxyList.back();
-    if ( --e->refCount <= 0 )  {
-      if ( e->temp )
-        ::operator delete(e->temp);
-      delete e;
-    }
-    fProxyList.pop_back();
-  }
-  fEnv = fProxyList.empty() ? 0 : fProxyList.back();
+void TGenCollectionProxy::PopProxy()
+{
+   if ( !fProxyList.empty() )  {
+      Env_t* e = fProxyList.back();
+      if ( --e->refCount <= 0 )  {
+         fProxyKept.push_back(e);
+      }
+      fProxyList.pop_back();
+   }
+   fEnv = fProxyList.empty() ? 0 : fProxyList.back();
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
-  // Call to delete/destruct individual item
-  if ( force && ptr )  {
-    switch (fSTL_type)  {
+void TGenCollectionProxy::DeleteItem(bool force, void* ptr) const
+{
+   // Call to delete/destruct individual item
+   if ( force && ptr )  {
+      switch (fSTL_type)  {
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-        if ( fKey->fCase&G__BIT_ISPOINTER )  {
-          fKey->DeleteItem(*(void**)ptr);
-        }
-        if ( fVal->fCase&G__BIT_ISPOINTER )  {
-          char *addr = ((char*)ptr)+fValOffset;
-          fVal->DeleteItem(*(void**)addr);
-        }
-        break;
+         if ( fKey->fCase&G__BIT_ISPOINTER )  {
+            fKey->DeleteItem(*(void**)ptr);
+         }
+         if ( fVal->fCase&G__BIT_ISPOINTER )  {
+            char *addr = ((char*)ptr)+fValOffset;
+            fVal->DeleteItem(*(void**)addr);
+         }
+         break;
       default:
-        if ( fVal->fCase&G__BIT_ISPOINTER )  {
-          fVal->DeleteItem(*(void**)ptr);
-        }
-        break;
-    }
-  }
+         if ( fVal->fCase&G__BIT_ISPOINTER )  {
+            fVal->DeleteItem(*(void**)ptr);
+         }
+         break;
+      }
+   }
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::Streamer(TBuffer &buff)  {
-  if ( fEnv )   {
-    GetCollectionClass()->Streamer( fEnv->object, buff );
-    return;
-  }
-  Fatal("TGenCollectionProxy","Streamer> Logic error - no proxy object set.");
+void TGenCollectionProxy::Streamer(TBuffer &buff)
+{
+   if ( fEnv )   {
+      GetCollectionClass()->Streamer( fEnv->object, buff );
+      return;
+   }
+   Fatal("TGenCollectionProxy","Streamer> Logic error - no proxy object set.");
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::Streamer(TBuffer &buff, void *objp, int /* siz */ ) {
-  // Streamer I/O overload
-  TPushPop env(this, objp);
-  Streamer(buff);
+void TGenCollectionProxy::Streamer(TBuffer &buff, void *objp, int /* siz */ )
+{
+   // Streamer I/O overload
+   TPushPop env(this, objp);
+   Streamer(buff);
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::operator()(TBuffer &b, void *objp) {
-  // TClassStreamer IO overload
-  Streamer(b, objp, 0);
+void TGenCollectionProxy::operator()(TBuffer &b, void *objp) 
+{
+   // TClassStreamer IO overload
+   Streamer(b, objp, 0);
 }
 
