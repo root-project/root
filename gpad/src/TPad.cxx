@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.176 2005/05/02 18:00:51 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.177 2005/05/24 20:05:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TCreatePrimitives.h"
+#include "TLegend.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -353,6 +354,46 @@ void TPad::Browse(TBrowser *b)
     fPrimitives->Browse(b);
 }
 
+//______________________________________________________________________________
+TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
+                           char* title)
+{
+   //
+   // Build a legend from the graphical objects in the pad
+   //
+   // A simple method to to build automatically a TLegend from the primitives in
+   // a TPad. Only those deriving from TAttLine, TAttMarker and TAttFill are 
+   // added, excluding TPave and TFrame derived classes. 
+   // x1, y1, x2, y2 are the Tlegend coordinates. 
+   // title is the legend title. By default it is " ".
+
+   TList *lop=GetListOfPrimitives();
+   TLegend *leg=0;
+   TIter next(lop);
+   TObject *o=0;
+   while( (o=next()) ) {
+      if((o->InheritsFrom("TAttLine") || o->InheritsFrom("TAttMarker") ||
+         o->InheritsFrom("TAttFill")) &&
+         ( !(o->InheritsFrom("TFrame")) && !(o->InheritsFrom("TPave")) )) {
+            if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+            TString mes;
+            if (o->InheritsFrom("TNamed") && strlen(((TNamed *)o)->GetTitle()))
+               mes = ((TNamed *)o)->GetTitle();
+            else if (strlen(o->GetName()))
+               mes = o->GetName();
+            else
+               mes = o->ClassName();
+            TString opt("");
+            if (o->InheritsFrom("TAttLine"))   opt += "l";
+            if (o->InheritsFrom("TAttMarker")) opt += "p";
+            if (o->InheritsFrom("TAttFill"))   opt += "f";
+            leg->AddEntry(o,mes.Data(),opt.Data());
+      }
+   }
+   if (leg) leg->Draw();
+   else Info("BuildLegend(void)","No object to build a TLegend.");
+   return leg;
+} 
 
 //______________________________________________________________________________
 TVirtualPad *TPad::cd(Int_t subpadnumber)
@@ -5037,7 +5078,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // Ensure we can create the new viewer before removing any exisiting one
    TVirtualViewer3D *newViewer = 0;
 
-	Bool_t createdExternal = kFALSE;
+   Bool_t createdExternal = kFALSE;
 
   // External viewers need to be created via plugin manager via interface...
    if (!strstr(type,"pad"))
@@ -5049,7 +5090,7 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
          // Return the existing viewer
          return fViewer3D;
       }
-		createdExternal = kTRUE;
+      createdExternal = kTRUE;
    }
    else {
       newViewer = new TViewer3DPad(*this);
@@ -5064,11 +5105,11 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    fViewer3D = newViewer;
 
    // Ensure any new external viewer is painted
-	// For internal TViewer3DPad type we assume this is being
-	// create on demand due to a paint - so this is not required
-	if (createdExternal) {
-   	Modified();
-   	Update();
+   // For internal TViewer3DPad type we assume this is being
+   // create on demand due to a paint - so this is not required
+   if (createdExternal) {
+      Modified();
+      Update();
    }
 
    return fViewer3D;
@@ -5083,11 +5124,9 @@ void TPad::ReleaseViewer3D(Option_t * /*type*/ )
 
    // We would like to ensure the pad is repainted
    // when external viewer is closed down. However
-	// a modify/paint call here will repaint the pad
-	// before the external viewer window actually closes.
-	// So the pad would have to be redraw twice over.
-	// Currenltly we just have to live with the pad staying blank
-	// any click in pad will refresh.
+   // a modify/paint call here will repaint the pad
+   // before the external viewer window actually closes.
+   // So the pad would have to be redraw twice over.
+   // Currenltly we just have to live with the pad staying blank
+   // any click in pad will refresh.
 }
-
-

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.32 2005/03/16 06:25:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.33 2005/04/01 17:42:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 class TVirtualViewer3D;
 class TBrowser;
 class TBox;
+class TLegend;
 
 class TPad : public TVirtualPad {
 
@@ -153,6 +154,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
+   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, char *title=""); // *MENU* 
    TVirtualPad*      cd(Int_t subpadnumber=0);
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
