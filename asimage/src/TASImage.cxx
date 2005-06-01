@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.32 2005/05/28 07:57:51 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.33 2005/05/30 22:38:38 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -741,7 +741,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, AllPlanes, 0, 0);
 #else
    unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(wd, w, h) : 0;
-   fImage = bitmap2asimage (bits, w, h, 0);
+   fImage = bitmap2asimage (bits, w, h, 0, 0);
 #endif
 }
 
@@ -1721,10 +1721,17 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, AllPlanes, 1, 0);
 #else
    unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(pxm, w, h) : 0;
-   fImage = bitmap2asimage (bits, w, h, 0);
+   if (fName.IsNull()) fName.Form("img_%dx%d",w, h);
+
+   // no mask
+   if (!mask) {
+      fImage = bitmap2asimage (bits, w, h, 0, 0);
+      return;
+   }
+   unsigned char *mask_bits = (gGetBmBits != 0) ? gGetBmBits(mask, w, h) : 0;
+   fImage = bitmap2asimage (bits, w, h, 0, mask_bits);
 #endif
 
-   fName.Form("img_%dx%d", fImage->width, fImage->height);
 }
 
 //______________________________________________________________________________
