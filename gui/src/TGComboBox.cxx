@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.28 2005/05/11 15:51:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.29 2005/05/31 18:52:45 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -304,7 +304,6 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
 
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
          fDDButton->SetState(kButtonUp);
-
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
@@ -403,13 +402,29 @@ void TGComboBox::Selected(Int_t widgetId, Int_t id)
 //______________________________________________________________________________
 void TGComboBox::ReturnPressed()
 {
-   // return pressed
+   // Add new entry to combo box when return key pressed inside text entry
+   // ReturnPressed signal is emitted.
 
    if (!fTextEntry) return;
-   Int_t nn = GetNumberOfEntries() + 1;
-   AddEntry(fTextEntry->GetText(), nn);
-   Select(nn);
+
+   TGLBContainer *lbc = (TGLBContainer *)fListBox->GetContainer();
+   TString text = fTextEntry->GetText();
+
+   TIter next(lbc->GetList());
+   TGFrameElement *el;
+
    Emit("ReturnPressed()");
+
+   while ((el = (TGFrameElement *)next())) {
+      TGTextLBEntry *lbe = (TGTextLBEntry *)el->fFrame;
+      if (lbe->GetText()->GetString() == text) {
+         return;
+      }
+   }
+
+   Int_t nn = GetNumberOfEntries() + 1;
+   AddEntry(text.Data(), nn);
+   Select(nn);
 }
 
 //______________________________________________________________________________

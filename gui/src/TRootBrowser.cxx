@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.73 2005/05/30 10:21:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.74 2005/05/31 18:52:45 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1205,20 +1205,17 @@ void TRootBrowser::UpdateDrawOption()
 
    TIter next(lbc->GetList());
    TGFrameElement *el;
-   Bool_t newopt = kTRUE;
 
    while ((el = (TGFrameElement *)next())) {
       TGTextLBEntry *lbe = (TGTextLBEntry *)el->fFrame;
       if (lbe->GetText()->GetString() == opt) {
-         newopt = kFALSE;
-         break;
+         return;
       }
    }
-   if (newopt) {
-      Int_t nn = fDrawOption->GetNumberOfEntries() + 1;
-      fDrawOption->AddEntry(opt.Data(), nn);
-      fDrawOption->Select(nn);
-   }
+ 
+   Int_t nn = fDrawOption->GetNumberOfEntries() + 1;
+   fDrawOption->AddEntry(opt.Data(), nn);
+   fDrawOption->Select(nn);
 }
 
 //______________________________________________________________________________
@@ -1323,6 +1320,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
       if (fClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
          act = action;
          act.ReplaceAll("%s", obj->GetName());
+         gInterpreter->SaveGlobalsContext();
 
          if (act[0] == '!') {
             act.Remove(0, 1);
