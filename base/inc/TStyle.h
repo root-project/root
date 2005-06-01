@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.19 2005/01/04 10:25:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.20 2005/02/14 15:07:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
         Color_t       fGridColor;         //grid line color (if 0 use axis line color)
         Style_t       fGridStyle;         //grid line style
         Width_t       fGridWidth;         //grid line width
+        Double_t      fHatchesLineWidth;  //hatches line width for hatch styles > 3100
         Double_t      fHatchesSpacing;    //hatches spacing for hatch styles > 3100
         Color_t       fFrameFillColor;    //pad frame fill color
         Color_t       fFrameLineColor;    //pad frame line color
@@ -193,6 +194,7 @@ public:
         Float_t          GetDateX()  const          {return fDateX;}
         Float_t          GetDateY() const           {return fDateY;}
         const char      *GetFitFormat()       const {return fFitFormat.Data();}
+        Double_t         GetHatchesLineWidth() const {return fHatchesLineWidth;}
         Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
         Int_t            GetNumberOfColors() const  {return fPalette.fN;}
         Color_t          GetPadColor() const        {return fPadColor;}
@@ -277,6 +279,7 @@ public:
 
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
         void             SetHeaderPS(const char *header);
+        void             SetHatchesLineWidth(Double_t l) {fHatchesLineWidth = l;}
         void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = TMath::Max(0.1,h);}
         void             SetTitlePS(const char *pstitle);
         void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
