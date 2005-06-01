@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.5 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -71,6 +71,15 @@ private:
    // Non-copyable class
    TGLScene(const TGLScene &);
    TGLScene & operator=(const TGLScene &);
+
+public:
+   enum EDrawMode{kFill, kOutline, kWireFrame};
+
+   void SetDrawMode(EDrawMode mode){fDrawMode = mode;}
+
+private:
+   EDrawMode      fDrawMode;  
+
 
 public:
    TGLScene();

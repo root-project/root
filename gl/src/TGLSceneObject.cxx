@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.38 2005/05/28 12:21:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.39 2005/06/01 12:38:25 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -245,6 +245,44 @@ void TGLFaceSet::DirectDraw(UInt_t /*LOD*/) const
          glEnd();
       }
    }
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::DrawWireFrame(UInt_t) const
+{
+   const Double_t *pnts = &fVertices[0];
+   const Int_t *pols = &fPolyDesc[0];
+
+
+   for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
+      Int_t npoints = pols[j++];
+
+      glBegin(GL_POLYGON);
+
+      for (Int_t k = 0; k < npoints; ++k, ++j)
+         glVertex3dv(pnts + pols[j] * 3);
+
+      glEnd();
+   }
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::DrawOutline(UInt_t lod) const
+{
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1.f, 1.f);
+
+   DirectDraw(lod);
+
+   glDisable(GL_POLYGON_OFFSET_FILL);
+   glDisable(GL_LIGHTING);
+   glPolygonMode(GL_FRONT, GL_LINE);
+   glColor3d(.1, .1, .1);
+
+   DirectDraw(lod);
+
+   glPolygonMode(GL_FRONT, GL_FILL);
+   glEnable(GL_LIGHTING);   
 }
 
 //______________________________________________________________________________

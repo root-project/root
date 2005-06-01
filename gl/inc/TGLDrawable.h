@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.4 2005/05/28 12:21:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.5 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -52,6 +52,16 @@ public:
    const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
 
    virtual void Draw(UInt_t LOD) const;
+
+   virtual void DrawWireFrame(UInt_t lod) const
+   {
+      DirectDraw(lod);
+   }
+   virtual void DrawOutline(UInt_t lod) const
+   {
+      DirectDraw(lod);   
+   }
+
 
    // Caching
            bool SetDLCache(bool DLCache);

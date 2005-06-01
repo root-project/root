@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -137,6 +137,67 @@ void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
    if (fInvertedWind) {
       glFrontFace(GL_CCW);
    }
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+void TGLPhysicalShape::DrawWireFrame(UInt_t lod) const
+{
+   glPushMatrix();
+   glLoadName(ID());
+   glMultMatrixd(fTransform.CArr());
+   
+   if (IsTransparent()) {
+      glEnable(GL_BLEND);
+      glDepthMask(GL_FALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+
+   glColor4fv(fColor);
+
+   if (fInvertedWind) glFrontFace(GL_CW);
+   fLogicalShape.DrawWireFrame(lod);
+   if (fInvertedWind) glFrontFace(GL_CCW);
+
+   if (IsTransparent()) {
+      glDepthMask(GL_TRUE);
+      glDisable(GL_BLEND);
+   }
+   
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+void TGLPhysicalShape::DrawOutline(UInt_t LOD) const
+{
+   // TODO: Can be moved to a one off switch when transparent draw sorting
+   // back in
+   glPushMatrix();
+   glLoadName(ID());
+   glMultMatrixd(fTransform.CArr());
+   
+   if (IsTransparent()) {
+      glEnable(GL_BLEND);
+      glDepthMask(GL_FALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+
+   //TODO: Sorting - Min. state swap for attributes
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
+   glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
+   glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
+   glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+
+   if (fInvertedWind) glFrontFace(GL_CW);
+   fLogicalShape.DrawOutline(LOD);
+   if (fInvertedWind) glFrontFace(GL_CCW);
+
+   if (IsTransparent()) {
+      glDepthMask(GL_TRUE);
+      glDisable(GL_BLEND);
+   }
+   
    glPopMatrix();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.5 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -268,7 +268,14 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
                ++physicalShapeIt;
                continue;
          }
-         physicalShape->Draw(shapeLOD);
+         
+         //Draw, DrawWireFrame, DrawOutline
+         if (fDrawMode == kFill) 
+            physicalShape->Draw(shapeLOD);
+         else if (fDrawMode == kWireFrame) 
+            physicalShape->DrawWireFrame(shapeLOD);
+         else 
+            physicalShape->DrawOutline(shapeLOD);
 
       }
       ++physicalShapeIt;

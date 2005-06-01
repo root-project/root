@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.4 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -57,6 +57,8 @@ public:
    const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
 
    virtual void Draw(UInt_t LOD) const;
+   virtual void DrawWireFrame(UInt_t lod) const;
+   virtual void DrawOutline(UInt_t lod) const;
    void         InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
    // Selection

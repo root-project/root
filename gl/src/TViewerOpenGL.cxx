@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.59 2005/05/28 12:21:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.60 2005/06/01 12:38:25 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -535,6 +535,8 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 {
    char tmp[10] = {0};
    UInt_t keysym = 0;
+   Float_t black[] = {0.f, 0.f, 0.f, 1.f};
+   Float_t white[] = {1.f, 1.f, 1.f, 1.f};
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    
@@ -553,16 +555,29 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
       break;
    case kKey_R:
    case kKey_r:
-      gVirtualGL->PolygonGLMode(kFRONT, kFILL);
+      gVirtualGL->EnableGL(kLIGHTING);
       gVirtualGL->EnableGL(kCULL_FACE);
-      gVirtualGL->SetGLLineWidth(1.f);
+      gVirtualGL->PolygonGLMode(kFRONT, kFILL);
+      gVirtualGL->ClearGLColor(black[0], black[1], black[2], black[3]);
+      fScene.SetDrawMode(TGLScene::kFill);
       invalidate = kTRUE;
       break;
    case kKey_W:
    case kKey_w:
       gVirtualGL->DisableGL(kCULL_FACE);
+      gVirtualGL->DisableGL(kLIGHTING);
       gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE);
-      gVirtualGL->SetGLLineWidth(1.5f);
+      gVirtualGL->ClearGLColor(black[0], black[1], black[2], black[3]);
+      fScene.SetDrawMode(TGLScene::kWireFrame);
+      invalidate = kTRUE;
+      break;
+   case kKey_T:
+   case kKey_t:
+      gVirtualGL->EnableGL(kLIGHTING);
+      gVirtualGL->EnableGL(kCULL_FACE);
+      gVirtualGL->PolygonGLMode(kFRONT, kFILL);
+      gVirtualGL->ClearGLColor(white[0], white[1], white[2], white[3]);
+      fScene.SetDrawMode(TGLScene::kOutline);
       invalidate = kTRUE;
       break;
    case kKey_Up:

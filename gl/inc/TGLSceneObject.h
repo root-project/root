@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.23 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.25 2005/05/25 14:25:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -72,6 +72,8 @@ public:
    TGLFaceSet(const TBuffer3D &buff, TObject *realObj);
    void SetFromMesh(const RootCsg::BaseMesh *m);
    //void Stretch(Double_t xs, Double_t ys, Double_t zs);
+   void DrawWireFrame(UInt_t) const;
+   void DrawOutline(UInt_t) const;
 
 private:
    void GLDrawPolys()const;
