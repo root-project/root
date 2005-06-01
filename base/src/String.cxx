@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.18 2002/12/05 15:31:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal 03/09/2003
 
 /*************************************************************************
@@ -24,24 +24,33 @@ namespace std {} using namespace std;
 void std_string_streamer(TBuffer &b, void *objadd) 
 {
    // Streamer function for std::string object.
-
    string *obj = (string*)objadd;
-   
+   Int_t   nbig;
+   UChar_t nwh;
    if (b.IsReading()) {
-
-      TString helper;
-      helper.Streamer(b);
-      (*obj) = helper.Data();
-      
-   } else {
-
-      TString helper( obj ? obj->c_str() : "" );
-      helper.Streamer(b);
-
+      b >> nwh;
+      if (nwh == 255)  {
+         b >> nbig;
+         obj->resize(nbig,'\0');
+         b.ReadFastArray((char*)obj->data(),nbig);
+      }
+      else  {
+         obj->resize(nwh,'\0');
+         b.ReadFastArray((char*)obj->data(),nwh);
+      }
+   } else if ( obj ) {
+      nbig = obj->length();
+      if (nbig > 254) {
+         nwh = 255;
+         b << nwh;
+         b << nbig;
+      } else {
+         nwh = UChar_t(nbig);
+         b << nwh;
+      }
+      b.WriteFastArray(obj->data(),nbig);
    }
-
 }
-
 
 // Declare the streamer to the string TClass object
 RootStreamer(string,std_string_streamer);
