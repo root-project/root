@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.8 2004/11/23 21:42:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.9 2004/11/29 21:59:07 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -121,12 +121,11 @@ private:
    TGButton       *fApplyButton;
    Bool_t         fIsActive;
 
-   Double_t       fCenter[3];
-
 public:
    TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *viewer);
 
    void SetCenter(const Double_t *center);
+   void SetScale(const Double_t *scale);
    void Disable();
    void DoButton();
    void GetObjectData(Double_t *shift, Double_t *scale);

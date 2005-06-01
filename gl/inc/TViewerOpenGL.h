@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.26 2005/04/01 13:53:18 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.28 2005/05/25 14:25:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -84,7 +84,7 @@ private:
    TGLLightEditor    *fLightEditor;
 
    // Interaction
-   enum EAction      { kNone, kRotate, kTruck, kDolly, kZoom };
+   enum EAction      { kNone, kRotate, kTruck, kDolly, kZoom, kDrag };
    EAction           fAction;
    TPoint            fStartPos;
    TPoint            fLastPos;

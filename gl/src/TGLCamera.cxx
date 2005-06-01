@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.9 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -24,9 +24,12 @@ ClassImp(TGLCamera)
 TGLCamera::TGLCamera() :
    fViewport(0,0,100,100),
    fProjM(),  fModVM(), fClipM(),
-   fCacheDirty(true),
+   fCacheDirty(kTRUE),
    fInterestBox(), fLargestInterest(0.0)
 {
+   for (UInt_t i = 0; i < kPlanesPerFrustum; i++ ) {
+      fFrustumPlanes[i].Set(1.0, 0.0, 0.0, 0.0, 0.0);
+   }
 }
 
 //______________________________________________________________________________
@@ -115,7 +118,7 @@ void TGLCamera::UpdateCache()
 TGLBoundingBox TGLCamera::FrustumBox() const
 {
    if (fCacheDirty) {
-      Error("TGLCamera::FrustumBox(", "cached dirty");
+      Error("TGLCamera::FrustumBox()", "cached dirty");
    }
 
    TGLVertex3 vertex[8];
@@ -147,7 +150,7 @@ TGLBoundingBox TGLCamera::FrustumBox() const
 EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
 {
    if (fCacheDirty) {
-      Error("TGLCamera::FrustumBox(", "cached dirty");
+      Error("TGLCamera::FrustumOverlap()", "cached dirty");
    }
 
    // Test shape against each plane in frustum - returning overlap result
@@ -157,7 +160,7 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
    // TODO: Improve this - have a reliable test (seperating axes).
 
    Int_t PlanesInside = 0; // Assume outside to start
-   for (Int_t PlaneIndex = 0; PlaneIndex < kPLANESPERFRUSTUM; ++PlaneIndex) {
+   for (Int_t PlaneIndex = 0; PlaneIndex < kPlanesPerFrustum; ++PlaneIndex) {
       EOverlap planeOverlap = box.Overlap(fFrustumPlanes[PlaneIndex]);
 
 	  // Special case - any object which comes through the near clipping
@@ -175,7 +178,7 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
       }
    }
    // Completely inside frustum
-   if ( PlanesInside == kPLANESPERFRUSTUM ) {
+   if ( PlanesInside == kPlanesPerFrustum ) {
       return kInside;
    } else {
       return kPartial;
@@ -193,7 +196,7 @@ EOverlap TGLCamera::ViewportOverlap(const TGLBoundingBox & box) const
 TGLRect TGLCamera::ViewportSize(const TGLBoundingBox & box) const
 {
    if (fCacheDirty) {
-      Error("TGLCamera::FrustumBox(", "cached dirty");
+      Error("TGLCamera::ViewportSize()", "cached dirty");
    }
 
    // May often result in a rect bigger then the viewport
@@ -221,6 +224,22 @@ TGLRect TGLCamera::ViewportSize(const TGLBoundingBox & box) const
    }
 
    return screenRect;
+}
+
+//______________________________________________________________________________
+TGLVector3 TGLCamera::ProjectedShift(const TGLVertex3 & vertex, Int_t xDelta, Int_t yDelta) const
+{
+   if (fCacheDirty) {
+      Error("TGLCamera::ProjectedShift()", "cached dirty");
+   }
+   //TODO: Convert TGLRect so this not required
+   GLint viewport[4] = { fViewport.X(), fViewport.Y(), fViewport.Width(), fViewport.Height() };
+   TGLVertex3 winVertex;
+   gluProject(vertex[0], vertex[1], vertex[2], fModVM.CArr(), fProjM.CArr(), viewport, &winVertex[0], &winVertex[1], &winVertex[2]);
+   winVertex.Shift(xDelta, yDelta, 0.0);
+   TGLVertex3 newVertex;
+   gluUnProject(winVertex[0], winVertex[1], winVertex[2], fModVM.CArr(), fProjM.CArr(), viewport, &newVertex[0], &newVertex[1], &newVertex[2]);
+   return (newVertex - vertex);
 }
 
 //______________________________________________________________________________

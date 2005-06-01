@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.12 2004/11/24 13:11:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.13 2004/11/29 21:59:07 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -393,7 +393,6 @@ TGLGeometryEditor::TGLGeometryEditor(const TGWindow *parent, TViewerOpenGL *v)
                      :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
                       fViewer(v)
 {
-   fCenter[0] = fCenter[1] = fCenter[2] = 0., 
    fTrash.SetOwner(kTRUE);
    fIsActive = kFALSE;
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3);
@@ -415,18 +414,18 @@ void TGLGeometryEditor::SetCenter(const Double_t *c)
 {
    fIsActive = kTRUE;
    fApplyButton->SetState(kButtonDisabled);
-   
-   fCenter[0] = c[0] + (c[1] - c[0]) / 2;
-   fCenter[1] = c[2] + (c[3] - c[2]) / 2;
-   fCenter[2] = c[4] + (c[5] - c[4]) / 2;
-   
-   fGeomData[kCenterX]->SetNumber(fCenter[0]);
-   fGeomData[kCenterY]->SetNumber(fCenter[1]);
-   fGeomData[kCenterZ]->SetNumber(fCenter[2]);
+   fGeomData[kCenterX]->SetNumber(c[0]);
+   fGeomData[kCenterY]->SetNumber(c[1]);
+   fGeomData[kCenterZ]->SetNumber(c[2]);
+}
 
-   fGeomData[kScaleX]->SetNumber(1.0);
-   fGeomData[kScaleY]->SetNumber(1.0);
-   fGeomData[kScaleZ]->SetNumber(1.0);
+//______________________________________________________________________________
+void TGLGeometryEditor::SetScale(const Double_t *s)
+{
+   fIsActive = kTRUE;
+   fGeomData[kScaleX]->SetNumber(s[0]);
+   fGeomData[kScaleY]->SetNumber(s[1]);
+   fGeomData[kScaleZ]->SetNumber(s[2]);
 }
 
 //______________________________________________________________________________
@@ -444,20 +443,16 @@ void TGLGeometryEditor::DoButton()
       fViewer->ModifyScene(wid);
       if (wid == kTBa1) {
          fApplyButton->SetState(kButtonDisabled);
-         fGeomData[kScaleX]->SetNumber(1.0);
-         fGeomData[kScaleY]->SetNumber(1.0);
-         fGeomData[kScaleZ]->SetNumber(1.0);
       } 
    }
 }
 
 //______________________________________________________________________________
-void TGLGeometryEditor::GetObjectData(Double_t *shift, Double_t *scale)
+void TGLGeometryEditor::GetObjectData(Double_t *center, Double_t *scale)
 {
-   shift[0] = fGeomData[kCenterX]->GetNumber() - fCenter[0];
-   shift[1] = fGeomData[kCenterY]->GetNumber() - fCenter[1];
-   shift[2] = fGeomData[kCenterZ]->GetNumber() - fCenter[2];
-
+   center[0] = fGeomData[kCenterX]->GetNumber();
+   center[1] = fGeomData[kCenterY]->GetNumber();
+   center[2] = fGeomData[kCenterZ]->GetNumber();
    scale[0] = fGeomData[kScaleX]->GetNumber();
    scale[1] = fGeomData[kScaleY]->GetNumber();
    scale[2] = fGeomData[kScaleZ]->GetNumber();

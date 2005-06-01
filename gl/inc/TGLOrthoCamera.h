@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -30,18 +30,18 @@ private:
    // Fields
    EType          fType;      //!
 
-   // Set in SetLimits()
+   // Set in Setup()
    Double_t       fZoomMin;    //!
    Double_t       fZoomDefault;//!
    Double_t       fZoomMax;    //!
    Double_t       fVolumeDiag; //!
 
-   TGLVertex3     fCenter;    //!
    Double_t       fWidth;     //!
    Double_t       fHeight;    //!
-   TGLMatrix      fMatrix;    //!
    Double_t       fZoom;      //!
+   TGLVertex3     fCenter;    //!
    TGLVector3     fTruck;     //!
+   TGLMatrix      fMatrix;    //!
 
    static   UInt_t   fgZoomDeltaSens;
 

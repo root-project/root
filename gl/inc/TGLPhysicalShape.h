@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -47,25 +47,69 @@ protected:
    virtual void DirectDraw(UInt_t LOD) const;
 
 public:
-   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+   TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                     const TGLMatrix & transform, Bool_t invertedWind);
-   TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+   TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                     const double * transform, Bool_t invertedWind);
    virtual ~TGLPhysicalShape();
 
+   // Associated logical
+   const TGLLogicalShape & GetLogical() const { return fLogicalShape; }
+
    virtual void Draw(UInt_t LOD) const;
+   void         InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 
-   void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
+   // Selection
+   Bool_t          IsSelected() const                 { return fSelected; }
+   void            Select(Bool_t select)              { fSelected = select; }
 
-   void Select(Bool_t select)  { fSelected = select; }
+   // Color
+   const Float_t * GetColor() const                   { return fColor; }
+   Bool_t          IsTransparent() const              { return fColor[3] < 1.f; }
+   void            SetColor(const Float_t rgba[4]);
 
-   const Float_t * GetColor() const { return fColor; }
-   void SetColor(const Float_t rgba[4]);
-
-   Bool_t IsSelected() const     { return fSelected; }
-   Bool_t IsTransparent() const  { return fColor[3] < 1.f; }
+   // Geometry
+   void            UpdateBoundingBox(); 
+   TGLVertex3      GetTranslation() const;
+   void            SetTranslation(const TGLVertex3 & trans);
+   void            Shift(const TGLVector3 & shift);
+   TGLVector3      GetScale() const;
+   void            SetScale(const TGLVector3 & scale);
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
+
+//______________________________________________________________________________
+inline TGLVertex3 TGLPhysicalShape::GetTranslation() const
+{ 
+   return fTransform.GetTranslation(); 
+}
+
+//______________________________________________________________________________
+inline void TGLPhysicalShape::SetTranslation(const TGLVertex3 & trans) 
+{ 
+   fTransform.SetTranslation(trans);
+   UpdateBoundingBox();
+}
+
+//______________________________________________________________________________
+inline void TGLPhysicalShape::Shift(const TGLVector3 & shift)
+{
+   fTransform.Shift(shift);
+   UpdateBoundingBox();
+}
+
+//______________________________________________________________________________
+inline TGLVector3 TGLPhysicalShape::GetScale() const
+{ 
+   return fTransform.GetScale(); 
+}
+
+//______________________________________________________________________________
+inline void TGLPhysicalShape::SetScale(const TGLVector3 & scale) 
+{ 
+   fTransform.SetScale(scale); 
+   UpdateBoundingBox();
+}
 
 #endif // ROOT_TGLPhysicalShape

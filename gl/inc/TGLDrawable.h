@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.h,v 1.4 2005/05/28 12:21:00 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
    virtual void DirectDraw(UInt_t LOD) const = 0; // Actual draw method (non DL cached)
 
 public:
-   TGLDrawable(UInt_t ID, bool DLCache);
+   TGLDrawable(ULong_t ID, bool DLCache);
    virtual ~TGLDrawable();
 
          ULong_t          ID()          const { return fID; }

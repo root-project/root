@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.37 2005/05/25 14:25:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.38 2005/05/28 12:21:00 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -111,36 +111,6 @@ void TGLSceneObject::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) 
       menu.Popup(x, y, fRealObject);
    }
 }
-
-//______________________________________________________________________________
-/*void TGLSceneObject::Shift(Double_t x, Double_t y, Double_t z)
-{
-   fSelectionBox.Shift(x, y, z);
-   for (UInt_t i = 0, e = fVertices.size(); i < e; i += 3) {
-      fVertices[i] += x;
-      fVertices[i + 1] += y;
-      fVertices[i + 2] += z;
-   }
-}
-
-//______________________________________________________________________________
-void TGLSceneObject::Stretch(Double_t xs, Double_t ys, Double_t zs)
-{
-   fSelectionBox.Stretch(xs, ys, zs);
-
-   const Double_t *bbox = fSelectionBox.GetData();
-   Double_t xC = bbox[0] + (bbox[1] - bbox[0]) / 2;
-   Double_t yC = bbox[2] + (bbox[3] - bbox[2]) / 2;
-   Double_t zC = bbox[4] + (bbox[5] - bbox[4]) / 2;
-
-   Shift(-xC, -yC, -zC);
-   for (UInt_t i = 0, e = fVertices.size(); i < e; i += 3) {
-      fVertices[i] *= xs;
-      fVertices[i + 1] *= ys;
-      fVertices[i + 2] *= zs;
-   }
-   Shift(xC, yC, zC);
-}*/
 
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, TObject *realobj)
@@ -348,13 +318,6 @@ void TGLFaceSet::CalculateNormals()
 }
 
 //______________________________________________________________________________
-/*void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
-{
-   TGLSceneObject::Stretch(xs, ys, zs);
-   CalculateNormals();
-}*/
-
-//______________________________________________________________________________
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
                   :TGLSceneObject(buffer, r),
                    fStyle(7)
@@ -518,20 +481,6 @@ void TGLSphere::DirectDraw(UInt_t LOD) const
       gluSphere(GetQuadric(),fRadius, divisions, divisions);
    }
 }
-
-//______________________________________________________________________________
-/*void TGLSphere::Shift(Double_t x, Double_t y, Double_t z)
-{
-   fX += x;
-   fY += y;
-   fZ += z;
-   fSelectionBox.Shift(x, y, z);
-}
-
-//______________________________________________________________________________
-void TGLSphere::Stretch(Double_t, Double_t, Double_t)
-{
-}*/
 
 ////////////////////////////////////////////////////////////
 namespace GL{
@@ -1080,18 +1029,3 @@ void TGLCylinder::DirectDraw(UInt_t /*LOD*/) const
    //draw here
    for (UInt_t i = 0; i < fParts.size(); ++i) fParts[i]->Draw(&fVertices[0]);
 }
-
-//______________________________________________________________________________
-/*void TGLCylinder::Shift(Double_t xs, Double_t ys, Double_t zs)
-{
-   fSelectionBox.Shift(xs, ys, zs);
-   for (UInt_t i = 0; i < fParts.size(); ++i)
-      fParts[i]->Shift(xs, ys, zs);
-}
-
-//______________________________________________________________________________
-void TGLCylinder::Stretch(Double_t, Double_t, Double_t)
-{
-   //non-stretchable now
-}*/
-

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -26,15 +26,19 @@
 class TGLPerspectiveCamera : public TGLCamera {
 private:
    // Fields
-   TGLVertex3  fCenter;          //!
-   TGLVector3  fTruck;           //!
+
+   // Set in Setup()
+   Double_t    fDollyMin;        //!
+   Double_t    fDollyDefault;    //!
+   Double_t    fDollyMax;        //!
+   Double_t    fVolumeDiag;      //!
+
    Double_t    fFOV;             //!
    Double_t    fDolly;           //!
    Double_t    fVRotate;         //!
    Double_t    fHRotate;         //!
-
-   // These calculated based on BBox in Setup()
-   Double_t fDollyMin, fDollyDefault, fDollyMax, fVolumeDiag;
+   TGLVertex3  fCenter;          //!
+   TGLVector3  fTruck;           //!
 
    // These are fixed for any perspective camera
    static   Double_t fgFOVMin, fgFOVDefault, fgFOVMax;

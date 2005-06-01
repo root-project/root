@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -29,8 +29,8 @@ ClassImp(TGLScene)
 
 //______________________________________________________________________________
 TGLScene::TGLScene() :
-   fBoundingBoxValid(kFALSE),
-   fCanCullLowLOD(kFALSE),
+   fBoundingBox(), fBoundingBoxValid(kFALSE), 
+   fLastDrawLOD(kHigh), fCanCullLowLOD(kFALSE),
    fSelectedPhysical(0)
 {
 }
@@ -51,7 +51,7 @@ void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::DestroyLogical(UInt_t ID)
+Bool_t TGLScene::DestroyLogical(ULong_t ID)
 {
    TGLLogicalShape * logical = FindLogical(ID);
    if (logical) {
@@ -94,7 +94,7 @@ UInt_t TGLScene::DestroyAllLogicals()
 
 //TODO: Inline
 //______________________________________________________________________________
-TGLLogicalShape * TGLScene::FindLogical(UInt_t ID) const
+TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 {
    LogicalShapeMapCIt_t it = fLogicalShapes.find(ID);
    if (it != fLogicalShapes.end()) {
@@ -114,7 +114,7 @@ void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::DestroyPhysical(UInt_t ID)
+Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 {
    TGLPhysicalShape * physical = FindPhysical(ID);
    if (physical) {
@@ -197,13 +197,31 @@ UInt_t TGLScene::DestroyAllPhysicals()
 
 //TODO: Inline
 //______________________________________________________________________________
-TGLPhysicalShape * TGLScene::FindPhysical(UInt_t ID) const
+TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 {
    PhysicalShapeMapCIt_t it = fPhysicalShapes.find(ID);
    if (it != fPhysicalShapes.end()) {
       return it->second;
    } else {
       return 0;
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::SetColorByLogical(ULong_t logicalID, const Float_t rgba[4])
+{
+   PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
+   TGLPhysicalShape * physical;
+   while (physicalShapeIt != fPhysicalShapes.end()) {
+      physical = physicalShapeIt->second;
+      if (physical) {
+         if (physical->GetLogical().ID() == logicalID) {
+            physical->SetColor(rgba);
+         }
+      } else {
+         assert(kFALSE);
+      }
+      ++physicalShapeIt;
    }
 }
 
@@ -245,7 +263,7 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
          UInt_t shapeLOD = CalcPhysicalLOD(*physicalShape, camera, sceneLOD);
 
          // Skip drawing low (i.e. small projected) LOD shapes on non-100% passes
-         // if previously we failed to complete in time
+         // if previously we failed to complete in time.
          if (sceneLOD < kHigh && fCanCullLowLOD && shapeLOD < 10) {
                ++physicalShapeIt;
                continue;
@@ -263,8 +281,16 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
       }
    }
 
-   // For some reason this gets obscurred if done in TGLPhysicalShape::Draw
    if (fSelectedPhysical) {
+      // Ensure the selected object is always draw regardless of above terminations
+      // This could result in it being drawn twice - but is (probably) cheaper than testing 
+      // in loop and recording if it was done
+      // TODO: Sort selected to front of draw list
+      UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
+      fSelectedPhysical->Draw(shapeLOD);
+      
+      // Draw selected object bounding box - for some reason this gets obscurred if done 
+      // in TGLPhysicalShape::Draw
       glDisable(GL_DEPTH_TEST);
       fSelectedPhysical->BoundingBox().Draw();
       glEnable(GL_DEPTH_TEST);
@@ -481,6 +507,16 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
    }
 
    return redrawReq;
+}
+
+//______________________________________________________________________________
+void TGLScene::SelectedModified() 
+{
+   // The selected object was modified external - our bounding box
+   // is potentially invalid
+   if (fSelectedPhysical && !BoundingBox().AlignedContains(fSelectedPhysical->BoundingBox())) {
+      fBoundingBoxValid = kFALSE;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.7 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -41,11 +41,11 @@ private:
       kTOP     = 3,
       kBOTTOM  = 4,
       kFAR     = 5,
-      kPLANESPERFRUSTUM
+      kPlanesPerFrustum
    };
 
    // Frustum planes (cached)
-   mutable TGLPlane fFrustumPlanes[kPLANESPERFRUSTUM]; //!
+   mutable TGLPlane fFrustumPlanes[kPlanesPerFrustum]; //!
 
    // Methods
    TGLBoundingBox FrustumBox() const; // bounding box encapsulating frustum
@@ -86,9 +86,11 @@ public:
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) = 0;
 
-   EOverlap FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
-   EOverlap ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
-   TGLRect  ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
+   // Projection and overlap testing
+   EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
+   EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
+   TGLRect    ViewportSize   (const TGLBoundingBox & box) const; // project size of box on viewport
+   TGLVector3 ProjectedShift(const TGLVertex3 & vertex, Int_t xDelta, Int_t yDelta) const;
    //Double_t NearVertexDistance(const TGLBoundingBox & box) const;
    //Double_t FarVertexDistance(const TGLBoundingBox & box) const;
 

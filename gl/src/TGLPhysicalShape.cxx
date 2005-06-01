@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 ClassImp(TObject)
 
 //______________________________________________________________________________
-TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                                    const TGLMatrix & transform, Bool_t invertedWind) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
    fLogicalShape(logicalShape),
@@ -35,7 +35,7 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalSha
 }
 
 //______________________________________________________________________________
-TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
+TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
                                    const Double_t * transform, Bool_t invertedWind) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
    fLogicalShape(logicalShape),
@@ -48,14 +48,20 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalSha
    // in opp layout to shear/translation parts. Speak to Andrei about best place
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
 	fTransform.InvRot();
-   fBoundingBox.Set(fLogicalShape.BoundingBox());
-   fBoundingBox.Transform(fTransform);
+   UpdateBoundingBox();
 }
 
 //______________________________________________________________________________
 TGLPhysicalShape::~TGLPhysicalShape()
 {
    fLogicalShape.SubRef();
+}
+
+//______________________________________________________________________________
+void TGLPhysicalShape::UpdateBoundingBox() 
+{
+   fBoundingBox.Set(fLogicalShape.BoundingBox());
+   fBoundingBox.Transform(fTransform);
 }
 
 //______________________________________________________________________________

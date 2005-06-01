@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -36,7 +36,7 @@ private:
    // Fields
 
    // Logical shapes
-   typedef std::map<UInt_t, TGLLogicalShape *> LogicalShapeMap_t;
+   typedef std::map<ULong_t, TGLLogicalShape *> LogicalShapeMap_t;
    typedef LogicalShapeMap_t::value_type LogicalShapeMapValueType_t;
    typedef LogicalShapeMap_t::iterator LogicalShapeMapIt_t;
    typedef LogicalShapeMap_t::const_iterator LogicalShapeMapCIt_t;
@@ -48,7 +48,7 @@ private:
    // so map ok
 
    // Physical Shapes
-   typedef std::map<UInt_t, TGLPhysicalShape *> PhysicalShapeMap_t;
+   typedef std::map<ULong_t, TGLPhysicalShape *> PhysicalShapeMap_t;
    typedef PhysicalShapeMap_t::value_type PhysicalShapeMapValueType_t;
    typedef PhysicalShapeMap_t::iterator PhysicalShapeMapIt_t;
    typedef PhysicalShapeMap_t::const_iterator PhysicalShapeMapCIt_t;
@@ -77,24 +77,28 @@ public:
    virtual ~TGLScene(); // ClassDef introduces virtual fns
 
    const TGLBoundingBox & BoundingBox() const;
-   void Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout = 0.0) const;
-   void DrawAxes() const;
-   Bool_t Select(const TGLCamera & camera);
-   TGLPhysicalShape * GetSelected() const { return fSelectedPhysical; }
+   void                   Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout = 0.0) const;
+   void                   DrawAxes() const;
+   Bool_t                 Select(const TGLCamera & camera);
+   TGLPhysicalShape *     GetSelected() const { return fSelectedPhysical; }
+   void                   SelectedModified();
 
    // Logical Shape Management
    void              AdoptLogical(TGLLogicalShape & shape);
-   Bool_t            DestroyLogical(UInt_t ID);
+   Bool_t            DestroyLogical(ULong_t ID);
    UInt_t            DestroyAllLogicals();
    void              PurgeNextLogical() {};
-   TGLLogicalShape * FindLogical(UInt_t ID)  const;
+   TGLLogicalShape * FindLogical(ULong_t ID)  const;
 
    // Physical Shape Management
    void               AdoptPhysical(TGLPhysicalShape & shape);
-   Bool_t             DestroyPhysical(UInt_t ID);
+   Bool_t             DestroyPhysical(ULong_t ID);
    UInt_t             DestroyPhysicals(const TGLCamera & camera);
    UInt_t             DestroyAllPhysicals();
-   TGLPhysicalShape * FindPhysical(UInt_t ID) const;
+   TGLPhysicalShape * FindPhysical(ULong_t ID) const;
+
+   // Set color on all physicals using a logical
+   void               SetColorByLogical(ULong_t logicalID, const Float_t rgba[4]);
 
    void Dump() const;
    UInt_t SizeOf() const;

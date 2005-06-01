@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.58 2005/05/26 10:24:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.59 2005/05/28 12:21:00 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -63,6 +63,7 @@ const char gHelpViewerOpenGL[] = "\
      mouse wheel.\n\
      RESET the camera by double clicking any button\n\
      SELECT an object with Shift+Left mouse button click.\n\
+     MOVE the object using Shift+Mid mouse drag.\n\
      Invoked the CONTEXT menu with Shift+Right mouse click.\n\
      PROJECTIONS\n\n\
      You can select the different plane projections\n\
@@ -443,6 +444,8 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          case(kButton1): {
             if (event->fState & kKeyShiftMask) {
                DoSelect(event, kFALSE); // without context menu
+
+               // TODO: If no selection start a box select
             } else {
                fAction = kRotate;
                grabPointer = kTRUE;
@@ -451,7 +454,14 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          }
          // MID mouse button
          case(kButton2): {
-            if (!(event->fState & kKeyShiftMask)) {
+            if (event->fState & kKeyShiftMask) {
+               DoSelect(event, kFALSE); // without context menu
+               // Start object drag
+               if (fScene.GetSelected()) {
+                  fAction = kDrag;
+                  grabPointer = kTRUE;
+               }
+            } else {
                fAction = kTruck;
                grabPointer = kTRUE;
             }
@@ -595,7 +605,16 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
       invalidate = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
    } else if (fAction == kDolly) {
       invalidate = CurrentCamera().Dolly(xDelta);
-   } 
+   } else if (fAction == kDrag) {
+      TGLPhysicalShape * selected = fScene.GetSelected();
+      if (selected) {
+         TGLVector3 shift = CurrentCamera().ProjectedShift(selected->BoundingBox().Center(), xDelta, -yDelta);
+         selected->Shift(shift);
+         fGeomEditor->SetCenter(selected->GetTranslation().CArr());
+         fScene.SelectedModified();
+         Invalidate();
+      }
+   }
 
    fLastPos.fX = event->fX;
    fLastPos.fY = event->fY;
@@ -627,7 +646,8 @@ void TViewerOpenGL::DoSelect(Event_t *event, Bool_t invokeContext)
    TGLPhysicalShape * selected = fScene.GetSelected();
    if (selected) {
       fColorEditor->SetRGBA(selected->GetColor());
-      fGeomEditor->SetCenter(selected->BoundingBox().Center().CArr());
+      fGeomEditor->SetCenter(selected->GetTranslation().CArr());
+      fGeomEditor->SetScale(selected->GetScale().CArr());
       if (invokeContext) {
          if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
          
@@ -753,20 +773,30 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 void TViewerOpenGL::ModifyScene(Int_t wid)
 {
    MakeCurrent();
+
+   TGLPhysicalShape * selected = fScene.GetSelected();
    switch (wid) {
    case kTBa:
-      fScene.GetSelected()->SetColor(fColorEditor->GetRGBA());
+      if (selected) {
+         selected->SetColor(fColorEditor->GetRGBA());
+      }
       break;
    case kTBaf:
-      //fRender->SetFamilyColor(fColorEditor->GetRGBA());
+      if (selected) {
+         fScene.SetColorByLogical(selected->GetLogical().ID(), 
+                                  fColorEditor->GetRGBA());
+      }
       break;
    case kTBa1:
       {
-         Double_t c[3] = {0.};
-         Double_t s[] = {1., 1., 1.};
-         fGeomEditor->GetObjectData(c, s);
-         //fSelectedObj->Stretch(s[0], s[1], s[2]);
-         //fSelectedObj->Shift(c[0], c[1], c[2]);
+         if (selected) {
+            TGLVertex3 trans;
+            TGLVector3 scale;
+            fGeomEditor->GetObjectData(trans.Arr(), scale.Arr());
+            selected->SetTranslation(trans);
+            selected->SetScale(scale);
+            fScene.SelectedModified();
+         }
       }
       break;
    case kTBda:

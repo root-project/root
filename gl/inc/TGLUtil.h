@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.5 2005/05/27 12:25:07 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -61,6 +61,9 @@ enum EOverlap
  *
  *
  *************************************************************************/
+
+class TGLVector3; // Forward declare for Shift()
+
 class TGLVertex3
 {
 protected:
@@ -81,6 +84,8 @@ public:
    void Fill(Double_t val) { Set(val,val,val); }
    void Set(Double_t x, Double_t y, Double_t z) { fVals[0]=x; fVals[1]=y; fVals[2]=z; }
    void Set(const TGLVertex3 & other) { fVals[0]=other.fVals[0]; fVals[1]=other.fVals[1]; fVals[2]=other.fVals[2]; }
+   void Shift(TGLVector3 & shift);
+   void Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta);
 
    // Accessors
    Double_t & operator [] (Int_t index)
@@ -407,12 +412,15 @@ public:
    { if (!ValidIndex(index)) { assert(kFALSE); return fVals[0]; } else { return fVals[index]; } }
 
    void Set(const Double_t vals[16]);
-   //void Fill(Double_t val);
-
    void SetIdentity();
-   void SetTranslation(Double_t x, Double_t y, Double_t z);
-   void TransformVertex(TGLVertex3 & vertex) const;
 
+   TGLVertex3  GetTranslation() const;
+   void        SetTranslation(const TGLVertex3 & trans);
+   void        Shift(const TGLVector3 & shift);
+   TGLVector3  GetScale() const;
+   void        SetScale(const TGLVector3 & scale);
+
+   void TransformVertex(TGLVertex3 & vertex) const;
 	void InvRot();
 
    void Dump() const;

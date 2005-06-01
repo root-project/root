@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 ClassImp(TGLDrawable)
 
 //______________________________________________________________________________
-TGLDrawable::TGLDrawable(UInt_t ID, Bool_t DLCache) :
+TGLDrawable::TGLDrawable(ULong_t ID, Bool_t DLCache) :
    fID(ID), fDLCache(DLCache)
 {
 }

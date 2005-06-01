@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -28,7 +28,10 @@ UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 1000;
 
 //______________________________________________________________________________
 TGLOrthoCamera::TGLOrthoCamera(EType type) :
-   fType(type)
+   fType(type), 
+   fZoomMin(0.01), fZoomDefault(1.0), fZoomMax(100.0),
+   fVolumeDiag(100.0), fWidth(100), fHeight(100), fZoom(1.0),
+   fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0), fMatrix()
 {
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }

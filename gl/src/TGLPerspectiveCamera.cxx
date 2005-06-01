@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -25,19 +25,22 @@
 
 ClassImp(TGLPerspectiveCamera)
 
-Double_t TGLPerspectiveCamera::fgFOVMin = 5;
-Double_t TGLPerspectiveCamera::fgFOVDefault = 30;
-Double_t TGLPerspectiveCamera::fgFOVMax = 160;
+Double_t TGLPerspectiveCamera::fgFOVMin = 5.0;
+Double_t TGLPerspectiveCamera::fgFOVDefault = 30.0;
+Double_t TGLPerspectiveCamera::fgFOVMax = 160.0;
 
 UInt_t   TGLPerspectiveCamera::fgDollyDeltaSens = 1000;
 UInt_t   TGLPerspectiveCamera::fgFOVDeltaSens = 1000;
 
 //______________________________________________________________________________
-TGLPerspectiveCamera::TGLPerspectiveCamera()
+TGLPerspectiveCamera::TGLPerspectiveCamera() :
+   fDollyMin(1.0), fDollyDefault(10.0), fDollyMax(100.0),
+   fVolumeDiag(100.0), fFOV(fgFOVDefault),
+   fDolly(fDollyDefault), fVRotate(0.0), fHRotate(0.0), 
+   fCenter(0.0, 0.0, 0.0), fTruck(0.0, 0.0, 0.0)
 {
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
 }
-
 
 //______________________________________________________________________________
 TGLPerspectiveCamera::~TGLPerspectiveCamera()

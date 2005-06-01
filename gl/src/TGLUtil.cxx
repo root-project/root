@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -39,6 +39,22 @@ TGLVertex3::TGLVertex3(const TGLVertex3 & other)
 //______________________________________________________________________________
 TGLVertex3::~TGLVertex3()
 {
+}
+
+//______________________________________________________________________________
+void TGLVertex3::Shift(TGLVector3 & shift)
+{
+   fVals[0] += shift[0];
+   fVals[1] += shift[1];
+   fVals[2] += shift[2];
+}
+
+//______________________________________________________________________________
+void TGLVertex3::Shift(Double_t xDelta, Double_t yDelta, Double_t zDelta)
+{
+   fVals[0] += xDelta;
+   fVals[1] += yDelta;
+   fVals[2] += zDelta;
 }
 
 //______________________________________________________________________________
@@ -192,7 +208,8 @@ TGLMatrix::TGLMatrix()
 //______________________________________________________________________________
 TGLMatrix::TGLMatrix(Double_t x, Double_t y, Double_t z)
 {
-   SetTranslation(x,y,z);
+   SetIdentity();
+   SetTranslation(TGLVertex3(x,y,z));
 }
 
 //______________________________________________________________________________
@@ -230,12 +247,39 @@ void TGLMatrix::SetIdentity()
 }
 
 //______________________________________________________________________________
-void TGLMatrix::SetTranslation(Double_t x, Double_t y, Double_t z)
+TGLVertex3 TGLMatrix::GetTranslation() const
 {
-   fVals[0] = 1.0; fVals[4] = 0.0; fVals[8 ] = 0.0; fVals[12] = x;
-   fVals[1] = 0.0; fVals[5] = 1.0; fVals[9 ] = 0.0; fVals[13] = y;
-   fVals[2] = 0.0; fVals[6] = 0.0; fVals[10] = 1.0; fVals[14] = z;
-   fVals[3] = 0.0; fVals[7] = 0.0; fVals[11] = 0.0; fVals[15] = 1.0;
+   return TGLVertex3(fVals[12], fVals[13], fVals[14]);
+}
+
+//______________________________________________________________________________
+void TGLMatrix::SetTranslation(const TGLVertex3 & trans)
+{
+   fVals[12] = trans[0];
+   fVals[13] = trans[1];
+   fVals[14] = trans[2];
+}
+
+//______________________________________________________________________________
+void TGLMatrix::Shift(const TGLVector3 & shift)
+{
+   fVals[12] += shift[0];
+   fVals[13] += shift[1];
+   fVals[14] += shift[2];
+}
+
+//______________________________________________________________________________
+TGLVector3 TGLMatrix::GetScale() const
+{
+   return TGLVector3(fVals[0], fVals[5], fVals[10]);
+}
+
+//______________________________________________________________________________
+void TGLMatrix::SetScale(const TGLVector3 & scale)
+{
+   fVals[0] = scale[0];
+   fVals[5] = scale[1];
+   fVals[10] = scale[2];
 }
 
 // TODO: Move this to the TGeo side and remove
