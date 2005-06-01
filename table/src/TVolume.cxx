@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.6 2005/03/10 08:56:27 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.7 2005/05/02 17:53:58 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -456,16 +456,16 @@ void TVolume::Draw(Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = new TView(11);
-      // Set the view to perform a first autorange (frame) draw. 
+      // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
    }
-   
+
    // Create a 3D viewer to draw us
    gPad->GetViewer3D(option);
-#else   
+#else
     Paint(option);
-#endif   
+#endif
 }
 
 
@@ -647,13 +647,13 @@ void TVolume::PaintShape(Option_t *option)
       shape->SetFillColor(GetFillColor());
       shape->SetFillStyle(GetFillStyle());
       TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-      TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
-     if (view3D)
+      gPad->GetViewer3D();
+      if (view3D)
          view3D->SetLineAttr(GetLineColor(),GetLineWidth(),option);
     }
-    
+
 #if ROOT_VERSION_CODE >= ROOT_VERSION(4,03,05)
-   // It MUST be the TShape::PAint method:
+   // It MUST be the TShape::Paint method:
     Bool_t viewerWantsSons = kTRUE;
     TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
     if (viewer3D) {
@@ -662,7 +662,7 @@ void TVolume::PaintShape(Option_t *option)
 
          // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
          // Not all will support the last two - which is fine
-         const TBuffer3D & buffer = 
+         const TBuffer3D & buffer =
             fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
          Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);
          if (reqSections != TBuffer3D::kNone)
