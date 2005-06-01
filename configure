@@ -1837,7 +1837,8 @@ fi
 if test ! "x$enable_xml" = "xno" ; then
     # Check for xml include and library
     checking_msg "xml2-config"
-    if `which xml2-config > /dev/null 2>&1` ; then
+    if `which xml2-config > /dev/null 2>&1` && \
+       test ! "x$platform" = "xwin32" ; then
        which xml2-config
        # we found xml2-config - now check the version number
        message "Checking for libxml2 version >= 2.4.x"
@@ -1851,6 +1852,7 @@ if test ! "x$enable_xml" = "xno" ; then
           xmlincdir=`xml2-config --cflags | sed 's/-I//g'`
        fi
     else
+       echo "not found"
        # fall back in case xml2-config is not found
        keepinc=$xmlincdir
        check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
