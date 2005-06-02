@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.14 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.15 2005/02/02 17:42:17 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -140,7 +140,7 @@ public:
   TVectorF &Apply(const TElementActionF    &action);
   TVectorF &Apply(const TElementPosActionF &action);
 
-  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; }
+  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; fElements = 0; }
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
 
@@ -167,12 +167,12 @@ public :
 
 inline       TVectorF &TVectorF::Use           (Int_t n,Float_t *data) { return Use(0,n-1,data); }
 inline       TVectorF &TVectorF::Use           (TVectorF &v)
-                                                        { 
+                                                        {
                                                           Assert(v.IsValid());
                                                           return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
                                                         }
 inline       TVectorF  TVectorF::GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option) const
-                                                        { 
+                                                        {
                                                           TVectorF tmp;
                                                           this->GetSub(row_lwb,row_upb,tmp,option);
                                                           return tmp;

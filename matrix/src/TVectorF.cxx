@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.26 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.27 2005/02/02 17:42:17 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -46,8 +46,8 @@ void TVectorF::Delete_m(Int_t size,Float_t *&m)
     if (size > kSizeMax)
     {
       delete [] m;
-      m = 0;
     }
+    m = 0;
   }
 }
 
@@ -416,11 +416,11 @@ TVectorF &TVectorF::Sqrt()
 
 //______________________________________________________________________________
 TVectorF &TVectorF::Invert()
-{ 
+{
    // v[i] = 1/v[i]
-    
+
   Assert(IsValid());
-  
+
         Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
@@ -428,19 +428,19 @@ TVectorF &TVectorF::Invert()
     *ep = 1./ *ep;
     ep++;
   }
-   
+
   return *this;
-} 
+}
 
 //______________________________________________________________________________
 TVectorF &TVectorF::SelectNonZeros(const TVectorF &select)
-{  
+{
   if (!AreCompatible(*this,select)) {
     Error("SelectNonZeros(const TVectorF &","vector's not compatible");
     Invalidate();
     return *this;
   }
- 
+
   const Float_t *sp = select.GetMatrixArray();
         Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
@@ -451,7 +451,7 @@ TVectorF &TVectorF::SelectNonZeros(const TVectorF &select)
   }
 
   return *this;
-}  
+}
 
 //______________________________________________________________________________
 Float_t TVectorF::Norm1() const
@@ -522,7 +522,7 @@ Int_t TVectorF::NonZeros() const
 //______________________________________________________________________________
 Float_t TVectorF::Sum() const
 {
-  // Compute sum of elements 
+  // Compute sum of elements
 
   Assert(IsValid());
 
@@ -1013,12 +1013,12 @@ Bool_t TVectorF::MatchesNonZeroPattern(const TVectorF &select)
   const Float_t *sp = select.GetMatrixArray();
   const Float_t *ep = this->GetMatrixArray();
   const Float_t * const fp = ep+fNrows;
-  while (ep < fp) 
+  while (ep < fp)
     if (*sp++ == 0.0 && *ep++ != 0.0)
       return kFALSE;
-  
+
   return kTRUE;
-} 
+}
 
 //______________________________________________________________________________
 Bool_t TVectorF::SomePositive(const TVectorF &select)
@@ -1058,9 +1058,9 @@ void TVectorF::AddSomeConstant(Float_t val,const TVectorF &select)
 void TVectorF::Randomize(Float_t alpha,Float_t beta,Double_t &seed)
 {
   // randomize vector elements value
-  
+
   Assert(IsValid());
-  
+
   const Float_t scale = beta-alpha;
   const Float_t shift = alpha/scale;
 
@@ -1272,13 +1272,13 @@ TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
                       const TVectorF &source1,const TVectorF &source2,const TVectorF &select)
 {
   // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
-  // where select[i] != 0.0 
+  // where select[i] != 0.0
 
   if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
     Error("AddElemMult(TVectorF &,Float_t,const TVectorF &,const TVectorF &,const TVectorF &)",
-           "vector's are incompatible"); 
-    target.Invalidate(); 
+           "vector's are incompatible");
+    target.Invalidate();
     return target;
   }
 
@@ -1345,13 +1345,13 @@ TVectorF &AddElemDiv(TVectorF &target,Float_t scalar,
                      const TVectorF &source1,const TVectorF &source2,const TVectorF &select)
 {
   // Modify addition: target += scalar * ElementMult(source1,source2) only for those elements
-  // where select[i] != 0.0 
+  // where select[i] != 0.0
 
   if (!( AreCompatible(target,source1) && AreCompatible(target,source1) &&
          AreCompatible(target,select) )) {
     Error("AddElemDiv(TVectorF &,Float_t,const TVectorF &,const TVectorF &,const TVectorF &)",
-           "vector's are incompatible"); 
-    target.Invalidate(); 
+           "vector's are incompatible");
+    target.Invalidate();
     return target;
   }
 
@@ -1497,7 +1497,7 @@ Bool_t AreCompatible(const TVectorF &v1,const TVectorD &v2,Int_t verbose)
     if (verbose)
       ::Error("AreCompatible", "vector 1 not initialized");
     return kFALSE;
-  } 
+  }
   if (!v2.IsValid()) {
     if (verbose)
       ::Error("AreCompatible", "vector 2 not initialized");
