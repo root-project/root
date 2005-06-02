@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.12 2005/04/15 07:19:50 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.13 2005/06/02 00:39:12 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -2118,27 +2118,27 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
       w = d->width();   // returns desktop width
       h = d->height();  // returns desktop height
    } else {
-      TQtClientWidget* theWidget = dynamic_cast<TQtClientWidget*>( wid(id) );
-      if (theWidget) {
-         const QRect &gWidget=theWidget->frameGeometry ();
-         // theWidget->dumpObjectInfo () ;
-         x = gWidget.x();
-         y = gWidget.y();
-         w = gWidget.width();
-         h = gWidget.height();
-      } else {
          QPixmap *thePix = dynamic_cast<QPixmap*>(iwid(id) );
          if (thePix) {
 //            *fQPixmapGuard.Pixmap(pix)
             w = thePix->width();     // returns pixmap width
             h = thePix->height();    // returns pixmap height
-         } else {         
-            QDesktopWidget *d = QApplication::desktop();
-            w = d->width();     // returns desktop width
-            h = d->height();    // returns desktop height
+         } else {
+            TQtClientWidget* theWidget = dynamic_cast<TQtClientWidget*>( wid(id) );
+            if (theWidget) {
+               const QRect &gWidget=theWidget->frameGeometry ();
+               // theWidget->dumpObjectInfo () ;
+               x = gWidget.x();
+               y = gWidget.y();
+               w = gWidget.width();
+               h = gWidget.height();
+            } else {         
+               QDesktopWidget *d = QApplication::desktop();
+               w = d->width();     // returns desktop width
+               h = d->height();    // returns desktop height
+            }
          }
-      }
-   }
+     }
  }
 //______________________________________________________________________________
 void  TGQt::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
