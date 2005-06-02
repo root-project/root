@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.32 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.33 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -128,7 +128,8 @@ bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
 
 // select and set executor
    const char* q = "";
-   if ( Utility::isPointer( longName ) == 1 )
+   int isPointer = Utility::IsPointer( longName );
+   if ( isPointer == 1 )
       q = "*";
 
    ExecFactories_t::iterator h = gExecFactories.find( shortName + q );
@@ -136,11 +137,17 @@ bool PyROOT::MethodHolder::InitExecutor_( Executor*& executor )
       executor = (h->second)();
    else {
       TClass* klass = gROOT->GetClass( shortName.c_str() );
-      if ( klass != 0 )
-         executor = new RootObjectExecutor( klass );
-      else {
-         std::cerr << "return type in method not handled! " << shortName << std::endl;
-         executor = (gExecFactories[ "void" ])();
+      if ( klass != 0 ) {
+         executor = isPointer ? new RootObjectExecutor( klass ) : new RootObjectByValueExecutor( klass );
+      } else {
+      // could still be an enum ...
+         G__TypeInfo ti( longName.c_str() );
+         if ( ti.Property() & G__BIT_ISENUM )
+            executor = (gExecFactories[ "UInt_t" ])();
+         else {
+            std::cerr << "return type in method not handled! " << shortName << std::endl;
+            executor = (gExecFactories[ "void" ])();
+         }
       }
    }
 
@@ -156,7 +163,7 @@ inline void PyROOT::MethodHolder::CalcOffset_( void* obj, TClass* klass )
    if ( derivedtagnum != fTagnum ) {
       fOffset = G__isanybase(
          fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1,
-         derivedtagnum, (long) obj );
+         derivedtagnum, (long)obj );
       fTagnum = derivedtagnum;
    }
 }

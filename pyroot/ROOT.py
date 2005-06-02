@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.22 2005/05/25 06:23:36 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.23 2005/05/25 08:38:16 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/16/05
+# Last: 06/02/05
 
 """PyROOT user module.
 
@@ -52,9 +52,14 @@ sys.setcheckinterval( 100 )
 __version__ = '3.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'AddressOf' ]
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'AddressOf', 'NULL' ]
 
 _orig_ehook = sys.excepthook
+
+## for setting memory policies; not exported
+_memPolicyAPI = [ 'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict' ]
+kMemoryHeuristics = 1
+kMemoryStrict     = 2
 
 
 ### helpers ---------------------------------------------------------------------
@@ -153,7 +158,7 @@ _thismodule = sys.modules[ __name__ ]
 class ModuleFacade:
    def __init__( self ):
     # store already available ROOT objects to prevent spurious lookups
-      for name in _thismodule.__pseudo__all__:
+      for name in _thismodule.__pseudo__all__ + _memPolicyAPI:
           self.__dict__[ name ] = getattr( _thismodule, name )
 
       self.__dict__[ '__doc__'  ] = _thismodule.__doc__

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.16 2005/05/06 15:02:52 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.17 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -19,9 +19,12 @@
 
 
 //- data _____________________________________________________________________
+PyObject* PyROOT::gNullObject = 0;
+
 PyROOT::dictlookup PyROOT::gDictLookupOrg = 0;
 bool PyROOT::gDictLookupActive = false;
 
+PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility::kHeuristics;
 
 PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
 
@@ -69,6 +72,17 @@ namespace {
 
 
 //- public functions ---------------------------------------------------------
+bool PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
+{
+   if ( kHeuristics <= e && e <= kStrict ) {
+      gMemoryPolicy = e;
+      return true;
+   }
+   return false;
+}
+
+
+//____________________________________________________________________________
 bool PyROOT::Utility::AddToClass(
       PyObject* pyclass, const char* label, PyCFunction cfunc, int flags )
 {
@@ -108,9 +122,6 @@ bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const c
    if ( PyType_Ready( pytype ) < 0 )
       return false;
 
-   if ( PyErr_Occurred() )
-      PyErr_Print();
-
 // add proxy type to the given (ROOT) module
    Py_INCREF( pytype );         // PyModule_AddObject steals reference
    if ( PyModule_AddObject( module, (char*)name, (PyObject*)pytype ) < 0 ) {
@@ -123,7 +134,7 @@ bool PyROOT::Utility::InitProxy( PyObject* module, PyTypeObject* pytype, const c
 }
 
 //____________________________________________________________________________
-PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& name )
+PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& name )
 {
    EDataType effType = kOther;
 
@@ -133,7 +144,7 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& na
 
    std::string shortName = TClassEdit::ShortType( ti.TrueName(), 1 );
 
-   const int isp = isPointer( name );
+   const int isp = IsPointer( name );
    const int mask = isp == 1 ? kPtrMask : 0;
 
    if ( shortName == "bool" )
@@ -170,17 +181,16 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& na
 }
 
 //____________________________________________________________________________
-int PyROOT::Utility::isPointer( const std::string& name )
+int PyROOT::Utility::IsPointer( const std::string& name )
 {
+// yields 1 for '*', 2 for '**', 10 for '&', and 11 for '*&' (etc.)
    int isp = 0;
    for ( std::string::const_reverse_iterator it = name.rbegin(); it != name.rend(); ++it ) {
-      if ( *it == '*' ) {
-         isp = 1;
-         break;
-      } else if ( *it == '&' ) {
-         isp = 2;
-         break;
-      } else if ( isalnum( *it ) )
+      if ( *it == '*' )
+         isp += 1;
+      else if ( *it == '&' )
+         isp += 10;
+      else if ( isalnum( *it ) )
          break;
    }
 

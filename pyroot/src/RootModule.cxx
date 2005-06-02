@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.8 2005/04/28 07:33:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.9 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -7,6 +7,7 @@
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
+#include "PyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
 
@@ -123,8 +124,8 @@ namespace {
 
             if ( PropertyProxy_Check( pyprop ) ) {
             // this is an address of a value (i.e. &myobj->prop)
-               PyObject* pybuf = PyBuffer_FromReadWriteMemory(
-                  (void*)pyprop->GetAddress( pyobj ), sizeof(void*) );
+               PyObject* pybuf = BufFac_t::Instance()->PyBuffer_FromMemory(
+                  (Long_t*)pyprop->GetAddress( pyobj ), 1 );
                Py_DECREF( pyprop );
                return pybuf;
             }
@@ -137,12 +138,29 @@ namespace {
          }
 
       // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
-         return PyBuffer_FromReadWriteMemory( &pyobj->fObject, 1 );
+         return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&pyobj->fObject, 1 );
       }
 
       PyErr_SetString( PyExc_ValueError, "invalid argument for AddressOf()" );
       return 0;
    }
+
+//____________________________________________________________________________
+   PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
+   {
+      PyObject* policy = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
+         return 0;
+
+      long l = PyInt_AS_LONG( policy );
+      if ( Utility::SetMemoryPolicy( (Utility::EMemoryPolicy)l ) ) {
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
+      return 0;
+  }
 
 } // unnamed namespace
 
@@ -157,6 +175,8 @@ static PyMethodDef PyROOTMethods[] = {
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object" },
+   { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
+     METH_VARARGS, (char*) "Determines object ownership model" },
    { NULL, NULL, 0, NULL }
 };
 

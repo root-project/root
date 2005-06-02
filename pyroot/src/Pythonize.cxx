@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.15 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.16 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -516,50 +516,42 @@ namespace {
    }
 
 
-//- TString behaviour ----------------------------------------------------------
-   PyObject* stringRepr( PyObject*, PyObject* args )
-   {
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "Data" );
-      PyObject* repr = PyString_FromFormat( "\'%s\'", PyString_AsString( data ) );
-      Py_DECREF( data );
-      return repr;
+//- string behaviour as primitives --------------------------------------------
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
+   PyObject* name##StringRepr( PyObject*, PyObject* args )                    \
+   {                                                                          \
+      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      PyObject* repr = PyString_FromFormat( "\'%s\'", PyString_AsString( data ) ); \
+      Py_DECREF( data );                                                      \
+      return repr;                                                            \
+   }                                                                          \
+                                                                              \
+   PyObject* name##StringCompare( PyObject*, PyObject* args )                 \
+   {                                                                          \
+      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      int result = PyObject_Compare( data, PyTuple_GET_ITEM( args, 1 ) );     \
+      Py_DECREF( data );                                                      \
+      if ( PyErr_Occurred() )                                                 \
+         return 0;                                                            \
+      return PyInt_FromLong( result );                                        \
+   }                                                                          \
+                                                                              \
+   PyObject* name##StringIsequal( PyObject*, PyObject* args )                 \
+   {                                                                          \
+      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), #func ); \
+      PyObject* result = PyObject_RichCompare( data, PyTuple_GET_ITEM( args, 1 ), Py_EQ );\
+      Py_DECREF( data );                                                      \
+      if ( ! result )                                                         \
+         return 0;                                                            \
+      return result;                                                          \
    }
+
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( stl, c_str )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   t, Data )
 
 
 //- TObjString behaviour -------------------------------------------------------
-   PyObject* objStringRepr( PyObject*, PyObject* args )
-   {
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
-      PyObject* repr = PyString_FromFormat( "\'%s\'", PyString_AsString( data ) );
-      Py_DECREF( data );
-      return repr;
-   }
-
-//____________________________________________________________________________
-   PyObject* objStringCompare( PyObject*, PyObject* args )
-   {
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
-      int result = PyObject_Compare( data, PyTuple_GET_ITEM( args, 1 ) );
-      Py_DECREF( data );
-
-      if ( PyErr_Occurred() )
-         return 0;
-
-      return PyInt_FromLong( result );
-   }
-
-//____________________________________________________________________________
-   PyObject* objStringIsequal( PyObject*, PyObject* args )
-   {
-      PyObject* data = callPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
-      PyObject* result = PyObject_RichCompare( data, PyTuple_GET_ITEM( args, 1 ), Py_EQ );
-      Py_DECREF( data );
-
-      if ( ! result )
-         return 0;
-
-      return result;
-   }
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( obj, GetName )
 
 //____________________________________________________________________________
    PyObject* objStringLength( PyObject*, PyObject* args )
@@ -657,7 +649,8 @@ namespace {
             BufFac_t* fac = BufFac_t::Instance();
             PyObject* scb = PyObject_GetAttrString( leaf, const_cast< char* >( "GetNdata" ) );
 
-            Utility::EDataType eType = Utility::effectiveType( stname );
+         // TODO: use Converter::FromMemory instead
+            Utility::EDataType eType = Utility::EffectiveType( stname );
             if ( eType == Utility::kLong )
                value = fac->PyBuffer_FromMemory( (long*) arr, scb );
             else if ( eType == Utility::kInt )
@@ -912,13 +905,23 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return true;
    }
 
+   if ( name == "string" || name == "std::string" ) {
+      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) stlStringRepr );
+      Utility::AddToClass( pyclass, "__str__", "c_str" );
+      Utility::AddToClass( pyclass, "__len__", "length" );
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) stlStringCompare );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) stlStringIsequal );
+
+      return true;
+   }
+
    if ( name == "TString" ) {
-   // ROOT pointer validity testing
-      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) stringRepr );
+      Utility::AddToClass( pyclass, "__repr__", (PyCFunction) tStringRepr );
       Utility::AddToClass( pyclass, "__str__", "Data" );
       Utility::AddToClass( pyclass, "__len__", "Length" );
 
       Utility::AddToClass( pyclass, "__cmp__", "CompareTo" );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) tStringIsequal );
 
       return true;
    }
@@ -935,7 +938,6 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name == "TIter" ) {
-   // ROOT pointer validity testing
       Utility::AddToClass( pyclass, "__iter__", (PyCFunction) iterIter );
       Utility::AddToClass( pyclass, "next",     (PyCFunction) iterNext );
 

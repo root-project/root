@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.2 2005/03/04 19:41:29 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.3 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -35,7 +35,12 @@ namespace {
       if ( pyprop->fDataMember->GetArrayDim() != 0 )
          ptr = &address;
 
-      return pyprop->fConverter->FromMemory( ptr );
+      if ( pyprop->fConverter != 0 )
+         return pyprop->fConverter->FromMemory( ptr );
+
+      PyErr_Format( PyExc_NotImplementedError,
+         "could not convert %s", pyprop->fDataMember->GetName() );
+      return 0;
 
    /*
       case Utility::kOther: {
@@ -66,13 +71,13 @@ namespace {
       if ( address < 0 )
          return errret;
 
-   // for fixed size arrays
+   // fixed size arrays and object instances are not passed as address, but as &address
       void* ptr = (void*)address;
       if ( pyprop->fDataMember->GetArrayDim() != 0 )
          ptr = &address;
 
    // actual conversion; return on success
-      if ( pyprop->fConverter->ToMemory( value, ptr ) )
+      if ( pyprop->fConverter && pyprop->fConverter->ToMemory( value, ptr ) )
          return 0;
 
    // set a python error, if not already done
@@ -160,8 +165,11 @@ void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
    fDataMember = dataMember;
 
    std::string fullType = fDataMember->GetFullTypeName();
-   if ( (int)fDataMember->GetArrayDim() != 0 )
+   if ( (int)fDataMember->GetArrayDim() != 0 ||
+        ( ! fDataMember->IsBasic() && fDataMember->IsaPointer() ) ) {
       fullType.append( "*" );
+   }
+
    fConverter  = CreateConverter( fullType, fDataMember->GetMaxIndex( 0 ) );
 }
 
@@ -169,11 +177,13 @@ void PyROOT::PropertyProxy::Set( TDataMember* dataMember )
 long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    const int errret = -1;
 
+// get offsets from CINT
+   G__ClassInfo* clInfo = fDataMember->GetClass()->GetClassInfo();
+
 // class attributes
    if ( fDataMember->Property() & G__BIT_ISSTATIC ) {
       long offset = 0;
-      G__DataMemberInfo dmi =
-         fDataMember->GetClass()->GetClassInfo()->GetDataMember( fName.c_str(), &offset );
+      G__DataMemberInfo dmi = clInfo->GetDataMember( fName.c_str(), &offset );
       return (long)((G__var_array*)dmi.Handle())->p[dmi.Index()];
    }
 
@@ -190,5 +200,7 @@ long PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
       return errret;
    }
 
-   return (long)obj + fDataMember->GetOffsetCint();
+   long offset = G__isanybase(
+      clInfo->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (long)obj );
+   return (long)obj + offset + fDataMember->GetOffsetCint();
 }

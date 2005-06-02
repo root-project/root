@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.6 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.7 2005/05/25 08:38:16 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -32,8 +32,8 @@ namespace PyROOT {
 
    public:
       virtual bool SetArg( PyObject*, G__CallFunc* ) = 0;
-      virtual PyObject* FromMemory( void* address );
-      virtual bool ToMemory( PyObject* value, void* address );
+      virtual PyObject* FromMemory( void* address ) = 0;
+      virtual bool ToMemory( PyObject* value, void* address ) = 0;
    };
 
 #define PYROOT_BASIC_CONVERTER( name )                                        \
@@ -64,7 +64,7 @@ namespace PyROOT {
 
 // converters for built-ins
    PYROOT_BASIC_CONVERTER( Long );
-   PYROOT_BASIC_CONVERTER2( Bool, Long );
+   PYROOT_BASIC_CONVERTER( Bool );
    PYROOT_BASIC_CONVERTER( Char );
    PYROOT_BASIC_CONVERTER( UChar );
    PYROOT_BASIC_CONVERTER2( Short, Long );
@@ -90,14 +90,16 @@ namespace PyROOT {
 // pointer/array conversions
    class VoidArrayConverter : public Converter {
    public:
-      VoidArrayConverter( bool isConst = false ) { fIsConst = isConst; }
+      VoidArrayConverter( bool keepControl = false ) { fKeepControl = keepControl; }
       virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual PyObject* FromMemory( void* address );
+      virtual bool ToMemory( PyObject* value, void* address );
 
    protected:
-      bool IsConst() { return fIsConst; }
+      bool KeepControl() { return fKeepControl; }
 
    private:
-      bool fIsConst;
+      bool fKeepControl;
    };
 
    PYROOT_ARRAY_CONVERTER( ShortArray );
@@ -110,24 +112,42 @@ namespace PyROOT {
    PYROOT_ARRAY_CONVERTER( DoubleArray );
 
 // converters for special cases
-   class TStringConverter : public Converter {
-   public:
-      virtual bool SetArg( PyObject*, G__CallFunc* );
+#define PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( name, strtype )          \
+   class name##Converter : public Converter {                                 \
+   public:                                                                    \
+      virtual bool SetArg( PyObject*, G__CallFunc* );                         \
+      virtual PyObject* FromMemory( void* address );                          \
+      virtual bool ToMemory( PyObject* value, void* address );                \
+   private:                                                                   \
+      strtype fBuffer;                                                        \
+   }
 
-   private:
-      TString fBuffer;
-   };
+   PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString );
+   PYROOT_DEFINE_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string );
 
    class KnownClassConverter: public VoidArrayConverter {
    public:
-      KnownClassConverter( const TClassRef& klass, bool isConst = false ) :
-         VoidArrayConverter( isConst ), fClass( klass ) {}
-      KnownClassConverter( TClass* klass, bool isConst = false ) :
-         VoidArrayConverter( isConst ), fClass( klass ) {}
+      KnownClassConverter( const TClassRef& klass, bool keepControl = false ) :
+         VoidArrayConverter( keepControl ), fClass( klass ) {}
+      KnownClassConverter( TClass* klass, bool keepControl = false ) :
+         VoidArrayConverter( keepControl ), fClass( klass ) {}
       virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual PyObject* FromMemory( void* address );
+      virtual bool ToMemory( PyObject* value, void* address );
 
-   private:
+   protected:
       TClassRef fClass;
+   };
+
+   class KnownClassPtrConverter : public KnownClassConverter {
+   public:
+      KnownClassPtrConverter( const TClassRef& klass, bool keepControl = false ) :
+         KnownClassConverter( klass, keepControl ) {}
+      KnownClassPtrConverter( TClass* klass, bool keepControl = false ) :
+         KnownClassConverter( klass, keepControl ) {}
+      virtual bool SetArg( PyObject*, G__CallFunc* );
+      virtual PyObject* FromMemory( void* address );
+      virtual bool ToMemory( PyObject* value, void* address );
    };
 
    class LongLongArrayConverter : public VoidArrayConverter {

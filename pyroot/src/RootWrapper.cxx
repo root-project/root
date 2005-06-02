@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.26 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.27 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -38,6 +38,8 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+
+#include <iostream>
 
 
 //- data _______________________________________________________________________
@@ -98,6 +100,11 @@ void PyROOT::InitRoot()
    AddToScope( "gSystem", gSystem, gSystem->IsA() );
    AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
+// explicit NULL pointer (typed object pointers can not be passed as NULL)
+   gNullObject = BindRootObject( NULL, NULL );
+   Py_INCREF( gNullObject );
+   PyModule_AddObject( gRootModule, const_cast< char* >( "NULL" ), gNullObject );
+
 // memory management
    gROOT->GetListOfCleanups()->Add( new MemoryRegulator() );
 
@@ -109,9 +116,16 @@ void PyROOT::InitRoot()
 int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
    assert( klass != 0 );
 
-   std::string clName = klass->GetName();
+// in case of namespaces, get the unscoped name
+   G__ClassInfo* clInfo = klass->GetClassInfo();
+   std::string clName = clInfo ? clInfo->Name() : klass->GetName();
+
+// some properties that'll affect building the dictionary
    bool isNamespace = klass->Property() & G__BIT_ISNAMESPACE;
    bool hasConstructor = false;
+
+// special cases for C++ facilities that have no python equivalent
+   TMethod* assign = 0;
 
 // load all public methods and data members
    typedef std::vector< PyCallable* > Callables_t;
@@ -136,9 +150,15 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          std::string op = mtName.substr( 8, std::string::npos );
 
       // filter memory operators
-         if ( op == "=" || op == " new" || op == " new[]" ||
+         if ( op == " new"    || op == " new[]" ||
               op == " delete" || op == " delete[]" )
             continue;
+
+      // filter assignment operator for later use
+         if ( op == "=" ) {
+            assign = method;
+            continue;
+         }
 
       // map C++ operator to python equivalent
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
@@ -177,6 +197,9 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 // add a pseudo-default ctor, if none defined
    if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new ConstructorHolder( klass, 0 ) );
+
+//   if ( assign != 0 )
+//      std::cout << "found assignment operator for: " << klass->GetName() << std::endl;
 
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
@@ -247,8 +270,7 @@ PyObject* PyROOT::BuildRootClassBases( TClass* klass )
    if ( nbases == 0 ) {
       Py_INCREF( &ObjectProxy_Type );
       PyTuple_SET_ITEM( pybases, 0, (PyObject*)&ObjectProxy_Type );
-   }
-   else {
+   } else {
       for ( std::vector< std::string >::size_type ibase = 0; ibase < nbases; ++ibase ) {
          PyObject* pyclass = MakeRootClassFromString( uqb[ ibase ] );
          if ( ! pyclass ) {
@@ -275,21 +297,81 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
+PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
 {
+// force building of the class if a scope is specified
+   bool force = scope != 0;
+
+// determine scope name, if a python scope has been given
+   std::string scName = "";
+   if ( scope ) {
+      PyObject* pyscope = PyObject_GetAttrString( scope, const_cast< char* >( "__name__" ) );
+      if ( ! pyscope ) {
+         PyErr_Format( PyExc_SystemError, "given scope has no name for %s", name.c_str() );
+         return 0;
+      }
+
+   // should be a string
+      scName = PyString_AsString( pyscope );
+      Py_DECREF( pyscope );
+      if ( PyErr_Occurred() )
+         return 0;
+   }
+
 // retrieve ROOT class (this verifies name)
-   TClass* klass = gROOT->GetClass( name.c_str() );
+   TClass* klass = gROOT->GetClass( scope ? (scName+"::"+name).c_str() : name.c_str() );
    if ( klass == 0 ) {
-      PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", name.c_str() );
+      PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", (scName+"::"+name).c_str() );
       return 0;
    }
 
-   G__TypeInfo ti( name.c_str() );
-   const std::string trueName = ti.TrueName();
-   PyObject* pyname = PyString_FromString( const_cast< char* >( trueName.c_str() ) );
+// locate the scope for building the class if not specified
+   if ( ! scope ) {
+      std::string::size_type last = name.rfind( "::" );
+      if ( last != 0 && last != std::string::npos ) {
+         scName = name.substr( 0, last );
+         name = name.substr( last + 2, std::string::npos );
+      }
 
-// first try to retrieve the class representation from the ROOT module
-   PyObject* pyclass = PyObject_GetAttr( gRootModule, pyname );
+      if ( scName != "" ) {
+         std::string::size_type pos = 0;
+         do {
+            last = scName.find( "::", pos );
+            std::string part = scName.substr( pos, last == std::string::npos ? last : last - pos );
+            PyObject* next = PyObject_GetAttrString(
+               scope ? scope : gRootModule, const_cast< char* >( part.c_str() ) );
+
+            if ( ! next ) {           // lookup failed, try to create it
+               PyErr_Clear();
+               next = MakeRootClassFromString( part, scope );
+            }
+            Py_XDECREF( scope );
+
+            if ( ! next )             // create failed, give up
+               return 0;
+
+            scope = next;
+            pos = last + 2;
+         } while ( last != std::string::npos );
+      }
+   } else
+     Py_INCREF( scope );
+
+// use global scope if no inner scope found
+   if ( ! scope ) {
+      scope = gRootModule;
+      Py_INCREF( scope );
+   }
+
+// use actual class name for binding
+   G__ClassInfo* clInfo = klass->GetClassInfo();
+   const std::string actual = clInfo ? clInfo->Name() : klass->GetName();
+
+// first try to retrieve an existing class representation
+   PyObject* pyactual = PyString_FromString( actual.c_str() );
+   PyObject* pyclass = 0;
+   if ( force == false )
+      pyclass = PyObject_GetAttr( scope, pyactual );
 
 // build if the class does not yet exist
    if ( ! pyclass ) {
@@ -300,10 +382,12 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
       PyObject* pybases = BuildRootClassBases( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
-         PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pyname, pybases );
+         PyObject* pytrue = PyString_FromString( klass->GetName() );
+         PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pytrue, pybases );
          pyclass = PyType_Type.tp_new( &PyRootType_Type, args, NULL );
 
          Py_DECREF( args );
+         Py_DECREF( pytrue );
          Py_DECREF( pybases );
       }
 
@@ -313,24 +397,19 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
          // something failed in building the dictionary
             Py_DECREF( pyclass );
             pyclass = 0;
-         }
-         else {
-            Py_INCREF( pyclass );            // PyModule_AddObject steals reference
-            PyModule_AddObject( gRootModule, const_cast< char* >( trueName.c_str() ), pyclass );
-         }
+         } else
+            PyObject_SetAttr( scope, pyactual, pyclass );
       }
    }
 
-   if ( pyclass && name != trueName ) {
-   // class exists, but is typedef-ed: simply map reference
-      Py_INCREF( pyclass );                  // PyModule_AddObject steals reference
-      PyModule_AddObject( gRootModule, const_cast< char* >( name.c_str() ), pyclass );
-   }
+   if ( pyclass && name != actual )     // class exists, but is typedef-ed: simply map reference
+      PyObject_SetAttrString( scope, const_cast< char* >( name.c_str() ), pyclass );
 
-   Py_DECREF( pyname );
+   Py_DECREF( pyactual );
+   Py_DECREF( scope );
 
 // add python-style features
-   if ( ! Pythonize( pyclass, trueName ) ) {
+   if ( ! Pythonize( pyclass, klass->GetName() ) ) {
       Py_XDECREF( pyclass );
       pyclass = 0;
    }
@@ -415,7 +494,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, bool isRef
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 {
-// for safety (should return "null pointer object")
+// for safety (None can't be used as NULL pointer)
    if ( ! address ) {
       Py_INCREF( Py_None );
       return Py_None;
@@ -462,7 +541,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 //____________________________________________________________________________
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
-// should return "null pointer" ... for now, None will do
+// gbl == 0 means global does not exist (rather than gbl is NULL pointer)
    if ( ! gbl ) {
       Py_INCREF( Py_None );
       return Py_None;
@@ -477,7 +556,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
          PyObject* result = pcnv->FromMemory( (void*)gbl->GetAddress() );
          delete pcnv;
          return result;
-      } else if ( Utility::effectiveType( gbl->GetFullTypeName() ) == Utility::kMacro ) {
+      } else if ( Utility::EffectiveType( gbl->GetFullTypeName() ) == Utility::kMacro ) {
          std::string gblName = gbl->GetName();    // == macro label
 
       // TGlobal offers no specifics; go directly to CINT for the type info
@@ -506,7 +585,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
          klass = TGlobal::Class();
    }
 
-   if ( Utility::isPointer( gbl->GetFullTypeName() ) )
+   if ( Utility::IsPointer( gbl->GetFullTypeName() ) )
       return BindRootObject( (void*)gbl->GetAddress(), klass, true );
 
    return BindRootObject( (void*)gbl->GetAddress(), klass );

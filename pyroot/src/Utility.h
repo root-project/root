@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.13 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.14 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -14,6 +14,8 @@
 
 namespace PyROOT {
 
+   R__EXTERN PyObject* gNullObject;
+
    typedef PyDictEntry* (*dictlookup) ( PyDictObject*, PyObject*, long );
    R__EXTERN dictlookup gDictLookupOrg;
    R__EXTERN bool gDictLookupActive;
@@ -26,6 +28,11 @@ namespace PyROOT {
       bool AddToClass( PyObject* pyclass, const char* label, const char* func );
 
       bool InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );
+
+   // memory handling
+      enum EMemoryPolicy { kHeuristics = 1, kStrict = 2 };
+      R__EXTERN EMemoryPolicy gMemoryPolicy;
+      bool SetMemoryPolicy( EMemoryPolicy e );
 
    // data/return types
       const int kPtrMask = 0x10000000;
@@ -59,8 +66,8 @@ namespace PyROOT {
       R__EXTERN TC2POperatorMapping_t gC2POperatorMapping;
 
    // meta information
-      EDataType effectiveType( const std::string& name );
-      int isPointer( const std::string& name );   // 0 = no, 1 = yes, 2 = ref
+      EDataType EffectiveType( const std::string& name );
+      int IsPointer( const std::string& name );   // 0 = no, 1 = yes, 2 = ref
 
    // CINT integration
       void ErrMsgCallback( char* msg );

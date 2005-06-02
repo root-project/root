@@ -1,9 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.2 2005/03/16 06:15:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.3 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
 #include "PyROOT.h"
 #include "Executors.h"
+#include "ObjectProxy.h"
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
 
@@ -125,6 +126,17 @@ PyObject* PyROOT::RootObjectExecutor::Execute( G__CallFunc* func, void* self )
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* self )
+{
+   PyObject* obj = BindRootObject( (void*)func->ExecInt( self ), fClass );
+   if ( ! obj )
+      return 0;
+   ((ObjectProxy*)obj)->fFlags |= ObjectProxy::kIsOwner;
+   return obj;
+}
+
+
+//____________________________________________________________________________
 PyObject* PyROOT::ConstructorExecutor::Execute( G__CallFunc* func, void* klass )
 {
 // package return address in PyObject* for caller to handle appropriately
@@ -176,6 +188,7 @@ namespace {
       ncp_t( "unsigned short",     &CreateIntExecutor                 ),
       ncp_t( "int",                &CreateIntExecutor                 ),
       ncp_t( "unsigned int",       &CreateULongExecutor               ),
+      ncp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
       ncp_t( "long",               &CreateLongExecutor                ),
       ncp_t( "unsigned long",      &CreateULongExecutor               ),
       ncp_t( "long long",          &CreateLongLongExecutor            ),

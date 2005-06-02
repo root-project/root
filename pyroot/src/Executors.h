@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.2 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.3 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -26,8 +26,6 @@ namespace PyROOT {
    class Executor {
    public:
       virtual ~Executor() {}
-
-   public:
       virtual PyObject* Execute( G__CallFunc*, void* ) = 0;
    };
 
@@ -65,12 +63,16 @@ namespace PyROOT {
    class RootObjectExecutor : public Executor {
    public:
       RootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
-
-   public:
       virtual PyObject* Execute( G__CallFunc*, void* );
 
-   private:
+   protected:
       TClassRef fClass;
+   };
+
+   class RootObjectByValueExecutor : public RootObjectExecutor {
+   public:
+      RootObjectByValueExecutor( const TClassRef& klass ) : RootObjectExecutor ( klass ) {}
+      virtual PyObject* Execute( G__CallFunc*, void* );
    };
 
    PYROOT_BASIC_EXECUTOR( ConstructorExecutor );
