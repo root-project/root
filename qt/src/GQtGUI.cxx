@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.11 2005/04/06 09:32:11 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.12 2005/04/15 07:19:50 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -2110,11 +2110,11 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
 {
    // Return geometry of window (should be called GetGeometry but signature
    // already used).
-
+   
+   x =  y = 0;
    if (id == kNone || id == kDefault )
    {
       QDesktopWidget *d = QApplication::desktop();
-      x =  y = 0;
       w = d->width();   // returns desktop width
       h = d->height();  // returns desktop height
    } else {
@@ -2127,10 +2127,16 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
          w = gWidget.width();
          h = gWidget.height();
       } else {
-         QDesktopWidget *d = QApplication::desktop();
-         x = y = 0;
-         w = d->width();     // returns desktop width
-         h = d->height();    // returns desktop height
+         QPixmap *thePix = dynamic_cast<QPixmap*>(iwid(id) );
+         if (thePix) {
+//            *fQPixmapGuard.Pixmap(pix)
+            w = thePix->width();     // returns pixmap width
+            h = thePix->height();    // returns pixmap height
+         } else {         
+            QDesktopWidget *d = QApplication::desktop();
+            w = d->width();     // returns desktop width
+            h = d->height();    // returns desktop height
+         }
       }
    }
  }
