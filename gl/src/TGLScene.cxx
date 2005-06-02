@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.6 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.7 2005/06/01 17:53:24 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -31,7 +31,7 @@ ClassImp(TGLScene)
 TGLScene::TGLScene() :
    fBoundingBox(), fBoundingBoxValid(kFALSE), 
    fLastDrawLOD(kHigh), fCanCullLowLOD(kFALSE),
-   fSelectedPhysical(0)
+   fSelectedPhysical(0), fDrawMode(kFill)
 {
 }
 
