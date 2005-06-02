@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.5 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.6 2004/10/15 17:10:13 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TList *TSystemDirectory::GetListOfFiles() const
    TList *contents  = new TList;
    contents->SetOwner();
    while ((file = gSystem->GetDirEntry(dir))) {
-      if (IsDirectory(file)) {
+      if (IsItDirectory(file)) {
          TString sdirpath;
          if (file[0] == '.' && file[1] == '\0')
             sdirpath = GetTitle();
@@ -102,7 +102,7 @@ void TSystemDirectory::SetDirectory(const char *name)
 }
 
 //______________________________________________________________________________
-Bool_t TSystemDirectory::IsDirectory(const char *name) const
+Bool_t TSystemDirectory::IsItDirectory(const char *name) const
 {
    // Check if name is a directory.
 
@@ -146,7 +146,7 @@ void TSystemDirectory::Browse(TBrowser *b)
    while ((file = gSystem->GetDirEntry(dir))) {
       if (b->TestBit(TBrowser::kNoHidden) && file[0] == '.' && file[1] != '.' )
          continue;
-      if (IsDirectory(file)) {
+      if (IsItDirectory(file)) {
          TString sdirpath;
          if (!strcmp(file, "."))
             sdirpath = name;

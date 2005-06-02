@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.6 2005/05/30 10:21:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.7 2005/05/31 18:52:45 brun Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -37,7 +37,7 @@ protected:
    TOrdCollection *fDirsInBrowser;
    TOrdCollection *fFilesInBrowser;
 
-   Bool_t             IsDirectory(const char *name) const;
+   Bool_t             IsItDirectory(const char *name) const;
    TSystemDirectory  *FindDirObj(const char *name);
    TSystemFile       *FindFileObj(const char *name, const char *dir);
 
@@ -48,7 +48,7 @@ public:
    virtual ~TSystemDirectory();
 
    virtual Bool_t IsFolder() const { return kTRUE; }
-   virtual Bool_t IsDirectory() const { return kTRUE; }
+   virtual Bool_t IsDirectory(const char * = 0) const { return kTRUE; }
 
    virtual void   Browse(TBrowser *b);
    virtual void   Edit() { }

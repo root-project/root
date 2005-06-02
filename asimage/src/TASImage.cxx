@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.33 2005/05/30 22:38:38 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.34 2005/06/01 17:47:28 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -257,6 +257,7 @@ TASImage &TASImage::operator=(const TASImage &img)
 
       if (fImage) {
          destroy_asimage(&fImage);
+         fImage = 0;
       }
 
       fPaintMode     = 1;
@@ -285,8 +286,10 @@ TASImage::~TASImage()
 {
    // Image dtor, clean up image and visual.
 
-   if (fImage)
+   if (fImage) {
       destroy_asimage(&fImage);
+      fImage = 0;
+   }
 
    delete fScaledImage;
    fScaledImage = 0;
@@ -331,7 +334,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    fZoomOffY   = 0;
    fZoomWidth  = fImage ? fImage->width : 0;
    fZoomHeight = fImage ? fImage->height : 0;
-   fPaintMode     = 1;
+   fPaintMode  = 1;
 }
 
 //______________________________________________________________________________
@@ -697,6 +700,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    if (fImage) {
       destroy_asimage(&fImage);
+      fImage = 0;
    }
 
    delete fScaledImage;
@@ -736,12 +740,13 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
    Window_t wd = gVirtualX->GetCurrentWindow();
+   if (!wd) return;
 
 #ifndef WIN32
    fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, AllPlanes, 0, 0);
 #else
    unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(wd, w, h) : 0;
-   fImage = bitmap2asimage (bits, w, h, 0, 0);
+   fImage = bitmap2asimage(bits, w, h, 0, 0);
 #endif
 }
 
@@ -1715,8 +1720,8 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
 
    Int_t xy;
    UInt_t w, h;
-
    gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
+
 #ifndef WIN32
    fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, AllPlanes, 1, 0);
 #else
@@ -1725,11 +1730,11 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
 
    // no mask
    if (!mask) {
-      fImage = bitmap2asimage (bits, w, h, 0, 0);
+      fImage = bitmap2asimage(bits, w, h, 0, 0);
       return;
    }
    unsigned char *mask_bits = (gGetBmBits != 0) ? gGetBmBits(mask, w, h) : 0;
-   fImage = bitmap2asimage (bits, w, h, 0, mask_bits);
+   fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
 #endif
 
 }
@@ -4630,14 +4635,14 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
 
 //_____________________________________________________________________________
 static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y, 
-                                     int x_to, CARD32 ratio)
+                                     int x_to, CARD32)
 {
    //
 
    int cw = ctx->canvas_width;
 
-   if (ratio != 0 && x_to >= 0 && x_from < cw && y >= 0 && y < ctx->canvas_height) {	
-      CARD32 value = ratio;
+   if (x_to >= 0 && x_from < cw && y >= 0 && y < ctx->canvas_height) {	
+      CARD32 value = ctx->tool->matrix[0]; //color
       CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw); 
       int x1 = x_from;
       int x2 = x_to; 
@@ -4805,9 +4810,9 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    // interpolate between fore and backgound colors
    for (x = 3; x > 0; x--) {
       xx = 4-x;
-      Int_t colxr   = (col4r*x + r*xx) >> 2;
+      Int_t colxr = (col4r*x + r*xx) >> 2;
       Int_t colxg = (col4g*x + g*xx) >> 2;
-      Int_t colxb  = (col4b*x + b*xx) >> 2;
+      Int_t colxb = (col4b*x + b*xx) >> 2;
       col[x] = (colxr << 16) + (colxg << 8) + colxb;
    }
 
@@ -5354,7 +5359,7 @@ void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/,
 //_______________________________________________________________________
 void TASImage::ToGray()
 {
-   // convert RGB image to Gray mage. It can be reverte by UnZoom() 
+   // Converts RGB image to Gray image.
 
    if (!IsValid()) {
       Warning("ToGray", "Image not initiated");

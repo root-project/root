@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.179 2005/06/01 16:15:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.180 2005/06/02 14:10:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2768,11 +2768,11 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t lw = gStyle->GetHatchesLineWidth();
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineStyle(1);
-      gVirtualX->SetLineWidth(lw);
+      gVirtualX->SetLineWidth(Short_t(lw));
    }
    if (gVirtualPS) {
       gVirtualPS->SetLineStyle(1);
-      gVirtualPS->SetLineWidth(lw);
+      gVirtualPS->SetLineWidth(Short_t(lw));
    }
    if (Ang1[IAng1] != 5.) PaintHatches(dy, Ang1[IAng1], nn, xx, yy);
    if (Ang2[IAng2] != 5.) PaintHatches(dy, Ang2[IAng2], nn, xx, yy);
@@ -3583,9 +3583,10 @@ void TPad::Print(const char *filenam, Option_t *option)
       image = kTRUE;
    }
 
+   Int_t wid=0;
    if (!gROOT->IsBatch() && image) {
       if (gtype == TImage::kGif) {
-         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
+         wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
 
          gVirtualX->SelectWindow(wid);
          if (gVirtualX->WriteGIF((char*)psname.Data())) {
@@ -3598,13 +3599,17 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (gtype != TImage::kUnknown) {
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
-         TImage *img = TImage::Create();
          gErrorIgnoreLevel = saver;
          gVirtualX->Update(1);
          gSystem->Sleep(30); // syncronize
 
-         img->FromPad(this);
-         img->WriteImage(psname, gtype);
+         if (gVirtualX->InheritsFrom("TGQt")) { // temporary solution
+            gVirtualX->WritePixmap(wid, UtoPixel(1.), VtoPixel(0.), (char*)psname.Data());
+         } else {
+            TImage *img = TImage::Create();
+            img->FromPad(this);
+            img->WriteImage(psname, gtype);
+         }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "file %s has been created", psname.Data());
          }
