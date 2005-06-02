@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.7 2005/02/18 11:22:28 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.8 2005/05/18 12:31:08 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -993,6 +993,7 @@ void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
          gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
          oldX = px;
          gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
+         gVirtualX->Update();
          break;
 
       case kButton1Up:
