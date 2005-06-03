@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.56 2005/04/13 16:56:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.57 2005/05/02 11:00:39 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -635,7 +635,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
          int offset = elem->GetTDSetOffset();
 
          // shift the list by the number of first event in that file
-         Int_t *arr = aList->GetList();
+         Long64_t *arr = aList->GetList();
          Int_t num = aList->GetN();
          if (arr && offset)
             for (int i = 0; i < num; i++)

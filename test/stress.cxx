@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.60 2005/04/18 10:54:58 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.61 2005/04/21 06:28:57 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -645,7 +645,7 @@ void stress7()
    helistc->SetName("helistc");
    Int_t nlist = elist->GetN();
    for (i=0;i<nlist;i++) {
-      Int_t event = elist->GetEntry(i);
+      Long64_t event = elist->GetEntry(i);
       ntuple->GetEntry(event);
       helistc->Fill(pxr);
    }

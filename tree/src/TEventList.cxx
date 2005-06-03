@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.11 2004/07/02 21:51:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.12 2004/09/10 12:16:50 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
    fN     = list.fN;
    fSize  = list.fSize;
    fDelta = list.fDelta;
-   fList  = new Int_t[fSize];
+   fList  = new Long64_t[fSize];
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
    fReapply = list.fReapply;
@@ -115,16 +115,16 @@ void TEventList::Add(const TEventList *alist)
    Int_t i;
    Int_t an = alist->GetN();
    if (!an) return;
-   Int_t *alst = alist->GetList();
+   Long64_t *alst = alist->GetList();
    if (!fList) {
-      fList = new Int_t[an];
+      fList = new Long64_t[an];
       for (i=0;i<an;i++) fList[i] = alst[i];
       fN = an;
       fSize = an;
       return;
    }
    Int_t newsize = fN + an;
-   Int_t *newlist = new Int_t[newsize];
+   Long64_t *newlist = new Long64_t[newsize];
    Int_t newpos, alpos;
    newpos = alpos = 0;
    for (i=0;i<fN;i++) {
@@ -154,7 +154,7 @@ void TEventList::Add(const TEventList *alist)
 }
 
 //______________________________________________________________________________
-Bool_t TEventList::Contains(Int_t entry)
+Bool_t TEventList::Contains(Long64_t entry)
 {
 //          Return TRUE if list contains entry.
 
@@ -163,13 +163,13 @@ Bool_t TEventList::Contains(Int_t entry)
 }
 
 //______________________________________________________________________________
-void TEventList::Enter(Int_t entry)
+void TEventList::Enter(Long64_t entry)
 {
 //          Enter element entry into the list
 
 
   if (!fList) {
-    fList = new Int_t[fSize];
+    fList = new Long64_t[fSize];
     fList[0] = entry;
     fN = 1;
     return;
@@ -187,14 +187,14 @@ void TEventList::Enter(Int_t entry)
     if(pos>=0 && entry==fList[pos])
       return;
     ++pos;
-    memmove( &(fList[pos+1]), &(fList[pos]), 4*(fN-pos));
+    memmove( &(fList[pos+1]), &(fList[pos]), 8*(fN-pos));
     fList[pos] = entry;
     ++fN;
   }
 }
 
 //______________________________________________________________________________
-Int_t TEventList::GetEntry(Int_t index) const
+Long64_t TEventList::GetEntry(Int_t index) const
 {
 //       Return value of entry at index in the list.
 //       Return -1 if index is not in the list range
@@ -205,14 +205,14 @@ Int_t TEventList::GetEntry(Int_t index) const
 }
 
 //______________________________________________________________________________
-Int_t TEventList::GetIndex(Int_t entry) const
+Int_t TEventList::GetIndex(Long64_t entry) const
 {
    // Return index in the list of element with value entry
    // array is supposed  to be sorted prior to this call.
    // If match is found, function returns position of element.
    // If no match found, function returns -1.
 
-   Int_t nabove, nbelow, middle;
+   Long64_t nabove, nbelow, middle;
    nabove = fN+1;
    nbelow = 0;
    while(nabove-nbelow > 1) {
@@ -232,7 +232,7 @@ void TEventList::Intersect(const TEventList *alist)
    if (!alist) return;
    if (!fList) return;
 
-   Int_t *newlist = new Int_t[fN];
+   Long64_t *newlist = new Long64_t[fN];
    Int_t newpos = 0;
    Int_t i;
    for (i=0;i<fN;i++) {
@@ -293,7 +293,7 @@ void TEventList::Print(Option_t *option) const
          sprintf(line,"%5d : ",i);
          nbuf = 1;
       }
-      sprintf(element,"%7d ",fList[i]);
+      sprintf(element,"%7lld ",fList[i]);
       strcat(line,element);
    }
    if (nbuf) printf("%s\n",line);
@@ -315,7 +315,7 @@ void TEventList::Resize(Int_t delta)
 
    if (!delta) delta = fDelta;
    fSize += delta;
-   Int_t *newlist = new Int_t[fSize];
+   Long64_t *newlist = new Long64_t[fSize];
    for (Int_t i=0;i<fN;i++) newlist[i] = fList[i];
    delete [] fList;
    fList = newlist;
@@ -352,8 +352,8 @@ void TEventList::Sort()
 {
 //          Sort list entries in increasing order
 
-   Int_t *index   = new Int_t[fN];
-   Int_t *newlist = new Int_t[fSize];
+   Int_t    *index   = new Int_t[fN];
+   Long64_t *newlist = new Long64_t[fSize];
    Int_t i,ind;
    TMath::Sort(fN,fList,index); //sort in decreasing order
    for (i=0;i<fN;i++) {
@@ -388,8 +388,11 @@ void TEventList::Streamer(TBuffer &b)
       b >> fSize;
       b >> fDelta;
       if (fN) {
-         fList = new Int_t[fSize];
-         b.ReadFastArray(fList,fN);
+         Int_t *tlist = new Int_t[fSize];
+         b.ReadFastArray(tlist,fN);
+         fList = new Long64_t[fSize];
+         for (Int_t i=0;i<fN;i++) fList[i] = tlist[i];
+         delete [] tlist;
       }
       fDirectory = gDirectory;
       gDirectory->Append(this);
@@ -409,7 +412,7 @@ void TEventList::Subtract(const TEventList *alist)
    if (!alist) return;
    if (!fList) return;
 
-   Int_t *newlist = new Int_t[fN];
+   Long64_t *newlist = new Long64_t[fN];
    Int_t newpos = 0;
    Int_t i;
    for (i=0;i<fN;i++) {
@@ -435,7 +438,7 @@ TEventList& TEventList::operator=(const TEventList &list)
       TNamed::operator=(list);
       if (fSize < list.fSize) {
          delete [] fList;
-         fList  = new Int_t[list.fSize];
+         fList  = new Long64_t[list.fSize];
       }
       fN     = list.fN;
       fSize  = list.fSize;
