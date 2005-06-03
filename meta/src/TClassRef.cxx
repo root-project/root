@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.3 2005/03/24 14:27:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.4 2005/06/01 15:41:19 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -42,9 +42,25 @@ TClassRef &TClassRef::operator=(const TClassRef &rhs)
 {
    // Assignment operator, increases reference count to original class object.
 
-   if (this != &rhs) {
+   if (this != &rhs) {      
+      Bool_t swap = fClassPtr != rhs.fClassPtr;
+      if (fClassPtr && swap) fClassPtr->RemoveRef(this);
       fClassName = rhs.fClassName;
-      fClassPtr = rhs.fClassPtr;
+      fClassPtr  = rhs.fClassPtr;
+      if (fClassPtr && swap) fClassPtr->AddRef(this);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+TClassRef &TClassRef::operator=(TClass* rhs)
+{
+   // Assignment operator, increases reference count to original class object.
+
+   if (this->fClassPtr != rhs) {      
+      if (fClassPtr) fClassPtr->RemoveRef(this);
+      fClassPtr  = rhs;
+      if (fClassPtr) fClassName = rhs->GetName();
       if (fClassPtr) fClassPtr->AddRef(this);
    }
    return *this;

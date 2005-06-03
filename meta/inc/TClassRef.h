@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.4 2005/03/24 14:27:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.h,v 1.5 2005/06/01 15:41:19 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -40,9 +40,14 @@ public:
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);
    TClassRef& operator=(const TClassRef&);
+   TClassRef& operator=(TClass*);
 
    ~TClassRef();
 
+   void SetName(const char* new_name) { 
+      if ( fClassPtr && fClassName != new_name ) *this = (TClass*)0; 
+      fClassName = new_name; 
+   }
    TClass *GetClass()  const { return fClassPtr ? fClassPtr : InternalGetClass(); }
    void Reset() { fClassPtr = 0; }
 
