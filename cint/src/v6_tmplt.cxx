@@ -180,6 +180,10 @@ struct G__Definedtemplatememfunc *deftmpmemfunc;
 
   while(ilist) {
     G__ASSERT(0<=ilist->i);
+    if (G__struct.name[ilist->i]==0) {
+      ilist = ilist->next;
+      continue;
+    }
     strcpy(tagname,G__struct.name[ilist->i]);
     strcpy(templatename,tagname);
     arg = strchr(templatename,'<');
@@ -3074,7 +3078,7 @@ int parent_tagnum;
     if(1==slash) {
       slash=0;
 #ifndef G__OLDIMPLEMENTATION714
-      if('/'==c && 0==symbol[0]) {
+      if('/'==c && 0==symbol[0] && 0==single_quote && 0==double_quote) {
 #else
       if('/'==c) {
 #endif
@@ -3096,7 +3100,7 @@ int parent_tagnum;
 	continue;
       }
 #ifndef G__OLDIMPLEMENTATION714
-      else if('*'==c && 0==symbol[0]) {
+      else if('*'==c && 0==symbol[0] && 0==single_quote && 0==double_quote) {
 #else
       else if('*'==c) {
 #endif
