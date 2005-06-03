@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.6 2005/03/10 08:56:27 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.7 2005/05/02 17:53:58 brun Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -647,7 +647,7 @@ void TVolume::PaintShape(Option_t *option)
       shape->SetFillColor(GetFillColor());
       shape->SetFillStyle(GetFillStyle());
       TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-      TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+      gPad->GetViewer3D();
      if (view3D)
          view3D->SetLineAttr(GetLineColor(),GetLineWidth(),option);
     }
