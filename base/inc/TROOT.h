@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.42 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.43 2005/05/19 14:56:01 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -72,6 +72,8 @@ protected:
    Int_t           fVersionInt;           //ROOT version in integer format (501)
    Int_t           fVersionDate;          //Date of ROOT version (ex 951226)
    Int_t           fVersionTime;          //Time of ROOT version (ex 1152)
+   Int_t           fBuiltDate;            //Date of ROOT built
+   Int_t           fBuiltTime;            //Time of ROOT built
    Int_t           fTimer;                //Timer flag
    TApplication    *fApplication;         //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
@@ -152,6 +154,8 @@ public:
    Int_t             GetEditorMode() const { return fEditorMode; }
    Bool_t            GetForceStyle() const { return fForceStyle; }
    VoidFuncPtr_t     GetMakeDefCanvas() const;
+   Int_t             GetBuiltDate() const { return fBuiltDate; }
+   Int_t             GetBuiltTime() const { return fBuiltTime; }
    Int_t             GetVersionDate() const { return fVersionDate; }
    Int_t             GetVersionTime() const { return fVersionTime; }
    Int_t             GetVersionInt() const { return fVersionInt; }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.147 2005/04/10 08:05:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.148 2005/05/19 14:56:01 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -130,7 +130,7 @@ static Int_t IVERSQ()
 }
 
 //______________________________________________________________________________
-static Int_t IDATQQ()
+static Int_t IDATQQ(const char *date)
 {
    // Return built date as integer, i.e. "Apr 28 2000" -> 20000428.
 
@@ -140,7 +140,7 @@ static Int_t IDATQQ()
 
    char  sm[12];
    Int_t yy, mm=0, dd;
-   sscanf(__DATE__, "%s %d %d", sm, &dd, &yy);
+   sscanf(date, "%s %d %d", sm, &dd, &yy);
    for (int i = 0; i < 12; i++)
       if (!strncmp(sm, months[i], 3)) {
          mm = i+1;
@@ -150,13 +150,13 @@ static Int_t IDATQQ()
 }
 
 //______________________________________________________________________________
-static Int_t ITIMQQ()
+static Int_t ITIMQQ(const char *time)
 {
    // Return built time as integer (with min precision), i.e.
    // "17:32:37" -> 1732.
 
    Int_t hh, mm, ss;
-   sscanf(__TIME__, "%d:%d:%d", &hh, &mm, &ss);
+   sscanf(time, "%d:%d:%d", &hh, &mm, &ss);
    return 100*hh + mm;
 }
 //------------------------------------------------------------------------------
@@ -326,8 +326,18 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fVersion         = ROOT_RELEASE;
    fVersionInt      = IVERSQ();
-   fVersionDate     = IDATQQ();
-   fVersionTime     = ITIMQQ();
+#ifdef ROOT_RELEASE_DATE
+   fVersionDate     = IDATQQ(ROOT_RELEASE_DATE);
+#else
+   fVersionDate     = IDATQQ(__DATE__);
+#endif
+#ifdef ROOT_RELEASE_TIME
+   fVersionTime     = ITIMQQ(ROOT_RELEASE_TIME);
+#else
+   fVersionTime     = ITIMQQ(__TIME__);
+#endif
+   fBuiltDate       = IDATQQ(__DATE__);
+   fBuiltTime       = ITIMQQ(__TIME__);
 
    fClasses         = new THashList(800,3);
    fIdMap           = new IdMap_t;
