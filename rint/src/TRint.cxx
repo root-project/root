@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.43 2005/01/13 20:04:48 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.44 2005/03/12 15:52:24 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -242,7 +242,7 @@ void TRint::Run(Bool_t retrn)
             // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
             needGetlinemInit = kFALSE;
             retval = ProcessLine(cmd, kFALSE, &error);
-	    gInterpreter->EndOfLineAction(); 
+	    gInterpreter->EndOfLineAction();
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());
@@ -287,13 +287,19 @@ void TRint::PrintLogo()
    iday   = idatqq%100;
    imonth = (idatqq/100)%100;
    iyear  = (idatqq/10000);
-   char *root_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
+   char *version_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
+   idatqq = gROOT->GetBuiltDate();
+   iday   = idatqq%100;
+   imonth = (idatqq/100)%100;
+   iyear  = (idatqq/10000);
+   char *built_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
+
 
    Printf("  *******************************************");
    Printf("  *                                         *");
    Printf("  *        W E L C O M E  to  R O O T       *");
    Printf("  *                                         *");
-   Printf("  *   Version%10s %17s   *", root_version, root_date);
+   Printf("  *   Version%10s %17s   *", root_version, version_date);
 // Printf("  *            Development version          *");
    Printf("  *                                         *");
    Printf("  *  You are welcome to visit our Web site  *");
@@ -305,18 +311,19 @@ void TRint::PrintLogo()
       Int_t major, minor, patch;
       //TTF::Version(major, minor, patch);
       // avoid dependency on libGraf and hard code, will not change too often
-      major = 2; minor = 1; patch = 3;
+      major = 2; minor = 1; patch = 9;
       Printf("\nFreeType Engine v%d.%d.%d used to render TrueType fonts.",
              major, minor, patch);
    }
 #ifdef _REENTRANT
    else
       printf("\n");
-   Printf("Compiled for %s with thread support.", gSystem->GetBuildArch());
+   Printf("Compiled on %s for %s with thread support.", built_date,
+          gSystem->GetBuildArch());
 #else
    else
       printf("\n");
-   Printf("Compiled for %s.", gSystem->GetBuildArch());
+   Printf("Compiled on %s for %s.", built_date, gSystem->GetBuildArch());
 #endif
 
    gInterpreter->PrintIntro();
