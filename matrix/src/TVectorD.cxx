@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.54 2005/02/02 17:42:17 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.55 2005/06/02 21:41:30 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -44,9 +44,7 @@ void TVectorD::Delete_m(Int_t size,Double_t *&m)
 {
   if (m) {
     if (size > kSizeMax)
-    {
       delete [] m;
-    }
     m = 0;
   }
 }

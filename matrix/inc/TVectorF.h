@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.15 2005/02/02 17:42:17 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.16 2005/06/02 21:57:48 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -140,7 +140,8 @@ public:
   TVectorF &Apply(const TElementActionF    &action);
   TVectorF &Apply(const TElementPosActionF &action);
 
-  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; fElements = 0; }
+  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
+                                          else fElements = 0; fNrows = 0; }
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
 
