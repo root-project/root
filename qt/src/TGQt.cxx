@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.16 2005/04/06 09:32:11 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.17 2005/04/15 07:19:50 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -122,9 +122,9 @@ class TQWidgetCollection {
 protected:
    //______________________________________________________________________________
    inline  Int_t SetMaxId(Int_t newId)
-   { 
-      fIDMax =  newId; 
-      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax; 
+   {
+      fIDMax =  newId;
+      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax;
       return fIDMax;
    }
 
@@ -151,7 +151,7 @@ protected:
 
    //______________________________________________________________________________
    inline Int_t GetFreeId(QPaintDevice *device) {
-	
+
       Int_t Id = 0;
       if (!fFreeWindowsIdStack.isEmpty() ) {
          Id = fFreeWindowsIdStack.pop();
@@ -244,7 +244,7 @@ QPaintDevice *TGQt::iwid(Int_t wid)
    QPaintDevice *topDevice = 0;
    if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
      topDevice = (*fWidgetArray)[wid];
-	else {         
+	else {
      assert(wid <= Int_t(fWidgetArray->MaxTotalId()));
      // this is allowed from the embedded TCanvas dtor only.
      //  at this point "wid" may have been destroyed
@@ -324,14 +324,14 @@ static float CalibrateFont()
     // Environment variable ROOTFONTFACTOR allows to set the factor manually
     static float fontCalibFactor = -1;
     if (fontCalibFactor  < 0 ) {
-    
+
        const char * envFactor = gSystem->Getenv("ROOTFONTFACTOR");
        bool ok=false;
-       if (envFactor && envFactor[0]) 
+       if (envFactor && envFactor[0])
           fontCalibFactor= QString(envFactor).toFloat(&ok);
        if (!ok) {
-    
-          bool  italic = TRUE;    
+
+          bool  italic = TRUE;
           long  bold   = 5;
           QString fontName = "Times New Roman";
 
@@ -357,7 +357,7 @@ static float CalibrateFont()
           // printf(" Font metric w = %d , h = %d\n", w,h);
           float f;
           switch (h) {
-             case 12: f = 1.10;  break;// it was  f = 1.13 :-(; 
+             case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
              case 14: f = 0.915; break;// it was f = 0.94  :-(;
              case 16: f = 0.94;  break;// to be tested yet
              default: f = 1.10;  break;
@@ -624,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.97 2005/04/14 01:05:16 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.17 2005/04/15 07:19:50 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -717,7 +717,7 @@ Bool_t TGQt::Init(void* /*display*/)
          //  provide the replacement and the codec
         fSymbolFontFamily = "Arial";
         fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
-        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
+        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
         // create a custom codec
         new QSymbolCodec();
     }
@@ -767,7 +767,7 @@ Int_t TGQt::InitWindow(ULong_t window)
    QWidget   *parent = 0;
    if (window <= fWidgetArray->MaxId() )
       parent = dynamic_cast<TQtWidget *> (iwid(int     (window)));
-   else {      
+   else {
       QPaintDevice *dev = dynamic_cast<QPaintDevice *>(iwid(Window_t(window)));
       parent = dynamic_cast<QWidget *>(dev);
    }
@@ -1286,7 +1286,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
       qApp->lock();
-      Int_t tsize = (Int_t)(fTextSize+0.5); 
+      Int_t tsize = (Int_t)(fTextSize+0.5);
       if (TMath::Abs(mgn-1) >0.05)  fQFont->setPixelSizeFloat(mgn*FontMagicFactor(tsize));
       UpdateFont();
       fQPainter->save();
@@ -1635,7 +1635,7 @@ Int_t  TGQt::ResizePixmap(int wid, UInt_t w, UInt_t h)
 void  TGQt::ResizeWindow(int wid)
 {
    // Resize the current window if necessary.
-   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) ) 
+   if (wid && ( (wid != (int)kNone ) &&  (wid != -1)  &&  (wid != kDefault)) )
    {
       QPaintDevice *dev = iwid(wid);
       TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
@@ -1674,7 +1674,7 @@ void  TGQt::SelectWindow(int wid)
          }
       }
    }
-   
+
    if (fPrevWindow && fPrevWindow != (void *)-1 && (fWidgetArray->find(fPrevWindow) != -1) )   End();
    if (fSelectedWindow && (fSelectedWindow != NoOperation))  Begin();
 }
@@ -2256,7 +2256,7 @@ Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/)
    //
    // Set text font to specified name. This function returns 0 if
    // the specified font is found, 1 if not.
-   
+
    // Qt takes care to make sure the proper font is loaded and scaled.
    return 0;
 }
@@ -2402,7 +2402,7 @@ void  TGQt::SetTextSize(Float_t textsize)
    //*-*                      =====================
    if ( fTextSize != textsize ) {
       fTextSize = textsize;
-      if (fTextSize > 0) {	
+      if (fTextSize > 0) {
          Int_t   tsize =(Int_t)( textsize+0.5);
          fQFont->setPixelSize(int(FontMagicFactor(tsize)));
          fTextFontModified = 1;
