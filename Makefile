@@ -121,6 +121,9 @@ endif
 ifeq ($(BUILDQT),yes)
 MODULES      += qt qtroot
 endif
+ifeq ($(BUILDREFLEX),yes)
+MODULES      += reflex
+endif
 ifeq ($(BUILDTABLE),yes)
 MODULES      += table
 endif

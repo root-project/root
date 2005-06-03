@@ -187,6 +187,8 @@ SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
+BUILDREFLEX    := @buildreflex@
+
 BUILDTABLE     := @buildtable@
 
 BUILDCLARENS   := @buildclarens@

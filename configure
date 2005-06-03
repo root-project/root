@@ -45,6 +45,7 @@ options="                    \
    enable_pythia6            \
    enable_python             \
    enable_qt                 \
+   enable_reflex             \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
@@ -71,6 +72,7 @@ enable_afs=no
 enable_explicitlink=no
 enable_pythia=no
 enable_qt=no
+enable_reflex=no
 enable_rpath=no
 enable_ruby=no
 enable_shadowpw=
@@ -106,6 +108,7 @@ GLOBUS_LOCATION  \
 SRP              \
 SSL              \
 AFS              \
+REFLEX           \
 TABLE            \
 XMLDIR           \
 "
@@ -658,6 +661,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pythia6            Pythia6 EG support, requires libPythia6
   python             Python ROOT bindings, requires python >= 2.1
   qt                 Qt graphics backend, requires libqt >= 3
+  reflex             Build libReflex dictionary library
   rfio               CASTOR support, requires libshift from CASTOR
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
@@ -2680,6 +2684,19 @@ echo $enable_shadowpw
 
 ######################################################################
 #
+### echo %%% Reflex Library - Contributed library
+#
+message "Checking whether to build libReflex"
+if test "x$enable_reflex" = "xyes" || test ! "x$REFLEX" = "x"; then
+    enable_reflex="yes"
+    echo "yes"
+else
+    enable_reflex=""
+    echo "no"
+fi
+
+######################################################################
+#
 ### echo %%% Table Library - Contributed library
 #
 message "Checking whether to build libTable"
@@ -3016,6 +3033,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
+    -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
