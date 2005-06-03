@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
    int vers_code = (xx << 16) + (yy << 8) + zz;
 
    fprintf(fp, "#define ROOT_RELEASE \"%s\"\n", vers);
+   fprintf(fp, "#define ROOT_RELEASE_DATE \"%s\"\n", __DATE__);
+   fprintf(fp, "#define ROOT_RELEASE_TIME \"%s\"\n", __TIME__);
    fprintf(fp, "#define ROOT_VERSION_CODE %d\n", vers_code);
    fprintf(fp, "#define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))\n");
    fprintf(fp, "\n#endif\n");
