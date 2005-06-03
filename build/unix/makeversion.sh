@@ -21,6 +21,7 @@ make -s -t; make -s -t; make -s -t
 
 # recompile only base/src/TROOT.cxx
 touch base/src/TROOT.cxx
+touch rootx/src/rootxx.cxx
 make
 
 echo "root-config --version reports: `bin/root-config --prefix=. --version`"
