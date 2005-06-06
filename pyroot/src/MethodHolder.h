@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.13 2005/04/13 05:04:50 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.14 2005/05/06 10:08:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -47,7 +47,7 @@ namespace PyROOT {
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds );
 
       virtual bool Initialize();
-      virtual bool FilterArgs( ObjectProxy*& self, PyObject*& args, PyObject*& kwds );
+      virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual bool SetMethodArgs( PyObject* args );
       virtual PyObject* Execute( void* self );
 

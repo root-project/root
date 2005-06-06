@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.9 2005/05/25 08:38:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.10 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -433,13 +433,22 @@ bool PyROOT::KnownClassConverter::SetArg( PyObject* pyobject, G__CallFunc* func 
       return false;
    }
 
-   if ( ((ObjectProxy*)pyobject)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
+   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+   if ( pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
       if ( ! KeepControl() )
          ((ObjectProxy*)pyobject)->Release();
 
+   // calculate offset between formal and actual arguments
+      void* obj = pyobj->GetObject();
+      G__ClassInfo* clFormalInfo = fClass->GetClassInfo();
+      G__ClassInfo* clActualInfo = pyobj->ObjectIsA()->GetClassInfo();
+      long offset = 0;
+      if ( clFormalInfo && clActualInfo )
+         offset = G__isanybase( clFormalInfo->Tagnum(), clActualInfo->Tagnum(), (long)obj );
+
    // set pointer (may be null) and declare success
-      func->SetArg( reinterpret_cast< long >( ((ObjectProxy*)pyobject)->GetObject() ) );
+      func->SetArg( reinterpret_cast< long >( obj ) + offset );
       return true;
    }
 

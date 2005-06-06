@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.27 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.28 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -101,7 +101,7 @@ void PyROOT::InitRoot()
    AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 
 // explicit NULL pointer (typed object pointers can not be passed as NULL)
-   gNullObject = BindRootObject( NULL, NULL );
+   gNullObject = PyLong_FromLong( 0l );
    Py_INCREF( gNullObject );
    PyModule_AddObject( gRootModule, const_cast< char* >( "NULL" ), gNullObject );
 
@@ -319,17 +319,30 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
    }
 
 // retrieve ROOT class (this verifies name)
-   TClass* klass = gROOT->GetClass( scope ? (scName+"::"+name).c_str() : name.c_str() );
+   const std::string& lookup = scope ? (scName+"::"+name) : name;
+   TClass* klass = gROOT->GetClass( lookup.c_str() );
    if ( klass == 0 ) {
+   // in case a "naked" templated class is requested, return callable proxy for instantiations
+      if ( G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
+         PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
+         PyObject* pytemplate = PyObject_CallFunction( pytcl, "s", lookup.c_str() );
+         Py_DECREF( pytcl );
+         return pytemplate;
+      }
+
       PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", (scName+"::"+name).c_str() );
       return 0;
    }
 
 // locate the scope for building the class if not specified
    if ( ! scope ) {
-      std::string::size_type last = name.rfind( "::" );
+   // cut template part, if present
+      std::string genName = name.substr( 0, name.find( "<" ) );
+
+   // drop class name (i.e. only collect actual scopes here)
+      std::string::size_type last = genName.rfind( "::" );
       if ( last != 0 && last != std::string::npos ) {
-         scName = name.substr( 0, last );
+         scName = genName.substr( 0, last );
          name = name.substr( last + 2, std::string::npos );
       }
 
@@ -450,8 +463,11 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 
 // still here ... try functions
    TFunction* func = gROOT->GetGlobalFunction( name.c_str(), 0, kTRUE );
-   if ( func )
-      return BindRootObject( func, TFunction::Class() );
+   if ( func ) {
+      PyObject* pyobject = BindRootObject( new TFunction( *func ), TFunction::Class() );
+      ((ObjectProxy*)pyobject)->fFlags |= ObjectProxy::kIsOwner;
+      return pyobject;
+   }
 
 // nothing found
    PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );
@@ -508,9 +524,12 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, bool isRef )
 
 // upgrade to real class for object returns
    if ( ! isRef ) {
-      TClass* clActual = klass->GetActualClass( (void*)address );
+      TClass* clActual = klass->GetActualClass( address );
       if ( clActual && klass != clActual ) {
-         int offset = clActual->GetBaseClassOffset( klass );
+       // root/meta base class offset fails in the case of virtual inheritance
+       //   long offset = clActual->GetBaseClassOffset( klass );
+         long offset = G__isanybase(
+            klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (long)address );
          (long&)address -= offset;
          klass = clActual;
       }

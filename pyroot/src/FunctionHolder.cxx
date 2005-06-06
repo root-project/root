@@ -18,18 +18,18 @@ PyObject* PyROOT::FunctionHolder::operator()( ObjectProxy* self, PyObject* args,
 // setup as necessary
    if ( ! Initialize() )
       return 0;                              // important: 0, not Py_None
-
-// verify and put the arguments in usable order
-   if ( ! FilterArgs( self, args, kwds ) )
+   
+// fetch self, verify, and put the arguments in usable order
+   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
       return 0;
-
+      
 // translate the arguments
-   if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not Py_None
-
-// done with filtered args
+   bool bConvertOk = SetMethodArgs( args );
    Py_DECREF( args );
-
+   
+   if ( bConvertOk == false )
+      return 0;
+   
 // execute function
    return Execute( 0 );
 }

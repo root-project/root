@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.23 2005/05/25 08:38:16 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.24 2005/06/02 10:03:17 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/02/05
+# Last: 06/03/05
 
 """PyROOT user module.
 
@@ -52,7 +52,8 @@ sys.setcheckinterval( 100 )
 __version__ = '3.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'AddressOf', 'NULL' ]
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad',
+                    'Template', 'AddressOf', 'NULL' ]
 
 _orig_ehook = sys.excepthook
 
@@ -75,6 +76,17 @@ def safeLookupCall( func, arg ):
       return func( arg )
    except:
       return None
+
+
+### template support ------------------------------------------------------------
+class Template:
+   def __init__( self, name ):
+      self.name = name
+
+   def __call__( self, *args ):
+      return MakeRootTemplateClass( self.name, *args )
+
+sys.modules[ 'libPyROOT' ].Template = Template
 
 
 ### special case for gPad (is a C++ macro) --------------------------------------

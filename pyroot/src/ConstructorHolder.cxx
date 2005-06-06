@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.3 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.4 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -47,15 +47,17 @@ PyObject* PyROOT::ConstructorHolder::operator()( ObjectProxy* self, PyObject* ar
 // setup as necessary
    if ( ! Initialize() )
       return 0;                              // important: 0, not Py_None
-
-// verify and put the arguments in usable order
-   if ( ! FilterArgs( self, args, kwds ) )
+   
+// fetch self, verify, and put the arguments in usable order
+   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
       return 0;
-
+      
 // translate the arguments
-   if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not Py_None
-
+   if ( ! SetMethodArgs( args ) ) {
+      Py_DECREF( args );
+      return 0;
+   }
+   
    TClass* klass = GetClass();
 
 // perform the call (TODO: fails for loaded macro's, and New() is insufficient)

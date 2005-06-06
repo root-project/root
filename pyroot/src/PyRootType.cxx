@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.1 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.2 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -27,9 +27,6 @@ namespace {
         std::string atName = PyString_AS_STRING( name );
         if ( atName.size() <= 2 || atName.substr( 0, 2 ) != "__" )
            attr = MakeRootClassFromString( atName, pyclass );
-
-        if ( PyErr_Occurred() )
-           PyErr_Print();
 
      // attribute is cached, if found
      }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.16 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.17 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -33,6 +33,15 @@ namespace {
 
 // for convenience
    using namespace PyROOT;
+
+//____________________________________________________________________________
+   inline bool IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
+      const int nsize = (int)name.size();
+      const int ksize = (int)klass.size();
+
+      return ( ksize   < nsize && name.substr(0,ksize) == klass ) ||
+             ( ksize+5 < nsize && name.substr(5,ksize) == klass );
+   }
 
 // to prevent compiler warnings about const char* -> char*
    inline PyObject* callPyObjMethod( PyObject* obj, const char* meth )
@@ -905,6 +914,15 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return true;
    }
 
+   if ( IsTemplatedSTLClass( name, "vector" ) ) {
+   //   Utility::AddToClass( pyclass, "__len__", "size" );
+   //   Utility::AddToClass( pyclass, "__getitem__", "at" );
+   }
+
+   if ( IsTemplatedSTLClass( name, "list" ) ) {
+   //   Utility::AddToClass( pyclass, "__len__",     "size" );
+   }
+
    if ( name == "string" || name == "std::string" ) {
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) stlStringRepr );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
@@ -942,6 +960,10 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "next",     (PyCFunction) iterNext );
 
       return true;
+   }
+
+   if ( IsTemplatedSTLClass( name, "map" ) ) {
+   //   Utility::AddToClass( pyclass, "__len__", "size" );
    }
 
    if ( name == "TTree" ) {

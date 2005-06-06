@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.33 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.34 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -274,12 +274,12 @@ bool PyROOT::MethodHolder::Initialize()
 }
 
 //____________________________________________________________________________
-bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyObject*& )
+PyObject* PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
-// verify self
+// verify existence of self, return if ok
    if ( self != 0 ) {
       Py_INCREF( args );
-      return true;
+      return args;
    }
 
 // otherwise, check for a suitable 'self' in args and update accordingly
@@ -289,14 +289,11 @@ bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyOb
    // demand PyROOT object, and either free global or matching class instance
       if ( ObjectProxy_Check( pyobj ) && ( strlen( fClass->GetName() ) == 0 ||
            ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass ) ) ) ) {
-      // reset self
+      // reset self (will live for the life time of args; i.e. call of function)
          self = pyobj;
 
-      // offset args by 1
-         args = PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
-
-      // declare success
-         return true;
+      // offset args by 1 (new ref)
+         return PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
       }
    }
 
@@ -304,7 +301,7 @@ bool PyROOT::MethodHolder::FilterArgs( ObjectProxy*& self, PyObject*& args, PyOb
    SetPyError_( PyString_FromFormat(
       "unbound method %s::%s must be called with a %s instance as first argument",
       fClass->GetName(), fMethod->GetName(), fClass->GetName() ) );
-   return false;
+   return 0;
 }
 
 //____________________________________________________________________________
@@ -371,16 +368,16 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
    if ( ! Initialize() )
       return 0;                              // important: 0, not Py_None
 
-// verify and put the arguments in usable order
-   if ( ! FilterArgs( self, args, kwds ) )
+// fetch self, verify, and put the arguments in usable order
+   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
       return 0;
 
 // translate the arguments
-   if ( ! SetMethodArgs( args ) )
-      return 0;                              // important: 0, not Py_None
-
-// done with filtered args
+   bool bConvertOk = SetMethodArgs( args );
    Py_DECREF( args );
+
+   if ( bConvertOk == false )
+      return 0;
 
 // get the ROOT object that this object proxy is a handle for
    void* object = self->GetObject();
@@ -394,6 +391,15 @@ PyObject* PyROOT::MethodHolder::operator()( ObjectProxy* self, PyObject* args, P
 // reset this method's offset for the object as appropriate
    CalcOffset_( object, self->ObjectIsA() );
 
-// actual call
-   return Execute( self->GetObject() );
+// actual call; recycle self instead of new object for same address objects
+   PyObject* pyobject = Execute( self->GetObject() );
+   if ( ObjectProxy_Check( pyobject ) &&
+        ((ObjectProxy*)pyobject)->GetObject() == self->GetObject() &&
+        ((ObjectProxy*)pyobject)->ObjectIsA() == self->ObjectIsA() ) {
+      Py_INCREF( (PyObject*)self );
+      Py_DECREF( pyobject );
+      return (PyObject*)self;
+   }
+
+   return pyobject;
 }

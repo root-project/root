@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.3 2005/03/30 05:16:19 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.4 2005/05/25 06:23:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -12,58 +12,9 @@
 
 namespace PyROOT {
 
-//= PyROOT object proxy pointer arithmetic support ===========================
+//= PyROOT method proxy construction/destruction =============================
 namespace {
 
-   int IsNotZero( ObjectProxy* self )
-   {
-      return (bool) self->GetObject();
-   }
-
-
-   PyNumberMethods ObjectProxyAsNumber = {
-      0,                     // nb_add
-      0,                     // nb_subtract
-      0,                     // nb_multiply
-      0,                     // nb_divide
-      0,                     // nb_remainder
-      0,                     // nb_divmod
-      0,                     // nb_power
-      0,                     // nb_negative
-      0,                     // nb_positive
-      0,                     // nb_absolute
-      (inquiry)IsNotZero,    // nb_nonzero
-      0,                     // nb_invert
-      0,                     // nb_lshift
-      0,                     // nb_rshift
-      0,                     // nb_and
-      0,                     // nb_xor
-      0,                     // nb_or
-      0,                     // nb_coerce
-      0,                     // nb_int
-      0,                     // nb_long
-      0,                     // nb_float
-      0,                     // nb_oct
-      0,                     // nb_hex
-      0,                     // nb_inplace_add
-      0,                     // nb_inplace_subtract
-      0,                     // nb_inplace_multiply
-      0,                     // nb_inplace_divide
-      0,                     // nb_inplace_remainder
-      0,                     // nb_inplace_power
-      0,                     // nb_inplace_lshift
-      0,                     // nb_inplace_rshift
-      0,                     // nb_inplace_and
-      0,                     // nb_inplace_xor
-      0,                     // nb_inplace_or
-      0,                     // nb_floor_divide
-      0,                     // nb_true_divide
-      0,                     // nb_inplace_floor_divide
-      0                      // nb_inplace_true_divide
-   };
-
-
-//= PyROOT method proxy construction/destruction =================================
    ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
    {
       ObjectProxy* pyobj = (ObjectProxy*)PyType_GenericNew( subtype, NULL, NULL );
@@ -99,7 +50,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_setattr
    0,                         // tp_compare
    0,                         // tp_repr
-   &ObjectProxyAsNumber,      // tp_as_number
+   0,                         // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
    0,                         // tp_hash

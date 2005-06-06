@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.9 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.10 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -101,6 +101,48 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* MakeRootTemplateClass( PyObject*, PyObject* args )
+   {
+   // args is class name + template arguments, build full instantiation
+      int nArgs = (int)PyTuple_GET_SIZE( args );
+      if ( nArgs < 2 ) {
+         PyErr_Format( PyExc_TypeError, "too few arguments for template instantiation" );
+         return 0;
+      }
+
+   // copy initial argument (no check, comes from internal class)
+      PyObject* pyname = PyString_FromString(
+         PyString_AS_STRING( PyTuple_GET_ITEM( args, 0 ) ) );
+
+   // build "< type, type, ... >" part of class name
+      PyString_ConcatAndDel( &pyname, PyString_FromString( "<" ) );
+      for ( int i = 1; i < nArgs; ++i ) {
+      // add type as string to name
+         PyObject* tn = PyTuple_GET_ITEM( args, i );
+         if ( PyString_Check( tn ) )
+            PyString_Concat( &pyname, tn );
+         else {
+            PyObject* tpName = PyObject_GetAttrString( tn, const_cast< char* >( "__name__" ) );
+            if ( PyErr_Occurred() ) {
+               Py_DECREF( pyname );
+               return 0;
+            }
+            PyString_ConcatAndDel( &pyname, tpName );
+         }
+
+      // add a comma, as needed
+         if ( i != nArgs - 1 )
+            PyString_ConcatAndDel( &pyname, PyString_FromString( "," ) );
+      }
+      PyString_ConcatAndDel( &pyname, PyString_FromString( ">" ) );
+
+      std::string name = PyString_AS_STRING( pyname );
+      Py_DECREF( pyname );
+
+      return MakeRootClassFromString( name );
+   }
+
+//____________________________________________________________________________
    PyObject* AddressOf( PyObject*, PyObject* args )
    {
       ObjectProxy* pyobj = 0;
@@ -172,6 +214,8 @@ static PyMethodDef PyROOTMethods[] = {
    { (char*) "getRootGlobal", (PyCFunction) PyROOT::GetRootGlobal,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "setRootLazyLookup", (PyCFunction) SetRootLazyLookup,
+     METH_VARARGS, (char*) "PyROOT internal function" },
+   { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object" },
