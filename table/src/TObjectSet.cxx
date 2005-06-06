@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TObjectSet.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// $Id: TObjectSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,7 +42,7 @@ TObjectSet::TObjectSet(TObject *obj,Bool_t makeOwner) : TDataSet("unknown","TObj
 //_____________________________________________________________________________
 TObjectSet::~TObjectSet()
 {
-   if (fObj && IsOwner()) delete fObj;
+   if (fObj && IsOwner() && (!TObject::TestBit(kNotDeleted))  ) delete fObj;
    fObj = 0;
 }
 

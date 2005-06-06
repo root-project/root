@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.7 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.8 2005/02/11 18:40:08 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *Id = {
-    "$Id: TDataSet.cxx,v 1.7 2004/07/30 01:12:27 rdm Exp $"
+    "$Id: TDataSet.cxx,v 1.8 2005/02/11 18:40:08 rdm Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -322,9 +322,11 @@ void TDataSet::Delete(Option_t *opt)
   TDataSet *son = 0;
   //  Delete the "Structural Members" of this TDataSet only
   while ((son = (TDataSet *)next())) {
-    if ( (!son->IsOnHeap()) || (this != son->GetParent()) ) continue;
+    if ( (!son->TObject::IsOnHeap()) || (this != son->TDataSet::GetParent()) ) continue;
     // mark the object is deleted from the TDataSet dtor or Delete method
-    son->SetBit(kCanDelete);
+    son->TDataSet::SetParent(0); 
+    if (son->TDataSet::Last()) { son->TDataSet::Delete(); }
+    son->TObject::SetBit(kCanDelete);
     delete son;
   }
   //  Cleare list
