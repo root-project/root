@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.61 2005/03/21 12:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.62 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1738,13 +1738,13 @@ TH1 *TH3::Project3D(Option_t *option) const
   Double_t entries  = 0;
   Double_t newerror = 0;
   for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
-     Int_t ix = ixbin-ixmin+1;
+     Int_t ix = ixbin-ixmin;
      if (ix < 0) ix=0; if (ix > nx+1) ix = nx+1;
      for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
-        Int_t iy = iybin-iymin+1;
+        Int_t iy = iybin-iymin;
         if (iy < 0) iy=0; if (iy > ny+1) iy = ny+1;
         for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
-           Int_t iz = izbin-izmin+1;
+           Int_t iz = izbin-izmin;
            if (iz < 0) iz=0; if (iz > nz+1) iz = nz+1;
            Int_t bin = GetBin(ixbin,iybin,izbin);
            cont = GetBinContent(bin);
