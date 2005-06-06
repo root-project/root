@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.8 2005/04/29 16:10:42 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.9 2005/05/31 18:49:25 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -642,6 +642,7 @@ void TLinearFitter::Eval()
       if (!fObjectFit)
          ((TF1*)fInputFunction)->SetChisquare(GetChisquare());
       ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
+      ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
    }
 
    //if parameters were fixed, change the design matrix back as it was before fixing
