@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.45 2005/06/03 14:52:30 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.46 2005/06/06 12:47:49 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -127,9 +127,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
    ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
-   ProcessLine("#include <vector>", kTRUE);  // Needed because vector and pair are 
-   ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionary
-                                             //   and CINT will not be able to properly unload this file
+   ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are 
+   ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionaries
+                                             //   and CINT will not be able to properly unload these files
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
