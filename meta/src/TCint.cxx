@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.101 2005/03/14 17:45:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.102 2005/04/11 15:55:47 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1245,12 +1245,25 @@ const char* TCint::GetSharedLibs()
       if (filename==0) continue;
       Int_t len = strlen(filename);
       const char *end = filename+len;
-      if ( (len>3 && strcmp(end-2,".a") == 0) ||
-           (len>4 && (strcmp(end-3,".sl") == 0 ||
-                      strcmp(end-3,".dl") == 0 ||
+      Bool_t needToSkip = kFALSE;
+      if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
+         // Filter out the cintdlls
+         const char *excludelist [] = { 
+            "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
+            "string.dll","vector.dll","list.dll","deque.dll","map.dll",
+            "map2.dll","set.dll multimap.dll multimap2.dll multiset.dll",
+            "stack.dll","queue.dll","valarray.dll","exception.dll","complex.dll"};
+         for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
+            if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
+         }
+      }
+      if ( !needToSkip && 
+           ( (len>3 && strcmp(end-2,".a") == 0) ||
+             (len>4 && (strcmp(end-3,".sl") == 0 ||
+                        strcmp(end-3,".dl") == 0 ||
                       strcmp(end-3,".so") == 0)) ||
-           (len>5 && (strcmp(end-4,".dll") == 0 ||
-                      strcmp(end-4,".DLL") == 0))) {
+             (len>5 && (strcmp(end-4,".dll") == 0 ||
+                        strcmp(end-4,".DLL") == 0)))) {
          if (!fSharedLibs.IsNull())
             fSharedLibs.Append(" ");
          fSharedLibs.Append(filename);
