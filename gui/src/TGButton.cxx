@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.54 2005/05/28 07:57:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.55 2005/05/30 22:38:39 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -620,7 +620,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
-   CreateDisabledPicture();
+   //CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -652,7 +652,6 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
-   CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -677,7 +676,6 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
-   CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -729,7 +727,12 @@ void TGPictureButton::DoRedraw()
       gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
       gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
    }
-   const TGPicture *pic = (fState == kButtonDisabled) && fPicD ? fPicD : fPic;
+
+   const TGPicture *pic = fPic;
+   if (fState == kButtonDisabled) {
+      if (!fPicD) CreateDisabledPicture();
+      pic = fPicD ? fPicD : fPic;
+   }
 
    pic->Draw(fId, fNormGC, x, y);
 }
@@ -768,7 +771,6 @@ void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
    fPicD = pic;
    fOwnDisabledPic = kFALSE;
 }
-
 
 //______________________________________________________________________________
 TGCheckButton::TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id,
