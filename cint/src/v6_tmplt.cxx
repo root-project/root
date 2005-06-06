@@ -2166,7 +2166,15 @@ struct G__Templatearg *def_para;
       strcat (str_out, " const");
       iout += lreslt;
       isconst=0;
-    } 
+    } else if (isconst && iout>=6 &&
+       strncmp(str_out+iout-6,"const ",6)==0 &&
+       rlen>0 && '*'==reslt[rlen-1]) {
+
+       strcpy(str_out+iout-6,reslt);
+       strcat(str_out, " const");
+       iout += lreslt;
+       isconst=0;      
+    }
     else {
       strcpy (str_out + iout, reslt);
       iout += lreslt;
