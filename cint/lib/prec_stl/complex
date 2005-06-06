@@ -34,7 +34,9 @@ template<class T> class complex {
   complex<T>& operator/=(const T&);
   
   complex& operator=(const complex&);
-#ifdef __CINT__
+#if defined(G__SUN)
+  // intentionally left blank
+#elif defined(__CINT__)
   complex<T>& operator= (const complex&);
   complex<T>& operator+=(const complex&);
   complex<T>& operator-=(const complex&);
@@ -47,7 +49,7 @@ template<class T> class complex {
   template<class X> complex<T>& operator*=(const complex<X>&);
   template<class X> complex<T>& operator/=(const complex<X>&);
 #endif
-#ifdef __CINT__
+#if defined(__CINT__) && !defined(G__SUN)
   friend complex<T> operator+(const complex&, const complex&);
   friend complex<T> operator+(const complex&, const T&);
   friend complex<T> operator+(const T&, const complex&);
