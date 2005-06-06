@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.35 2004/08/02 08:52:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.36 2004/11/03 11:03:04 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -869,6 +869,10 @@ void TString::ReadBuffer(char *&buffer)
    else
       nchars = nwh;
 
+   if (nchars < 0) {
+      printf("Error in TString::ReadBuffer, found case with nwh=%d and nchars=%d\n",nwh,nchars);
+      return;
+   }
    fData = TStringRef::GetRep(nchars, nchars)->Data();
 
    for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
