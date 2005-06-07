@@ -149,12 +149,16 @@ else
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
 			TTFINCDIR="--with-ttf-includes=-I../../../$(FREETYPEDIRI)"; \
 		fi; \
+		if [ "$(DEBUGFLAGS)" != "" ]; then \
+			GDB="--enable-gdb"; \
+		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf $$TTFINCDIR \
 		--with-afterbase=no \
 		--disable-glx \
 		$$MMX \
+		$$GDB \
 		--with-builtin-ungif \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \

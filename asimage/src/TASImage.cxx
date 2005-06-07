@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.34 2005/06/01 17:47:28 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.35 2005/06/02 16:28:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -167,8 +167,6 @@ TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
    // create an empty image
 
    SetDefaults();
-   fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
-   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -1670,18 +1668,17 @@ Pixmap_t TASImage::GetMask()
    char *bits = new char[ww*hh]; //an array of bits
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
-                                                0, 0, img->width, 0, 0);
+                                                0, 0, ww, 0, 0);
    if(!imdec) {
       return 0;
    }
 
-   CARD32 *a = imdec->buffer.alpha;
-
    for (y = 0; y < hh; y++) {
       imdec->decode_image_scanline(imdec);
+      CARD32 *a = imdec->buffer.alpha;
+
       for (x = 0; x < ww; x++) {
-         Bool_t setclr = a[x];
-         if (setclr) {
+         if (a[x]) {
             SETBIT(bits[i], bit);
          } else {
             CLRBIT(bits[i], bit);
@@ -2916,7 +2913,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 
 /////////////////////////////// vector graphics ///////////////////////////////
 // a couple of macros which can be "assembler accelerated"
-#if defined(__GNUC__) && defined(_i386__)
+#if defined(R__GNU) && defined(__i386__)
 #define _MEMSET_(dst, lng, val)   asm("movl  %0,%%eax \n"             \
                                       "movl  %1,%%edi \n"             \
                                       "movl  %2,%%ecx \n"             \
@@ -2963,28 +2960,32 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
       y = 0;
    }
 
+   Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
+
    x = x > (int)fImage->width ? fImage->width : x;
    y = y > (int)fImage->height ? fImage->height : y;
 
    width = x + width > fImage->width ? fImage->width - x : width;
    height = y + height > fImage->height ? fImage->height - y : height;
 
-   int idx = 0;
-   int yy = 0;
-   int xx = 0;
-
    if (!fImage->alt.argb32) {
       fill_asimage(fgVisual, fImage, x, y, width, height, color);
    } else {
       int yyy = y*fImage->width;
-      for (UInt_t i = 0; i < height; i++) {
-         yy = y + i;
-         if ((yy < 0) || (yy >= (int)fImage->height)) continue;
-         for (UInt_t j = 0; j < width; j++) {
-            xx = x + j;
-            if ((xx < 0) || (xx >= (int)fImage->width)) continue;
-            idx = yyy + xx;
-            _alphaBlend(&fImage->alt.argb32[idx], &color);
+      if (!has_alpha) { // use faster memset
+         ARGB32 *p0 = fImage->alt.argb32 + yyy + x;
+         ARGB32 *p = p0;
+         for (UInt_t i = 0; i < height; i++) {
+            _MEMSET_(p, width, color);
+            p += fImage->width;
+         }
+      } else {
+         for (UInt_t i = y; i < y + height; i++) {
+            int j = x + width;
+            while (j > x) {
+               j--;
+               _alphaBlend(&fImage->alt.argb32[yyy + j], &color);
+            }
          }
          yyy += fImage->width;
       }
@@ -3015,10 +3016,10 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
 
    if (!fImage) {
       fImage = create_asimage(width ? width : 20, height ? height : 20, 0);
-      x = 0;
-      y = 0;
+      fImage->back_color = color;
+      return;
    }
-
+   BeginPaint();
    FillRectangleInternal((UInt_t)color, x, y, width, height);
    UnZoom();
 }
@@ -3272,8 +3273,12 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
       return;
    }
 
+   ARGB32 color;
+   parse_argb_color(col, &color);
+
    if (!fImage) {
-      Warning("DrawRectangle", "no image");
+      fImage = create_asimage(w, h, 0);
+      fImage->back_color = color;
       return;
    }
 
@@ -3285,9 +3290,6 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
       Warning("DrawRectangle", "Failed to get pixel array");
       return;
    }
-
-   ARGB32 color;
-   parse_argb_color(col, &color);
 
    DrawHLine(y, x, x + w, (UInt_t)color, thick);
    DrawVLine(x + w, y, y + h, (UInt_t)color, thick);
