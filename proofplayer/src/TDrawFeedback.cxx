@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.7 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.8 2005/03/24 16:32:28 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -38,6 +38,7 @@ TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
    fNames = new THashList;
+   fNames->SetOwner();
 
    if (proof == 0) proof = gProof;
 

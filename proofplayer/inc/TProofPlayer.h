@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.27 2005/03/30 04:07:29 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.28 2005/05/02 11:00:39 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -27,9 +27,6 @@
 #endif
 #ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TObjString
-#include "TObjString.h"
 #endif
 #ifndef ROOT_TQObject
 #include "TQObject.h"

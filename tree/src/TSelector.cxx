@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.15 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.16 2005/02/21 09:41:39 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TTree.h"
-#include "THashList.h"
+#include "TList.h"
 #include "TError.h"
 #include "TSelectorCint.h"
 #include "Api.h"
@@ -49,7 +49,7 @@ TSelector::TSelector() : TObject()
    fStatus = 0;
    fObject = 0;
    fInput  = 0;
-   fOutput = new THashList;
+   fOutput = new TList;
    fOutput->SetOwner();
 }
 

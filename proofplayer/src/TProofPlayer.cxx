@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.57 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.58 2005/06/03 07:37:05 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -45,16 +45,18 @@
 #include "TSortedList.h"
 #include "TTreeDrawArgsParser.h"
 #include "TCanvas.h"
+#include "TNamed.h"
+#include "TObjString.h"
 #include "Api.h"
 
 
-class TAutoBinVal : public TObjString {
+class TAutoBinVal : public TNamed {
 private:
    Double_t fXmin, fXmax, fYmin, fYmax, fZmin, fZmax;
 
 public:
    TAutoBinVal(const char *name, Double_t xmin, Double_t xmax, Double_t ymin,
-               Double_t ymax, Double_t zmin, Double_t zmax) : TObjString(name)
+               Double_t ymax, Double_t zmin, Double_t zmax) : TNamed(name,"")
    {
       fXmin = xmin; fXmax = xmax;
       fYmin = ymin; fYmax = ymax;
@@ -1080,9 +1082,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
          }
       }
 
-      TList msds; // Mass storage domain of submasters and TDSetElements
-                  // This should be a THashList, but THashList::FindObject()
-                  // fails for some reason.
+      TList msds;
       msds.SetOwner(); // This will delete TPairs
 
       TList keyholder; // List to clean up key part of the pairs

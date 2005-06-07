@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.88 2005/05/18 12:31:09 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.89 2005/05/25 16:26:04 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 // messages to all slaves, it collects results, etc.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include <vector>
 
 #include <fcntl.h>
 #include <errno.h>
@@ -57,7 +59,7 @@
 #include "TMap.h"
 #include "TTimer.h"
 #include "TThread.h"
-#include <vector>
+#include "TObjString.h"
 
 //
 // Entities used for parallel startup
@@ -2887,7 +2889,7 @@ void TProof::ValidateDSet(TDSet *dset)
 
    if (dset->ElementsValid()) return;
 
-   THashList nodes;
+   TList nodes;
    nodes.SetOwner();
 
    TList slholder;
@@ -3897,7 +3899,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
 
    if (dset->ElementsValid()) return;
 
-   THashList msds;
+   TList msds;
    msds.SetOwner();
 
    TList smholder;

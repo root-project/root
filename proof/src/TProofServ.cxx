@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.91 2005/05/20 09:56:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.92 2005/05/20 22:58:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -74,6 +74,7 @@
 #include "TUrl.h"
 #include "TTree.h"
 #include "TPluginManager.h"
+#include "TObjString.h"
 
 #include "compiledata.h"
 
