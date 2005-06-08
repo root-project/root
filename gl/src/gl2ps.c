@@ -1,4 +1,4 @@
-/* $Id: gl2ps.c,v 1.207 2005/04/27 19:01:43 geuzaine Exp $ */
+/* $Id: gl2ps.c,v 1.4 2005/06/02 16:24:56 brun Exp $ */
 /*
  * GL2PS, an OpenGL to PostScript Printing Library
  * Copyright (C) 1999-2005 Christophe Geuzaine <geuz@geuz.org>
@@ -1559,6 +1559,7 @@ static GL2PSprimitive *gl2psCreateSplitPrimitive2D(GL2PSprimitive *parent,
     case 2 : child->type = GL2PS_LINE; break;
     case 3 : child->type = GL2PS_TRIANGLE; break;
     case 4 : child->type = GL2PS_QUADRANGLE; break;
+    default: child->type = GL2PS_NOTYPE; break;
     }
   }
   child->boundary = 0; /* not done! */
