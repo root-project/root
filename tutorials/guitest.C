@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.52 2005/04/05 15:56:20 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.53 2005/04/19 09:10:59 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -392,7 +392,8 @@ public:
    virtual ~TestDirList();
 
    // slots
-   virtual void OnDoubleClick(TGListTreeItem* item, Int_t btn);
+   void OnDoubleClick(TGListTreeItem* item, Int_t btn);
+   void CloseWindow();
 };
 
 
@@ -405,17 +406,18 @@ protected:
    TGFileContainer  *fContents;
    TGPopupMenu      *fMenu;
 
-   virtual void DisplayFile(const TString &fname);
-   virtual void DisplayDirectory(const TString &fname);
-   virtual void DisplayObject(const TString& fname,const TString& name);
+   void DisplayFile(const TString &fname);
+   void DisplayDirectory(const TString &fname);
+   void DisplayObject(const TString& fname,const TString& name);
 
 public:
    TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
    virtual ~TestFileList();
 
    // slots
-   virtual void OnDoubleClick(TGLVEntry*,Int_t);
-   virtual void DoMenu(Int_t);
+   void OnDoubleClick(TGLVEntry*,Int_t);
+   void DoMenu(Int_t);
+   void CloseWindow();
 };
 
 class TestProgress {
@@ -1781,7 +1783,7 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 TestShutter::~TestShutter()
 {
    // dtor
-
+   gClient->FreePicture(fDefaultPic);
    delete fMain;
 }
 
@@ -1803,6 +1805,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
    // Create transient frame containing a dirlist widget.
 
    fMain = new TGTransientFrame(p, main, w, h);
+   fMain->Connect("CloseWindow()", "TestDirList", this, "CloseWindow()");
    fIcon = gClient->GetPicture("rootdb_t.xpm");
    TGLayoutHints *lo;
 
@@ -1836,7 +1839,14 @@ TestDirList::~TestDirList()
 {
    // Cleanup.
 
+   gClient->FreePicture(fIcon);
+   delete fContents;
    delete fMain;
+}
+
+void TestDirList::CloseWindow()
+{
+   delete this;
 }
 
 TString TestDirList::DirName(TGListTreeItem* item)
@@ -1894,6 +1904,7 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    TGLayoutHints *lo;
 
    fMain = new TGTransientFrame(p, main, w, h);
+   fMain->Connect("CloseWindow()", "TestDirList", this, "CloseWindow()");
 
    // use hierarchical cleaning
    fMain->SetCleanup(kDeepCleanup);
@@ -1940,7 +1951,7 @@ TestFileList::~TestFileList()
    // Cleanup.
 
    delete fContents;
-   delete fMenu; 
+   delete fMenu;
    delete fMain;
 }
 
@@ -2037,6 +2048,10 @@ void TestFileList::OnDoubleClick(TGLVEntry *f, Int_t btn)
    gVirtualX->SetCursor(fContents->GetId(), cur);
 }
 
+void TestFileList::CloseWindow()
+{
+   delete this;
+}
 
 TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
                            UInt_t w, UInt_t h)
