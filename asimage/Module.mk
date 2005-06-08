@@ -11,7 +11,7 @@ ASIMAGEDIR   := $(MODDIR)
 ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
-ifeq ($(BUILTINASIMAGE), yes)
+ifeq ($(BUILTINASIMAGE),yes)
 ASTEPVERS    := libAfterImage
 ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
@@ -22,7 +22,7 @@ ASTEPVERS    :=
 endif
 
 ##### libAfterImage #####
-ifeq ($(BUILTINASIMAGE), yes)
+ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.lib
 ASTEPLIB     := $(LPATH)/libAfterImage.lib
@@ -31,6 +31,11 @@ ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
 endif
 ASTEPDEP     := $(ASTEPLIB)
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ASTEPDBG      = "--enable-gdb"
+else
+ASTEPDBG      =
+endif
 else
 ASTEPLIBA    := $(ASLIBDIR) $(ASLIB)
 ASTEPLIB     := $(ASLIBDIR) $(ASLIB)
@@ -77,7 +82,7 @@ INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
 include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
-ifeq ($(BUILTINASIMAGE), yes)
+ifeq ($(BUILTINASIMAGE),yes)
 $(ASTEPLIB):    $(ASTEPLIBA)
 		cp $< $@
 		@(if [ $(PLATFORM) = "macosx" ]; then \
@@ -149,16 +154,13 @@ else
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
 			TTFINCDIR="--with-ttf-includes=-I../../../$(FREETYPEDIRI)"; \
 		fi; \
-		if [ "$(DEBUGFLAGS)" != "" ]; then \
-			GDB="--enable-gdb"; \
-		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf $$TTFINCDIR \
 		--with-afterbase=no \
 		--disable-glx \
 		$$MMX \
-		$$GDB \
+		$(ASTEPDBG) \
 		--with-builtin-ungif \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
@@ -230,7 +232,7 @@ map::           map-asimage map-asimagegui
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO)
-ifeq ($(BUILTINASIMAGE), yes)
+ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(ASTEPDIRS) ]; then \
 			cd $(ASTEPDIRS); \
@@ -253,7 +255,7 @@ distclean-asimage: clean-asimage
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
 		   $(ASIMAGEGUILIB)
 
-ifeq ($(BUILTINASIMAGE), yes)
+ifeq ($(BUILTINASIMAGE),yes)
 		@rm -rf $(ASTEPLIB)
 endif
 		@rm -rf $(ASTEPDIRS)
