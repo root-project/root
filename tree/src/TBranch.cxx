@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.88 2005/05/18 12:31:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.89 2005/05/31 19:47:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -938,12 +938,13 @@ Int_t TBranch::GetRow(Int_t)
 //______________________________________________________________________________
 TBranch *TBranch::GetMother() const
 {
-// Get top level branch parent of this branch
-// A top level branch has its fID negative.
+   // Get top level branch parent of this branch
+   // A top level branch has its fID negative.
 
-   TIter next(fTree->GetListOfBranches());
-   TBranch *branch;
-   while ((branch=(TBranch*)next())) {
+   const TObjArray *array = fTree->GetListOfBranches();
+   Int_t n = array->GetEntriesFast();
+   for (Int_t i=0; i < n; ++i) {
+      TBranch *branch = (TBranch*)array->UncheckedAt(i);
       TBranch *br = branch->GetSubBranch(this);
       if (br) {
          //if (br == this) return 0;
@@ -956,14 +957,14 @@ TBranch *TBranch::GetMother() const
 //______________________________________________________________________________
 TBranch *TBranch::GetSubBranch(const TBranch *br) const
 {
-// recursively find branch br in the list of branches of this branch.
-// return null if br is not in this branch hierarchy.
+   // recursively find branch br in the list of branches of this branch.
+   // return null if br is not in this branch hierarchy.
 
    if (br == this) return (TBranch*)this;
 
-   Int_t len = fBranches.GetLast();
-   for(Int_t i = 0; i <= len; ++i) {
-      TBranch *branch = dynamic_cast<TBranch*>(fBranches.UncheckedAt( i ));
+   Int_t len = fBranches.GetEntriesFast();
+   for(Int_t i = 0; i < len; ++i) {
+      TBranch *branch = (TBranch*)(fBranches.UncheckedAt( i ));
       if (branch == 0) continue;
       if (branch == br) return (TBranch*)this;
       TBranch *br2 = branch->GetSubBranch(br);
