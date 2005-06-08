@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.9 2003/04/03 13:46:51 brun Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.10 2003/07/05 20:37:06 brun Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -669,6 +669,7 @@ XColor c;
       c.blue   = 0;
       c.flags  = DoRed | DoGreen | DoBlue;
       c.pixel  = 255;
+      c.pad    = 0;
       g->cmapColors[0][index] = c;
       g->cmapColors[1][index] = c;
       g->cmapColors[2][index] = c;
