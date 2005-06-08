@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.168 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.169 2005/05/27 16:42:58 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -392,7 +392,7 @@ ClassImp(TClass)
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
                    fDeleteArray(0), fDestructor(0), fSizeof(-1),
                    fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
-                   fCurrentInfo(0), fRefs(0)
+                   fCurrentInfo(0), fRefStart(0)
 {
    // Default ctor.
 
@@ -428,7 +428,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
                                    fDelete(0), fDeleteArray(0), fDestructor(0),
                                    fSizeof(-1), fVersionUsed(kFALSE),
                                    fOffsetStreamer(0), fStreamerType(kNone),
-                                   fCurrentInfo(0), fRefs(0)
+                                   fCurrentInfo(0), fRefStart(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -493,7 +493,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefs(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -509,7 +509,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefs(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -712,12 +712,10 @@ TClass::~TClass()
    delete fAllPubData;     fAllPubData  =0;
    delete fAllPubMethod;   fAllPubMethod=0;
 
-   if (fRefs) {
+   if (fRefStart) {
       // Inform the TClassRef object that we are going away.
-      std::list<TClassRef*>::iterator iter;
-      for(iter = fRefs->begin(); iter != fRefs->end(); ++iter) {
-         (*iter)->Reset();
-      }
+      fRefStart->ListReset();
+      fRefStart = 0;
    }
    if (fBase)
       fBase->Delete();
@@ -778,9 +776,13 @@ void TClass::AddRef(TClassRef *ref)
    // Register a TClassRef object which points to this TClass object.
    // When this TClass object is deleted, 'ref' will be 'Reset'.
 
-   if (fRefs==0) fRefs = new std::list<TClassRef*>;
-   fRefs->remove(ref);
-   fRefs->push_back(ref);
+   if (fRefStart==0) {
+      fRefStart = ref;
+   } else {
+      fRefStart->fPrevious = ref;
+      ref->fNext = fRefStart;
+      fRefStart = ref;
+   }
 }
 
 //______________________________________________________________________________
@@ -1678,8 +1680,17 @@ Bool_t TClass::IsFolder(void *obj) const
 void TClass::RemoveRef(TClassRef *ref) 
 {
    // Unregister the TClassRef object.
-
-   if (fRefs) fRefs->remove(ref);
+ 
+   if (ref==fRefStart) {
+      fRefStart = ref->fNext;
+      if (fRefStart) fRefStart->fPrevious = 0;
+      ref->fPrevious = ref->fNext = 0;
+   } else {
+      TClassRef *next = ref->fNext;
+      ref->fPrevious->fNext = next;
+      if (next) next->fPrevious = ref->fPrevious;
+      ref->fPrevious = ref->fNext = 0;
+   }
 }
 
 //______________________________________________________________________________

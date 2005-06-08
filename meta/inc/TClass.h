@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.50 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.51 2005/05/27 16:42:58 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #ifndef ROOT_TStreamerInfo
 #include "TStreamerInfo.h"
 #endif
-#include <list>
 
 class TBaseClass;
 class TBrowser;
@@ -111,9 +110,7 @@ private:
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
-#if !defined(__CINT__)
-   std::list<TClassRef*> *fRefs;        //!List of references to this object
-#endif
+   TClassRef         *fRefStart;        //!List of references to this object
 
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
