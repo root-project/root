@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.77 2005/05/15 07:30:17 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.78 2005/05/30 22:47:27 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TInterpreter.h"
 #include "TEnv.h"
 #include "Riostream.h"
+#include "TGDockableFrame.h"
 
 #include "TG3DLine.h"
 #include "TGToolBar.h"
@@ -315,7 +316,6 @@ void TRootCanvas::CreateCanvas(const char *name)
 {
    // Create the actual canvas.
 
-   Int_t i;
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fEditor    = 0;
@@ -469,42 +469,24 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    AddFrame(fMenuBar, fMenuBarLayout);
 
-   // Create toolbar
-   fToolBarSep = new TGHorizontal3DLine(this);
-   fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
-   fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX);
-
-   int spacing = 6;
-   for (i = 0; gToolBarData[i].fPixmap; i++) {
-      if (strlen(gToolBarData[i].fPixmap) == 0) {
-         spacing = 6;
-         continue;
-      }
-      fToolBar->AddButton(this, &gToolBarData[i], spacing);
-      spacing = 0;
-   }
-   fVertical1 = new TGVertical3DLine(fToolBar);
-   fVertical2 = new TGVertical3DLine(fToolBar);
-   fVertical1Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 4,2,0,0);
-   fVertical2Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0);
-   fToolBar->AddFrame(fVertical1, fVertical1Layout);
-   fToolBar->AddFrame(fVertical2, fVertical2Layout);
-
-   spacing = 6;
-   for (i = 0; gToolBarData1[i].fPixmap; i++) {
-      if (strlen(gToolBarData1[i].fPixmap) == 0) {
-         spacing = 6;
-         continue;
-      }
-      fToolBar->AddButton(this, &gToolBarData1[i], spacing);
-      spacing = 0;
-   }
-
    fHorizontal1 = new TGHorizontal3DLine(this);
    fHorizontal1Layout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
 
+   // Create toolbar dock
+   fToolDock = new TGDockableFrame(this);
+   AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
+   fToolDock->SetWindowName("ROOT Canvas ToolBar");
+
+   // will alocate it later
+   fToolBar = 0;
+   fVertical1 = 0;
+   fVertical2 = 0;
+   fVertical1Layout = 0;
+   fVertical2Layout = 0;
+
+   fToolBarSep = new TGHorizontal3DLine(this);
+   fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX);
    AddFrame(fToolBarSep, fToolBarLayout);
-   AddFrame(fToolBar, fToolBarLayout);
    AddFrame(fHorizontal1, fHorizontal1Layout);
 
    fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4,
@@ -578,7 +560,7 @@ TRootCanvas::~TRootCanvas()
       delete fMainFrame;
       delete fMainFrameLayout;
       delete fToolBarSep;
-      delete fToolBar;
+      delete fToolDock;
       delete fToolBarLayout;
       delete fVertical1;
       delete fVertical2;
@@ -592,6 +574,7 @@ TRootCanvas::~TRootCanvas()
       delete fMenuBarItemLayout;
       delete fMenuBarHelpLayout;
       delete fCanvasLayout;
+      delete fToolBar;
    }
 
    delete fFileMenu;
@@ -1351,6 +1334,48 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 {
    // Show or hide toolbar.
 
+   Int_t i;
+
+   if (show) {
+      ShowFrame(fToolDock);
+   } else {
+      HideFrame(fToolDock); 
+   }
+
+   if (show && !fToolBar) {
+      fToolBar = new TGToolBar(fToolDock, 60, 20, kHorizontalFrame);
+      fToolDock->AddFrame(fToolBar, fHorizontal1Layout);
+
+      int spacing = 6;
+      for (i = 0; gToolBarData[i].fPixmap; i++) {
+         if (strlen(gToolBarData[i].fPixmap) == 0) {
+            spacing = 6;
+            continue;
+         }
+         fToolBar->AddButton(this, &gToolBarData[i], spacing);
+         spacing = 0;
+      }
+      fVertical1 = new TGVertical3DLine(fToolBar);
+      fVertical2 = new TGVertical3DLine(fToolBar);
+      fVertical1Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 4,2,0,0);
+      fVertical2Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0);
+      fToolBar->AddFrame(fVertical1, fVertical1Layout);
+      fToolBar->AddFrame(fVertical2, fVertical2Layout);
+
+      spacing = 6;
+      for (i = 0; gToolBarData1[i].fPixmap; i++) {
+         if (strlen(gToolBarData1[i].fPixmap) == 0) {
+            spacing = 6;
+            continue;
+         }
+         fToolBar->AddButton(this, &gToolBarData1[i], spacing);
+         spacing = 0;
+      }
+      fToolDock->MapSubwindows();
+   }
+
+   if (!fToolBar) return;
+
    UInt_t h = GetHeight();
    UInt_t th = fToolBar->GetHeight() + fToolBarSep->GetHeight();
 
@@ -1518,3 +1543,4 @@ void TRootContainer::SavePrimitive(ofstream &out, Option_t *)
    out << GetName() << " = new TGCompositeFrame(gClient,winC"
        << "," << GetParent()->GetName() << ");" << endl;
 }
+

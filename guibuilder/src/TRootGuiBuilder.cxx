@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.13 2005/02/18 11:22:28 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.14 2005/05/02 11:01:04 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -255,7 +255,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
    fToolDock->SetWindowName("ROOT GuiBuilder ToolBar");
 
-   fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
+   fToolBar = new TGToolBar(fToolDock, 60, 20, kHorizontalFrame);
    fToolDock->AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
    int spacing = 8;

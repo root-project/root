@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.16 2004/12/15 09:27:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.17 2005/05/30 22:47:27 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -39,6 +39,7 @@ class TGToolBar;
 class TGHorizontal3DLine;
 class TGVertical3DLine;
 class TVirtualPadEditor;
+class TGDockableFrame;
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
 
@@ -78,6 +79,7 @@ private:
    TGLayoutHints       *fVertical1Layout;    // layout hints for separator
    TGLayoutHints       *fVertical2Layout;    // layout hints for separator
    TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
+   TGDockableFrame     *fToolDock;
 
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
    Int_t                fCanvasID;   // index in fWindows array of TGX11

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.6 2004/09/16 18:50:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.7 2005/01/12 18:39:29 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -175,6 +175,7 @@ TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
 
    SetWindowName("");
    fDockable = dockable;
+   //SetCleanup(kDeepCleanup);
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
@@ -189,7 +190,13 @@ TGUndockedFrame::~TGUndockedFrame()
 {
    // Delete undocked frame. Puts back dockable frame in its original container.
 
-   fDockable->DockContainer(kFALSE);
+   if (fDockable) { 
+      if (fDockable->fDeleted) {
+         delete fDockable->GetContainer();
+      } else {
+         fDockable->DockContainer(kFALSE);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -244,6 +251,7 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    fEnableUndock = kTRUE;
    fHidden       = kFALSE;
    fFrame        = 0;
+   fDeleted      = kFALSE;
 
    fDockButton->Associate(this);
    fHideButton->Associate(this);
@@ -258,8 +266,10 @@ TGDockableFrame::~TGDockableFrame()
 {
    // Cleanup dockable frame.
 
-   if (fFrame)
+   if (fFrame) {
+      fDeleted = kTRUE;
       delete fFrame;
+   }
    delete fCl;
 }
 

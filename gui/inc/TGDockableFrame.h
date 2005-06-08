@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.3 2004/07/30 15:42:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.4 2004/09/08 08:13:11 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -98,10 +98,13 @@ public:
 
 
 class TGDockableFrame : public TGCompositeFrame, public TGWidget {
+friend class TGUndockedFrame;
+
 protected:
    Bool_t            fHidden;        // if frame is hidden
    Bool_t            fEnableHide;    // if frame can be hidden
    Bool_t            fEnableUndock;  // if frame can be undocked
+   Bool_t            fDeleted;       // kTRUE if it is being deleted
    TString           fDockName;      // name of frame
    TGCompositeFrame *fContainer;     // container containing dockable frame
    TGCompositeFrame *fButtons;       // container containing dock and hide buttons
