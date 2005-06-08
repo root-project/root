@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.6 2004/03/26 18:00:10 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.7 2004/05/24 11:24:27 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -198,6 +198,7 @@ const Mask_t kKeyShiftMask   = BIT(0);
 const Mask_t kKeyLockMask    = BIT(1);
 const Mask_t kKeyControlMask = BIT(2);
 const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
+const Mask_t kKeyMod2Mask    = BIT(4);   // typically mod on numeric keys
 const Mask_t kButton1Mask    = BIT(8);
 const Mask_t kButton2Mask    = BIT(9);
 const Mask_t kButton3Mask    = BIT(10);

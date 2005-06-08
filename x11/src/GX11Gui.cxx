@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.40 2005/01/18 21:07:27 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.41 2005/02/11 18:40:09 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1410,6 +1410,8 @@ void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
          xstate |= ControlMask;
       if ((state & kKeyMod1Mask))
          xstate |= Mod1Mask;
+      if ((state & kKeyMod2Mask))
+         xstate |= Mod2Mask;
       if ((state & kButton1Mask))
          xstate |= Button1Mask;
       if ((state & kButton2Mask))
@@ -1428,6 +1430,8 @@ void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
          state |= kKeyControlMask;
       if ((xstate & Mod1Mask))
          state |= kKeyMod1Mask;
+      if ((xstate & Mod2Mask))
+         state |= kKeyMod2Mask;
       if ((xstate & Button1Mask))
          state |= kButton1Mask;
       if ((xstate & Button2Mask))
