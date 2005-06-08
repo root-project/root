@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.55 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.56 2005/06/06 20:04:23 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -620,7 +620,6 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
    fPicD = 0;
-   //CreateDisabledPicture();
    SetWindowName();
 }
 
@@ -1186,7 +1185,7 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
       }
       fOptions &= ~kSunkenFrame;
       fgReleaseBtn = fId;
-   } else { // 
+   } else { //
       fgReleaseBtn = 0;
 
       if (in) fOptions |= kSunkenFrame;
