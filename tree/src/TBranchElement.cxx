@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.170 2005/06/08 21:19:36 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.171 2005/06/09 18:20:02 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2080,61 +2080,65 @@ void TBranchElement::InitializeOffsets()
       }
    }
    if ( nbranches > 0 )  {
-       const char *ename = fID<0 ? 0 : ((TStreamerElement*)fInfo->GetElems()[fID])->GetName();
-       fBranchOffset = new Int_t[nbranches];
-       fBranchTypes  = new Bool_t[nbranches];
-       for (Int_t j=0; j<nbranches; j++ )  {
+      Int_t parentID = 0;
+      TClass* parentBranchClass = 0;
+      TStreamerElement* elem = fID<0 ? 0 : ((TStreamerElement*)fInfo->GetElems()[fID]);
+      const char *ename = elem ? elem->GetName() : 0;
+      fBranchOffset = new Int_t[nbranches];
+      fBranchTypes  = new Bool_t[nbranches];
+      for (Int_t j=0; j<nbranches; j++ )  {
          fBranchOffset[j] = 0;
          TBranch *abranch = (TBranch*)fBranches[j];
          fBranchTypes[j]  = abranch->InheritsFrom(TBranchElement::Class());
-       }
-       for (Int_t i=0; i<nbranches;i++ )  {
-         TBranch *abranch = (TBranch*)fBranches[i];
+      }
+      for (Int_t i=0; i<nbranches;i++ )  {
          //just in case a TBranch had been added to a TBranchElement!
          if ( !fBranchTypes[i] ) {
            continue;
          }
-         TBranchElement *branch = (TBranchElement*)abranch;
+         TBranchElement *branch = (TBranchElement*)fBranches[i];
          Int_t nb2 = branch->GetListOfBranches()->GetEntries();
+         Int_t lOffset = 0; // offset in the local streamerInfo.
 
-         if ( nb2 > 0 ) {
-            Int_t lOffset; // offset in the local streamerInfo.
-            lOffset = clm->GetStreamerInfo()->GetOffset(ename);
-            Int_t id = branch->GetID();
+         lOffset = clm->GetStreamerInfo()->GetOffset(ename);
+         Int_t id = branch->GetID();
 
-            if (!clparent) clparent = fBranchClass;
-            TStreamerInfo *info = branch->GetInfo();
+         if (!clparent) clparent = clm;
+         // Test if we are in the case where the class described by 'clparent'
+         // did not get its own branch in the tree.  In this case the immediate
+         // parent branch will have a different type.
 
+         // First get the immediate parent (i.e a branch which has 'branch' has
+         // a direct sub-branch.
+
+         TStreamerInfo *info = branch->GetInfo();
+         TBranchElement *parent = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
+         assert(parent==this);
+
+         parentID = parent->GetID();
+         assert(parentID>=0 || parentID==-2 || parentID==-1);  
+         // if the ID was negative, the branch would not have been split!
+         // -2 = Base class; -1 = (STL-)Collection
+         TStreamerInfo *parentInfo = parent->GetInfo();
+         assert(parentInfo != 0);
+
+         switch(parentID) {
+            case -2:
+	    case -1:
+	       parentBranchClass = parentInfo->GetClass();
+	       break;
+	    default: {
+               TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
+	       parentBranchClass = parentElem->GetClassPointer();
+	       break;
+	    }
+         }
+         if ( nb2 > 0 )   {
             // The branch has some sub-branches
             if (info) {
                Int_t *leafOffsets = info->GetOffsets();
 
-               // Test if we are in the case where the class described by 'clparent'
-               // did not get its own branch in the tree.  In this case the immediate
-               // parent branch will have a different type.
-
-               // First get the immediate parent (i.e a branch which has 'branch' has
-               // a direct sub-branch.
-
-               TBranchElement *parent = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
-               assert(parent==this);
-
-               Int_t parentID = parent->GetID();
-               assert(parentID>=0 || parentID==-2);  // if the ID was negative, the branch would not have been split!
-
-               TStreamerInfo *parentInfo = parent->GetInfo();
-               assert(parentInfo != 0);
-
-               TClass *parentBranchClass = 0;
-               if (parentID==-2) {
-                 parentBranchClass = parentInfo->GetClass();
-               } else {
-                 TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
-                 parentBranchClass = parentElem->GetClassPointer();
-               }
-
                TClass *containingClass = info->GetClass();
-
                if ( ! parentBranchClass->InheritsFrom(containingClass) ) {
                  // We are in the case where there is a missing branch in the hiearchy
 
@@ -2165,10 +2169,26 @@ void TBranchElement::InitializeOffsets()
                      Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
                  }
                }
-           } else {
+            } else {
                // fInfo==0
                Error("SetAddress","branch=%s, info=0",branch->GetName());
-           }
+            }
+         }
+         else  {
+            std::string enam( branch->GetName() );
+            size_t idx = enam.find(".");
+            if ( idx != std::string::npos )  {
+               // Broken branch hierarchy: need to look for offset 
+               // in the parents StreamerInfo
+               enam = enam.substr(0,idx);
+               parentInfo = parentBranchClass->GetStreamerInfo();
+               if ( parentInfo )  {
+                  fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
+               }
+               else  {
+                  Error("SetAddress","branch=%s, parentInfo=0",branch->GetName());
+               }
+            }
          }
       }
    }
@@ -2396,22 +2416,7 @@ void TBranchElement::SetAddress(void *add)
    }
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *abranch = (TBranch*)fBranches[i];
-      //just in case a TBranch had been added to a TBranchElement!
-      if ( !fBranchTypes[i] ) {
-        abranch->SetAddress(fObject);
-        continue;
-      }
-      TBranchElement *branch = (TBranchElement*)abranch;
-      // I do not know if this may harm...but it helps for speed M.Frank
-      // Int_t nb2 = branch->GetListOfBranches()->GetEntries();
-      Int_t nb2 = branch->GetListOfBranches()->GetEntriesFast();
-      if ( nb2 > 0 ) {
-          branch->SetAddress( fObject + fBranchOffset[i]);
-      }
-      else {
-        // The branch has no sub-branches
-        branch->SetAddress(fObject);
-      }
+      abranch->SetAddress(fObject + fBranchOffset[i]);
    }
 }
 
