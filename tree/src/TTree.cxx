@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.252 2005/05/18 12:31:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.253 2005/05/31 19:47:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1888,13 +1888,13 @@ void TTree::CopyAddresses(TTree *tree)
 
    // copy branch addresses starting from leaves.
    TObjArray *tleaves = tree->GetListOfLeaves();
-   Int_t nleaves = tleaves->GetEntriesFast();
-   for (i=0;i<nleaves;i++) {
-      TLeaf *leaf2 = (TLeaf*)tleaves->UncheckedAt(i);
-      TBranch *branch2 = leaf2->GetBranch();
-      TBranch *branch = GetBranch(branch2->GetName());
+   Int_t ntleaves = tleaves->GetEntriesFast();
+   for (i=0;i<ntleaves;i++) {
+      TLeaf *tleaf = (TLeaf*)tleaves->UncheckedAt(i);
+      TBranch *tbranch = tleaf->GetBranch();
+      TBranch *branch = GetBranch(tbranch->GetName());
       if (!branch) continue;
-      TLeaf *leaf  = branch->GetLeaf(leaf2->GetName());
+      TLeaf *leaf  = branch->GetLeaf(tleaf->GetName());
       if (!leaf) continue;
       if (branch->TestBit(kDoNotProcess)) continue;
       if (!branch->GetAddress()&&!leaf->GetValuePointer()) {
@@ -1908,7 +1908,7 @@ void TTree::CopyAddresses(TTree *tree)
       if (branch->GetAddress()) {
          tree->SetBranchAddress(branch->GetName(),(void*)branch->GetAddress());
       } else {
-         leaf2->SetAddress(leaf->GetValuePointer());
+         tleaf->SetAddress(leaf->GetValuePointer());
       }
    }
 }

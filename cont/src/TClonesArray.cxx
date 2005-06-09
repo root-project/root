@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.44 2004/11/17 06:02:52 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.45 2005/03/11 21:48:39 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -281,7 +281,7 @@ void TClonesArray::Clear(Option_t *option)
    if (option && option[0] == 'C') {
       Int_t n = GetEntriesFast();
       for (Int_t i = 0; i < n; i++) {
-         TObject *obj = At(i);
+         TObject *obj = UncheckedAt(i);
          if (obj) obj->Clear();
       }
    }

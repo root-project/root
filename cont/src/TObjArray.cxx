@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.21 2003/03/17 14:30:11 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.22 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -310,7 +310,7 @@ void TObjArray::Streamer(TBuffer &b)
       fLast = -1;
       TObject *obj;
       for (Int_t i = 0; i < nobjects; i++) {
-         b >> obj;
+         obj = (TObject*) b.ReadObjectAny(TObject::Class());
          if (obj) {
             fCont[i] = obj;
             fLast = i;

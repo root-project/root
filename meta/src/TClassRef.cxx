@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.5 2005/06/03 15:59:18 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.6 2005/06/08 21:13:48 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -44,8 +44,7 @@ TClassRef::TClassRef(const char *classname) :
 }
 
 //______________________________________________________________________________
-TClassRef::TClassRef(TClass *cl) :
-   /* fClassName(cl?cl->GetName():""),*/ fClassPtr(cl), fPrevious(0), fNext(0)
+TClassRef::TClassRef(TClass *cl) : fClassPtr(cl), fPrevious(0), fNext(0)
 {
    // Add reference to specified class object.
    

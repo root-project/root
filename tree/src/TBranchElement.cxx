@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.169 2005/05/23 16:58:00 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.170 2005/06/08 21:19:36 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TBranchElement::TBranchElement(): TBranch(), fCurrentClass(), fParentClass(), fB
 
 //______________________________________________________________________________
 TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
-    :TBranch(), fCurrentClass((TClass*)0), fParentClass((TClass*)0), fBranchClass(sinfo->GetClass())
+    :TBranch(), fCurrentClass(), fParentClass(), fBranchClass(sinfo->GetClass())
 {
 // Create a BranchElement
 //
@@ -93,7 +93,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
    fCheckSum     = sinfo->GetCheckSum();
-   fID           = id;
+   fID           = id;  
+   fInit         = kTRUE;
    fStreamerType = -1;
    fType         = 0;
    fBranchCount  = 0;
@@ -108,7 +109,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchOffset = 0;
    fParentOffset = 0;
    fBranchTypes  = 0;
-   fInit         = fInitOffsets = kFALSE;
+   fInitOffsets  = kFALSE;
    ULong_t *elems = sinfo->GetElems();
    TStreamerElement *element = 0;
    TBranchElement *brcount = 0;
@@ -331,7 +332,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
 //______________________________________________________________________________
 TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
-    :TBranch(), fInfo(TClonesArray::Class()->GetStreamerInfo()),fCurrentClass((TClass*)0),fParentClass((TClass*)0), fBranchClass(fInfo->GetClass())
+    :TBranch(), fInfo(TClonesArray::Class()->GetStreamerInfo()), 
+     fCurrentClass(),fParentClass(), fBranchClass(fInfo->GetClass())
 {
 // Create a BranchElement
 //
@@ -340,6 +342,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fCollProxy = 0;
    fSplitLevel    = splitlevel;
    fID            = 0;
+   fInit          = kTRUE;
    fStreamerType  = -1;
    fType          = 0;
    fClassVersion  = TClonesArray::Class()->GetClassVersion();
@@ -353,7 +356,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fParentOffset  = 0;
    fBranchTypes   = 0;
    fSTLtype       = TClassEdit::kNotSTL;
-   fInit          = fInitOffsets = kFALSE;
+   fInitOffsets   = kFALSE;
 
    fTree          = gTree;
    fDirectory     = fTree->GetDirectory();
@@ -428,7 +431,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
 }
 //______________________________________________________________________________
 TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
-  :TBranch(),fCurrentClass((TClass*)0),fParentClass((TClass*)0), fBranchClass(cont->GetCollectionClass())
+  : TBranch(),fCurrentClass(),fParentClass(), fBranchClass(cont->GetCollectionClass())
 {
    // Create a BranchElement
    //
@@ -438,10 +441,11 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    char name[kMaxLen];
    strcpy(name,bname);
    if (name[strlen(name)-1]=='.') name[strlen(name)-1]=0;
-   fInit          = fInitOffsets = kFALSE;
+   fInitOffsets   = kFALSE;
    fSplitLevel    = splitlevel;
    fInfo          = 0;
    fID            = -1;
+   fInit          = kTRUE;
    fStreamerType  = -1; // TStreamerInfo::kSTLp;
    fType          = 0;
    fClassVersion  = cont->GetCollectionClass()->GetClassVersion();
@@ -1258,20 +1262,21 @@ Bool_t TBranchElement::CheckBranchID()
    // Need to reassign branches in case schema evolution has scrambled leaf list.
 
    if ( GetID() >= 0 ) {
+      size_t pos;
+      std::string s( GetName() );
+      pos = s.rfind('.');
+      if ( pos != std::string::npos )  {
+         s = s.substr(pos+1);
+      }
+      while ( (pos=s.rfind('[')) != std::string::npos ) {
+         s = s.substr(0,pos);
+      }
       int offset = 0;
-      std::string s = GetName();
-      if ( s.rfind('.') != std::string::npos )  {
-         std::string tmp = s;
-         s = tmp.substr(s.rfind('.')+1);
-      }
-      while ( s.rfind('[') != std::string::npos ) {
-         s = s.substr(0,s.rfind('['));
-      }
       TStreamerElement* elt = fInfo->GetStreamerElement(s.c_str(),offset);
       if ( elt )   {
          TObjArray* arr = fInfo->GetElements();
-         for(size_t i=0, num=arr->GetSize(); i < num; ++i )  {
-            if ( (TStreamerElement*)arr->At(i) == elt )  {
+         for(size_t i=0, num=arr->GetEntriesFast(); i < num; ++i )  {
+            if ( (TStreamerElement*)arr->UncheckedAt(i) == elt )  {
                fID = i;
                break;
             }
