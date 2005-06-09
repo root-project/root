@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.35 2005/01/18 15:08:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.36 2005/03/10 19:19:43 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -90,10 +90,23 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
 {
    // Create list tree item.
 
+   fClient = client;
+
    fText = name;
+
+   if (!opened)
+      opened = fClient->GetPicture("ofolder_t.xpm");
+   else 
+      ((TRefCnt *)opened)->AddReference();
+
+   if (!closed)
+      closed = fClient->GetPicture("folder_t.xpm");
+   else
+      ((TRefCnt *)closed)->AddReference();
 
    fOpenPic   = opened;
    fClosedPic = closed;
+   
    fPicWidth  = TMath::Max(fOpenPic->GetWidth(), fClosedPic->GetWidth());
 
    fOpen = fActive = kFALSE;
@@ -106,8 +119,6 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
    fHeight = 0;
 
    fUserData = 0;
-
-   fClient = client;
 }
 
 //______________________________________________________________________________
@@ -136,6 +147,8 @@ void TGListTreeItem::SetPictures(const TGPicture* opened, const TGPicture* close
    fClient->FreePicture(fClosedPic);
    fOpenPic   = opened;
    fClosedPic = closed;
+   ((TRefCnt *)fOpenPic)->AddReference();
+   ((TRefCnt *)fClosedPic)->AddReference();
 }
 
 
@@ -222,7 +235,8 @@ TGListTree::~TGListTree()
 
    item = fFirst;
    while (item) {
-      if (item->fFirstchild) PDeleteChildren(item->fFirstchild);
+      if (item->fFirstchild) 
+         PDeleteChildren(item->fFirstchild);
       sibling = item->fNextsibling;
       delete item;
       item = sibling;
@@ -1266,9 +1280,6 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    // Add item to list tree. Returns new item.
 
    TGListTreeItem *item;
-
-   if (!open)   open   = fClient->GetPicture("ofolder_t.xpm");
-   if (!closed) closed = fClient->GetPicture("folder_t.xpm");
 
    item = new TGListTreeItem(fClient, string, open, closed);
    InsertChild(parent, item);
