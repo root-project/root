@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.169 2005/05/27 16:42:58 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.170 2005/06/08 21:13:48 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2537,6 +2537,7 @@ void TClass::SetUnloaded()
    // Call this method to indicate that the shared library containing this
    // class's code has been removed (unloaded) from the process's memory
 
+   delete fIsA; fIsA = 0;
    gInterpreter->SetClassInfo(this,kTRUE);
    fDeclFileName = 0;
    fDeclFileLine = 0;
