@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.7 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.8 2005/06/08 17:05:56 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -175,7 +175,6 @@ TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
 
    SetWindowName("");
    fDockable = dockable;
-   //SetCleanup(kDeepCleanup);
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
@@ -190,12 +189,8 @@ TGUndockedFrame::~TGUndockedFrame()
 {
    // Delete undocked frame. Puts back dockable frame in its original container.
 
-   if (fDockable) { 
-      if (fDockable->fDeleted) {
-         delete fDockable->GetContainer();
-      } else {
-         fDockable->DockContainer(kFALSE);
-      }
+   if (fDockable && !fDockable->fDeleted) { 
+      fDockable->DockContainer(kFALSE);
    }
 }
 
@@ -232,8 +227,6 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    TGLayoutHints *lb = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
    TGLayoutHints *lc = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX);
 
-   SetCleanup();
-
    fButtons = new TGCompositeFrame(this, 10, 10, kVerticalFrame);
    fButtons->SetCleanup();
    fHideButton = new TGDockHideButton(fButtons);
@@ -269,8 +262,11 @@ TGDockableFrame::~TGDockableFrame()
    if (fFrame) {
       fDeleted = kTRUE;
       delete fFrame;
+   } else {
+      delete fContainer; 
    }
    delete fCl;
+   delete fButtons;
 }
 
 //______________________________________________________________________________
