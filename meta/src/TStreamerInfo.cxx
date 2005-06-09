@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.223 2005/04/18 19:14:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.224 2005/05/23 17:00:57 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -386,8 +386,9 @@ void TStreamerInfo::BuildCheck()
          
          // A foreign class would have the ClassVersion equal to 1
          // Also we only care if a StreamerInfo has already been loaded
-         if ( fClassVersion==1 && array->At(1) != 0 ) {
-            if (fCheckSum != ((TStreamerInfo*)array->At(1))->GetCheckSum()) {
+         TStreamerInfo *v1;
+         if ( fClassVersion==1 && (v1=(TStreamerInfo*)array->At(1)) != 0 ) {
+            if (fCheckSum != v1->GetCheckSum()) {
                searchOnChecksum = kTRUE;
                fClassVersion = array->GetLast()+1;
             }
@@ -399,7 +400,7 @@ void TStreamerInfo::BuildCheck()
       if (searchOnChecksum) {
          Int_t ninfos = array->GetEntriesFast();
          for (Int_t i=1;i<ninfos;i++) {
-            info = (TStreamerInfo*)array->At(i);
+            info = (TStreamerInfo*)array->UncheckedAt(i);
             if (!info) continue;
             if (fCheckSum == info->GetCheckSum()) {
                fClassVersion = i;
@@ -426,7 +427,7 @@ void TStreamerInfo::BuildCheck()
             TObjArray *elems = info->GetElements();
             TStreamerElement *e1, *e2;
             for (Int_t i=0;i<nel;i++) {
-               e1 = (TStreamerElement *)fElements->At(i);
+               e1 = (TStreamerElement *)fElements->UncheckedAt(i);
                e2 = (TStreamerElement *)elems->At(i);
                if (!e1 || !e2) continue;
                if (strlen(e1->GetTitle()) != strlen(e2->GetTitle())) {
@@ -517,7 +518,7 @@ void TStreamerInfo::BuildEmulated(TFile *file)
    TStreamerElement *element;
    Int_t i;
    for (i=0;i<ndata;i++) {
-      element = (TStreamerElement*)elements->At(i);
+      element = (TStreamerElement*)elements->UncheckedAt(i);
       if (!element) break;
       int ty = element->GetType();
       if (ty < kChar || ty >kULong+kOffsetL)    continue;
@@ -728,7 +729,8 @@ void TStreamerInfo::BuildOld()
                TIter nextBC(fClass->GetListOfBases());
                while ((bc=(TBaseClass*)nextBC())) {
 
-                  if (strchr(bc->GetName(),'<')!=0) {
+                  if (strchr(bc->GetName(),'<')!=0 ||
+                      strcmp(bc->GetName(),"string")==0) {
                      TString bcName( TClassEdit::ShortType(bc->GetName()         ,TClassEdit::kDropStlDefault).c_str() );
                      TString elName( TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropStlDefault).c_str() );
                      if (bcName==elName) break;
