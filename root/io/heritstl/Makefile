@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += minostest 
+TEST_TARGETS += baseString minostest 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -27,3 +27,11 @@ minostest.log: minostest_C.$(DllSuf) classes_C.$(DllSuf)
 
 minostest: minostest.log
 		  $(TestDiff)
+
+strtest.root: runbaseString_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -l -q 'runbaseString.C+(0)' 2>&1 > strtest.log
+
+baseString.clog: strtest.root
+
+baseString: baseString.clog
+	$(TestDiff)
