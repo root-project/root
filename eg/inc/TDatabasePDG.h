@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.5 2001/11/22 07:38:21 brun Exp $
+// @(#)root/eg:$Name: v4-04-02 $:$Id: TDatabasePDG.h,v 1.6 2004/08/19 20:00:14 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
 					Int_t        TrackingCode=0);
 
   virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number);
+  virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber);
   virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
 
   virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);

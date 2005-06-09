@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.19 2002/07/19 08:28:32 rdm Exp $
+// @(#)root/eg:$Name: v4-04-02 $:$Id: TDatabasePDG.cxx,v 1.20 2002/12/02 18:50:02 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -270,6 +270,62 @@ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) {
      case 47  : return 0;        // alpha
      case 24  : return 3334;     // Omega- (PB)
      case 48  : return 0;        // G nu ? PDG ID 0 is undefined
+
+     default  : return 0;
+
+  }
+}
+
+//______________________________________________________________________________
+Int_t TDatabasePDG::ConvertPdgToGeant3(Int_t pdgNumber) {
+  // Converts pdg code to geant3 id
+
+  switch(pdgNumber) {
+
+     case   22     : return  1;    // photon
+     case   -2112  : return  25;   // anti-neutron
+     case   -11    : return  2;    // e+
+     case   -3122  : return  26;   // anti-Lambda
+     case   11     : return  3;    // e-
+     case   -3222  : return  27;   // Sigma-
+     case   12     : return  4;    // e-neutrino (NB: flavour undefined by Geant)
+     case   -3212  : return  28;   // Sigma0
+     case   -13    : return  5;    // mu+
+     case   -3112  : return  29;   // Sigma+ (PB)*/
+     case   13     : return  6;    // mu-
+     case   -3322  : return  30;   // Xi0
+     case   111    : return  7;    // pi0
+     case   -3312  : return  31;   // Xi+
+     case   211    : return  8;    // pi+
+     case   -3334  : return  32;   // Omega+ (PB)
+     case   -211   : return  9;    // pi-
+     case   -15    : return  33;   // tau+
+     case   130    : return  10;   // K long
+     case   15     : return  34;   // tau-
+     case   321    : return  11;   // K+
+     case   411    : return  35;   // D+
+     case   -321   : return  12;   // K-
+     case   -411   : return  36;   // D-
+     case   2112   : return  13;   // n
+     case   421    : return  37;   // D0
+     case   2212   : return  14;   // p
+     case   -421   : return  38;   // D0
+     case   -2212  : return  15;   // anti-proton
+     case   431    : return  39;   // Ds+
+     case   310    : return  16;   // K short
+     case   -431   : return  40;   // anti Ds-
+     case   221    : return  17;   // eta
+     case   4122   : return  41;   // Lamba_c+
+     case   3122   : return  18;   // Lambda
+     case   24     : return  42;   // W+
+     case   3222   : return  19;   // Sigma+
+     case   -24    : return  43;   // W-
+     case   3212   : return  20;   // Sigma0
+     case   23     : return  44;   // Z
+     case   3112   : return  21;   // Sigma-
+     case   3322   : return  22;   // Xi0
+     case   3312   : return  23;   // Xi-
+     case   3334   : return  24;   // Omega- (PB)
 
      default  : return 0;
 
