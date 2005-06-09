@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.35 2005/06/02 16:28:27 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.36 2005/06/07 19:40:33 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -2914,14 +2914,15 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 /////////////////////////////// vector graphics ///////////////////////////////
 // a couple of macros which can be "assembler accelerated"
 #if defined(R__GNU) && defined(__i386__)
-#define _MEMSET_(dst, lng, val)   asm("movl  %0,%%eax \n"             \
-                                      "movl  %1,%%edi \n"             \
-                                      "movl  %2,%%ecx \n"             \
-                                      "cld \n"                        \
-                                      "rep \n"                        \
-                                      "stosl %%eax,(%%edi) \n"        \
-                                      ::"g" (val),"g" (dst),"g" (lng) \
-                                      :"eax","edi","ecx"              \
+#define _MEMSET_(dst, lng, val)   __asm__("movl  %0,%%eax \n"\
+                                      "movl  %1,%%edi \n"              \
+                                      "movl  %2,%%ecx \n"              \
+                                      "cld \n"                         \
+                                      "rep \n"                         \
+                                      "stosl %%eax,(%%edi) \n"         \
+                                      : /* no output registers */      \
+                                      :"g" (val), "g" (dst), "g" (lng) \
+                                      :"eax","edi","ecx"               \
                                      )
 
 #else
