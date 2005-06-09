@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d *.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += treeBranch iobug merging headerTest clonesATest EmbeddedTest inheritTest relationsTest
+TEST_TARGETS += inheritAndOwn treeBranch iobug merging headerTest clonesATest EmbeddedTest inheritTest relationsTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -87,4 +87,9 @@ iobug: iobug.log
 treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 
 treeBranch: treeBranch.log
+	$(TestDiff)
+
+inheritAndOwn.log: test_Persistency0_C.$(DllSuf)
+
+inheritAndOwn: inheritAndOwn.log
 	$(TestDiff)
