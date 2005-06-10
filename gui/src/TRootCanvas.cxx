@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.78 2005/05/30 22:47:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.79 2005/06/08 17:05:56 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -475,7 +475,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create toolbar dock
    fToolDock = new TGDockableFrame(this);
    AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
-   fToolDock->SetWindowName("ROOT Canvas ToolBar");
 
    // will alocate it later
    fToolBar = 0;
@@ -1166,6 +1165,7 @@ void TRootCanvas::SetWindowTitle(const char *title)
 
    SetWindowName(title);
    SetIconName(title);
+   fToolDock->SetWindowName(Form("ToolBar: %s", title));
 }
 
 //______________________________________________________________________________
@@ -1372,6 +1372,7 @@ void TRootCanvas::ShowToolBar(Bool_t show)
          spacing = 0;
       }
       fToolDock->MapSubwindows();
+      fToolDock->SetWindowName(Form("ToolBar: %s", GetWindowName()));
    }
 
    if (!fToolBar) return;
