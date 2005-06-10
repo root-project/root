@@ -1088,6 +1088,7 @@ int type;
     G__struct.memfunc[i]->p_tagtable[0] = -1; 
     G__struct.memfunc[i]->p_typetable[0] = -1; 
     G__struct.memfunc[i]->staticalloc[0] = 0; 
+    G__struct.memfunc[i]->isvirtual[0] = 0;
 #ifndef G__OLDIMPLEMENTATION2050
     G__struct.memfunc[i]->busy[0] = 0; 
 #endif

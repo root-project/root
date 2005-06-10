@@ -4073,6 +4073,9 @@ G__value G__exec_statement()
 		if(G__dispsource) G__disp_mask=1;
 		statement[iout++] = ' ' ;
 		spaceflag |= 1;
+                /* a little later this string will be passed to subfunctions
+                   that expect the string to be terminated */
+                statement[iout] = '\0';
 	      }
 	      else {
 		statement[0]=c;
@@ -4153,6 +4156,9 @@ G__value G__exec_statement()
 		fseek(G__ifile.fp,-1,SEEK_CUR);
 		statement[iout++] = ' ' ;
 		spaceflag |= 1;
+                /* a little later this string will be passed to subfunctions
+                   that expect the string to be terminated */
+                statement[iout] = '\0';
 	      }
 	      else {
 		statement[iout++] = ' ' ;
@@ -4161,6 +4167,9 @@ G__value G__exec_statement()
 		c=G__fgetstream_template(statement+iout,")");
 		spaceflag |= 1;
 		iout = strlen(statement);
+                /* a little later this string will be passed to subfunctions
+                   that expect the string to be terminated */
+                statement[iout] = '\0';
 		statement[iout++]=c;
 	      }
 	      break;
