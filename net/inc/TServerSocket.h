@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.5 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.6 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 // requests to come in over the network. It performs some operation     //
 // based on that request and then possibly returns a full duplex socket //
 // to the requester. The actual work is done via the TSystem class      //
-// (either TUnixSystem, TWin32System or TMacSystem).                    //
+// (either TUnixSystem or TWinNTSystem).                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@
 #endif
 #include <string>
 
-typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *, 
+typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
                            std::string&, Int_t &, Int_t &, std::string &);
 typedef Int_t (*SrvClup_t)(const char *);
 
@@ -44,7 +44,7 @@ private:
    TSeqCollection  *fSecContexts; // List of TSecContext with cleanup info
    static SrvAuth_t fgSrvAuthHook;
    static SrvClup_t fgSrvAuthClupHook;
-   static UChar_t fgAcceptOpt;     // Default accept options 
+   static UChar_t fgAcceptOpt;     // Default accept options
 
    TServerSocket() { }
    TServerSocket(const TServerSocket &);

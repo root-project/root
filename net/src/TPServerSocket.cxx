@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.3 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.4 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -17,8 +17,7 @@
 // socket waits for requests to come in over the network. It performs   //
 // some operation based on that request and then possibly returns a     //
 // full duplex parallel socket to the requester. The actual work is     //
-// done via the TSystem class (either TUnixSystem, TWin32System or      //
-// TMacSystem).                                                         //
+// done via the TSystem class (either TUnixSystem or TWinNTSystem).     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -122,13 +121,13 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
 
    } else {
       pSockets = new TSocket*[size];
-      
+
       for (int i = 0; i < size; i++) {
          pSockets[i] = new TSocket(setupSocket->GetInetAddress(),
                                            port, fTcpWindowSize);
          gROOT->GetListOfSockets()->Remove(pSockets[i]);
       }
-      
+
       // create TPSocket object with all the accepted sockets
       newPSocket = new TPSocket(pSockets, size);
 
@@ -137,7 +136,7 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
    // Transmit authentication information, if any
    if (setupSocket->IsAuthenticated())
       newPSocket->SetSecContext(setupSocket->GetSecContext());
-      
+
    // clean up, if needed
    if (size > 0)
       delete setupSocket;

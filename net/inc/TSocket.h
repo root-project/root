@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.16 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.17 2004/12/16 19:33:38 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 // This class implements client sockets. A socket is an endpoint for    //
 // communication between two machines.                                  //
 // The actual work is done via the TSystem class (either TUnixSystem,   //
-// TWin32System or TMacSystem).                                         //
+// or TWinNTSystem).                                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

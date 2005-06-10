@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.8 2004/07/13 16:48:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.9 2004/07/17 23:21:50 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -42,8 +42,6 @@ class TInetAddress : public TObject {
 friend class TSystem;
 friend class TUnixSystem;
 friend class TWinNTSystem;
-friend class TVmsSystem;
-friend class TMacSystem;
 friend class TUUID;
 friend class TSocket;
 friend class TServerSocket;

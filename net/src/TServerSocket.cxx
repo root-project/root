@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.5 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.6 2005/04/28 16:24:23 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 // requests to come in over the network. It performs some operation     //
 // based on that request and then possibly returns a full duplex socket //
 // to the requester. The actual work is done via the TSystem class      //
-// (either TUnixSystem, TWin32System or TMacSystem).                    //
+// (either TUnixSystem or TWinNTSystem).                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -159,12 +159,12 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
    // In case of error 0 is returned and in case non-blocking I/O is
    // enabled and no connections are available -1 is returned.
    //
-   // Opt can be used to require client authentication; valid options are 
-   //       
+   // Opt can be used to require client authentication; valid options are
+   //
    //    kSrvAuth   =   require client authentication
    //    kSrvNoAuth =   force no client authentication
    //
-   // Example: use Opt = kSrvAuth to require client authentication. 
+   // Example: use Opt = kSrvAuth to require client authentication.
    //
    // Default options are taken from fgAcceptOpt and are initially
    // equivalent to kSrvNoAuth; they can be changed with the static
@@ -261,9 +261,9 @@ void TServerSocket::ShowAcceptOptions()
 }
 
 //______________________________________________________________________________
-Bool_t TServerSocket::Authenticate(TSocket *sock) 
+Bool_t TServerSocket::Authenticate(TSocket *sock)
 {
-   // Check authentication request from the client on new 
+   // Check authentication request from the client on new
    // open connection
 
    if (!fgSrvAuthHook) {
@@ -286,7 +286,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
          Error("Authenticate", "can't locate %s",srvlib.Data());
          return kFALSE;
       }
-      //   
+      //
       // Locate SrvAuthenticate
       Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
       if (f)
@@ -295,7 +295,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
          Error("Authenticate", "can't find SrvAuthenticate");
          return kFALSE;
       }
-      //   
+      //
       // Locate SrvAuthCleanup
       f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
       if (f)
@@ -312,7 +312,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       confdir = TString(gSystem->Getenv("ROOTSYS"));
    } else {
       // Try to guess it from 'root.exe' path
-      confdir = TString(gSystem->Which(gSystem->Getenv("PATH"), 
+      confdir = TString(gSystem->Which(gSystem->Getenv("PATH"),
                         "root.exe", kExecutePermission));
       confdir.Resize(confdir.Last('/'));
    }
@@ -351,7 +351,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    if (auth > 0) {
 
       if (type == 1) {
-         // An existing authentication has been re-used: retrieve 
+         // An existing authentication has been re-used: retrieve
          // the related security context
          TIter next(gROOT->GetListOfSecContexts());
          while ((seccontext = (TSecContext *)next())) {
@@ -371,7 +371,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
          // in case of interrupt
          seccontext = new TSecContext(user.c_str(), openhost, meth, -1,
                                       "server", ctkn.c_str());
-         if (seccontext) { 
+         if (seccontext) {
             // Add to the list
             fSecContexts->Add(seccontext);
             // Store SecContext

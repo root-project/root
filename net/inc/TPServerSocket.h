@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.3 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.4 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -21,8 +21,7 @@
 // socket waits for requests to come in over the network. It performs   //
 // some operation based on that request and then possibly returns a     //
 // full duplex parallel socket to the requester. The actual work is     //
-// done via the TSystem class (either TUnixSystem, TWin32System or      //
-// TMacSystem).                                                         //
+// done via the TSystem class (either TUnixSystem or TWinNTSystem).     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
