@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.92 2005/05/20 22:58:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.93 2005/06/07 20:28:32 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1839,7 +1839,7 @@ void TProofServ::SendStatistics()
 
    Long64_t bytesread = 0;
    if (IsMaster()) bytesread = fProof->GetBytesRead();
-   else bytesread = static_cast<Long64_t>(TFile::GetFileBytesRead());
+   else bytesread = TFile::GetFileBytesRead();
 
    TMessage mess(kPROOF_GETSTATS);
    TString workdir = gSystem->WorkingDirectory();  // expect TString on other side

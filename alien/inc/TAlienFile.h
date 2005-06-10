@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.5 2004/10/15 16:55:06 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.6 2005/05/20 11:13:30 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -65,9 +65,9 @@ public:
                 { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
    Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0)
                 { return ((fSubFile)?fSubFile->Write(name,opt,bufsiz):-1); }
-   Double_t  GetBytesRead() const
+   Long64_t  GetBytesRead() const
                 { return ((fSubFile)?fSubFile->GetBytesRead():-1); }
-   Double_t  GetBytesWritten() const
+   Long64_t  GetBytesWritten() const
                 { return ((fSubFile)?fSubFile->GetBytesWritten():-1); }
    Long64_t  GetSize() const
                 { return ((fSubFile)?fSubFile->GetSize():-1); }

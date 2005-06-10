@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.13 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.14 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -195,7 +195,7 @@ Long64_t TEventIterObj::GetNextEvent()
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
       if (gPerfStats != 0 && fFile != 0) {
-         Long64_t bytesRead = (Long64_t) fFile->GetBytesRead();
+         Long64_t bytesRead = fFile->GetBytesRead();
          gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
          fOldBytesRead = bytesRead;
       }
@@ -317,7 +317,7 @@ Long64_t TEventIterTree::GetNextEvent()
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
       if (gPerfStats != 0 && fFile != 0) {
-         Long64_t bytesRead = (Long64_t) fFile->GetBytesRead();
+         Long64_t bytesRead = fFile->GetBytesRead();
          gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
          fOldBytesRead = bytesRead;
       }

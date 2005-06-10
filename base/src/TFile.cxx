@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.137 2005/05/16 16:01:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.138 2005/05/31 13:57:45 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -50,8 +50,8 @@
 TFile *gFile;                 //Pointer to current file
 
 
-Double_t TFile::fgBytesRead  = 0;
-Double_t TFile::fgBytesWrite = 0;
+Long64_t TFile::fgBytesRead  = 0;
+Long64_t TFile::fgBytesWrite = 0;
 
 const Int_t kBEGIN = 100;
 
@@ -2268,13 +2268,13 @@ Int_t TFile::SysSync(Int_t fd)
 }
 
 //______________________________________________________________________________
-Double_t TFile::GetFileBytesRead() { return fgBytesRead; }
+Long64_t TFile::GetFileBytesRead() { return fgBytesRead; }
 
 //______________________________________________________________________________
-Double_t TFile::GetFileBytesWritten() { return fgBytesWrite; }
+Long64_t TFile::GetFileBytesWritten() { return fgBytesWrite; }
 
 //______________________________________________________________________________
-void TFile::SetFileBytesRead(Double_t bytes){ fgBytesRead = bytes; }
+void TFile::SetFileBytesRead(Long64_t bytes){ fgBytesRead = bytes; }
 
 //______________________________________________________________________________
-void TFile::SetFileBytesWritten(Double_t bytes){ fgBytesWrite = bytes; }
+void TFile::SetFileBytesWritten(Long64_t bytes){ fgBytesWrite = bytes; }

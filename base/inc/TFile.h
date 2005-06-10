@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.36 2004/08/24 10:41:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.37 2005/05/31 13:57:45 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -37,8 +37,8 @@ class TFile : public TDirectory {
 protected:
    Double_t      fSumBuffer;      //Sum of buffer sizes of objects written so far
    Double_t      fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
-   Double_t      fBytesWrite;     //Number of bytes written to this file
-   Double_t      fBytesRead;      //Number of bytes read from this file
+   Long64_t      fBytesWrite;     //Number of bytes written to this file
+   Long64_t      fBytesRead;      //Number of bytes read from this file
    Long64_t      fBEGIN;          //First used byte in file
    Long64_t      fEND;            //Last used byte in file
    Long64_t      fSeekFree;       //Location on disk of free segments structure
@@ -63,8 +63,8 @@ protected:
    Bool_t        fIsArchive;      //!True if this is a pure archive file
    Bool_t        fIsRootFile;     //!True is this is a ROOT file
 
-   static Double_t fgBytesWrite;  //Number of bytes written by all TFile objects
-   static Double_t fgBytesRead;   //Number of bytes read by all TFile objects
+   static Long64_t fgBytesWrite;  //Number of bytes written by all TFile objects
+   static Long64_t fgBytesRead;   //Number of bytes read by all TFile objects
 
    void     Init(Bool_t create);
    Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
@@ -119,8 +119,8 @@ public:
    virtual Int_t     GetNfree() const { return fFree->GetSize(); }
    virtual Int_t     GetNProcessIDs() const { return fNProcessIDs; }
    Option_t         *GetOption() const { return fOption.Data(); }
-   virtual Double_t  GetBytesRead() const { return fBytesRead; }
-   virtual Double_t  GetBytesWritten() const { return fBytesWrite; }
+   virtual Long64_t  GetBytesRead() const { return fBytesRead; }
+   virtual Long64_t  GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t     GetNbytesInfo() const {return fNbytesInfo;}
@@ -162,13 +162,13 @@ public:
                           const char *ftitle = "", Int_t compress = 1,
                           Int_t netopt = 0);
 
-   static Double_t   GetFileBytesRead();
-   static Double_t   GetFileBytesWritten();
+   static Long64_t   GetFileBytesRead();
+   static Long64_t   GetFileBytesWritten();
 
-   static void       SetFileBytesRead(Double_t bytes=0);
-   static void       SetFileBytesWritten(Double_t bytes=0);
+   static void       SetFileBytesRead(Long64_t bytes = 0);
+   static void       SetFileBytesWritten(Long64_t bytes = 0);
 
-   ClassDef(TFile,6)  //ROOT file
+   ClassDef(TFile,7)  //ROOT file
 };
 
 R__EXTERN TFile   *gFile;

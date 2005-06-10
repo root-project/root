@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.1 2005/05/27 13:47:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.2 2005/05/31 13:58:19 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -147,12 +147,12 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
    totalread = 0;
    fWatch.Start();
 
-   b00 = (Long64_t)sfile->GetBytesRead();
+   b00 = sfile->GetBytesRead();
 
    do {
       if (progressbar) PrintProgress(totalread, filesize);
 
-      Long64_t b1 = (Long64_t)sfile->GetBytesRead() - b00;
+      Long64_t b1 = sfile->GetBytesRead() - b00;
 
       Long64_t readsize;
       if (filesize - b1 > (Long64_t)buffersize) {
@@ -161,17 +161,17 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
          readsize = filesize - b1;
       }
 
-      Long64_t b0 = (Long64_t)sfile->GetBytesRead();
+      Long64_t b0 = sfile->GetBytesRead();
       readop = sfile->ReadBuffer(copybuffer, readsize);
-      read   = (Long64_t)sfile->GetBytesRead() - b0;
+      read   = sfile->GetBytesRead() - b0;
       if (read < 0) {
          Error("Cp", "cannot read from source file %s", src);
          goto copyout;
       }
 
-      Long64_t w0 = (Long64_t)dfile->GetBytesWritten();
+      Long64_t w0 = dfile->GetBytesWritten();
       writeop = dfile->WriteBuffer(copybuffer, read);
-      written = (Long64_t)dfile->GetBytesWritten() - w0;
+      written = dfile->GetBytesWritten() - w0;
       if (written != read) {
          Error("Cp", "cannot write %d bytes to destination file %s", read, dst);
          goto copyout;
