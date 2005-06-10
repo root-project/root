@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.29 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.30 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -31,6 +31,7 @@
 
 // CINT
 #include "Api.h"
+R__EXTERN char G__cintsysdir[G__MAXFILENAME];
 
 // Standard
 #include <assert.h>
@@ -39,8 +40,6 @@
 #include <string>
 #include <algorithm>
 #include <vector>
-
-#include <iostream>
 
 
 //- data _______________________________________________________________________

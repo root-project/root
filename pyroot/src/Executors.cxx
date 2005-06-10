@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.4 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.5 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -11,9 +11,11 @@
 // ROOT
 #include "Rtypes.h"
 #include "TClass.h"
+#include "DllImport.h"
 
 // CINT
 #include "Api.h"
+R__EXTERN G__tempobject_list* G__p_tempbuf;
 
 // Standard
 #include <utility>
