@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.77 2004/09/13 16:39:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.78 2004/12/09 08:30:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -934,14 +934,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
    }
 
-//*-*-              No bining
-
-   if (ndiv == 0)goto L210;
-   if (wmin == wmax) {
-      Error(where, "wmin (%f) == wmax (%f)", wmin, wmax);
-      goto L210;
-   }
-
 //*-*-              Draw axis title if it exists
    if (!drawGridOnly && strlen(GetTitle())) {
       textaxis->SetTextSize (GetTitleSize());
@@ -988,6 +980,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                               GetTitleSize(),
                               GetTitle());
       }
+   }
+
+//*-*-              No bining
+
+   if (ndiv == 0)goto L210;
+   if (wmin == wmax) {
+      Error(where, "wmin (%f) == wmax (%f)", wmin, wmax);
+      goto L210;
    }
 
 //*-*-              Labels preparation:
