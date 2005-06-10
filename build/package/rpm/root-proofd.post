@@ -12,20 +12,20 @@ fi
 #
 # Add a file to /etc/xinet.d if it exists
 #
-if test -d /etc/xinet.d ; then 
-    rm -f /etc/xinet.d/proofd 
-    cat > /etc/xinet.d/proofd <<-EOF
-	service proofd 
-	{
-		disable		= no
-		flags		= REUSE
-		socket_type	= stream
-		wait		= no
-		user		= root
-		server		= %_prefix/bin/proofd
-		server_args	= -i
-	}
-	EOF
+if test -d /etc/xinetd.d ; then 
+    rm -f /etc/xinetd.d/proofd 
+    cat > /etc/xinetd.d/proofd <<EOF
+service proofd 
+{
+	disable		= no
+	flags		= REUSE
+	socket_type	= stream
+	wait		= no
+	user		= root
+	server		= %_prefix/bin/proofd
+	server_args	= -i
+}
+EOF
 fi
 #
 # Install lines in /etc/services 

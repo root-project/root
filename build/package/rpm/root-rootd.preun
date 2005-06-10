@@ -9,7 +9,7 @@ if test -f /etc/inetd.conf ; then
     mv /etc/inetd.conf.rpmnew /etc/inetd.conf
   fi
 fi
-rm -f /etc/xinet.d/rootd
+rm -f /etc/xinetd.d/rootd
 #
 # Do not remove antries from /etc/services, since the numbers _are_ 
 # assigned IANA, so there's no need 
@@ -18,6 +18,6 @@ rm -f /etc/xinet.d/rootd
 #
 # Stop the service
 #
-%_sysconfdir/init.d/rootd start 
+%_sysconfdir/init.d/rootd stop
 
 # end of script

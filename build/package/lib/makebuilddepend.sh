@@ -11,7 +11,10 @@ if test "x$1" = "xrpm" ; then
 	    root-cint)							;;
 	    root-doc)							;;
 	    *alien)	echo -n ", AliEn-Client" 			;;
-	    *asimage)	echo -n ", AfterStep-devel"			;;
+# Build dependency on AfterStep-devel temporarily commented out 
+# until such a time when ROOT can use the normal libAfterImage.
+#	    *asimage)	echo -n ", AfterStep-devel"			;;
+	    *asimage)							;;
 	    *asimage)							;;
 	    *castor)	echo -n ", CASTOR-client"			;;
 	    *chirp)							;;
@@ -64,7 +67,10 @@ for i in $* ; do
 	root-cint)							;;
 	root-doc)							;;
 	*alien)		echo -n ", libalien-dev" 			;;
-	*asimage)	echo -n ", libafterimage-dev"			;;
+# Build dependency on libafterimage-dev temporarily commented out 
+# until such a time when ROOT can use the normal libAfterImage.
+#	*asimage)	echo -n ", libafterimage-dev"			;;
+	*asimage)							;;
 	*castor)	echo -n ", libshift-dev"			;;
 	*chirp)		echo -n ", libchirp-dev"			;;
 	*clarens)	echo -n ", libxmlrpc-c-dev"			;;
@@ -81,7 +87,7 @@ for i in $* ; do
 	*mysql)		echo -n ", libmysqlclient-dev | libmysqlclient12-dev | libmysqlclient14-dev" ;;
 	*netx)								;;
 	*peac)								;;
-	*pgsql)		echo -n ", postgresql-dev"			;;
+	*pgsql)		echo -n ", postgresql-dev | libpq-dev"		;;
 	*proof)								;;
 	*pythia5)	echo -n ", pythia5-dev"				;;
 	*pythia6)	echo -n ", pythia6-dev"				;;

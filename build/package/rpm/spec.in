@@ -69,13 +69,17 @@ ROOT web-site: http://root.cern.ch
 	    --disable-afs				\
 	    --disable-srp				\
 	    --disable-builtin-freetype			\
-	    --disable-builtin-afterimage		\
 	    --prefix=%_prefix 				\
 	    --mandir=%_prefix/share/man/man1		\
 	    --docdir=%_defaultdocdir			\
 	    --cintincdir=%_prefix/lib/root/cint		\
 	    --etcdir=%_sysconfdir/root			\
             --with-sys-iconpath=%_datadir/pixmaps 	
+
+# Usage of external afterimage disabled until such a time when ROOT can use 
+# the normal libAfterImage
+#	    --disable-builtin-afterimage		\
+
 make 
 make cintdlls
 

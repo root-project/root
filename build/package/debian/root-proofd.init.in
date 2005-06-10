@@ -28,10 +28,23 @@ if test -f /var/run/inetd.pid ; then
 fi
 if test -f /var/run/xinetd.pid ; then 
     # Inetd is running
-    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` || \
-	test -f /etc/xinetd/proofd || test -f /etc/xinetd/root-proofd; then 
+    if `grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1` ; then 
 	# PROOFD is controlled by xinetd. 
 	ENABLE_PROOFD=no
+    fi
+    # old name 
+    if test -f /etc/xinetd.d/proofd && 
+	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/proofd > /dev/null 2>&1 ` ; then
+	# PROOFD is controlled by xinetd. 
+	ENABLE_PROOFD=no
+	
+    fi
+    # new name 
+    if test -f /etc/xinetd.d/root-proofd && 
+	`grep "disable[[:space:]]*= *[Nn][Oo]" /etc/xinetd.d/root-proofd > /dev/null 2>&1 ` ; then
+	# PROOFD is controlled by xinetd. 
+	ENABLE_PROOFD=no
+	
     fi
 fi
 

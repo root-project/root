@@ -117,7 +117,6 @@ clean:  $(TEMPLATES:%.in=%)
 	rm -rf bin lib include 		\
 		system.rootrc 		\
 		config/Makefile.config 	\
-		test/Makefile 		\
 		README/Changelog 	\
 		etc/system.rootrc 	\
 		etc/system.rootauthrc 	\

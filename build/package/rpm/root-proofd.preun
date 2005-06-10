@@ -9,10 +9,12 @@ if test -f /etc/inetd.conf ; then
     mv /etc/inetd.conf.rpmnew /etc/inetd.conf
   fi
 fi
-rm -f /etc/xinet.d/proofd
+rm -f /etc/xinetd.d/proofd
 
 #
 # Do not remove antries from /etc/services, since the numbers _are_ 
 # assigned IANA, so there's no need 
 #
+%_sysconfdir/init.d/proofd stop
+
 # end of script

@@ -12,20 +12,20 @@ fi
 #
 # Add a file to /etc/xinet.d if it exists
 #
-if test -d /etc/xinet.d ; then 
-    rm -f /etc/xinet.d/rootd 
-    cat > /etc/xinet.d/rootd <<-EOF 
-	service rootd 
-	{
-		disable		= no
-		flags		= REUSE
-		socket_type	= stream
-		wait		= no
-		user		= root
-		server		= %_prefix/bin/rootd
-		server_args	= -i
-	}
-	EOF
+if test -d /etc/xinetd.d ; then 
+    rm -f /etc/xinetd.d/rootd 
+    cat > /etc/xinetd.d/rootd <<EOF 
+service rootd 
+{
+	disable		= no
+	flags		= REUSE
+	socket_type	= stream
+	wait		= no
+	user		= root
+	server		= %_prefix/bin/rootd
+	server_args	= -i
+}
+EOF
 fi
 #
 # Install lines in /etc/services 
