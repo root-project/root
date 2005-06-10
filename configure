@@ -271,22 +271,28 @@ check_library() {
 
     echo $found_dir
     unset libs
-    unset slibs
     unset libdirs
 
-    if test "x$found_dir" = "xno" || test "$found_lib" = "xno" ; then
+    if test "x$found_dir" = "xno" || test "x$found_lib" = "xno" ; then
 	found_dir=""
 	found_lib=""
     else
 	flib=""
+        maclib=""
 	for i in $lib ; do
 	    for ext in .a .lib "" ; do     # lib without extension for MacOS X
 		if test "x$found_lib" = "x$i$ext" ; then
 		    flib=$i$ext
+                    if test "x$ext" = "x" ; then
+                        maclib="yes"
+                    fi
+                    break 2
 		fi
 	    done
 	done
-	if test "x$found_lib" = "x$flib" ; then
+
+	if (test "x$found_lib" = "x$flib" && test "x$shared" = "xno") || \
+           test "x$maclib" = "xyes" ; then
 	    found_lib=${found_dir}/${found_lib}
 	    found_dir=""
 	else
@@ -311,8 +317,10 @@ check_library() {
         fi
     fi
     unset shared
+    unset slibs
     unset lib
     unset flib
+    unset maclib
     unset libdirl
 }
 
@@ -370,7 +378,7 @@ check_header()  {
 
     echo $found_dir
 
-    if test "x$found_hdr" = "xno" || test "$found_dir" = "xno" ; then
+    if test "x$found_hdr" = "xno" || test "x$found_dir" = "xno" ; then
 	found_hdr=""
 	found_dir=""
     fi
@@ -532,6 +540,7 @@ guess_architecture () {
         openbsd*:*:*)          arch=openbsd         ;;
         lynx:*:*)              arch=lynxos          ;;
         darwin:power*:*)       arch=macosx          ;;
+        darwin:x86*:*)         arch=macosx          ;;
         irix*:sgi*:*)          arch=sgicc           ;;
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;

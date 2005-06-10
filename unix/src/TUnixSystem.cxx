@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.132 2005/05/02 10:59:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.133 2005/05/03 13:17:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -245,7 +245,7 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__)
+#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -614,9 +614,9 @@ Int_t TUnixSystem::GetFPEMask()
    fegetenv(&oldenv);
    fesetenv(&oldenv);
  #ifdef __alpha__
-	 ULong_t oldmask = ~oldenv;
+   ULong_t oldmask = ~oldenv;
  #elif __ia64__
-    Int_t oldmask = ~oldenv;
+   Int_t oldmask = ~oldenv;
  #else
    Int_t oldmask = ~oldenv.__control_word;
  #endif
@@ -629,7 +629,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__)
+#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -648,6 +648,8 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 {
    // Set which conditions trigger a floating point exception.
    // Return the previous set of conditions.
+
+   if (mask) { }  // use mask to avoid warning
 
    Int_t old = GetFPEMask();
 
@@ -671,7 +673,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(__xlC__)
+#if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;

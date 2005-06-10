@@ -448,15 +448,16 @@ endif
 
 ifeq ($(ARCH),macosx64)
 # MacOS X >= 10.4 with gcc 64 bit mode (GNU gcc 4.*)
+# Only specific option (-m64) comes from root-config
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 CXX           = c++
-CXXFLAGS      = -m64 -O2 -pipe -Wall -W -Woverloaded-virtual
-LDFLAGS       = -m64 -O2 -bind_at_load
+CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual
+LDFLAGS       = -O2 -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
 DllSuf        = dylib
 LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
-SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
+SOFLAGS       = -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
 ifeq ($(ARCH),macosxxlc)

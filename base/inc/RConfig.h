@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.81 2005/04/15 17:26:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.82 2005/04/18 16:05:48 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -298,6 +298,9 @@
 #   endif
 #   if defined(__ppc64__)
 #      define R__B64      /* enable when 64 bit machine */
+#   endif
+#   if defined(__i386__)
+#      define R__BYTESWAP
 #   endif
 #endif
 
