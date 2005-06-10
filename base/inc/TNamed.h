@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.5 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.6 2002/11/26 07:58:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -51,8 +51,8 @@ public:
    virtual Int_t    Compare(const TObject *obj) const;
    virtual void     Copy(TObject &named) const;
    virtual void     FillBuffer(char *&buffer);
-   virtual const char  *GetName() const {return fName.Data();}
-   virtual const char  *GetTitle() const {return fTitle.Data();}
+   virtual const char  *GetName() const { return fName; }
+   virtual const char  *GetTitle() const { return fTitle; }
    virtual ULong_t  Hash() const { return fName.Hash(); }
    virtual Bool_t   IsSortable() const { return kTRUE; }
    virtual void     SetName(const char *name); // *MENU*

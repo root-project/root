@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.6 2002/01/27 13:41:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.7 2004/04/27 13:13:23 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@
 #include "TString.h"
 #endif
 
-class TOrdCollection;
+class THashList;
 class TEnv;
 class TEnvParser;
 class TReadEnvParser;
@@ -110,6 +110,7 @@ public:
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
    EEnvLevel   GetLevel() const { return fLevel; }
+   ULong_t     Hash() const { return fName.Hash(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -121,7 +122,7 @@ public:
 class TEnv : public TObject {
 
 private:
-   TOrdCollection   *fTable;
+   THashList        *fTable;
    TString           fRcName;
 
    const char       *Getvalue(const char *name);
@@ -130,7 +131,7 @@ public:
    TEnv(const char *name="");
    virtual ~TEnv();
 
-   TOrdCollection     *GetTable() const { return fTable; }
+   THashList          *GetTable() const { return fTable; }
    Bool_t              Defined(const char *name)
                                   { return Getvalue(name) != 0; }
 

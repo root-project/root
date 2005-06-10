@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.18 2004/12/01 13:11:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.19 2005/04/07 14:43:35 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -70,7 +70,7 @@
 #include "TEnv.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TOrdCollection.h"
+#include "THashList.h"
 #include "TError.h"
 
 
@@ -371,7 +371,7 @@ TEnv::TEnv(const char *name)
    if (strlen(name) == 0)
       fTable = 0;
    else {
-      fTable  = new TOrdCollection(1000);
+      fTable  = new THashList(1000);
       fRcName = name;
 
       char sname[128] = "system";
@@ -530,6 +530,8 @@ TEnvRec *TEnv::Lookup(const char *name)
    // Loop over all resource records and return the one with name.
    // Return 0 in case name is not in the resoucre table.
 
+   return (TEnvRec*) fTable->FindObject(name);
+#if 0
    TIter next(fTable);
    TEnvRec *er;
 
@@ -538,6 +540,7 @@ TEnvRec *TEnv::Lookup(const char *name)
             return er;
 
    return 0;
+#endif
 }
 
 //______________________________________________________________________________
