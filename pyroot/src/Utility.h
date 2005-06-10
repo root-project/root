@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.14 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.15 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -67,7 +67,7 @@ namespace PyROOT {
 
    // meta information
       EDataType EffectiveType( const std::string& name );
-      int IsPointer( const std::string& name );   // 0 = no, 1 = yes, 2 = ref
+      int IsPointer( const std::string& name );
 
    // CINT integration
       void ErrMsgCallback( char* msg );

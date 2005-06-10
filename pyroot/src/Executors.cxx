@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.3 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.4 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -131,7 +131,14 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
    PyObject* obj = BindRootObject( (void*)func->ExecInt( self ), fClass );
    if ( ! obj )
       return 0;
+
+// take over object ownership from CINT
+   G__tempobject_list* prev = G__p_tempbuf->prev;
+   free( (void*)G__p_tempbuf );
+   G__p_tempbuf = prev;
    ((ObjectProxy*)obj)->fFlags |= ObjectProxy::kIsOwner;
+
+// python ref counting will now control the object life span
    return obj;
 }
 

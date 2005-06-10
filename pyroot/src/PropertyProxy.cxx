@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.3 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.4 2005/06/02 10:03:17 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -71,7 +71,7 @@ namespace {
       if ( address < 0 )
          return errret;
 
-   // fixed size arrays and object instances are not passed as address, but as &address
+   // for fixed size arrays
       void* ptr = (void*)address;
       if ( pyprop->fDataMember->GetArrayDim() != 0 )
          ptr = &address;

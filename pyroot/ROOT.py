@@ -1,14 +1,14 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.24 2005/06/02 10:03:17 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.25 2005/06/06 15:08:40 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/03/05
+# Last: 06/08/05
 
 """PyROOT user module.
 
  o) install lazy ROOT class/variable lookup as appropriate
  o) feed gSystem and gInterpreter for display updates
  o) enable some ROOT/CINT style commands
- o) handle a few special cases such as gPad
+ o) handle a few special cases such as gPad, STL, etc.
 
 """
 
@@ -52,8 +52,8 @@ sys.setcheckinterval( 100 )
 __version__ = '3.0.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
-__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad',
-                    'Template', 'AddressOf', 'NULL' ]
+__pseudo__all__ = [ 'gROOT', 'gSystem', 'gInterpreter', 'gPad', 'NULL',
+                    'Template', 'AddressOf', 'std' ]
 
 _orig_ehook = sys.excepthook
 
@@ -81,12 +81,39 @@ def safeLookupCall( func, arg ):
 ### template support ------------------------------------------------------------
 class Template:
    def __init__( self, name ):
-      self.name = name
+      self.__name__ = name
 
    def __call__( self, *args ):
-      return MakeRootTemplateClass( self.name, *args )
+      name = self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:]
+      return MakeRootTemplateClass( name, *args )
 
 sys.modules[ 'libPyROOT' ].Template = Template
+
+
+### scope place holder for STL classes ------------------------------------------
+class _STD: 
+   def __getattr__( self, name ):
+      pos = name.find( "<" )
+      if 0 < pos:
+         name = name[:pos] 
+
+      if name in [ 'complex', 'exception', 'pair',\
+            'deque', 'list', 'queue', 'stack', 'vector',\
+            'map', 'multimap', 'set', 'multiset' ]:
+
+         rmod = sys.modules[ __name__ ]
+         if rmod.__dict__.has_key( name ):
+            attr = rmod.__dict__[ name ]
+            self.__dict__[ name ] = attr
+         else:
+            attr = getattr( rmod, 'std::'+name )
+            setattr( rmod, name, attr )
+         return attr
+
+      raise AttributeError( name )
+   
+std = _STD()
+del _STD
 
 
 ### special case for gPad (is a C++ macro) --------------------------------------

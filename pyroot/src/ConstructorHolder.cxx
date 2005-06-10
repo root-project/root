@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.4 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.5 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -13,7 +13,6 @@
 #include "TMethod.h"
 
 // Standard
-#include <assert.h>
 #include <string>
 
 

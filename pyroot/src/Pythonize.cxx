@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.17 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.18 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -39,8 +39,9 @@ namespace {
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
 
-      return ( ksize   < nsize && name.substr(0,ksize) == klass ) ||
-             ( ksize+5 < nsize && name.substr(5,ksize) == klass );
+      return ( ( ksize   < nsize && name.substr(0,ksize) == klass ) ||
+               ( ksize+5 < nsize && name.substr(5,ksize) == klass ) ) &&
+             name.find( "::", name.find( ">" ) ) == std::string::npos;
    }
 
 // to prevent compiler warnings about const char* -> char*
@@ -524,6 +525,50 @@ namespace {
       return index;
    }
 
+//- vector behaviour as primitives --------------------------------------------
+   PyObject* vectorGetItem( PyObject*, PyObject* args )
+   {
+      ObjectProxy* self = 0; PySliceObject* index = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__getitem__" ), &self, &index ) )
+         return 0;
+
+      if ( PySlice_Check( index ) ) {
+         if ( ! ObjectProxy_Check( self ) || ! self->GetObject() ) {
+            PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
+            return 0;
+         }
+
+         PyObject* pyclass =
+            PyObject_GetAttrString( (PyObject*)self, const_cast< char* >( "__class__" ) );
+         PyObject* nseq = PyObject_CallObject( pyclass, NULL );
+         Py_DECREF( pyclass );
+ 
+         int start, stop, step;
+         PySlice_GetIndices( index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
+         for ( int i = start; i < stop; i += step ) {
+            PyObject* pyidx = PyInt_FromLong( i );
+            callPyObjMethod( nseq, "push_back", callPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
+            Py_DECREF( pyidx );
+         }
+
+         return nseq;
+      }
+
+      return callSelfIndex( args, "_vector__at" );
+   }
+
+//- STL container iterator supprt ---------------------------------------------
+   PyObject* stlSequenceIter( PyObject*, PyObject* args )
+   {
+      PyObject* iter = callSelf( args, "begin", "O" );
+      if ( iter ) {
+         PyObject* end = callSelf( args, "end", "O" );
+         if ( end )
+            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
+         Py_XDECREF( end );
+      }
+      return iter;
+   }
 
 //- string behaviour as primitives --------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
@@ -598,6 +643,47 @@ namespace {
    }
 
 
+//- STL iterator behaviour -----------------------------------------------------
+   PyObject* stlIterCompare( PyObject*, PyObject* args )
+   {
+      ObjectProxy* self = 0, *pyobj = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "OO:__cmp__" ), &self, &pyobj ) )
+         return 0;
+
+      if ( ! ObjectProxy_Check( pyobj ) )
+         return PyInt_FromLong( -1l );
+
+      return PyInt_FromLong( *(void**)self->GetObject() == *(void**)pyobj->GetObject() ? 0l : 1l );
+   }
+
+//____________________________________________________________________________
+   PyObject* stlIterNext( PyObject*, PyObject* args )
+   {
+      PyObject* self = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O" ), &self ) )
+         return 0;
+
+      PyObject* next = 0;
+
+      PyObject* last = PyObject_GetAttrString( self, const_cast< char* >( "end" ) );
+      if ( last != 0 ) {
+         PyObject* dummy = PyInt_FromLong( 1l );
+         PyObject* iter = callPyObjMethod( self, "__postinc__", dummy );
+         Py_DECREF( dummy );
+         if ( iter != 0 ) {
+            if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)iter)->fObject )
+               PyErr_SetString( PyExc_StopIteration, "" );
+            else
+               next = callPyObjMethod( iter, "__deref__" );
+         }
+         Py_XDECREF( iter );
+      }
+      Py_XDECREF( last );
+
+      return next;
+   }
+
+
 //- TTree behaviour ------------------------------------------------------------
    class TreeEraser : public TObject {
    public:
@@ -644,8 +730,9 @@ namespace {
 
       // found a leaf, extract value if just one, or wrap buffer if more
          PyObject* lcount = callPyObjMethod( leaf, "GetLeafCount" );
+         PyObject* length = callPyObjMethod( leaf, "GetLenStatic" );
 
-         if ( lcount == Py_None ) {
+         if ( lcount == Py_None && PyInt_AS_LONG( length ) <= 1 ) {
             value = callPyObjMethod( leaf, "GetValue" );
          } else {
             PyObject* ptr = callPyObjMethod( leaf, "GetValuePointer" );
@@ -675,6 +762,7 @@ namespace {
             PyObject_SetAttr( self, name, value );
          }
 
+         Py_DECREF( length );
          Py_DECREF( lcount );
          Py_DECREF( leaf );
 
@@ -915,12 +1003,28 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
-   //   Utility::AddToClass( pyclass, "__len__", "size" );
-   //   Utility::AddToClass( pyclass, "__getitem__", "at" );
+      Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
+
+      Utility::AddToClass( pyclass, "__len__",     "size" );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) vectorGetItem );
+      Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) stlSequenceIter );
+
+      return true;
    }
 
    if ( IsTemplatedSTLClass( name, "list" ) ) {
-   //   Utility::AddToClass( pyclass, "__len__",     "size" );
+      Utility::AddToClass( pyclass, "__len__",  "size" );
+      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) stlSequenceIter );
+
+      return true;
+   }
+
+   if ( name.find( "iterator" ) != std::string::npos ) {
+      Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) stlIterCompare );
+
+      Utility::AddToClass( pyclass, "next", (PyCFunction) stlIterNext );
+
+      return true;
    }
 
    if ( name == "string" || name == "std::string" ) {
@@ -963,12 +1067,16 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( IsTemplatedSTLClass( name, "map" ) ) {
-   //   Utility::AddToClass( pyclass, "__len__", "size" );
+      Utility::AddToClass( pyclass, "__len__", "size" );
+
+      return true;
    }
 
    if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) treeGetAttr );
+
+      return true;
    }
 
    if ( name == "TF1" ) {
@@ -985,6 +1093,8 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TFunction" ) {
    // allow direct call
       Utility::AddToClass( pyclass, "__call__", (PyCFunction) functionCall );
+
+      return true;
    }
 
    return true;

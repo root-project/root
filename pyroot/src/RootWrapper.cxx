@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.28 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.29 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -35,6 +35,7 @@
 // Standard
 #include <assert.h>
 #include <map>
+#include <set>
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -62,6 +63,47 @@ namespace {
    {
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
+   }
+
+   std::set< std::string > gSTLTypes;
+   struct InitSTLTypes {
+      InitSTLTypes()
+      {
+         const char* stlTypes[] = { "complex", "exception",
+            "deque", "list", "queue", "stack", "vector",
+            "map", "multimap", "set", "multiset" };
+         std::string nss = "std::";
+         for ( int i = 0; i < int(sizeof(stlTypes)/sizeof(stlTypes[0])); ++i ) {
+            gSTLTypes.insert( stlTypes[ i ] );
+            gSTLTypes.insert( nss + stlTypes[ i ] );
+         }
+      }
+   } initSTLTypes_;
+
+   void LoadDictionaryForSTLType( const std::string& tname )
+   {
+       std::string sub = tname.substr( 0, tname.find( "<" ) );
+       if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
+          if ( sub.substr( 0, 5 ) == "std::" )
+             sub = sub.substr( 5, std::string::npos );
+
+          if ( ! G__cintsysdir || G__cintsysdir[0] == '*' )
+             G__getcintsysdir();
+
+          char fulldllpath[ kMAXPATHLEN ];
+          sprintf( fulldllpath, "%s/stl/%s.dll", G__cintsysdir, sub.c_str() );
+          if ( 0 <= gSystem->Load( fulldllpath ) ) {
+             if ( sub == "map" || sub == "multimap" ) {
+                sprintf( fulldllpath, "%s/stl/%s2.dll", G__cintsysdir, sub.c_str() );
+                gSystem->Load( fulldllpath );
+             }
+             gSTLTypes.erase( sub );
+             gSTLTypes.erase( "std::" + sub );
+          } else {
+             PyErr_Warn( PyExc_RuntimeWarning,
+                const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
+          }
+       } 
    }
 
 } // unnamed namespace
@@ -149,21 +191,36 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       if ( 8 < mtName.size() && mtName.substr( 0, 8 ) == "operator" ) {
          std::string op = mtName.substr( 8, std::string::npos );
 
-      // filter memory operators
-         if ( op == " new"    || op == " new[]" ||
-              op == " delete" || op == " delete[]" )
-            continue;
-
       // filter assignment operator for later use
          if ( op == "=" ) {
             assign = method;
             continue;
          }
 
-      // map C++ operator to python equivalent
+      // map C++ operator to python equivalent, or made up name if no equivalent exists
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
-         if ( pop != Utility::gC2POperatorMapping.end() )
+         if ( pop != Utility::gC2POperatorMapping.end() ) {
             mtName = pop->second;
+         } else if ( op == "*" ) {
+            if ( method->GetNargs() == 0 )   // dereference
+               mtName = "__deref__";
+            else                             // multiplier (is python equivalent)
+               mtName = "__mul__";
+         } else if ( op == "++" ) {
+            if ( method->GetNargs() == 0 )   // prefix increment
+               mtName = "__preinc__"; 
+            else                             // postfix increment
+               mtName = "__postinc__";
+         } else if ( op == "--" ) {
+            if ( method->GetNargs() == 0 )   // prefix decrement
+               mtName = "__predec__";
+            else                             // postfix decrement
+               mtName = "__postdec__";
+         } else if ( op == "->" ) {          // class member access
+             mtName = "__follow__";
+         } else {
+            continue;                        // operator not handled (new, delete, etc.)
+         }
       }
 
    // decide on method type: member or static (which includes globals)
@@ -318,9 +375,13 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
          return 0;
    }
 
+// special action for STL classes to load dict lib (must be done before GetClass())
+   LoadDictionaryForSTLType( name );
+
 // retrieve ROOT class (this verifies name)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
    TClass* klass = gROOT->GetClass( lookup.c_str() );
+
    if ( klass == 0 ) {
    // in case a "naked" templated class is requested, return callable proxy for instantiations
       if ( G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
@@ -330,7 +391,7 @@ PyObject* PyROOT::MakeRootClassFromString( std::string name, PyObject* scope )
          return pytemplate;
       }
 
-      PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", (scName+"::"+name).c_str() );
+      PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", lookup.c_str() );
       return 0;
    }
 

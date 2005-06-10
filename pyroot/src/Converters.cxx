@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.10 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.11 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -604,11 +604,12 @@ PyROOT::Converter* PyROOT::CreateConverter( const std::string& fullType, long us
             result = new KnownClassConverter( klass, true );
          else                                // TODO: this may cause pbs ...
             result = new VoidArrayConverter( control );
+
       } else if ( ti.Property() & G__BIT_ISENUM ) {
       // special case; represent enums as unsigned integers
          h = gConvFactories.find( "UInt_t" );
       } else if ( 0 < isp )        // pointer and reference types treated as void*'s
-         result = new VoidArrayConverter( control ); 
+         result = new VoidArrayConverter( control );
    }
 
    if ( ! result && h != gConvFactories.end() )

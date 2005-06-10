@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.10 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.11 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -127,6 +127,13 @@ namespace {
                Py_DECREF( pyname );
                return 0;
             }
+
+         // special case for strings
+            if ( strcmp( PyString_AS_STRING( tpName ), "str" ) == 0 ) {
+               Py_DECREF( tpName );
+               tpName = PyString_FromString( "std::string" );
+            }
+
             PyString_ConcatAndDel( &pyname, tpName );
          }
 

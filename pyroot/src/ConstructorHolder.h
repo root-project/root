@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.h,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.h,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_CONSTRUCTORHOLDER_H
@@ -34,7 +34,7 @@ namespace PyROOT {
 
    protected:
       virtual bool InitExecutor_( Executor*& );
-    };
+   };
 
 } // namespace PyROOT
 
