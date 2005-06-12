@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.5 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.6 2005/06/10 18:24:07 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -15,7 +15,7 @@
 
 // CINT
 #include "Api.h"
-R__EXTERN G__tempobject_list* G__p_tempbuf;
+extern G__tempobject_list*& gCintTempBuf;
 
 // Standard
 #include <utility>
@@ -135,9 +135,9 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
       return 0;
 
 // take over object ownership from CINT
-   G__tempobject_list* prev = G__p_tempbuf->prev;
-   free( (void*)G__p_tempbuf );
-   G__p_tempbuf = prev;
+   G__tempobject_list* prev = gCintTempBuf->prev;
+   free( (void*)gCintTempBuf );
+   gCintTempBuf = prev;
    ((ObjectProxy*)obj)->fFlags |= ObjectProxy::kIsOwner;
 
 // python ref counting will now control the object life span

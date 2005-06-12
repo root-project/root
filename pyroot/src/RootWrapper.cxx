@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.30 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.31 2005/06/10 18:24:07 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -31,7 +31,7 @@
 
 // CINT
 #include "Api.h"
-R__EXTERN char G__cintsysdir[G__MAXFILENAME];
+extern char* gCintSysDir;
 
 // Standard
 #include <assert.h>
@@ -86,14 +86,14 @@ namespace {
           if ( sub.substr( 0, 5 ) == "std::" )
              sub = sub.substr( 5, std::string::npos );
 
-          if ( ! G__cintsysdir || G__cintsysdir[0] == '*' )
+          if ( ! gCintSysDir || gCintSysDir[0] == '*' )
              G__getcintsysdir();
 
           char fulldllpath[ kMAXPATHLEN ];
-          sprintf( fulldllpath, "%s/stl/%s.dll", G__cintsysdir, sub.c_str() );
+          sprintf( fulldllpath, "%s/stl/%s.dll", gCintSysDir, sub.c_str() );
           if ( 0 <= gSystem->Load( fulldllpath ) ) {
              if ( sub == "map" || sub == "multimap" ) {
-                sprintf( fulldllpath, "%s/stl/%s2.dll", G__cintsysdir, sub.c_str() );
+                sprintf( fulldllpath, "%s/stl/%s2.dll", gCintSysDir, sub.c_str() );
                 gSystem->Load( fulldllpath );
              }
              gSTLTypes.erase( sub );

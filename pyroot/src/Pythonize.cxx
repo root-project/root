@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.18 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.19 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -307,7 +307,9 @@ namespace {
       TCollection* col =
          (TCollection*) self->ObjectIsA()->DynamicCast( TCollection::Class(), self->GetObject() );
 
-      return BindRootObject( (void*) new TIter( col ), TIter::Class() );
+      PyObject* pyobject = BindRootObject( (void*) new TIter( col ), TIter::Class() );
+      ((ObjectProxy*)pyobject)->fFlags |= ObjectProxy::kIsOwner;
+      return pyobject;
    }
 
 
@@ -716,7 +718,8 @@ namespace {
       PyObject* notify = callPyObjMethod( self, "GetNotify" );
       if ( PyObject_Not( notify ) ) {
          TObject* te = new TreeEraser( self );
-         Py_XDECREF( callPyObjMethod( self, "SetNotify", BindRootObject( te, te->IsA() ) ) );
+         PyObject* result = callPyObjMethod( self, "SetNotify", BindRootObject( te, te->IsA() ) );
+         Py_XDECREF( result );
       }
       Py_DECREF( notify );
 

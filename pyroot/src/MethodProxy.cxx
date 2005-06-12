@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.5 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.6 2005/05/06 10:26:21 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -170,7 +170,7 @@ namespace {
       newPyMeth->fMethodInfo = pymeth->fMethodInfo;
 
    // new method is to be bound to current object (may be NULL)
-      Py_XINCREF( pyobj );
+      Py_XINCREF( (PyObject*)pyobj );
       newPyMeth->fSelf = pyobj;
 
       return newPyMeth;
@@ -192,7 +192,9 @@ namespace {
    void mp_dealloc( MethodProxy* pymeth )
    {
       PyObject_GC_UnTrack( pymeth );
-      Py_XDECREF( pymeth->fSelf );
+
+      Py_XDECREF( (PyObject*)pymeth->fSelf );
+      pymeth->fSelf = NULL;
 
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
          delete pymeth->fMethodInfo;
@@ -213,9 +215,8 @@ namespace {
 //____________________________________________________________________________
    int mp_clear( MethodProxy* pymeth )
    {
-      PyObject* pyobject = (PyObject*)pymeth->fSelf;
+      Py_XDECREF( (PyObject*)pymeth->fSelf );
       pymeth->fSelf = NULL;
-      Py_XDECREF( pyobject );
 
       return 0;
    }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.11 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.12 2005/06/10 14:30:22 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -10,6 +10,7 @@
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
+#include "DllImport.h"
 
 // Standard
 #include <string>
@@ -17,6 +18,13 @@
 
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
+
+R__EXTERN char G__cintsysdir[];
+char* gCintSysDir = (char*)&G__cintsysdir[0];
+
+struct G__tempobject_list;
+R__EXTERN G__tempobject_list* G__p_tempbuf;
+G__tempobject_list*& gCintTempBuf = G__p_tempbuf;
 
 
 //- private helpers ------------------------------------------------------------
