@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.171 2005/06/09 18:20:02 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.172 2005/06/09 19:44:48 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2086,18 +2086,22 @@ void TBranchElement::InitializeOffsets()
       const char *ename = elem ? elem->GetName() : 0;
       fBranchOffset = new Int_t[nbranches];
       fBranchTypes  = new Bool_t[nbranches];
-      for (Int_t j=0; j<nbranches; j++ )  {
-         fBranchOffset[j] = 0;
-         TBranch *abranch = (TBranch*)fBranches[j];
-         fBranchTypes[j]  = abranch->InheritsFrom(TBranchElement::Class());
-      }
+      //for (Int_t j=0; j<nbranches; j++ )  {
+      //   fBranchOffset[j] = 0;
+      //   TBranch *abranch = (TBranch*)fBranches[j];
+      //   fBranchTypes[j]  = abranch->InheritsFrom(TBranchElement::Class());
+      //}
       for (Int_t i=0; i<nbranches;i++ )  {
+         fBranchOffset[i] = 0;
+         TBranch *abranch = (TBranch*)fBranches[i];
+         fBranchTypes[i]  = abranch->InheritsFrom(TBranchElement::Class());
+
          //just in case a TBranch had been added to a TBranchElement!
          if ( !fBranchTypes[i] ) {
            continue;
          }
-         TBranchElement *branch = (TBranchElement*)fBranches[i];
-         Int_t nb2 = branch->GetListOfBranches()->GetEntries();
+         TBranchElement *branch = (TBranchElement*)abranch;
+         Int_t nb2 = branch->GetListOfBranches()->GetEntriesFast();
          Int_t lOffset = 0; // offset in the local streamerInfo.
 
          lOffset = clm->GetStreamerInfo()->GetOffset(ename);
@@ -2112,26 +2116,26 @@ void TBranchElement::InitializeOffsets()
          // a direct sub-branch.
 
          TStreamerInfo *info = branch->GetInfo();
-         TBranchElement *parent = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
-         assert(parent==this);
+         TBranchElement *parent = this; // = (TBranchElement*) branch->GetMother()->GetSubBranch(branch);
+         //assert(parent==this);
 
          parentID = parent->GetID();
          assert(parentID>=0 || parentID==-2 || parentID==-1);  
          // if the ID was negative, the branch would not have been split!
          // -2 = Base class; -1 = (STL-)Collection
-         TStreamerInfo *parentInfo = parent->GetInfo();
+         TStreamerInfo *parentInfo = fInfo; // since parent==this parent->GetInfo();
          assert(parentInfo != 0);
 
          switch(parentID) {
             case -2:
-	    case -1:
-	       parentBranchClass = parentInfo->GetClass();
-	       break;
-	    default: {
+            case -1:
+               parentBranchClass = parentInfo->GetClass();
+               break;
+            default: {
                TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
-	       parentBranchClass = parentElem->GetClassPointer();
-	       break;
-	    }
+               parentBranchClass = parentElem->GetClassPointer();
+               break;
+            }
          }
          if ( nb2 > 0 )   {
             // The branch has some sub-branches
@@ -2175,14 +2179,19 @@ void TBranchElement::InitializeOffsets()
             }
          }
          else  {
-            std::string enam( branch->GetName() );
-            size_t idx = enam.find(".");
-            if ( idx != std::string::npos )  {
+            const char *name = branch->GetName();
+            const char *pos = strchr( name, '.');
+            //std::string enam( branch->GetName() );
+            //size_t idx = enam.find(".");
+            //if ( idx != std::string::npos )  {
+            if (pos) {
+               size_t idx = (pos-name);
                // Broken branch hierarchy: need to look for offset 
                // in the parents StreamerInfo
-               enam = enam.substr(0,idx);
+               //enam = enam.substr(0,idx);
                parentInfo = parentBranchClass->GetStreamerInfo();
                if ( parentInfo )  {
+                  std::string enam( branch->GetName(), idx );
                   fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
                }
                else  {
