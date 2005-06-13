@@ -85,6 +85,52 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 rootfiles: ams.root aleph.root  brahms.root  btev.root cdf.root d0.root  \
 	e907.root gem.root phenix.root phobos.root star.root tesla.root
 
+alice_all.C : unpack.last
+alice_itsd.C : unpack.last
+alice_itsv.C : unpack.last
+alice.root : unpack.last
+atlas_all.C : unpack.last
+atlas_cryo.C : unpack.last
+atlas_sctt.C : unpack.last
+atlas.root : unpack.last
+cms_cmse.C : unpack.last
+cms_calo.C : unpack.last
+cms.root : unpack.last
+ams.C : unpack.last
+ams_all.C : unpack.last
+btev.C : unpack.last
+btev_all.C : unpack.last
+gem.C : unpack.last
+gem_all.C : unpack.last
+hades_all.C : unpack.last
+hades.root : unpack.last
+phenix.C : unpack.last
+phenix_all.C : unpack.last
+phobos_all.C : unpack.last
+phobos.C : unpack.last
+brahms_all.C : unpack.last
+brahms.C : unpack.last
+d0_all.C : unpack.last
+d0.C : unpack.last
+tesla_all.C : unpack.last
+tesla.C : unpack.last
+e907_all.C : unpack.last
+e907.C : unpack.last
+cdf_all.C : unpack.last
+cdf_svxc.C : unpack.last
+cdf.root : unpack.last
+aleph_all.C : unpack.last
+aleph.root : unpack.last
+star_all.C : unpack.last
+star_svtt.C : unpack.last
+star.root : unpack.last
+lhcb.C : unpack.last
+lhcb_all.C : unpack.last
+lhcbfull_all.C : unpack.last
+lhcbnobool_all.C : unpack.last
+lhcbfull.root : unpack.last
+lhcbnobool.root : unpack.last
+
 unpack.last: geometries.tar.gz
 	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && ($(MAKE) rootfiles) && touch unpack.last
 
