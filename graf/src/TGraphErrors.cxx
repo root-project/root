@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.47 2005/03/07 09:15:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.48 2005/05/24 17:37:03 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -550,6 +550,7 @@ void TGraphErrors::Paint(Option_t *option)
    box.SetLineWidth(GetLineWidth());
    box.SetLineColor(GetLineColor());
    box.SetFillColor(GetFillColor());
+   box.SetFillStyle(GetFillStyle());
 
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*BASEMARKER;
