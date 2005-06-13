@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.172 2005/06/09 19:44:48 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.173 2005/06/13 16:48:19 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1274,9 +1274,11 @@ Bool_t TBranchElement::CheckBranchID()
       int offset = 0;
       TStreamerElement* elt = fInfo->GetStreamerElement(s.c_str(),offset);
       if ( elt )   {
-         TObjArray* arr = fInfo->GetElements();
-         for(size_t i=0, num=arr->GetEntriesFast(); i < num; ++i )  {
-            if ( (TStreamerElement*)arr->UncheckedAt(i) == elt )  {
+         size_t ndata = fInfo->GetNdata();
+         ULong_t *elems = fInfo->GetElems();
+
+         for(size_t i=0; i < ndata; ++i )  {
+            if ( (TStreamerElement*)elems[i] == elt )  {
                fID = i;
                break;
             }
@@ -2189,8 +2191,8 @@ void TBranchElement::InitializeOffsets()
                // Broken branch hierarchy: need to look for offset 
                // in the parents StreamerInfo
                //enam = enam.substr(0,idx);
-               parentInfo = parentBranchClass->GetStreamerInfo();
-               if ( parentInfo )  {
+               TClass *pbc = parentBranchClass;
+               if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
                   std::string enam( branch->GetName(), idx );
                   fBranchOffset[i] = parentInfo->GetOffset(enam.c_str());
                }
