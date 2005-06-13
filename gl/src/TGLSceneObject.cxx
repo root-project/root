@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.39 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.40 2005/06/01 14:07:14 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,19 +8,19 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  **********************************************TF***************************/
-#include "TGLIncludes.h"
+#include "TGLSceneObject.h"
 
+#include "TGLIncludes.h"
 #include "TAttMarker.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TError.h"
-
-#include "TGLSceneObject.h"
 #include "TContextMenu.h"
 
-#include <assert.h>
+// For debug tracing
+#include "TClass.h" 
+#include "TError.h"
 
-ClassImp(TGLSceneObject)
+#include <assert.h>
 
 static GLUtriangulatorObj *GetTesselator()
 {
@@ -77,6 +77,8 @@ static GLUquadric *GetQuadric()
    return singleton.fQuad;
 }
 
+ClassImp(TGLSceneObject)
+
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, TObject *obj) :
    TGLLogicalShape(reinterpret_cast<ULong_t>(obj)), // TODO: Clean up more
@@ -111,6 +113,8 @@ void TGLSceneObject::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) 
       menu.Popup(x, y, fRealObject);
    }
 }
+
+ClassImp(TGLFaceSet)
 
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, TObject *realobj)
@@ -216,8 +220,13 @@ void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::DirectDraw(UInt_t /*LOD*/) const
+void TGLFaceSet::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    GLUtriangulatorObj *tessObj = GetTesselator();
    const Double_t *pnts = &fVertices[0];
    const Double_t *normals = &fNormals[0];
@@ -355,6 +364,8 @@ void TGLFaceSet::CalculateNormals()
    }
 }
 
+ClassImp(TGLPolyMarker)
+
 //______________________________________________________________________________
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
                   :TGLSceneObject(buffer, r),
@@ -366,8 +377,13 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::DirectDraw(UInt_t /*LOD*/) const
+void TGLPolyMarker::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
@@ -466,6 +482,8 @@ void TGLPolyMarker::DrawStars()const
    glEnable(GL_LIGHTING);
 }
 
+ClassImp(TGLPolyLine)
+
 //______________________________________________________________________________
 TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
                 :TGLSceneObject(buffer, r)
@@ -473,8 +491,13 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
 }
 
 //______________________________________________________________________________
-void TGLPolyLine::DirectDraw(UInt_t /*LOD*/) const
+void TGLPolyLine::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    glBegin(GL_LINE_STRIP);
 
    for (UInt_t i = 0; i < fVertices.size(); i += 3)
@@ -482,6 +505,8 @@ void TGLPolyLine::DirectDraw(UInt_t /*LOD*/) const
 
    glEnd();
 }
+
+ClassImp(TGLSphere)
 
 //______________________________________________________________________________
 TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
@@ -505,6 +530,11 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
 //______________________________________________________________________________
 void TGLSphere::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    if (LOD == 0) {
       glPointSize(fRadius*2.0);
       glBegin(GL_POINTS);
@@ -988,6 +1018,8 @@ void CylinderSegMesh::Draw(const Double_t * /*rot*/)const
    glDisableClientState(GL_NORMAL_ARRAY);
 }
 
+ClassImp(TGLCylinder)
+
 //______________________________________________________________________________
 TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer, TObject *r)
             :TGLSceneObject(buffer, 16, r)
@@ -1062,8 +1094,13 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 }
 
 //______________________________________________________________________________
-void TGLCylinder::DirectDraw(UInt_t /*LOD*/) const
+void TGLCylinder::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    //draw here
    for (UInt_t i = 0; i < fParts.size(); ++i) fParts[i]->Draw(&fVertices[0]);
 }

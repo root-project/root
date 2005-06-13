@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 
 #include "TGLDrawable.h"
 #include "TGLDisplayListCache.h"
+
+// For debug tracing
+#include "TClass.h" 
+#include "TError.h"
 
 ClassImp(TGLDrawable)
 
@@ -53,6 +57,11 @@ Bool_t TGLDrawable::SetDLCache(Bool_t DLCache)
 //______________________________________________________________________________
 void TGLDrawable::Draw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLDrawable::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    TGLDisplayListCache & cache = TGLDisplayListCache::Instance();
 
    // If shape is not cached, or a capture to cache is already in progress
@@ -67,6 +76,9 @@ void TGLDrawable::Draw(UInt_t LOD) const
 
    if (!cache.Draw(*this, LOD))
    {
+      if (gDebug > 2) {
+         Info("TGLDrawable::Draw", "added to DL cache");
+      }
       // Capture the shape draw into compiled DL
       // If the cache is disabled the capture is ignored and
       // the shape is directly drawn
@@ -81,6 +93,8 @@ void TGLDrawable::Draw(UInt_t LOD) const
          Bool_t ok = cache.Draw(*this, LOD);
          assert(ok);
       }
+   } else if (gDebug > 2) {
+         Info("TGLDrawable::Draw", "from DL cache");
    }
 }
 

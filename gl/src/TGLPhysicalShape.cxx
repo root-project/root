@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.5 2005/06/01 14:07:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -18,7 +18,11 @@
 #include "TGLLogicalShape.h"
 #include "TGLIncludes.h"
 
-ClassImp(TObject)
+// For debug tracing
+#include "TClass.h" 
+#include "TError.h"
+
+ClassImp(TGLPhysicalShape)
 
 //______________________________________________________________________________
 TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
@@ -88,6 +92,11 @@ void TGLPhysicalShape::SetColor(const Float_t rgba[4])
 //______________________________________________________________________________
 void TGLPhysicalShape::Draw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    // TODO: Can be moved to a one off switch when transparent draw sorting
    // back in
    if (IsTransparent()) {
@@ -127,6 +136,11 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
 //______________________________________________________________________________
 void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
 {
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLPhysicalShape::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    glPushMatrix();
    glLoadName(ID());
    glMultMatrixd(fTransform.CArr());

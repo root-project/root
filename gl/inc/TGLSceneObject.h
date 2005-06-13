@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.25 2005/05/25 14:25:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.26 2005/06/01 14:07:14 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -48,14 +48,11 @@ public:
    
    void InvokeContextMenu(TContextMenu &menu, UInt_t x, UInt_t y) const;
 
-   //virtual void Shift(Double_t x, Double_t y, Double_t z);
-   //virtual void Stretch(Double_t xs, Double_t ys, Double_t zs);
-
 private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);
 
-   ClassDef(TGLSceneObject,0)
+   ClassDef(TGLSceneObject,0) // abstract scene object logical
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -80,6 +77,8 @@ private:
    Int_t CheckPoints(const Int_t *source, Int_t *dest)const;
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
    void CalculateNormals();
+
+   ClassDef(TGLFaceSet,0) // a faceset logical shape
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -95,6 +94,8 @@ public:
 
 private:
    void DrawStars()const;
+
+   ClassDef(TGLPolyMarker,0) // a polymarker logical shape
 };
 
 
@@ -105,6 +106,7 @@ protected:
 public:
    TGLPolyLine(const TBuffer3D &buff, TObject *realObject);
 
+   ClassDef(TGLPolyLine,0) // a polyline logical shape
 };
 
 // Utility class to draw a Sphere using OpenGL Sphere primitive
@@ -118,8 +120,7 @@ protected:
 public:
    TGLSphere(const TBuffer3DSphere &buffer, TObject *realObject);
 
-   // void Shift(Double_t x, Double_t y, Double_t z);
-   // void Stretch(Double_t xs, Double_t ys, Double_t zs);
+   ClassDef(TGLSphere,0) // a spherical logical shape
 };
 
 class TGLMesh;
@@ -135,11 +136,10 @@ public:
    TGLCylinder(const TBuffer3DTube &buff, TObject *realObject);
    ~TGLCylinder();
 
-   //void Shift(Double_t x, Double_t y, Double_t z);
-   //void Stretch(Double_t xs, Double_t ys, Double_t zs);
-
 private:
    void CreateParts(const TBuffer3DTube & buffer);
+
+   ClassDef(TGLCylinder,0) // a cylinderical logical shape
 };
 
 #endif

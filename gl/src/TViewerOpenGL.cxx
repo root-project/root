@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.60 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.61 2005/06/01 14:07:14 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -288,7 +288,6 @@ void TViewerOpenGL::CreateViewer()
    MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    SetWMPosition(fgInitX, fgInitY);
    Show();
-   TGLUtil::CheckError();
 }
 
 //______________________________________________________________________________

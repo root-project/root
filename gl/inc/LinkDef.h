@@ -46,8 +46,12 @@
 #pragma link C++ class TGLRenderArea;
 #pragma link C++ class TGLWindow;
 #pragma link C++ class TGLSceneObject;
+#pragma link C++ class TGLFaceSet;
+#pragma link C++ class TGLPolyLine;
+#pragma link C++ class TGLPolyMarker;
+#pragma link C++ class TGLCylinder;
+#pragma link C++ class TGLSphere;
 #pragma link C++ class TViewerOpenGL;
-
 #ifndef _WIN32
 #pragma link C++ class TX11GL;
 #endif
