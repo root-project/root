@@ -1088,8 +1088,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                ans = This->ReadBufferSkip(b,arr,i,kase,aElement,narr,eoffset);
             if (ans==0) continue;
          }
-         Error("ReadBuffer","The element %s::%s type %d (%s) is not supported yet\n",
+         if (aElement)
+            Error("ReadBuffer","The element %s::%s type %d (%s) is not supported yet\n",
                This->GetName(),aElement->GetFullName(),kase,aElement->GetTypeName());
+         else 
+           Error("ReadBuffer","The TStreamerElement for %s %d is missing!\n",
+               This->GetName(),i);
+
          continue;
       }
    }
