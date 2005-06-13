@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.8 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.h,v 1.9 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -67,6 +67,7 @@ protected:
    Int_t            *fExtraY;         //[fNey] indices of extra daughters in Y slices
    Int_t            *fExtraZ;         //[fNez] indices of extra daughters in Z slices
    Int_t            *fCheckList;      //! list of candidates
+   UChar_t          *fBits1;          //! bits used for list intersection
 public :
    TGeoVoxelFinder();
    TGeoVoxelFinder(TGeoVolume *vol);

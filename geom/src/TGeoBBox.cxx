@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.43 2005/05/13 16:20:38 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.44 2005/05/25 14:25:16 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -601,14 +601,21 @@ void TGeoBBox::SetPoints(Double_t *points) const
 {
 // create box points
    if (!points) return;
-   points[ 0] = -fDX+fOrigin[0]; points[ 1] = -fDY+fOrigin[1]; points[ 2] = -fDZ+fOrigin[2];
-   points[ 3] = -fDX+fOrigin[0]; points[ 4] =  fDY+fOrigin[1]; points[ 5] = -fDZ+fOrigin[2];
-   points[ 6] =  fDX+fOrigin[0]; points[ 7] =  fDY+fOrigin[1]; points[ 8] = -fDZ+fOrigin[2];
-   points[ 9] =  fDX+fOrigin[0]; points[10] = -fDY+fOrigin[1]; points[11] = -fDZ+fOrigin[2];
-   points[12] = -fDX+fOrigin[0]; points[13] = -fDY+fOrigin[1]; points[14] =  fDZ+fOrigin[2];
-   points[15] = -fDX+fOrigin[0]; points[16] =  fDY+fOrigin[1]; points[17] =  fDZ+fOrigin[2];
-   points[18] =  fDX+fOrigin[0]; points[19] =  fDY+fOrigin[1]; points[20] =  fDZ+fOrigin[2];
-   points[21] =  fDX+fOrigin[0]; points[22] = -fDY+fOrigin[1]; points[23] =  fDZ+fOrigin[2];
+   Double_t xmin,xmax,ymin,ymax,zmin,zmax;
+   xmin = -fDX+fOrigin[0];
+   xmax =  fDX+fOrigin[0];
+   ymin = -fDY+fOrigin[1];
+   ymax =  fDY+fOrigin[1];
+   zmin = -fDZ+fOrigin[2];
+   zmax =  fDZ+fOrigin[2];
+   points[ 0] = xmin; points[ 1] = ymin; points[ 2] = zmin;
+   points[ 3] = xmin; points[ 4] = ymax; points[ 5] = zmin;
+   points[ 6] = xmax; points[ 7] = ymax; points[ 8] = zmin;
+   points[ 9] = xmax; points[10] = ymin; points[11] = zmin;
+   points[12] = xmin; points[13] = ymin; points[14] = zmax;
+   points[15] = xmin; points[16] = ymax; points[17] = zmax;
+   points[18] = xmax; points[19] = ymax; points[20] = zmax;
+   points[21] = xmax; points[22] = ymin; points[23] = zmax;
 }
 
 //_____________________________________________________________________________
@@ -616,14 +623,21 @@ void TGeoBBox::SetPoints(Float_t *points) const
 {
 // create box points
    if (!points) return;
-   points[ 0] = -fDX+fOrigin[0]; points[ 1] = -fDY+fOrigin[1]; points[ 2] = -fDZ+fOrigin[2];
-   points[ 3] = -fDX+fOrigin[0]; points[ 4] =  fDY+fOrigin[1]; points[ 5] = -fDZ+fOrigin[2];
-   points[ 6] =  fDX+fOrigin[0]; points[ 7] =  fDY+fOrigin[1]; points[ 8] = -fDZ+fOrigin[2];
-   points[ 9] =  fDX+fOrigin[0]; points[10] = -fDY+fOrigin[1]; points[11] = -fDZ+fOrigin[2];
-   points[12] = -fDX+fOrigin[0]; points[13] = -fDY+fOrigin[1]; points[14] =  fDZ+fOrigin[2];
-   points[15] = -fDX+fOrigin[0]; points[16] =  fDY+fOrigin[1]; points[17] =  fDZ+fOrigin[2];
-   points[18] =  fDX+fOrigin[0]; points[19] =  fDY+fOrigin[1]; points[20] =  fDZ+fOrigin[2];
-   points[21] =  fDX+fOrigin[0]; points[22] = -fDY+fOrigin[1]; points[23] =  fDZ+fOrigin[2];
+   Double_t xmin,xmax,ymin,ymax,zmin,zmax;
+   xmin = -fDX+fOrigin[0];
+   xmax =  fDX+fOrigin[0];
+   ymin = -fDY+fOrigin[1];
+   ymax =  fDY+fOrigin[1];
+   zmin = -fDZ+fOrigin[2];
+   zmax =  fDZ+fOrigin[2];
+   points[ 0] = xmin; points[ 1] = ymin; points[ 2] = zmin;
+   points[ 3] = xmin; points[ 4] = ymax; points[ 5] = zmin;
+   points[ 6] = xmax; points[ 7] = ymax; points[ 8] = zmin;
+   points[ 9] = xmax; points[10] = ymin; points[11] = zmin;
+   points[12] = xmin; points[13] = ymin; points[14] = zmax;
+   points[15] = xmin; points[16] = ymax; points[17] = zmax;
+   points[18] = xmax; points[19] = ymax; points[20] = zmax;
+   points[21] = xmax; points[22] = ymin; points[23] = zmax;
 }
 
 //_____________________________________________________________________________

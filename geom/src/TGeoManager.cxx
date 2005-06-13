@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.114 2005/05/13 16:20:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.115 2005/05/26 12:54:56 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2662,8 +2662,8 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // we are looking upwards until inside current node or exit
       if (fStartSafe) GotoSafeLevel();
       vol=fCurrentNode->GetVolume();
-      fCache->MasterToLocal(fPoint, &point[0]);
-      inside_current = vol->Contains(&point[0]);
+      fCache->MasterToLocal(fPoint, point);
+      inside_current = vol->Contains(point);
       if (!inside_current) {
          fIsSameLocation = kFALSE;
          TGeoNode *skip = fCurrentNode;
@@ -2679,12 +2679,12 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    if (!inside_current) {
    // we are looking downwards
       vol = fCurrentNode->GetVolume();
-      fCache->MasterToLocal(fPoint, &point[0]);
+      fCache->MasterToLocal(fPoint, point);
       if (fCurrentNode==skipnode) {
       // in case searching down and skipping this
          inside_current = kTRUE;
       } else {
-         inside_current = vol->Contains(&point[0]);
+         inside_current = vol->Contains(point);
          if (!inside_current) {
             fIsSameLocation = kFALSE;
             return 0;
@@ -2699,6 +2699,14 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       fSearchOverlaps = kFALSE;
    }
 
+   Int_t crtindex = vol->GetCurrentNodeIndex();
+   while (crtindex>=0) {
+      CdDown(crtindex);
+      vol = fCurrentNode->GetVolume();
+      crtindex = vol->GetCurrentNodeIndex();
+      if (crtindex<0) fCache->MasterToLocal(fPoint, point);
+   }   
+      
    Int_t nd = vol->GetNdaughters();
    // in case there are no daughters
    if (!nd) return fCurrentNode;
@@ -2965,9 +2973,9 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
       Int_t ifirst = finder->GetDivIndex();
       current = vol->GetNode(ifirst);
       current->cd();
-      current->MasterToLocal(&point[0], &lpoint[0]);
-      current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
+      current->MasterToLocal(&point[0], lpoint);
+      current->MasterToLocalVect(&dir[0], ldir);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
       if (snext<fStep) {
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
@@ -2982,9 +2990,9 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
       if (ilast==ifirst) return fNextNode;
       current = vol->GetNode(ilast);
       current->cd();
-      current->MasterToLocal(&point[0], &lpoint[0]);
-      current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
+      current->MasterToLocal(&point[0], lpoint);
+      current->MasterToLocalVect(&dir[0], ldir);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
       if (snext<fStep) {
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
@@ -2999,58 +3007,55 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
    }
    // if only few daughters, check all and exit
    TGeoVoxelFinder *voxels = vol->GetVoxels();
-   if (nd<5) {
+   Int_t indnext;
+   if (nd<5 || !voxels) {
       for (i=0; i<nd; i++) {
          current = vol->GetNode(i);
          current->cd();
-         if (voxels) {
-            if (voxels->IsSafeVoxel(point, i, fStep)) {
-               continue;
-            }
-            current->MasterToLocal(&point[0], &lpoint[0]);
-            current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
-         } else {
-            current->MasterToLocal(&point[0], &lpoint[0]);
-            current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
-         }
-
+         if (voxels && voxels->IsSafeVoxel(point, i, fStep)) continue;
+         current->MasterToLocal(point, lpoint);
+         current->MasterToLocalVect(dir, ldir);
+         snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
+         
          if (snext<fStep) {
+            indnext = current->GetVolume()->GetNextNodeIndex();
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                 fCurrentMatrix->Multiply(current->GetMatrix());
+                if (indnext>=0) fCurrentMatrix->Multiply(current->GetDaughter(indnext)->GetMatrix());
             }
             fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
-            nodefound = current;
+            if (indnext>=0) fNextNode = current->GetDaughter(indnext);
+            nodefound = fNextNode;   
          }
       }
       return nodefound;
    }
    // if current volume is voxelized, first get current voxel
-   if (voxels) {
-      Int_t ncheck = 0;
-      Int_t *vlist = 0;
-      voxels->SortCrossedVoxels(&point[0], &dir[0]);
-      while ((vlist=voxels->GetNextVoxel(&point[0], &dir[0], ncheck))) {
-         for (i=0; i<ncheck; i++) {
-            current = vol->GetNode(vlist[i]);
-            current->cd();
-            current->MasterToLocal(&point[0], &lpoint[0]);
-            current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], 3);
-            if (snext<fStep) {
-               if (compmatrix) {
-                  *fCurrentMatrix = GetCurrentMatrix();
-                   fCurrentMatrix->Multiply(current->GetMatrix());
-                }
-               fIsStepEntering = kTRUE;
-               fStep=snext;
-               fNextNode = current;
-               nodefound = current;
-            }
+   Int_t ncheck = 0;
+   Int_t *vlist = 0;
+   voxels->SortCrossedVoxels(point, dir);
+   while ((vlist=voxels->GetNextVoxel(point, dir, ncheck))) {
+      for (i=0; i<ncheck; i++) {
+         current = vol->GetNode(vlist[i]);
+         current->cd();
+         current->MasterToLocal(point, lpoint);
+         current->MasterToLocalVect(dir, ldir);
+         snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
+         if (snext<fStep) {
+            indnext = current->GetVolume()->GetNextNodeIndex();
+            if (compmatrix) {
+               *fCurrentMatrix = GetCurrentMatrix();
+                fCurrentMatrix->Multiply(current->GetMatrix());
+                if (indnext>=0) fCurrentMatrix->Multiply(current->GetDaughter(indnext)->GetMatrix());
+             }
+             fIsStepEntering = kTRUE;
+             fStep=snext;
+             fNextNode = current;
+             if (indnext>=0) fNextNode = current->GetDaughter(indnext);
+             nodefound = fNextNode;
          }
       }
    }

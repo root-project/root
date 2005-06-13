@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.38 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.39 2005/04/25 07:53:27 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -125,13 +125,15 @@ public:
    Bool_t          IsXYZVoxels() const {return TObject::TestBit(kVoxelsXYZ);}
    Bool_t          IsTopVolume() const;
    Bool_t          IsValid() const {return fShape->IsValid();}
-   Bool_t          IsVisible() const {return TGeoAtt::IsVisible();}
+   virtual Bool_t  IsVisible() const {return TGeoAtt::IsVisible();}
    Bool_t          IsVisibleDaughters() const {return TGeoAtt::IsVisDaughters();}
    Bool_t          IsAllInvisible() const {return ((!IsVisible()) & (!IsVisibleDaughters()));}
    Bool_t          IsRaytracing() const;
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
    Bool_t          FindMatrixOfDaughterVolume(TGeoVolume *vol) const;
+   virtual Int_t   GetCurrentNodeIndex() const {return -1;}
+   virtual Int_t   GetNextNodeIndex() const {return -1;}
    TObjArray      *GetNodes() {return fNodes;}
    Int_t           GetNdaughters() const;
    Int_t           GetNtotal() const {return fNtotal;}
@@ -248,13 +250,26 @@ public:
 
 class TGeoVolumeAssembly : public TGeoVolume
 {
+private:
+   Int_t           fCurrent;              //! index of current selected node
+   Int_t           fNext;                 //! index of next node to be entered
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);
    virtual ~TGeoVolumeAssembly() {;}
-   virtual Bool_t  IsAssembly() const {return kTRUE;}
 
-ClassDef(TGeoVolumeAssembly, 1)   // an assembly of volumes
+   virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option=""); 
+   virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);
+   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
+   virtual void    DrawOnly(Option_t *) {;} 
+   virtual Int_t   GetCurrentNodeIndex() const {return fCurrent;}
+   virtual Int_t   GetNextNodeIndex() const {return fNext;}
+   virtual Bool_t  IsAssembly() const {return kTRUE;}
+   virtual Bool_t  IsVisible() const {return kFALSE;}
+   void            SetCurrentNodeIndex(Int_t index) {fCurrent = index;}
+   void            SetNextNodeIndex(Int_t index) {fNext = index;}
+
+ClassDef(TGeoVolumeAssembly, 2)   // an assembly of volumes
 };
 
 inline Int_t TGeoVolume::GetNdaughters() const {

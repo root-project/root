@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.22 2004/01/20 15:44:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.23 2005/04/30 19:45:26 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -75,6 +75,7 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    fCheckList    = 0;
    fNcandidates  = 0;
    fCurrentVoxel = 0;
+   fBits1    = 0;
    SetInvalid(kFALSE);
 }
 //-----------------------------------------------------------------------------
@@ -116,6 +117,7 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fCheckList = 0;
    fNcandidates  = 0;
    fCurrentVoxel = 0;
+   fBits1    = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoVoxelFinder::~TGeoVoxelFinder()
@@ -140,6 +142,7 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
    if (fExtraZ) delete [] fExtraZ;
 //   printf("IndX IndY IndZ...\n");
    if (fCheckList) delete [] fCheckList;
+   if (fBits1) delete [] fBits1;
 //   printf("checklist...\n");
 }
 //-----------------------------------------------------------------------------
@@ -152,6 +155,8 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    Int_t id;
    TGeoNode *node;
    if (fBoxes) delete [] fBoxes;
+   if (fBits1) delete [] fBits1;
+   fBits1 = new UChar_t[1+((nd-1)>>3)];
    fNboxes = 6*nd;
    fBoxes = new Double_t[fNboxes];
    if (fCheckList) delete [] fCheckList;
@@ -191,10 +196,10 @@ void TGeoVoxelFinder::BuildVoxelLimits()
 void TGeoVoxelFinder::CreateCheckList()
 {
 // Initializes check list.
-   if (!fCheckList) {
-      Int_t nd = fVolume->GetNdaughters();
-      if (nd>0) fCheckList = new Int_t[nd];
-   }
+   Int_t nd = fVolume->GetNdaughters();
+   if (!nd) return;
+   if (!fCheckList) fCheckList = new Int_t[nd];
+   if (!fBits1) fBits1 = new UChar_t[1+((nd-1)>>3)];
 }      
 //-----------------------------------------------------------------------------
 void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master) const
@@ -428,7 +433,7 @@ Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) cons
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are not contained in current check list
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -437,7 +442,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
       bitnumber = (UInt_t)list[icand];
       loc = bitnumber>>3;
       bit = bitnumber%8;
-      byte = (~bits[loc]) & (1<<bit);
+      byte = (~fBits1[loc]) & (1<<bit);
       if (byte) fCheckList[fNcandidates++]=list[icand];
    }
    ncheck = fNcandidates;
@@ -448,7 +453,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -457,7 +462,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
       bitnumber = (UInt_t)list[icand];
       loc = bitnumber>>3;
       bit = bitnumber%8;
-      byte = (~bits[loc]) & array1[loc] & (1<<bit);
+      byte = (~fBits1[loc]) & array1[loc] & (1<<bit);
       if (byte) fCheckList[fNcandidates++]=list[icand];
    }
    ncheck = fNcandidates;
@@ -468,7 +473,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
 Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck)
 {
 // Get extra candidates that are contained in array1 but not in current check list
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -477,7 +482,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*
       bitnumber = (UInt_t)list[icand];
       loc = bitnumber>>3;
       bit = bitnumber%8;
-      byte = (~bits[loc]) & array1[loc] & array2[loc] & (1<<bit);
+      byte = (~fBits1[loc]) & array1[loc] & array2[loc] & (1<<bit);
       if (byte) fCheckList[fNcandidates++]=list[icand];
    }
    ncheck = fNcandidates;
@@ -1009,8 +1014,8 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
    fNcandidates = 0;
    Int_t  loc = 1+((fVolume->GetNdaughters()-1)>>3);
 //   printf("   LOC=%i\n", loc*sizeof(UChar_t));
-   UChar_t *bits = gGeoManager->GetBits();
-   memset(bits, 0, loc);
+//   UChar_t *bits = gGeoManager->GetBits();
+   memset(fBits1, 0, loc);
    memset(fInc, 0, 3*sizeof(Int_t));
    for (Int_t i=0; i<3; i++) {
       fInvdir[i] = TGeoShape::Big();
@@ -1333,10 +1338,10 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
 {
 // return the list of nodes corresponding to one array of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
-   memcpy(bits, array1, nbytes*sizeof(UChar_t)); 
+   memcpy(fBits1, array1, nbytes*sizeof(UChar_t)); 
    Int_t current_byte;
    Int_t current_bit;
    UChar_t byte;
@@ -1366,7 +1371,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
 // make union of older bits with new array
 //   printf("Union - one slice\n");
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
    Int_t current_byte;
@@ -1375,7 +1380,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
    Bool_t ibreak = kFALSE;
    for (current_byte=0; current_byte<nbytes; current_byte++) {
 //      printf("   byte %i : bits=%i array=%i\n", current_byte, bits[current_byte], array1[current_byte]);
-      byte = (~bits[current_byte]) & array1[current_byte];
+      byte = (~fBits1[current_byte]) & array1[current_byte];
       if (!byte) continue;
       for (current_bit=0; current_bit<8; current_bit++) {
          if (byte & (1<<current_bit)) {
@@ -1386,7 +1391,7 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
             }   
          }
       }
-      bits[current_byte] |= byte;
+      fBits1[current_byte] |= byte;
       if (ibreak) return kTRUE;
    }
    return (fNcandidates>0);        
@@ -1398,21 +1403,21 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
 // make union of older bits with new array
 //   printf("Union - two slices\n");
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
    Int_t current_byte;
    Int_t current_bit;
    UChar_t byte;
    for (current_byte=0; current_byte<nbytes; current_byte++) {
-      byte = (~bits[current_byte]) & (array1[current_byte] & array2[current_byte]);
+      byte = (~fBits1[current_byte]) & (array1[current_byte] & array2[current_byte]);
       if (!byte) continue;
       for (current_bit=0; current_bit<8; current_bit++) {
          if (byte & (1<<current_bit)) {
             fCheckList[fNcandidates++] = (current_byte<<3)+current_bit;
          }
       }
-      bits[current_byte] |= byte;
+      fBits1[current_byte] |= byte;
    }
    return (fNcandidates>0);        
 }      
@@ -1424,21 +1429,21 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
 //   printf("Union - three slices\n");
 //   printf("n1=%i n2=%i n3=%i\n", n1,n2,n3);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
    Int_t current_byte;
    Int_t current_bit;
    UChar_t byte;
    for (current_byte=0; current_byte<nbytes; current_byte++) {
-      byte = (~bits[current_byte]) & (array1[current_byte] & array2[current_byte] & array3[current_byte]);
+      byte = (~fBits1[current_byte]) & (array1[current_byte] & array2[current_byte] & array3[current_byte]);
       if (!byte) continue;
       for (current_bit=0; current_bit<8; current_bit++) {
          if (byte & (1<<current_bit)) {
             fCheckList[fNcandidates++] = (current_byte<<3)+current_bit;
          }
       }
-      bits[current_byte] |= byte;
+      fBits1[current_byte] |= byte;
    }
    return (fNcandidates>0);        
 }      
@@ -1476,7 +1481,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
 {
 // return the list of nodes corresponding to the intersection of two arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
 //   memset(bits, 0, nbytes*sizeof(UChar_t));
@@ -1487,7 +1492,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    for (current_byte=0; current_byte<nbytes; current_byte++) {
       byte = array1[current_byte] & array2[current_byte];
       icand = current_byte<<3;
-      bits[current_byte] = byte;
+      fBits1[current_byte] = byte;
       if (!byte) continue;
       for (current_bit=0; current_bit<8; current_bit++) {
          if (byte & (1<<current_bit)) {
@@ -1531,7 +1536,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
 {
 // return the list of nodes corresponding to the intersection of three arrays of bits
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
-   UChar_t *bits = gGeoManager->GetBits();
+//   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
 //   memset(bits, 0, nbytes*sizeof(UChar_t));
@@ -1542,7 +1547,7 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /
    for (current_byte=0; current_byte<nbytes; current_byte++) {
       byte = array1[current_byte] & array2[current_byte] & array3[current_byte];
       icand = current_byte<<3;
-      bits[current_byte] = byte;
+      fBits1[current_byte] = byte;
       if (!byte) continue;
       for (current_bit=0; current_bit<8; current_bit++) {
          if (byte & (1<<current_bit)) {

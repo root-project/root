@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoVolume.cxx,v 1.60 2005/05/26 12:54:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.61 2005/05/31 18:35:05 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -344,6 +344,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TGeoVolume.h"
 #include "TEnv.h"
+#include "TGeoShapeAssembly.h"
 
 ClassImp(TGeoVolume)
 
@@ -644,12 +645,10 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
       Error("AddNode", "Volume is NULL");
       return;
    }
-   if (!vol->IsAssembly()) {
-      if (!vol->IsValid()) {
-         Error("AddNode", "Won't add node with invalid shape");
-         printf("### invalid volume was : %s\n", vol->GetName());
-         return;
-      }
+   if (!vol->IsValid()) {
+      Error("AddNode", "Won't add node with invalid shape");
+      printf("### invalid volume was : %s\n", vol->GetName());
+      return;
    }   
    if (!fNodes) fNodes = new TObjArray();   
 
@@ -660,29 +659,7 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    }
 
    TGeoNodeMatrix *node = 0;
-   char *name = 0;
-   if (vol->IsAssembly()) {
-      TGeoHMatrix *total = 0;
-      Int_t id = GetNdaughters();
-      Int_t nd = vol->GetNdaughters();
-      for (Int_t i=0; i<nd; i++) {
-         id++;
-         total = new TGeoHMatrix();
-         *total = (*matrix) * (*(vol->GetNode(i)->GetMatrix()));
-         total->RegisterYourself();
-         node = new TGeoNodeMatrix(vol->GetNode(i)->GetVolume(), total);
-         node->SetMotherVolume(this);
-         fNodes->Add(node);
-         name = new char[strlen(vol->GetNode(i)->GetVolume()->GetName())+7];
-         sprintf(name, "%s_%i", vol->GetNode(i)->GetVolume()->GetName(), id);
-         if (fNodes->FindObject(name))
-            Warning("AddNode", "Volume %s : added assembly node %s with same name", GetName(), name);
-         node->SetName(name);
-         node->SetNumber(id);
-      }
-      return;
-   }
-         
+   char *name = 0;         
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
    fNodes->Add(node);
@@ -730,13 +707,11 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
       Error("AddNodeOverlap", "Volume is NULL");
       return;
    }
-   if (!vol->IsAssembly()) {
-      if (!vol->IsValid()) {
-         Error("AddNodeOverlap", "Won't add node with invalid shape");
-         printf("### invalid volume was : %s\n", vol->GetName());
-         return;
-      }
-   }   
+   if (!vol->IsValid()) {
+      Error("AddNodeOverlap", "Won't add node with invalid shape");
+      printf("### invalid volume was : %s\n", vol->GetName());
+      return;
+   }
    if (!fNodes) fNodes = new TObjArray();   
 
    if (fFinder) {
@@ -747,31 +722,6 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
 
    TGeoNodeMatrix *node = 0;
    char *name = 0;
-   if (vol->IsAssembly()) {
-      TGeoHMatrix *total = 0;
-      Int_t nd = vol->GetNdaughters();
-      Int_t id = GetNdaughters();
-      for (Int_t i=0; i<nd; i++) {
-         id++;
-         total = new TGeoHMatrix();
-         *total = (*matrix) * (*(vol->GetNode(i)->GetMatrix()));
-         total->RegisterYourself();
-         node = new TGeoNodeMatrix(vol->GetNode(i)->GetVolume(), total);
-         node->SetMotherVolume(this);
-         fNodes->Add(node);
-         name = new char[strlen(vol->GetNode(i)->GetVolume()->GetName())+7];
-         sprintf(name, "%s_%i", vol->GetNode(i)->GetVolume()->GetName(), id);
-         if (fNodes->FindObject(name))
-            Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
-         node->SetName(name);
-         node->SetNumber(id);
-         node->SetOverlapping();
-         if (vol->GetMedium() == fMedium)
-         node->SetVirtual();
-      }
-      return;
-   }
-
 
    node = new TGeoNodeMatrix(vol, matrix);
    node->SetMotherVolume(this);
@@ -802,10 +752,6 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 //         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
 //  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
-   if (IsAssembly()) {
-      Error("Divide", "Cannot divide %s since it is an assembly", GetName());
-      return 0;
-   }   
    if (fFinder) {
    // volume already divided.
       Fatal("Divide","volume %s already divided", GetName());
@@ -1605,8 +1551,6 @@ void TGeoVolume::Voxelize(Option_t *option)
    }   
    // do not voxelize divided volumes
    if (fFinder) return;
-   // nor assemblies
-   if (IsAssembly()) return;
    // or final leaves
    Int_t nd = GetNdaughters();
    if (!nd) return;
@@ -1930,12 +1874,37 @@ ClassImp(TGeoVolumeAssembly)
 TGeoVolumeAssembly::TGeoVolumeAssembly()
                    :TGeoVolume()
 {
-
+   fCurrent = -1;
+   fNext = -1;
 }
 
 //_____________________________________________________________________________
 TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
                    :TGeoVolume(name, NULL, NULL)
 {
-
+   fCurrent = -1;
+   fNext = -1;
+   fShape = new TGeoShapeAssembly(this);
+   if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
 }
+//_____________________________________________________________________________
+void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+{
+   // Add a component to the assembly. 
+   TGeoVolume::AddNode(vol,copy_no,mat,option);
+   fShape->ComputeBBox();
+}   
+
+//_____________________________________________________________________________
+void TGeoVolumeAssembly::AddNodeOverlap(const TGeoVolume *, Int_t, TGeoMatrix *, Option_t *)
+{
+   Error("AddNodeOverlap","Overlapping nodes not supported in assemblies");
+}   
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolumeAssembly::Divide(const char *, Int_t, Int_t, Double_t, Double_t, Int_t, Option_t *)
+{
+   Error("Divide","Assemblies cannot be divided");
+   return 0;
+}
+
