@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.10 2005/04/12 09:26:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.11 2005/05/24 20:52:33 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -280,7 +280,7 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 
    if (!fMinorFormula) {
       fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
-      fMajorFormula->SetQuickLoad(kTRUE);
+      fMinorFormula->SetQuickLoad(kTRUE);
    }
    return fMinorFormula;
 }
@@ -294,6 +294,10 @@ TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *T)
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
       fMajorFormulaParent->SetQuickLoad(kTRUE);
    }
+   if (fMajorFormulaParent->GetTree() != T) {
+      fMajorFormulaParent->SetTree((TTree*)T);
+      fMajorFormulaParent->UpdateFormulaLeaves();
+   }
    return fMajorFormulaParent;
 }
 
@@ -306,6 +310,11 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *T)
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
       fMinorFormulaParent->SetQuickLoad(kTRUE);
    }
+   if (fMinorFormulaParent->GetTree() != T) {
+      fMinorFormulaParent->SetTree((TTree*)T);
+      fMinorFormulaParent->UpdateFormulaLeaves();
+   }
+
    return fMinorFormulaParent;
 }
 
@@ -367,6 +376,16 @@ void TTreeIndex::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
+void TTreeIndex::UpdateFormulaLeaves()
+{
+   // Called by TChain::LoadTree when the parent chain changes it's tree.
+
+   if (fMajorFormula)       { fMajorFormula->UpdateFormulaLeaves();}
+   if (fMinorFormula)       { fMinorFormula->UpdateFormulaLeaves();}
+   if (fMajorFormulaParent) { fMajorFormulaParent->UpdateFormulaLeaves();}
+   if (fMinorFormulaParent) { fMinorFormulaParent->UpdateFormulaLeaves();}
+}
+//______________________________________________________________________________
 void TTreeIndex::SetTree(const TTree *T)
 {
    // this function is called by TChain::LoadTree and TTreePlayer::UpdateFormulaLeaves
@@ -375,8 +394,5 @@ void TTreeIndex::SetTree(const TTree *T)
    // must update the leaves numbers in the TTreeFormula used by the TreeIndex.
 
    fTree = (TTree*)T;
-   if (fMajorFormula)       {fMajorFormula->SetTree(fTree);        fMajorFormula->UpdateFormulaLeaves();}
-   if (fMinorFormula)       {fMinorFormula->SetTree(fTree);        fMinorFormula->UpdateFormulaLeaves();}
-   if (fMajorFormulaParent) {fMajorFormulaParent->SetTree(fTree);  fMajorFormulaParent->UpdateFormulaLeaves();}
-   if (fMinorFormulaParent) {fMinorFormulaParent->SetTree(fTree);  fMinorFormulaParent->UpdateFormulaLeaves();}
 }
+
