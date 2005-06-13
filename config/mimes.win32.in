@@ -86,7 +86,7 @@ action = TImage::Open("%s")->Draw("nxxx")
 
 [image/tga]
 pattern = *.tga
-icon = psp_s.tga psp_t.tga
+icon = psp_s.xpm psp_t.xpm
 action = TImage::Open("%s")->Draw("nxxx")
 
 [text/html]

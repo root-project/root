@@ -26,6 +26,11 @@ ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.lib
 ASTEPLIB     := $(LPATH)/libAfterImage.lib
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ASTEPBLD      = "libAfterImage - Win32 Debug"
+else
+ASTEPBLD      = "libAfterImage - Win32 Release"
+endif
 else
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
@@ -102,7 +107,7 @@ ifeq ($(PLATFORM),win32)
 		cd $(ASTEPVERS); \
 		unset MAKEFLAGS; \
 		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) -nologo -f libAfterImage.mak \
-		CFG="libAfterImage - Win32 Release")
+		CFG=$(ASTEPBLD))
 else
 		@(if [ -d $(ASTEPDIRS) ]; then \
 			rm -rf $(ASTEPDIRS); \
