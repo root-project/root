@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.22 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.23 2005/06/09 18:20:02 pcanal Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -286,6 +286,38 @@ void TObjArray::Expand(Int_t newSize)
    fCont = (TObject**) TStorage::ReAlloc(fCont, newSize * sizeof(TObject*),
                                          fSize * sizeof(TObject*));
    fSize = newSize;
+}
+
+//______________________________________________________________________________
+TObject *TObjArray::FindObject(const char *name) const
+{
+   // Find an object in this collection using its name. Requires a sequential
+   // scan till the object has been found. Returns 0 if object with specified
+   // name is not found.
+
+   Int_t nobjects = GetAbsLast()+1;
+   for (Int_t i = 0; i < nobjects; ++i) {
+      TObject *obj = fCont[i];
+      if (obj && 0==strcmp(name, obj->GetName())) return obj;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TObjArray::FindObject(const TObject *iobj) const
+{
+   // Find an object in this collection using the object's IsEqual()
+   // member function. Requires a sequential scan till the object has
+   // been found. Returns 0 if object is not found.
+   // Typically this function is overridden by a more efficient version
+   // in concrete collection classes (e.g. THashTable).
+
+   Int_t nobjects = GetAbsLast()+1;
+   for (Int_t i = 0; i < nobjects; ++i) {
+      TObject *obj = fCont[i];
+      if (obj && obj->IsEqual(iobj)) return obj;
+   }
+   return 0;
 }
 
 //_______________________________________________________________________

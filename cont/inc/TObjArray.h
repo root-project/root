@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.12 2002/08/10 11:56:17 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.13 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -65,6 +65,8 @@ public:
    virtual Int_t    AddAtFree(TObject *obj);
    virtual void     AddAfter(const TObject *after, TObject *obj);
    virtual void     AddBefore(const TObject *before, TObject *obj);
+   virtual TObject *FindObject(const char *name) const;
+   virtual TObject *FindObject(const TObject *obj) const;
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
 
