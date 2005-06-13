@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.36 2005/04/20 19:35:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.37 2005/05/18 12:31:09 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -563,7 +563,7 @@ void TProfile2D::Divide(const TH1 *h1)
          Double_t e1 = er1[bin];
          Double_t c12= c1*c1;
          if (!c1) fSumw2.fArray[bin] = 0;
-         else     fSumw2.fArray[bin] = (e0*e0*c1*c1 + e1*e1*c0*c0)/(c12*c12);
+         else     fSumw2.fArray[bin] = (e0*c1*c1 + e1*c0*c0)/(c12*c12);
          if (!en1[bin]) fBinEntries.fArray[bin] = 0;
          else           fBinEntries.fArray[bin] /= en1[bin];
       }
@@ -658,7 +658,7 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
             if (binomial) {
                fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));
             } else {
-               fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
+               fSumw2.fArray[bin] = d1*d2*(e1*b2*b2 + e2*b1*b1)/(b22*b22);
             }
          }
          if (!en2[bin]) fBinEntries.fArray[bin] = 0;

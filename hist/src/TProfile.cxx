@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.60 2005/05/18 12:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.61 2005/06/08 06:53:01 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -542,10 +542,10 @@ void TProfile::Divide(const TH1 *h1)
       fTsumwx2 += z*c1*c1;
       e0 = fSumw2.fArray[bin];
       if (er1) e1 = er1[bin];
-      else     e1 = h1->GetBinError(bin);
+      else    {e1 = h1->GetBinError(bin); e1*=e1;}
       c12= c1*c1;
       if (!c1) fSumw2.fArray[bin] = 0;
-      else     fSumw2.fArray[bin] = (e0*e0*c1*c1 + e1*e1*c0*c0)/(c12*c12);
+      else     fSumw2.fArray[bin] = (e0*c1*c1 + e1*c0*c0)/(c12*c12);
       if (!en1) continue;
       if (!en1[bin]) fBinEntries.fArray[bin] = 0;
       else           fBinEntries.fArray[bin] /= en1[bin];
