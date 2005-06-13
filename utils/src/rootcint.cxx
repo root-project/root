@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.209 2005/05/27 03:00:05 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.210 2005/05/27 16:42:59 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -291,7 +291,8 @@ char autold[64];
 FILE *fp;
 char *StrDup(const char *str);
 
-char FunNames[10000] = { 0 };
+typedef map<string,bool> funcMap_t;
+funcMap_t gFunMap;
 
 //const char* root_style()  {
 //  static const char* s = ::getenv("MY_ROOT");
@@ -300,26 +301,15 @@ char FunNames[10000] = { 0 };
 
 // static int check = 0;
 //______________________________________________________________________________
-void SetFun (const char *fname)
+void SetFun (const string &fname)
 {
-   strcat(FunNames," ");
-   strcat(FunNames,fname);
-   strcat(FunNames," ");
+   gFunMap[fname] = true;
 }
 
 //______________________________________________________________________________
-const char *GetFun(const char *fname)
+bool GetFun(const string &fname)
 {
-   char buf[100];
-   buf[0]=0;
-
-//   if (!check) fprintf(stderr,"%s\n",FunNames);
-   strcat(buf," ");
-   strcat(buf,fname);
-   strcat(buf," ");
-//   fprintf(stderr,"look for function for %s and will find %p\n",
-//           fname,strstr(FunNames,buf));
-   return strstr(FunNames,buf);
+   return gFunMap[fname];
 }
 
 //______________________________________________________________________________
@@ -2844,9 +2834,10 @@ void WritePointersSTL(G__ClassInfo &cl)
 {
    // Write interface function for STL members
 
-   char a[80],fun[80];
+   // char a[80],fun[80];
+   char a[G__LONGLINE];
    char clName[G__LONGLINE];
-   sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
+   strcpy(clName, G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion( cl);
    if (version == 0) return;
    if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) return;
@@ -2865,7 +2856,7 @@ void WritePointersSTL(G__ClassInfo &cl)
             const char *rightb = strchr(leftb,']');
             if (rightb) {
                pCounter++;
-               sprintf(a,m.Type()->Name());
+               strcpy(a,m.Type()->Name());
                char *astar = (char*)strchr(a,'*');
                *astar = 0;
                if (strstr(m.Type()->Name(),"**")) pCounter++;
@@ -2873,7 +2864,6 @@ void WritePointersSTL(G__ClassInfo &cl)
          }
       }
 
-      sprintf(fun,"R__%s_%s",clName,m.Name());
 
       //member is a string
       {
@@ -2882,29 +2872,6 @@ void WritePointersSTL(G__ClassInfo &cl)
             continue;
          }
       }
-
-//       if (!strcmp(shortTypeName, "string")) {
-//          // remove all 'const' keyword.
-//          string mTypeName = GetNonConstTypeName(m).c_str();
-//          fprintf(fp, "//_______________________________________");
-//          fprintf(fp, "_______________________________________\n");
-//          SetFun(fun);
-//          fprintf(fp, "void %s(TBuffer &R__b, void *R__p, int)\n",fun);
-//          fprintf(fp, "{\n");
-//          if (m.Property() & G__BIT_ISPOINTER) {
-//             //fprintf(fp, "   %s %s = (%s)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
-//            fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
-//          } else {
-//             fprintf(fp, "   %s &%s = *(%s *)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
-//          }
-//          fprintf(fp, "   if (R__b.IsReading()) {\n");
-//          STLStringStreamer(m,0);
-//          fprintf(fp, "   } else {\n");
-//          STLStringStreamer(m,1);
-//          fprintf(fp, "   }\n");
-//          fprintf(fp, "}\n\n");
-//          continue;
-//       }
 
       if (!IsStreamable(m)) continue;
 
@@ -2921,8 +2888,11 @@ void WritePointersSTL(G__ClassInfo &cl)
       // For now we use it only for variable size array of objects (well maybe ... it is not really tested!)
       if (!pCounter) continue;
 
-      sprintf(fun,"R__%s_%s",clName,m.Name());
-      SetFun(fun);
+      {
+         string fun ( string("R__")+ clName +"_" + m.Name() );
+         // sprintf(fun,"R__%s_%s",clName,m.Name());
+         SetFun(fun);
+      }
 
       fprintf(fp, "//_______________________________________");
       fprintf(fp, "_______________________________________\n");
@@ -3089,8 +3059,9 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[24], cvar[128];
-   char clName[G__LONGLINE],fun[80];
-   sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
+   char clName[G__LONGLINE];
+   string fun;
+   strcpy(clName,G__map_cpp_name((char *)cl.Fullname()));
    int version = GetClassVersion(cl);
    int clflag = 1;
    if (version == 0 || cl.RootFlag() == 0) clflag = 0;
@@ -3102,7 +3073,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       //  - static members
       //  - the member G__virtualinfo inserted by the CINT RTTI system
 
-      sprintf(fun,"R__%s_%s",clName,m.Name());
+      fun = string("R__") + clName + "_" + m.Name(); // sprintf(fun,"R__%s_%s",clName,m.Name());
       if (!(m.Property() & G__BIT_ISSTATIC) &&
           strcmp(m.Name(), "G__virtualinfo")) {
 
@@ -3111,7 +3082,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
              ((m.Type())->Property() & G__BIT_ISENUM)) {
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
-               sprintf(cvar, "*%s", m.Name());
+               cvar[0] = '*';
+               strcpy(cvar+1, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
@@ -3122,7 +3094,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s%s);\n",
                        m.Name(), prefix, m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
-               sprintf(cvar, "%s", m.Name());
+               strcpy(cvar, m.Name());
                bool vardim = false;
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   int maxInd = m.MaxIndex(dim);
@@ -3167,7 +3139,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
-               sprintf(cvar, "*%s", m.Name());
+               cvar[0] = '*';
+               strcpy(cvar+1, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
@@ -3182,7 +3155,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                if (clflag && IsStreamable(m) && GetFun(fun))
                   fprintf(fp, "      R__cl->SetMemberStreamer(\"*%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
-               sprintf(cvar, "%s", m.Name());
+               strcpy(cvar, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
                   sprintf(cdim, "[%d]", m.MaxIndex(dim));
                   strcat(cvar, cdim);
@@ -3755,7 +3728,7 @@ const char *Which(const char *fname)
    static char pname[1024];
    FILE *fp = 0;
 
-   sprintf(pname, "%s", fname);
+   strcpy(pname, fname);
 #ifdef WIN32
    fp = fopen(pname, "rb");
 #else
