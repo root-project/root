@@ -131,8 +131,12 @@ lhcbnobool_all.C : unpack.last
 lhcbfull.root : unpack.last
 lhcbnobool.root : unpack.last
 
+FILES_IN_TAR = alice_all.C alice_itsd.C alice_itsv.C alice.root atlas_all.C atlas_cryo.C atlas_sctt.C atlas.root cms_cmse.C cms_calo.C cms.root ams.C ams_all.C btev.C btev_all.C gem.C gem_all.C hades_all.C hades.root phenix.C phenix_all.C phobos_all.C phobos.C brahms_all.C brahms.C d0_all.C d0.C tesla_all.C tesla.C e907_all.C e907.C cdf_all.C cdf_svxc.C cdf.root aleph_all.C aleph.root star_all.C star_svtt.C star.root lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root
+
 unpack.last: geometries.tar.gz
-	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && ($(MAKE) rootfiles) && touch unpack.last
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && touch unpack.last && \
+	    touch $(FILES_IN_TAR) && \
+            ($(MAKE) rootfiles)
 
 readGeo.log: unpack.last ams.root brahms.root btev.root d0.root e907.root gem.root phenix.root phobos.root tesla.root
 
