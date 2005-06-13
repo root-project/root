@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.107 2005/05/06 08:57:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.108 2005/05/13 16:26:39 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -44,7 +44,7 @@
 #include "TChainProof.h"
 #include "TVirtualProof.h"
 #include "TDSet.h"
-
+#include "TVirtualIndex.h"
 
 ClassImp(TChain)
 
@@ -823,7 +823,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
                TTree* old = t->GetTree();
                TTree* oldintree = fetree ? fetree->GetTree() : 0;
 
-               t->LoadTree(entry);
+               t->LoadTreeFriend(entry, this);
 
                Int_t newNumber = ((TChain*)t)->GetTreeNumber();
                if (oldNumber!=newNumber || old!=t->GetTree()
@@ -841,7 +841,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
                // direct friend of the chain, it should be scanned
                // used the chain entry number and NOT the tree entry
                // number (fReadEntry) hence we redo:
-               t->LoadTree(entry);
+               t->LoadTreeFriend(entry, this);
             }
          }
 
@@ -952,7 +952,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
       TFriendElement *fe;
       while ((fe = (TFriendElement*)next())) {
          TTree *t = fe->GetTree();
-         t->LoadTree(entry);
+         if (t->GetTreeIndex())
+            t->GetTreeIndex()->UpdateFormulaLeaves();
+         t->LoadTreeFriend(entry, this);
          TTree *friend_t = t->GetTree();
          if (friend_t) {
             fTree->AddFriend(friend_t,fe->GetName())

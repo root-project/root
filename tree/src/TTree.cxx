@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.253 2005/05/31 19:47:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.254 2005/06/09 18:20:02 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -599,16 +599,14 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,filename);
-   if (fe) {
-      fFriends->Add(fe);
-      TTree *t = fe->GetTree();
-      if (t) {
-         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
-            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
-                     treename,filename,t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","Unknown Tree %s in file %s",treename,filename);
+   Assert(fe);           // this assert is for historical reasons. Don't remove it unless you 
+                         // understand all the consequences.
+   fFriends->Add(fe);
+   TTree *t = fe->GetTree();
+   if (t) {
+      if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
+         Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+                  treename,filename,t->GetEntries(),fEntries);
       }
    } else {
       Warning("AddFriend","Cannot add FriendElement %s in file %s",treename,filename);
@@ -628,20 +626,16 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,treename,file);
-   if (fe) {
-      fFriends->Add(fe);
-      TTree *t = fe->GetTree();
-      if (t) {
-         if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
-            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
-                     treename,file->GetName(),t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","unknown tree %s in file %s",treename,file->GetName());
+   Assert(fe);
+   fFriends->Add(fe);
+   TTree *t = fe->GetTree();
+   if (t) {
+      if (!t->GetTreeIndex() && t->GetEntries() < fEntries) {
+         Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+                  treename,file->GetName(),t->GetEntries(),fEntries);
       }
    } else {
-      Warning("AddFriend","cannot add FriendElement %s in file %s",treename,
-              file?file->GetName():"");
+      Warning("AddFriend","unknown tree %s in file %s",treename,file->GetName());
    }
    return fe;
 }
@@ -656,14 +650,14 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
    if (!tree) return 0;
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,tree, alias);
-   if (fe) {
-      fFriends->Add(fe);
-      TTree *t = fe->GetTree();
-      if (warn && t->GetEntries() < fEntries) {
-         Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
-                 tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",
-                 t->GetEntries(),fEntries);
-      }
+   Assert(fe);           // this assert is for historical reasons. Don't remove it unless you
+                         // understand all the consequences.
+   fFriends->Add(fe);
+   TTree *t = fe->GetTree();
+   if (warn && t->GetEntries() < fEntries) {
+      Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+              tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",
+              t->GetEntries(),fEntries);
    }
    return fe;
 }
@@ -3499,7 +3493,7 @@ Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree *T)
   // in T to locate the corresponding entry in the friend Tree.
 
    if (!fTreeIndex) return LoadTree(entry);
-   return fReadEntry = fTreeIndex->GetEntryNumberFriend(T);
+   return LoadTree(fTreeIndex->GetEntryNumberFriend(T));
 }
 
 //______________________________________________________________________________
