@@ -22,7 +22,7 @@ if [ $PLATFORM != "clean" ]; then
    COMPILER=$1      ; shift
 fi
 if [ $PLATFORM = "macosx" ]; then
-   SOEXT=so
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    AUXCXXFLAGS=-fno-inline
 fi
 if [ $PLATFORM = "win32" ]; then
@@ -65,15 +65,15 @@ clean() {
    rm -f $CINTDIRS/valarray.dll         $CINTDIRS/valarray.so.*
    rm -f $CINTDIRS/exception.dll        $CINTDIRS/exception.so.*
    rm -f $CINTDIRS/complex.dll          $CINTDIRS/complex.so.*
-   rm -f lib/libdequeDict.$SOEXT
-   rm -f lib/liblistDict.$SOEXT
-   rm -f lib/libmap2Dict.$SOEXT
-   rm -f lib/libmapDict.$SOEXT
-   rm -f lib/libmultimap2Dict.$SOEXT
-   rm -f lib/libmultimapDict.$SOEXT
-   rm -f lib/libmultisetDict.$SOEXT
-   rm -f lib/libsetDict.$SOEXT
-   rm -f lib/libvectorDict.$SOEXT
+   rm -f lib/libdequeDict.$SOEXT        lib/libdequeDict.so
+   rm -f lib/liblistDict.$SOEXT         lib/liblistDict.so
+   rm -f lib/libmap2Dict.$SOEXT         lib/libmap2Dict.so
+   rm -f lib/libmapDict.$SOEXT          lib/libmapDict.so
+   rm -f lib/libmultimap2Dict.$SOEXT    lib/libmultimap2Dict.so
+   rm -f lib/libmultimapDict.$SOEXT     lib/libmultimapDict.so
+   rm -f lib/libmultisetDict.$SOEXT     lib/libmultisetDict.so
+   rm -f lib/libsetDict.$SOEXT          lib/libsetDict.so
+   rm -f lib/libvectorDict.$SOEXT       lib/libvectorDict.so
 }
 
 execute() {
@@ -83,7 +83,27 @@ execute() {
 
 rename() {
    if [ "$SOEXT" != "dll" ]; then
-      mv $1.$SOEXT $1.dll;
+      if [ "$PLATFORM" = "macosx" ]; then
+         if [ $macosx_minor -ge 4 ]; then
+            mv $1.$SOEXT $1.dll
+            rm -f $1.so
+         else
+            mv $1.so $1.dll
+            rm -f $1.$SOEXT
+         fi
+      else
+         mv $1.$SOEXT $1.dll
+      fi
+   fi
+}
+
+macrename() {
+   if [ "$PLATFORM" = "macosx" ]; then
+      if [ $macosx_minor -ge 4 ]; then
+         mv -f $1.$SOEXT $1.so
+      else
+         rm -f $1.$SOEXT
+      fi
    fi;
 }
 
@@ -216,6 +236,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" vector.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libvectorDict.$SOEXT \
    lib/libvectorDict.$SOEXT $STLDIR/rootcint_vector.o
 rename $CINTDIRS/vector
+macrename lib/libvectorDict
 
 execute "$CINT -w1 -zlist -n$STLDIR/G__cpp_list.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/lst.h"
@@ -232,6 +253,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" list.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" liblistDict.$SOEXT \
    lib/liblistDict.$SOEXT $STLDIR/rootcint_list.o
 rename $CINTDIRS/list
+macrename lib/liblistDict
 
 execute "$CINT -w1 -zdeque -n$STLDIR/G__cpp_deque.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/dqu.h"
@@ -248,6 +270,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" deque.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libdequeDict.$SOEXT \
    lib/libdequeDict.$SOEXT $STLDIR/rootcint_deque.o
 rename $CINTDIRS/deque
+macrename lib/libdequeDict
 
 execute "$CINT -w1 -zmap -n$STLDIR/G__cpp_map.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/mp.h"
@@ -263,6 +286,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libmapDict.$SOEXT \
    lib/libmapDict.$SOEXT $STLDIR/rootcint_map.o
 rename $CINTDIRS/map
+macrename lib/libmapDict
 
 execute "$CINT -w1 -zmap2 -n$STLDIR/G__cpp_map2.cxx -D__MAKECINT__ \
          -DG__MAKECINT -DG__MAP2 -I$STLDIR -c-1 -A  -Z0 $STLDIR/mp.h"
@@ -279,6 +303,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map2.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libmap2Dict.$SOEXT \
    lib/libmap2Dict.$SOEXT $STLDIR/rootcint_map2.o
 rename $CINTDIRS/map2
+macrename lib/libmap2Dict
 
 execute "$CINT -w1 -zset -n$STLDIR/G__cpp_set.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/st.h"
@@ -294,6 +319,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" set.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libsetDict.$SOEXT \
    lib/libsetDict.$SOEXT $STLDIR/rootcint_set.o
 rename $CINTDIRS/set
+macrename lib/libsetDict
 
 execute "$CINT -w1 -zmultimap -n$STLDIR/G__cpp_multimap.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/multmp.h"
@@ -311,6 +337,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libmultimapDict.$SOEXT \
    lib/libmultimapDict.$SOEXT $STLDIR/rootcint_multimap.o
 rename $CINTDIRS/multimap
+macrename lib/libmultimapDict
 
 execute "$CINT -w1 -zmultimap2 -n$STLDIR/G__cpp_multimap2.cxx -D__MAKECINT__ \
          -DG__MAKECINT -DG__MAP2 -I$STLDIR -c-1 -A  -Z0 $STLDIR/multmp.h"
@@ -328,6 +355,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap2.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libmultimap2Dict.$SOEXT \
    lib/libmultimap2Dict.$SOEXT $STLDIR/rootcint_multimap2.o
 rename $CINTDIRS/multimap2
+macrename lib/libmultimap2Dict
 
 execute "$CINT -w1 -zmultiset -n$STLDIR/G__cpp_multiset.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/multst.h"
@@ -345,6 +373,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multiset.$SOEXT \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" libmultisetDict.$SOEXT \
    lib/libmultisetDict.$SOEXT $STLDIR/rootcint_multiset.o
 rename $CINTDIRS/multiset
+macrename lib/libmultisetDict
 
 execute "$CINT -w1 -zstack -n$STLDIR/G__cpp_stack.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/stk.h"
