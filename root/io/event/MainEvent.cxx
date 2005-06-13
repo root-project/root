@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.28 2005/01/12 07:50:02 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.1 2005/05/24 17:17:15 pcanal Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -11,9 +11,9 @@
 //    - a tree
 //  Additional arguments can be passed to the program to control the flow
 //  of execution. (see comments describing the arguments in the code).
-//      Event  nevent comp split fill
+//      Event  nevent comp split fill filename
 //  All arguments are optional. Default is:
-//      Event  400      1    1     1
+//      Event  400      1    1     1  Event.root
 //
 //  In this example, the tree consists of one single "super branch"
 //  The statement ***tree->Branch("event", &event, 64000,split);*** below
@@ -94,6 +94,7 @@
 
 #include "Event.h"
 
+const char *gFilename = "Event.root";
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -107,12 +108,14 @@ int main(int argc, char **argv)
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t netf   = 0;
+   const char *arg6 = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
    if (argc > 3)  split  = atoi(argv[3]);
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  arg6   = argv[6];
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -124,6 +127,7 @@ int main(int argc, char **argv)
    if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
    if (arg4 == 35) { write = 0; read  = 2;}  //netfile + read random
    if (arg4 == 36) { write = 1; }            //netfile + write sequential
+   if (arg6) gFilename = arg6;
    Int_t branchStyle = 1; //new style by default
    if (split < 0) {branchStyle = 0; split = -1-split;}
 
@@ -153,7 +157,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
          hfile->UseCache(10);
       } else
-         hfile = new TFile("Event.root");
+         hfile = new TFile(gFilename);
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -187,7 +191,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
          hfile->UseCache(10);
       } else
-         hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+         hfile = new TFile(gFilename,"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
