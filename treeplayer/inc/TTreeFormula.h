@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.44 2005/03/22 19:53:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.45 2005/04/19 19:39:58 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -177,6 +177,7 @@ public:
    virtual void        SetAxis(TAxis *axis=0);
            void        SetQuickLoad(Bool_t quick) { fQuickLoad = quick; }
    virtual void        SetTree(TTree *tree) {fTree = tree;}
+   virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 
    ClassDef(TTreeFormula,9)  //The Tree formula
