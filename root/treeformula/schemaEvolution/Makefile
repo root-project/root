@@ -52,7 +52,7 @@ LOGFILES_TEST = $(subst .log,.test,$(LOGFILES))
 
 #debug := $(shell echo $(LOGFILES_TEST) 1>&2)
 
-$(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) 
+$(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) Event.root
 	$(CMDECHO) root.exe -q -b -l  $< 2>&1 \
 	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F | sed -e 's/45[0-9],/45,/g'  \
 	> $@
