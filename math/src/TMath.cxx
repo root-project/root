@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.98 2005/05/19 08:26:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.99 2005/06/13 13:21:04 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3920,7 +3920,7 @@ Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 }
 
 //______________________________________________________________________________
-Double_t ChisquareQuantile(Double_t p, Double_t ndf)
+Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 {
    // Evaluate the quantiles of the chi-squared probability distribution function.
    // Algorithm AS 91   Appl. Statist. (1975) Vol.24, P.35
