@@ -7,6 +7,11 @@
 
 const int N = 5;
 
+struct Pod {
+   Int_t    fInt;
+   Double_t fDouble;
+};
+
 class ClassWithData {
 public:
    ClassWithData() : fOwnsArrays( false )
@@ -53,6 +58,9 @@ public:
       }
 
       fOwnsArrays = true;
+
+      fPod.fInt    = 888;
+      fPod.fDouble = 3.14;
    };
 
    ~ClassWithData()
@@ -150,6 +158,9 @@ public:
    Double_t  fDoubleArray[N];
    Double_t* fDoubleArray2;
 
+// object types
+   Pod fPod;
+
 public:
    static Char_t   sChar;
    static UChar_t  sUChar;
@@ -176,3 +187,18 @@ Long_t   ClassWithData::sLong   = -303l;
 ULong_t  ClassWithData::sULong  =  303ul;
 Float_t  ClassWithData::sFloat  = -404.f;
 Double_t ClassWithData::sDouble = -505.;
+
+long GetPodAddress( ClassWithData& c )
+{
+   return (long)&c.fPod;
+}
+
+long GetIntAddress( ClassWithData& c )
+{
+   return (long)&c.fPod.fInt;
+}
+
+long GetDoubleAddress( ClassWithData& c )
+{
+   return (long)&c.fPod.fDouble;
+}

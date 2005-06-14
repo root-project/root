@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += PyROOT_cpptests
+TEST_TARGETS += PyROOT_cpptests PyROOT_advancedtests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -20,4 +20,9 @@ endif
 PyROOT_cpptests.log: Namespace_C.$(DllSuf)
 
 PyROOT_cpptests: PyROOT_cpptests.log
+	$(TestDiff)
+
+PyROOT_advancedtests.log: AdvancedCpp_C.$(DllSuf)
+
+PyROOT_advancedtests: PyROOT_advancedtests.log
 	$(TestDiff)
