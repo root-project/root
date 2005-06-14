@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.108 2005/05/13 16:26:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.109 2005/06/13 19:21:04 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1132,6 +1132,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    //file->cd();  //in case a user wants to write in a file/subdir
    TTree *hnew = CloneTree(0);
    if (!hnew) return 0;
+   hnew->SetName(GetName());
    hnew->SetAutoSave(2000000000);
 
 // May be reset branches compression level?
