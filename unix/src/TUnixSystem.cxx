@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.133 2005/05/03 13:17:55 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.134 2005/06/10 18:12:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3883,7 +3883,7 @@ Func_t TUnixSystem::UnixDynFindSymbol(const char *lib, const char *entry)
 void TUnixSystem::UnixDynListSymbols(const char *lib, const char *regexp)
 {
    // List symbols in a shared library. One can use wildcards to list only
-   // the intresting symbols.
+   // the interesting symbols.
 
 #if defined(R__HPUX) && !defined(R__GNU)
    shl_t handle;
