@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.7 2005/06/12 17:21:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.8 2005/06/14 05:06:03 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -138,7 +138,7 @@ PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* s
    void* result2 = result1;
    if ( fClass->GetClassInfo() && fClass->GetClassInfo()->Linkage() != -1 ) {
       result2 = new char[ fClass->Size() ];
-      mempcpy( result2, result1, fClass->Size() );
+      memcpy( result2, result1, fClass->Size() );
    }
    G__pop_tempobject();            // doesn't call dtor
 
