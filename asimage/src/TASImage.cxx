@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.36 2005/06/07 19:40:33 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.37 2005/06/09 16:50:03 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -1886,10 +1886,6 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    if (!InitVisual()) {
       Warning("DrawText", "Visual not initiated");
-      return;
-   }
-   if (!InitVisual()) {
-      Warning("DrawFillArea", "Visual not initiated");
       return;
    }
 
