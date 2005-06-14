@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.6 2005/06/10 18:24:07 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.7 2005/06/12 17:21:53 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -15,7 +15,6 @@
 
 // CINT
 #include "Api.h"
-extern G__tempobject_list*& gCintTempBuf;
 
 // Standard
 #include <utility>
@@ -130,20 +129,28 @@ PyObject* PyROOT::RootObjectExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::RootObjectByValueExecutor::Execute( G__CallFunc* func, void* self )
 {
-   PyObject* obj = BindRootObject( (void*)func->ExecInt( self ), fClass );
-   if ( ! obj )
+// execution will bring a temporary in existence ...
+   void* result1 = (void*)func->ExecInt( self );
+   if ( ! result1 )
       return 0;
 
-// take over object ownership from CINT
-   G__tempobject_list* prev = gCintTempBuf->prev;
-   free( (void*)gCintTempBuf );
-   gCintTempBuf = prev;
-   ((ObjectProxy*)obj)->fFlags |= ObjectProxy::kIsOwner;
+// ... which must be copied to retain ownership, then released
+   void* result2 = result1;
+   if ( fClass->GetClassInfo() && fClass->GetClassInfo()->Linkage() != -1 ) {
+      result2 = new char[ fClass->Size() ];
+      mempcpy( result2, result1, fClass->Size() );
+   }
+   G__pop_tempobject();            // doesn't call dtor
 
-// python ref counting will now control the object life span
-   return obj;
+// the final result can then be bound
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObject( result2, fClass );
+   if ( ! pyobj )
+      return 0;
+
+// let python ref counting will now control the object life span
+   pyobj->fFlags |= ObjectProxy::kIsOwner;
+   return (PyObject*)pyobj;
 }
-
 
 //____________________________________________________________________________
 PyObject* PyROOT::ConstructorExecutor::Execute( G__CallFunc* func, void* klass )

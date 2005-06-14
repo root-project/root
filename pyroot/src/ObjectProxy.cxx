@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.4 2005/05/25 06:23:36 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.5 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -12,12 +12,12 @@
 
 namespace PyROOT {
 
-//= PyROOT method proxy construction/destruction =============================
 namespace {
 
+//= PyROOT method proxy construction/destruction =============================
    ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
    {
-      ObjectProxy* pyobj = (ObjectProxy*)PyType_GenericNew( subtype, NULL, NULL );
+      ObjectProxy* pyobj = (ObjectProxy*)subtype->tp_alloc( subtype, 0 );
       pyobj->fObject = NULL;
       new (&pyobj->fClass) TClassRef( (TClass*)0 );
       pyobj->fFlags  = 0;
@@ -25,12 +25,14 @@ namespace {
       return pyobj;
    }
 
+//____________________________________________________________________________
    void op_dealloc( ObjectProxy* pyobj )
    {
       if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
          pyobj->fClass->Destructor( pyobj->fObject );
       }
 
+      pyobj->fClass.~TClassRef();
       pyobj->ob_type->tp_free( (PyObject*)pyobj );
    }
 
@@ -59,7 +61,8 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_getattro
    0,                         // tp_setattro
    0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,     // tp_flags
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE |
+      Py_TPFLAGS_HAVE_GC,                        // tp_flags
    (char*)"PyROOT object proxy (internal)",      // tp_doc
    0,                         // tp_traverse
    0,                         // tp_clear

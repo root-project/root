@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.31 2005/06/10 18:24:07 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.32 2005/06/12 17:21:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -31,7 +31,6 @@
 
 // CINT
 #include "Api.h"
-extern char* gCintSysDir;
 
 // Standard
 #include <assert.h>
@@ -86,15 +85,9 @@ namespace {
           if ( sub.substr( 0, 5 ) == "std::" )
              sub = sub.substr( 5, std::string::npos );
 
-          if ( ! gCintSysDir || gCintSysDir[0] == '*' )
-             G__getcintsysdir();
-
-          char fulldllpath[ kMAXPATHLEN ];
-          sprintf( fulldllpath, "%s/stl/%s.dll", gCintSysDir, sub.c_str() );
-          if ( 0 <= gSystem->Load( fulldllpath ) ) {
+          if ( 0 <= G__loadfile( (sub+".dll").c_str() ) ) {
              if ( sub == "map" || sub == "multimap" ) {
-                sprintf( fulldllpath, "%s/stl/%s2.dll", gCintSysDir, sub.c_str() );
-                gSystem->Load( fulldllpath );
+                G__loadfile( (sub+"2.dll").c_str() );
              }
              gSTLTypes.erase( sub );
              gSTLTypes.erase( "std::" + sub );

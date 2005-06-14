@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.12 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.13 2005/06/12 17:21:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -18,13 +18,6 @@
 
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
-
-R__EXTERN char G__cintsysdir[];
-char* gCintSysDir = (char*)&G__cintsysdir[0];
-
-struct G__tempobject_list;
-R__EXTERN G__tempobject_list* G__p_tempbuf;
-G__tempobject_list*& gCintTempBuf = G__p_tempbuf;
 
 
 //- private helpers ------------------------------------------------------------
