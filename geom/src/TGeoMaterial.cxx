@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.20 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.21 2005/04/20 15:22:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -50,6 +50,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, "")
 {
 // constructor
+   fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
    fShader   = 0;
@@ -71,6 +72,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
              :TNamed(name, "")
 {
 // constructor
+   fName = fName.Strip();
    SetUsed(kFALSE);
    fShader   = 0;
    fIndex    = -1;
@@ -93,6 +95,7 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
              :TNamed(name, "")
 {
 // constructor
+   fName = fName.Strip();
    SetUsed(kFALSE);
    fShader   = 0;
    fIndex    = -1;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.115 2005/05/26 12:54:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.116 2005/06/13 12:17:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -891,7 +891,7 @@ TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t ia
    if (!amother) amother = GetVolume(mname);
    if (amother) return amother->Divide(vname,iaxis,ndiv,start,step,numed, option);
 
-   Error("Division","mother: %s is null",mname);
+   Error("Division","VOLUME: \"%s\" not defined",mname);
    return 0;
 }
 //_____________________________________________________________________________
@@ -1011,7 +1011,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
    amother = (TGeoVolume*)fGVolumes->FindObject(mname);
    if (!amother) amother = GetVolume(mname);
    if (!amother) {
-      Error("Node","mother: %s is null, name=%s",mname,vname);
+      Error("Node","VOLUME \"%s\" not defined",mname);
       return;
    }
    Int_t i;
@@ -1022,7 +1022,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       volume  = (TGeoVolume*)fGVolumes->FindObject(vname);
       if (!volume) volume = GetVolume(vname);
       if (!volume) {
-         Error("Node","volume: %s is null",vname);
+         Error("Node","VOLUME: \"%s\" not defined",vname);
          return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
@@ -1039,7 +1039,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
             Node(vname,nr,mname,x,y,z,irot,isOnly, upar);
             return;
          }
-         Error("Node","volume: %s not yet defined ",vname);
+         Error("Node","VOLUME: \"%s\" not defined ",vname);
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
@@ -1147,7 +1147,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
    amother = (TGeoVolume*)fGVolumes->FindObject(mname);
    if (!amother) amother = GetVolume(mname);
    if (!amother) {
-      Error("Node","mother: %s is null, name=%s",mname,vname);
+      Error("Node","VOLUME: \"%s\" not defined",mname);
       return;
    }
    Int_t i;
@@ -1158,7 +1158,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       volume  = (TGeoVolume*)fGVolumes->FindObject(vname);
       if (!volume) volume = GetVolume(vname);
       if (!volume) {
-         Error("Node","volume: %s is null",vname);
+         Error("Node","VOLUME: \"%s\" not defined",vname);
          return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
@@ -1175,7 +1175,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
             Node(vname,nr,mname,x,y,z,irot,isOnly, upar);
             return;
          }
-         Error("Node","volume: %s not yet defined ",vname);
+         Error("Node","VOLUME: \"%s\" not defined ",vname);
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
@@ -3448,8 +3448,11 @@ TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::GetVolume(const char *name) const
 {
-// Search for a named volume.
-   TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(name);
+// Search for a named volume. All trailing blanks stripped.
+   TString sname = name;
+   sname = sname.Strip();
+   TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(sname.Data());
+   if (!vol) Error("GetVolume", "=== VOLUME: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return vol;
 //   return (TGeoVolume*)fGVolumes->FindObject(name);
 }
@@ -3484,16 +3487,22 @@ TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
 //_____________________________________________________________________________
 TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
 {
-// Search for a named material.
-   TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(matname);
+// Search for a named material. All trailing blanks stripped.
+   TString sname = matname;
+   sname = sname.Strip();
+   TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(sname.Data());
+   if (!mat) Error("GetMaterial", "=== MATERIAL: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return mat;
 }
 
 //_____________________________________________________________________________
 TGeoMedium *TGeoManager::GetMedium(const char *medium) const
 {
-// Search for a named tracking medium.
-   TGeoMedium *med = (TGeoMedium*)fMedia->FindObject(medium);
+// Search for a named tracking medium. All trailing blanks stripped.
+   TString sname = medium;
+   sname = sname.Strip();
+   TGeoMedium *med = (TGeoMedium*)fMedia->FindObject(sname.Data());
+   if (!med) Error("GetMedium", "=== MEDIUM: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return med;
 }
 
@@ -3506,6 +3515,7 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
    while ((med=(TGeoMedium*)next())) {
       if (med->GetId()==numed) return med;
    }
+   Error("GetMedium","=== MEDIUM NUMBER %i not found #!#!#!#!#!#!#!#!",numed);
    return 0;
 }
 
@@ -3513,7 +3523,10 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
 // Return material at position id.
-   if (id >= fMaterials->GetSize()) return 0;
+   if (id<0 || id >= fMaterials->GetSize()) {
+      Error("GetMaterial", "=== MATERIAL %i not defined #!#!#!#!#!#!#!#!", id);
+      return 0;
+   }   
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->At(id);
    return mat;
 }
@@ -3521,14 +3534,17 @@ TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 {
 // Return index of named material.
+   TString sname = matname;
+   sname = sname.Strip();
    TIter next(fMaterials);
    TGeoMaterial *mat;
    Int_t id = 0;
    while ((mat = (TGeoMaterial*)next())) {
-      if (mat->GetName() == matname)
+      if (!strcmp(mat->GetName(),sname.Data()))
          return id;
       id++;
    }
+   Error("GetMaterialIndex", "=== MATERIAL: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return -1;  // fail
 }
 //_____________________________________________________________________________

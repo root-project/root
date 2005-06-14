@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.61 2005/05/31 18:35:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.62 2005/06/13 12:17:32 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -370,6 +370,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
            :TNamed(name, "")
 {
 // default constructor
+   fName = fName.Strip();
    fNodes    = 0;
    fShape    = (TGeoShape*)shape;
    if (fShape) {

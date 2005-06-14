@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.2 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMedium.cxx,v 1.3 2005/02/09 13:30:27 brun Exp $
 // Author: Rene Brun   26/12/02
 
 /*************************************************************************
@@ -32,6 +32,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, D
              :TNamed(name,"")
 {
 // constructor
+   fName = fName.Strip();
    fId    = numed;
    fMaterial = (TGeoMaterial*)mat;
    for (Int_t i=0;i<10;i++) {
@@ -47,6 +48,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
              :TNamed(name,"")
 {
 // constructor
+   fName = fName.Strip();
    fId    = numed;
    TIter next (gGeoManager->GetListOfMaterials());
    TGeoMaterial *mat;
