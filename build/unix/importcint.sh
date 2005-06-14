@@ -61,7 +61,7 @@ cp $SRCO/*.cxx $SRCT/
 cp $ORG/platform/aixdlfcn/dlfcn.c $SRCT/
 
 tar cf - -C $ORG --exclude lib/WildCard --exclude lib/cintocx \
-   --exclude lib/wintcldl --exclude lib/wintcldl83 \
+   --exclude lib/wintcldl --exclude lib/wintcldl83 --exclude CVS \
    include lib main stl tool | (cd $ASM; tar xf -)
 
 rm -f $SRCT/dmystrm.c
