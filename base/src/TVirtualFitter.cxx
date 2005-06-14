@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.6 2003/11/24 14:11:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.7 2004/01/20 17:59:38 rdm Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -188,6 +188,10 @@ void TVirtualFitter::SetErrorDef(Double_t errdef)
    // static: Set the Error Definition (default=1)
 
    fgErrorDef = errdef;
+   if (!fgFitter) return;
+   Double_t arglist[1];
+   arglist[0] = errdef;
+   fgFitter->ExecuteCommand("SET ERRORDEF", arglist, 1);
 }
 
 //______________________________________________________________________________
