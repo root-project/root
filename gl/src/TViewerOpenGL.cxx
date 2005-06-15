@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.62 2005/06/13 10:20:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.63 2005/06/15 10:22:57 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -369,7 +369,7 @@ void TViewerOpenGL::Invalidate(UInt_t redrawLOD)
    // will call our DoRedraw() method
    fClient->NeedRedraw(this);
 
-   if (gDebug>1) {
+   if (gDebug>3) {
       Info("TViewerOpenGL::Invalidate", "invalidated at %d LOD", fNextSceneLOD);
    }
 }
@@ -408,7 +408,7 @@ Bool_t TViewerOpenGL::HandleContainerEvent(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>2) {
          Info("TViewerOpenGL::HandleContainerButton", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -505,7 +505,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerDoubleClick(Event_t *event)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::HandleContainerDoubleClick", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -526,7 +526,7 @@ Bool_t TViewerOpenGL::HandleContainerDoubleClick(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t *event)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::HandleContainerConfigure", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -542,7 +542,7 @@ Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::HandleContainerKey", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -620,7 +620,7 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::HandleContainerMotion", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -667,7 +667,7 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerExpose(Event_t *)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::HandleContainerExpose", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -740,14 +740,14 @@ void TViewerOpenGL::DoRedraw()
    if (!fScene.TakeLock(TGLScene::kDrawLock)) {
       // If taking drawlock fails the previous draw is still in progress
       // set timer to do this one later
-      if (gDebug>0) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::DoRedraw", "scene drawlocked - requesting another draw");
       }
       fRedrawTimer->RequestDraw(100, fNextSceneLOD);
       return;
    }
 
-   if (gDebug>1) {
+   if (gDebug>3) {
       Info("TViewerOpenGL::DoRedraw", "request draw at %d LOD on this = %d", fNextSceneLOD, this);
    }
 
@@ -761,7 +761,7 @@ void TViewerOpenGL::DoRedraw()
 void TViewerOpenGL::PrintObjects()
 {
    if (fScene.IsLocked()) {
-      if (gDebug>0) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::PrintObjects", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return;
@@ -778,7 +778,7 @@ void TViewerOpenGL::PrintObjects()
 Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    if (fScene.IsLocked()) {
-      if (gDebug>0) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::ProcessMessage", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
       }
       return kFALSE;
@@ -968,7 +968,7 @@ void TViewerOpenGL::BeginScene()
    fAcceptedPhysicals = 0;
    fRejectedPhysicals = 0;
 
-   if (gDebug>1) {
+   if (gDebug>3) {
       Info("TViewerOpenGL::BeginScene", "destroyed %d physicals %d logicals", 
             destroyedPhysicals, destroyedLogicals);
       fScene.Dump();
@@ -991,7 +991,7 @@ void TViewerOpenGL::EndScene()
       fInternalRebuild = kFALSE;
    }      
 
-   if (gDebug>1) {
+   if (gDebug>3) {
       Info("TViewerOpenGL::EndScene", "Added %d, rejected %d physicals", fAcceptedPhysicals, fRejectedPhysicals);
       fScene.Dump();
    }
@@ -1001,20 +1001,20 @@ void TViewerOpenGL::EndScene()
 Bool_t TViewerOpenGL::RebuildScene()
 {
    if (!CurrentCamera().UpdateInterest()) {
-      if (gDebug>1) {
+      if (gDebug>3) {
          Info("TViewerOpenGL::RebuildScene", " not required");
       }
       return kFALSE;
    }
    
-   if (gDebug>1) {
+   if (gDebug>3) {
       Info("TViewerOpenGL::RebuildScene", "required");
    }
 
    fInternalRebuild = kTRUE;
    
    TGLStopwatch timer;
-   if (gDebug>1) {
+   if (gDebug>2) {
       timer.Start();
    }
       
@@ -1022,7 +1022,7 @@ Bool_t TViewerOpenGL::RebuildScene()
    //fPad->Modified();
    fPad->Paint();
 
-   if (gDebug>1) {
+   if (gDebug>2) {
       Info("TViewerOpenGL::RebuildScene", "rebuild complete in %f", timer.End());
    }
 
@@ -1163,7 +1163,7 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
    if (physical) { 
       fScene.AdoptPhysical(*physical);
       ++fAcceptedPhysicals;
-      if (gDebug>1 && fAcceptedPhysicals%1000 == 0) {
+      if (gDebug>3 && fAcceptedPhysicals%1000 == 0) {
          Info("TViewerOpenGL::AddObject", "added %d physicals", fAcceptedPhysicals);
       }
    } else {

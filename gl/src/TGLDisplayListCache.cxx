@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.4 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -66,13 +66,13 @@ Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, UInt_t LOD) const
    UInt_t drawList = Find(MakeCacheID(drawable, LOD));
 
    if (drawList == INVALID_DL_NAME) {
-      if (gDebug>2) {
+      if (gDebug>4) {
          Info("TGLDisplayListCache::Draw", "no cache for drawable %d LOD %d", &drawable, LOD);
       }
       return kFALSE;
    }
 
-   if (gDebug>2) {
+   if (gDebug>4) {
       Info("TGLDisplayListCache::Draw", "drawable %d LOD %d", &drawable, LOD);
    }
    glCallList(drawList);
@@ -103,7 +103,7 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
       Init();
    }
 
-   if (gDebug>2) {
+   if (gDebug>4) {
       Info("TGLDisplayListCache::OpenCapture", "for drawable %d LOD %d", &drawable, LOD);
    }
 
@@ -135,7 +135,7 @@ Bool_t TGLDisplayListCache::CloseCapture()
    TGLUtil::CheckError();
    fCaptureOpen = kFALSE;
 
-   if (gDebug>2) {
+   if (gDebug>4) {
       Info("TGLDisplayListCache::CloseCapture","complete");
    }
 

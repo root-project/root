@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.41 2005/06/13 10:20:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.42 2005/06/15 10:22:57 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -227,7 +227,7 @@ void TGLFaceSet::SetFromMesh(const RootCsg::BaseMesh *mesh)
 void TGLFaceSet::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -386,7 +386,7 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
 void TGLPolyMarker::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLPolyMarker::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -502,7 +502,7 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
 void TGLPolyLine::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -541,7 +541,7 @@ TGLSphere::TGLSphere(const TBuffer3DSphere &buffer, TObject *r)
 void TGLSphere::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLSphere::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -1109,7 +1109,7 @@ void TGLCylinder::CreateParts(const TBuffer3DTube &buffer)
 void TGLCylinder::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 

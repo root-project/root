@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.6 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.7 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -138,7 +138,7 @@ inline Bool_t TGLScene::TakeLock(ELock lock) const
 {
    if (fLock == kUnlocked) {
       fLock = lock;
-      if (gDebug>2) {
+      if (gDebug>3) {
          Info("TGLScene::TakeLock", "took %s", LockName(fLock));
       }
       return kTRUE;
@@ -151,7 +151,7 @@ inline Bool_t TGLScene::ReleaseLock(ELock lock) const
 {
    if (fLock == lock) {
       fLock = kUnlocked;
-      if (gDebug>2) {
+      if (gDebug>3) {
          Info("TGLScene::ReleaseLock", "released %s", LockName(lock));
       }
       return kTRUE;

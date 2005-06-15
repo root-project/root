@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.6 2005/06/13 10:20:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.7 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -93,7 +93,7 @@ void TGLPhysicalShape::SetColor(const Float_t rgba[4])
 void TGLPhysicalShape::Draw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -112,7 +112,7 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
 void TGLPhysicalShape::DirectDraw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLPhysicalShape::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
@@ -149,7 +149,7 @@ void TGLPhysicalShape::DrawWireFrame(UInt_t lod) const
 void TGLPhysicalShape::DrawOutline(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 

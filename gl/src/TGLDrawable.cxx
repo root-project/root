@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.5 2005/06/13 10:20:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.6 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -62,7 +62,7 @@ Bool_t TGLDrawable::SetDLCache(Bool_t DLCache)
 void TGLDrawable::Draw(UInt_t LOD) const
 {
    // Debug tracing
-   if (gDebug > 2) {
+   if (gDebug > 4) {
       Info("TGLDrawable::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 

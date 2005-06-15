@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.31 2005/05/25 14:25:17 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.32 2005/06/15 10:22:57 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1455,7 +1455,7 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
 //______________________________________________________________________________
 void TGLKernel::DrawViewer(TGLViewer *viewer)
 {
-   if (gDebug>2) {
+   if (gDebug>3) {
       Info("TGLKernel::DrawViewer", "got reqeust to draw viewer = %d", viewer);
    }
    viewer->Draw();

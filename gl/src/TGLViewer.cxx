@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.5 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -54,7 +54,7 @@ void TGLViewer::Draw()
 
    TGLStopwatch timer;
    UInt_t drawn = 0;
-   if (gDebug>0) {
+   if (gDebug>2) {
       timer.Start();
    }
 
@@ -91,9 +91,9 @@ void TGLViewer::Draw()
 
    PostDraw();
 
-   if (gDebug>0) {
+   if (gDebug>2) {
       Info("TGLViewer::Draw()", "Drew %i at %i LOD in %f msec", drawn, fNextSceneLOD, timer.End());
-      if (gDebug>1) {
+      if (gDebug>3) {
          TGLDisplayListCache::Instance().Dump();
       }
    }

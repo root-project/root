@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.9 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.10 2005/06/15 13:08:43 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -466,7 +466,7 @@ void TGLScene::SortDrawList()
 
    TGLStopwatch stopwatch;
 
-   if (gDebug>1) {
+   if (gDebug>2) {
       stopwatch.Start();
    }
 
@@ -482,7 +482,7 @@ void TGLScene::SortDrawList()
    // Sort by volume of shape bounding box
    sort(fDrawList.begin(), fDrawList.end(), TGLScene::ComparePhysicalVolumes);
 
-   if (gDebug>1) {
+   if (gDebug>2) {
       Info("TGLScene::SortDrawList", "sorting took %f msec", stopwatch.End());
    }
 
