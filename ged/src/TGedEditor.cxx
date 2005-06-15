@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.20 2005/05/20 14:39:22 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.21 2005/05/20 16:22:37 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -75,7 +75,11 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    MapSubwindows();
    if (canvas) {
       UInt_t ch = fCanvas->GetWindowHeight();
-      Resize(GetWidth(), ch > 700 ? 700 : ch);
+      if (ch)
+         Resize(GetWidth(), ch > 700 ? 700 : ch);
+      else
+         Resize(GetWidth(), canvas->GetWh() < 450 ? 450 : canvas->GetWh()+4);  
+                                                   // canvas borders=4pix
    } else {
       Resize(GetDefaultSize());
    }
@@ -291,7 +295,8 @@ void TGedEditor::Show()
       UInt_t ch = fCanvas->GetWindowHeight();
       UInt_t cx = (UInt_t)fCanvas->GetWindowTopX();
       UInt_t cy = (UInt_t)fCanvas->GetWindowTopY();
-      
+      if (!ch) cy = cy + 20;      // embedded canvas protection
+
       Int_t gedx = 0, gedy = 0;
 
       if (cw + GetWidth() > dw) {
