@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.37 2005/06/09 16:50:03 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.38 2005/06/14 16:24:09 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -4032,6 +4032,7 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
       Warning("CopyArea", "no image");
       return;
    }
+   if (!dst) return;
 
    ASImage *out = ((TASImage*)dst)->GetImage();
 
@@ -4041,8 +4042,8 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
    int idx2 = 0;
    xsrc = xsrc < 0 ? 0 : xsrc;
    ysrc = ysrc < 0 ? 0 : ysrc;
-   xsrc = xsrc > (int)fImage->width ? fImage->width : xsrc;
-   ysrc = ysrc > (int)fImage->height ? fImage->height : ysrc;
+
+   if ((xsrc >= (int)fImage->width) || (ysrc >= (int)fImage->height)) return;
 
    w = xsrc + w > fImage->width ? fImage->width - xsrc : w;
    h = ysrc + h > fImage->height ? fImage->height - ysrc : h;
