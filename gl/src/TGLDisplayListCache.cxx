@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TGLDisplayListCache.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+#include "TError.h"
 #include "Riostream.h"
 
 ClassImp(TGLDisplayListCache)
@@ -34,7 +35,7 @@ TGLDisplayListCache & TGLDisplayListCache::Instance()
 
 //______________________________________________________________________________
 TGLDisplayListCache::TGLDisplayListCache(Bool_t enable, UInt_t size) :
-      fSize(size), fInit(kFALSE), fEnabled(enable), fAddingNew(kFALSE),
+      fSize(size), fInit(kFALSE), fEnabled(enable), fCaptureOpen(kFALSE),
       fDLBase(INVALID_DL_NAME), fDLNextFree(INVALID_DL_NAME)
 {
 }
@@ -65,10 +66,15 @@ Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, UInt_t LOD) const
    UInt_t drawList = Find(MakeCacheID(drawable, LOD));
 
    if (drawList == INVALID_DL_NAME) {
+      if (gDebug>2) {
+         Info("TGLDisplayListCache::Draw", "no cache for drawable %d LOD %d", &drawable, LOD);
+      }
       return kFALSE;
    }
 
-   //std::cout << "DL " << drawList << " for " << objectID << " / " << quality << std::endl;
+   if (gDebug>2) {
+      Info("TGLDisplayListCache::Draw", "drawable %d LOD %d", &drawable, LOD);
+   }
    glCallList(drawList);
    return true;
 }
@@ -80,22 +86,25 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
       return kFALSE;
    }
 
-   if (fAddingNew) {
-      assert(kFALSE);
+   if (fCaptureOpen) {
+      Error("TGLDisplayListCache::OpenCapture", "capture already ");
       return(kFALSE);
    }
 
    // Cache full?
    if (fDLNextFree > fDLBase + fSize) {
-      //std::cout << "!";
       return kFALSE;
    }
 
-   fAddingNew = true;
+   fCaptureOpen = kTRUE;
 
    if (!fInit)
    {
       Init();
+   }
+
+   if (gDebug>2) {
+      Info("TGLDisplayListCache::OpenCapture", "for drawable %d LOD %d", &drawable, LOD);
    }
 
    // TODO: Overflow of list cache - start to loop or recycle in another fashion?
@@ -106,11 +115,8 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, UInt_t LOD
    glNewList(fDLNextFree,GL_COMPILE);
    TGLUtil::CheckError();
 
-   //std::cout << "Add DL " << fDLNextFree << "(" << fCacheDLMap.size() << ") for " << id << " / " << LOD << std::endl;
-   //std::cout << "+";
-
    fDLNextFree++;
-   return true;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -120,15 +126,55 @@ Bool_t TGLDisplayListCache::CloseCapture()
       return kFALSE;
    }
 
-   if (!fAddingNew) {
-      assert(kFALSE);
+   if (!fCaptureOpen) {
+      Error("TGLDisplayListCache::CloseCapture", "no current capture open");
       return kFALSE;
    }
 
    glEndList();
    TGLUtil::CheckError();
-   fAddingNew = kFALSE;
-   return true;
+   fCaptureOpen = kFALSE;
+
+   if (gDebug>2) {
+      Info("TGLDisplayListCache::CloseCapture","complete");
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLDisplayListCache::Purge()
+{
+   // Purge everything from the cache
+   glDeleteLists(fDLBase,fSize);
+   fCacheDLMap.erase(fCacheDLMap.begin(), fCacheDLMap.end());
+   fInit = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */) 
+{ 
+   if(fCaptureOpen) {
+      Error("TGLDisplayListCache::Purge", "attempt to purge while capture open");
+      return;
+   }
+
+   // TODO
+
+   return; 
+}
+
+//______________________________________________________________________________
+void TGLDisplayListCache::Purge(const TGLDrawable & /* drawable */, UInt_t /* LOD */) 
+{ 
+   if(fCaptureOpen) {
+      Error("TGLDisplayListCache::Purge", "attempt to purge while capture open");
+      return;
+   }
+
+   // TODO
+
+   return;
 }
 
 //______________________________________________________________________________
@@ -156,5 +202,5 @@ TGLDisplayListCache::CacheID_t TGLDisplayListCache::MakeCacheID(const TGLDrawabl
 //______________________________________________________________________________
 void TGLDisplayListCache::Dump() const
 {
-   std::cout << (fDLNextFree - fDLBase) << " of " << fSize << " used." << std::endl;
+   Info("TGLDisplayListCache::Dump", "%d of %d used", (fDLNextFree - fDLBase), fSize);
 }

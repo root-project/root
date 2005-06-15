@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.61 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.62 2005/06/13 10:20:10 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -32,7 +32,6 @@
 #include "TGLRenderArea.h"
 #include "TGLEditor.h"
 #include "TGLCamera.h"
-//#include "TArcBall.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -41,6 +40,8 @@
 
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
+#include "TGLDisplayListCache.h"
+#include "TGLStopwatch.h"
 #include "TObject.h"
 
 #include "gl2ps.h"
@@ -140,39 +141,19 @@ int sortgl = GL2PS_BSP_SORT;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
-                   TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
-                   fInternalRebuild(kFALSE), fBuildingScene(kFALSE),
-                   fPad(pad), fComposite(0)
+   TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
+   fMainFrame(0), fV1(0), fV2(0), fShutter(0), fShutItem1(0), fShutItem2(0), 
+   fShutItem3(0), fShutItem4(0), fL1(0), fL2(0), fL3(0), fL4(0),
+   fCanvasLayout(0), fMenuBar(0), fFileMenu(0), fViewMenu(0), fHelpMenu(0),
+   fMenuBarLayout(0), fMenuBarItemLayout(0), fMenuBarHelpLayout(0),
+   fContextMenu(0), fCanvasWindow(0), fCanvasContainer(0),
+   fColorEditor(0), fGeomEditor(0), fSceneEditor(0), fLightEditor(0),
+   fAction(kNone), fStartPos(0,0), fLastPos(0,0), fActiveButtonID(0),
+   fInternalRebuild(kFALSE), fNextPhysicalID(1), // 0 reserved
+   fLightMask(0x1b), fPad(pad), fComposite(0), fCSLevel(0),
+   fAcceptedPhysicals(0), fRejectedPhysicals(0)
 {
    // Create OpenGL viewer.
-
-   //good compiler (not VC 6.0) will initialize our
-   //arrays in ctor-init-list with zeroes (default initialization)
-
-   // TODO: Resort !!
-   fMainFrame = 0;
-   fV2 = 0;
-   fV1 = 0;
-   fColorEditor = 0;
-   fGeomEditor = 0;
-   fSceneEditor = 0;
-   fCanvasWindow = 0;
-   fCanvasContainer = 0;
-   fL1 = fL2 = fL3 = fL4 = 0;
-   fCanvasLayout = 0;
-   fMenuBar = 0;
-   fFileMenu = fViewMenu = fHelpMenu = 0;
-   fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
-   fLightMask = 0x1b;
-   //fXc = fYc = fZc = fRad = 0.;
-   fAction = kNone;
-   fActiveButtonID = 0;
-   //fConf = kPERSP;
-   fContextMenu = 0;
-   //fSelectedObj = 0;
-
-   fNextPhysicalID = 1;
-
    static Bool_t init = kFALSE;
    if (!init) {
       TPluginHandler *h;
@@ -191,8 +172,6 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
 //______________________________________________________________________________
 void TViewerOpenGL::CreateViewer()
 {
-   assert(!fBuildingScene);
-
    // Menus creation
    fFileMenu = new TGPopupMenu(fClient->GetRoot());
    fFileMenu->AddEntry("&Print EPS", kGLPrintEPS_SIMPLE);
@@ -300,8 +279,6 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fMenuBarLayout;
    delete fMenuBarHelpLayout;
    delete fMenuBarItemLayout;
-   //delete fArcBall;
-   //delete fRender;
    delete fCanvasContainer;
    delete fCanvasWindow;
    delete fCanvasLayout;
@@ -381,24 +358,35 @@ void TViewerOpenGL::InitGL()
 //______________________________________________________________________________
 void TViewerOpenGL::Invalidate(UInt_t redrawLOD)
 {
+   if (fScene.IsLocked()) {
+      Error("TViewerOpenGL::Invalidate", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
+
    TGLViewer::Invalidate(redrawLOD);
    
    // Mark the window as requiring a redraw - the GUI thread
    // will call our DoRedraw() method
    fClient->NeedRedraw(this);
+
+   if (gDebug>1) {
+      Info("TViewerOpenGL::Invalidate", "invalidated at %d LOD", fNextSceneLOD);
+   }
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::MakeCurrent() const
 {
-   assert(!fBuildingScene);
    fCanvasContainer->GetGLWindow()->MakeCurrent();
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::SwapBuffers() const
 {
-   assert(!fBuildingScene);
+   if (fScene.CurrentLock() != TGLScene::kDrawLock && 
+      fScene.CurrentLock() != TGLScene::kSelectLock) {
+      Error("TViewerOpenGL::MakeCurrent", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
+   }
    fCanvasContainer->GetGLWindow()->SwapBuffers();
 }
 
@@ -419,6 +407,13 @@ Bool_t TViewerOpenGL::HandleContainerEvent(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerButton", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    // Only process one action/button down/up pairing - block others
    if (fAction != kNone) {
       if (event->fType == kButtonPress ||
@@ -480,6 +475,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
    }
    // Button UP
    else if (event->fType == kButtonRelease) {
+
       // TODO: Check on Linux - on Win32 only see button release events
       // for mouse wheel
       switch(event->fCode) {
@@ -499,16 +495,22 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             break;
          }
       }
-
       fAction = kNone;
    }
-   
+
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerDoubleClick(Event_t *event)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerDoubleClick", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    // Reset interactive camera mode on button double
    // click (unless mouse wheel)
    if (event->fCode != kButton4 && event->fCode != kButton5) {
@@ -523,6 +525,13 @@ Bool_t TViewerOpenGL::HandleContainerDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t *event)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerConfigure", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    if (event) {
       SetViewport(event->fX, event->fY, event->fWidth, event->fHeight);
    }
@@ -532,6 +541,13 @@ Bool_t TViewerOpenGL::HandleContainerConfigure(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerKey", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    char tmp[10] = {0};
    UInt_t keysym = 0;
    Float_t black[] = {0.f, 0.f, 0.f, 1.f};
@@ -603,6 +619,13 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerMotion", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    if (!event) {
       return kFALSE;
    }
@@ -643,6 +666,13 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::HandleContainerExpose(Event_t *)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::HandleContainerExpose", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    Invalidate(kHigh);
    return kTRUE;
 }
@@ -650,6 +680,13 @@ Bool_t TViewerOpenGL::HandleContainerExpose(Event_t *)
 //______________________________________________________________________________
 void TViewerOpenGL::DoSelect(Event_t *event, Bool_t invokeContext)
 {
+   // Take select lock on scene immediately we enter here - it is released
+   // in the other (drawing) thread - see TGLViewer::Select()
+   // Removed when gVirtualGL removed
+   if (!fScene.TakeLock(TGLScene::kSelectLock)) {
+      return;
+   }
+
    // TODO: Check only the GUI thread ever enters here & DoSelect.
    // Then TVirtualGL and TGLKernel can be obsoleted.
    TGLRect selectRect(event->fX, event->fY, 3, 3); // TODO: Constant somewhere
@@ -677,7 +714,9 @@ void TViewerOpenGL::DoSelect(Event_t *event, Bool_t invokeContext)
 //______________________________________________________________________________
 void TViewerOpenGL::Show()
 {
-   assert(!fBuildingScene);
+   if (fScene.IsLocked()) {
+      Error("TViewerOpenGL::Show", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));   
+   }
    MapRaised();
 
    // Must NOT Invalidate() here as for some reason it throws the win32
@@ -695,7 +734,23 @@ void TViewerOpenGL::CloseWindow()
 //______________________________________________________________________________
 void TViewerOpenGL::DoRedraw()
 {
-   //TGMainFrame::DoRedraw();
+   // Take draw lock on scene immediately we enter here - it is released
+   // in the other (drawing) drawing thread - see TGLViewer::Draw()
+   // Removed when gVirtualGL removed
+   if (!fScene.TakeLock(TGLScene::kDrawLock)) {
+      // If taking drawlock fails the previous draw is still in progress
+      // set timer to do this one later
+      if (gDebug>0) {
+         Info("TViewerOpenGL::DoRedraw", "scene drawlocked - requesting another draw");
+      }
+      fRedrawTimer->RequestDraw(100, fNextSceneLOD);
+      return;
+   }
+
+   if (gDebug>1) {
+      Info("TViewerOpenGL::DoRedraw", "request draw at %d LOD on this = %d", fNextSceneLOD, this);
+   }
+
    // TODO: Check only the GUI thread ever enters here, DoSelect() and PrintObjects().
    // Then TVirtualGL and TGLKernel can be obsoleted and all GL context work done
    // in GUI thread.
@@ -705,6 +760,13 @@ void TViewerOpenGL::DoRedraw()
 //______________________________________________________________________________
 void TViewerOpenGL::PrintObjects()
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>0) {
+         Info("TViewerOpenGL::PrintObjects", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return;
+   }
+
    // Generates a PostScript or PDF output of the OpenGL scene. They are vector
    // graphics files and can be huge and long to generate.
     TGLBoundingBox sceneBox = fScene.BoundingBox();
@@ -715,6 +777,13 @@ void TViewerOpenGL::PrintObjects()
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
+   if (fScene.IsLocked()) {
+      if (gDebug>0) {
+         Info("TViewerOpenGL::ProcessMessage", "ignored - scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+      }
+      return kFALSE;
+   }
+
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
       switch (GET_SUBMSG(msg)) {
@@ -786,6 +855,10 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 //______________________________________________________________________________
 void TViewerOpenGL::ModifyScene(Int_t wid)
 {
+   if (!fScene.TakeLock(TGLScene::kModifyLock)) {
+      return;
+   }
+
    MakeCurrent();
 
    TGLPhysicalShape * selected = fScene.GetSelected();
@@ -797,8 +870,8 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       break;
    case kTBaf:
       if (selected) {
-         fScene.SetColorByLogical(selected->GetLogical().ID(), 
-                                  fColorEditor->GetRGBA());
+         fScene.SetPhysicalsColorByLogical(selected->GetLogical().ID(), 
+                                           fColorEditor->GetRGBA());
       }
       break;
    case kTBa1:
@@ -847,6 +920,8 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       break;
    }
 
+   fScene.ReleaseLock(TGLScene::kModifyLock);
+
    Invalidate();
 }
 
@@ -859,58 +934,103 @@ Bool_t TViewerOpenGL::PreferLocalFrame() const
 //______________________________________________________________________________
 void TViewerOpenGL::BeginScene()
 {
-   TGLUtil::CheckError();
-
-   // Scene builds can't be nested
-   if (fBuildingScene) {
-      assert(kFALSE);
+   if (!fScene.TakeLock(TGLScene::kModifyLock)) {
       return;
    }
-   
-   if (!fInternalRebuild) {
-      CurrentCamera().ResetInterest();
-      fScene.DestroyAllPhysicals();
-   }
-      
-   fBuildingScene = kTRUE;
 
-   TGLUtil::CheckError();
+   UInt_t destroyedLogicals = 0;
+   UInt_t destroyedPhysicals = 0;
+
+   // External rebuild?
+   if (!fInternalRebuild) {
+      // Reset camera interest to ensure we respond to
+      // new scene range
+      CurrentCamera().ResetInterest();
+
+      // External rebuilds could potentially invalidate all logical and
+      // physical shapes
+      // Physicals must be removed first
+      destroyedPhysicals = fScene.DestroyAllPhysicals();
+      destroyedLogicals = fScene.DestroyAllLogicals();
+
+      // Purge out the DL cache - not required once shapes do this themselves properly
+      TGLDisplayListCache::Instance().Purge();
+   } else {
+      //Internal rebuilds - destroy all physicals - retain logicals
+      destroyedPhysicals = fScene.DestroyAllPhysicals();
+      //fScene.DestroyPhysicals(CurrentCamera());
+   }
+
+   // Reset internal ID counter
+   fNextPhysicalID = 1;
+   
+   // Reset tracing info
+   fAcceptedPhysicals = 0;
+   fRejectedPhysicals = 0;
+
+   if (gDebug>1) {
+      Info("TViewerOpenGL::BeginScene", "destroyed %d physicals %d logicals", 
+            destroyedPhysicals, destroyedLogicals);
+      fScene.Dump();
+   }
 }
 
 //______________________________________________________________________________
 void TViewerOpenGL::EndScene()
 {
-   TGLUtil::CheckError();
+   fScene.ReleaseLock(TGLScene::kModifyLock);
 
-   assert(fBuildingScene);
-   fBuildingScene = kFALSE;
-  
-   if (!fInternalRebuild && !fScene.BoundingBox().IsEmpty()) {
-      SetupCameras(fScene.BoundingBox());
-   } else {
+   // External scene build
+   if (!fInternalRebuild) {
+      // Setup camera unless scene is empty
+      if (!fScene.BoundingBox().IsEmpty()) {
+         SetupCameras(fScene.BoundingBox());
+      }
+      Invalidate();
+   } else if (fInternalRebuild) {
       fInternalRebuild = kFALSE;
    }      
-    
-   Invalidate();
-   
-   TGLUtil::CheckError();
+
+   if (gDebug>1) {
+      Info("TViewerOpenGL::EndScene", "Added %d, rejected %d physicals", fAcceptedPhysicals, fRejectedPhysicals);
+      fScene.Dump();
+   }
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::RebuildScene()
-{   
+Bool_t TViewerOpenGL::RebuildScene()
+{
+   if (!CurrentCamera().UpdateInterest()) {
+      if (gDebug>1) {
+         Info("TViewerOpenGL::RebuildScene", " not required");
+      }
+      return kFALSE;
+   }
+   
+   if (gDebug>1) {
+      Info("TViewerOpenGL::RebuildScene", "required");
+   }
+
    fInternalRebuild = kTRUE;
    
-   // Destroy physicals no longer of interest to current camera
-   // TODO: Only do this if above a certain number of physicals (or mem size)
-   // otherwise why not just keep them all?
-   //fScene.DestroyPhysicals(CurrentCamera());
-   fScene.DestroyAllPhysicals();
-   fNextPhysicalID = 1;
+   TGLStopwatch timer;
+   if (gDebug>1) {
+      timer.Start();
+   }
       
    // TODO: Just marking modified doesn't seem to result in pad repaint - need to check on
    //fPad->Modified();
    fPad->Paint();
+
+   if (gDebug>1) {
+      Info("TViewerOpenGL::RebuildScene", "rebuild complete in %f", timer.End());
+   }
+
+   // Need to invalidate/redraw via timer as under Win32 we are already inside the 
+   // GUI(DoRedraw) thread - direct invalidation will be cleared when leaving
+   fRedrawTimer->RequestDraw(20, kMed);
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -928,15 +1048,15 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
       *addChildren = kFALSE;
    }
    
+   // Scene should be modify locked
+   if (fScene.CurrentLock() != TGLScene::kModifyLock) {
+      assert(kFALSE);
+      return TBuffer3D::kNone;
+   }
+
    // 0 reserved for detecting re-entry
    assert(physicalID != 0);
    
-   // Currently we protect against add objects being added outside a scene build 
-   // as there are problems with mutliple 3D viewers on pad
-   if (!fBuildingScene) {
-       return TBuffer3D::kNone;
-   }
-
    // Note that 'object' here is really a physical/logical pair described
    // in buffer + physical ID.
 
@@ -1000,6 +1120,7 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
                *addChildren = ofInterest;
             }            
             if (!ofInterest) {
+               ++fRejectedPhysicals;
                return TBuffer3D::kNone;
             } 
          }
@@ -1041,6 +1162,10 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
    
    if (physical) { 
       fScene.AdoptPhysical(*physical);
+      ++fAcceptedPhysicals;
+      if (gDebug>1 && fAcceptedPhysicals%1000 == 0) {
+         Info("TViewerOpenGL::AddObject", "added %d physicals", fAcceptedPhysicals);
+      }
    } else {
       assert(kFALSE);
    }

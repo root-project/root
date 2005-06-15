@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.5 2005/06/01 14:07:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -78,6 +78,8 @@ public:
    TGLVector3      GetScale() const;
    void            SetScale(const TGLVector3 & scale);
 
+   inline Bool_t operator < (const TGLPhysicalShape & other) const;
+
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
 
@@ -112,6 +114,12 @@ inline void TGLPhysicalShape::SetScale(const TGLVector3 & scale)
 { 
    fTransform.SetScale(scale); 
    UpdateBoundingBox();
+}
+
+//______________________________________________________________________________
+inline Bool_t TGLPhysicalShape::operator < (const TGLPhysicalShape & other) const
+{ 
+   return BoundingBox().Volume() < other.BoundingBox().Volume(); 
 }
 
 #endif // ROOT_TGLPhysicalShape

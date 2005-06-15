@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.5 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.6 2005/06/13 10:20:10 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -97,14 +97,6 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
       Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
    }
 
-   // TODO: Can be moved to a one off switch when transparent draw sorting
-   // back in
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
    //TODO: Sorting - Min. state swap for attributes
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
@@ -114,23 +106,6 @@ void TGLPhysicalShape::Draw(UInt_t LOD) const
 
    // Do base work with potential DL caching
    TGLDrawable::Draw(LOD);
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-
-   // Selection state drawing is never cached - so outside of DirectDraw()
-   if (fSelected) {
-      // Selection indicated by bounding box at present
-      // NOTE: This is outside of the glMultMatrixd() for the
-      // physical translation as the bounding box is translated when created
-      // Done at end of scene draw at present - blend/depth problem...?
-      //glColor3d(1.0,1.0,1.0);
-      //glDisable(GL_DEPTH_TEST);
-      //fBoundingBox.Draw();
-      //glEnable(GL_DEPTH_TEST);
-   }
 }
 
 //______________________________________________________________________________
@@ -161,22 +136,11 @@ void TGLPhysicalShape::DrawWireFrame(UInt_t lod) const
    glLoadName(ID());
    glMultMatrixd(fTransform.CArr());
    
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-
    glColor4fv(fColor);
 
    if (fInvertedWind) glFrontFace(GL_CW);
    fLogicalShape.DrawWireFrame(lod);
    if (fInvertedWind) glFrontFace(GL_CCW);
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
    
    glPopMatrix();
 }
@@ -184,18 +148,15 @@ void TGLPhysicalShape::DrawWireFrame(UInt_t lod) const
 //______________________________________________________________________________
 void TGLPhysicalShape::DrawOutline(UInt_t LOD) const
 {
-   // TODO: Can be moved to a one off switch when transparent draw sorting
-   // back in
+   // Debug tracing
+   if (gDebug > 2) {
+      Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d", this, IsA()->GetName(), LOD);
+   }
+
    glPushMatrix();
    glLoadName(ID());
    glMultMatrixd(fTransform.CArr());
    
-   if (IsTransparent()) {
-      glEnable(GL_BLEND);
-      glDepthMask(GL_FALSE);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   }
-
    //TODO: Sorting - Min. state swap for attributes
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
@@ -206,11 +167,6 @@ void TGLPhysicalShape::DrawOutline(UInt_t LOD) const
    if (fInvertedWind) glFrontFace(GL_CW);
    fLogicalShape.DrawOutline(LOD);
    if (fInvertedWind) glFrontFace(GL_CCW);
-
-   if (IsTransparent()) {
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
    
    glPopMatrix();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -41,16 +41,13 @@ public:
    enum ECamera { kPerspective, kXOY, kYOZ, kXOZ };
 
 private:
-
    // Fields
-   TGLRedrawTimer     * fRedrawTimer;
-   UInt_t               fNextSceneLOD;       //!
-   TGLCamera          * fCurrentCamera;      //!
    // TODO: Put in vector and allow external creation
    TGLPerspectiveCamera fPerspectiveCamera;  //!
    TGLOrthoCamera       fOrthoXOYCamera;     //!
    TGLOrthoCamera       fOrthoYOZCamera;     //!
    TGLOrthoCamera       fOrthoXOZCamera;     //!
+   TGLCamera          * fCurrentCamera;      //!
 
    // Methods
    void PreDraw();
@@ -62,6 +59,10 @@ private:
 
 protected:
    // Fields
+   // Move back to private when gVirtualGL removed
+   TGLRedrawTimer     * fRedrawTimer;        //!
+   UInt_t               fNextSceneLOD;       //!
+
    // Scene is created/owned internally.
    // In future it will be shaped between multiple viewers
    TGLScene       fScene;          //! the GL scene - owned by viewer at present
@@ -72,16 +73,16 @@ protected:
    Bool_t         fInitGL;         //! has GL been initialised?
 
    // Methods
-   virtual void InitGL()                            = 0;
-   virtual void MakeCurrent()  const                = 0;
-   virtual void SwapBuffers()  const                = 0;
-   virtual void RebuildScene()                      = 0;
+   virtual void   InitGL()                            = 0;
+   virtual void   MakeCurrent()  const                = 0;
+   virtual void   SwapBuffers()  const                = 0;
+   virtual Bool_t RebuildScene()                      = 0;
 
-   void   SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
-
-   void SetupCameras(const TGLBoundingBox & box);
-   void SetCurrentCamera(ECamera camera);
-   TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
+   // Viewport and Camera
+   void         SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
+   void         SetupCameras(const TGLBoundingBox & box);
+   void         SetCurrentCamera(ECamera camera);
+   TGLCamera &  CurrentCamera() const { return *fCurrentCamera; }
 
 public:
    TGLViewer();
@@ -99,6 +100,22 @@ public:
    virtual void Invalidate(UInt_t redrawLOD = kMed) = 0;
 
    ClassDef(TGLViewer,0) // GL viewer generic base class
+};
+
+// TODO: Find a better place/way to do this
+class TGLRedrawTimer : public TTimer
+{
+   private:
+      TGLViewer & fViewer;
+      UInt_t      fRedrawLOD;
+   public:
+      TGLRedrawTimer(TGLViewer & viewer) : fViewer(viewer), fRedrawLOD(100) {};
+      ~TGLRedrawTimer() {};
+      void   RequestDraw(Int_t milliSec, UInt_t redrawLOD) {
+         fRedrawLOD = redrawLOD;
+         TTimer::Start(milliSec, kTRUE);
+      }
+      Bool_t Notify() { TurnOff(); fViewer.Invalidate(kHigh); return kTRUE; }
 };
 
 #endif // ROOT_TGLViewer

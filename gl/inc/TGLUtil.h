@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.5 2005/05/27 12:25:07 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.6 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -442,8 +442,7 @@ class TGLUtil
 public:
    virtual ~TGLUtil() { }
 
-   static void CheckError();
-
+   static void   CheckError();
    ClassDef(TGLUtil,0) // Wrapper class for misc GL pieces
 };
 

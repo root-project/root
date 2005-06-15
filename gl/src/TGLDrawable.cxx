@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.5 2005/06/13 10:20:10 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 
 #include "TGLDrawable.h"
 #include "TGLDisplayListCache.h"
+
+// For debug tracing
+#include "TClass.h" 
+#include "TError.h"
 
 // For debug tracing
 #include "TClass.h" 
@@ -68,17 +72,15 @@ void TGLDrawable::Draw(UInt_t LOD) const
    // perform a direct draw
    // DL can be nested, but not created in nested fashion. As we only
    // build DL on draw demands have to protected against this here.
-   if (!UseDLCache(LOD) || cache.InsideCapture())
+   if (!UseDLCache(LOD) || cache.CaptureIsOpen())
    {
       DirectDraw(LOD);
       return;
    }
 
+   // Attempt to draw from the cache
    if (!cache.Draw(*this, LOD))
    {
-      if (gDebug > 2) {
-         Info("TGLDrawable::Draw", "added to DL cache");
-      }
       // Capture the shape draw into compiled DL
       // If the cache is disabled the capture is ignored and
       // the shape is directly drawn
@@ -93,8 +95,6 @@ void TGLDrawable::Draw(UInt_t LOD) const
          Bool_t ok = cache.Draw(*this, LOD);
          assert(ok);
       }
-   } else if (gDebug > 2) {
-         Info("TGLDrawable::Draw", "from DL cache");
    }
 }
 

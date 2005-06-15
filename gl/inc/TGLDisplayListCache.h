@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -29,16 +29,16 @@ class TGLDrawable;
 class TGLDisplayListCache {
 private:
    typedef std::pair<const TGLDrawable *, const UInt_t> CacheID_t;
-   typedef std::map<CacheID_t,UInt_t>                  CacheDLMap_t;
+   typedef std::map<CacheID_t,UInt_t>                   CacheDLMap_t;
 
    // Fields
-   UInt_t         fSize;       //!
-   Bool_t         fInit;       //!
-   Bool_t         fEnabled;    //!
-   Bool_t         fAddingNew;  //!
-   UInt_t         fDLBase;     //!
-   UInt_t         fDLNextFree; //!
-   CacheDLMap_t   fCacheDLMap; //!
+   UInt_t         fSize;         //!
+   Bool_t         fInit;         //!
+   Bool_t         fEnabled;      //!
+   Bool_t         fCaptureOpen;  //!
+   UInt_t         fDLBase;       //!
+   UInt_t         fDLNextFree;   //!
+   CacheDLMap_t   fCacheDLMap;   //!
 
    // Static Fields
    static TGLDisplayListCache * fInstance; //! the singleton cache instance
@@ -64,15 +64,16 @@ public:
    void   Enable(Bool_t enable)   { fEnabled = enable; }
    Bool_t IsEnabled()             { return fEnabled; }
    //void   Resize(UInt_t size)     {}; //TODO
+   void   Purge();               // purge entire cache
    void   Dump() const;
 
    // Cache entities (TLGDrawable) manipulators
    Bool_t Draw(const TGLDrawable & drawable, UInt_t LOD) const;
    Bool_t OpenCapture(const TGLDrawable & drawable, UInt_t LOD);
    Bool_t CloseCapture();
-   Bool_t InsideCapture() { return fAddingNew; }
-   Bool_t Purge(const TGLDrawable & /* drawable */ ) { /*assert(!fAddingNew);*/ return true; } //TODO
-   Bool_t Purge(const TGLDrawable & /* drawable */, UInt_t /* LOD */) { /*assert(!fAddingNew);*/ return true; } //TODO
+   Bool_t CaptureIsOpen() { return fCaptureOpen; }
+   void   Purge(const TGLDrawable & drawable);
+   void   Purge(const TGLDrawable & drawable, UInt_t LOD);
 
    ClassDef(TGLDisplayListCache,0) // a cache of GL display lists (singleton)
 };

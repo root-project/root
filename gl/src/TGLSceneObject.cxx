@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.40 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.41 2005/06/13 10:20:10 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -79,6 +79,8 @@ static GLUquadric *GetQuadric()
 
 ClassImp(TGLSceneObject)
 
+ClassImp(TGLSceneObject)
+
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, TObject *obj) :
    TGLLogicalShape(reinterpret_cast<ULong_t>(obj)), // TODO: Clean up more
@@ -113,6 +115,8 @@ void TGLSceneObject::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) 
       menu.Popup(x, y, fRealObject);
    }
 }
+
+ClassImp(TGLFaceSet)
 
 ClassImp(TGLFaceSet)
 
@@ -366,6 +370,8 @@ void TGLFaceSet::CalculateNormals()
 
 ClassImp(TGLPolyMarker)
 
+ClassImp(TGLPolyMarker)
+
 //______________________________________________________________________________
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buffer, TObject *r)
                   :TGLSceneObject(buffer, r),
@@ -484,6 +490,8 @@ void TGLPolyMarker::DrawStars()const
 
 ClassImp(TGLPolyLine)
 
+ClassImp(TGLPolyLine)
+
 //______________________________________________________________________________
 TGLPolyLine::TGLPolyLine(const TBuffer3D &buffer, TObject *r)
                 :TGLSceneObject(buffer, r)
@@ -505,6 +513,8 @@ void TGLPolyLine::DirectDraw(UInt_t LOD) const
 
    glEnd();
 }
+
+ClassImp(TGLSphere)
 
 ClassImp(TGLSphere)
 
@@ -1017,6 +1027,8 @@ void CylinderSegMesh::Draw(const Double_t * /*rot*/)const
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 }
+
+ClassImp(TGLCylinder)
 
 ClassImp(TGLCylinder)
 

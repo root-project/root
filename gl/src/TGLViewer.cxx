@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.4 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,28 +15,20 @@
 #include "TGLViewer.h"
 #include "TGLIncludes.h"
 #include "TGLStopwatch.h"
-
-// TODO: Find a better place/way to do this
-class TGLRedrawTimer : public TTimer
-{
-   private:
-      TGLViewer & fViewer;
-   public:
-      TGLRedrawTimer(TGLViewer & viewer) : fViewer(viewer) {};
-      ~TGLRedrawTimer() {};
-      Bool_t Notify() { TurnOff(); fViewer.Invalidate(kHigh); return kTRUE; }
-};
+#include "TGLDisplayListCache.h"
+#include "TError.h"
 
 ClassImp(TGLViewer)
 
 //______________________________________________________________________________
 TGLViewer::TGLViewer() :
-   fNextSceneLOD(kHigh),
-   fCurrentCamera(&fPerspectiveCamera),
    fPerspectiveCamera(),
    fOrthoXOYCamera(TGLOrthoCamera::kXOY),
    fOrthoYOZCamera(TGLOrthoCamera::kYOZ),
    fOrthoXOZCamera(TGLOrthoCamera::kXOZ),
+   fCurrentCamera(&fPerspectiveCamera),
+   fRedrawTimer(0),
+   fNextSceneLOD(kHigh),
    fClipPlane(1.0, 0.0, 0.0, 0.0),
    fUseClipPlane(kFALSE),
    fDrawAxes(kFALSE),
@@ -48,6 +40,74 @@ TGLViewer::TGLViewer() :
 //______________________________________________________________________________
 TGLViewer::~TGLViewer()
 {
+}
+
+//______________________________________________________________________________
+void TGLViewer::Draw()
+{
+   // Draw lock should already been taken in other thread in 
+   // TViewerOpenGL::DoRedraw()
+   if (fScene.CurrentLock() != TGLScene::kDrawLock) {
+      Error("TGLViewer::Draw", "expected kDrawLock, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
+
+   TGLStopwatch timer;
+   UInt_t drawn = 0;
+   if (gDebug>0) {
+      timer.Start();
+   }
+
+   PreDraw();
+
+   // Apply current camera projection (always as scene may be empty now but rebuilt
+   // in which case camera must have been applied)
+   fCurrentCamera->Apply(fScene.BoundingBox());
+
+   // Something to draw?
+   if (!fScene.BoundingBox().IsEmpty()) {
+      // Draw axes. Still get's clipped - need to find a way to disable clips
+      // for this
+      if (fDrawAxes) {
+         fScene.DrawAxes();
+      }
+
+      // Apply any clipping plane
+      if (fUseClipPlane) {
+         glEnable(GL_CLIP_PLANE0);
+         glClipPlane(GL_CLIP_PLANE0, fClipPlane.CArr());
+      } else {
+         glDisable(GL_CLIP_PLANE0);
+      }
+
+      if (fNextSceneLOD == kHigh) {
+         // High quality (final pass) draws have unlimited time to complete
+         drawn = fScene.Draw(*fCurrentCamera, fNextSceneLOD);
+      } else {
+         // Other (interactive) draws terminate after 100 msec
+         drawn = fScene.Draw(*fCurrentCamera, fNextSceneLOD, 100.0);
+      }
+   }
+
+   PostDraw();
+
+   if (gDebug>0) {
+      Info("TGLViewer::Draw()", "Drew %i at %i LOD in %f msec", drawn, fNextSceneLOD, timer.End());
+      if (gDebug>1) {
+         TGLDisplayListCache::Instance().Dump();
+      }
+   }
+
+   // Release draw lock on scene
+   fScene.ReleaseLock(TGLScene::kDrawLock);
+
+   // Scene rebuild required?
+   if (!RebuildScene()) {
+      // Final draw pass required?
+      if (fNextSceneLOD != kHigh) {
+         fRedrawTimer->RequestDraw(100, kHigh);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -67,48 +127,6 @@ void TGLViewer::PreDraw()
 }
 
 //______________________________________________________________________________
-void TGLViewer::Draw()
-{
-   //TGLStopwatch timer;
-   //timer.Start();
-
-   PreDraw();
-
-   // Something to draw?
-   if (!fScene.BoundingBox().IsEmpty()) {
-      // Apply current camera projection
-      fCurrentCamera->Apply(fScene.BoundingBox());
-
-      // Draw axes. Still get's clipped - need to find a way to disable clips
-      // for this
-      if (fDrawAxes) {
-         fScene.DrawAxes();
-      }
-
-      // Apply any clipping plane
-      if (fUseClipPlane) {
-         glEnable(GL_CLIP_PLANE0);
-         glClipPlane(GL_CLIP_PLANE0, fClipPlane.CArr());
-      } else {
-         glDisable(GL_CLIP_PLANE0);
-      }
-
-      // TODO: Drop objects below a certain (projected) size?
-      if (fNextSceneLOD == kHigh) {
-         fScene.Draw(*fCurrentCamera, fNextSceneLOD);
-      } else {
-         // Force redraw to terminate after 300 msec - needs more playing with - based
-         // on multiple scene qualities?
-         fScene.Draw(*fCurrentCamera, fNextSceneLOD, 300.0);
-      }
-   }
-
-   PostDraw();
-}
-
-
-
-//______________________________________________________________________________
 void TGLViewer::PostDraw()
 {
    // GL work which must be done after each draw of scene
@@ -116,17 +134,6 @@ void TGLViewer::PostDraw()
 
    // Flush everything in case picking starts
    glFlush();
-
-   // Rebuild scene?
-   if (fNextSceneLOD == kHigh && CurrentCamera().UpdateInterest()) {
-      RebuildScene();
-   } else if (fNextSceneLOD != kHigh) {
-      // Final pass render required
-      // TODO: Should really be another factor on top of scene draw qaulity
-      // 100 msec single shot callback to redraw at best quality if no
-      // other user action during this time
-      fRedrawTimer->Start(100,kTRUE);
-   }
 
    TGLUtil::CheckError();
 }
@@ -141,21 +148,37 @@ void TGLViewer::Invalidate(UInt_t redrawLOD)
 //______________________________________________________________________________
 Bool_t TGLViewer::Select(const TGLRect & rect)
 {
+   // Select lock should already been taken in other thread in 
+   // TViewerOpenGL::DoSelect()
+   if (fScene.CurrentLock() != TGLScene::kSelectLock) {
+      Error("TGLViewer::Draw", "expected kSelectLock, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return kFALSE;
+   }
+
    TGLRect glRect(rect);
    WindowToGL(glRect);
    fCurrentCamera->Apply(fScene.BoundingBox(), &glRect);
 
    MakeCurrent();
    Bool_t changed = fScene.Select(*fCurrentCamera);
+
+   // Release select lock on scene before invalidation
+   fScene.ReleaseLock(TGLScene::kSelectLock);
+
    if (changed) {
       Invalidate(kHigh);
    }
+
    return changed;
 }
 
 //______________________________________________________________________________
 void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   if (fScene.IsLocked()) {
+      Error("TGLViewer::SetViewport", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
    Invalidate();
@@ -164,6 +187,11 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height)
 //______________________________________________________________________________
 void TGLViewer::SetCurrentCamera(ECamera camera)
 {
+   if (fScene.IsLocked()) {
+      Error("TGLViewer::SetCurrentCamera", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
+
    switch(camera) {
       case(kPerspective): {
          fCurrentCamera = &fPerspectiveCamera;
@@ -194,9 +222,13 @@ void TGLViewer::SetCurrentCamera(ECamera camera)
 //______________________________________________________________________________
 void TGLViewer::SetupCameras(const TGLBoundingBox & box)
 {
+   if (fScene.IsLocked()) {
+      Error("TGLViewer::SetupCameras", "expected kUnlocked, found %s", TGLScene::LockName(fScene.CurrentLock()));
+      return;
+   }
+
    fPerspectiveCamera.Setup(box);
    fOrthoXOYCamera.Setup(box);
    fOrthoYOZCamera.Setup(box);
    fOrthoXOZCamera.Setup(box);
 }
-

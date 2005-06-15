@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -51,19 +51,15 @@ void TGLStopwatch::Start()
 //______________________________________________________________________________
 Double_t TGLStopwatch::Lap() const
 {
-   //TODO: Investigate what the cost of this is? Don't get
-   // accurate time without it but may make who process slower.
-   // Maybe can record total scene drawtime on full draw and just
-   // terminate on fraction of this?
-   FinishDrawing();
-   Double_t current = GetClock();
-   return (current - fStart - fgOverhead);
+   Double_t elapsed = GetClock() - fStart - fgOverhead;
+   return elapsed > 0.0 ? elapsed : 0.0;
 }
 
 // In milliseconds
 //______________________________________________________________________________
 Double_t TGLStopwatch::End()
 {
+   FinishDrawing();
    return Lap();
 }
 
@@ -113,7 +109,7 @@ Double_t TGLStopwatch::WaitForTick(void)  const
 void TGLStopwatch::InitOverhead(void) const
 {
    Double_t runTime;
-   Long_t reps;
+   Long_t   reps;
    Double_t start;
    Double_t finish;
    Double_t current;
@@ -123,12 +119,12 @@ void TGLStopwatch::InitOverhead(void) const
    // Next tick
    while ((finish = GetClock()) == start);
 
-   // Test on 100 ticks range to 0.5 sec - 5 sec
+   // Test on 100 ticks range to 0.1 sec - 0.5 sec
    runTime = 100.0 * (finish - start);
-   if (runTime < 500)
-      runTime = 500;
-   else if (runTime > 5000)
-      runTime = 5000;
+   if (runTime < 100)
+      runTime = 100;
+   else if (runTime > 500)
+      runTime = 1000;
 
    // Clear GL pipe
    FinishDrawing();

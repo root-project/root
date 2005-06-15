@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:$:$Id:$
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -46,10 +46,11 @@ private:
    // box diagonally (e.g. 0,5,6 or 1,3,6 etc) would fix it in space - rest
    // could be calculated on demand - but not worth effort.....
    TGLVertex3 fVertex[8]; //! the 8 bounding box vertices
+   Double_t   fVolume;    //! box volume - cached for speed
 
    // Methods
-
-   Bool_t ValidIndex(UInt_t index) const { return (index < 8); }
+   void     UpdateVolume();
+   Bool_t   ValidIndex(UInt_t index) const { return (index < 8); }
    Double_t Min(UInt_t index) const;
    Double_t Max(UInt_t index) const;
 
@@ -87,7 +88,7 @@ public:
    inline TGLVertex3 Center() const;
    inline TGLVector3 Extents() const;
    inline TGLVector3 Axis(UInt_t i, Bool_t normalised = true) const;
-   inline Double_t   Volume() const;
+   inline Double_t   Volume() const { return fVolume; }
    inline Bool_t     IsEmpty() const;
 
    EOverlap Overlap(const TGLPlane & plane) const;
@@ -153,10 +154,10 @@ inline TGLVector3 TGLBoundingBox::Axis(UInt_t i, Bool_t normalised) const
 }
 
 //______________________________________________________________________________
-inline Double_t TGLBoundingBox::Volume() const
+inline void TGLBoundingBox::UpdateVolume()
 {
    TGLVector3 extents = Extents();
-   return fabs(extents.X() * extents.Y() * extents.Z());
+   fVolume = fabs(extents.X() * extents.Y() * extents.Z());
 }
 
 inline Bool_t TGLBoundingBox::IsEmpty() const

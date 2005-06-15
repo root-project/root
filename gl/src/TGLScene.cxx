@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.7 2005/06/01 17:53:24 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.8 2005/06/02 10:47:27 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -18,46 +18,67 @@
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLStopwatch.h"
+#include "TGLDisplayListCache.h"
 #include "TGLIncludes.h"
 #include "TError.h"
 #include "TString.h"
+#include "Riostream.h"
 
-#include <vector>
-#include <Riostream.h>
+#include <algorithm>
 
 ClassImp(TGLScene)
 
 //______________________________________________________________________________
 TGLScene::TGLScene() :
-   fBoundingBox(), fBoundingBoxValid(kFALSE), 
-   fLastDrawLOD(kHigh), fCanCullLowLOD(kFALSE),
-   fSelectedPhysical(0), fDrawMode(kFill)
+   fLock(kUnlocked), fDrawList(1000), 
+   fDrawListValid(kFALSE), fBoundingBox(), fBoundingBoxValid(kFALSE), 
+   fLastDrawLOD(kHigh), fDrawMode(kFill), fSelectedPhysical(0)
 {
 }
 
 //______________________________________________________________________________
 TGLScene::~TGLScene()
 {
+   TakeLock(kModifyLock);
    DestroyAllPhysicals();
    DestroyAllLogicals();
+   ReleaseLock(kModifyLock);
+
+   // Purge out the DL cache - when per drawable done no longer required
+   TGLDisplayListCache::Instance().Purge();
 }
 
 //TODO: Inline
 //______________________________________________________________________________
 void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 {
-   assert(!fLogicalShapes.count(shape.ID()));
+   if (fLock != kModifyLock) {
+      Error("TGLScene::AdoptLogical", "expected ModifyLock");
+      return;
+   }
+
+   // TODO: Very inefficient check - disable
+   assert(fLogicalShapes.find(shape.ID()) == fLogicalShapes.end());
    fLogicalShapes.insert(LogicalShapeMapValueType_t(shape.ID(), &shape));
 }
 
 //______________________________________________________________________________
 Bool_t TGLScene::DestroyLogical(ULong_t ID)
 {
-   TGLLogicalShape * logical = FindLogical(ID);
-   if (logical) {
+   if (fLock != kModifyLock) {
+      Error("TGLScene::DestroyLogical", "expected ModifyLock");
+      return kFALSE;
+   }
+
+   LogicalShapeMapIt_t logicalIt = fLogicalShapes.find(ID);
+   if (logicalIt != fLogicalShapes.end()) {
+      const TGLLogicalShape * logical = logicalIt->second;
       if (logical->Ref() == 0) {
+         fLogicalShapes.erase(logicalIt);
          delete logical;
-         return true;
+         return kTRUE;
+      } else {
+         assert(kFALSE);
       }
    }
 
@@ -68,6 +89,11 @@ Bool_t TGLScene::DestroyLogical(ULong_t ID)
 UInt_t TGLScene::DestroyAllLogicals()
 {
    UInt_t count = 0;
+   if (fLock != kModifyLock) {
+      Error("TGLScene::DestroyAllLogicals", "expected ModifyLock");
+      return count;
+   }
+
    LogicalShapeMapIt_t logicalShapeIt = fLogicalShapes.begin();
    const TGLLogicalShape * logicalShape;
    while (logicalShapeIt != fLogicalShapes.end()) {
@@ -78,15 +104,13 @@ UInt_t TGLScene::DestroyAllLogicals()
             delete logicalShape;
             ++count;
             continue;
+         } else {
+            assert(kFALSE);
          }
       } else {
          assert(kFALSE);
       }
       ++logicalShapeIt;
-   }
-
-   if (count > 0) {
-      fBoundingBoxValid = kFALSE;
    }
 
    return count;
@@ -108,24 +132,47 @@ TGLLogicalShape * TGLScene::FindLogical(ULong_t ID) const
 //______________________________________________________________________________
 void TGLScene::AdoptPhysical(TGLPhysicalShape & shape)
 {
-   assert(!fPhysicalShapes.count(shape.ID()));
+   if (fLock != kModifyLock) {
+      Error("TGLScene::AdoptPhysical", "expected ModifyLock");
+      return;
+   }
+   // TODO: Very inefficient check - disable
+   assert(fPhysicalShapes.find(shape.ID()) == fPhysicalShapes.end());
+
    fPhysicalShapes.insert(PhysicalShapeMapValueType_t(shape.ID(), &shape));
    fBoundingBoxValid = kFALSE;
+
+   // Add into draw list and mark for sorting
+   fDrawList.push_back(&shape);
+   fDrawListValid = kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 {
-   TGLPhysicalShape * physical = FindPhysical(ID);
-   if (physical) {
+   if (fLock != kModifyLock) {
+      Error("TGLScene::DestroyPhysical", "expected ModifyLock");
+      return kFALSE;
+   }
+   PhysicalShapeMapIt_t physicalIt = fPhysicalShapes.find(ID);
+   if (physicalIt != fPhysicalShapes.end()) {
+      TGLPhysicalShape * physical = physicalIt->second;
       if (fSelectedPhysical == physical) {
          fSelectedPhysical = 0;
       }
-
-      delete physical;
+      fPhysicalShapes.erase(physicalIt);
       fBoundingBoxValid = kFALSE;
-      fCanCullLowLOD = kFALSE;
-      return true;
+  
+      // Zero the draw list entry - will be erased as part of sorting
+      DrawListIt_t drawIt = find(fDrawList.begin(), fDrawList.end(), physical);
+      if (drawIt != fDrawList.end()) {
+         *drawIt = 0;
+         fDrawListValid = kFALSE;
+      } else {
+         assert(kFALSE);
+      }
+      delete physical;
+      return kTRUE;
    }
 
    return kFALSE;
@@ -134,6 +181,10 @@ Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 //______________________________________________________________________________
 UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
 {
+   if (fLock != kModifyLock) {
+      Error("TGLScene::DestroyPhysicals", "expected ModifyLock");
+      return kFALSE;
+   }
    UInt_t count = 0;
    PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
    const TGLPhysicalShape * physical;
@@ -143,6 +194,15 @@ UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
          // Destroy any physical shape no longer of interest to camera
          if (!camera.OfInterest(physical->BoundingBox())) {
             fPhysicalShapes.erase(physicalShapeIt++);
+
+            // Zero the draw list entry - will be erased as part of sorting
+            DrawListIt_t drawIt = find(fDrawList.begin(), fDrawList.end(), physical);
+            if (drawIt != fDrawList.end()) {
+               *drawIt = 0;
+            } else {
+               assert(kFALSE);
+            }
+
             delete physical;
             if (fSelectedPhysical == physical) {
                fSelectedPhysical = 0;
@@ -158,7 +218,7 @@ UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
 
    if (count > 0) {
       fBoundingBoxValid = kFALSE;
-      fCanCullLowLOD = kFALSE;
+      fDrawListValid = kFALSE;
    }
 
    return count;
@@ -168,6 +228,11 @@ UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
 UInt_t TGLScene::DestroyAllPhysicals()
 {
    UInt_t count = 0;
+   if (fLock != kModifyLock) {
+      Error("TGLScene::DestroyAllPhysicals", "expected ModifyLock");
+      return count;
+   }
+
    PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
    const TGLPhysicalShape * physical;
    while (physicalShapeIt != fPhysicalShapes.end()) {
@@ -183,12 +248,16 @@ UInt_t TGLScene::DestroyAllPhysicals()
       ++physicalShapeIt;
    }
 
+   // Empty draw list immediately - no point in setting all
+   // to zero
+   fDrawList.clear();
+
    if (fSelectedPhysical) {
       fSelectedPhysical = 0;
    }
    if (count > 0) {
       fBoundingBoxValid = kFALSE;
-      fCanCullLowLOD = kFALSE;
+      fDrawListValid = kFALSE;
    }
 
 
@@ -208,8 +277,12 @@ TGLPhysicalShape * TGLScene::FindPhysical(ULong_t ID) const
 }
 
 //______________________________________________________________________________
-void TGLScene::SetColorByLogical(ULong_t logicalID, const Float_t rgba[4])
+void TGLScene::SetPhysicalsColorByLogical(ULong_t logicalID, const Float_t rgba[4])
 {
+   if (fLock != kModifyLock) {
+      Error("TGLScene::SetPhysicalsColorByLogical", "expected ModifyLock");
+      return;
+   }
    PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
    TGLPhysicalShape * physical;
    while (physicalShapeIt != fPhysicalShapes.end()) {
@@ -227,9 +300,13 @@ void TGLScene::SetColorByLogical(ULong_t logicalID, const Float_t rgba[4])
 
 //______________________________________________________________________________
 //TODO: Merge axes flag and LOD into general draw flag
-void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout) const
+UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
 {
-   Bool_t  run = kTRUE;
+   UInt_t drawn = 0;
+   if (fLock != kDrawLock && fLock != kSelectLock) {
+      Error("TGLScene::Draw", "expected Draw or Select Lock");
+   }
+
    void (TGLPhysicalShape::*drawPtr)(UInt_t)const = &TGLPhysicalShape::Draw;
 
    if (fDrawMode)
@@ -243,64 +320,104 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
    // no need to check individual shapes - everything is visible
    Bool_t doFrustumCheck = (camera.FrustumOverlap(BoundingBox()) != kInside);
 
-   // Loop through all placed shapes in scene
-   PhysicalShapeMapCIt_t physicalShapeIt = fPhysicalShapes.begin();
-   const TGLPhysicalShape * physicalShape;
+   if (!fDrawListValid) {
+      SortDrawList();
+   }
 
-   while (physicalShapeIt != fPhysicalShapes.end() && run)
-   {
-      physicalShape = physicalShapeIt->second;
-      if (!physicalShape)
+   // TODO: Tidy up draw loop to make this less complicated
+
+   // Step 1: Loop through the main sorted draw list 
+   Bool_t                   run = kTRUE;
+   const TGLPhysicalShape * drawShape;
+
+   // Transparent list built on fly
+   static DrawList_t transDrawList;
+   transDrawList.reserve(fDrawList.size() / 10); // assume less 10% of total
+   transDrawList.clear();
+
+   // Opaque only objects drawn in first loop
+   // TODO: Sort front -> back for better performance
+   glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
+
+   for (DrawListIt_t drawIt = fDrawList.begin(); drawIt != fDrawList.end() && run;
+        drawIt++) {
+      drawShape = *drawIt;
+      if (!drawShape)
       {
          assert(kFALSE);
          continue;
       }
 
+      // TODO: Do small skipping first? Probably cheaper than frustum check
+      // Profile relative costs? The frustum check could be done implictly 
+      // from the LOD as we project all 8 verticies of the BB onto viewport
       EOverlap frustumOverlap = kInside;
       if (doFrustumCheck)
       {
-         frustumOverlap = camera.FrustumOverlap(physicalShape->BoundingBox());
+         frustumOverlap = camera.FrustumOverlap(drawShape->BoundingBox());
       }
 
       if (frustumOverlap == kInside || frustumOverlap == kPartial)
       {
-         // Get the shape draw quality
-         UInt_t shapeLOD = CalcPhysicalLOD(*physicalShape, camera, sceneLOD);
-
-         // Skip drawing low (i.e. small projected) LOD shapes on non-100% passes
-         // if previously we failed to complete in time.
-         if (sceneLOD < kHigh && fCanCullLowLOD && shapeLOD < 10) {
-               ++physicalShapeIt;
-               continue;
+         // Collect transparent shapes for drawing at end
+         if (drawShape->IsTransparent()) {
+            transDrawList.push_back(drawShape);
+            continue;
          }
-         
+
+         // Get the shape draw quality
+         UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
+
          //Draw, DrawWireFrame, DrawOutline
-         (physicalShape->*drawPtr)(shapeLOD);
+         (drawShape->*drawPtr)(shapeLOD);
+         ++drawn;
       }
-      ++physicalShapeIt;
 
       // Terminate the draw is over timeout
-      // TODO: Really need front/back sorting before this can
-      // be useful
       if (timeout > 0.0 && stopwatch.Lap() > timeout) {
          run = kFALSE;
       }
    }
 
+   // Step 2: Deal with selected physical
    if (fSelectedPhysical) {
-      // Ensure the selected object is always draw regardless of above terminations
-      // This could result in it being drawn twice - but is (probably) cheaper than testing 
-      // in loop and recording if it was done
-      // TODO: Sort selected to front of draw list
-      UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
-
-      (fSelectedPhysical->*drawPtr)(shapeLOD);
-      
-      // Draw selected object bounding box - for some reason this gets obscurred if done 
-      // in TGLPhysicalShape::Draw
-      if (fDrawMode == kFill || fDrawMode == kOutline) {
-         glDisable(GL_LIGHTING);
+      // Draw now if non-transparent (may already have been done)
+      if (!fSelectedPhysical->IsTransparent()) {
+         UInt_t shapeLOD = CalcPhysicalLOD(*fSelectedPhysical, camera, sceneLOD);
+         (fSelectedPhysical->*drawPtr)(shapeLOD);
+         ++drawn;
+      } else {
+         // Ensure transparent selected physical will get drawn
+         transDrawList.push_back(fSelectedPhysical);
       }
+   }
+
+   // Step 3: Draw the filtered transparent objects with GL depth writing off
+   // blending on
+   // TODO: Sort to draw back to front with depth test off for better blending
+   glDepthMask(GL_FALSE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   // We assume there are <<< of these than opaque so time will be negligible
+   // TODO: Record transparent % and reserve time for these 
+   for (DrawListIt_t drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
+      drawShape = *drawIt;
+
+      UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
+
+      //Draw, DrawWireFrame, DrawOutline
+      (drawShape->*drawPtr)(shapeLOD);
+      ++drawn;
+   }
+
+   // Reset these after transparent done
+   glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
+
+   // Finally: Draw selected object bounding box
+   if (fSelectedPhysical) {
 
       //BBOX is white for wireframe mode and fill,
       //red for outlines
@@ -316,39 +433,79 @@ void TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeout)
          break;
       }
 
+      if (fDrawMode == kFill || fDrawMode == kOutline) {
+         glDisable(GL_LIGHTING);
+      }
       glDisable(GL_DEPTH_TEST);
+
       fSelectedPhysical->BoundingBox().Draw();
-      glEnable(GL_DEPTH_TEST);
 
       if (fDrawMode == kFill || fDrawMode == kOutline) {
          glEnable(GL_LIGHTING);
       }
-   }
-
-   // Failed to complete in time? Record flag to cull low LODs next time
-   if (timeout > 0.0 && stopwatch.End() > timeout) {
-      fCanCullLowLOD = kTRUE;
+      glEnable(GL_DEPTH_TEST);
    }
 
    // Record this so that any Select() draw can be redone at same quality and ensure
    // accuracy of picking
-   // TODO: Also record timeout?
    fLastDrawLOD = sceneLOD;
+
+   // TODO: Should record if full scene can be drawn at 100% in a target time (set on scene)
+   // Then timeout should not be passed - just bool if termination is permitted - which may
+   // be ignored if all can be done. Pass back bool to indicate if whole scene could be drawn
+   // at desired quality. Need a fixed target time so valid across multiple draws
+
+   return drawn;
+}
+
+//______________________________________________________________________________
+void TGLScene::SortDrawList()
+{
+   assert(!fDrawListValid);
+
+   TGLStopwatch stopwatch;
+
+   if (gDebug>1) {
+      stopwatch.Start();
+   }
+
+   fDrawList.reserve(fPhysicalShapes.size());
+
+   // Delete all zero (to-be-deleted) objects
+   fDrawList.erase(remove(fDrawList.begin(), fDrawList.end(), static_cast<const TGLPhysicalShape *>(0)), fDrawList.end());
+   
+   assert(fDrawList.size() == fPhysicalShapes.size());
+
+   //TODO: partition the selected to front
+
+   // Sort by volume of shape bounding box
+   sort(fDrawList.begin(), fDrawList.end(), TGLScene::ComparePhysicalVolumes);
+
+   if (gDebug>1) {
+      Info("TGLScene::SortDrawList", "sorting took %f msec", stopwatch.End());
+   }
+
+   fDrawListValid = kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape * shape1, const TGLPhysicalShape * shape2)
+{
+   return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
 
 //______________________________________________________________________________
 void TGLScene::DrawAxes() const
 {
+   if (fLock != kDrawLock && fLock != kSelectLock) {
+      Error("TGLScene::Draw", "expected Draw or Select Lock");
+   }
    // Draw out the scene axes
    // Taken directly from TGLRender by Timur Pocheptsov
    static const UChar_t xyz[][8] = {{0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
                                      {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
                                      {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}};
 
-   /*if (!fPxs) {
-      fPxs = kTRUE;
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-   }*/
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    glPushAttrib(GL_DEPTH_BUFFER_BIT);
    glDisable(GL_DEPTH_TEST);
@@ -405,6 +562,9 @@ void TGLScene::DrawAxes() const
 //______________________________________________________________________________
 void TGLScene::DrawNumber(Double_t num, Double_t x, Double_t y, Double_t z, Double_t yorig) const
 {
+   if (fLock != kDrawLock && fLock != kSelectLock) {
+      Error("TGLScene::Draw", "expected Draw or Select Lock");
+   }
    static const UChar_t
       digits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
                      {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
@@ -470,6 +630,9 @@ UInt_t TGLScene:: CalcPhysicalLOD(const TGLPhysicalShape & shape, const TGLCamer
 Bool_t TGLScene::Select(const TGLCamera & camera)
 {
    Bool_t redrawReq = kFALSE;
+   if (fLock != kSelectLock) {
+      Error("TGLScene::Draw", "expected SelectLock");
+   }
 
    // Create the select buffer. This will work as we have a flat set of physical shapes.
    // We only ever load a single name in TGLPhysicalShape::DirectDraw so any hit record always
@@ -515,7 +678,6 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
       TGLPhysicalShape * selected = FindPhysical(minDepthName);
       if (!selected) {
          assert(kFALSE);
-         return kFALSE;
       }
 
       // Swap any selection
@@ -524,14 +686,14 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
             fSelectedPhysical->Select(kFALSE);
          }
          fSelectedPhysical = selected;
-         fSelectedPhysical->Select(true);
-         redrawReq = true;
+         fSelectedPhysical->Select(kTRUE);
+         redrawReq = kTRUE;
       }
    } else { // 0 hits
       if (fSelectedPhysical) {
          fSelectedPhysical->Select(kFALSE);
          fSelectedPhysical = 0;
-         redrawReq = true;
+         redrawReq = kTRUE;
       }
    }
 
@@ -541,6 +703,8 @@ Bool_t TGLScene::Select(const TGLCamera & camera)
 //______________________________________________________________________________
 void TGLScene::SelectedModified() 
 {
+   // External modification - no locking
+
    // The selected object was modified external - our bounding box
    // is potentially invalid
    if (fSelectedPhysical && !BoundingBox().AlignedContains(fSelectedPhysical->BoundingBox())) {
@@ -580,11 +744,12 @@ const TGLBoundingBox & TGLScene::BoundingBox() const
          ++physicalShapeIt;
       }
       fBoundingBox.SetAligned(TGLVertex3(xMin,yMin,zMin), TGLVertex3(xMax,yMax,zMax));
-      fBoundingBoxValid = true;
+      fBoundingBoxValid = kTRUE;
    }
    return fBoundingBox;
 }
 
+//______________________________________________________________________________
 void TGLScene::Dump() const
 {
    std::cout << "Scene: " << fLogicalShapes.size() << " Logicals / " << fPhysicalShapes.size() << " Physicals " << std::endl;
@@ -605,7 +770,7 @@ UInt_t TGLScene::SizeOf() const
       ++logicalShapeIt;
    }
 
-   std::cout << "Size: Scene + Shapes " << size << std::endl;
+   std::cout << "Size: Scene + Logical Shapes " << size << std::endl;
 
    PhysicalShapeMapCIt_t physicalShapeIt = fPhysicalShapes.begin();
    const TGLPhysicalShape * physicalShape;
@@ -615,7 +780,7 @@ UInt_t TGLScene::SizeOf() const
       ++physicalShapeIt;
    }
 
-   std::cout << "Size: Scene + Shapes + Placed Shapes " << size << std::endl;
+   std::cout << "Size: Scene + Logical Shapes + Physical Shapes " << size << std::endl;
 
    return size;
 }

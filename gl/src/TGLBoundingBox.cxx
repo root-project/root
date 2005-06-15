@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.4 2005/06/01 17:53:24 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -59,6 +59,7 @@ void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = vertex[v];
    }
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -69,6 +70,7 @@ void TGLBoundingBox::Set(const Double_t vertex[8][3])
          fVertex[v][a] = vertex[v][a];
       }
    }
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -77,6 +79,7 @@ void TGLBoundingBox::Set(const TGLBoundingBox & other)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Set(other.fVertex[v]);
    }
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -85,6 +88,7 @@ void TGLBoundingBox::SetEmpty()
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Fill(0.0);
    }
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -107,6 +111,7 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    fVertex[5] = highVertex; fVertex[5].Y() -= diff.Y();
    fVertex[6] = highVertex;
    fVertex[7] = highVertex; fVertex[7].X() -= diff.X();
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -145,6 +150,7 @@ void TGLBoundingBox::Scale(Double_t scale)
       newVector *= scale;
       fVertex[v].Set(center + newVector);
    }
+   UpdateVolume();
 }
 
 //______________________________________________________________________________
@@ -153,6 +159,8 @@ void TGLBoundingBox::Translate(const TGLVector3 & offset)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = fVertex[v] + offset;
    }
+
+   // No volume change
 }
 
 //______________________________________________________________________________
@@ -161,6 +169,9 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
    for (UInt_t v = 0; v < 8; v++) {
       matrix.TransformVertex(fVertex[v]);
    }
+
+   // Could change volume
+   UpdateVolume();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.5 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.6 2005/06/01 15:13:35 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -354,13 +354,11 @@ ClassImp(TGLUtil)
 //______________________________________________________________________________
 void TGLUtil::CheckError()
 {
-   //TODO: Make for debug only! Which symbol?
-   GLenum errCode; // TODO: Type?
-   const GLubyte *errString;// TODO: Type?
+   GLenum errCode;
+   const GLubyte *errString;
 
    if ((errCode = glGetError()) != GL_NO_ERROR) {
       errString = gluErrorString(errCode);
-      std::cout << "OpenGL Error: " << errString << std::endl;
-      //assert(kFALSE);
+      Error("TGLUtil::CheckError", (const char *)errString);
    }
 }
