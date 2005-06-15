@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.214 2005/04/25 13:59:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.215 2005/05/11 11:31:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4511,6 +4511,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //  Example: gStyle->SetOptFit(1011);
 //           print fit probability, parameter names/values and errors.
 //
+//  Note: gStyle->SetOptFit(1) means "default value", so it is equivalent to
+//        gStyle->SetOptFit(111)
 //
 //  When option "same" is specified, the statistic box is not drawn.
 //  Specify option "sames" to force painting statistics with option "same"
