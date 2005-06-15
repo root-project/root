@@ -127,7 +127,7 @@ else
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
-		if [ "$(CC)" = "/opt/SUNWspro/bin/cc" ]; then \
+		if [ "$(ARCH)" = "solarisCC5" ]; then \
 			ACFLAGS += " -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
 		fi; \
 		if [ "$(ARCH)" = "sgicc64" ]; then \
