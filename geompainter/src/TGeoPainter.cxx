@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.64 2005/05/25 14:25:16 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.65 2005/06/15 08:44:35 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -446,7 +446,7 @@ void TGeoPainter::DefaultAngles()
 void TGeoPainter::DefaultColors()
 {   
 // Set default volume colors according to tracking media
-   TIter next((const TCollection *)fGeoManager->GetListOfVolumes());
+   TIter next(fGeoManager->GetListOfVolumes());
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next()))
       vol->SetLineColor(vol->GetMaterial()->GetDefaultColor());

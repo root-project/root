@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.117 2005/06/14 15:47:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.118 2005/06/15 08:44:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -412,7 +412,6 @@
 #include "TBrowser.h"
 #include "TFile.h"
 #include "TKey.h"
-#include "THashTable.h"
 
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
@@ -595,10 +594,10 @@ void TGeoManager::Init()
    fCldirChecked = new Double_t[3];
    memset(fNormal, 0, kN3);
    fCldir = new Double_t[3];
-   fVolumes = new THashList(256);
+   fVolumes = new TObjArray(256);
    fPhysicalNodes = new TObjArray(256);
    fShapes = new TObjArray(256);
-   fGVolumes = new THashList(256);
+   fGVolumes = new TObjArray(256);
    fGShapes = new TObjArray(256);
    fTracks = new TObjArray(256);
    fMedia = new THashList(200,3);
@@ -785,10 +784,11 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
       }
    }
    volume->SetNumber(uid);      	 	    
-   THashList *list = fVolumes;
+   TObjArray *list = fVolumes;
    if (!volume->GetShape()) list=fGVolumes;
    else if (volume->IsRunTime() || volume->IsVolumeMulti()) list = fGVolumes;
-   list->Add((TGeoVolume*)volume);
+   Int_t index = list->GetEntriesFast();
+   list->AddAtAndExpand((TGeoVolume*)volume,index);
    return uid;
 }
 //_____________________________________________________________________________
@@ -4113,7 +4113,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
    ClearOverlaps();
    printf("====  Checking overlaps for %s within a limit of %g ====\n", GetName(),ovlp);
    fSearchOverlaps = kTRUE;
-   Int_t nvol = fVolumes->GetSize();
+   Int_t nvol = fVolumes->GetEntriesFast();
    Int_t i10 = nvol/10;
    Int_t iv=0;
    TIter next(fVolumes);
