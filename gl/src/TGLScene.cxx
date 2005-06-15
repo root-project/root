@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.8 2005/06/02 10:47:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.9 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -340,7 +340,8 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeou
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
 
-   for (DrawListIt_t drawIt = fDrawList.begin(); drawIt != fDrawList.end() && run;
+   DrawListIt_t drawIt;
+   for (drawIt = fDrawList.begin(); drawIt != fDrawList.end() && run;
         drawIt++) {
       drawShape = *drawIt;
       if (!drawShape)
@@ -402,7 +403,7 @@ UInt_t TGLScene::Draw(const TGLCamera & camera, UInt_t sceneLOD, Double_t timeou
 
    // We assume there are <<< of these than opaque so time will be negligible
    // TODO: Record transparent % and reserve time for these 
-   for (DrawListIt_t drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
+   for (drawIt = transDrawList.begin(); drawIt != transDrawList.end(); drawIt++) {
       drawShape = *drawIt;
 
       UInt_t shapeLOD = CalcPhysicalLOD(*drawShape, camera, sceneLOD);
