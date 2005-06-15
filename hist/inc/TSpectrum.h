@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.10 2004/01/27 13:28:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.11 2005/04/13 10:01:06 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -152,6 +152,8 @@ protected:
    Float_t      *fPositionY;      //!Y position of peaks
    Float_t       fResolution;     //resolution of the neighboring peaks
    TH1          *fHistogram;      //resulting histogram
+static Int_t     fgAverageWindow; //Average window of searched peaks
+static Int_t     fgIterations;    //Maximum number of decon iterations (default=3)
 
 public:
    TSpectrum();
@@ -165,7 +167,9 @@ public:
    Float_t    *GetPositionX() const {return fPositionX;}
    Float_t    *GetPositionY() const {return fPositionY;}
    virtual Int_t  Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
-   void        SetResolution(Float_t resolution=1);
+   static void SetAverageWindow(Int_t w=3);   //set average window
+   static void SetDeconIterations(Int_t n=3); //set max number of decon iterations
+    void       SetResolution(Float_t resolution=1);
 
    //new functions April 2003
    const char *Background1General(float *spectrum,int size,int number_of_iterations,int direction,int filter_order,bool compton);

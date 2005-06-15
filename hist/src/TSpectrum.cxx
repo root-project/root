@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.26 2005/04/13 08:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.27 2005/06/01 07:41:05 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -53,6 +53,10 @@
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
 #include "TMath.h"
+
+Int_t TSpectrum::fgIterations    = 3;
+Int_t TSpectrum::fgAverageWindow = 3;
+
 #define PEAK_WINDOW 1024
     ClassImp(TSpectrum)  
 //______________________________________________________________________________
@@ -100,6 +104,24 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
    delete fHistogram;
 }
 
+
+//______________________________________________________________________________
+void TSpectrum::SetAverageWindow(Int_t w)
+{
+  // static function: Set average window of searched peaks
+  // see TSpectrum::Search1HighRes
+   
+   fgAverageWindow = w;
+}
+
+//______________________________________________________________________________
+void TSpectrum::SetDeconIterations(Int_t n)
+{
+  // static function: Set max number of decon iterations in deconvolution operation
+  // see TSpectrum::Search1HighRes
+   
+   fgIterations = n;
+}
 
 //______________________________________________________________________________
 const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
@@ -170,7 +192,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       Float_t * dest   = new float[size];
       for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + first);
 
-      npeaks = Search1HighRes(source, dest, size, sigma, 100*threshold, kTRUE, 3, kTRUE, 3);
+      npeaks = Search1HighRes(source, dest, size, sigma, 100*threshold, kTRUE, fgIterations, kTRUE, fgAverageWindow);
 
       //TH1 * hnew = (TH1 *) hin->Clone("markov");
       //for (i = 0; i < size; i++)
