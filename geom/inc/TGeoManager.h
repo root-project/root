@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.59 2005/04/20 15:22:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.60 2005/05/26 12:54:56 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -92,10 +92,10 @@ private :
 
    TObjArray            *fMatrices;         //-> list of local transformations
    TObjArray            *fShapes;           //-> list of shapes
-   TObjArray            *fVolumes;          //-> list of volumes
+   THashList           *fVolumes;          //-> list of volumes
    TObjArray            *fPhysicalNodes;    //-> list of physical nodes
    TObjArray            *fGShapes;          //! list of runtime shapes
-   TObjArray            *fGVolumes;         //! list of runtime volumes
+   THashList           *fGVolumes;         //! list of runtime volumes
    TObjArray            *fTracks;           //-> list of tracks attached to geometry
    TObjArray            *fPdgNames;         //-> list of pdg names for tracks
    TList                *fMaterials;        //-> list of materials
@@ -399,8 +399,8 @@ public:
    TObjArray             *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}
    TList                 *GetListOfMedia() const        {return fMedia;}
-   TObjArray             *GetListOfVolumes() const      {return fVolumes;}
-   TObjArray             *GetListOfGVolumes() const     {return fGVolumes;} 
+   THashList            *GetListOfVolumes() const      {return fVolumes;}
+   THashList            *GetListOfGVolumes() const     {return fGVolumes;} 
    TObjArray             *GetListOfShapes() const       {return fShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;} 
    TObjArray             *GetListOfTracks() const       {return fTracks;}

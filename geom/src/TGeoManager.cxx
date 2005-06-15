@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.116 2005/06/13 12:17:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.117 2005/06/14 15:47:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -412,6 +412,7 @@
 #include "TBrowser.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "THashTable.h"
 
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
@@ -594,10 +595,10 @@ void TGeoManager::Init()
    fCldirChecked = new Double_t[3];
    memset(fNormal, 0, kN3);
    fCldir = new Double_t[3];
-   fVolumes = new TObjArray(256);
+   fVolumes = new THashList(256);
    fPhysicalNodes = new TObjArray(256);
    fShapes = new TObjArray(256);
-   fGVolumes = new TObjArray(256);
+   fGVolumes = new THashList(256);
    fGShapes = new TObjArray(256);
    fTracks = new TObjArray(256);
    fMedia = new THashList(200,3);
@@ -784,11 +785,10 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
       }
    }
    volume->SetNumber(uid);      	 	    
-   TObjArray *list = fVolumes;
+   THashList *list = fVolumes;
    if (!volume->GetShape()) list=fGVolumes;
    else if (volume->IsRunTime() || volume->IsVolumeMulti()) list = fGVolumes;
-   Int_t index = list->GetEntriesFast();
-   list->AddAtAndExpand((TGeoVolume*)volume,index);
+   list->Add((TGeoVolume*)volume);
    return uid;
 }
 //_____________________________________________________________________________
@@ -892,6 +892,7 @@ TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t ia
    if (amother) return amother->Divide(vname,iaxis,ndiv,start,step,numed, option);
 
    Error("Division","VOLUME: \"%s\" not defined",mname);
+
    return 0;
 }
 //_____________________________________________________________________________
@@ -1011,7 +1012,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
    amother = (TGeoVolume*)fGVolumes->FindObject(mname);
    if (!amother) amother = GetVolume(mname);
    if (!amother) {
-      Error("Node","VOLUME \"%s\" not defined",mname);
+      Error("Node","Mother VOLUME \"%s\" not defined",mname);
       return;
    }
    Int_t i;
@@ -1022,8 +1023,8 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       volume  = (TGeoVolume*)fGVolumes->FindObject(vname);
       if (!volume) volume = GetVolume(vname);
       if (!volume) {
-         Error("Node","VOLUME: \"%s\" not defined",vname);
-         return;
+	Error("Node","VOLUME: \"%s\" not defined",vname);
+	return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
@@ -1147,7 +1148,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
    amother = (TGeoVolume*)fGVolumes->FindObject(mname);
    if (!amother) amother = GetVolume(mname);
    if (!amother) {
-      Error("Node","VOLUME: \"%s\" not defined",mname);
+      Error("Node","Mother VOLUME: \"%s\" not defined",mname);
       return;
    }
    Int_t i;
@@ -3452,7 +3453,6 @@ TGeoVolume *TGeoManager::GetVolume(const char *name) const
    TString sname = name;
    sname = sname.Strip();
    TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(sname.Data());
-   if (!vol) Error("GetVolume", "=== VOLUME: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return vol;
 //   return (TGeoVolume*)fGVolumes->FindObject(name);
 }
@@ -3491,7 +3491,6 @@ TGeoMaterial *TGeoManager::GetMaterial(const char *matname) const
    TString sname = matname;
    sname = sname.Strip();
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->FindObject(sname.Data());
-   if (!mat) Error("GetMaterial", "=== MATERIAL: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return mat;
 }
 
@@ -3502,7 +3501,6 @@ TGeoMedium *TGeoManager::GetMedium(const char *medium) const
    TString sname = medium;
    sname = sname.Strip();
    TGeoMedium *med = (TGeoMedium*)fMedia->FindObject(sname.Data());
-   if (!med) Error("GetMedium", "=== MEDIUM: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return med;
 }
 
@@ -3515,7 +3513,6 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
    while ((med=(TGeoMedium*)next())) {
       if (med->GetId()==numed) return med;
    }
-   Error("GetMedium","=== MEDIUM NUMBER %i not found #!#!#!#!#!#!#!#!",numed);
    return 0;
 }
 
@@ -3523,10 +3520,7 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
 // Return material at position id.
-   if (id<0 || id >= fMaterials->GetSize()) {
-      Error("GetMaterial", "=== MATERIAL %i not defined #!#!#!#!#!#!#!#!", id);
-      return 0;
-   }   
+   if (id<0 || id >= fMaterials->GetSize()) return 0;
    TGeoMaterial *mat = (TGeoMaterial*)fMaterials->At(id);
    return mat;
 }
@@ -3534,17 +3528,16 @@ TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 Int_t TGeoManager::GetMaterialIndex(const char *matname) const
 {
 // Return index of named material.
-   TString sname = matname;
-   sname = sname.Strip();
    TIter next(fMaterials);
    TGeoMaterial *mat;
    Int_t id = 0;
+   TString sname = matname;
+   sname = sname.Strip();
    while ((mat = (TGeoMaterial*)next())) {
       if (!strcmp(mat->GetName(),sname.Data()))
          return id;
       id++;
    }
-   Error("GetMaterialIndex", "=== MATERIAL: \"%s\" not defined #!#!#!#!#!#!#!#!",sname.Data());
    return -1;  // fail
 }
 //_____________________________________________________________________________
@@ -3588,8 +3581,8 @@ void TGeoManager::Voxelize(Option_t *option)
    TGeoVoxelFinder *vox = 0;
    if (!fStreamVoxels) printf("Voxelizing...\n");
 //   Int_t nentries = fVolumes->GetSize();
-   for (Int_t i=0; i<fVolumes->GetEntriesFast(); i++) {
-      vol = (TGeoVolume*)fVolumes->At(i);
+   TIter next(fVolumes);
+   while ((vol = (TGeoVolume*)next())) {
       if (!fIsGeomReading) vol->SortNodes();
       if (!fStreamVoxels) {
          vol->Voxelize(option);
@@ -4120,7 +4113,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
    ClearOverlaps();
    printf("====  Checking overlaps for %s within a limit of %g ====\n", GetName(),ovlp);
    fSearchOverlaps = kTRUE;
-   Int_t nvol = fVolumes->GetEntriesFast();
+   Int_t nvol = fVolumes->GetSize();
    Int_t i10 = nvol/10;
    Int_t iv=0;
    TIter next(fVolumes);
