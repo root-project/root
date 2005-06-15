@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.240 2005/05/06 15:40:22 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.241 2005/05/18 12:31:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5058,6 +5058,20 @@ void TH1::UseCurrentStyle()
 //______________________________________________________________________________
 Double_t TH1::GetMean(Int_t axis) const
 {
+//  For axis = 1,2 or 3 returns the mean value of the histogram along
+//  X,Y or Z axis.
+//  For axis = 11, 12, 13 returns the standard error of the mean value
+//  of the histogram along X, Y or Z axis
+//
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
+
+
+
 //   -*-*-*-*-*-*Return mean value of this histogram along the X axis*-*-*-*-*
 //               ====================================================
 //  Note that the mean value/RMS is computed using the bins in the currently
@@ -5067,13 +5081,18 @@ Double_t TH1::GetMean(Int_t axis) const
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
 
-  if (axis <1 || axis > 3) return 0;
-  Stat_t stats[kNstat];
-  for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
-  GetStats(stats);
-  if (stats[0] == 0) return 0;
-  Int_t ax[3] = {2,4,7};
-  return stats[ax[axis-1]]/stats[0];
+   if (axis<1 || axis>3&&axis<11 || axis>13) return 0;
+   Stat_t stats[kNstat];
+   for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
+   GetStats(stats);
+   if (stats[0] == 0) return 0;
+   if (axis<10){
+      Int_t ax[3] = {2,4,7};
+      return stats[ax[axis-1]]/stats[0];
+   } else {
+      Double_t rms = GetRMS(axis-10);
+      return (rms/TMath::Sqrt(stats[0]));
+   }
 }
 
 //______________________________________________________________________________
@@ -5090,18 +5109,16 @@ Double_t TH1::GetMeanError(Int_t axis) const
 //  Also note, that although the definition of standard error doesn't include the
 //  assumption of normality, many uses of this feature implicitly assume it.
 
-   if (axis <1 || axis > 3) return 0;
-   Double_t rms = GetRMS(axis);
-   Stat_t stats[15];
-   GetStats(stats);
-   if (stats[0]==0) return 0;
-   return (rms/TMath::Sqrt(stats[0]));
+   return GetMean(axis+10);
 }
 
 //______________________________________________________________________________
 Double_t TH1::GetRMS(Int_t axis) const
 {
-//  Return the Sigma value of this histogram
+//  For axis = 1,2 or 3 returns the Sigma value of the histogram along
+//  X, Y or Z axis
+//  For axis = 11, 12 or 13 returns the error of RMS estimation along
+//  X, Y or Z axis for Normal distribution
 //
 //     Note that the mean value/sigma is computed using the bins in the currently
 //  defined range (see TAxis::SetRange). By default the range includes
@@ -5115,16 +5132,20 @@ Double_t TH1::GetRMS(Int_t axis) const
 //  The name "RMS" was introduced many years ago (Hbook/PAW times).
 //  We kept the name for continuity.
 
-  if (axis <1 || axis > 3) return 0;
-  Stat_t x, rms2, stats[kNstat];
-  for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
-  GetStats(stats);
-  if (stats[0] == 0) return 0;
-  Int_t ax[3] = {2,4,7};
-  Int_t axm = ax[axis-1];
-  x    = stats[axm]/stats[0];
-  rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
-  return TMath::Sqrt(rms2);
+   if (axis<1 || axis>3&&axis<11 || axis>13) return 0;
+
+   Stat_t x, rms2, stats[kNstat];
+   for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
+   GetStats(stats);
+   if (stats[0] == 0) return 0;
+   Int_t ax[3] = {2,4,7};
+   Int_t axm = ax[axis%10 - 1];
+   x    = stats[axm]/stats[0];
+   rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
+   if (axis<10)
+      return TMath::Sqrt(rms2);
+   else 
+      return TMath::Sqrt(rms2/(2*stats[0]));
 }
 
 //______________________________________________________________________________
@@ -5140,70 +5161,88 @@ Double_t TH1::GetRMSError(Int_t axis) const
 //  the histogram.
 //  Value returned is standard deviation of sample standard deviation.
 
-   if (axis <1 || axis > 3) return 0;
-   Double_t rms = GetRMS(axis);
-   Stat_t stats[15];
-   GetStats(stats);
-   if (stats[0]==0) return 0;
-   return (rms/TMath::Sqrt(2*stats[0]));
+   return GetRMS(axis+10);
 }
 
 //______________________________________________________________________________
 Double_t TH1::GetSkewness(Int_t axis) const
 {
-  //Returns skewness of the histogram
-  //Note, that since third and fourth moment are not calculated
-  //at the fill time, skewness is computed bin by bin
+   //For axis = 1, 2 or 3 returns skewness of the histogram along x, y or z axis. 
+   //For axis = 11, 12 or 13 returns the approximate standard error of skewness
+   //of the histogram along x, y or z axis 
+   //Note, that since third and fourth moment are not calculated
+   //at the fill time, skewness and its standard error are computed bin by bin
 
-   if (axis <1 || axis > 3) return 0;
-   Double_t x, w, mean, rms, rms3, sum=0;
-   mean = GetMean(axis);
-   rms = GetRMS(axis);
-   rms3 = rms*rms*rms;
-   Int_t bin;
-   Double_t np=0;
    const TAxis *ax;
-   if (axis==1) ax = &fXaxis;
-   else if (axis==2) ax = &fYaxis;
-   else ax = &fZaxis;
-
-   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
-      x = GetBinCenter(bin);
-      w = GetBinContent(bin);
-      np+=w;
-      sum+=w*(x-mean)*(x-mean)*(x-mean);
+   if (axis==1 || axis==11) ax = &fXaxis;
+   else if (axis==2 || axis==12) ax = &fYaxis;
+   else if (axis==3 || axis==13) ax = &fZaxis;
+   else {
+      Error("GetSkewness", "illegal value of parameter");
+      return 0;
    }
-   sum/=np*rms3;
-   return sum;
+
+   if (axis < 10) {
+      //compute skewness
+      Double_t x, w, mean, rms, rms3, sum=0;
+      mean = GetMean(axis);
+      rms = GetRMS(axis);
+      rms3 = rms*rms*rms;
+      Int_t bin;
+      Double_t np=0;
+
+      for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+         x = GetBinCenter(bin);
+         w = GetBinContent(bin);
+         np+=w;
+         sum+=w*(x-mean)*(x-mean)*(x-mean);
+      }
+      sum/=np*rms3;
+      return sum;
+   } else {
+      //compute standard error of skewness
+      Int_t nbins = ax->GetNbins();
+      return TMath::Sqrt(6./nbins);
+   }
 }
 
 //______________________________________________________________________________
 Double_t TH1::GetKurtosis(Int_t axis) const
 {
-  //Returns kurtosis of the histogram. Kurtosis(gaussian(0, 1)) = 0.
-  //Note, that since third and fourth moment are not calculated
-  //at the fill time, kurtosis is computed bin by bin
-
-   if (axis <1 || axis > 3) return 0;
-   Double_t x, w, mean, rms, rms4, sum=0;
-   mean = GetMean(axis);
-   rms = GetRMS(axis);
-   rms4 = rms*rms*rms*rms;
-   Int_t bin;
-   Double_t np=0;
+   //For axis =1, 2 or 3 returns kurtosis of the histogram along x, y or z axis. 
+   //Kurtosis(gaussian(0, 1)) = 0.
+   //For axis =11, 12 or 13 returns the approximate standard error of kurtosis 
+   //of the histogram along x, y or z axis 
+   //Note, that since third and fourth moment are not calculated
+   //at the fill time, kurtosis and its standard error are computed bin by bin
+   
    const TAxis *ax;
-   if (axis==1) ax = &fXaxis;
-   else if (axis==2) ax = &fYaxis;
-   else ax = &fZaxis;
-
-   for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
-      x = GetBinCenter(bin);
-      w = GetBinContent(bin);
-      np+=w;
-      sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
+   if (axis==1 || axis==11) ax = &fXaxis;
+   else if (axis==2 || axis==12) ax = &fYaxis;
+   else if (axis==3 || axis==13) ax = &fZaxis;
+   else {
+      Error("GetKurtosis", "illegal value of parameter");
+      return 0;
    }
-   sum/=np*rms4;
-   return sum-3;
+   if (axis < 10){
+      Double_t x, w, mean, rms, rms4, sum=0;
+      mean = GetMean(axis);
+      rms = GetRMS(axis);
+      rms4 = rms*rms*rms*rms;
+      Int_t bin;
+      Double_t np=0;
+      for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
+         x = GetBinCenter(bin);
+         w = GetBinContent(bin);
+         np+=w;
+         sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
+      }
+      sum/=np*rms4;
+      return sum-3;
+   } else {
+      Int_t nbins = ax->GetNbins();
+      return TMath::Sqrt(24./nbins);
+   }
 }
 
 
