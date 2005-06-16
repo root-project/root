@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.118 2005/06/15 08:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.119 2005/06/15 11:53:00 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -412,6 +412,7 @@
 #include "TBrowser.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "THashList.h"
 
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
@@ -533,6 +534,8 @@ TGeoManager::TGeoManager()
       fGLMatrix = 0;
       fPaintVolume = 0;
       fElementTable = 0;
+      fHashVolumes = 0;
+      fHashGVolumes = 0;
       //gGeoManager = this;
     } else {
       Init();
@@ -549,7 +552,7 @@ TGeoManager::TGeoManager(const char *name, const char *title)
    Init();
    gGeoIdentity = new TGeoIdentity("Identity");
    BuildDefaultMaterials();
-   printf("Geometry %s, %s created\n", GetName(), GetTitle());
+   Info("TGeoManager","Geometry %s, %s created", GetName(), GetTitle());
 }
 
 //_____________________________________________________________________________
@@ -644,6 +647,8 @@ void TGeoManager::Init()
    fGLMatrix = new TGeoHMatrix();
    fPaintVolume = 0;
    fElementTable = 0;
+   fHashVolumes = 0;
+   fHashGVolumes = 0;
 }
 
 //_____________________________________________________________________________
@@ -666,6 +671,8 @@ TGeoManager::~TGeoManager()
    if (fElementTable) delete fElementTable;
    if (fMedia) {fMedia->Delete(); delete fMedia;}
    if (fShapes) {fShapes->Delete(); delete fShapes;}
+   if (fHashVolumes) delete fHashVolumes;
+   if (fHashGVolumes) delete fHashGVolumes;
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}
    fVolumes = 0;
    if (fPhysicalNodes) {fPhysicalNodes->Delete(); delete fPhysicalNodes;}
@@ -784,11 +791,19 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
       }
    }
    volume->SetNumber(uid);      	 	    
+   if (!fHashVolumes) {
+      fHashVolumes = new THashList(256);
+      fHashGVolumes = new THashList(256);
+   }   
    TObjArray *list = fVolumes;
-   if (!volume->GetShape()) list=fGVolumes;
-   else if (volume->IsRunTime() || volume->IsVolumeMulti()) list = fGVolumes;
+   if (!volume->GetShape() || volume->IsRunTime() || volume->IsVolumeMulti()) {
+      list = fGVolumes;
+      fHashGVolumes->Add(volume);
+   } else {
+      fHashVolumes->Add(volume);   
+   }   
    Int_t index = list->GetEntriesFast();
-   list->AddAtAndExpand((TGeoVolume*)volume,index);
+   list->AddAtAndExpand(volume,index);
    return uid;
 }
 //_____________________________________________________________________________
@@ -829,9 +844,9 @@ void TGeoManager::BuildCache(Bool_t dummy, Bool_t nodeid)
    if (!fCache) {
       if (!fNLevel) {
          fNLevel = 100;
-         if (first) printf("--- Maximum geometry depth set to 100\n");
+         if (first) Info("BuildCache","--- Maximum geometry depth set to 100");
       } else {
-         if (first) printf("--- Maximum geometry depth is %i\n", fNLevel);   
+         if (first) Info("BuildCache","--- Maximum geometry depth is %i", fNLevel);   
       }   
       if (fNNodes>5000000 || dummy)  // temporary - works without
          // build dummy cache
@@ -1001,30 +1016,28 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 //  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
-   TString sname = name;
-   sname = sname.Strip();
-   const char *vname = sname.Data();
-   TString smname = mother;
-   smname = smname.Strip();
-   const char *mname = smname.Data();
    
    // look into special volume list first
-   amother = (TGeoVolume*)fGVolumes->FindObject(mname);
-   if (!amother) amother = GetVolume(mname);
+   amother = FindVolumeFast(mother,kTRUE);
+   if (!amother) amother = FindVolumeFast(mother);
    if (!amother) {
-      Error("Node","Mother VOLUME \"%s\" not defined",mname);
+      TString mname = mother;
+      mname = mname.Strip();
+      Error("Node","Mother VOLUME \"%s\" not defined",mname.Data());
       return;
    }
    Int_t i;
    if (npar<=0) {
    //---> acting as G3 gspos
-      if (gDebug > 0) printf("calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i\n",mname,vname,nr,x,y,z,irot,(Int_t)isOnly);
+      if (gDebug > 0) Info("Node","Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i",mother,name,nr,x,y,z,irot,(Int_t)isOnly);
       // look into special volume list first
-      volume  = (TGeoVolume*)fGVolumes->FindObject(vname);
-      if (!volume) volume = GetVolume(vname);
+      volume  = FindVolumeFast(name,kTRUE);
+      if (!volume) volume = FindVolumeFast(name);
       if (!volume) {
-	Error("Node","VOLUME: \"%s\" not defined",vname);
-	return;
+         TString vname = name;
+         vname = vname.Strip();
+	      Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+	      return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
@@ -1032,58 +1045,60 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       }
    } else {
    //---> acting as G3 gsposp
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(vname);
+      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)FindVolumeFast(name, kTRUE);
       if (!vmulti) {
-         volume = GetVolume(vname);
+         volume = FindVolumeFast(name);
          if (volume) {
-            Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", vname);
-            Node(vname,nr,mname,x,y,z,irot,isOnly, upar);
+            Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", volume->GetName());
+            Node(name,nr,mother,x,y,z,irot,isOnly, upar);
             return;
          }
-         Error("Node","VOLUME: \"%s\" not defined ",vname);
+         TString vname = name;
+         vname = vname.Strip();         
+         Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
       TString sh    = vmulti->GetTitle();
       sh.ToLower();
       if (sh.Contains("box")) {
-         volume = MakeBox(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeBox(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("trd1")) {
-         volume = MakeTrd1(vname,medium,upar[0],upar[1],upar[2],upar[3]);
+         volume = MakeTrd1(name,medium,upar[0],upar[1],upar[2],upar[3]);
       } else if (sh.Contains("trd2")) {
-         volume = MakeTrd2(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTrd2(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("trap")) {
-         volume = MakeTrap(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeTrap(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("gtra")) {
-         volume = MakeGtra(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+         volume = MakeGtra(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
       } else if (sh.Contains("tube")) {
-         volume = MakeTube(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeTube(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("tubs")) {
-         volume = MakeTubs(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTubs(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("cone")) {
-         volume = MakeCone(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeCone(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("cons")) {
-         volume = MakeCons(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+         volume = MakeCons(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
       } else if (sh.Contains("pgon")) {
-         volume = MakePgon(vname,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+         volume = MakePgon(name,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
          Int_t nz = (Int_t)upar[3];
          for (i=0;i<nz;i++) {
             ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
          }
       } else if (sh.Contains("pcon")) {
-         volume = MakePcon(vname,medium,upar[0],upar[1],(Int_t)upar[2]);
+         volume = MakePcon(name,medium,upar[0],upar[1],(Int_t)upar[2]);
          Int_t nz = (Int_t)upar[2];
          for (i=0;i<nz;i++) {
             ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
          }
       } else if (sh.Contains("eltu")) {
-         volume = MakeEltu(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeEltu(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("sphe")) {
-         volume = MakeSphere(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakeSphere(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
       } else if (sh.Contains("ctub")) {
-         volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("para")) {
-         volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
       } else {
          Error("Node","cannot create shape %s",sh.Data());
       }
@@ -1138,29 +1153,28 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 //  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
-   TString sname = name;
-   sname = sname.Strip();
-   const char *vname = sname.Data();
-   TString smname = mother;
-   smname = smname.Strip();
-   const char *mname = smname.Data();
+   
    // look into special volume list first
-   amother = (TGeoVolume*)fGVolumes->FindObject(mname);
-   if (!amother) amother = GetVolume(mname);
+   amother = FindVolumeFast(mother,kTRUE);
+   if (!amother) amother = FindVolumeFast(mother);
    if (!amother) {
-      Error("Node","Mother VOLUME: \"%s\" not defined",mname);
+      TString mname = mother;
+      mname = mname.Strip();
+      Error("Node","Mother VOLUME \"%s\" not defined",mname.Data());
       return;
    }
    Int_t i;
    if (npar<=0) {
    //---> acting as G3 gspos
-      if (gDebug > 0) printf("calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i\n",mname,vname,nr,x,y,z,irot,(Int_t)isOnly);
+      if (gDebug > 0) Info("Node","Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i",mother,name,nr,x,y,z,irot,(Int_t)isOnly);
       // look into special volume list first
-      volume  = (TGeoVolume*)fGVolumes->FindObject(vname);
-      if (!volume) volume = GetVolume(vname);
+      volume  = FindVolumeFast(name,kTRUE);
+      if (!volume) volume = FindVolumeFast(name);
       if (!volume) {
-         Error("Node","VOLUME: \"%s\" not defined",vname);
-         return;
+         TString vname = name;
+         vname = vname.Strip();
+	      Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+	      return;
       }
       if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
@@ -1168,61 +1182,64 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       }
    } else {
    //---> acting as G3 gsposp
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(vname);
+      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)FindVolumeFast(name, kTRUE);
       if (!vmulti) {
-         volume = GetVolume(vname);
+         volume = FindVolumeFast(name);
          if (volume) {
-            Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", vname);
-            Node(vname,nr,mname,x,y,z,irot,isOnly, upar);
+            Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", volume->GetName());
+            Node(name,nr,mother,x,y,z,irot,isOnly, upar);
             return;
          }
-         Error("Node","VOLUME: \"%s\" not defined ",vname);
+         TString vname = name;
+         vname = vname.Strip();         
+         Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
       TString sh    = vmulti->GetTitle();
       sh.ToLower();
       if (sh.Contains("box")) {
-         volume = MakeBox(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeBox(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("trd1")) {
-         volume = MakeTrd1(vname,medium,upar[0],upar[1],upar[2],upar[3]);
+         volume = MakeTrd1(name,medium,upar[0],upar[1],upar[2],upar[3]);
       } else if (sh.Contains("trd2")) {
-         volume = MakeTrd2(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTrd2(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("trap")) {
-         volume = MakeTrap(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeTrap(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("gtra")) {
-         volume = MakeGtra(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+         volume = MakeGtra(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
       } else if (sh.Contains("tube")) {
-         volume = MakeTube(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeTube(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("tubs")) {
-         volume = MakeTubs(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTubs(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("cone")) {
-         volume = MakeCone(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeCone(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
       } else if (sh.Contains("cons")) {
-         volume = MakeCons(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+         volume = MakeCons(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
       } else if (sh.Contains("pgon")) {
-         volume = MakePgon(vname,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+         volume = MakePgon(name,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
          Int_t nz = (Int_t)upar[3];
          for (i=0;i<nz;i++) {
             ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
          }
       } else if (sh.Contains("pcon")) {
-         volume = MakePcon(vname,medium,upar[0],upar[1],(Int_t)upar[2]);
+         volume = MakePcon(name,medium,upar[0],upar[1],(Int_t)upar[2]);
          Int_t nz = (Int_t)upar[2];
          for (i=0;i<nz;i++) {
             ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
          }
       } else if (sh.Contains("eltu")) {
-         volume = MakeEltu(vname,medium,upar[0],upar[1],upar[2]);
+         volume = MakeEltu(name,medium,upar[0],upar[1],upar[2]);
       } else if (sh.Contains("sphe")) {
-         volume = MakeSphere(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakeSphere(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
       } else if (sh.Contains("ctub")) {
-         volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
       } else if (sh.Contains("para")) {
-         volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
       } else {
          Error("Node","cannot create shape %s",sh.Data());
       }
+
       if (!volume) return;
       vmulti->AddVolume(volume);
    }
@@ -1274,16 +1291,8 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
    TString sname = name;
    sname = sname.Strip();
    const char *vname = sname.Data();
-   if (gDebug > 0) {
-      printf("Creating volume:%s with medium=%s, shape:%s, nmed=%d",vname,medium->GetTitle(),sh.Data(),nmed);
-      for (i=0;i<npar;i++) printf(" par[%d]=%g",i,upar[i]);
-      printf("\n");
-   }
    if (npar <= 0) {
       //--- create a TGeoVolumeMulti
-      if (gDebug>0) {
-         printf("Creating volume multi: %s\n", vname);
-      }
       volume = MakeVolumeMulti(vname,medium);
       volume->SetTitle(shape);
       TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(vname);
@@ -1362,16 +1371,8 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
    TString sname = name;
    sname = sname.Strip();
    const char *vname = sname.Data();
-   if (gDebug > 0) {
-      printf("Creating volume:%s with medium=%s, shape:%s, nmed=%d",vname,medium->GetTitle(),sh.Data(),nmed);
-      for (i=0;i<npar;i++) printf(" par[%d]=%g",i,upar[i]);
-      printf("\n");
-   }
    if (npar <= 0) {
       //--- create a TGeoVolumeMulti
-      if (gDebug>0) {
-         printf("Creating volume multi: %s\n", vname);
-      }
       volume = MakeVolumeMulti(vname,medium);
       volume->SetTitle(shape);
       TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGVolumes->FindObject(vname);
@@ -1519,7 +1520,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    Bool_t dummy = opt.Contains("d");
    Bool_t nodeid = opt.Contains("i");
    if (fIsGeomReading) {
-      printf("### Geometry loaded from file...\n");
+      Info("CloseGeometry","Geometry loaded from file...");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
       if (!fElementTable) fElementTable = new TGeoElementTable(200);
       if (!fTopNode) {
@@ -1528,7 +1529,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
             return;
          }
          SetTopVolume(fMasterVolume);
-         if (fStreamVoxels) printf("### Voxelization retrieved from file\n");
+         if (fStreamVoxels) Info("CloseGeometry","Voxelization retrieved from file");
          Voxelize("ALL");
          if (!fCache) BuildCache(dummy,nodeid);
       } else {
@@ -1537,23 +1538,22 @@ void TGeoManager::CloseGeometry(Option_t *option)
          if (!fCache) BuildCache(dummy,nodeid);
       }
 //      BuildIdArray();
-      printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
-      printf("----------------modeler ready----------------\n");
+      Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
+      Info("CloseGeometry","----------------modeler ready----------------");
       return;
    }
 
    SelectTrackingMedia();
-   printf("Fixing runtime shapes...\n");
    CheckGeometry();
-   printf("Counting nodes...\n");
+   Info("CloseGeometry","Counting nodes...");
    fNNodes = CountNodes();
    fNLevel = fMasterVolume->CountNodes(1,3)+1;
 //   BuildIdArray();
    Voxelize("ALL");
-   printf("Building caches for nodes and matrices...\n");
+   Info("CloseGeometry","Building cache...");
    BuildCache(dummy,nodeid);
-   printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
-   printf("----------------modeler ready----------------\n");
+   Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
+   Info("CloseGeometry","----------------modeler ready----------------");
 }
 
 //_____________________________________________________________________________
@@ -2167,7 +2167,6 @@ Double_t TGeoManager::Safety(Bool_t inside)
    if (!inside) fSafety = TGeoShape::Big();
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
-//      if (fSafety<0) {printf("%s (%f, %f, %f) kFALSE outside safe=%g\n", fTopVolume->GetName(), fPoint[0],fPoint[1],fPoint[2],fSafety); exit(1);}
       return fSafety;
    }
    //---> convert point to local reference frame of current node
@@ -2227,12 +2226,10 @@ Double_t TGeoManager::Safety(Bool_t inside)
       for (id=0; id<nd; id++) {
          node = (TGeoNode*)nodes->UncheckedAt(id);
          safe = node->Safety(point, kFALSE);
-//         if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE loop in %s safe=%g\n", node->GetVolume()->GetShape()->ClassName(),node->GetVolume()->GetName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
          if (safe<0) {
             fSafety=0;
             return fSafety;
          }
-//         if (safe<0) continue; // ignore overlaps for the time being
          if (safe<fSafety) fSafety=safe;
       }
       if (fCurrentOverlapping  && !inside) SafetyOverlaps();
@@ -2256,12 +2253,10 @@ Double_t TGeoManager::Safety(Bool_t inside)
       if (dxyz >= fSafety*fSafety) continue;
       node = (TGeoNode*)nodes->UncheckedAt(id);
       safe = node->Safety(point, kFALSE);
-//      if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE vox of %s safe=%g\n", node->GetVolume()->GetName(),node->GetVolume()->GetShape()->ClassName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
       if (safe<0) {
          fSafety=0;
          return fSafety;
       }
-//      if (safe<0) continue;
       if (safe<fSafety) fSafety = safe;
    }
    if (fCurrentOverlapping  && !inside) SafetyOverlaps();
@@ -2362,7 +2357,7 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
 void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
 // set the maximum number of visible nodes.   
    fMaxVisNodes = maxnodes;
-   if (maxnodes>0) printf("--- Automatic visible depth for %d visible nodes\n", maxnodes);
+   if (maxnodes>0) Info("SetMaxVisNodes","Automatic visible depth for %d visible nodes", maxnodes);
    if (!fPainter) return;
    fPainter->CountVisibleNodes();
    Int_t level = fPainter->GetVisLevel();
@@ -2408,7 +2403,7 @@ void TGeoManager::SetVisLevel(Int_t level) {
    if (level>0) {
       fVisLevel = level;
       fMaxVisNodes = 0;
-      printf("--- Automatic visible depth disabled\n");
+      Info("SetVisLevel","Automatic visible depth disabled");
       if (fPainter) fPainter->CountVisibleNodes();
    } else {
       SetMaxVisNodes();
@@ -2427,7 +2422,7 @@ void TGeoManager::OptimizeVoxels(const char *filename)
 {
 // Optimize voxelization type for all volumes. Save best choice in a macro.
    if (!fTopNode) {
-      printf("SaveAttributes - geometry must be closed\n");
+      Error("OptimizeVoxels","Geometry must be closed first");
       return;
    }
    ofstream out;
@@ -2536,7 +2531,7 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          }
       }
       if (level!=0) {
-         printf("parse error : paranthesys does not match\n");
+         if (gGeoManager) gGeoManager->Error("Parse","paranthesys does not match");
          return -1;
       }
       if (iloop==1 && (e0(0)=='(') && (e0(len-1)==')')) {
@@ -2597,7 +2592,7 @@ void TGeoManager::SaveAttributes(const char *filename)
 {
 // Save current attributes in a macro
    if (!fTopNode) {
-      printf("SaveAttributes - geometry must be closed\n");
+      Error("SaveAttributes","geometry must be closed first\n");
       return;
    }
    ofstream out;
@@ -3131,7 +3126,6 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
 // crossed when propagating on a straight line from a given point/direction.
 // Returns the normal vector cosines in the MASTER coordinate system. The dot
 // product of the normal and the current direction is positive defined.
-//   printf("Current node: %s forward=%i\n", GetPath(), forward);
    Double_t lnorm[3];
    Double_t lpt[3];
    Double_t ldir[3];
@@ -3167,7 +3161,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
-         printf("woops : nothing back...\n");
+         Warning("FindNormal","nothing backwards\n");
          return 0;
       }
       // try to cross the boundary
@@ -3179,8 +3173,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          if (istep>1E3) {
             // we have a big problem not being able to reach the boundary
             Error("FindNormal", "cannot reach backward boundary");
-            printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
-            printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
+            Error("FindNormal", "starting point was : (%f, %f, %f)", saved_point[0], saved_point[1], saved_point[2]);
+            Error("FindNormal", "direction was      : (%f, %f, %f)", fDirection[0], fDirection[1], fDirection[2]);
             memcpy(fPoint, saved_point, kN3);
             memcpy(fDirection, saved_direction, kN3);
             fStep = saved_step;
@@ -3202,7 +3196,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
-         printf("woops : nothing forward...\n");
+         Error("FindNormal","nothing forward...");
          return 0;
       }
       // try to cross the boundary
@@ -3214,8 +3208,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
          if (istep>1E3) {
             // we have a big problem not being able to reach the boundary
             Error("FindNormal", "cannot reach forward boundary");
-            printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
-            printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
+            Error("FindNormal", "starting point was : (%f, %f, %f)", saved_point[0], saved_point[1], saved_point[2]);
+            Error("FindNormal", "direction was      : (%f, %f, %f)", fDirection[0], fDirection[1], fDirection[2]);
             memcpy(fPoint, saved_point, kN3);
             memcpy(fDirection, saved_direction, kN3);
             fStep = saved_step;
@@ -3425,7 +3419,7 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
    TIter next3(fMedia);
    TGeoMedium *med;
    while ((med=(TGeoMedium*)next3())) count += med->GetByteCount();
-   printf("Total size of logical tree : %i bytes\n", count);
+   Info("GetByteCount","Total size of logical tree : %i bytes", count);
    return count;
 }
 //_____________________________________________________________________________
@@ -3454,7 +3448,27 @@ TGeoVolume *TGeoManager::GetVolume(const char *name) const
    sname = sname.Strip();
    TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(sname.Data());
    return vol;
-//   return (TGeoVolume*)fGVolumes->FindObject(name);
+}
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
+{
+// Fast search for a named volume. All trailing blanks stripped.
+   if (!fHashVolumes) {
+      Int_t nvol = fVolumes->GetEntriesFast();
+      Int_t ngvol = fGVolumes->GetEntriesFast();
+      fHashVolumes = new THashList(nvol+1);
+      fHashGVolumes = new THashList(ngvol+1);
+      Int_t i;
+      for (i=0; i<ngvol; i++) fHashGVolumes->AddAt(fGVolumes->At(i),i);
+      for (i=0; i<nvol; i++) fHashVolumes->AddAt(fVolumes->At(i),i);
+   }   
+   TString sname = name;
+   sname = sname.Strip();
+   THashList *list = fHashVolumes;
+   if (multi) list = fHashGVolumes;
+   TGeoVolume *vol = (TGeoVolume*)list->FindObject(sname.Data());
+   return vol;
 }
 
 //_____________________________________________________________________________
@@ -3579,7 +3593,7 @@ void TGeoManager::Voxelize(Option_t *option)
 // Voxelize all non-divided volumes.
    TGeoVolume *vol;
    TGeoVoxelFinder *vox = 0;
-   if (!fStreamVoxels) printf("Voxelizing...\n");
+   if (!fStreamVoxels) Info("Voxelize","Voxelizing...");
 //   Int_t nentries = fVolumes->GetSize();
    TIter next(fVolumes);
    while ((vol = (TGeoVolume*)next())) {
@@ -3631,7 +3645,7 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a paralelipiped shape with given medium.
    if ((alpha==0) && (theta==0)) {
-      printf("Warning : para %s with alpha=0, theta=0 -> making box instead\n", name);
+      Warning("MakePara","parallelipiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
    TGeoPara *para=0;
@@ -4034,14 +4048,14 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       fCache = 0;
       BuildCache(dummy,nodeid);
    }
-   printf("Top volume is %s. Master volume is %s\n", fTopVolume->GetName(),
+   Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
            fMasterVolume->GetName());
 }
 //_____________________________________________________________________________
 void TGeoManager::SelectTrackingMedia()
 {
 // Define different tracking media.
-   printf("List of materials :\n");
+//   printf("List of materials :\n");
 /*
    Int_t nmat = fMaterials->GetSize();
    if (!nmat) {printf(" No materials !\n"); return;}
@@ -4092,6 +4106,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
 // Instanciate a TGeoChecker object and investigates the geometry according to
 // option. Not implemented yet.
    // check shapes first
+   Info("CheckGeometry","Fixing runtime shapes...");
    TIter next(fShapes);
    TGeoShape *shape;
    Bool_t has_runtime = kFALSE;
@@ -4103,7 +4118,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
          if (!shape->TestShapeBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }
    if (has_runtime) fTopNode->CheckShapes();
-   else printf(" --- nothing to fix\n");
+   else Info("CheckGeometry","...Nothing to fix");
 }
 
 //_____________________________________________________________________________
@@ -4111,7 +4126,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
 {
 // Check all geometry for illegal overlaps within a limit OVLP.
    ClearOverlaps();
-   printf("====  Checking overlaps for %s within a limit of %g ====\n", GetName(),ovlp);
+   Info("CheckOverlaps", "Checking overlaps for %s within a limit of %g", GetName(),ovlp);
    fSearchOverlaps = kTRUE;
    Int_t nvol = fVolumes->GetEntriesFast();
    Int_t i10 = nvol/10;
@@ -4147,7 +4162,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
       obj->SetName(name);
    }
    fSearchOverlaps = kFALSE;
-   printf("   number of illegal overlaps/extrusions : %d\n", novlps);
+   Info("CheckOverlaps","number of illegal overlaps/extrusions : %d", novlps);
 }
 
 //_____________________________________________________________________________
@@ -4176,7 +4191,7 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
    TString opt(option);
    opt.ToLower();
    if (opt.Contains("v")) {
-      printf("* Estimating weight of %s with %g %% precision\n", fTopVolume->GetName(), 100.*precision);
+      Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
       printf("    event         weight         err\n");
       printf("========================================\n");
    }
@@ -4219,19 +4234,27 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 
    TString sfile(filename);
    if (!sfile.Contains(".root")) {
-      printf("Exporting %s %s as C++ code\n", GetName(), GetTitle());
+      Info("Export","Exporting %s %s as C++ code", GetName(), GetTitle());
       fTopVolume->SaveAs(filename);
       return 1;
    }   
    TFile *f = TFile::Open(filename,"recreate");
-   if (!f || f->IsZombie()) return 0;
+   if (!f || f->IsZombie()) {
+      Error("Export","Cannot open file");
+      return 0;
+   }   
    char keyname[256];
    if (name) strcpy(keyname,name);
    if (strlen(keyname) == 0) strcpy(keyname,GetName());
    TString opt = option;
    opt.ToLower();
-   if (opt.Contains("v")) fStreamVoxels = kTRUE;
-   else                   fStreamVoxels = kFALSE;
+   if (opt.Contains("v")) {
+      fStreamVoxels = kTRUE;
+      Info("Export","Exporting %s %s as root file. Optimizations streamed.", GetName(), GetTitle());
+   } else {
+      fStreamVoxels = kFALSE;
+      Info("Export","Exporting %s %s as root file. Optimizations not streamed.", GetName(), GetTitle());
+   }
    Int_t nbytes = Write(keyname);
    fStreamVoxels = kFALSE;
    delete f;
@@ -4247,10 +4270,12 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //Note that this function deletes the current gGeoManager (if one)
    //before importing the new object.
 
+   printf("Info: TGeoManager::Import : Reading geometry from file\n");
    TFile *old = gFile;
    TFile *f = TFile::Open(filename);
    if (!f || f->IsZombie()) {
       if (old) old->cd();
+      printf("Error: TGeoManager::Import : Cannot open file\n");
       return 0;
    }
    if (gGeoManager) delete gGeoManager;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.61 2005/06/15 08:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.62 2005/06/15 11:53:00 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -127,6 +127,8 @@ private :
    Double_t             *fDblBuffer;        //! transient dbl buffer
    Double_t              fLastPoint[3];     //! last point for which safety was computed
    TGeoVolume           *fPaintVolume;      //! volume currently painted
+   THashList            *fHashVolumes;      //! hash list of volumes providing fast search
+   THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
@@ -459,6 +461,7 @@ public:
 
    //--- general use getters/setters
    TGeoMaterial          *FindDuplicateMaterial(const TGeoMaterial *mat) const;
+   TGeoVolume            *FindVolumeFast(const char*name, Bool_t multi=kFALSE);
    TGeoMaterial          *GetMaterial(const char *matname) const;
    TGeoMaterial          *GetMaterial(Int_t id) const;
    TGeoMedium            *GetMedium(const char *medium) const;
