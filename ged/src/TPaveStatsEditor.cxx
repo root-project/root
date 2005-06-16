@@ -44,6 +44,9 @@ enum EPaveStatsWid {
    kSTAT_UNDER,
    kSTAT_OVER,
    kSTAT_INTEGRAL,
+   kSTAT_SKEWNESS,
+   kSTAT_KURTOSIS,
+   kSTAT_ERR,
    kFIT_NAME,
    kFIT_ERR,
    kFIT_CHI,
@@ -89,29 +92,43 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    f4->AddFrame(fRMS, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
-   fIntegral = new TGCheckButton(this, "Integral of bins", kSTAT_INTEGRAL);
-   fIntegral->SetToolTipText("Print the integral of bins");
-   AddFrame(fIntegral, new TGLayoutHints(kLHintsTop, 4, 1, 0, 5));
-   
-   MakeTitle("Fit Options");
- 
    TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fNameValues = new TGCheckButton(f5, "Values", kFIT_NAME);
-   fNameValues->SetToolTipText("Print the parameter name and value");
-   f5->AddFrame(fNameValues, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fErrors = new TGCheckButton(f5, "Errors", kFIT_ERR);
-   fErrors->SetToolTipText("Print the errors");
-   f5->AddFrame(fErrors, new TGLayoutHints(kLHintsTop, 21, 1, 0, 0));
+   fSkewness = new TGCheckButton(f5, "Skewness", kSTAT_SKEWNESS);
+   fSkewness->SetToolTipText("Print the skewness");
+   f5->AddFrame(fSkewness, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
+   fIntegral = new TGCheckButton(f5, "Integral", kSTAT_INTEGRAL);
+   fIntegral->SetToolTipText("Print the integral of bins");
+   f5->AddFrame(fIntegral, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fProbability = new TGCheckButton(f6, "Probability", kFIT_PROB);
-   fProbability->SetToolTipText("Print probability");
-   f6->AddFrame(fProbability, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fChisquare = new TGCheckButton(f6, "Chi", kFIT_CHI);
-   fChisquare->SetToolTipText("Print Chisquare");
-   f6->AddFrame(fChisquare, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fKurtosis = new TGCheckButton(f6, "Kurtosis", kSTAT_KURTOSIS);
+   fKurtosis->SetToolTipText("Print the kurtosis");
+   f6->AddFrame(fKurtosis, new TGLayoutHints(kLHintsTop, 3, 1, 0, 5));
+   fStatsErrors = new TGCheckButton(f6, "Errors", kSTAT_ERR);
+   fStatsErrors->SetToolTipText("Print the errors");
+   f6->AddFrame(fStatsErrors, new TGLayoutHints(kLHintsTop, 15, 1, 0, 5));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   MakeTitle("Fit Options");
+ 
+   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fNameValues = new TGCheckButton(f7, "Values", kFIT_NAME);
+   fNameValues->SetToolTipText("Print the parameter name and value");
+   f7->AddFrame(fNameValues, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
+   fErrors = new TGCheckButton(f7, "Errors", kFIT_ERR);
+   fErrors->SetToolTipText("Print the errors");
+   f7->AddFrame(fErrors, new TGLayoutHints(kLHintsTop, 21, 1, 0, 0));
+   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGCompositeFrame *f8 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   fProbability = new TGCheckButton(f8, "Probability", kFIT_PROB);
+   fProbability->SetToolTipText("Print probability");
+   f8->AddFrame(fProbability, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
+   fChisquare = new TGCheckButton(f8, "Chi", kFIT_CHI);
+   fChisquare->SetToolTipText("Print Chisquare");
+   f8->AddFrame(fChisquare, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
    MapSubwindows();
    Layout();
@@ -152,6 +169,9 @@ void TPaveStatsEditor::ConnectSignals2Slots()
    fUnderflow->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
    fRMS->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
    fIntegral->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
+   fSkewness->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
+   fKurtosis->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
+   fStatsErrors->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
 
    // about fit options
    fNameValues->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoFitOptions()");
@@ -203,6 +223,12 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    if (stat/1000000 % 10) fIntegral->SetState(kButtonDown);
    else fIntegral->SetState(kButtonUp);
+   
+   if (stat/10000000 % 10) fSkewness->SetState(kButtonDown);
+   else fSkewness->SetState(kButtonUp);
+
+   if (stat/100000000 % 10) fKurtosis->SetState(kButtonDown);
+   else fKurtosis->SetState(kButtonUp);
 
    Int_t fit = fPaveStats->GetOptFit();
    if (fit % 10)  fNameValues->SetState(kButtonDown);
@@ -228,16 +254,24 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 //______________________________________________________________________________
 void TPaveStatsEditor::DoStatOptions()
 {
-   // Slot conected to the stat options.
+   // Slot connected to the stat options.
 
    Int_t stat = 0;
-   if (fHistoName->GetState() == kButtonDown) stat +=1;
-   if (fEntries->GetState()   == kButtonDown) stat +=10;
-   if (fMean->GetState()      == kButtonDown) stat +=100;
-   if (fRMS->GetState()       == kButtonDown) stat +=1000;
-   if (fUnderflow->GetState() == kButtonDown) stat +=10000;
-   if (fOverflow->GetState()  == kButtonDown) stat +=100000;
-   if (fIntegral->GetState()  == kButtonDown) stat +=1000000;
+   if (fHistoName->GetState()   == kButtonDown) stat +=1;
+   if (fEntries->GetState()     == kButtonDown) stat +=10;
+   if (fMean->GetState()        == kButtonDown) stat +=100;
+   if (fRMS->GetState()         == kButtonDown) stat +=1000;
+   if (fUnderflow->GetState()   == kButtonDown) stat +=10000;
+   if (fOverflow->GetState()    == kButtonDown) stat +=100000;
+   if (fIntegral->GetState()    == kButtonDown) stat +=1000000;
+   if (fSkewness->GetState()    == kButtonDown) stat +=10000000;
+   if (fKurtosis->GetState()    == kButtonDown) stat +=100000000;
+   if (fStatsErrors->GetState() == kButtonDown) {
+      if (fMean->GetState()     == kButtonDown) stat +=100;
+      if (fRMS->GetState()      == kButtonDown) stat +=1000;
+      if (fSkewness->GetState() == kButtonDown) stat +=10000000;
+      if (fKurtosis->GetState() == kButtonDown) stat +=100000000;
+   }
    
    if (stat == 1) stat = 10000001;
    fPaveStats->SetOptStat(stat);

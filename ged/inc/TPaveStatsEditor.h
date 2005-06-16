@@ -46,6 +46,9 @@ protected:
    TGCheckButton      *fUnderflow;        // underflow number check box
    TGCheckButton      *fOverflow;         // overflow number check box
    TGCheckButton      *fIntegral;         // integral of bins check box
+   TGCheckButton      *fSkewness;         // skewness check box
+   TGCheckButton      *fKurtosis;         // kurtosis check box
+   TGCheckButton      *fStatsErrors;      // statistics error check box
    // widgets for fit options
    TGCheckButton      *fNameValues;       // parameters' name/values check box
    TGCheckButton      *fErrors;           // error check box
