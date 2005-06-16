@@ -4482,46 +4482,49 @@ void THistPainter::PaintScatterPlot(Option_t *option)
 //______________________________________________________________________________
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-//    *-*-*-*-*-*-*-*-*-*Draw the statistics box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//                       =======================
-// The type of information printed in the histogram statistics box
-//  can be selected via gStyle->SetOptStat(mode).
-//  The parameter mode can be = iourmen  (default = 0001111)
-//    n = 1;  name of histogram is printed
-//    e = 1;  number of entries printed
-//    m = 1;  mean value printed
-//    m = 2;  mean and mean error values printed
-//    r = 1;  rms printed
-//    r = 2;  rms and rms error printed
-//    u = 1;  number of underflows printed
-//    o = 1;  number of overflows printed
-//    i = 1;  integral of bins printed
-//  Example: gStyle->SetOptStat(11);
-//           print only name of histogram and number of entries.
-//
-// The type of information about fit parameters printed in the histogram
-// statistics box can be selected via gStyle->SetOptFit(mode).
-//  The parameter mode can be = pcev  (default = 0111)
-//    v = 1;  print name/values of parameters
-//    e = 1;  print errors (if e=1, v must be 1)
-//    c = 1;  print Chisquare/Number of degrees of freedom
-//    p = 1;  print Probability
-//    When "v"=1 is specified, only the non-fixed parameters are shown.
-//    When "v"=2 all parameters are shown.
-//  Example: gStyle->SetOptFit(1011);
-//           print fit probability, parameter names/values and errors.
-//
-//  Note: gStyle->SetOptFit(1) means "default value", so it is equivalent to
-//        gStyle->SetOptFit(111)
-//
-//  When option "same" is specified, the statistic box is not drawn.
-//  Specify option "sames" to force painting statistics with option "same"
-//  When option "sames" is given, one can use the following technique
-//  to move a previous "stats" box to a new position
-//  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
-//  Root > st->SetX1NDC(newx1); //new x start position
-//  Root > st->SetX2NDC(newx2); //new x end position
-//  Root > newhist->Draw("sames")
+   // Draw the statistics box for 1D and profile histograms
+   // The type of information printed in the histogram statistics box
+   // can be selected via gStyle->SetOptStat(mode).
+   // The parameter mode can be = iourmen  (default = 0001111)
+   //    n = 1;  name of histogram is printed
+   //    e = 1;  number of entries printed
+   //    m = 1;  mean value printed
+   //    m = 2;  mean and mean error values printed
+   //    r = 1;  rms printed
+   //    r = 2;  rms and rms error printed
+   //    u = 1;  number of underflows printed
+   //    o = 1;  number of overflows printed
+   //    i = 1;  integral of bins printed
+   //    s = 1;  skewness printed
+   //    s = 2;  skewness and skewness error printed
+   //    k = 1;  kurtosis printed
+   //    k = 2;  kurtosis and kurtosis error printed
+   //  Example: gStyle->SetOptStat(11);
+   //           print only name of histogram and number of entries.
+   //
+   // The type of information about fit parameters printed in the histogram
+   // statistics box can be selected via gStyle->SetOptFit(mode).
+   // The parameter mode can be = pcev  (default = 0111)
+   //    v = 1;  print name/values of parameters
+   //    e = 1;  print errors (if e=1, v must be 1)
+   //    c = 1;  print Chisquare/Number of degrees of freedom
+   //    p = 1;  print Probability
+   //    When "v"=1 is specified, only the non-fixed parameters are shown.
+   //    When "v"=2 all parameters are shown.
+   //  Example: gStyle->SetOptFit(1011);
+   //           print fit probability, parameter names/values and errors.
+   //
+   //  Note: gStyle->SetOptFit(1) means "default value", so it is equivalent to
+   //        gStyle->SetOptFit(111)
+   //
+   //  When option "same" is specified, the statistic box is not drawn.
+   //  Specify option "sames" to force painting statistics with option "same"
+   //  When option "sames" is given, one can use the following technique
+   //  to move a previous "stats" box to a new position
+   //  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
+   //  Root > st->SetX1NDC(newx1); //new x start position
+   //  Root > st->SetX2NDC(newx2); //new x end position
+   //  Root > newhist->Draw("sames")
 
    static char t[64];
    Int_t dofit;
@@ -4551,7 +4554,11 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t print_under   = (dostat/10000)%10;
    Int_t print_over    = (dostat/100000)%10;
    Int_t print_integral= (dostat/1000000)%10;
-   Int_t nlines = print_name + print_entries + print_mean + print_rms + print_under + print_over + print_integral;
+   Int_t print_skew    = (dostat/10000000)%10;
+   Int_t print_kurt    = (dostat/100000000)%10;
+   Int_t nlines = print_name + print_entries + print_mean + print_rms + 
+                  print_under + print_over + print_integral +
+		  print_skew + print_kurt;
    Int_t print_fval    = dofit%10;
    Int_t print_ferrors = (dofit/10)%10;
    Int_t print_fchi2   = (dofit/100)%10;
@@ -4563,7 +4570,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (fH->InheritsFrom("TProfile")) nlinesf += print_mean + print_rms;
 
-//     Pavetext with statistics
+   // Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
       if (stats) { delete stats; fFunctions->Remove(stats); }
@@ -4617,12 +4624,18 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       } else {
          sprintf(textstats,"Mean  = %s%s #pm %s%s","%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         sprintf(t,textstats,fH->GetMean(1),fH->GetMeanError());
+         sprintf(t,textstats,fH->GetMean(1),fH->GetMeanError(1));
       }
       stats->AddText(t);
       if (fH->InheritsFrom("TProfile")) {
-         sprintf(textstats,"Meany = %s%s","%",stats->GetStatFormat());
-         sprintf(t,textstats,fH->GetMean(2));
+         if (print_mean == 1) {
+            sprintf(textstats,"Mean y = %s%s","%",stats->GetStatFormat());
+            sprintf(t,textstats,fH->GetMean(2));
+         } else {
+            sprintf(textstats,"Mean y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                      ,"%",stats->GetStatFormat());
+            sprintf(t,textstats,fH->GetMean(2),fH->GetMeanError(2));
+         }
          stats->AddText(t);
       }
    }
@@ -4633,12 +4646,18 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       } else {
          sprintf(textstats,"RMS   = %s%s #pm %s%s","%",stats->GetStatFormat()
                                                   ,"%",stats->GetStatFormat());
-         sprintf(t,textstats,fH->GetRMS(1),fH->GetRMSError());
+         sprintf(t,textstats,fH->GetRMS(1),fH->GetRMSError(1));
       }
       stats->AddText(t);
       if(fH->InheritsFrom("TProfile")) {
-         sprintf(textstats,"RMSy = %s%s","%",stats->GetStatFormat());
-         sprintf(t,textstats,fH->GetRMS(2));
+         if (print_rms == 1) {
+            sprintf(textstats,"RMS y = %s%s","%",stats->GetStatFormat());
+            sprintf(t,textstats,fH->GetRMS(2));
+         } else {
+            sprintf(textstats,"RMS y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                     ,"%",stats->GetStatFormat());
+            sprintf(t,textstats,fH->GetRMS(2),fH->GetRMSError(2));
+         }
          stats->AddText(t);
       }
    }
@@ -4657,8 +4676,30 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       sprintf(t,textstats,fH->Integral());
       stats->AddText(t);
    }
+   if (print_skew) {
+      if (print_skew == 1) {
+         sprintf(textstats,"Skewness = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetSkewness(1));
+      } else {
+         sprintf(textstats,"Skewness = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                     ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetSkewness(1),fH->GetSkewness(11));
+      }
+      stats->AddText(t);
+   }
+   if (print_kurt) {
+      if (print_kurt == 1) {
+         sprintf(textstats,"Kurtosis = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetKurtosis(1));
+      } else {
+         sprintf(textstats,"Kurtosis = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                     ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,fH->GetKurtosis(1),fH->GetKurtosis(11));
+      }
+      stats->AddText(t);
+   }
 
-//     Draw Fit parameters
+   // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
       sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
@@ -4703,10 +4744,16 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    //    n = 1;  name of histogram is printed
    //    e = 1;  number of entries printed
    //    m = 1;  mean value printed
+   //    m = 2;  mean and mean error values printed
    //    r = 1;  rms printed
+   //    r = 2;  rms and rms error printed
    //    u = 1;  number of underflows printed
    //    o = 1;  number of overflows printed
    //    i = 1;  integral of bins printed
+   //    s = 1;  skewness printed
+   //    s = 2;  skewness and skewness error printed
+   //    k = 1;  kurtosis printed
+   //    k = 2;  kurtosis and kurtosis error printed
    //  Example: gStyle->SetOptStat(11);
    //           print only name of histogram and number of entries.
 
@@ -4738,6 +4785,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    Int_t print_under   = (dostat/10000)%10;
    Int_t print_over    = (dostat/100000)%10;
    Int_t print_integral= (dostat/1000000)%10;
+   Int_t print_skew    = (dostat/10000000)%10;
+   Int_t print_kurt    = (dostat/100000000)%10;
    Int_t nlines = print_name + print_entries + 2*print_mean + 2*print_rms + print_integral;
    if (print_under || print_over) nlines += 3;
 
@@ -4787,17 +4836,86 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       else                        sprintf(t,"Entries = %14.7g",Float_t(h2->GetEntries()));
       stats->AddText(t);
    }
+   char textstats[50];
    if (print_mean) {
-      sprintf(t,"Mean x = %6.4g",h2->GetMean(1));
-      stats->AddText(t);
-      sprintf(t,"Mean y = %6.4g",h2->GetMean(2));
-      stats->AddText(t);
+      if (print_mean == 1) {
+         sprintf(textstats,"Mean x = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetMean(1));
+         stats->AddText(t);
+         sprintf(textstats,"Mean y = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetMean(2));
+         stats->AddText(t);
+      } else {
+         sprintf(textstats,"Mean x = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                   ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetMean(1),h2->GetMeanError(1));
+         stats->AddText(t);
+         sprintf(textstats,"Mean y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                   ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetMean(2),h2->GetMeanError(2));
+         stats->AddText(t);
+      }
    }
    if (print_rms) {
-      sprintf(t,"RMS x  = %6.4g",h2->GetRMS(1));
+      if (print_rms == 1) {
+         sprintf(textstats,"RMS x = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetRMS(1));
+         stats->AddText(t);
+         sprintf(textstats,"RMS y = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetRMS(2));
+         stats->AddText(t);
+      } else {
+         sprintf(textstats,"RMS x = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                  ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetRMS(1),h2->GetRMSError(1));
+         stats->AddText(t);
+         sprintf(textstats,"RMS y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                  ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetRMS(2),h2->GetRMSError(2));
+         stats->AddText(t);
+      }
+   }
+   if (print_integral) {
+      sprintf(t,"Integral  = %6.4g",h2->Integral());
       stats->AddText(t);
-      sprintf(t,"RMS y  = %6.4g",h2->GetRMS(2));
-      stats->AddText(t);
+   }
+   if (print_skew) {
+      if (print_skew == 1) {
+         sprintf(textstats,"Skewness x = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetSkewness(1));
+         stats->AddText(t);
+         sprintf(textstats,"Skewness y = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetSkewness(2));
+         stats->AddText(t);
+      } else {
+         sprintf(textstats,"Skewness x = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                       ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetSkewness(1),h2->GetSkewness(11));
+         stats->AddText(t);
+         sprintf(textstats,"Skewness y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                       ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetSkewness(2),h2->GetSkewness(12));
+         stats->AddText(t);
+      }
+   }
+   if (print_kurt) {
+      if (print_kurt == 1) {
+         sprintf(textstats,"Kurtosis x = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetKurtosis(1));
+         stats->AddText(t);
+         sprintf(textstats,"Kurtosis y = %s%s","%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetKurtosis(2));
+         stats->AddText(t);
+      } else {
+         sprintf(textstats,"Kurtosis x = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                       ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetKurtosis(1),h2->GetKurtosis(11));
+         stats->AddText(t);
+         sprintf(textstats,"Kurtosis y = %s%s #pm %s%s","%",stats->GetStatFormat()
+                                                       ,"%",stats->GetStatFormat());
+         sprintf(t,textstats,h2->GetKurtosis(2),h2->GetKurtosis(12));
+         stats->AddText(t);
+      }
    }
    if (print_under || print_over) {
       //get 3*3 under/overflows for 2d hist
@@ -4821,10 +4939,6 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
          sprintf(t, " %7d|%14.7g|%7d\n", (Int_t)unov[3], (Float_t)unov[4], (Int_t)unov[5]);
       stats->AddText(t);
       sprintf(t, " %7d|%7d|%7d\n", (Int_t)unov[6], (Int_t)unov[7], (Int_t)unov[8]);
-      stats->AddText(t);
-   }
-   if (print_integral) {
-      sprintf(t,"Integral  = %6.4g",h2->Integral());
       stats->AddText(t);
    }
 

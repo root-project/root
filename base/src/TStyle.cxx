@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.42 2005/04/26 17:03:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.43 2005/06/01 16:15:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -933,28 +933,34 @@ void TStyle::SetOptFit(Int_t mode)
 //______________________________________________________________________________
 void TStyle::SetOptStat(Int_t mode)
 {
-// The type of information printed in the histogram statistics box
-//  can be selected via the parameter mode.
-//  The parameter mode can be = iourmen  (default = 0001111)
-//    n = 1;  name of histogram is printed
-//    e = 1;  number of entries printed
-//    m = 1;  mean value printed
-//    r = 1;  rms printed
-//    u = 1;  number of underflows printed
-//    o = 1;  number of overflows printed
-//    i = 1;  integral of bins printed
-//  Example: gStyle->SetOptStat(11);
-//           print only name of histogram and number of entries.
-//           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
-//  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
-//          be taken as an octal number !!
-//  WARNING: SetOptStat(1) is taken as SetOptStat(1111) (for back compatibility
-//           with older versions. If you want to print only the name of the histogram
-//           call SetOptStat(10000001).
-//  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
-//        or overflow (100000), the stats box will show all combinations
-//        of underflow/overflows and not just one single number!
-//
+   // The type of information printed in the histogram statistics box
+   //  can be selected via the parameter mode.
+   //  The parameter mode can be = iourmen  (default = 0001111)
+   //    n = 1;  name of histogram is printed
+   //    e = 1;  number of entries printed
+   //    m = 1;  mean value printed
+   //    m = 2;  mean and mean error values printed
+   //    r = 1;  rms printed
+   //    r = 2;  rms and rms error printed
+   //    u = 1;  number of underflows printed
+   //    o = 1;  number of overflows printed
+   //    i = 1;  integral of bins printed
+   //    s = 1;  skewness printed
+   //    s = 2;  skewness and skewness error printed
+   //    k = 1;  kurtosis printed
+   //    k = 2;  kurtosis and kurtosis error printed
+   //  Example: gStyle->SetOptStat(11);
+   //           print only name of histogram and number of entries.
+   //           gStyle->SetOptStat(1101);  displays the name of histogram, mean value and RMS.
+   //  WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
+   //          be taken as an octal number !!
+   //  WARNING: SetOptStat(1) is taken as SetOptStat(1111) (for back compatibility
+   //           with older versions. If you want to print only the name of the histogram
+   //           call SetOptStat(10000001).
+   //  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
+   //        or overflow (100000), the stats box will show all combinations
+   //        of underflow/overflows and not just one single number!
+
    fOptStat = mode;
    if (gPad) {
       TObject *obj;
@@ -967,37 +973,48 @@ void TStyle::SetOptStat(Int_t mode)
    }
 }
 
-  //______________________________________________________________________________
+//______________________________________________________________________________
 void TStyle::SetOptStat(Option_t *stat)
 {
-//  The parameter mode can be = IOURMEN
-//    n :  name of histogram is printed
-//    e :  number of entries printed
-//    m :  mean value printed
-//    r :  rms printed
-//    u :  number of underflows printed
-//    o :  number of overflows printed
-//    i :  integral of bins printed
-//  Example: gStyle->SetOptStat("ne");
-//           print only name of histogram and number of entries.
-//  gStyle->SetOptStat("n") print only the name of the histogram
-//  gStyle->SetOptStat("nemr") is the default
+   //  The parameter mode can be = IOURMEN
+   //    n :  name of histogram is printed
+   //    e :  number of entries printed
+   //    m :  mean value printed
+   //    M :  mean value mean error values printed
+   //    r :  rms printed
+   //    R :  rms and rms error printed
+   //    u :  number of underflows printed
+   //    o :  number of overflows printed
+   //    i :  integral of bins printed
+   //    s :  skewness printed
+   //    S :  skewness and skewness error printed
+   //    k :  kurtosis printed
+   //    K :  kurtosis and kurtosis error printed
+   //  Example: gStyle->SetOptStat("ne");
+   //           print only name of histogram and number of entries.
+   //  gStyle->SetOptStat("n") print only the name of the histogram
+   //  gStyle->SetOptStat("nemr") is the default
 
-  Int_t mode=0;
+   Int_t mode=0;
 
-  TString opt = stat;
-  opt.ToLower();
+   TString opt = stat;
 
-  if (opt.Contains("n")) mode+=1;
-  if (opt.Contains("e")) mode+=10;
-  if (opt.Contains("m")) mode+=100;
-  if (opt.Contains("r")) mode+=1000;
-  if (opt.Contains("u")) mode+=10000;
-  if (opt.Contains("o")) mode+=100000;
-  if (opt.Contains("i")) mode+=1000000;
-  if (mode == 1) mode = 10000001;
+   if (opt.Contains("n")) mode+=1;
+   if (opt.Contains("e")) mode+=10;
+   if (opt.Contains("m")) mode+=100;
+   if (opt.Contains("M")) mode+=200;
+   if (opt.Contains("r")) mode+=1000;
+   if (opt.Contains("R")) mode+=2000;
+   if (opt.Contains("u")) mode+=10000;
+   if (opt.Contains("o")) mode+=100000;
+   if (opt.Contains("i")) mode+=1000000;
+   if (opt.Contains("s")) mode+=10000000;
+   if (opt.Contains("S")) mode+=20000000;
+   if (opt.Contains("k")) mode+=100000000;
+   if (opt.Contains("K")) mode+=200000000;
+   if (mode == 1) mode = 10000001;
 
-  SetOptStat(mode);
+   SetOptStat(mode);
 }
 
 //______________________________________________________________________________
