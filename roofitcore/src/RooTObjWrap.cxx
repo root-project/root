@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTObjWrap.cc,v 1.7 2005/02/14 20:44:29 wverkerke Exp $
+ *    File: $Id: RooTObjWrap.cc,v 1.8 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [AUX] --
 // RooInt is a minimal implementation of a TNamed holding a TObject
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooTObjWrap.hh"
 #include "RooFitCore/RooTObjWrap.hh"
 
 ClassImp(RooTObjWrap)

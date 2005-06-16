@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRootFinder.cc,v 1.7 2004/11/29 20:22:43 wverkerke Exp $
+ *    File: $Id: RooAbsRootFinder.cc,v 1.8 2005/02/25 14:22:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooAbsRootFinder is the abstract interface for finding roots of real-valued
 // 1-dimensional function that implements the RooAbsFunc interface.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsRootFinder.hh"
 #include "RooFitCore/RooAbsRootFinder.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 #include <iostream>

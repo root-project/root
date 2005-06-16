@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooQuasiRandomGenerator.cc,v 1.8 2004/11/29 20:24:17 wverkerke Exp $
+ *    File: $Id: RooQuasiRandomGenerator.cc,v 1.9 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,7 +23,11 @@
 // Quasi-random number sequences are useful for improving the
 // convergence of a Monte Carlo integration.
 
+#include "RooFitCore/RooFit.hh"
+
 #include "RooFitCore/RooQuasiRandomGenerator.hh"
+#include "RooFitCore/RooQuasiRandomGenerator.hh"
+#include "TMath.h"
 
 #include <iostream>
 #include <assert.h>

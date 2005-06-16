@@ -1,4 +1,7 @@
 #ifndef __CINT__
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooNumber.hh"
 #endif
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlotable.cc,v 1.9 2004/11/29 20:24:06 wverkerke Exp $
+ *    File: $Id: RooPlotable.cc,v 1.10 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // Classes inheriting from this class can be plotted and printed, and can
 // be dynamically cross-cast into TObject's.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooPlotable.hh"
 #include "RooFitCore/RooPlotable.hh"
 #include "TObject.h"
 #include <iostream>

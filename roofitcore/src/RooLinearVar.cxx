@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.26 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.27 2005/04/18 21:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,6 +35,9 @@
 // member function.
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.41 2005/03/16 15:19:46 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.42 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,9 @@
 // and this class owns the returned object.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"

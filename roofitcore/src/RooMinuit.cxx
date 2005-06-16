@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.18 2005/04/15 13:05:43 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.19 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,6 +35,9 @@
 // Various methods are available to control verbosity, profiling,
 // automatic PDF optimization.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <fstream>
 #include <fstream>
 #include <iomanip>
 #include "TH1.h"

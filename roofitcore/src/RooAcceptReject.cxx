@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.32 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.33 2005/04/18 21:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // A class description belongs here...
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAcceptReject.hh"
 #include "RooFitCore/RooAcceptReject.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooCategory.hh"

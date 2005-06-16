@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.27 2005/03/22 13:05:25 wverkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.28 2005/04/18 21:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,9 @@
 // from the context. The definition of what is punctuation can be redefined.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <stdlib.h>
 #include <ctype.h>

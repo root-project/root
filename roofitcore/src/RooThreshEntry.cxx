@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThreshEntry.cc,v 1.8 2004/11/29 20:24:40 wverkerke Exp $
+ *    File: $Id: RooThreshEntry.cc,v 1.9 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // -- CLASS DESCRIPTION [AUX] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TClass.h"
 #include "TClass.h"
 #include "RooFitCore/RooThreshEntry.hh"
 

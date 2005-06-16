@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooComplex.cc,v 1.9 2004/11/29 20:23:05 wverkerke Exp $
+ *    File: $Id: RooComplex.cc,v 1.10 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // -- CLASS DESCRIPTION [MISC] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooComplex.hh"
 #include "RooFitCore/RooComplex.hh"
 #include <iostream>
 #include <iomanip>

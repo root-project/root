@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdArg.cc,v 1.7 2005/02/23 15:09:31 wverkerke Exp $
+ *    File: $Id: RooCmdArg.cc,v 1.8 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,6 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooCmdArg.hh"
 #include "RooFitCore/RooCmdArg.hh"
 #include <iostream>
 #include <string>

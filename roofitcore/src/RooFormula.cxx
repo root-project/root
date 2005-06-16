@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.50 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.51 2005/04/18 21:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // e.g. 'tagCat::Kaon' will resolve to the numerical value of
 // the Kaon state of the RooAbsCategory object named tagCat.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <stdlib.h>
 #include "TROOT.h"

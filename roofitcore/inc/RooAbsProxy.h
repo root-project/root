@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsProxy.rdl,v 1.11 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsProxy.rdl,v 1.12 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,15 @@
 
 #include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
+
+#ifdef _WIN32
+// Turn off 'warning C4355: 'this' : used in base member initializer list'
+// 
+// This message will pop up for any class that initializes member proxy objects
+// Including the pragma here will automatically disable that warning message
+// for all such cases
+#pragma warning ( disable:4355 )
+#endif
 
 class RooAbsProxy {
 public:

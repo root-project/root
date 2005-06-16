@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.cc,v 1.23 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.24 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [MISC] --
 // RooStringVar represents a fundamental string valued object.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

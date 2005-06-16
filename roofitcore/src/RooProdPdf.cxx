@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.56 2005/03/29 18:43:48 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.57 2005/04/18 21:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,6 +37,9 @@
 // have to appear in any specific place in the list.
 // 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TIterator.h"
 #include "TIterator.h"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"

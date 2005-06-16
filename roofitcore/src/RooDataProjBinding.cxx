@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.14 2005/02/25 14:22:55 wverkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.15 2005/04/18 21:44:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // performing a weighted sum over the states of a RooSuperCategory that is
 // constructed from all the categories in the dataset
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooDataProjBinding.hh"
 #include "RooFitCore/RooDataProjBinding.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsData.hh"

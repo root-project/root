@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.24 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.25 2005/04/18 21:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,9 @@
 // The latter form, while slightly less readable, is more versatile because it
 // doesn't hardcode any of the variable names it expects
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooArgList.hh"

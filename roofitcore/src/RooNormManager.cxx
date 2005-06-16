@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormManager.cc,v 1.9 2005/02/14 20:44:26 wverkerke Exp $
+ *    File: $Id: RooNormManager.cc,v 1.10 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,9 @@
 // projection configurations can be cached.
 // 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooNormManager.hh"
 #include "RooFitCore/RooNormManager.hh"
 using std::cout;
 using std::endl;

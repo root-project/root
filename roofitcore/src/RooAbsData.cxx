@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.25 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.26 2005/04/18 21:44:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // points for its contents and provides an iterator over its elements
 // (bins for binned data sets, data points for unbinned datasets).
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooCmdConfig.hh"

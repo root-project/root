@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.94 2005/03/22 13:05:12 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.95 2005/04/18 21:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,6 +107,9 @@
 // the proxy holds a function, and will trigger an assert
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 #include "TObjString.h"

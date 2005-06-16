@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddGenContext.cc,v 1.15 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.16 2005/04/18 21:44:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,9 @@
 // for each component PDF sequentially
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAddGenContext.hh"
 #include "RooFitCore/RooAddGenContext.hh"
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooDataSet.hh"

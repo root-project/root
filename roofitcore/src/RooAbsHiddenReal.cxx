@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsHiddenReal.cc,v 1.8 2004/11/29 20:22:04 wverkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.cc,v 1.9 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // has a protected version of getVal()
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsHiddenReal.hh"
 #include "RooFitCore/RooCategory.hh"

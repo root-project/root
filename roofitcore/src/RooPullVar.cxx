@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPullVar.cc,v 1.1 2005/02/23 15:09:56 wverkerke Exp $
+ *    File: $Id: RooPullVar.cc,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,9 @@
 // is defined on a given measurement the proper side of that asymmetric
 // error will be used
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 

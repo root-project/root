@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealProxy.cc,v 1.15 2004/11/29 20:24:20 wverkerke Exp $
+ *    File: $Id: RooRealProxy.cc,v 1.16 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,9 @@
 // RooRealProxy provides a cast operator to Double_t, allowing
 // the proxy to functions a Double_t on the right hand side of expressions.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TClass.h"
 #include "TClass.h"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooRealVar.hh"

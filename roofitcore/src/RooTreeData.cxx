@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.68 2005/03/16 15:19:46 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.69 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooTreeData is the abstract base class for data collection that
 // use a TTree as internal storage mechanism
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -36,6 +39,7 @@ using std::string ;
 #include "TIterator.h"
 #include "TPaveText.h"
 #include "TLeaf.h"
+#include "TMath.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -1359,10 +1363,10 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
     //cout << "hdim = " << hdim << " bin = " << bin << endl ;
 
-    Double_t error2 = pow(hist->GetBinError(bin),2)-pow(weight(),2)  ;
+    Double_t error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
     Double_t we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
-    error2 += pow(we,2) ;
+    error2 += TMath::Power(we,2) ;
     //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
   }
@@ -1479,7 +1483,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, c
     if (select && select->eval()==0) continue ;
     if (cutRange && vars->allInRange(cutRange)) continue ;
     
-    sum+= weight() * pow(varPtr->getVal() - offset,order);
+    sum+= weight() * TMath::Power(varPtr->getVal() - offset,order);
   }
   return sum/sumEntries();
 }

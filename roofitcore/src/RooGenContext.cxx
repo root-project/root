@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.cc,v 1.42 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.43 2005/04/18 21:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // A class description belongs here...
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooDataSet.hh"

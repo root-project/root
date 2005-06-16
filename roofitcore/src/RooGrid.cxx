@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGrid.cc,v 1.10 2004/11/29 20:23:45 wverkerke Exp $
+ *    File: $Id: RooGrid.cc,v 1.11 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,10 +18,14 @@
 // RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
 // numerical integration, following the VEGAS algorithm.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooGrid.hh"
 #include "RooFitCore/RooGrid.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "TMath.h"
 
 #include <math.h>
 #include <iostream>
@@ -287,7 +291,7 @@ void RooGrid::refine(Double_t alpha) {
       if (value(i,j) > 0) {
 	oldg = grid_tot_j/value(i,j);
 	/* damped change */
-	_weight[i] = pow(((oldg-1.0)/oldg/log(oldg)), alpha);
+	_weight[i] = TMath::Power(((oldg-1.0)/oldg/log(oldg)), alpha);
       }
       tot_weight += _weight[i];
     }

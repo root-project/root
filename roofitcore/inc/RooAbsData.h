@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.28 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.29 2005/04/18 21:44:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -72,6 +72,7 @@ public:
 			  const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
 			  const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
 			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
+  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const = 0 ;
 
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;
@@ -94,7 +95,6 @@ public:
 
 protected:
 
-  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const = 0 ;
 
   // Constant term optimizer interface
   friend class RooAbsReal ;

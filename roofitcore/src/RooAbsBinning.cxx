@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.cc,v 1.11 2005/04/04 14:25:01 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.cc,v 1.12 2005/04/18 21:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooAbsBinning is the abstract base class for RooRealVar binning definitions
 // This class defines the interface to retrieve bin boundaries, ranges etc.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsBinning.hh"
 #include "RooFitCore/RooAbsBinning.hh"
 using std::endl;
 using std::ostream;

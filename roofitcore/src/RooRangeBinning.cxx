@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRangeBinning.cc,v 1.1 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooRangeBinning.cc,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooRangeBinning is a single bin binning used to indicate alternative
 // ranges for integration etc...
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooNumber.hh"
 #include <iostream>
 using std::cout ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.3 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.4 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,8 +36,12 @@
 
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <assert.h>
 #include <assert.h>
 #include <iostream>
+#include "TMath.h"
 #include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -256,7 +260,7 @@ rescale_error (double err, const double result_abs, const double result_asc)
 
   if (result_asc != 0 && err != 0)
       {
-        double scale = pow((200 * err / result_asc), 1.5) ;
+        double scale = TMath::Power((200 * err / result_asc), 1.5) ;
         
         if (scale < 1)
           {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.21 2005/02/25 14:22:48 wverkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.22 2005/04/18 21:44:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // Roo1DTable implements a one-dimensional table. A table is the category
 // equivalent of a plot. To create a table use the RooDataSet::table method.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <iomanip>
 #include "TString.h"

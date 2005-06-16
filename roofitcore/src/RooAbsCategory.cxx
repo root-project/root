@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.cc,v 1.42 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.43 2005/04/18 21:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,9 @@
 // Implementation of RooAbsCategory may be derived, there no interface
 // is provided to modify the contents, nor a public interface to define states.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <stdlib.h>
 #include "TString.h"

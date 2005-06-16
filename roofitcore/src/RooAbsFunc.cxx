@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsFunc.cc,v 1.7 2004/11/29 20:22:04 wverkerke Exp $
+ *    File: $Id: RooAbsFunc.cc,v 1.8 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // the getMinLimit() and getMaxLimit() methods.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsFunc.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 
 ClassImp(RooAbsFunc)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.cc,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.20 2005/04/18 21:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // normalized by RooHistPdf and can have an arbitrary number of real or 
 // discrete dimensions.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooHistPdf.hh"
 #include "RooFitCore/RooHistPdf.hh"
 #include "RooFitCore/RooDataHist.hh"
 using std::cout;

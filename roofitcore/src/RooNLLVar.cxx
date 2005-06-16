@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.16 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.17 2005/03/02 17:20:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,9 @@
 //
 // In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsPdf.hh"

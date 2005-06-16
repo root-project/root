@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.cc,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGraphSpring.cc,v 1.11 2005/04/18 21:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooGraphSpring.hh"
 #include "RooFitCore/RooGraphSpring.hh"
 #include "TList.h"
+#include "TMath.h"
 #include "RooFitCore/RooGraphEdge.hh"
 
 #include <iostream>
@@ -206,7 +210,7 @@ double RooGraphSpring::GetSpringD2Energy(char m)
       x2 = fn2->GetY1();
     }
   double n = ((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-  double energy = k*(1-l*(x1-x2)*(x1-x2)/pow(n,1.5));
+  double energy = k*(1-l*(x1-x2)*(x1-x2)/TMath::Power(n,1.5));
   return energy;
 }
 
@@ -220,7 +224,7 @@ double RooGraphSpring::GetSpringDxyEnergy()
   double x2 = fn2->GetX1();
   double y2 = fn2->GetY1();
   double n = ((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-  double energy = k*(l*(x1-x2)*(y1-y2)/pow(n,1.5));
+  double energy = k*(l*(x1-x2)*(y1-y2)/TMath::Power(n,1.5));
   return energy;
 }
 

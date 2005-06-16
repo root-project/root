@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCatType.cc,v 1.13 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.9 2005/04/20 15:10:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,28 +13,24 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+#ifndef ROO_FIT
+#define ROO_FIT
 
-// -- CLASS DESCRIPTION [CAT] --
-// RooCatType is an auxilary class for RooAbsCategory and defines a 
-// a single category state. The class holds a string label and an integer 
-// index value which define the state
+// Global include file to fix occasional compiler issues
+// An error in the construction of the system and C++ header files on
+// Solaris 8 / Workshop 6 Updates 1&2 leads to a conflict between the use
+// of ::clock_t and std::clock_t when <string> is compiled under
+// -D_XOPEN_SOURCE=500. The following code ensures that ::clock_t is
+// always defined and thus allows <string> to compile.
+// This is just a workaround and should be monitored as compiler and
+// operating system versions evolve.
+#if defined(__SUNPRO_CC) && defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE - 0 == 500 )
+#ifndef _CLOCK_T
+#define _CLOCK_T
+typedef long clock_t; /* relative time in a
+specified resolution */
+#endif /* ifndef _CLOCK_T */
+#endif // SUN and XOPENSOURCE=500
 
-#include "RooFitCore/RooFit.hh"
 
-#include <stdlib.h>
-#include <stdlib.h>
-#include "RooFitCore/RooCatType.hh"
-using std::endl;
-using std::ostream;
-
-ClassImp(RooCatType)
-;
-
-void RooCatType::printToStream(ostream& os, PrintOption /*opt*/, TString /*indent*/) const {
-  // Print info about this category type to the specified stream. We only have a
-  // OneLine output format.
-
-  // we don't use oneLinePrint() since GetTitle() is empty.
-  os << ClassName() << "::" << GetName() << ": Value = " << getVal() << endl;
-}
-
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.8 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.9 2005/04/18 21:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,13 +16,18 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
+#include "TMath.h"
 
 #include "RooFitCore/RooPolyVar.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "TMath.h"
 using std::cout;
 using std::endl;
 
@@ -100,7 +105,7 @@ Double_t RooPolyVar::evaluate() const
   RooAbsReal* coef ;
   const RooArgSet* nset = _coefList.nset() ;
   while((coef=(RooAbsReal*)_coefIter->Next())) {
-    sum += coef->getVal(nset)*pow(_x,order++) ;
+    sum += coef->getVal(nset)*TMath::Power(_x,order++) ;
   }
 
   return sum;
@@ -128,7 +133,7 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
 
   // Primitive = sum(k) coef_k * 1/(k+1) x^(k+1)
   while((coef=(RooAbsReal*)_coefIter->Next())) {
-    sum += coef->getVal(nset)*(pow(_x.max(rangeName),order+1)-pow(_x.min(rangeName),order+1))/(order+1) ; 
+    sum += coef->getVal(nset)*(TMath::Power(_x.max(rangeName),order+1)-TMath::Power(_x.min(rangeName),order+1))/(order+1) ; 
     order++ ;
   }
 

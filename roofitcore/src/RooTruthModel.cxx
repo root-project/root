@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTruthModel.cc,v 1.25 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.26 2005/04/18 21:44:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,9 @@
 // as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
 // functions used in D mixing have been hand coded for speed.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitCore/RooTruthModel.hh"
 
@@ -131,31 +134,31 @@ Double_t RooTruthModel::evaluate() const
   // Return desired basis function
   switch(basisType) {    
   case expBasis: {
-    return exp(-fabs(x)/tau) ;
+    return exp(-fabs((Double_t)x)/tau) ;
   }
   case sinBasis: {
     Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
-    return exp(-fabs(x)/tau)*sin(x*dm) ;
+    return exp(-fabs((Double_t)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
     Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
-    return exp(-fabs(x)/tau)*cos(x*dm) ;
+    return exp(-fabs((Double_t)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
-    Double_t tscaled = fabs(x)/tau;
+    Double_t tscaled = fabs((Double_t)x)/tau;
     return exp(-tscaled)*tscaled ;
   }
   case quadBasis: {
-    Double_t tscaled = fabs(x)/tau;
+    Double_t tscaled = fabs((Double_t)x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
   }  
   case sinhBasis: {
     Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
-    return exp(-fabs(x)/tau)*sinh(x*dg/2) ;
+    return exp(-fabs((Double_t)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
     Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
-    return exp(-fabs(x)/tau)*cosh(x*dg/2) ;
+    return exp(-fabs((Double_t)x)/tau)*cosh(x*dg/2) ;
   }
   default:
     assert(0) ;

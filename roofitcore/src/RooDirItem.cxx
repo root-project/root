@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDirItem.cc,v 1.8 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooDirItem.cc,v 1.9 2005/04/18 21:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,9 @@
 // to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
 // methods that can be used to safely attach and detach one self from a TDirectory
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "TROOT.h"
 #include "TList.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.8 2005/03/22 13:05:23 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.9 2005/04/18 21:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // Global helper functions
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooGlobalFunc.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooRealConstant.hh"
@@ -208,7 +211,7 @@ RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, cons
              const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) 
            { return RooArgList(v1,v2,v3,v4,v5,v6,v7,v8,v9) ; }
 
-RooConstVar& C(Double_t value) { return RooConst(value) ; }
+RooConstVar& C(Double_t value) { return RooFit::RooConst(value) ; }
 
 } // End namespace Shorthand
 

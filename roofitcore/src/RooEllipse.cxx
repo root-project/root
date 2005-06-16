@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEllipse.cc,v 1.8 2004/11/29 20:23:35 wverkerke Exp $
+ *    File: $Id: RooEllipse.cc,v 1.9 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,11 @@
 // an error contour.
 
 
+#include "RooFitCore/RooFit.hh"
+
 #include "RooFitCore/RooEllipse.hh"
+#include "RooFitCore/RooEllipse.hh"
+#include "TMath.h"
 
 #include <iostream>
 #include <math.h>
@@ -74,7 +78,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    Double_t r,psi,phi,u1,u2,xx1,xx2,dphi(2*M_PI/points);
+    Double_t r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
       // adjust the angular spacing of the points for the aspect ratio

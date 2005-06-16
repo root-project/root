@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvPdf.cc,v 1.5 2005/02/23 15:09:41 wverkerke Exp $
+ *    File: $Id: RooNumConvPdf.cc,v 1.6 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,6 +54,9 @@
 // calls that MINUIT needs to fit your function as function of the
 // convolution precision. 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "TH2F.h"
 #include "RooFitCore/RooNumConvPdf.hh"

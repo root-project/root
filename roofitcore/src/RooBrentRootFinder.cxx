@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBrentRootFinder.cc,v 1.9 2004/11/29 20:23:03 wverkerke Exp $
+ *    File: $Id: RooBrentRootFinder.cc,v 1.10 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,9 @@
 // the Brent-Decker method. This implementation is based on the one
 // in the GNU scientific library (v0.99).
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooBrentRootFinder.hh"
 #include "RooFitCore/RooBrentRootFinder.hh"
 #include "RooFitCore/RooAbsFunc.hh"
 #include <math.h>

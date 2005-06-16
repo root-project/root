@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.19 2005/03/29 18:43:48 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.20 2005/04/18 21:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // component generator contexts that are used to generate the dependents
 // for each component PDF sequentially. 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooProdGenContext.hh"
 #include "RooFitCore/RooProdGenContext.hh"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"

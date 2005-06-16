@@ -1,3 +1,6 @@
+#include "RooFitCore/RooFit.hh"
+
+#include "Rtypes.h"
 #include "Rtypes.h"
 #include <iostream>
 using std::cout;

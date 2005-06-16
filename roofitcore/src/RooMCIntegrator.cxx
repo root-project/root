@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.19 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.20 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 // based on a C version from the 0.9 beta release of the GNU scientific library.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooNumber.hh"
@@ -163,7 +166,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
     if(_mode != ImportanceOnly) {
       // calculate the largest number of equal subdivisions ("boxes") along each
       // axis that results in an average of no more than 2 integrand calls per cell
-      boxes = (UInt_t)floor(pow(calls/2.0,1.0/dim));
+      boxes = (UInt_t)floor(TMath::Power(calls/2.0,1.0/dim));
       // use stratified sampling if we are allowed enough calls (or equivalently,
       // if the dimension is low enough)
       _mode = Importance;
@@ -184,7 +187,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
     }
 
     // calculate the total number of n-dim boxes for this step
-    Double_t tot_boxes = pow((Double_t)boxes,(Double_t)dim);
+    Double_t tot_boxes = TMath::Power((Double_t)boxes,(Double_t)dim);
 
     // increase the total number of calls to get at least 2 calls per box, if necessary
     _calls_per_box = (UInt_t)(calls/tot_boxes);
@@ -192,7 +195,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
     calls= (UInt_t)(_calls_per_box*tot_boxes);
 
     // calculate the Jacobean factor: volume/(avg # of calls/bin)
-    _jac = _grid.getVolume()*pow((Double_t)bins,(Double_t)dim)/calls;
+    _jac = _grid.getVolume()*TMath::Power((Double_t)bins,(Double_t)dim)/calls;
 
     // setup our grid to use the calculated number of boxes and bins
     _grid.setNBoxes(boxes);

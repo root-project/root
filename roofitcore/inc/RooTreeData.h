@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.35 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.36 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -103,6 +103,25 @@ public:
 
   using RooAbsData::plotOn ;
 
+  // WVE --- This needs to be public to avoid CINT problems
+  struct PlotOpt {
+   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
+              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE) {} ;
+   const char* cuts ;
+   Option_t* drawOptions ;
+   RooAbsBinning* bins ;
+   RooAbsData::ErrorType etype ;
+   const char* cutRange ;
+   const char* histName ;
+   Bool_t histInvisible ;
+   const char* addToHistName ;
+   Double_t addToWgtSelf ;
+   Double_t addToWgtOther ;
+   Double_t xErrorSize ;
+   Bool_t refreshFrameNorm ;
+  } ;
+	
+
 protected:
 
   friend class RooMCStudy ;
@@ -142,23 +161,6 @@ protected:
   Int_t getBranchBufferSize() const { return _defTreeBufSize ; }
 
   // PlotOn implementation
-  struct PlotOpt {
-   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE) {} ;
-   const char* cuts ;
-   Option_t* drawOptions ;
-   RooAbsBinning* bins ;
-   RooAbsData::ErrorType etype ;
-   const char* cutRange ;
-   const char* histName ;
-   Bool_t histInvisible ;
-   const char* addToHistName ;
-   Double_t addToWgtSelf ;
-   Double_t addToWgtOther ;
-   Double_t xErrorSize ;
-   Bool_t refreshFrameNorm ;
-  } ;
-	
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
 

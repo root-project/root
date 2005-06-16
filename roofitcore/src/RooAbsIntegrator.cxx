@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.cc,v 1.16 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsIntegrator.cc,v 1.17 2005/04/18 21:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooAbsIntegrator is the abstract interface for integrating real-valued
 // functions that implement the RooAbsFunc interface.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "TClass.h"
 using std::cout;

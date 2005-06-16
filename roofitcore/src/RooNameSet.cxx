@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameSet.cc,v 1.17 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.18 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // -- CLASS DESCRIPTION [AUX] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TObjString.h"
 #include "TObjString.h"
 #include "RooFitCore/RooNameSet.hh"
 #include "RooFitCore/RooArgSet.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.3 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.4 2005/02/25 14:22:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,9 @@
 // For integrands with integrable singulaties the Wynn epsilon rule
 // can be selected to speed up the converges of these integrals
 
+#include "RooFitCore/RooFit.hh"
+
+#include <assert.h>
 #include <assert.h>
 #include <iostream>
 #include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
@@ -46,6 +49,7 @@
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooNumIntFactory.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
+#include "TMath.h"
 
 using std::cout ;
 using std::endl ;
@@ -946,7 +950,7 @@ rescale_error (double err, const double result_abs, const double result_asc)
 
   if (result_asc != 0 && err != 0)
       {
-        double scale = pow((200 * err / result_asc), 1.5) ;
+        double scale = TMath::Power((200 * err / result_asc), 1.5) ;
         
         if (scale < 1)
           {

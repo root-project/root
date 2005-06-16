@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMath.rdl,v 1.11 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.12 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,6 +57,9 @@ public:
   // 1-D nth order polynomial interpolation routines
   static Double_t interpolate(Double_t yArr[],Int_t nOrder, Double_t x) ;
   static Double_t interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x) ;
+
+  static Double_t erf(const Double_t x) ;
+  static Double_t erfc(const Double_t x) ;
 
 private:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSetPair.cc,v 1.3 2004/11/29 20:24:25 wverkerke Exp $
+ *    File: $Id: RooSetPair.cc,v 1.4 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [AUX] ---
 // RooSetPair
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooSetPair.hh"
 #include "RooFitCore/RooSetPair.hh"
 
 

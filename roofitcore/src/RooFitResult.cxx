@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.30 2005/04/04 14:25:04 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.31 2005/04/18 21:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +25,9 @@
 //
 // No references to the fitted PDF and dataset are stored
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iomanip>
 #include <iomanip>
 #include "TMinuit.h"
 #include "TMarker.h"

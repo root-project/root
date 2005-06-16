@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.14 2005/02/14 20:44:24 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.15 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,9 @@
 //  the nominal integration range normRegion[x[]
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooExtendPdf.hh"
 #include "RooFitCore/RooExtendPdf.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"

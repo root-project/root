@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.34 2005/04/15 13:05:23 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.35 2005/04/18 21:44:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [CONT] --
 // RooAbsCollection is an abstract container object that can hold multiple RooAbsArg objects.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <iomanip>
 #include <fstream>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.cc,v 1.22 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.23 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // RooSuperCategory state are automatically defined and updated whenever an input
 // category modifies its list of states
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.111 2005/04/18 21:44:22 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.112 2005/04/20 15:10:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,9 @@
 // This class holds in addition a unit and label string, as well
 // as a plot range and number of plot bins and plot creation methods.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"

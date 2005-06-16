@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConstVar.cc,v 1.8 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooConstVar.cc,v 1.9 2005/04/18 21:44:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // RooConstVar represent a constant real-valued object
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooConstVar.hh"
 #include "RooFitCore/RooConstVar.hh"
 using std::ostream;
 

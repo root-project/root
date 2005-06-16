@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.39 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.40 2005/04/18 21:44:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,6 +33,9 @@
 // extended likelihood configurations.
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
 #include "RooFitCore/RooAddModel.hh"

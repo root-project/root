@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsString.cc,v 1.28 2005/02/25 14:22:52 wverkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.29 2005/04/18 21:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,9 @@
 // is provided to modify the contents
 // 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "TObjString.h"
 #include "TH1.h"

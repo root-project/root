@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.41 2005/04/18 21:44:24 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.42 2005/04/20 15:10:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,9 @@
 // The fit limits serve as integration range when interpreted
 // as a dependent and a boundaries when interpreted as a parameter.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

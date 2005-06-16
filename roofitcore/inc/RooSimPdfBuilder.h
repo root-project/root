@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.rdl,v 1.10 2004/04/05 22:44:13 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.rdl,v 1.11 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooAbsData.hh"
+class RooSimultaneous ;
 class RooAbsPdf ;
 class RooCategory ;
 

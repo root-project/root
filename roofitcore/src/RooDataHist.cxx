@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.46 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.47 2005/04/18 21:44:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,7 +20,11 @@
 // or RooStringVar objects, thus data can be binned in real and/or discrete dimensions
 //
 
+#include "RooFitCore/RooFit.hh"
+
 #include "TH1.h"
+#include "TH1.h"
+#include "TMath.h"
 #include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooAbsLValue.hh"
 #include "RooFitCore/RooArgList.hh"
@@ -292,14 +296,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	if (zvar) {
 	  for (iz=0 ; iz < zvar->getBins() ; iz++) {
 	    zvar->setBin(iz) ;
-	    add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,pow(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,2)) ;
+	    add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,2)) ;
 	  }
 	} else {
-	  add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin)*weight,pow(histo->GetBinError(ix+1+xmin,iy+1+ymin)*weight,2)) ;
+	  add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin)*weight,2)) ;
 	}
       }
     } else {
-      add(set,histo->GetBinContent(ix+1+xmin)*weight,pow(histo->GetBinError(ix+1+xmin)*weight,2)) ;	    
+      add(set,histo->GetBinContent(ix+1+xmin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin)*weight,2)) ;	    
     }
   }  
   

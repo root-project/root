@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.cc,v 1.6 2004/11/29 20:24:23 wverkerke Exp $
+ *    File: $Id: RooRefCountList.cc,v 1.7 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // the counter instead of adding multiple copies. Remove() decrements the 
 // reference count until zero, when the object is actually removed.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooRefCountList.hh"
 #include "RooFitCore/RooRefCountList.hh"
 
 #include <iostream>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorBinding.cc,v 1.4 2004/11/29 20:23:57 wverkerke Exp $
+ *    File: $Id: RooIntegratorBinding.cc,v 1.5 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,9 @@
 // Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooIntegratorBinding.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
 
 ClassImp(RooIntegratorBinding)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.12 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.13 2005/04/18 21:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,6 +28,9 @@
 // In the present version coef_i may not depend on x, but this limitation will be removed in the future
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
 #include "RooFitCore/RooRealSumPdf.hh"

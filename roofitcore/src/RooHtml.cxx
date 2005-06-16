@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.15 2005/04/15 13:05:41 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.16 2005/04/18 21:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // -- CLASS DESCRIPTION [MISC] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooHtml.hh"
 #include "RooFitCore/RooHtml.hh"
 
 #include "TDatime.h"
@@ -32,12 +35,13 @@
 
 #ifndef _WIN32
 #include <strings.h>
+#endif
+
 using std::cout;
 using std::endl;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
-#endif
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( std::streampos&, char* );

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.13 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.14 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,9 @@
 // integration limits of +/-Infinity.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooImproperIntegrator1D.hh"
 #include "RooFitCore/RooImproperIntegrator1D.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooInvTransform.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenCategory.cc,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.20 2005/04/18 21:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,6 +25,9 @@
 // RooGenCategory builds a numerical index-to-index map from the user function
 // to achieve a high performance mapping.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>

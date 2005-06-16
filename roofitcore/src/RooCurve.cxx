@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.44 2005/04/15 13:30:09 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.45 2005/04/18 21:44:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,9 @@
 //  p->Draw();
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooAbsReal.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.6 2005/04/15 12:42:26 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.7 2005/04/18 21:44:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,6 +55,9 @@
 //  valid for all coefficients.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitCore/RooAbsAnaConvPdf.hh"
 #include "RooFitCore/RooResolutionModel.hh"

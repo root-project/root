@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.18 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.19 2005/04/18 21:44:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [AUX] --
 // RooAbsGenContext is the abstract base class for generator contexts.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooAbsGenContext.hh"
 #include "RooFitCore/RooAbsGenContext.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooDataSet.hh"

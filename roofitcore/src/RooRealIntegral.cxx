@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.80 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.81 2005/04/18 21:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,9 @@
 // The actual analytical integrations (if any) are done in the PDF themselves, the numerical
 // integration is performed in the various implemenations of the RooAbsIntegrator base class.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "TObjString.h"
 #include "TH1.h"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.54 2005/03/22 13:05:24 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.55 2005/04/18 21:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // This class also holds an error and a fit range associated with the real value
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

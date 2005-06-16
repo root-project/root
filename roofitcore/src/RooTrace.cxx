@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.cc,v 1.18 2005/02/15 21:17:17 wverkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.19 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,9 @@
 
 // -- CLASS DESCRIPTION [AUX] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooAbsArg.hh"
 
@@ -71,6 +74,7 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   Int_t i, nMarked(0) ;
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
+      // WVE !!! check 64 bit here!!!
       sprintf(buf,"%010x : ",(UInt_t)(void*)_list.At(i)) ;
       os << buf << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;
     } else {

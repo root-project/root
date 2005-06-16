@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.12 2005/02/23 15:09:41 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.13 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,6 +15,9 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [AUX] --
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooNormSetCache.hh"
 #include "RooFitCore/RooNormSetCache.hh"
 #include "RooFitCore/RooArgSet.hh"
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.15 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.16 2005/04/18 21:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 // Use RooAbsCollection derived objects for public use
 // (RooArgSet and RooArgList) 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooLinkedListIter.hh"
 #include "RooFitCore/RooHashTable.hh"

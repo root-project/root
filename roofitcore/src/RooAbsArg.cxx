@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.89 2005/04/15 13:05:21 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.90 2005/04/18 21:44:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,9 @@
 // relationships and setting/clearing/testing named attributes. The class
 // also defines a pure virtual public interface for I/O streaming.
 
+#include "RooFitCore/RooFit.hh"
+
+#include "TObjString.h"
 #include "TObjString.h"
 
 #include "RooFitCore/RooAbsArg.hh"

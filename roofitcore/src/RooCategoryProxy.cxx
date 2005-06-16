@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.cc,v 1.13 2004/11/29 20:23:05 wverkerke Exp $
+ *    File: $Id: RooCategoryProxy.cc,v 1.14 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,9 @@
 // the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooCategoryProxy.hh"
 
 ClassImp(RooCategoryProxy)
