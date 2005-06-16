@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.15 2005/04/18 21:48:29 wverkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
@@ -21,6 +21,9 @@
 // Implement standard CP physics model with S and C (no mention of lambda)
 // Suitably stolen and modified from RooBCPEffDecay
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"

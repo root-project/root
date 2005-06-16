@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooChebychev.cc,v 1.8 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooChebychev.cc,v 1.9 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
  *                                                                           *
@@ -15,6 +15,9 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 
@@ -60,7 +63,7 @@ RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
 {
 }
 
-inline static double p0(double t,double a) {  return a; }
+inline static double p0(double ,double a) {  return a; }
 inline static double p1(double t,double a,double b) {  return a*t+b; }
 inline static double p2(double t,double a,double b,double c) {  return p1(t,p1(t,a,b),c); }
 inline static double p3(double t,double a,double b,double c,double d) {  return p2(t,p1(t,a,b),c,d); }

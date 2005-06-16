@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.5 2004/11/29 21:15:49 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.6 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -33,10 +33,14 @@
  *   -------------------------------------------			     *
  *****************************************************************************/
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 
 #include "RooFitModels/RooBukinPdf.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "TMath.h"
 
 ClassImp(RooBukinPdf)
 
@@ -87,7 +91,7 @@ Double_t RooBukinPdf::evaluate() const
   
   hp=sigp*consts;
   r3=log(2.);
-  r4=sqrt(pow(xi,2)+1);
+  r4=sqrt(TMath::Power(xi,2)+1);
   r1=xi/r4;  
 
   if(fabs(xi) > exp(-6.)){
@@ -101,7 +105,7 @@ Double_t RooBukinPdf::evaluate() const
   
   //--- Left Side
   if(x < x1){
-    r2=rho1*pow((x-x1)/(Xp-x1),2)-r3 + 4 * r3 * (x-x1)/hp * r5 * r4/pow((r4-xi),2);
+    r2=rho1*TMath::Power((x-x1)/(Xp-x1),2)-r3 + 4 * r3 * (x-x1)/hp * r5 * r4/TMath::Power((r4-xi),2);
   }
 
 
@@ -109,17 +113,17 @@ Double_t RooBukinPdf::evaluate() const
   else if(x < x2) {
     if(fabs(xi) > exp(-6.)) {
       r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
-      r2=-r3*(pow(r2,2));
+      r2=-r3*(TMath::Power(r2,2));
     }
     else{
-      r2=-4*r3*pow(((x-Xp)/hp),2);  
+      r2=-4*r3*TMath::Power(((x-Xp)/hp),2);  
     }
   }
   
 
   //--- Right Side
   else {
-    r2=rho2*pow((x-x2)/(Xp-x2),2)-r3 - 4 * r3 * (x-x2)/hp * r5 * r4/pow((r4+xi),2);
+    r2=rho2*TMath::Power((x-x2)/(Xp-x2),2)-r3 - 4 * r3 * (x-x2)/hp * r5 * r4/TMath::Power((r4+xi),2);
   }
 
   if(fabs(r2) > 100){

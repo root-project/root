@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussian.cc,v 1.23 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooGaussian.cc,v 1.24 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [PDF] --
 // Gaussian PDF...
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 using std::cout ;
@@ -26,6 +29,7 @@ using std::endl ;
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooMath.hh"
 
 ClassImp(RooGaussian)
 
@@ -71,7 +75,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   
   Double_t xscale = root2*sigma;
-  return rootPiBy2*sigma*(erf((x.max(rangeName)-mean)/xscale)-erf((x.min(rangeName)-mean)/xscale));
+  return rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
 }
 
 

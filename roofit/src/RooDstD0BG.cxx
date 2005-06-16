@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.15 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -18,8 +18,12 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
+#include "TMath.h"
 
 #include "RooFitModels/RooDstD0BG.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -30,7 +34,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.15 2005/04/18 21:48:30 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
@@ -55,7 +59,7 @@ Double_t RooDstD0BG::evaluate() const
   Double_t arg= dm- dm0;
   if (arg <= 0 ) return 0;
   Double_t ratio= dm/dm0;
-  Double_t val= (1- exp(-arg/c))* pow(ratio, a) + b*(ratio-1);
+  Double_t val= (1- exp(-arg/c))* TMath::Power(ratio, a) + b*(ratio-1);
 
   return (val > 0 ? val : 0) ;
 }

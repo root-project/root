@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.rdl,v 1.18 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.19 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -84,7 +84,7 @@ protected:
   // Calculate Re(exp(-u^2) cwerf(i(u+c)))
   // added FMV, 08/17/03
   inline Double_t evalCerfRe(Double_t u, Double_t c) const {
-    return exp(u*2*c+c*c) * erfc(u+c);
+    return exp(u*2*c+c*c) * RooMath::erfc(u+c);
   }
 
   // Calculate common normalization factors 

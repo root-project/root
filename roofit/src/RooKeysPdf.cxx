@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.16 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.17 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -14,6 +14,9 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 #include <iostream>
 
@@ -125,7 +128,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   Double_t mean=x1/x0;
   Double_t sigma=sqrt(x2/x0-mean*mean);
-  Double_t h=pow(Double_t(4)/Double_t(3),0.2)*pow(_nEvents,-0.2)*_rho;
+  Double_t h=TMath::Power(Double_t(4)/Double_t(3),0.2)*TMath::Power(_nEvents,-0.2)*_rho;
   Double_t hmin=h*sigma*sqrt(2.)/10;
   Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
 
@@ -191,7 +194,7 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
     }
   }
   
-  static const Double_t sqrt2pi(sqrt(2*M_PI));  
+  static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
   return y/(sqrt2pi*_nEvents);
 }
 
@@ -205,6 +208,6 @@ Double_t RooKeysPdf::g(Double_t x,Double_t sigma) const {
     y+=exp(-c*r*r);
   }
   
-  static const Double_t sqrt2pi(sqrt(2*M_PI));  
+  static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
   return y/(sigma*sqrt2pi*_nEvents);
 }

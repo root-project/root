@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.19 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.20 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,11 +17,16 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitModels/RooGExpModel.hh"
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooRealConstant.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooMath.hh"
+#include "TMath.h"
 using std::cout;
 using std::endl;
 
@@ -148,16 +153,16 @@ Double_t RooGExpModel::evaluate() const
 
     Double_t result ;
     if (expArg<300) {
-      result = 1/(2*rtau) * exp(expArg) * erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+      result = 1/(2*rtau) * exp(expArg) * RooMath::erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
     } else {
-      // If exponent argument is very large, bring canceling erfc() term inside exponent
+      // If exponent argument is very large, bring canceling RooMath::erfc() term inside exponent
       // to avoid floating point over/underflows of intermediate calculations
       result = 1/(2*rtau) * exp(expArg + logErfC(sig/(root2*rtau) + fsign*x/(root2*sig))) ;
     }
 
 //     Double_t result = 1/(2*rtau)
 //                     * exp(sig*sig/(2*rtau*rtau) + fsign*x/rtau)
-//                     * erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+//                     * RooMath::erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
 
     // equivalent form, added FMV, 07/24/03
     //Double_t xprime = x/rtau ;
@@ -348,8 +353,8 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
 
     cFly=1./(MeanTau*MeanTau*root2pi) *
       exp(-(-xp/MeanTau-sig*sig/(2*MeanTau*MeanTau)))
-      *(sig*exp(-1/(2*sig*sig)*pow((sig*sig/MeanTau+xp),2)) 
-	-(sig*sig/MeanTau+xp)*(rootpi/root2)*erfc(sig/(root2*MeanTau)+xp/(root2*sig)));
+      *(sig*exp(-1/(2*sig*sig)*TMath::Power((sig*sig/MeanTau+xp),2)) 
+	-(sig*sig/MeanTau+xp)*(rootpi/root2)*RooMath::erfc(sig/(root2*MeanTau)+xp/(root2*sig)));
     
     if(_nlo) {
       Double_t epsilon=0.5*(tau-rtau);
@@ -360,14 +365,14 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
 	(exp(-a*a)*(sig/MeanTau*root2/rootpi
 		    -(4*a*sig*sig)/(2*rootpi*MeanTau*MeanTau)
 		    +(-4/rootpi+8*a*a/rootpi)/6
-		    *pow(sig/(root2*MeanTau),3)
+		    *TMath::Power(sig/(root2*MeanTau),3)
 		    +2/rootpi*(sig*sig/(MeanTau*MeanTau)+xp/MeanTau)*
 		    (sig/(root2*MeanTau)-a*(sig*sig)/(2*MeanTau*MeanTau))
 		    +2/rootpi*((3*sig*sig)/(2*MeanTau*MeanTau)+xp/MeanTau+
-			       0.5*pow(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,2))*sig/(root2*MeanTau))
+			       0.5*TMath::Power(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,2))*sig/(root2*MeanTau))
 	 -(2*sig*sig/(MeanTau*MeanTau)+xp/MeanTau+(sig*sig/(MeanTau*MeanTau)+xp/MeanTau)*
 	   (3*sig*sig/(2*MeanTau*MeanTau)+xp/MeanTau)
-	   +pow(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,3)/6)*erfc(a));
+	   +TMath::Power(sig*sig/(MeanTau*MeanTau)+xp/MeanTau,3)/6)*RooMath::erfc(a));
     }
     
   } else {
@@ -377,12 +382,12 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
 
     Double_t term1, term2 ;
     if (expArg1<300) {
-      term1 = exp(expArg1) *erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
+      term1 = exp(expArg1) *RooMath::erfc(sig/(root2*tau)-sign*xp/(root2*sig)) ;
     } else {
       term1 = exp(expArg1+logErfC(sig/(root2*tau)-sign*xp/(root2*sig))) ; ;
     }
     if (expArg2<300) {
-      term2 = exp(expArg2) *erfc(sig/(root2*rtau)+xp/(root2*sig)) ;
+      term2 = exp(expArg2) *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)) ;
     } else {
       term2 = exp(expArg2+logErfC(sig/(root2*rtau)+xp/(root2*sig))) ; ;
     }
@@ -423,13 +428,13 @@ Double_t RooGExpModel::calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma
   sign *= fsign ;  // modified FMV,08/13/03
 
   cFly=tau1*(exp(sig*sig/(2*tau1*tau1)-sign*xp/tau1)
-	  *erfc(sig/(root2*tau1)-sign*xp/(root2*sig))
+	  *RooMath::erfc(sig/(root2*tau1)-sign*xp/(root2*sig))
 	  +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-	  *erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau1+sign*rtau))
+	  *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau1+sign*rtau))
     +tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
-	  *erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
+	  *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
 	  +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-	  *erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+	  *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
   return cFly;
 }
 */
@@ -455,13 +460,13 @@ Double_t RooGExpModel::calcSinhConv(Double_t sign, Double_t sign1, Double_t sign
   sign2 *= fsign ;  // modified FMV,08/13/03
 
   cFly=sign1*tau1*(exp(sig*sig/(2*tau1*tau1)-sign*xp/tau1)
-	  *erfc(sig/(root2*tau1)-sign*xp/(root2*sig))
+	  *RooMath::erfc(sig/(root2*tau1)-sign*xp/(root2*sig))
 	  +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-	  *erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau1+sign*rtau))
+	  *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau1+sign*rtau))
     +sign2*tau2*(exp(sig*sig/(2*tau2*tau2)-sign*xp/tau2)
-	  *erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
+	  *RooMath::erfc(sig/(root2*tau2)-sign*xp/(root2*sig))
 	  +sign*exp(sig*sig/(2*rtau*rtau)+xp/rtau)
-	  *erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
+	  *RooMath::erfc(sig/(root2*rtau)+xp/(root2*sig)))/(2*(tau2+sign*rtau));;
   return cFly;
 }
 */
@@ -725,7 +730,7 @@ RooComplex RooGExpModel::evalCerfInt(Double_t sign, Double_t wt, Double_t tau, D
   if (_asympInt) {
     diff = RooComplex(2,0) ;
   } else {
-    diff = RooComplex(sign,0.)*(evalCerf(wt,umin,c) - evalCerf(wt,umax,c) + erf(umin) - erf(umax));
+    diff = RooComplex(sign,0.)*(evalCerf(wt,umin,c) - evalCerf(wt,umax,c) + RooMath::erf(umin) - RooMath::erf(umax));
   }
   return RooComplex(tau/(1.+wt*wt),0)*RooComplex(1,wt)*diff;
 }
@@ -740,7 +745,7 @@ Double_t RooGExpModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, D
       // If integral is over >8 sigma, approximate with full integral
       diff = 2. ;
     } else {
-      diff = sign*(evalCerfRe(umin,c) - evalCerfRe(umax,c) + erf(umin) - erf(umax));
+      diff = sign*(evalCerfRe(umin,c) - evalCerfRe(umax,c) + RooMath::erf(umin) - RooMath::erf(umax));
     }
   }
   return tau*diff;

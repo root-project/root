@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooArgusBG.cc,v 1.14 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooArgusBG.cc,v 1.15 2005/04/18 21:48:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,12 +16,19 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
+using std::endl ;
+using std::cout ;
 
 #include "RooFitModels/RooArgusBG.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRealConstant.hh"
+#include "RooFitCore/RooMath.hh"
+#include "TMath.h"
 
 ClassImp(RooArgusBG)
 
@@ -60,7 +67,8 @@ Double_t RooArgusBG::evaluate() const {
   if(t >= 1) return 0;
 
   Double_t u= 1 - t*t;
-  return m*pow(u,p)*exp(c*u) ;
+  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ; 
+  return m*TMath::Power(u,p)*exp(c*u) ;
 }
 
 
@@ -82,11 +90,13 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   static const Double_t pi = atan2(0.0,-1.0);
   Double_t min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;
   Double_t max = (m.max(rangeName) < m0) ? m.max(rangeName) : m0;
-  Double_t f1 = (1.-pow(min/m0,2));
-  Double_t f2 = (1.-pow(max/m0,2));
-  Double_t aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/pow(-c,1.5)*sqrt(pi)*erf(sqrt(-c*f1)));
-  Double_t aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/pow(-c,1.5)*sqrt(pi)*erf(sqrt(-c*f2)));
+  Double_t f1 = (1.-TMath::Power(min/m0,2));
+  Double_t f2 = (1.-TMath::Power(max/m0,2));
+  Double_t aLow, aHigh ;
+  aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
+  aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
   Double_t area = aHigh - aLow;
+  //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << endl ;
   return area;
 
 }

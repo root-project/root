@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.19 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.20 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -38,10 +38,14 @@
 //    a_c^Q = C + Q*deltaC
 // where Q denotes the charge of the rho.
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitModels/RooNonCPEigenDecay.hh"
+#include "TMath.h"
 using std::cout;
 using std::endl;
 
@@ -380,8 +384,8 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     Double_t a_cos_m = _avgC - _delC;
   
     // maximum probability density 
-    double a1 = 1 + sqrt(pow(a_cos_m, 2) + pow(a_sin_m, 2));
-    double a2 = 1 + sqrt(pow(a_cos_p, 2) + pow(a_sin_p, 2));
+    double a1 = 1 + sqrt(TMath::Power(a_cos_m, 2) + TMath::Power(a_sin_m, 2));
+    double a2 = 1 + sqrt(TMath::Power(a_cos_p, 2) + TMath::Power(a_sin_p, 2));
  
     Double_t maxAcceptProb = (1.10 + fabs(_acp)) * (a1 > a2 ? a1 : a2);
     // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00

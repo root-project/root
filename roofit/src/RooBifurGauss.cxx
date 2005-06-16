@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.cc,v 1.17 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.18 2005/04/18 21:48:29 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -13,16 +13,20 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooBifurGauss.hh"
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooMath.hh"
 
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.17 2005/02/25 14:25:04 wverkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.18 2005/04/18 21:48:29 wverkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
@@ -90,18 +94,18 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) co
       Double_t integral = 0.0;
       if(x.max(rangeName) < mean)
       {
-	integral = sigmaL * ( erf((x.max(rangeName) - mean)/xscaleL) - erf((x.min(rangeName) - mean)/xscaleL) );
+	integral = sigmaL * ( RooMath::erf((x.max(rangeName) - mean)/xscaleL) - RooMath::erf((x.min(rangeName) - mean)/xscaleL) );
       }
       else if (x.min(rangeName) > mean)
       {
-	integral = sigmaR * ( erf((x.max(rangeName) - mean)/xscaleR) - erf((x.min(rangeName) - mean)/xscaleR) );
+	integral = sigmaR * ( RooMath::erf((x.max(rangeName) - mean)/xscaleR) - RooMath::erf((x.min(rangeName) - mean)/xscaleR) );
       }
       else
       {
-	integral = sigmaR*erf((x.max(rangeName) - mean)/xscaleR) - sigmaL*erf((x.min(rangeName) - mean)/xscaleL);
+	integral = sigmaR*RooMath::erf((x.max(rangeName) - mean)/xscaleR) - sigmaL*RooMath::erf((x.min(rangeName) - mean)/xscaleL);
       }
-      //      return rootPiBy2*(sigmaR*erf((x.max(rangeName) - mean)/xscaleR) - 
-      //			sigmaL*erf((x.min(rangeName) - mean)/xscaleL));
+      //      return rootPiBy2*(sigmaR*RooMath::erf((x.max(rangeName) - mean)/xscaleR) - 
+      //			sigmaL*RooMath::erf((x.min(rangeName) - mean)/xscaleL));
       return integral*rootPiBy2;
     }
   }  

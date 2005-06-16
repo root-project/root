@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.cc,v 1.9 2004/11/29 21:15:51 wverkerke Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.10 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *
@@ -23,6 +23,9 @@
 // the selectFastAlgorithm() method.
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 

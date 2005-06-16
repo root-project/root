@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.17 2004/11/29 21:15:45 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.18 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -37,13 +37,17 @@
 //
 //
 
+#include "RooFitCore/RooFit.hh"
+
+#include "RooFitModels/Roo2DKeysPdf.hh"
 #include "RooFitModels/Roo2DKeysPdf.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "TH2.h"
 #include "TFile.h"
 #include "TBranch.h"
+#include "TMath.h"
 
-#include <math.h>
+//#include <math.h>
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -128,7 +132,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
   if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)" << endl; }
 
-  _2pi       = 2.0*M_PI;   //use pi from math.h
+  _2pi       = 2.0*TMath::Pi() ;   //use pi from math.h
   _sqrt2pi   = sqrt(_2pi);
   _nEvents   = (Int_t)data.numEntries();
   if(_nEvents == 0) 
@@ -136,7 +140,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
     cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
     return 1;
   }
-  _n16       =  pow (_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
+  _n16       =  TMath::Power(_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
 
   _lox       = x.min();
   _hix       = x.max();
@@ -301,11 +305,11 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   {
     cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwith (in general different for all events) [default]"<<endl;
     cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
-    Double_t xnorm   = h * pow(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
-    Double_t ynorm   = h * pow(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
+    Double_t xnorm   = h * TMath::Power(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
+    Double_t ynorm   = h * TMath::Power(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j) 
     {
-      Double_t f_ti =  pow ( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
+      Double_t f_ti =  TMath::Power( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
       _hx[j] = xnorm * f_ti;
       _hy[j] = ynorm * f_ti;
       if(_hx[j]<xhmin) _hx[j] = xhmin;

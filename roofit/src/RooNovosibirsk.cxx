@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.7 2004/11/29 21:15:51 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.8 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -19,6 +19,9 @@
 //
 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <math.h>
 #include <math.h>
 
 #include "RooFitModels/RooNovosibirsk.hh"
@@ -56,7 +59,7 @@ Double_t RooNovosibirsk::evaluate() const {
   double qa=0,qb=0,qc=0,qx=0,qy=0;
 
   if(fabs(tail) < 1.e-7) 
-    qc = 0.5*pow(((x-peak)/width),2);
+    qc = 0.5*TMath::Power(((x-peak)/width),2);
   else {
     qa = tail*sqrt(log(4.));
     qb = sinh(qa)/qa;
@@ -66,7 +69,7 @@ Double_t RooNovosibirsk::evaluate() const {
     //---- Cutting curve from right side
 
     if( qy > 1.E-7) 
-      qc = 0.5*(pow((log(qy)/tail),2) + tail*tail);
+      qc = 0.5*(TMath::Power((log(qy)/tail),2) + tail*tail);
     else
       qc = 15.0;
   }

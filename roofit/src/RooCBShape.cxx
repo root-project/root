@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooCBShape.cc,v 1.12 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.13 2005/04/18 21:48:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,12 +16,17 @@
 
 // -- CLASS DESCRIPTION [PDF] --
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 
 #include "RooFitModels/RooCBShape.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooMath.hh"
+#include "TMath.h"
 
 ClassImp(RooCBShape)
 ;
@@ -35,12 +40,12 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
   if( arg < -erflim )
     return -1.0;
   
-  return erf(arg);
+  return RooMath::erf(arg);
 }
 
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.12 2005/02/25 14:25:04 wverkerke Exp $";
+"$Id: RooCBShape.cc,v 1.13 2005/04/18 21:48:29 wverkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,
@@ -66,16 +71,16 @@ Double_t RooCBShape::evaluate() const {
   Double_t t = (m-m0)/sigma;
   if (alpha < 0) t = -t;
 
-  Double_t absAlpha = fabs(alpha);
+  Double_t absAlpha = fabs((Double_t)alpha);
 
   if (t >= -absAlpha) {
     return exp(-0.5*t*t);
   }
   else {
-    Double_t a =  pow(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
     Double_t b= n/absAlpha - absAlpha; 
 
-    return a/pow(b - t, n);
+    return a/TMath::Power(b - t, n);
   }
 }
 
@@ -100,7 +105,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
   if( fabs(n-1.0) < 1.0e-05 )
     useLog = true;
   
-  double sig = fabs(sigma);
+  double sig = fabs((Double_t)sigma);
   
   double tmin = (m.min(rangeName)-m0)/sig;
   double tmax = (m.max(rangeName)-m0)/sig;
@@ -111,26 +116,26 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
     tmax = -tmp;
   }
 
-  double absAlpha = fabs(alpha);
+  double absAlpha = fabs((Double_t)alpha);
   
   if( tmin >= -absAlpha ) {
     result += sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
                                 - ApproxErf(tmin/sqrt2) );
   }
   else if( tmax <= -absAlpha ) {
-    double a = pow(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    double a = TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
     double b = n/absAlpha - absAlpha;
     
     if(useLog) {
       result += a*sig*( log(b-tmin) - log(b-tmax) );
     }
     else {
-      result += a*sig/(1.0-n)*(   1.0/(pow(b-tmin,n-1.0))
-                                - 1.0/(pow(b-tmax,n-1.0)) );
+      result += a*sig/(1.0-n)*(   1.0/(TMath::Power(b-tmin,n-1.0))
+                                - 1.0/(TMath::Power(b-tmax,n-1.0)) );
     }
   }
   else {
-    double a = pow(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    double a = TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
     double b = n/absAlpha - absAlpha;
     
     double term1 = 0.0;
@@ -138,8 +143,8 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
       term1 = a*sig*(  log(b-tmin) - log(n/absAlpha));
     }
     else {
-      term1 = a*sig/(1.0-n)*(   1.0/(pow(b-tmin,n-1.0))
-                              - 1.0/(pow(n/absAlpha,n-1.0)) );
+      term1 = a*sig/(1.0-n)*(   1.0/(TMath::Power(b-tmin,n-1.0))
+                              - 1.0/(TMath::Power(n/absAlpha,n-1.0)) );
     }
     
     double term2 = sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)

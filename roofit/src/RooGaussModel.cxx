@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.33 2005/02/25 14:25:05 wverkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.34 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,9 @@
 // -- CLASS DESCRIPTION [PDF] --
 // 
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include "RooFitModels/RooGaussModel.hh"
 #include "RooFitCore/RooMath.hh"
@@ -157,8 +160,8 @@ Double_t RooGaussModel::evaluate() const
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
     if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
     Double_t result(0) ;
-    if (basisSign!=Minus) result += exp(-xprime+c*c) * erfc(-u+c) ;
-    if (basisSign!=Plus)  result += exp(xprime+c*c) * erfc(u+c) ;
+    if (basisSign!=Minus) result += exp(-xprime+c*c) * RooMath::erfc(-u+c) ;
+    if (basisSign!=Plus)  result += exp(xprime+c*c) * RooMath::erfc(u+c) ;
     // equivalent form, added FMV, 07/24/03
     //if (basisSign!=Minus) result += evalCerfRe(-u,c) ; 
     //if (basisSign!=Plus)  result += evalCerfRe( u,c) ; 
@@ -197,7 +200,7 @@ Double_t RooGaussModel::evaluate() const
 
     assert(basisSign==Plus);  // This should only be for positive times
 
-    Double_t f0 = exp(-xprime+c*c) * erfc(-u+c);
+    Double_t f0 = exp(-xprime+c*c) * RooMath::erfc(-u+c);
     Double_t f1 = exp(-u*u);
 
     return (xprime - 2*c*c)*f0 + (2*c/rootpi)*f1 ; 
@@ -210,7 +213,7 @@ Double_t RooGaussModel::evaluate() const
 
     assert(basisSign==Plus);  // This should only be for positive times
 
-    Double_t f0 = exp(-xprime+c*c) * erfc(-u+c);
+    Double_t f0 = exp(-xprime+c*c) * RooMath::erfc(-u+c);
     Double_t f1 = exp(-u*u);
 
     Double_t x2c2 = xprime - 2*c*c; 
@@ -236,8 +239,8 @@ Double_t RooGaussModel::evaluate() const
     //Double_t c22 = c2*c2;
 
     Double_t result(0);   
-    //if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * erfc(-u1+c1)+exp(-xprime2+c22) * erfc(-u2+c2)) ;
-    //if (basisSign!=Plus)  result += 0.5*(exp(xprime1+c12) * erfc(u1+c1)+exp(xprime2+c22) * erfc(u2+c2)) ;
+    //if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * RooMath::erfc(-u1+c1)+exp(-xprime2+c22) * RooMath::erfc(-u2+c2)) ;
+    //if (basisSign!=Plus)  result += 0.5*(exp(xprime1+c12) * RooMath::erfc(u1+c1)+exp(xprime2+c22) * RooMath::erfc(u2+c2)) ;
     // equivalent form, added FMV, 07/24/03
     if (basisSign!=Minus) result += 0.5*(evalCerfRe(-u1,c1)+evalCerfRe(-u2,c2)) ; 
     if (basisSign!=Plus)  result += 0.5*(evalCerfRe( u1,c1)+evalCerfRe( u2,c2)) ; 
@@ -263,8 +266,8 @@ Double_t RooGaussModel::evaluate() const
     //Double_t c22 = c2*c2;
 
     Double_t result(0);   
-    //if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * erfc(-u1+c1)-exp(-xprime2+c22) * erfc(-u2+c2)) ;
-    //if (basisSign!=Plus)  result += 0.5*(-exp(xprime1+c12) * erfc(u1+c1)+exp(xprime2+c22) * erfc(u2+c2)) ;
+    //if (basisSign!=Minus) result += 0.5*(exp(-xprime1+c12) * RooMath::erfc(-u1+c1)-exp(-xprime2+c22) * RooMath::erfc(-u2+c2)) ;
+    //if (basisSign!=Plus)  result += 0.5*(-exp(xprime1+c12) * RooMath::erfc(u1+c1)+exp(xprime2+c22) * RooMath::erfc(u2+c2)) ;
     // equivalent form, added FMV, 07/24/03
     if (basisSign!=Minus) result += 0.5*(evalCerfRe(-u1,c1)-evalCerfRe(-u2,c2)) ; 
     if (basisSign!=Plus)  result += 0.5*(evalCerfRe( u2,c2)-evalCerfRe( u1,c1)) ; 
@@ -361,7 +364,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 	// If integral is over >6 sigma, approximate with full integral
 	result = 1.0 ;
       } else {
-	result = 0.5*(erf(xpmax)-erf(xpmin)) ;
+	result = 0.5*(RooMath::erf(xpmax)-RooMath::erf(xpmin)) ;
       }
     }
 
@@ -402,12 +405,12 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 	if (basisSign!=Minus) result += 2 * tau ;
 	if (basisSign!=Plus)  result += 2 * tau ;      
       } else {
-	if (basisSign!=Minus) result += -1 * tau * ( erf(-umax) - erf(-umin) + 
-						     exp(c*c) * ( exp(-xpmax)*erfc(-umax+c)
-								  - exp(-xpmin)*erfc(-umin+c) )) ;
-	if (basisSign!=Plus)  result +=      tau * ( erf(umax) - erf(umin) + 
-						     exp(c*c) * ( exp(xpmax)*erfc(umax+c)
-								  - exp(xpmin)*erfc(umin+c) )) ;     
+	if (basisSign!=Minus) result += -1 * tau * ( RooMath::erf(-umax) - RooMath::erf(-umin) + 
+						     exp(c*c) * ( exp(-xpmax)*RooMath::erfc(-umax+c)
+								  - exp(-xpmin)*RooMath::erfc(-umin+c) )) ;
+	if (basisSign!=Plus)  result +=      tau * ( RooMath::erf(umax) - RooMath::erf(umin) + 
+						     exp(c*c) * ( exp(xpmax)*RooMath::erfc(umax+c)
+								  - exp(xpmin)*RooMath::erfc(umin+c) )) ;     
 	// equivalent form, added FMV, 07/24/03
 	//if (basisSign!=Minus) result += evalCerfInt(+1,tau,-umin,-umax,c).re();   
 	//if (basisSign!=Plus) result += evalCerfInt(-1,tau,umin,umax,c).re();
@@ -427,15 +430,15 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (wt==0) return result*ssfInt ;
     if (basisSign!=Minus) {
       RooComplex evalDif(evalCerf(-wt,-umax,c) - evalCerf(-wt,-umin,c)) ;
-      //result += -tau/(1+wt*wt) * ( -evalDif.im() +   -wt*evalDif.re() -   -wt*(erf(-umax) - erf(-umin)) ) ; 
+      //result += -tau/(1+wt*wt) * ( -evalDif.im() +   -wt*evalDif.re() -   -wt*(RooMath::erf(-umax) - RooMath::erf(-umin)) ) ; 
       // FMV, fixed wrong sign, 07/24/03
-      result += -tau/(1+wt*wt) * ( -evalDif.im() +   wt*evalDif.re() -   -wt*(erf(-umax) - erf(-umin)) ) ; 
+      result += -tau/(1+wt*wt) * ( -evalDif.im() +   wt*evalDif.re() -   -wt*(RooMath::erf(-umax) - RooMath::erf(-umin)) ) ; 
     }
     if (basisSign!=Plus) {
       RooComplex evalDif(evalCerf(wt,umax,c) - evalCerf(wt,umin,c)) ;
-      //result +=  tau/(1+wt*wt) * ( -evalDif.im() +    wt*evalDif.re() -    wt*(erf(umax) - erf(umin)) ) ;
+      //result +=  tau/(1+wt*wt) * ( -evalDif.im() +    wt*evalDif.re() -    wt*(RooMath::erf(umax) - RooMath::erf(umin)) ) ;
       // FMV, fixed wrong sign, 07/24/03
-      result +=  tau/(1+wt*wt) * ( -evalDif.im() +   -wt*evalDif.re() -    wt*(erf(umax) - erf(umin)) ) ;
+      result +=  tau/(1+wt*wt) * ( -evalDif.im() +   -wt*evalDif.re() -    wt*(RooMath::erf(umax) - RooMath::erf(umin)) ) ;
     }
     // equivalent form, added FMV, 07/24/03
     //if (basisSign!=Minus) result += -1*evalCerfInt(+1,-wt,tau,-umin,-umax,c).im();
@@ -452,15 +455,15 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t result(0) ;
     if (basisSign!=Minus) {
       RooComplex evalDif(evalCerf(-wt,-umax,c) - evalCerf(-wt,-umin,c)) ;
-      //result += -tau/(1+wt*wt) * ( evalDif.re() + -wt*evalDif.im() + erf(-umax) - erf(-umin) ) ;
+      //result += -tau/(1+wt*wt) * ( evalDif.re() + -wt*evalDif.im() + RooMath::erf(-umax) - RooMath::erf(-umin) ) ;
       // FMV, fixed wrong sign, 07/24/03
-      result += -tau/(1+wt*wt) * ( evalDif.re() + wt*evalDif.im() + erf(-umax) - erf(-umin) ) ;
+      result += -tau/(1+wt*wt) * ( evalDif.re() + wt*evalDif.im() + RooMath::erf(-umax) - RooMath::erf(-umin) ) ;
     }
     if (basisSign!=Plus) {
       RooComplex evalDif(evalCerf(wt,umax,c) - evalCerf(wt,umin,c)) ;
-      //result +=  tau/(1+wt*wt) * ( evalDif.re() +  wt*evalDif.im() + erf(umax) - erf(umin) ) ;
+      //result +=  tau/(1+wt*wt) * ( evalDif.re() +  wt*evalDif.im() + RooMath::erf(umax) - RooMath::erf(umin) ) ;
       // FMV, fixed wrong sign, 07/24/03
-      result +=  tau/(1+wt*wt) * ( evalDif.re() + -wt*evalDif.im() + erf(umax) - erf(umin) ) ;
+      result +=  tau/(1+wt*wt) * ( evalDif.re() + -wt*evalDif.im() + RooMath::erf(umax) - RooMath::erf(umin) ) ;
     }
     // equivalent form, added FMV, 07/24/03
     //if (basisSign!=Minus) result += evalCerfInt(+1,-wt,tau,-umin,-umax,c).re();
@@ -475,11 +478,11 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
 			     << ") 6th form tau=" << tau << endl ;
 
-    Double_t f0 = erf(-umax) - erf(-umin);
+    Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
     Double_t f1 = exp(-umax*umax) - exp(-umin*umin);
 
-    Double_t tmp1 = exp(-xpmax)*erfc(-umax + c);
-    Double_t tmp2 = exp(-xpmin)*erfc(-umin + c);
+    Double_t tmp1 = exp(-xpmax)*RooMath::erfc(-umax + c);
+    Double_t tmp2 = exp(-xpmin)*RooMath::erfc(-umin + c);
 
     Double_t f2 = tmp1 - tmp2;
     Double_t f3 = xpmax*tmp1 - xpmin*tmp2;
@@ -498,7 +501,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
 			     << ") 7th form tau=" << tau << endl ;
 
-    Double_t f0 = erf(-umax) - erf(-umin);
+    Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
 
     Double_t tmpA1 = exp(-umax*umax);
     Double_t tmpA2 = exp(-umin*umin);
@@ -506,8 +509,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t f1 = tmpA1 - tmpA2;
     Double_t f2 = umax*tmpA1 - umin*tmpA2;
 
-    Double_t tmpB1 = exp(-xpmax)*erfc(-umax + c);
-    Double_t tmpB2 = exp(-xpmin)*erfc(-umin + c);
+    Double_t tmpB1 = exp(-xpmax)*RooMath::erfc(-umax + c);
+    Double_t tmpB2 = exp(-xpmin)*RooMath::erfc(-umin + c);
 
     Double_t f3 = tmpB1 - tmpB2;
     Double_t f4 = xpmax*tmpB1 - xpmin*tmpB2;
@@ -546,18 +549,18 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t result(0) ;
     
     /*
-    if (basisSign!=Minus) result += -0.5*(tau1 * ( erf(-umax1) - erf(-umin1) + 
-						   ec12 * ( exp(-xpmax1)*erfc(-umax1+c1)
-								- exp(-xpmin1)*erfc(-umin1+c1) )) +   
-                                                   tau2 * ( erf(-umax2) - erf(-umin2) + 
-						   ec22 * ( exp(-xpmax2)*erfc(-umax2+c2)
-								- exp(-xpmin2)*erfc(-umin2+c2) ))) ;
-      if (basisSign!=Plus)  result +=  0.5*(tau1 * ( erf(umax1) - erf(umin1) + 
-						   ec12 * ( exp(xpmax1)*erfc(umax1+c1)
-								- exp(xpmin1)*erfc(umin1+c1) ))+ 
-			                           tau2 * ( erf(umax2) - erf(umin2) + 
-						   ec22 * ( exp(xpmax2)*erfc(umax2+c2)
-								- exp(xpmin2)*erfc(umin2+c2) ))) ;  
+    if (basisSign!=Minus) result += -0.5*(tau1 * ( RooMath::erf(-umax1) - RooMath::erf(-umin1) + 
+						   ec12 * ( exp(-xpmax1)*RooMath::erfc(-umax1+c1)
+								- exp(-xpmin1)*RooMath::erfc(-umin1+c1) )) +   
+                                                   tau2 * ( RooMath::erf(-umax2) - RooMath::erf(-umin2) + 
+						   ec22 * ( exp(-xpmax2)*RooMath::erfc(-umax2+c2)
+								- exp(-xpmin2)*RooMath::erfc(-umin2+c2) ))) ;
+      if (basisSign!=Plus)  result +=  0.5*(tau1 * ( RooMath::erf(umax1) - RooMath::erf(umin1) + 
+						   ec12 * ( exp(xpmax1)*RooMath::erfc(umax1+c1)
+								- exp(xpmin1)*RooMath::erfc(umin1+c1) ))+ 
+			                           tau2 * ( RooMath::erf(umax2) - RooMath::erf(umin2) + 
+						   ec22 * ( exp(xpmax2)*RooMath::erfc(umax2+c2)
+								- exp(xpmin2)*RooMath::erfc(umin2+c2) ))) ;  
     */
     // equivalent form, added FMV, 07/24/03
     if (basisSign!=Minus) result += 0.5*(evalCerfInt(+1,tau1,-umin1,-umax1,c1)+
@@ -594,18 +597,18 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t result(0) ;
 
     /*
-    if (basisSign!=Minus) result += 0.5*(-tau1 * ( erf(-umax1) - erf(-umin1) + 
-						   ec12 * ( exp(-xpmax1)*erfc(-umax1+c1)
-							    - exp(-xpmin1)*erfc(-umin1+c1) )) +   
-                                                   tau2 * ( erf(-umax2) - erf(-umin2) + 
-							    ec22 * ( exp(-xpmax2)*erfc(-umax2+c2)
-								     - exp(-xpmin2)*erfc(-umin2+c2) ))) ;
-    if (basisSign!=Plus)  result += 0.5*(-tau1 * ( erf(umax1) - erf(umin1) + 
-						   ec12 * ( exp(xpmax1)*erfc(umax1+c1)
-							    - exp(xpmin1)*erfc(umin1+c1) ))+ 
-					 tau2 * ( erf(umax2) - erf(umin2) + 
-						  ec22 * ( exp(xpmax2)*erfc(umax2+c2)
-							   - exp(xpmin2)*erfc(umin2+c2) ))) ; 
+    if (basisSign!=Minus) result += 0.5*(-tau1 * ( RooMath::erf(-umax1) - RooMath::erf(-umin1) + 
+						   ec12 * ( exp(-xpmax1)*RooMath::erfc(-umax1+c1)
+							    - exp(-xpmin1)*RooMath::erfc(-umin1+c1) )) +   
+                                                   tau2 * ( RooMath::erf(-umax2) - RooMath::erf(-umin2) + 
+							    ec22 * ( exp(-xpmax2)*RooMath::erfc(-umax2+c2)
+								     - exp(-xpmin2)*RooMath::erfc(-umin2+c2) ))) ;
+    if (basisSign!=Plus)  result += 0.5*(-tau1 * ( RooMath::erf(umax1) - RooMath::erf(umin1) + 
+						   ec12 * ( exp(xpmax1)*RooMath::erfc(umax1+c1)
+							    - exp(xpmin1)*RooMath::erfc(umin1+c1) ))+ 
+					 tau2 * ( RooMath::erf(umax2) - RooMath::erf(umin2) + 
+						  ec22 * ( exp(xpmax2)*RooMath::erfc(umax2+c2)
+							   - exp(xpmin2)*RooMath::erfc(umin2+c2) ))) ; 
     */
     // equivalent form, added FMV, 07/24/03
     if (basisSign!=Minus) result += 0.5*(evalCerfInt(+1,tau1,-umin1,-umax1,c1)-
@@ -647,7 +650,7 @@ RooComplex RooGaussModel::evalCerfInt(Double_t sign, Double_t wt, Double_t tau, 
   if (_asympInt) {
     diff = RooComplex(2,0) ;
   } else {
-    diff = RooComplex(sign,0.)*(evalCerf(wt,umin,c) - evalCerf(wt,umax,c) + erf(umin) - erf(umax));
+    diff = RooComplex(sign,0.)*(evalCerf(wt,umin,c) - evalCerf(wt,umax,c) + RooMath::erf(umin) - RooMath::erf(umax));
   }
   return RooComplex(tau/(1.+wt*wt),0)*RooComplex(1,wt)*diff;
 }
@@ -662,7 +665,7 @@ Double_t RooGaussModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, 
       // If integral is over >8 sigma, approximate with full integral
       diff = 2. ;
     } else {
-      diff = sign*(evalCerfRe(umin,c) - evalCerfRe(umax,c) + erf(umin) - erf(umax));
+      diff = sign*(evalCerfRe(umin,c) - evalCerfRe(umax,c) + RooMath::erf(umin) - RooMath::erf(umax));
     }
   }
   return tau*diff;

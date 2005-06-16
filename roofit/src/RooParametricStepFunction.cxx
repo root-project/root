@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitBabar                                                      *
- *    File: $Id: RooParametricStepFunction.cc,v 1.4 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooParametricStepFunction.cc,v 1.5 2005/04/18 21:48:30 wverkerke Exp $
  * Authors:                                                                  *
  *    Aaron Roodman, Stanford Linear Accelerator Center, Stanford University *
  *                                                                           *
@@ -40,6 +40,9 @@
 //                                    *list,limits,nbins);
 				
 
+#include "RooFitCore/RooFit.hh"
+
+#include <iostream>
 #include <iostream>
 #include <math.h>
 

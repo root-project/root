@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.rdl,v 1.13 2005/02/24 22:45:39 wverkerke Exp $
+ *    File: $Id: RooGExpModel.rdl,v 1.14 2005/02/25 14:25:05 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -108,7 +108,7 @@ protected:
   inline Double_t evalCerfRe(Double_t u, Double_t c) const {
     Double_t expArg = u*2*c+c*c ;
     if (expArg<300) {
-       return exp(expArg) * erfc(u+c);
+       return exp(expArg) * RooMath::erfc(u+c);
     } else {
        return exp(expArg+logErfC(u+c));
     }
