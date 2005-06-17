@@ -260,43 +260,39 @@ cout << "[" << ll << "," << ul << "]" << endl;
 // Example for Model 1
 ///////////////////////////////////////////////////////
 
-
- Double_t bm = 0.0;
- Double_t tau = 5;
- Int_t mid = 1;
- Int_t m = 100;
- Int_t z = 90;
- Int_t y = 15;
- Int_t x = 0;
+   bm = 0.0;
+   tau = 5;
+   mid = 1;
+   m = 100;
+   z = 90;
+   y = 15;
+   x = 0;
  // Initialize parameters not used.
- Double_t e = 0.0;
- Double_t em = 0.0;
- Double_t sde=0.0;
- Double_t sdb=0.0;
- Double_t b = 0.0;
+   e = 0.0;
+   em = 0.0;
+   sde=0.0;
+   sdb=0.0;
+   b = 0.0;
+
+   g.SetCL(0.90);
+   g.SetSwitch(1); //bounded
+   
+   ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+   ll = g.GetLowerLimit();
+   
+   g.SetSwitch(0); //unbounded
+   
+   cout << "Assuming Model 1" << endl; 
+   cout <<  "the BOUNDED Profile Likelihood interval is :" << endl;
+   cout << "[" << ll << "," << ul << "]" << endl;
 
 
- TRolke g;
- 
- g.SetCL(0.90);
- g.SetSwitch(1); //bounded
- 
- Double_t ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
- Double_t ll = g.GetLowerLimit();
-
- g.SetSwitch(0); //unbounded
-
- cout << "Assuming Model 1" << endl; 
- cout <<  "the BOUNDED Profile Likelihood interval is :" << endl;
- cout << "[" << ll << "," << ul << "]" << endl;
-
-
-  ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
-  ll = g.GetLowerLimit();
-
- cout << "Assuming Model 1" << endl; 
- cout <<  "the UNBOUNDED Profile Likelihood interval is :" << endl;
- cout << "[" << ll << "," << ul << "]" << endl;
-
+   ul = g.CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
+   ll = g.GetLowerLimit();
+   
+   cout << "Assuming Model 1" << endl; 
+   cout <<  "the UNBOUNDED Profile Likelihood interval is :" << endl;
+   cout << "[" << ll << "," << ul << "]" << endl;
+  
 }
 
