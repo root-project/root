@@ -185,7 +185,7 @@ namespace genie {
       friend struct Cleaner;
    };
    
-   ostream& operator<<(ostream& stream, const ConfigPool & config_poo) {
+   ostream& operator<<(ostream& stream, const ConfigPool & config_pool) {
       return stream;
    }
    ostream& operator>>(ostream& stream, const ConfigPool & config_pool) {
