@@ -1143,14 +1143,18 @@ GdkWin32SingleFont *gdk_font_load_internal(const gchar * font_name)
 
       logpixelsy = GetDeviceCaps(gdk_DC, LOGPIXELSY);
 
-      if (strcmp(pixel_size, "*") == 0)
-         if (strcmp(point_size, "*") == 0)
+      if (strcmp(pixel_size, "*") == 0) {
+         if (strcmp(point_size, "*") == 0) {
             nHeight = 0;
-         else
-            nHeight =
-                (int) (((double) atoi(point_size)) / 720. * logpixelsy);
-      else
-         nHeight = atoi(pixel_size);
+         }
+         else {
+            nHeight = -MulDiv(atoi(point_size), GetDeviceCaps(gdk_DC, LOGPIXELSY), 72);
+//                (int) (((double) atoi(point_size)) / 720. * logpixelsy);
+         }
+      }
+      else {
+         nHeight = -1 * atoi(pixel_size);
+      }
 
       nWidth = 0;
 //      nEscapement = 0;

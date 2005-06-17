@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.104 2005/05/20 09:56:56 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.105 2005/05/25 16:20:54 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -123,13 +123,13 @@ Unix.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Unix.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Unix.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
 Unix.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+WinNT.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
 Gui.BackgroundColor:         #c0c0c0
 Gui.ForegroundColor:         black
 Gui.SelectBackgroundColor:   #000080

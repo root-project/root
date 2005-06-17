@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.9 2005/01/27 14:51:49 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.10 2005/05/25 14:25:17 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -21,7 +21,7 @@ TGWin32VirtualGLProxy::TGWin32VirtualGLProxy()
 {
    //
 
-   fMaxResponseTime = 5000;
+   fMaxResponseTime = 15000;
 }
 
 //____________________________________________________________________________
