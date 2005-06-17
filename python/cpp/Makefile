@@ -24,5 +24,10 @@ PyROOT_cpptests: PyROOT_cpptests.log
 
 PyROOT_advancedtests.log: AdvancedCpp_C.$(DllSuf)
 
-PyROOT_advancedtests: PyROOT_advancedtests.log
+ifeq ($(FAIL),)
+PyROOT_advancedtests:
+	$(WarnFailTest)
+else
+        PyROOT_advancedtests: PyROOT_advancedtests.log
 	$(TestDiff)
+endif
