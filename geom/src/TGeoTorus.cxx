@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.24 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.25 2005/05/13 16:20:38 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -942,7 +942,7 @@ Int_t TGeoTorus::SolveCubic(Double_t a, Double_t b, Double_t c, Double_t *x) con
 //_____________________________________________________________________________
 Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Double_t *x) const
 {
-// Find real solutions of the quartic equation : x^3 + a*x^2 + b*x + c = 0
+// Find real solutions of the quartic equation : x^4 + a*x^3 + b*x^2 + c*x + d = 0
 // Input: a,b,c,d
 // Output: x[4] - real solutions
 // Returns number of real solutions (0 to 4)
