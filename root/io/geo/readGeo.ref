@@ -1,121 +1,138 @@
 
 Processing runreadGeo.C...
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ALEF. Master volume is ALEF
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::BuildCache>: --- Maximum geometry depth set to 100
+Info in <TGeoManager::CloseGeometry>: 8177 nodes/ 227 volume UID's in aleph.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: aleph/aleph.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is AMSG. Master volume is AMSG
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 112777 nodes/ 1003 volume UID's in ams.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: ams/ams.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ALIC. Master volume is ALIC
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 1872000 nodes/ 2178 volume UID's in default geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: Geometry/default geometry
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ATLS. Master volume is ATLS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 29046966 nodes/ 7144 volume UID's in atlas.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: atlas/atlas.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 2649 nodes/ 279 volume UID's in brahms.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: brahms/brahms.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is C0WA. Master volume is C0WA
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 295310 nodes/ 1989 volume UID's in btev.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: btev/btev.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CDF. Master volume is CDF
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 28525 nodes/ 1154 volume UID's in cdf.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: cdf/cdf.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is OCMS. Master volume is OCMS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 1166318 nodes/ 1538 volume UID's in cms.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: cms/cms.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is D0. Master volume is D0
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 2048158 nodes/ 1355 volume UID's in d0.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: d0/d0.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 16722 nodes/ 361 volume UID's in e907.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: e907/e907.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is GEMH. Master volume is GEMH
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 145340 nodes/ 340 volume UID's in gem.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: gem/gem.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 18491756 nodes/ 710 volume UID's in VGM Root geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: VGM Root geometry/VGM Root geometry
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 18488018 nodes/ 641 volume UID's in VGM Root geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: VGM Root geometry/VGM Root geometry
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 6130066 nodes/ 182 volume UID's in phenix.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: phenix/phenix.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is OUTS. Master volume is OUTS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 749 nodes/ 351 volume UID's in phobos.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: phobos/phobos.C
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 15370 nodes/ 566 volume UID's in tesla.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Warning in <TGeoManager::dtor>: deleting geometry: tesla/tesla.C
-### Geometry loaded from file...
-Top volume is ALEF. Master volume is ALEF
-### Voxelization retrieved from file
---- Maximum geometry depth set to 100
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 157692 nodes/ 568 volume UID's in star.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 8177 nodes/ 227 volume UID's in aleph.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is AMSG. Master volume is AMSG
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 112777 nodes/ 1003 volume UID's in ams.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is ALIC. Master volume is ALIC
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 1872000 nodes/ 2178 volume UID's in default geometry
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is ATLS. Master volume is ATLS
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 29046966 nodes/ 7144 volume UID's in atlas.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is CAVE. Master volume is CAVE
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 2649 nodes/ 279 volume UID's in brahms.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is C0WA. Master volume is C0WA
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 295310 nodes/ 1989 volume UID's in btev.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is CDF. Master volume is CDF
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 28525 nodes/ 1154 volume UID's in cdf.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is OCMS. Master volume is OCMS
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 1166318 nodes/ 1538 volume UID's in cms.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is D0. Master volume is D0
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 2048158 nodes/ 1355 volume UID's in d0.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is CAVE. Master volume is CAVE
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 16722 nodes/ 361 volume UID's in e907.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is GEMH. Master volume is GEMH
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 145340 nodes/ 340 volume UID's in gem.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is World. Master volume is World
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 18491756 nodes/ 710 volume UID's in VGM Root geometry
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is World. Master volume is World
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 18488018 nodes/ 641 volume UID's in VGM Root geometry
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is HALL. Master volume is HALL
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 6130066 nodes/ 182 volume UID's in phenix.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is OUTS. Master volume is OUTS
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 749 nodes/ 351 volume UID's in phobos.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is CAVE. Master volume is CAVE
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 15370 nodes/ 566 volume UID's in tesla.C
-----------------modeler ready----------------
-### Geometry loaded from file...
-Top volume is CAVE. Master volume is CAVE
-### Voxelization retrieved from file
+Info: TGeoManager::Import : Reading geometry from file
 --- node ID tracking disabled
-### 157692 nodes/ 568 volume UID's in star.C
-----------------modeler ready----------------
