@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.38 2005/06/14 16:24:09 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.39 2005/06/15 12:50:34 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 // TASImage                                                             //
 //                                                                      //
 // Interface to image processing library using libAfterImage.           //
-// It allows for the reading and writing of images in different         //
+// It allows reading and writing of images in different                 //
 // formats, several image manipulations (scaling, tiling, merging,      //
 // etc.) and displaying in pads.                                        //
 // The size of the image on the screen does not depend on the original  //
@@ -757,7 +757,7 @@ void TASImage::Draw(Option_t *option)
    //                   with this option the zooming is not possible
    //                   and disabled
    // "N"             - display in new canvas (of original image size)
-   // "xxx"           - image is drawn exapnded to pad size
+   // "xxx"           - image is drawn expanded to pad size
    //
    // The default is to display the image in the current gPad.
 
