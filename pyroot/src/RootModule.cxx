@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.13 2005/06/12 17:21:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.14 2005/06/14 05:06:03 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -10,7 +10,6 @@
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
-#include "DllImport.h"
 
 // Standard
 #include <string>

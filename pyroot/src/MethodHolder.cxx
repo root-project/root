@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.34 2005/06/02 10:03:17 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.35 2005/06/06 15:08:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -348,7 +348,7 @@ PyObject* PyROOT::MethodHolder::Execute( void* self )
    } catch ( TPyException& ) {
       result = TPyExceptionMagic;
    } catch ( std::exception& e ) {
-      std::cout << "C++ exception caught: " << e.what() << std::endl;
+      PyErr_Format( PyExc_Exception, "%s (C++ exception)", e.what() );
       result = 0;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.19 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.20 2005/06/12 17:21:53 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -686,7 +686,7 @@ namespace {
    }
 
 
-//- TTree behaviour ------------------------------------------------------------
+//- TTree behaviour ----------------------------------------------------------
    class TreeEraser : public TObject {
    public:
       TreeEraser( PyObject* ttree ) : fTree( ttree ) {}
@@ -781,7 +781,7 @@ namespace {
    }
 
 
-//- TF1 behaviour --------------------------------------------------------------
+//- TFN behaviour ------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > gPyObjectCallbacks;
    typedef std::pair< PyObject*, int > CallInfo_t;
 
@@ -843,6 +843,9 @@ namespace {
       static int fgCount;
 
    public:
+      TF1InitWithPyFunc( int ntf = 1 ) : m_nArgs( 2 + 2*ntf ) {}
+
+   public:
       virtual PyObject* GetDocString()
       {
          return PyString_FromString(
@@ -850,13 +853,17 @@ namespace {
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
 
-   public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
-         if ( ! ( argc == 4 || argc == 5 ) )
+         if ( ! ( argc == m_nArgs || argc == m_nArgs+1 ) ) {
+            PyErr_Format( PyExc_TypeError,
+               "TFN::TFN(const char*, PyObject* callable, ...) =>\n"
+               "    takes at least %d and at most %d arguments (%d given)",
+               m_nArgs, m_nArgs+1, argc );
             return 0;              // reported as an overload failure
+         }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 1 );
          if ( ! pyfunc || ! PyCallable_Check( pyfunc ) ) {
@@ -902,8 +909,8 @@ namespace {
          Py_INCREF( pyfunc );
 
          int npar = 0;             // default value if not given
-         if ( argc == 5 )
-            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, 4 ) );
+         if ( argc == m_nArgs+1 )
+            npar = PyInt_AsLong( PyTuple_GET_ITEM( args, m_nArgs ) );
 
          ifunc->userparam[index] = (void*) new std::pair< PyObject*, int >( pyfunc, npar );
 
@@ -912,7 +919,7 @@ namespace {
             (PyObject*)self, const_cast< char* >( "__init__" ) );
 
       // build new argument array
-         PyObject* newArgs = PyTuple_New( 5 );
+         PyObject* newArgs = PyTuple_New( m_nArgs + 1 );
 
          for ( int iarg = 0; iarg < argc; ++iarg ) {
             PyObject* item = PyTuple_GET_ITEM( args, iarg );
@@ -925,8 +932,8 @@ namespace {
             }
          }
 
-         if ( argc == 4 )
-            PyTuple_SET_ITEM( args, 4, PyInt_FromLong( 0l ) );
+         if ( argc == m_nArgs )
+            PyTuple_SET_ITEM( args, m_nArgs, PyInt_FromLong( 0l ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
@@ -936,9 +943,43 @@ namespace {
          Py_DECREF( method );
          return result;
       }
+
+   private:
+      int m_nArgs;
    };
 
    int TF1InitWithPyFunc::fgCount = 0;
+
+//____________________________________________________________________________
+   class TF2InitWithPyFunc : public TF1InitWithPyFunc {
+   public:
+      TF2InitWithPyFunc() : TF1InitWithPyFunc( 2 ) {}
+
+   public:
+      virtual PyObject* GetDocString()
+      {
+         return PyString_FromString(
+            "TF2::TF2(const char* name, PyObject* callable, "
+            "Double_t xmin, Double_t xmax, "
+            "Double_t ymin, Double_t ymax, Int_t npar = 0)" );
+      }
+   };
+
+//____________________________________________________________________________
+   class TF3InitWithPyFunc : public TF1InitWithPyFunc {
+   public:
+      TF3InitWithPyFunc() : TF1InitWithPyFunc( 3 ) {}
+
+   public:
+      virtual PyObject* GetDocString()
+      {
+         return PyString_FromString(
+            "TF3::TF3(const char* name, PyObject* callable, "
+            "Double_t xmin, Double_t xmax, "
+            "Double_t ymin, Double_t ymax, "
+            "Double_t zmin, Double_t zmax, Int_t npar = 0)" );
+      }
+   };
 
 
 //- TFunction behaviour --------------------------------------------------------
@@ -1082,14 +1123,30 @@ bool PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return true;
    }
 
-   if ( name == "TF1" ) {
-   // allow instantiation with python function
+   if ( name == "TF1" ) {   // allow instantiation with python function
       MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
          pyclass, const_cast< char* >( "__init__" ) );
-
       method->AddMethod( new TF1InitWithPyFunc() );
-
       Py_DECREF( method );
+
+      return true;
+   }
+
+   if ( name == "TF2" ) {   // allow instantiation with python function
+      MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
+         pyclass, const_cast< char* >( "__init__" ) );
+      method->AddMethod( new TF2InitWithPyFunc() );
+      Py_DECREF( method );
+
+      return true;
+   }
+
+   if ( name == "TF3" ) {   // allow instantiation with python function
+      MethodProxy* method = (MethodProxy*)PyObject_GetAttrString(
+         pyclass, const_cast< char* >( "__init__" ) );
+      method->AddMethod( new TF3InitWithPyFunc() );
+      Py_DECREF( method );
+
       return true;
    }
 
