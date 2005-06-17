@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.4 2004/08/31 07:22:48 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.5 2004/09/10 17:00:34 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -65,9 +65,6 @@ protected:
   Double_t LikeMod7(Double_t mu,Double_t b,Double_t e,Int_t x,Double_t em,Double_t v);
 
   //MISC
-  static Double_t Chi2Percentile(Double_t df,Double_t CL1);
-  static Double_t InverseIncompleteGamma(Double_t df,Double_t CL1);
-  static Double_t InverseNormal(Double_t CL1);
   static Double_t EvalPolynomial(Double_t x, const Int_t coef[], Int_t N);
   static Double_t EvalMonomial  (Double_t x, const Int_t coef[], Int_t N);
 
