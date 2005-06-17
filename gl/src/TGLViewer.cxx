@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.5 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.6 2005/06/15 15:40:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -45,11 +45,17 @@ TGLViewer::~TGLViewer()
 //______________________________________________________________________________
 void TGLViewer::Draw()
 {
-   // Draw lock should already been taken in other thread in 
-   // TViewerOpenGL::DoRedraw()
+   // Draw out the the current viewer/scene
+
+   // Locking mainly for Win32 mutli thread safety - but no harm in all using it
+   // During normal draws a draw lock is taken in other thread (Win32) in TViewerOpenGL
+   // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
+   // If no draw lock taken get one now
    if (fScene.CurrentLock() != TGLScene::kDrawLock) {
-      Error("TGLViewer::Draw", "expected kDrawLock, found %s", TGLScene::LockName(fScene.CurrentLock()));
-      return;
+      if (!fScene.TakeLock(TGLScene::kDrawLock)) {
+         Error("TGLViewer::Draw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
+         return;
+      }
    }
 
    TGLStopwatch timer;

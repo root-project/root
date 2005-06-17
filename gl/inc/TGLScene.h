@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.7 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.8 2005/06/15 15:40:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -126,6 +126,7 @@ public:
    inline Bool_t IsLocked() const;
    inline ELock  CurrentLock() const;
    static inline const char * LockName(ELock lock);
+   static inline Bool_t       LockValid(ELock lock); 
    
    // Debug
    void   Dump() const;
@@ -136,7 +137,7 @@ public:
 
 inline Bool_t TGLScene::TakeLock(ELock lock) const
 {
-   if (fLock == kUnlocked) {
+   if (LockValid(lock) && fLock == kUnlocked) {
       fLock = lock;
       if (gDebug>3) {
          Info("TGLScene::TakeLock", "took %s", LockName(fLock));
@@ -149,7 +150,7 @@ inline Bool_t TGLScene::TakeLock(ELock lock) const
 
 inline Bool_t TGLScene::ReleaseLock(ELock lock) const
 {
-   if (fLock == lock) {
+   if (LockValid(lock) && fLock == lock) {
       fLock = kUnlocked;
       if (gDebug>3) {
          Info("TGLScene::ReleaseLock", "released %s", LockName(lock));
@@ -183,6 +184,20 @@ inline const char * TGLScene::LockName(ELock lock)
       return names[lock].c_str(); 
    } else {
       return names[4].c_str();
+   }
+}
+
+inline Bool_t TGLScene::LockValid(ELock lock) 
+{
+   // Test if lock is a valid type to take/release
+   // kUnlocked is never valid in these cases
+   switch(lock) {
+      case kDrawLock:
+      case kSelectLock:
+      case kModifyLock:
+         return kTRUE;
+      default:
+         return kFALSE;
    }
 }
 
