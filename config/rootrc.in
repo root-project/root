@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.105 2005/05/25 16:20:54 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.106 2005/06/17 14:07:16 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -116,20 +116,13 @@ Root.Html.Root:              http://root.cern.ch/root/html
 # GUI specific settings.
 Gui.Backend:                native
 Gui.Factory:                native
-Unix.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Unix.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DefaultFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.MenuFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.MenuHiFont:      -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DocFixedFont:    -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.DocPropFont:     -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.IconFont:        -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.StatusFont:      -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.DefaultFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuFont:               -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuHiFont:             -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocFixedFont:           -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocPropFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.IconFont:               -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.StatusFont:             -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
 Gui.BackgroundColor:         #c0c0c0
 Gui.ForegroundColor:         black
 Gui.SelectBackgroundColor:   #000080
