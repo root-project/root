@@ -65,71 +65,70 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t id, Int_t width,
    
    MakeTitle("Stat Options");
 
-   TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f1 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f2 = new TGCompositeFrame(f1, 40, 20, kVerticalFrame);
+   f1->AddFrame(f2, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   
    fHistoName = new TGCheckButton(f2, "Name", kSTAT_NAME);
    fHistoName->SetToolTipText("Print the histogram name");
-   f2->AddFrame(fHistoName, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fEntries = new TGCheckButton(f2, "Entries", kSTAT_ENTRIES);
-   fEntries->SetToolTipText("Print the number of entries");
-   f2->AddFrame(fEntries, new TGLayoutHints(kLHintsTop, 27, 1, 0, 0));
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
-   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fOverflow = new TGCheckButton(f3, "Overflow", kSTAT_OVER);
+   f2->AddFrame(fHistoName, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fOverflow = new TGCheckButton(f2, "Overflow", kSTAT_OVER);
    fOverflow->SetToolTipText("Print the number of overflows");
-   f3->AddFrame(fOverflow, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
+   f2->AddFrame(fOverflow, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fUnderflow = new TGCheckButton(f2, "Underflow", kSTAT_UNDER);
+   fUnderflow->SetToolTipText("Print the number of underflows");
+   f2->AddFrame(fUnderflow, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fSkewness = new TGCheckButton(f2, "Skewness", kSTAT_SKEWNESS);
+   fSkewness->SetToolTipText("Print the skewness");
+   f2->AddFrame(fSkewness, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fKurtosis = new TGCheckButton(f2, "Kurtosis", kSTAT_KURTOSIS);
+   fKurtosis->SetToolTipText("Print the kurtosis");
+   f2->AddFrame(fKurtosis, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGCompositeFrame *f3 = new TGCompositeFrame(f1, 40, 20, kVerticalFrame);
+   f1->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fEntries = new TGCheckButton(f3, "Entries", kSTAT_ENTRIES);
+   fEntries->SetToolTipText("Print the number of entries");
+   f3->AddFrame(fEntries, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    fMean = new TGCheckButton(f3, "Mean", kSTAT_MEAN);
    fMean->SetToolTipText("Print the mean value");
-   f3->AddFrame(fMean, new TGLayoutHints(kLHintsTop, 9, 1, 0, 0));
-   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fUnderflow = new TGCheckButton(f4, "Underflow", kSTAT_UNDER);
-   fUnderflow->SetToolTipText("Print the number of underflows");
-   f4->AddFrame(fUnderflow, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fRMS = new TGCheckButton(f4, "RMS", kSTAT_RMS);
+   f3->AddFrame(fMean, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fRMS = new TGCheckButton(f3, "RMS", kSTAT_RMS);
    fRMS->SetToolTipText("Print root-mean-square (RMS)");
-   f4->AddFrame(fRMS, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fSkewness = new TGCheckButton(f5, "Skewness", kSTAT_SKEWNESS);
-   fSkewness->SetToolTipText("Print the skewness");
-   f5->AddFrame(fSkewness, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fIntegral = new TGCheckButton(f5, "Integral", kSTAT_INTEGRAL);
+   f3->AddFrame(fRMS, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fIntegral = new TGCheckButton(f3, "Integral", kSTAT_INTEGRAL);
    fIntegral->SetToolTipText("Print the integral of bins");
-   f5->AddFrame(fIntegral, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fKurtosis = new TGCheckButton(f6, "Kurtosis", kSTAT_KURTOSIS);
-   fKurtosis->SetToolTipText("Print the kurtosis");
-   f6->AddFrame(fKurtosis, new TGLayoutHints(kLHintsTop, 3, 1, 0, 5));
-   fStatsErrors = new TGCheckButton(f6, "Errors", kSTAT_ERR);
+   f3->AddFrame(fIntegral, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fStatsErrors = new TGCheckButton(f3, "Errors", kSTAT_ERR);
    fStatsErrors->SetToolTipText("Print the errors");
-   f6->AddFrame(fStatsErrors, new TGLayoutHints(kLHintsTop, 15, 1, 0, 5));
-   AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   f3->AddFrame(fStatsErrors, new TGLayoutHints(kLHintsTop, 1, 1, 0, 5));
+
+   AddFrame(f1, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    MakeTitle("Fit Options");
  
-   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fNameValues = new TGCheckButton(f7, "Values", kFIT_NAME);
-   fNameValues->SetToolTipText("Print the parameter name and value");
-   f7->AddFrame(fNameValues, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fErrors = new TGCheckButton(f7, "Errors", kFIT_ERR);
-   fErrors->SetToolTipText("Print the errors");
-   f7->AddFrame(fErrors, new TGLayoutHints(kLHintsTop, 21, 1, 0, 0));
-   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f5 = new TGCompositeFrame(f4, 40, 20, kVerticalFrame);
+   f4->AddFrame(f5, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
 
-   TGCompositeFrame *f8 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fProbability = new TGCheckButton(f8, "Probability", kFIT_PROB);
+   fNameValues = new TGCheckButton(f5, "Values", kFIT_NAME);
+   fNameValues->SetToolTipText("Print the parameter name and value");
+   f5->AddFrame(fNameValues, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fProbability = new TGCheckButton(f5, "Probability", kFIT_PROB);
    fProbability->SetToolTipText("Print probability");
-   f8->AddFrame(fProbability, new TGLayoutHints(kLHintsTop, 3, 1, 0, 0));
-   fChisquare = new TGCheckButton(f8, "Chi", kFIT_CHI);
+   f5->AddFrame(fProbability, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGCompositeFrame *f6 = new TGCompositeFrame(f4, 40, 20, kVerticalFrame);
+   f4->AddFrame(f6, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fErrors = new TGCheckButton(f6, "Errors", kFIT_ERR);
+   fErrors->SetToolTipText("Print the errors");
+   f6->AddFrame(fErrors, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fChisquare = new TGCheckButton(f6, "Chi", kFIT_CHI);
    fChisquare->SetToolTipText("Print Chisquare");
-   f8->AddFrame(fChisquare, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
+   f6->AddFrame(fChisquare, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
    MapSubwindows();
    Layout();
    MapWindow();

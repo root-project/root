@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.7 2004/10/21 10:01:27 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.8 2005/05/14 00:19:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -105,23 +105,26 @@ TAxisEditor::TAxisEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fTicksBoth = new TGCheckButton(f3, "+-", kAXIS_TICKSBOTH);
+   TGCompositeFrame *f4a = new TGCompositeFrame(f3, 40, 20, kVerticalFrame);
+   f3->AddFrame(f4a, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fTicksBoth = new TGCheckButton(f4a, "+-", kAXIS_TICKSBOTH);
    fTicksBoth->SetToolTipText("Draw ticks on both axis sides");
-   f3->AddFrame(fTicksBoth, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 1, 0));
-   fOptimize = new TGCheckButton(f3, "Optimize", kAXIS_OPTIM);
+   f4a->AddFrame(fTicksBoth, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 1, 0));
+   fLogAxis = new TGCheckButton(f4a, "Log", kAXIS_LOG);
+   fLogAxis->SetToolTipText("Draw logarithmic scale");
+   f4a->AddFrame(fLogAxis, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 0, 0));
+
+   TGCompositeFrame *f4b = new TGCompositeFrame(f3, 40, 20, kVerticalFrame);
+   f3->AddFrame(f4b, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fOptimize = new TGCheckButton(f4b, "Optimize", kAXIS_OPTIM);
    fOptimize->SetState(kButtonDown);
    fOptimize->SetToolTipText("Optimize the number of axis divisions");
-   f3->AddFrame(fOptimize, new TGLayoutHints(kLHintsTop, 28, 1, 1, 0));
-   AddFrame(f3, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fLogAxis = new TGCheckButton(f4, "Log", kAXIS_LOG);
-   f4->AddFrame(fLogAxis, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 3, 1, 0, 0));
-   fLogAxis->SetToolTipText("Draw logarithmic scale");
-   fMoreLog = new TGCheckButton(f4, "MoreLog", kAXIS_LBLLOG);
-   f4->AddFrame(fMoreLog, new TGLayoutHints(kLHintsLeft, 19, 1, 0, 0));
+   f4b->AddFrame(fOptimize, new TGLayoutHints(kLHintsTop, 17, 1, 1, 0));
+   fMoreLog = new TGCheckButton(f4b, "MoreLog", kAXIS_LBLLOG);
    fMoreLog->SetToolTipText("Draw more logarithmic labels");
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   f4b->AddFrame(fMoreLog, new TGLayoutHints(kLHintsLeft, 17, 1, 0, 0));
+
+   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fDiv3 = new TGNumberEntry(f5, 10, 2,kAXIS_DIV1, TGNumberFormat::kNESInteger,

@@ -75,31 +75,31 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
    AddFrame(fFixedAR, new TGLayoutHints(kLHintsTop, 4, 1, 2, 1));
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fCrosshair = new TGCheckButton(f2, "Crosshair", kPAD_CROSS);
+   TGCompositeFrame *f3 = new TGCompositeFrame(f2, 40, 20, kVerticalFrame);
+   f2->AddFrame(f3, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fCrosshair = new TGCheckButton(f3, "Crosshair", kPAD_CROSS);
    fCrosshair->SetToolTipText("Set crosshair");
-   f2->AddFrame(fCrosshair, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
-   fEditable = new TGCheckButton(f2, "Edit", kPAD_EDIT);
-   fEditable->SetToolTipText("Set editable mode");
-   f2->AddFrame(fEditable, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
-   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   f3->AddFrame(fCrosshair, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
    fGridX = new TGCheckButton(f3, "GridX", kPAD_GRIDX);
    fGridX->SetToolTipText("Set grid along X");
    f3->AddFrame(fGridX, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
-   fGridY = new TGCheckButton(f3, "GridY", kPAD_GRIDY);
-   fGridY->SetToolTipText("Set grid along Y");
-   f3->AddFrame(fGridY, new TGLayoutHints(kLHintsTop, 24, 1, 1, 1));
-   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fTickX = new TGCheckButton(f4, "TickX", kPAD_TICKX);
+   fTickX = new TGCheckButton(f3, "TickX", kPAD_TICKX);
    fTickX->SetToolTipText("Set tick marks along X");
-   f4->AddFrame(fTickX, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+   f3->AddFrame(fTickX, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+
+   TGCompositeFrame *f4 = new TGCompositeFrame(f2, 40, 20, kVerticalFrame);
+   f2->AddFrame(f4, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
+   fEditable = new TGCheckButton(f4, "Edit", kPAD_EDIT);
+   fEditable->SetToolTipText("Set editable mode");
+   f4->AddFrame(fEditable, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+   fGridY = new TGCheckButton(f4, "GridY", kPAD_GRIDY);
+   fGridY->SetToolTipText("Set grid along Y");
+   f4->AddFrame(fGridY, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
    fTickY = new TGCheckButton(f4, "TickY", kPAD_TICKY);
    fTickY->SetToolTipText("Set tick marks along Y");
-   f4->AddFrame(fTickY, new TGLayoutHints(kLHintsTop, 24, 1, 1, 1));
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 2));
+   f4->AddFrame(fTickY, new TGLayoutHints(kLHintsTop, 3, 1, 1, 1));
+
+   AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    MakeTitle("Log Scale");
 
