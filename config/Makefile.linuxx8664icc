@@ -63,11 +63,15 @@ CRYPTLIBS     = -lcrypt
 F77           = ifort
 F77FLAGS      =
 # check path for libg2c and libfrtbegin
-LIBG2C       := $(shell gcc -print-file-name=libg2c.a | \
-                  awk '{ if ($$1 != "libg2c.a") print $$1}')
-LIBFRTBEGIN  := $(shell gcc -print-file-name=libfrtbegin.a | \
-                  awk '{ if ($$1 != "libfrtbegin.a") print $$1}')
-F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
+LIBG2CDIR    := $(shell dirname `gcc -print-file-name=libg2c.a` | \
+                  sed 's|/|-L/|')
+LIBG2C       := $(shell basename `gcc -print-file-name=libg2c.a` | \
+                  sed 's|^lib\(.*\)\..*|-l\1|')
+LIBFRTBEGIND := $(shell dirname `gcc -print-file-name=libfrtbegin.a` | \
+                  sed 's|/|-L/|')
+LIBFRTBEGIN  := $(shell basename `gcc -print-file-name=libfrtbegin.a` | \
+                  sed 's|^lib\(.*\)\..*|-l\1|')
+F77LIBS       = $(LIBFRTBEGIND) $(LIBFRTBEGIN) $(LIBG2CDIR) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
 
