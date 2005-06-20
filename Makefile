@@ -46,7 +46,7 @@ MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 newdelete hist tree freetype graf g3d gpad gui minuit \
                 histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp \
-                guibuilder xml foam mathcore reflex cintex
+                guibuilder xml foam
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
