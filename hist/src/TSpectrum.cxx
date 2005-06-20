@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.27 2005/06/01 07:41:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.28 2005/06/15 10:27:36 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -191,7 +191,11 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       Float_t * source = new float[size];
       Float_t * dest   = new float[size];
       for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + first);
-
+      if (sigma <= 1) {
+         sigma = size/fMaxPeaks;
+         if (sigma < 1) sigma = 1;
+         if (sigma > 8) sigma = 8;
+      }
       npeaks = Search1HighRes(source, dest, size, sigma, 100*threshold, kTRUE, fgIterations, kTRUE, fgAverageWindow);
 
       //TH1 * hnew = (TH1 *) hin->Clone("markov");
@@ -2357,7 +2361,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    int i, j, number_of_iterations = (int)(7 * sigma + 0.5);
    float a, b;
    int k, lindex, posit, imin, imax, jmin, jmax, lh_gold;
-   double lda, ldb, ldc, area,maximum;
+   double lda, ldb, ldc, area, maximum, maximum_decon;
    int xmin, xmax, l, peak_index = 0, size_ext = size + 2 * number_of_iterations, shift = number_of_iterations;
    float maxch;
    float nom, nip, nim, sp, sm, plocha = 0;
@@ -2393,13 +2397,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    
    i = (int)(7 * sigma + 0.5);
    i = 2 * i;
-   Int_t wslen = 6*(size+i);
-   double *working_space = new double [wslen];
-
-   // Initialize the working space
-   for ( Int_t kinit = 0; kinit < wslen; kinit++ ) {
-     working_space[kinit] = 0.0;
-   }
+   double *working_space = new double [7 * (size + i)];    
    for(i = 0; i < size_ext; i++){
       if(i < shift)
          working_space[i + size_ext] = source[0];
@@ -2433,8 +2431,12 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
          else{
             working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
          }
-      }
+      }      
    }
+   for(i = 0; i < size_ext; i++){
+      working_space[i + 6*size_ext] = working_space[i + size_ext];
+   }
+  
    if(markov == true){
       for(j = 0; j < size_ext; j++)
          working_space[2 * size_ext + j] = working_space[size_ext + j];
@@ -2539,7 +2541,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       }
    }
 //read source vector
-   for(i = 0; i < size_ext; i++)
+   for(i = 0; i < size_ext; i++)  	
       working_space[2 * size_ext + i] = TMath::Abs(working_space[size_ext + i]);
 //create matrix at*a(vector b)
    i = lh_gold - 1;
@@ -2628,18 +2630,20 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
       working_space[size_ext + j] = lda;
    }
 //write back resulting spectrum
-   maximum = 0;
+   maximum = 0, maximum_decon = 0;
    j = lh_gold - 1;
    for(i = 0; i < size_ext - j; i++){
       working_space[i] = area * working_space[size_ext + i + j];
-      if(maximum < working_space[i])
-         maximum = working_space[i];
+      if(maximum_decon < working_space[i])
+         maximum_decon = working_space[i];      
+      if(maximum < working_space[6 * size_ext + i])
+         maximum = working_space[6 * size_ext + i];
    }
 //searching for peaks in deconvolved spectrum
    for(i = 1; i < size_ext - 1; i++){
       if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
          if(i >= shift && i < size + shift){
-            if(working_space[i] > threshold * maximum / 100.0){
+            if(working_space[i] > 0.01*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){	
                if(peak_index < fMaxPeaks){
                   for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
                      a += (double)(j - shift) * working_space[j];
@@ -2669,6 +2673,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
    fNPeaks = peak_index;
    return fNPeaks;
 }
+
 
 
 //_____________________________________________________________________________
