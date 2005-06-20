@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.173 2005/06/13 16:48:19 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.174 2005/06/13 21:55:22 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2180,17 +2180,15 @@ void TBranchElement::InitializeOffsets()
                Error("SetAddress","branch=%s, info=0",branch->GetName());
             }
          }
-         else  {
+         else if ( fType == 1 ) {
+            // Offset seems to need correction for TStreamerBases
             const char *name = branch->GetName();
             const char *pos = strchr( name, '.');
-            //std::string enam( branch->GetName() );
-            //size_t idx = enam.find(".");
-            //if ( idx != std::string::npos )  {
             if (pos) {
                size_t idx = (pos-name);
                // Broken branch hierarchy: need to look for offset 
-               // in the parents StreamerInfo
-               //enam = enam.substr(0,idx);
+               // in the parents StreamerInfo if the branch represents
+               // a TStreamerBase
                TClass *pbc = parentBranchClass;
                if ( pbc && (parentInfo=pbc->GetStreamerInfo()) )  {
                   std::string enam( branch->GetName(), idx );
