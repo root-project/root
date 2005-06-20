@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.47 2005/03/22 13:05:25 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.48 2005/04/18 21:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -47,13 +47,13 @@ public:
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError() const { return (_error>=0) ; }
-  inline void setError(Double_t value) { _error= value ; }
+  inline void setError(Double_t value) { _error= value ; removeAsymError() ; }
   inline void removeError() { _error = -1 ; }
   inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
   inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
   inline Bool_t hasAsymError() const { return (_asymErrHi>=0 && _asymErrLo<=0) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
-  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
+  inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; removeError() ; }
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
@@ -69,8 +69,8 @@ public:
 
   // RooAbsRealLValue implementation
   Bool_t hasBinning(const char* name) const ;
-  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
-  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ; 
+  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
+  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ; 
 
   // Set infinite fit range limits
   inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }
@@ -87,14 +87,14 @@ public:
   void removeFitRange() ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { return kTRUE; }
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 
   TString* format(const RooCmdArg& formatArg) const ;

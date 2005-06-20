@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.17 2005/03/16 15:19:45 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.18 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,8 +32,6 @@
 #include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooCmdConfig.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooChi2Var)
 ;

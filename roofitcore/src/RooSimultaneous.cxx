@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.59 2005/04/18 21:44:52 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.60 2005/06/16 09:31:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,8 +47,6 @@
 #include "RooFitCore/RooNameReg.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
 #include "RooFitCore/RooNameReg.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooSimultaneous)
 ;

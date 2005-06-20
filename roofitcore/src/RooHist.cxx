@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.30 2005/04/18 21:44:46 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.31 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,13 +27,9 @@
 #include "RooFitCore/RooCurve.hh"
 
 #include "TH1.h"
-#include <iostream>
+#include "Riostream.h"
 #include <iomanip>
 #include <math.h>
-using std::cout;
-using std::endl;
-using std::ostream;
-using std::setw;
 
 ClassImp(RooHist)
 
@@ -223,6 +219,30 @@ void RooHist::initialize() {
 Double_t RooHist::getFitRangeNEvt() const {
   return (_rawEntries==-1 ? _entries : _rawEntries) ;
 }
+
+Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const 
+{
+  // Calculate integral of histogram in given range 
+  Double_t sum(0) ;
+  for (int i=0 ; i<GetN() ; i++) {
+    Double_t x,y ;
+    GetPoint(i,x,y) ;
+    if (x>=xlo && x<=xhi) {
+      sum += y ;
+    }
+  }
+  
+  if (_rawEntries!=-1) {
+    cout << "RooHist::getFitRangeNEvt() WARNING: Number of normalization events associated to histogram is not equal to number of events in histogram" << endl
+	 << "                           due cut made in RooAbsData::plotOn() call. Automatic normalization over sub-range of plot variable assumes"    << endl
+         << "                           that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To be sure of"   << endl 
+         << "                           correct normalization explicit pass normalization information to RooAbsPdf::plotOn() call using Normalization()" << endl ;
+    sum *= _rawEntries / _entries ;
+  }
+
+  return sum ;
+}
+
 
 Double_t RooHist::getFitRangeBinW() const {
   return _nominalBinWidth ;
@@ -432,3 +452,5 @@ RooHist* RooHist::makePullHist(const RooCurve& curve) const {
   
   return pullHist ;
 }
+
+

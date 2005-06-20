@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMappedCategory.rdl,v 1.19 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.20 2005/02/25 14:22:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,11 +35,11 @@ public:
   Bool_t map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ; 
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
   

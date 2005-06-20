@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvIntegrandBinding.cc,v 1.3 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooConvIntegrandBinding.cc,v 1.4 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,8 +27,6 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 
 #include <assert.h>
-using std::cout;
-using std::endl ;
 
 ClassImp(RooConvIntegrandBinding)
 ;

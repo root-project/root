@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.30 2005/04/18 21:44:51 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.31 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -456,8 +456,6 @@
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooGenericPdf.hh"
-using std::cout;
-using std::endl;
 
 
 ClassImp(RooSimPdfBuilder)
@@ -531,6 +529,11 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     physName = strtok(0,spaceChars) ;
   } else {
     physName = strtok(buf,spaceChars) ;
+  }
+
+  if (!physName) {
+    cout << "RooSimPdfBuilder::buildPdf: ERROR: No models specified, nothing to do!" << endl ;
+    return 0 ;
   }
 
   Bool_t first(kTRUE) ;
@@ -901,15 +904,36 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  return 0 ;
 		}
 
+		// Check if we are doing a restricted build
+		TList* remStateSplitList = static_cast<TList*>(splitStateList.FindObject(splitCat->GetName())) ;
+
+		// If so, check if remainder state is actually being built.
+		if (remStateSplitList && !remStateSplitList->FindObject(remainderState)) {
+		  cout << "RooSimPdfBuilder::buildPdf: ERROR " << paramName 
+		       << " remainder state " << remainderState << " in parameter split " 
+		       << param->GetName() << " is not actually being built" << endl ;
+		  delete paramList ;
+		  customizerList->Delete() ;
+		  delete customizerList ;
+		  splitStateList.Delete() ;
+		  return 0 ;		  
+		}
+
 		TIterator* iter = splitCat->typeIterator() ;
 		RooCatType* type ;
 		RooArgList fracLeafList ;
 		TString formExpr("1") ;
 		Int_t i(0) ;
+
 		while((type=(RooCatType*)iter->Next())) {
 
 		  // Skip remainder state
 		  if (!TString(type->GetName()).CompareTo(remainderState)) continue ;
+
+		  // If restricted build is requested, skip states of splitcat that are not built
+		  if (remStateSplitList && !remStateSplitList->FindObject(type->GetName())) {
+		    continue ;
+		  }
 		  
 		  // Construct name of split leaf
 		  TString splitLeafName(param->GetName()) ;
@@ -938,7 +962,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 		  RooAbsArg* remLeaf = new RooFormulaVar(remLeafName,formExpr,fracLeafList) ;
 		  _splitNodeList.addOwned(*remLeaf) ;
 		  cout << "RooSimPdfBuilder::buildPdf: creating remainder fraction formula for " << remainderState 
-		       << " specialization of split parameter " << param->GetName() << endl ;
+		       << " specialization of split parameter " << param->GetName() << " " << formExpr << endl ;
 		}
 	      }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.20 2005/04/18 21:44:49 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.21 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,8 +28,6 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
-using std::cout;
-using std::ostream;
 
 ClassImp(RooProdGenContext)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.8 2005/03/22 13:05:23 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.9 2005/04/20 15:10:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,8 @@
 #include "RooFitCore/RooCmdArg.hh"
 #include "RooFitCore/RooDataHist.hh"
 #include "RooFitCore/RooAbsPdf.hh"
+#include "RooFitCore/RooRealConstant.hh"
+
 class RooAbsData ;
 class RooArgSet ;
 class RooCategory ;
@@ -39,8 +41,8 @@ RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
-RooCmdArg Range(const char* rangeName) ;
-RooCmdArg Range(Double_t lo, Double_t hi) ;
+RooCmdArg Range(const char* rangeName, Bool_t adjustNorm=kFALSE) ;
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm=kFALSE) ;
 RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
 RooCmdArg LineStyle(Style_t style) ;
@@ -158,6 +160,8 @@ RooCmdArg TLatexStyle(Bool_t flag=kTRUE) ;
 RooCmdArg LatexStyle(Bool_t flag=kTRUE) ;
 RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
 RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
+
+RooConstVar& RooConst(Double_t val) ; 
 
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.55 2005/02/23 15:09:34 wverkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.56 2005/02/25 14:22:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,7 +81,7 @@ public:
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
-  void printToStream(std::ostream& os, PrintOption opt, TString indent) const ;
+  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
 
 protected:
 

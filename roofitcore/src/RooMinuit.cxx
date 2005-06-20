@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.19 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.20 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,16 +56,10 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooAbsPdf.hh"
-using std::cout;
-using std::endl;
-using std::flush;
-using std::fstream;
-using std::ofstream;
-using std::setprecision;
 
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooMinuit) 

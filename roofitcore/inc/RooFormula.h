@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.rdl,v 1.31 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.32 2005/04/18 21:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,7 +48,7 @@ public:
   Bool_t reCompile(const char* newFormula) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

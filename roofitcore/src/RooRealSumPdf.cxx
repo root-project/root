@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.13 2005/04/18 21:44:50 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.14 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,8 +40,6 @@
 #include "RooFitCore/RooAddGenContext.hh"
 #include "RooFitCore/RooRealConstant.hh"
 #include "RooFitCore/RooRealIntegral.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooRealSumPdf)
 ;

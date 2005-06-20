@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.18 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.19 2005/04/18 21:44:19 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_CATEGORY_LVALUE
 #define ROO_ABS_CATEGORY_LVALUE
 
-#include <iostream>
+#include "Riostream.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooAbsLValue.hh"
 
@@ -47,8 +47,11 @@ public:
   inline virtual Bool_t isLValue() const { return kTRUE; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+
+  virtual Bool_t hasRange(const char* rangeName) const = 0 ;
+  virtual Bool_t isInRange(const char* rangeName) const = 0 ;
 
 protected:
 

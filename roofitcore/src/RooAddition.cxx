@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddition.cc,v 1.3 2005/04/18 21:44:40 wverkerke Exp $
+ *    File: $Id: RooAddition.cc,v 1.4 2005/06/16 09:31:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,8 +24,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 
 #include "RooFitCore/RooAddition.hh"
@@ -34,8 +34,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooChi2Var.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooAddition)
 ;

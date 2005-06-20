@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenCategory.cc,v 1.20 2005/04/18 21:44:45 wverkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.21 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,8 +27,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
@@ -37,10 +37,6 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooMapCatEntry.hh"
 #include "RooFitCore/RooErrorHandler.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooGenCategory)
 

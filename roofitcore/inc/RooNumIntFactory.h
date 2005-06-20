@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.rdl,v 1.2 2005/02/17 14:32:38 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.rdl,v 1.3 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ protected:
   friend class RooNumIntConfig ;
   void processInitializers() ;
 
-  std::list<RooNumIntInitializerFunc> _initFuncList ; //!
+  list<RooNumIntInitializerFunc> _initFuncList ; //!
   RooLinkedList _integratorList ; // List of integrator prototypes
   RooLinkedList _nameList ;       // List of integrator names
   RooLinkedList _depList ;        // List of dependent integrator names

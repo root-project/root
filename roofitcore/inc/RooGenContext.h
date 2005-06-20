@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenContext.rdl,v 1.16 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooGenContext.rdl,v 1.17 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +32,7 @@ public:
 		const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
   virtual ~RooGenContext();
 
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
 
 protected:
 

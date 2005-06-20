@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMappedCategory.cc,v 1.24 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.25 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,18 +25,14 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
 #include "RooFitCore/RooMappedCategory.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooMapCatEntry.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooMappedCategory)
 

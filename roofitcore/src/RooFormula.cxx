@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.51 2005/04/18 21:44:44 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.52 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,8 +25,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <stdlib.h>
 #include "TROOT.h"
 #include "TClass.h"
@@ -35,9 +35,6 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgList.hh"
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooFormula)
 

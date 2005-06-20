@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.22 2005/04/18 21:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.23 2005/06/16 09:31:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,9 +39,6 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooErrorHandler.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooAbsOptGoodnessOfFit)
 ;

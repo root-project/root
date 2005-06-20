@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.rdl,v 1.15 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.16 2005/04/18 21:44:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,14 +36,15 @@ public:
   inline operator Int_t() const { return ((RooAbsCategory*)_arg)->getIndex() ; }
   inline operator const char*() const { return ((RooAbsCategory*)_arg)->getLabel() ; }
   inline const RooAbsCategory& arg() const { return (RooAbsCategory&)*_arg ; }
+  inline Bool_t hasRange(const char* rangeName) const { return lvptr()->hasRange(rangeName) ; }
 
 protected:
 
-  inline RooAbsCategoryLValue* lvptr()  {
+  inline RooAbsCategoryLValue* lvptr() const {
     // Assert that the held arg is an LValue
     RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
     if (!lvptr) {
-      std::cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << std::endl ;
+      cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
       assert(0) ;
     }
     return lvptr ;

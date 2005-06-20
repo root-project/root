@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.rdl,v 1.21 2005/02/23 15:08:56 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.22 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -84,7 +84,7 @@ public:
   inline RooAbsArg *first() const { return (RooAbsArg*)_list.First(); }
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

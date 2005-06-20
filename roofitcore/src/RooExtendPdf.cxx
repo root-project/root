@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.15 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.16 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,8 +44,6 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooNameReg.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooExtendPdf)
 ;

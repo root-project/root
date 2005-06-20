@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.rdl,v 1.18 2005/02/15 21:16:49 wverkerke Exp $
+ *    File: $Id: RooHist.rdl,v 1.19 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,12 +39,13 @@ public:
   // add a datapoint for the asymmetry (n1-n2)/(n1+n2), using a binomial error
   void addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth= 0, Double_t xErrorFrac=1.0);
 
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
 
   Double_t getFitRangeNEvt() const;
+  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
   Double_t getFitRangeBinW() const;
   inline Double_t getNominalBinWidth() const { return _nominalBinWidth; }
   inline void setRawEntries(Double_t n) { _rawEntries = n ; } 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsHiddenReal.cc,v 1.9 2005/02/25 14:22:50 wverkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.cc,v 1.10 2005/06/16 09:31:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,10 +29,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsHiddenReal.hh"
 #include "RooFitCore/RooCategory.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooAbsHiddenReal)
 ;

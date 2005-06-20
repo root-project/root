@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPrintable.rdl,v 1.9 2005/02/23 15:09:52 wverkerke Exp $
+ *    File: $Id: RooPrintable.rdl,v 1.10 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,7 @@
 
 class TNamed ;
 
-#include <iostream>
+#include "Riostream.h"
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -28,12 +28,12 @@ public:
   inline RooPrintable() { }
   inline virtual ~RooPrintable() { }
   enum PrintOption { InLine=0, OneLine=1, Standard=2, Shape=3, Verbose=4 } ;
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
   PrintOption parseOptions(Option_t *options) const;
   PrintOption lessVerbose(PrintOption opt) const;
-  static void inLinePrint(std::ostream& os, const TNamed &named);
-  static void oneLinePrint(std::ostream& os, const TNamed &named);
-  static std::ostream& defaultStream(std::ostream *os= 0);
+  static void inLinePrint(ostream& os, const TNamed &named);
+  static void oneLinePrint(ostream& os, const TNamed &named);
+  static ostream& defaultStream(ostream *os= 0);
 
 
   ClassDef(RooPrintable,1) // Interface for printable objects

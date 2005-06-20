@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.rdl,v 1.11 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.rdl,v 1.12 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_MULTI_CAT_ITER
 #define ROO_MULTI_CAT_ITER
 
-#include <iostream>
+#include "Riostream.h"
 #include "TIterator.h"
 #include "RooFitCore/RooArgSet.hh"
 #include "TObjString.h"
@@ -29,7 +29,7 @@ typedef RooAbsCategoryLValue* pRooCategory ;
 class RooMultiCatIter : public TIterator {
 public:
   // Constructors, assignment etc.
-  RooMultiCatIter(const RooArgSet& catList) ;
+  RooMultiCatIter(const RooArgSet& catList, const char* rangeName=0) ;
   RooMultiCatIter(const RooMultiCatIter& other) ;
   virtual ~RooMultiCatIter() ;
 
@@ -51,7 +51,8 @@ protected:
   RooCatType*   _curTypeList ;   // List of current types
   Int_t _nIter ;                 // Number of categories/iterators in use
   Int_t _curIter ;               // Current location of master iterator
-  TObjString _compositeLabel ;
+  TObjString _compositeLabel ;   //
+  TString _rangeName ;           // Range name (optional)
 
   ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
 };

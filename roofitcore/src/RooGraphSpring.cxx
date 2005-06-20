@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.cc,v 1.11 2005/04/18 21:44:46 wverkerke Exp $
+ *    File: $Id: RooGraphSpring.cc,v 1.12 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,13 +22,9 @@
 #include "TMath.h"
 #include "RooFitCore/RooGraphEdge.hh"
 
-#include <iostream>
+#include "Riostream.h"
 #include <fstream>
 #include <math.h>
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::ifstream;
 
 ///////////////////////////////////////////////////////////////////////////////
 //RooGraphSpring:                                                            //

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.cc,v 1.43 2005/04/18 21:44:18 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.44 2005/06/16 09:31:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,8 +24,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
@@ -35,10 +35,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooAbsCategory) 
 ;

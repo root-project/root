@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.rdl,v 1.13 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooStreamParser.rdl,v 1.14 2005/03/22 13:05:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,14 +16,14 @@
 #ifndef ROO_STREAM_PARSER
 #define ROO_STREAM_PARSER
 
-#include <iostream>
+#include "Riostream.h"
 #include "TString.h"
 
 class RooStreamParser {
 public:
   // Constructors, assignment etc.
-  RooStreamParser(std::istream& is) ;
-  RooStreamParser(std::istream& is, const TString& errPrefix) ;
+  RooStreamParser(istream& is) ;
+  RooStreamParser(istream& is, const TString& errPrefix) ;
   virtual ~RooStreamParser();
 
   TString readToken() ;
@@ -49,14 +49,14 @@ public:
   
 protected:
 
-  std::istream& _is ;
+  istream& _is ;
   Bool_t _atEOL ;
   Bool_t _atEOF ;
   TString _prefix ;
   TString _punct ;
 
   
-  ClassDef(RooStreamParser,0) // Utility class that parses std::istream data into tokens
+  ClassDef(RooStreamParser,0) // Utility class that parses istream data into tokens
 };
 
 #endif

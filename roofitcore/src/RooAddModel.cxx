@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.40 2005/04/18 21:44:40 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.41 2005/06/16 09:31:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,8 +43,6 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooRealConstant.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooAddModel)
 ;

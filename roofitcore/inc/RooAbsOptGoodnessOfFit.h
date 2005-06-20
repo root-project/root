@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.12 2005/02/24 22:36:04 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.13 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_OPT_GOODNESS_OF_FIT
 #define ROO_ABS_OPT_GOODNESS_OF_FIT
 
-#include <iostream>
+#include "Riostream.h"
 #include "RooFitCore/RooAbsGoodnessOfFit.hh"
 #include "RooFitCore/RooSetProxy.hh"
 
@@ -41,7 +41,7 @@ protected:
   void constOptimize(ConstOpCode opcode) ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
 
   RooArgSet*  _normSet ;
   RooArgSet*  _pdfCloneSet ;

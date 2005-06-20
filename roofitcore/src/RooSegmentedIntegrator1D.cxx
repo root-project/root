@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.11 2005/02/25 14:23:02 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.12 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,8 +29,6 @@
 #include "RooFitCore/RooNumIntFactory.hh"
 
 #include <assert.h>
-using std::cout;
-using std::endl;
 
 ClassImp(RooSegmentedIntegrator1D)
 ;

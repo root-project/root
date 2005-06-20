@@ -7,9 +7,6 @@
 
 #include <math.h>
 #include <iomanip>
-using std::cout;
-using std::endl;
-using std::setprecision;
 
 // Study the performance of the Monte Carlo integration algorithm
 

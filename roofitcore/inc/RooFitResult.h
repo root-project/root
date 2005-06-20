@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.rdl,v 1.19 2004/11/29 12:22:18 wverkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.20 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_FIT_RESULT
 #define ROO_FIT_RESULT
 
-#include <iostream>
+#include "Riostream.h"
 #include "TObject.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
@@ -40,7 +40,7 @@ public:
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }

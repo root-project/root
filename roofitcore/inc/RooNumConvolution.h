@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvolution.rdl,v 1.1 2004/12/02 14:10:27 wverkerke Exp $
+ *    File: $Id: RooNumConvolution.rdl,v 1.2 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,7 +62,7 @@ protected:
   void initialize() const ;
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
 
   RooNumIntConfig _convIntConfig ; // Configuration of numeric convolution integral ;
   mutable RooConvIntegrandBinding* _integrand ; //! Binding of Convolution Integrand function

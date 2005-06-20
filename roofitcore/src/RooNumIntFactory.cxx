@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.cc,v 1.5 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.cc,v 1.6 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,8 +27,6 @@
 #include "RooFitCore/RooAbsFunc.hh"
 #include "RooFitCore/RooNumIntConfig.hh"
 #include "RooFitCore/RooNumber.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooNumIntFactory)
 ;
@@ -66,7 +64,7 @@ void RooNumIntFactory::processInitializers()
   if (alreadyProcessing) return ;
   alreadyProcessing = kTRUE ;
 
-  std::list<RooNumIntInitializerFunc>::iterator iter;
+  list<RooNumIntInitializerFunc>::iterator iter;
 
   // Call all registered initializer functions
   for (iter= _initFuncList.begin() ; iter != _initFuncList.end() ; ++iter) {

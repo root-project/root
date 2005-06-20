@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.84 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.85 2005/04/18 21:44:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include <iostream>
+#include "Riostream.h"
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
@@ -89,11 +89,13 @@ public:
   // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
   friend class RooAddPdf ;
-  RooArgSet* getParameters(const RooAbsData* set) const ;
+  RooArgSet* getParameters(const RooAbsData* data) const ;
+  RooArgSet* getParameters(const RooAbsData& data) const { return getParameters(&data) ; }
   RooArgSet* getParameters(const RooArgSet& set) const { return getParameters(&set) ; }
   virtual RooArgSet* getParameters(const RooArgSet* depList) const ;
   RooArgSet* getObservables(const RooArgSet& set) const { return getObservables(&set) ; }
-  RooArgSet* getObservables(const RooAbsData* set) const ;
+  RooArgSet* getObservables(const RooAbsData* data) const ;
+  RooArgSet* getObservables(const RooAbsData& data) const { return getObservables(&data) ; }
   virtual RooArgSet* getObservables(const RooArgSet* depList) const ;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
@@ -114,11 +116,11 @@ public:
   void attachDataSet(const RooAbsData &set);
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const = 0 ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
@@ -156,8 +158,8 @@ public:
 
 
   void printCompactTree(const char* indent="",const char* fileName=0) ;
-  void printCompactTree(std::ostream& os, const char* indent="") ;
-  virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
+  void printCompactTree(ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char *ind="") ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
   Bool_t deleteWatch() const { return _deleteWatch ; }
@@ -193,13 +195,13 @@ protected:
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
   inline void clearValueDirty() const { 
-    if (_verboseDirty) std::cout << "RooAbsArg::clearValueDirty(" << GetName() 
-			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << std::endl ;
+    if (_verboseDirty) cout << "RooAbsArg::clearValueDirty(" << GetName() 
+			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << endl ;
     _valueDirty=kFALSE ; 
   }
   inline void clearShapeDirty() const { 
-    if (_verboseDirty) std::cout << "RooAbsArg::clearShapeDirty(" << GetName() 
-			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << std::endl ;
+    if (_verboseDirty) cout << "RooAbsArg::clearShapeDirty(" << GetName() 
+			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << endl ;
     _shapeDirty=kFALSE ; 
   }
 
@@ -221,6 +223,7 @@ protected:
   friend class RooResolutionModel ;
   friend class RooSimultaneous ;
   friend class RooSimGenContext ;  
+  friend class RooEffGenContext ;  
   friend class RooSimPdfBuilder ;
   friend class RooAbsOptGoodnessOfFit ;
   friend class RooAbsPdf ;
@@ -256,7 +259,7 @@ protected:
 	
   // Attribute list
   THashList _attribList ; // List of string attributes
-  void printAttribList(std::ostream& os) const;
+  void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
   friend class RooTreeData ;
@@ -271,8 +274,8 @@ protected:
   UInt_t crc32(const char* data) const ;
 
   // Global   
-  friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
-  friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
+  friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
+  friend istream& operator>>(istream& is, RooAbsArg &arg) ;
   
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
@@ -293,7 +296,7 @@ private:
   ClassDef(RooAbsArg,1) // Abstract variable
 };
 
-std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
-std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
+ostream& operator<<(ostream& os, const RooAbsArg &arg);  
+istream& operator>>(istream& is, RooAbsArg &arg) ;
 
 #endif

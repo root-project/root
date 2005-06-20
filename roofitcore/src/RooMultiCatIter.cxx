@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMultiCatIter.cc,v 1.16 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.17 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,16 +23,17 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooMultiCatIter)
 ;
 
 
-RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList) : _catList("catList") 
+RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList, const char* rangeName) : _catList("catList") 
 {
   // Constructor
+  if (rangeName) {
+    _rangeName = rangeName ;
+  }
   initialize(catList) ;
 }
 
@@ -52,10 +53,10 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   TIterator* catIter = catList.createIterator() ;
   TObject* obj ;
   while ((obj = catIter->Next())) {
-    RooAbsCategory *cat= dynamic_cast<RooAbsCategory*>(obj);
+    RooAbsCategory *cat= dynamic_cast<RooAbsCategoryLValue*>(obj);
     if(0 == cat) {
       cout << "RooMultiCatIter:: list element " << obj->GetName() 
-	   << " is not a RooAbsCategory, ignored" << endl ;
+	   << " is not a RooAbsCategoryLValue, ignored" << endl ;
       continue ;
     }
     _catList.add(*cat) ;

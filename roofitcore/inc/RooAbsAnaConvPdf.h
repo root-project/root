@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.3 2005/02/14 20:44:16 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.4 2005/02/25 14:22:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ public:
   virtual ~RooAbsAnaConvPdf();
 
   Int_t declareBasis(const char* expression, const RooArgList& params) ;
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   // Coefficient normalization access
   inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const { return getCoefNorm(coefIdx,&nset,rangeName) ; }
@@ -54,7 +54,7 @@ public:
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   
   // Coefficient Analytical integration support
-  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   

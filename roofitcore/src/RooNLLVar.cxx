@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNLLVar.cc,v 1.17 2005/03/02 17:20:23 wverkerke Exp $
+ *    File: $Id: RooNLLVar.cc,v 1.18 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,8 +29,6 @@
 #include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooCmdConfig.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooNLLVar)
 ;

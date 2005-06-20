@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.rdl,v 1.10 2005/04/04 14:25:03 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.rdl,v 1.11 2005/04/18 21:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,7 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
 
 protected:
   

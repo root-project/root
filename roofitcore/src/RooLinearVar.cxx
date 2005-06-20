@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.27 2005/04/18 21:44:47 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.28 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,10 +50,6 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooBinning.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooLinearVar)
 
@@ -183,7 +179,7 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
 }
 
 
- RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose) 
+ RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
 {
   // Normalization binning
   if (name==0) {
@@ -198,6 +194,11 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
     return *altBinning ;
   }
 
+  // If binning is not found return default binning, if creation is not requested
+  if (!createOnTheFly) {
+    return _binning ;
+  }
+
   // Create translator binning on the fly
   RooAbsBinning& sourceBinning = ((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose) ;
   RooLinTransBinning* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
@@ -206,9 +207,9 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
   return *transBinning ;
 }
 
-const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose) const
+const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
 {
-  return const_cast<RooLinearVar*>(this)->getBinning(name,verbose) ;
+  return const_cast<RooLinearVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
 
 Bool_t RooLinearVar::hasBinning(const char* name) const 

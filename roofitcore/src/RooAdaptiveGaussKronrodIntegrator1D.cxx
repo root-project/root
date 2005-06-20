@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.4 2005/02/25 14:22:53 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.5 2005/06/16 09:31:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,7 +42,7 @@
 
 #include <assert.h>
 #include <assert.h>
-#include <iostream>
+#include "Riostream.h"
 #include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -51,8 +51,6 @@
 #include "RooFitCore/RooIntegratorBinding.hh"
 #include "TMath.h"
 
-using std::cout ;
-using std::endl ;
 
 ClassImp(RooAdaptiveGaussKronrodIntegrator1D)
 ;
@@ -454,8 +452,6 @@ int gsl_integration_qag (const gsl_function * f,
 
 #include <config.h>
 #include <stdlib.h>
-using std::cout;
-using std::endl;
 
 // INCLUDED BELOW #include "initialise.c"
 static inline

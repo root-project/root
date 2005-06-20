@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAICRegistry.rdl,v 1.8 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAICRegistry.rdl,v 1.9 2005/02/25 14:22:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_AIC_REGISTRY
 #define ROO_AIC_REGISTRY
 
-#include <iostream>
+#include "Riostream.h"
 #include <assert.h>
 #include "Rtypes.h"
 class RooArgSet ;

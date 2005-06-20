@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.9 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMinuit.rdl,v 1.10 2005/04/04 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,8 @@ class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
+
+void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,  Double_t &f, Double_t *par, Int_t /*flag*/) ;
 
 class RooMinuit : public TObject {
 public:
@@ -70,7 +72,7 @@ protected:
   void backProp() ;
 
   inline Int_t getNPar() const { return _nPar ; }
-  inline std::ofstream* logfile() const { return _logfile ; }
+  inline ofstream* logfile() const { return _logfile ; }
   inline Double_t& maxFCN() { return _maxFCN ; }
 
   Double_t getPdfParamVal(Int_t index) ;
@@ -97,7 +99,7 @@ private:
   RooAbsReal* _func ;
 
   Double_t    _maxFCN ;  
-  std::ofstream*   _logfile ;
+  ofstream*   _logfile ;
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;

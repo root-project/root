@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.rdl,v 1.25 2004/11/29 12:22:19 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.26 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,11 +39,11 @@ public:
   inline RooAbsArg* getParameter(Int_t index) const { return _actualVars.at(index) ; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // Debugging
   void dumpFormula() { formula().dump() ; }

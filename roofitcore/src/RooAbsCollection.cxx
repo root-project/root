@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.35 2005/04/18 21:44:19 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.36 2005/06/16 09:31:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,8 +19,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include <vector>
@@ -40,16 +40,9 @@
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooGlobalFunc.hh"
-using std::string ;
-using std::vector ;
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::ostream;
-using std::setw;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooAbsCollection)

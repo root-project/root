@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConstVar.rdl,v 1.6 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooConstVar.rdl,v 1.7 2005/04/18 21:44:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +32,7 @@ public:
   virtual ~RooConstVar();
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
 

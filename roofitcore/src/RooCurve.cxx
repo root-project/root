@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.45 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.46 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,18 +39,12 @@
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooScaledFunc.hh"
 
-#include <iostream>
+#include "Riostream.h"
 #include <iomanip>
 #include <math.h>
 #include <assert.h>
 #include <deque>
 #include <algorithm>
-using std::deque ;
-using std::cout;
-using std::endl;
-using std::ostream;
-using std::setw;
-using std::sort ;
 
 ClassImp(RooCurve)
 
@@ -331,6 +325,11 @@ void RooCurve::addPoint(Double_t x, Double_t y) {
 
 Double_t RooCurve::getFitRangeNEvt() const {
   return 1;
+}
+
+Double_t RooCurve::getFitRangeNEvt(Double_t, Double_t) const 
+{
+  return 1 ;
 }
 
 Double_t RooCurve::getFitRangeBinW() const {

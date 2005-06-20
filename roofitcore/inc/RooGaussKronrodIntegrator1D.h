@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.rdl,v 1.1 2004/11/29 20:23:41 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.rdl,v 1.2 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,8 @@
 
 #include "RooFitCore/RooAbsIntegrator.hh"
 #include "RooFitCore/RooNumIntConfig.hh"
+
+double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
 
 class RooGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:

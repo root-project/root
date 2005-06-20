@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.rdl,v 1.21 2004/11/29 12:22:16 wverkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.22 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_CATEGORY
 #define ROO_CATEGORY
 
-#include <iostream>
+#include "Riostream.h"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 
 class RooCategory : public RooAbsCategoryLValue {
@@ -35,8 +35,8 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
   
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { return kTRUE; }
@@ -45,7 +45,16 @@ public:
   Bool_t defineType(const char* label, Int_t index) ;
   void clearTypes() { RooAbsCategory::clearTypes() ; }
 
+  void clearRange(const char* name, Bool_t silent) ;
+  void setRange(const char* rangeName, const char* stateNameList) ;
+  void addToRange(const char* rangeName, const char* stateNameList) ;
+  Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
+  virtual Bool_t isInRange(const char* rangeName) const { return isStateInRange(rangeName,getLabel()) ; } 
+  virtual Bool_t hasRange(const char* rangeName) const { return _altRanges.FindObject(rangeName) ? kTRUE : kFALSE ; }
+ 
 protected:
+
+  RooLinkedList _altRanges ; //! alternative range definitions for categories ;
 
   virtual RooCatType evaluate() const { return RooCatType() ;} // dummy because we overload getIndex()/getLabel()
 

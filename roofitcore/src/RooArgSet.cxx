@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.57 2005/04/18 21:44:41 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.58 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,8 +41,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include "TClass.h"
@@ -54,16 +54,9 @@
 #include "RooFitCore/RooStringVar.hh"
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooArgList.hh"
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::ifstream;
-using std::istream;
-using std::ofstream;
-using std::ostream;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooArgSet)
@@ -449,7 +442,7 @@ void RooArgSet::writeToFile(const char* fileName)
 
 
 
-Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, const char* section) 
+Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, const char* section, Bool_t verbose) 
 {
   // Read contents of the argset from specified file.
   // See readFromStream() for details
@@ -458,7 +451,7 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
     cout << "RooArgSet::readFromFile(" << GetName() << ") error opening file " << fileName << endl ;
     return kTRUE ;
   }
-  return readFromStream(ifs,kFALSE,flagReadAtt,section,kTRUE) ;
+  return readFromStream(ifs,kFALSE,flagReadAtt,section,verbose) ;
 }
 
 
@@ -573,6 +566,25 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       continue ;
     }
 
+    // Process include directives
+    if (!token.CompareTo("include")) {
+      if (parser.atEOL()) {
+	cout << "RooArgSet::readFromStream(" << GetName() 
+	     << "): no filename found after include statement" << endl ;
+	return kTRUE ;
+      }
+      TString filename = parser.readLine() ;
+      ifstream incfs(filename) ;
+      if (!incfs.good()) {
+	cout << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
+	return kTRUE ;
+      }
+      cout << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
+	   << filename << endl ;
+      if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
+      continue ;
+    }
+
     // Process section headers if requested
     if (*token.Data()=='[') {
       TString hdr(token) ;
@@ -595,25 +607,6 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       continue ;
     }
 
-    // Process include directives
-    if (!token.CompareTo("include")) {
-      if (parser.atEOL()) {
-	cout << "RooArgSet::readFromStream(" << GetName() 
-	     << "): no filename found after include statement" << endl ;
-	return kTRUE ;
-      }
-      TString filename = parser.readLine() ;
-      ifstream incfs(filename) ;
-      if (!incfs.good()) {
-	cout << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
-	return kTRUE ;
-      }
-      cout << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
-	   << filename << endl ;
-      if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
-      continue ;
-    }
-    
     // Conditional statement evaluation
     if (!token.CompareTo("if")) {
       
@@ -716,8 +709,10 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 	if (!argRet && flagReadAtt) arg->setAttribute(flagReadAtt,kTRUE) ;
 	retVal |= argRet ;
       } else {
-	cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
-	     << token << " not in list, ignored" << endl ;
+	if (verbose) {
+	  cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
+	       << token << " not in list, ignored" << endl ;
+	}
 	parser.zapToEnd() ;
       }
     } else {

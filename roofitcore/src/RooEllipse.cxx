@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooEllipse.cc,v 1.9 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooEllipse.cc,v 1.10 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,12 +25,9 @@
 #include "RooFitCore/RooEllipse.hh"
 #include "TMath.h"
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
 #include <assert.h>
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooEllipse)
 

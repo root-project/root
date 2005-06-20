@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.9 2005/04/18 21:44:45 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.10 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,8 +37,8 @@ namespace RooFit {
   RooCmdArg Precision(Double_t prec)               { return RooCmdArg("Precision",0,0,prec,0,0,0,0,0) ; }
   RooCmdArg ShiftToZero()                          { return RooCmdArg("ShiftToZero",1,0,0,0,0,0,0,0) ; }
   RooCmdArg Normalization(Double_t scaleFactor)    { return RooCmdArg("Normalization",RooAbsReal::Relative,0,scaleFactor,0,0,0,0,0) ; }
-  RooCmdArg Range(const char* rangeName)           { return RooCmdArg("RangeWithName",0,0,0,0,rangeName,0,0,0) ; }
-  RooCmdArg Range(Double_t lo, Double_t hi)        { return RooCmdArg("Range",0,0,lo,hi,0,0,0,0) ; }
+  RooCmdArg Range(const char* rangeName, Bool_t adjustNorm)   { return RooCmdArg("RangeWithName",adjustNorm,0,0,0,rangeName,0,0,0) ; }
+  RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm){ return RooCmdArg("Range",adjustNorm,0,lo,hi,0,0,0,0) ; }
   RooCmdArg VLines()                               { return RooCmdArg("VLines",1,0,0,0,0,0,0,0) ; } 
   RooCmdArg LineColor(Color_t color)               { return RooCmdArg("LineColor",color,0,0,0,0,0,0,0) ; }
   RooCmdArg LineStyle(Style_t style)               { return RooCmdArg("LineStyle",style,0,0,0,0,0,0,0) ; }
@@ -174,6 +174,7 @@ namespace RooFit {
   RooCmdArg LatexTableStyle(Bool_t flag)  { return RooCmdArg("LatexTableStyle",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg VerbatimName(Bool_t flag)     { return RooCmdArg("VerbatimName",flag,0,0,0,0,0,0,0) ; }
 
+  RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
  
 } // End namespace RooFit
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.26 2005/04/18 21:44:19 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.27 2005/06/16 09:31:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,8 +28,6 @@
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 
-using std::cout;
-using std::endl;
 
 ClassImp(RooAbsData)
 ;

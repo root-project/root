@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRootFinder.cc,v 1.8 2005/02/25 14:22:52 wverkerke Exp $
+ *    File: $Id: RooAbsRootFinder.cc,v 1.9 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,9 +23,7 @@
 #include "RooFitCore/RooAbsRootFinder.hh"
 #include "RooFitCore/RooAbsRootFinder.hh"
 #include "RooFitCore/RooAbsFunc.hh"
-#include <iostream>
-using std::cout;
-using std::endl;
+#include "Riostream.h"
 
 ClassImp(RooAbsRootFinder)
 ;

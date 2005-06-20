@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.22 2005/04/18 21:44:16 wverkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.23 2005/06/16 09:31:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,16 +20,11 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <iomanip>
 #include "TString.h"
 #include "RooFitCore/Roo1DTable.hh"
-using std::cout;
-using std::endl;
-using std::ostream;
-using std::setfill;
-using std::setw;
 
 ClassImp(Roo1DTable)
 

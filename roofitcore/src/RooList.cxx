@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooList.cc,v 1.9 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooList.cc,v 1.10 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,9 +23,7 @@
 #include "RooFitCore/RooList.hh"
 #include "RooFitCore/RooList.hh"
 
-#include <iostream>
-using std::cout;
-using std::endl;
+#include "Riostream.h"
 
 ClassImp(RooList)
 

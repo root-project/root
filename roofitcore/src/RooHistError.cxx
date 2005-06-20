@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.19 2005/04/20 15:10:15 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.20 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,10 +26,8 @@
 #include "RooFitCore/RooBrentRootFinder.hh"
 #include "TMath.h"
 
-#include <iostream>
+#include "Riostream.h"
 #include <assert.h>
-using std::cout;
-using std::endl;
 
 ClassImp(RooHistError)
   ;

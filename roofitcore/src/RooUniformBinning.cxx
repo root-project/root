@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.cc,v 1.13 2005/04/18 21:44:54 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.14 2005/06/16 09:31:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,9 +18,6 @@
 
 #include "RooFitCore/RooUniformBinning.hh"
 #include "RooFitCore/RooUniformBinning.hh"
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooUniformBinning)
 ;

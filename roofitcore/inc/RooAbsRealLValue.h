@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.32 2005/02/26 18:06:30 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.33 2005/04/18 21:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_REAL_LVALUE
 #define ROO_ABS_REAL_LVALUE
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -50,8 +50,8 @@ public:
   virtual Double_t getBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
   
   // Get fit range limits
-  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const = 0 ;
-  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) = 0 ;
+  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const = 0 ;
+  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
   virtual Bool_t hasBinning(const char* name) const = 0 ;
   virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound() ; }
   virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound() ; }
@@ -81,11 +81,11 @@ public:
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   
   // Build 1-dimensional plots
   RooPlot* frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none, 

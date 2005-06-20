@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMath.cc,v 1.17 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.18 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,12 +26,7 @@
 #include "RooFitCore/RooMath.hh"
 #include "TMath.h"
 #include <math.h>
-#include <iostream>
-using std::cout;
-using std::endl;
-using std::flush;
-using std::ifstream;
-using std::ofstream;
+#include "Riostream.h"
 
 ClassImp(RooMath)
 ;
@@ -428,12 +423,12 @@ const char* RooMath::cacheFileName()
 }
 
 
-Double_t RooMath::erf(const Double_t x) 
+Double_t RooMath::erf(Double_t x) 
 {
   return TMath::Erf(x) ;
 }
 
-Double_t RooMath::erfc(const Double_t x)
+Double_t RooMath::erfc(Double_t x)
 {
   return TMath::Erfc(x) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.12 2005/02/25 14:22:56 wverkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.13 2005/04/18 21:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ERROR_VAR
 #define ROO_ERROR_VAR
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -49,8 +49,8 @@ public:
 //   virtual Bool_t isDerived() const { return kFALSE ; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Set/get finite fit range limits
   inline void setMin(Double_t value) { setMin(0,value) ; }
@@ -62,8 +62,8 @@ public:
 
   void setBins(Int_t nBins) { setBinning(RooUniformBinning(getMin(),getMax(),nBins)) ; }
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
-  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
-  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ;
+  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
+  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ;
   Bool_t hasBinning(const char* name) const ;
 
   // Set infinite fit range limits

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.90 2005/04/18 21:44:16 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.91 2005/06/16 09:31:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,15 +48,9 @@
 #include <string.h>
 #include <iomanip>
 #include <fstream>
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::istream;
-using std::ofstream;
-using std::ostream;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooAbsArg)
@@ -1351,7 +1345,7 @@ UInt_t RooAbsArg::crc32(const char* data) const
 }
 
 
-void RooAbsArg::printCompactTreeHook(std::ostream&, const char *) 
+void RooAbsArg::printCompactTreeHook(ostream&, const char *) 
 {
 }
 

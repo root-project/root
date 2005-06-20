@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.4 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.5 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@
 
 #include <assert.h>
 #include <assert.h>
-#include <iostream>
+#include "Riostream.h"
 #include "TMath.h"
 #include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -49,8 +49,6 @@
 #include "RooFitCore/RooNumIntFactory.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
 
-using std::cout ;
-using std::endl ;
 
 ClassImp(RooGaussKronrodIntegrator1D)
 ;
@@ -239,8 +237,6 @@ Double_t RooGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 #include <math.h>
 #include <float.h>
 #include <stdlib.h>
-using std::cout;
-using std::endl;
 
 int gsl_integration_qng (const gsl_function * f,
                          double a, double b,

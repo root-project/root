@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.cc,v 1.13 2005/04/18 21:44:49 wverkerke Exp $
+ *    File: $Id: RooRealConstant.cc,v 1.14 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,10 +38,6 @@ ClassImp(RooRealConstant)
 
 RooArgList* RooRealConstant::_constDB = 0;
 TIterator* RooRealConstant::_constDBIter = 0;
-
-namespace RooFit {
-  RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
-}
 
 RooConstVar& RooRealConstant::value(Double_t value) 
 {

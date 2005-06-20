@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.rdl,v 1.12 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.13 2005/02/25 14:22:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,7 +38,7 @@ public:
 
   virtual void setProtoDataOrder(Int_t* lut) ;
 
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
@@ -49,6 +49,7 @@ protected:
   friend class RooProdGenContext ;
   friend class RooAddGenContext ;
   friend class RooSimGenContext ;
+  friend class RooEffGenContext ;
 
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRangeBinning.cc,v 1.2 2005/02/25 14:23:01 wverkerke Exp $
+ *    File: $Id: RooRangeBinning.cc,v 1.3 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,9 +22,7 @@
 
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooNumber.hh"
-#include <iostream>
-using std::cout ;
-using std::endl ;
+#include "Riostream.h"
 
 
 #include "RooFitCore/RooRangeBinning.hh"

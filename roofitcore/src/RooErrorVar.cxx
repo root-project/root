@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.14 2005/04/18 21:44:44 wverkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.15 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,10 +29,6 @@
 #include "RooFitCore/RooAbsBinning.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRangeBinning.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooErrorVar)
 ;
@@ -82,13 +78,13 @@ Bool_t RooErrorVar::hasBinning(const char* name) const
 }
 
 
-const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose) const 
+const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const 
 {
-  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose) ;
+  return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
 
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose) 
+RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {
@@ -99,6 +95,11 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose)
   RooAbsBinning* binning = (RooAbsBinning*) _altBinning.FindObject(name) ;
   if (binning) {
     return *binning ;
+  }
+
+  // Return default binning if binning is not found and no creation is requested
+  if (!createOnTheFly) {
+    return *_binning ;
   }
 
   // Create a new RooRangeBinning with this name with default range

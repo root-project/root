@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.25 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.26 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,8 +21,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <stdlib.h>
 #include <string.h>
 #include "TTree.h"
@@ -31,10 +31,6 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooCategory) 
 ;
@@ -53,12 +49,31 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name)
 {
   // Copy constructor
+
+  // Copy ranges
+  TIterator* iter = other._altRanges.MakeIterator() ;
+  TList* origTypeList ;
+  while((origTypeList=(TList*)iter->Next())) {
+    TList* typeList = new TList ;
+    typeList->SetName(origTypeList->GetName()) ;
+    TIterator* iter2 = origTypeList->MakeIterator() ;
+    RooCatType* state ;
+    while((state=(RooCatType*)iter2->Next())) {
+      typeList->Add(const_cast<RooCatType*>(lookupType(state->GetName()))) ;
+    }
+    delete iter2 ;
+  }
+  delete iter ;
+
 }
 
 
 RooCategory::~RooCategory()
 {
   // Destructor
+
+  // Delete ranges
+  _altRanges.Delete() ;
 }
 
 
@@ -152,5 +167,91 @@ void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
+void RooCategory::clearRange(const char* name, Bool_t silent)
+{
+  // Check that both input arguments are not null pointers
+  if (!name) {
+    cout << "RooCategory::clearRange(" << GetName() << ") ERROR: must specificy valid range name" << endl ;
+    return ;
+  }
+  
+  // Find the list that represents this range
+  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(name)) ;
+
+  // If it exists, clear it 
+  if (rangeNameList) {
+    rangeNameList->Clear() ;
+  } else if (!silent) {
+    cout << "RooCategory::clearRange(" << GetName() << ") ERROR: range '" << name << "' does not exist" << endl ;
+  } 
+}
+
+
+void RooCategory::setRange(const char* name, const char* stateNameList) 
+{
+  clearRange(name,kTRUE) ;
+  addToRange(name,stateNameList) ;
+}
+
+
+void RooCategory::addToRange(const char* name, const char* stateNameList) 
+{
+  // Check that both input arguments are not null pointers
+  if (!name || !stateNameList) {
+    cout << "RooCategory::setRange(" << GetName() << ") ERROR: must specificy valid name and state name list" << endl ;
+    return ;
+  }
+  
+  // Find the list that represents this range
+  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(name)) ;
+
+  // If it does not exist, create it on the fly
+  if (!rangeNameList) {
+    cout << "RooCategory::setRange(" << GetName() 
+	 << ") new range named '" << name << "' created with state list " << stateNameList << endl ;
+
+    rangeNameList = new TList ;
+    rangeNameList->SetName(name) ;
+    _altRanges.Add(rangeNameList) ;    
+  }
+
+  // Parse list of state names, verify that each is valid and add them to the list
+  char* buf = new char[strlen(stateNameList)+1] ;
+  strcpy(buf,stateNameList) ;
+  char* token = strtok(buf,",") ;
+  while(token) {
+    const RooCatType* state = lookupType(token,kFALSE) ;
+    if (state && !rangeNameList->FindObject(token)) {
+      rangeNameList->Add(const_cast<RooCatType*>(state)) ;	
+    } else {
+      cout << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
+	   << token << "' in state name list" << endl ;
+    }
+    token = strtok(0,",") ;
+  }
+
+  delete[] buf ;
+}
+
+Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName) const
+{
+  // Check that both input arguments are not null pointers
+  if (!rangeName||!stateName) {
+    cout << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid range name and state name" << endl ;
+    return kFALSE ;
+  }
+  
+  // Find the list that represents this range
+  TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(rangeName)) ;
+
+  // If the range doesn't exist create range with all valid states included
+  if (rangeNameList) {
+    return rangeNameList->FindObject(stateName) ? kTRUE : kFALSE ;  
+  }
+
+  // Range does not exists -- create it on the fly with full set of states (analoguous to RooRealVar)
+  return kTRUE ;
+
+}
 
 

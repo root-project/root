@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.36 2005/04/18 21:44:53 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.37 2005/06/16 09:31:32 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -99,7 +99,7 @@ public:
   // WVE Debug stuff
   void dump() ;
 
-  void printToStream(std::ostream& os, PrintOption opt, TString indent) const ;
+  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
 
   using RooAbsData::plotOn ;
 

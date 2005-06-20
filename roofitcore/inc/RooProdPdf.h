@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.38 2005/02/23 15:09:55 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.39 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_PROD_PDF
 #define ROO_PROD_PDF
 
-#include <iostream>
+#include "Riostream.h"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooLinkedList.hh"
@@ -94,7 +94,7 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
 
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
 
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 

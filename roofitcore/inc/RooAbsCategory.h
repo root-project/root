@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategory.rdl,v 1.34 2005/02/25 14:22:49 wverkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.35 2005/04/18 21:44:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_CATEGORY
 #define ROO_ABS_CATEGORY
 
-#include <iostream>
+#include "Riostream.h"
 #include "TNamed.h"
 #include "TObjArray.h"
 #include "THashList.h"
@@ -40,8 +40,11 @@ public:
   virtual Int_t getIndex() const ;
   virtual const char* getLabel() const ;
   Bool_t operator==(Int_t index) const ;
+  Bool_t operator!=(Int_t index) { return !operator==(index);}
   Bool_t operator==(const char* label) const ;
+  Bool_t operator!=(const char* label) { return !operator==(label);}
   virtual Bool_t operator==(const RooAbsArg& other) ;
+  Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
   
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  
@@ -55,9 +58,9 @@ public:
   Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
-  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { return kTRUE ; }
 

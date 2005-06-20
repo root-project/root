@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooComplex.cc,v 1.10 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooComplex.cc,v 1.11 2005/06/16 09:31:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,11 +20,8 @@
 
 #include "RooFitCore/RooComplex.hh"
 #include "RooFitCore/RooComplex.hh"
-#include <iostream>
+#include "Riostream.h"
 #include <iomanip>
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooComplex)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.16 2005/04/18 21:44:46 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.17 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,7 @@
 #include "TObjString.h"
 
 #include <ctype.h>
-#include <iostream>
+#include "Riostream.h"
 #include <fstream>
 #include <string.h>
 
@@ -37,14 +37,9 @@
 #include <strings.h>
 #endif
 
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 const Int_t   kSpaceNum      = 1;

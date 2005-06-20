@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.80 2005/02/25 16:37:24 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.81 2005/04/18 21:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,8 +62,10 @@ public:
 			  const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
 			  const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
 			  const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
-			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const {
-    return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none,
+			  const RooCmdArg& arg9=RooCmdArg::none, const RooCmdArg& arg10=RooCmdArg::none
+              ) const {
+    return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
 
   // Backward compatibility functions
@@ -111,10 +113,6 @@ public:
   virtual void initGenerator(Int_t code) ;
   virtual void generateEvent(Int_t code);  
 
-  // Optimized accept/reject generator support
-  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) ;
-
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
@@ -151,7 +149,7 @@ public:
   virtual Double_t expectedEvents(const RooArgSet* nset=0) const ; 
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   static void verboseEval(Int_t stat) { _verboseEval = stat ; }
 
@@ -185,11 +183,12 @@ protected:
 
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
+  friend class RooEffGenContext ;
   friend class RooAddGenContext ;
   friend class RooProdGenContext ;
   friend class RooSimGenContext ;
-  friend class RooSimultaneous ;
   friend class RooConvGenContext ;
+  friend class RooSimultaneous ;
   friend class RooMCStudy ;
 
   Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen) const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThresholdCategory.rdl,v 1.5 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooThresholdCategory.rdl,v 1.6 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,8 +35,8 @@ public:
   Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
   

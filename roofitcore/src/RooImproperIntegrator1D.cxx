@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooImproperIntegrator1D.cc,v 1.14 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooImproperIntegrator1D.cc,v 1.15 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,10 +29,8 @@
 #include "RooFitCore/RooNumIntFactory.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
-using std::cout;
-using std::endl;
 
 ClassImp(RooImproperIntegrator1D)
 ;

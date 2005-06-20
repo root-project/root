@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.cc,v 1.34 2005/04/18 21:44:45 wverkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.35 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,10 +42,6 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooChi2Var.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooFormulaVar)
 

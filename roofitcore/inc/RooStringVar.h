@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.rdl,v 1.20 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.21 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_STRING_VAR
 #define ROO_STRING_VAR
 
-#include <iostream>
+#include "Riostream.h"
 #include "TString.h"
 #include "RooFitCore/RooAbsString.hh"
 class RooArgSet ;
@@ -40,8 +40,8 @@ public:
   inline virtual Bool_t isFundamental() const { return kTRUE; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
 

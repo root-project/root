@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.29 2005/02/15 21:17:17 wverkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.30 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,7 +60,7 @@ public:
   void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
 
   // ascii printing
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
@@ -68,6 +68,7 @@ public:
   // data member get/set methods
   inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
   inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
+  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
   inline Double_t getFitRangeBinW() const { return _normBinWidth; }
   inline Double_t getPadFactor() const { return _padFactor; }
   inline void setPadFactor(Double_t factor) { if(factor >= 0) _padFactor= factor; }
@@ -129,8 +130,11 @@ protected:
   RooAbsRealLValue *_plotVarClone; // A clone of the variable we are plotting.
   RooArgSet *_plotVarSet;    // A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
+
+  const RooPlotable* _normObj ;    // Pointer to normalization object ;
   Double_t _normNumEvts;     // Number of events in histogram (for normalization)
   Double_t _normBinWidth;    // Histogram bin width (for normalization)
+
   TIterator *_iterator;      //! non-persistent
 
   Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
@@ -138,7 +142,7 @@ protected:
 
   RooPlot(const RooPlot& other); // object cannot be copied
 
-  ClassDef(RooPlot,1)        // Plot frame and container for graphics objects
+  ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
 };
 
 #endif

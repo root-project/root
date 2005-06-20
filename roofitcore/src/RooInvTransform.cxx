@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooInvTransform.cc,v 1.8 2005/02/25 14:22:57 wverkerke Exp $
+ *    File: $Id: RooInvTransform.cc,v 1.9 2005/06/16 09:31:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,10 +23,8 @@
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooInvTransform.hh"
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
-using std::cout;
-using std::endl;
 
 ClassImp(RooInvTransform)
 ;

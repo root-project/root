@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.9 2005/04/18 21:44:49 wverkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.10 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 
@@ -28,8 +28,6 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "TMath.h"
-using std::cout;
-using std::endl;
 
 ClassImp(RooPolyVar)
 ;

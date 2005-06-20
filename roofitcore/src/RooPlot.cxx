@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.42 2005/04/18 21:44:48 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.43 2005/06/16 09:31:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,19 +43,16 @@
 #include "TAttMarker.h"
 #include "TAttText.h"
 
-#include <iostream>
+#include "Riostream.h"
 #include <string.h>
 #include <assert.h>
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooPlot)
 ;
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), 
-  _items(), _plotVarClone(0), _plotVarSet(0), 
+  _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
   _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with the specified x-axis limits.
@@ -65,7 +62,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
-  _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits.
   SetMinimum(ymin);
@@ -75,7 +72,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   TH1(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()), _items(),
-  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
@@ -100,7 +97,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
-  _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
@@ -114,7 +111,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 
 RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   TH1(name,title,nbins,xmin,xmax), _items(), 
-  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(1)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
@@ -135,7 +132,7 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 
 RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   TH1(histName(),"RooPlot",nbins,xmin,xmax), _items(), 
-  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(1)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
@@ -323,11 +320,13 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
     // scale this histogram to match that density
     _normNumEvts = rp->getFitRangeNEvt()/corFac ;
+    _normObj = rp ;
     //cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
     //cout << "updating numevts to " << _normNumEvts << endl ;
     
   } else {
 
+    _normObj = rp ;
     _normNumEvts = rp->getFitRangeNEvt() ;
     _normBinWidth = rp->getFitRangeBinW() ;
 
@@ -675,3 +674,12 @@ const char* RooPlot::DrawOpt::rawOpt() const
   return buf ;
 }
 
+
+Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const 
+{
+  Double_t scaleFactor = 1.0 ;
+  if (_normObj) {
+    scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
+  }
+  return getFitRangeNEvt()*scaleFactor ;
+}

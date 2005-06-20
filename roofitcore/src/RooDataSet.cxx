@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.90 2005/04/18 21:44:43 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.91 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,8 +22,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <fstream>
 #include "TH2.h"
 #include "RooFitCore/RooDataSet.hh"
@@ -37,15 +37,9 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooDataHist.hh"
 #include "TROOT.h"
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::ostream;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
-char* operator+( std::streampos&, char* );
+char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooDataSet)

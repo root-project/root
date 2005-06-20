@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMapCatEntry.rdl,v 1.10 2005/02/25 14:22:59 wverkerke Exp $
+ *    File: $Id: RooMapCatEntry.rdl,v 1.11 2005/04/18 21:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_MAP_CAT_ENTRY
 #define ROO_MAP_CAT_ENTRY
 
-#include <iostream>
+#include "Riostream.h"
 #include "TNamed.h"
 #include "TRegexp.h"
 #include "RooFitCore/RooCatType.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.70 2005/02/25 14:22:51 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.71 2005/04/18 21:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -83,6 +83,11 @@ public:
               { return createIntegral(iset,0,&cfg,rangeName) ; }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
+  // Optimized accept/reject generator support
+  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
+  virtual Double_t maxVal(Int_t code) ;
+
+
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
   inline Double_t getPlotMax() const { return _plotMax; }
@@ -112,7 +117,9 @@ public:
 			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
 			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),
+			  const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()
+              ) const ;
 
   // Forwarder function for backward compatibility
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
@@ -130,11 +137,11 @@ public:
                        const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
@@ -225,8 +232,8 @@ protected:
   
   struct PlotOpt {
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), projSet(0), precision(1e-3), shiftToZero(kFALSE),
-               projDataSet(0),rangeLo(0),rangeHi(0),wmode(RooCurve::Extended),projectionRangeName(0),curveInvisible(kFALSE),
-               curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.) {} ;
+               projDataSet(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),projectionRangeName(0),
+               curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
@@ -237,6 +244,7 @@ protected:
    const RooArgSet* projDataSet ;
    Double_t rangeLo ;
    Double_t rangeHi ;
+   Bool_t postRangeFracScale ;
    RooCurve::WingMode wmode ;
    const char* projectionRangeName ;
    Bool_t curveInvisible ;

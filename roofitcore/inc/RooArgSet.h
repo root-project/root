@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.rdl,v 1.39 2004/11/29 20:22:49 wverkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.40 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -85,13 +85,13 @@ public:
   RooAbsArg& operator[](const char* name) const ;   
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
-  Bool_t readFromStream(std::istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact, const char* section=0) ;  
+  Bool_t readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact, const char* section=0) ;  
   void writeToFile(const char* fileName) ;
-  Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0) ;
+  Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 
   // Utilities functions when used as configuration object
   Double_t getRealValue(const char* name, Double_t defVal=0, Bool_t verbose=kFALSE) const ;

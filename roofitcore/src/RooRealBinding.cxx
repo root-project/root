@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.cc,v 1.16 2005/04/18 21:44:49 wverkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.17 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,7 +29,6 @@
 #include "RooFitCore/RooNameReg.hh"
 
 #include <assert.h>
-using std::cout;
 
 ClassImp(RooRealBinding)
 ;

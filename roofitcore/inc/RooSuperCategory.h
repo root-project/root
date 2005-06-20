@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.rdl,v 1.12 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.13 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@
 class RooSuperCategory : public RooAbsCategoryLValue {
 public:
   // Constructors etc.
-  inline RooSuperCategory() { }
+  inline RooSuperCategory() : _catIter(0) { }
   RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooSuperCategory(const RooSuperCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooSuperCategory(*this,newname); }
@@ -36,14 +36,17 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   TIterator* MakeIterator() const ;
   const RooArgSet& inputCatList() const { return _catSet ; }
+
+  virtual Bool_t isInRange(const char* rangeName) const ;
+  virtual Bool_t hasRange(const char* rangeName) const ;
 
 protected:
 
@@ -52,6 +55,7 @@ protected:
   TString currentLabel() const ;
 
   RooSetProxy _catSet ; // Set of input category
+  TIterator* _catIter ; // Iterator over set of input categories
   
   virtual RooCatType evaluate() const ; 
 

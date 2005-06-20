@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.55 2005/04/18 21:44:50 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.56 2005/06/16 09:31:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,11 +35,6 @@
 #include "RooFitCore/RooErrorVar.hh"
 #include "RooFitCore/RooRangeBinning.hh"
 #include "RooFitCore/RooCmdConfig.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
-using std::setw;
 
 ClassImp(RooRealVar)
 ;
@@ -147,13 +142,13 @@ Bool_t RooRealVar::hasBinning(const char* name) const
 }
 
 
-const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose) const 
+const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const 
 {
-  return const_cast<RooRealVar*>(this)->getBinning(name, verbose) ;
+  return const_cast<RooRealVar*>(this)->getBinning(name, verbose, createOnTheFly) ;
 }
 
 
-RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose) 
+RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {
@@ -166,15 +161,19 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose)
     return *binning ;
   }
 
+  // Return default binning if requested binning doesn't exist
+  if (!createOnTheFly) {
+    return *_binning ;
+  }  
+
   // Create a new RooRangeBinning with this name with default range
   binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
     cout << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
 	 << name << "' created with default bounds" << endl ;
   }
-
   _altBinning.Add(binning) ;
-
+  
   return *binning ;
 }
 
@@ -209,7 +208,7 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
 void RooRealVar::setMin(const char* name, Double_t value) 
 {
   // Set new minimum of fit range 
-  RooAbsBinning& binning = getBinning(name) ;
+  RooAbsBinning& binning = getBinning(name,kTRUE,kTRUE) ;
 
   // Check if new limit is consistent
   if (value >= getMax()) {
@@ -234,7 +233,7 @@ void RooRealVar::setMin(const char* name, Double_t value)
 void RooRealVar::setMax(const char* name, Double_t value)
 {
   // Set new maximum of fit range 
-  RooAbsBinning& binning = getBinning(name) ;
+  RooAbsBinning& binning = getBinning(name,kTRUE,kTRUE) ;
 
   // Check if new limit is consistent
   if (value < getMin()) {
@@ -261,7 +260,7 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
   Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
   // Set new fit range 
-  RooAbsBinning& binning = getBinning(name,kFALSE) ;
+  RooAbsBinning& binning = getBinning(name,kFALSE,kTRUE) ;
 
   // Check if new limit is consistent
   if (min>max) {
@@ -327,17 +326,15 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	  break ;
 	}
 
-	// Next token is error
-	Double_t error ;
-	if (parser.readDouble(error)) break ;
-	setError(error) ;
-
-	// Look for optional asymmetric error
+	// Next token is error or asymmetric error, check if first char of token is a '('
 	TString tmp = parser.readToken() ;
 	if (tmp.CompareTo("(")) {
-	  // No error, but back token
-	  token = tmp ;
-	  reprocessToken = kTRUE ;	  
+	  // Symmetric error, convert token do double
+
+	  Double_t error ;
+	  parser.convertToDouble(tmp,error) ;
+	  setError(error) ;
+
 	} else {
 	  // Have error
 	  Double_t asymErrLo, asymErrHi ;
@@ -439,16 +436,13 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       if (_value>=0) os << " " ;
       os << Form(fmtVal,_value) ;
 
-      if (hasError()) {
-	os << " +/- " << Form(fmtErr,getError()) ;
-      } else {
-	os << setw(_printSigDigits+9) << " " ;
-      }
-
       if (hasAsymError()) {
-	os << " (" << Form(fmtErr,getAsymErrorLo())
+	os << " +/- (" << Form(fmtErr,getAsymErrorLo())
 	   << ", " << Form(fmtErr,getAsymErrorHi()) << ")" ;
-      }
+      } else  if (hasError()) {
+	os << " +/- " << Form(fmtErr,getError()) ;
+      } 
+
       os << " " ;
     } else {
       os << format(_printSigDigits,"EFA")->Data() << " " ;

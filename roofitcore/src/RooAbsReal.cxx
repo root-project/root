@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.112 2005/04/20 15:10:16 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.113 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,7 +46,7 @@
 #include "RooFitCore/RooNumIntConfig.hh"
 #include "RooFitCore/RooAddition.hh"
 
-#include <iostream>
+#include "Riostream.h"
 
 #include "TObjString.h"
 #include "TTree.h"
@@ -56,10 +56,6 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TAttLine.h"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
  
 ClassImp(RooAbsReal)
 ;
@@ -839,7 +835,8 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			    const RooCmdArg& arg3, const RooCmdArg& arg4,
 			    const RooCmdArg& arg5, const RooCmdArg& arg6,
-			    const RooCmdArg& arg7, const RooCmdArg& arg8) const
+			    const RooCmdArg& arg7, const RooCmdArg& arg8,
+			    const RooCmdArg& arg9, const RooCmdArg& arg10) const
 {
   // Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
   // will show a unit normalized curve in the frame variable, taken at the present value 
@@ -903,6 +900,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
+  l.Add((TObject*)&arg9) ;  l.Add((TObject*)&arg10) ;
   return plotOn(frame,l) ;
 }
 
@@ -925,6 +923,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineObject("projData","ProjData",1) ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
+  pc.defineInt("rangeAdjustNorm","Range",0,0) ;
+  pc.defineInt("rangeWNAdjustNorm","RangeWithName",0,0) ;
   pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
   pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
@@ -965,10 +965,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   if (pc.hasProcessed("Range")) {
     o.rangeLo = pc.getDouble("rangeLo") ;
     o.rangeHi = pc.getDouble("rangeHi") ;
+    o.postRangeFracScale = pc.getInt("rangeAdjustNorm") ;
     if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
   } else if (pc.hasProcessed("RangeWithName")) {    
     o.rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
     o.rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
+    o.postRangeFracScale = pc.getInt("rangeAdjustNorm") ;
     if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
   } else {
 
@@ -978,6 +980,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     if (plotDepVar->hasBinning("fit")) {
       o.rangeLo = plotDepVar->getMin("fit") ;
       o.rangeHi = plotDepVar->getMax("fit") ;
+      o.postRangeFracScale = kTRUE ;
       if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
     }
     delete plotDep ;
@@ -1266,6 +1269,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode) ;
     cout << endl ;
 
+    // Add self to other curve if requested
+    if (o.addToCurveName) {
+      RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
+      RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
+      delete curve ;
+      curve = sumCurve ;
+    }
+
     if (o.curveName) {
       curve->SetName(o.curveName) ;
     }
@@ -1282,6 +1293,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     if (o.rangeLo==0 && o.rangeHi==0) {
       o.rangeLo = frame->GetXaxis()->GetXmin() ;
       o.rangeHi = frame->GetXaxis()->GetXmax() ;
+    }
+
+    // Calculate a posteriori range fraction scaling if requested (2nd part of normalization correction for
+    // result fit on subrange of data)
+    if (o.postRangeFracScale) {
+      plotVar->setRange("plotRange",o.rangeLo,o.rangeHi) ;
+      RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,"plotRange") ;
+      o.scaleFactor /= intFrac->getVal() ;
+      delete intFrac ;
     }
 
     // create a new curve of our function using the clone to do the evaluations
@@ -2089,12 +2109,16 @@ Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset,
 
 void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList, Bool_t /*verbose*/) 
 {
-  TIterator* vIter = dset->get()->createIterator() ;
+  RooArgSet* observables = getObservables(dset) ;
+  TIterator* vIter = observables->createIterator() ;
   RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*) vIter->Next())) {
-    if (dependsOn(*arg)) pruneList.add(*arg) ;
+  while ((arg=(RooAbsArg*) vIter->Next())) {    
+    if (!dependsOn(*arg)) {
+      pruneList.add(*arg) ;
+    }
   }
   delete vIter ;
+  delete observables ;
 }
 
 
@@ -2141,4 +2165,24 @@ void RooAbsReal::selectNormalizationRange(const char*, Bool_t)
 }
 
 
+
+Int_t RooAbsReal::getMaxVal(const RooArgSet& /*vars*/) const 
+  // Advertise capability to determine maximum value of function for given set of 
+  // observables. If no direct generator method is provided, this information
+  // will assist the accept/reject generator to operate more efficiently as
+  // it can skip the initial trial sampling phase to empirically find the function
+  // maximum
+{
+  return 0 ;
+}
+
+
+Double_t RooAbsReal::maxVal(Int_t /*code*/) 
+{
+  // Return maximum value for set of observables identified by code assigned
+  // in getMaxVal
+
+  assert(1) ;
+  return 0 ;
+}
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlotable.rdl,v 1.11 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.12 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,9 +44,10 @@ public:
   // the normalization value refers to the full "fit range" instead of
   // the "plot range"
   virtual Double_t getFitRangeNEvt() const = 0;
+  virtual Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const = 0;
   virtual Double_t getFitRangeBinW() const = 0;
 
-  virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   TObject *crossCast();
 protected:
   TString _yAxisLabel;

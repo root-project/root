@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStringVar.cc,v 1.24 2005/04/18 21:44:53 wverkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.25 2005/06/16 09:31:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,10 +28,6 @@
 #include "TTree.h"
 #include "RooFitCore/RooStringVar.hh"
 #include "RooFitCore/RooStreamParser.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooStringVar)
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsString.cc,v 1.29 2005/04/18 21:44:24 wverkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.30 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,8 +24,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "TObjString.h"
 #include "TH1.h"
 #include "TTree.h"
@@ -33,10 +33,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsString.hh"
 #include "RooFitCore/RooStringVar.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooAbsString) 
 ;

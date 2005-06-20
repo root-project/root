@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.9 2005/04/20 15:10:15 wverkerke Exp $
+ *    File: $Id: RooFit.rdl,v 1.1 2005/06/16 09:31:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,7 @@
 // Global include file to fix occasional compiler issues
 // An error in the construction of the system and C++ header files on
 // Solaris 8 / Workshop 6 Updates 1&2 leads to a conflict between the use
-// of ::clock_t and std::clock_t when <string> is compiled under
+// of ::clock_t and clock_t when <string> is compiled under
 // -D_XOPEN_SOURCE=500. The following code ensures that ::clock_t is
 // always defined and thus allows <string> to compile.
 // This is just a workaround and should be monitored as compiler and

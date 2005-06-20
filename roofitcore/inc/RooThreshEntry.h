@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooThreshEntry.rdl,v 1.8 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooThreshEntry.rdl,v 1.9 2005/04/18 21:44:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_THRESH_ENTRY
 #define ROO_THRESH_ENTRY
 
-#include <iostream>
+#include "Riostream.h"
 #include "TNamed.h"
 #include "TRegexp.h"
 #include "RooFitCore/RooCatType.hh"

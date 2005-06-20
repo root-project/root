@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.95 2005/04/18 21:44:21 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.96 2005/06/16 09:31:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -109,8 +109,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 #include "TObjString.h"
 #include "TPaveText.h"
@@ -135,9 +135,6 @@
 #include "RooFitCore/RooAddition.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooInt.hh"
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(RooAbsPdf) 
 ;
@@ -585,13 +582,14 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   // Options to control construction of -log(L)
   // ------------------------------------------
   // ConditionalObservables(const RooArgSet& set) -- Do not normalize PDF over listed observables
-  // Extended(Bool_t flag)         -- Add extended likelihood term, off by default
-  // Range(const char* name)       -- Fit only data inside range with given name
-  // NumCPU(int num)               -- Parallelize NLL calculation on num CPUs
-  // Optimize(Bool_t flag)         -- Activate constant term optimization (on by default)
-  // SplitRange(Bool_t flag)       -- Use separate fit ranges in a simultaneous fit. Actual range name for each
-  //                                  subsample is assumed to by rangeName_{indexState} where indexState
-  //                                  is the state of the master index category of the simultaneous fit
+  // Extended(Bool_t flag)           -- Add extended likelihood term, off by default
+  // Range(const char* name)         -- Fit only data inside range with given name
+  // Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
+  // NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
+  // Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
+  // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
+  //                                    subsample is assumed to by rangeName_{indexState} where indexState
+  //                                    is the state of the master index category of the simultaneous fit
   //
   // Options to control flow of fit procedure
   // ----------------------------------------
@@ -638,6 +636,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
+  pc.defineDouble("rangeLo","Range",0,-999.) ;
+  pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineInt("splitRange","SplitRange",0,0) ;
   pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -659,6 +659,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineMutex("FitOptions","InitialHesse") ;
   pc.defineMutex("FitOptions","Hesse") ;
   pc.defineMutex("FitOptions","Minos") ;
+  pc.defineMutex("Range","RangeWithName") ;
 
   
   // Process and check varargs 
@@ -683,6 +684,23 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t splitr   = pc.getInt("splitRange") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+
+  if (pc.hasProcessed("Range")) {
+    Double_t rangeLo = pc.getDouble("rangeLo") ;
+    Double_t rangeHi = pc.getDouble("rangeHi") ;
+   
+    // Create range with name 'fit' with above limits on all observables
+    RooArgSet* obs = getObservables(&data) ;
+    TIterator* iter = obs->createIterator() ;
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
+      if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
+    }
+    // Set range name to be fitted to "fit"
+    rangeName = "fit" ;
+  }
+
 
   RooArgSet projDeps ;
   RooArgSet* tmp = (RooArgSet*) pc.getObject("projDepSet") ;  
@@ -1164,26 +1182,6 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 }
 
 
-Int_t RooAbsPdf::getMaxVal(const RooArgSet& /*vars*/) const 
-  // Advertise capability to determine maximum value of function for given set of 
-  // observables. If no direct generator method is provided, this information
-  // will assist the accept/reject generator to operate more efficiently as
-  // it can skip the initial trial sampling phase to empirically find the function
-  // maximum
-{
-  return 0 ;
-}
-
-
-Double_t RooAbsPdf::maxVal(Int_t /*code*/) 
-{
-  // Return maximum value for set of observables identified by code assigned
-  // in getMaxVal
-
-  assert(1) ;
-  return 0 ;
-}
-
 
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
@@ -1244,18 +1242,23 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
 
 
-
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
 
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
-  pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
+  pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;  
   pc.defineObject("compSet","SelectCompSet",0) ;
   pc.defineString("compSpec","SelectCompSpec",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
+  pc.defineDouble("rangeLo","Range",0,-999.) ;
+  pc.defineDouble("rangeHi","Range",1,-999.) ;
+  pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineInt("rangeAdjustNorm","Range",0,0) ;
+  pc.defineInt("rangeWNAdjustNorm","RangeWithName",0,0) ;
   pc.defineMutex("SelectCompSet","SelectCompSpec") ;
+  pc.defineMutex("Range","RangeWithName") ;
   pc.allowUndefined() ; // unknowns may be handled by RooAbsReal
 
   // Process and check varargs 
@@ -1294,7 +1297,39 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   if (stype != Raw) {    
 
     if (frame->getFitRangeNEvt() && stype==Relative) {
-      scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+
+      Bool_t hasCustomRange(kFALSE), adjustNorm(kFALSE) ;
+      Double_t rangeLo(0), rangeHi(0) ;
+      // Retrieve plot range to be able to adjust normalization to data
+      if (pc.hasProcessed("Range")) {
+	rangeLo = pc.getDouble("rangeLo") ;
+	rangeHi = pc.getDouble("rangeHi") ;
+	adjustNorm = pc.getInt("rangeAdjustNorm") ;
+	hasCustomRange = kTRUE ;
+      } else if (pc.hasProcessed("RangeWithName")) {    
+	rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
+	rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
+	adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
+	hasCustomRange = kTRUE ;
+      } else {
+	// Use range of last fit, if it was non-default and no other range was specified
+	RooArgSet* plotDep = getObservables(*frame->getPlotVar()) ;
+	RooRealVar* plotDepVar = (RooRealVar*) plotDep->find(frame->getPlotVar()->GetName()) ;
+	if (plotDepVar->hasBinning("fit")) {
+	  rangeLo = plotDepVar->getMin("fit") ;
+	  rangeHi = plotDepVar->getMax("fit") ;
+	  adjustNorm = kTRUE ;
+	  hasCustomRange = kTRUE ;
+	}
+	delete plotDep ;
+	cout << "RooAbsPdf::plotOn(" << GetName() << ") INFO: pdf has been fit over restricted range, plotting only fitted "
+	     << "part of PDF normalized data in restricted range" << endl ;
+      }
+      if (hasCustomRange && adjustNorm) {	
+	scaleFactor *= frame->getFitRangeNEvt(rangeLo,rangeHi)/nExpected ;
+      } else {
+	scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+      }
     } else if (stype==RelativeExpected) {
       scaleFactor *= nExpected ;
     } else if (stype==NumEvent) {
@@ -1449,6 +1484,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
   if (o.stype != Raw) {    
 
     if (frame->getFitRangeNEvt() && o.stype==Relative) {
+      // If non-default plotting range is specified, adjust number of events in fit range
       o.scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
     } else if (o.stype==RelativeExpected) {
       o.scaleFactor *= nExpected ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.rdl,v 1.7 2004/12/03 13:18:29 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.rdl,v 1.8 2005/02/25 14:23:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ public:
   virtual Double_t averageBinWidth() const { return _binw ; }
   virtual Double_t* array() const ;
 
-  virtual void printToStream(std::ostream &os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.42 2005/04/20 15:10:15 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.43 2005/06/16 09:31:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,10 +49,6 @@
 #include "RooFitCore/RooCmdConfig.hh"
 #include "RooFitCore/RooTreeData.hh"
 #include "RooFitCore/RooRealVar.hh"
-using std::cout;
-using std::endl;
-using std::istream;
-using std::ostream;
 
 ClassImp(RooAbsRealLValue)
 

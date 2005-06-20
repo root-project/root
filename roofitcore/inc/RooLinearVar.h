@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.rdl,v 1.16 2005/02/25 14:22:58 wverkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.17 2005/04/18 21:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,7 +16,7 @@
 #ifndef ROO_LINEAR_VAR
 #define ROO_LINEAR_VAR
 
-#include <iostream>
+#include "Riostream.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"
@@ -40,18 +40,18 @@ public:
 
   // Jacobian and limits
   virtual Bool_t hasBinning(const char* name) const ;
-  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
-  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE)  ;
+  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
+  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE)  ;
 
   virtual Double_t jacobian() const ;
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   using RooAbsRealLValue::operator= ;
 
