@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.10 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.11 2005/02/25 14:25:06 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -85,7 +85,7 @@ public:
   virtual Double_t coefficient( Int_t basisIndex ) const;
 
   virtual Int_t getCoefAnalyticalIntegral( RooArgSet& allVars, 
-  					   RooArgSet& analVars ) const;
+  					   RooArgSet& analVars, const char* rangeName=0 ) const;
   virtual Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const;
 
   Int_t getGenerator( const RooArgSet& directVars, 

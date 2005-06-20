@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.cc,v 1.18 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -15,8 +15,8 @@
  *****************************************************************************/
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 
 #include "RooFitModels/RooBifurGauss.hh"
@@ -26,7 +26,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.18 2005/04/18 21:48:29 wverkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,

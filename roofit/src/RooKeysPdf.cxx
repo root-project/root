@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooKeysPdf.cc,v 1.17 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.18 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,15 +18,13 @@
 
 #include <math.h>
 #include <math.h>
-#include <iostream>
+#include "Riostream.h"
 
 #include "RooFitModels/RooKeysPdf.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooDataSet.hh"
-using std::cerr;
-using std::endl;
 
 ClassImp(RooKeysPdf)
 

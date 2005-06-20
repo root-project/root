@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPEffDecay.cc,v 1.17 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooBCPEffDecay.cc,v 1.18 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,8 +19,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitModels/RooBCPEffDecay.hh"
@@ -128,8 +128,10 @@ Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
 
 
 
-Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
+  if (rangeName) return 0 ;
+
   if (matchArgs(allVars,analVars,_tag)) return 1 ;
   return 0 ;
 }

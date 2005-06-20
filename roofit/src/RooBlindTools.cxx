@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBlindTools.cc,v 1.12 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBlindTools.cc,v 1.13 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu       *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
@@ -23,14 +23,11 @@
 #include "RooFitModels/RooBlindTools.hh"
 
 #include "RooFitCore/RooErrorHandler.hh"
-#include <iostream>
+#include "Riostream.h"
 #include <fstream>
 #include <math.h>  
 #include <string.h>
 #include <ctype.h>
-using std::cout;
-using std::endl;
-using std::fstream;
 
 ClassImp(RooBlindTools)
 

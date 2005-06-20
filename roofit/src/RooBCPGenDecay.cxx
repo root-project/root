@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.15 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.16 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
@@ -23,8 +23,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitModels/RooBCPGenDecay.hh"
@@ -131,8 +131,9 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
 
 
 
-Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
+  if (rangeName) return 0 ;
   if (matchArgs(allVars,analVars,_tag)) return 1 ;
   return 0 ;
 }

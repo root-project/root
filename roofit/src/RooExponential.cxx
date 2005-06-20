@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooExponential.cc,v 1.13 2005/04/18 21:48:30 wverkerke Exp $
+ *    File: $Id: RooExponential.cc,v 1.14 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,8 +18,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 
 #include "RooFitModels/RooExponential.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBMixDecay.cc,v 1.21 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.22 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,8 +19,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitModels/RooBMixDecay.hh"
 #include "RooFitCore/RooRandom.hh"
@@ -108,9 +108,12 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 
 
 
-Int_t RooBMixDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooBMixDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
 //   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
+  if (rangeName) {
+    return 0 ;
+  }
 
   if (matchArgs(allVars,analVars,_mixState,_tagFlav)) return 3 ;
   if (matchArgs(allVars,analVars,_mixState)) return 2 ;

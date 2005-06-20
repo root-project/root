@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooDstD0BG.cc,v 1.15 2005/04/18 21:48:30 wverkerke Exp $
+ *    File: $Id: RooDstD0BG.cc,v 1.16 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
  *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
@@ -20,8 +20,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 
@@ -34,7 +34,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.15 2005/04/18 21:48:30 wverkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.16 2005/06/16 09:37:27 wverkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,

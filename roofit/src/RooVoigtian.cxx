@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooVoigtian.cc,v 1.10 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.11 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   TS, Thomas Schietinger, SLAC,           schieti@slac.stanford.edu       *
  *                                                                           *
@@ -25,8 +25,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 
 #include "RooFitModels/RooVoigtian.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBreitWigner.cc,v 1.11 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooBreitWigner.cc,v 1.12 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
@@ -20,8 +20,8 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 
 #include "RooFitModels/RooBreitWigner.hh"

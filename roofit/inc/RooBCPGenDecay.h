@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.rdl,v 1.10 2005/02/14 20:48:03 wverkerke Exp $
+ *    File: $Id: RooBCPGenDecay.rdl,v 1.11 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   JS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu  *
  *                                                                           *
@@ -42,7 +42,7 @@ public:
 
   virtual Double_t coefficient(Int_t basisIndex) const ;
 
-  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;

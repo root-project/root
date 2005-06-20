@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGaussModel.cc,v 1.34 2005/04/18 21:48:30 wverkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.35 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,14 +19,12 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "RooFitModels/RooGaussModel.hh"
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooRealConstant.hh"
 #include "RooFitCore/RooRandom.hh"
-using std::cout;
-using std::endl;
 
 ClassImp(RooGaussModel) 
 ;
@@ -339,7 +337,6 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     ssfInt = (ssf.max(rangeName)-ssf.min(rangeName)) ;
   }
 
-
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
@@ -400,21 +397,15 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
       if (basisSign!=Minus) result += 2 * tau ;
       if (basisSign!=Plus)  result += 2 * tau ;      
     } else {
-      if (umin<-8 && umax>8) {
-	// If integral is over >8 sigma, approximate with full integral
-	if (basisSign!=Minus) result += 2 * tau ;
-	if (basisSign!=Plus)  result += 2 * tau ;      
-      } else {
-	if (basisSign!=Minus) result += -1 * tau * ( RooMath::erf(-umax) - RooMath::erf(-umin) + 
-						     exp(c*c) * ( exp(-xpmax)*RooMath::erfc(-umax+c)
-								  - exp(-xpmin)*RooMath::erfc(-umin+c) )) ;
-	if (basisSign!=Plus)  result +=      tau * ( RooMath::erf(umax) - RooMath::erf(umin) + 
-						     exp(c*c) * ( exp(xpmax)*RooMath::erfc(umax+c)
-								  - exp(xpmin)*RooMath::erfc(umin+c) )) ;     
-	// equivalent form, added FMV, 07/24/03
-	//if (basisSign!=Minus) result += evalCerfInt(+1,tau,-umin,-umax,c).re();   
-	//if (basisSign!=Plus) result += evalCerfInt(-1,tau,umin,umax,c).re();
-      }
+      if (basisSign!=Minus) result += -1 * tau * ( RooMath::erf(-umax) - RooMath::erf(-umin) + 
+						   exp(c*c) * ( exp(-xpmax)*RooMath::erfc(-umax+c)
+								- exp(-xpmin)*RooMath::erfc(-umin+c) )) ;
+      if (basisSign!=Plus)  result +=      tau * ( RooMath::erf(umax) - RooMath::erf(umin) + 
+						   exp(c*c) * ( exp(xpmax)*RooMath::erfc(umax+c)
+								- exp(xpmin)*RooMath::erfc(umin+c) )) ;     
+      // equivalent form, added FMV, 07/24/03
+      //if (basisSign!=Minus) result += evalCerfInt(+1,tau,-umin,-umax,c).re();   
+      //if (basisSign!=Plus) result += evalCerfInt(-1,tau,umin,umax,c).re();
     }
     //cout << "Integral 3rd form " << " result= " << result*ssfInt << endl;
     return result*ssfInt ;

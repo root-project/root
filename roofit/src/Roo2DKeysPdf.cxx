@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.cc,v 1.18 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -48,9 +48,6 @@
 #include "TMath.h"
 
 //#include <math.h>
-using std::cout;
-using std::endl;
-using std::ostream;
 
 ClassImp(Roo2DKeysPdf)
 

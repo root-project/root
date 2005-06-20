@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: Roo2DKeysPdf.rdl,v 1.9 2004/11/29 13:06:21 wverkerke Exp $
+ *    File: $Id: Roo2DKeysPdf.rdl,v 1.10 2005/02/25 14:25:04 wverkerke Exp $
  * Authors:                                                                  *
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
  *                                                                           *
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooDataSet.hh"
-#include <iostream>
+#include "Riostream.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 class Roo2DKeysPdf : public RooAbsPdf 
@@ -66,7 +66,7 @@ public:
   Double_t getSigma(const char * axis) const;
 
 // print content and basic information about the data
-  void     PrintInfo(std::ostream &) const;
+  void     PrintInfo(ostream &) const;
 
 // save PDF to a file as a TH2F *, TTree * or both
 // this is so that you only need to compute the PDF once and 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.20 2005/04/18 21:48:30 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.21 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -40,14 +40,12 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitModels/RooNonCPEigenDecay.hh"
 #include "TMath.h"
-using std::cout;
-using std::endl;
 
 ClassImp(RooNonCPEigenDecay);
 
@@ -254,8 +252,10 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 
 // advertise analytical integration
 Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( RooArgSet& allVars, 
-						     RooArgSet& analVars ) const 
+						     RooArgSet& analVars, const char* rangeName ) const 
 {
+  if (rangeName) return 0 ;
+
   if (matchArgs( allVars, analVars, _tag, _rhoQ )) return 3;
   if (matchArgs( allVars, analVars, _rhoQ       )) return 2;
   if (matchArgs( allVars, analVars, _tag        )) return 1;

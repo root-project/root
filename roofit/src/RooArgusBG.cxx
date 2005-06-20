@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooArgusBG.cc,v 1.15 2005/04/18 21:48:29 wverkerke Exp $
+ *    File: $Id: RooArgusBG.cc,v 1.16 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,11 +18,9 @@
 
 #include "RooFitCore/RooFit.hh"
 
-#include <iostream>
-#include <iostream>
+#include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
-using std::endl ;
-using std::cout ;
 
 #include "RooFitModels/RooArgusBG.hh"
 #include "RooFitCore/RooRealVar.hh"
