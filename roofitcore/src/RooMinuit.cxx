@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.20 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.21 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -172,7 +172,7 @@ void RooMinuit::setErrorLevel(Double_t level)
 
 
 
-Int_t RooMinuit::fit(const char* options)
+RooFitResult* RooMinuit::fit(const char* options)
 {
   // Parse traditional RooAbsPdf::fitTo driver options
   // 
@@ -182,6 +182,7 @@ Int_t RooMinuit::fit(const char* options)
   //  v - Verbose mode
   //  l - Log parameters after each Minuit steps to file
   //  t - Activate profile timer
+  //  r - Save fit result
   //  0 - Run Migrad with strategy 0
 
   TString opts(options) ;
@@ -201,7 +202,7 @@ Int_t RooMinuit::fit(const char* options)
   if (opts.Contains("h")||!opts.Contains("m")) hesse() ;
   if (!opts.Contains("m")) minos() ;
   
-  return _status ;
+  return (!opts.Contains("r")) ? save() : 0 ; 
 }
 
 

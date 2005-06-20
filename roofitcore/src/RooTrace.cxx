@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.cc,v 1.20 2005/06/16 09:31:32 wverkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.21 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -70,8 +70,11 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   Int_t i, nMarked(0) ;
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
-      // WVE !!! check 64 bit here!!!
+#ifdef R__B64
+      sprintf(buf,"%010x : ",(ULong64_t)(void*)_list.At(i)) ;
+#else
       sprintf(buf,"%010x : ",(UInt_t)(void*)_list.At(i)) ;
+#endif
       os << buf << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;
     } else {
       nMarked++ ;

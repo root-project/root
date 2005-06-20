@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.cc,v 1.8 2005/06/16 09:31:21 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.9 2005/06/20 15:44:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -541,7 +541,7 @@ Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, con
     normList = new RooArgList("coefNormList") ;
     if (_coefVarList.getSize()==0) makeCoefVarList() ;  
     for (i=0 ; i<_coefVarList.getSize() ; i++) {
-      RooRealIntegral* coefInt = new RooRealIntegral("coefInt","coefInt",(RooAbsReal&)(*_coefVarList.at(i)),*nset,0,0,rangeName) ;
+      RooAbsReal* coefInt = static_cast<RooAbsReal&>(*_coefVarList.at(i)).createIntegral(*nset,rangeName) ;
       normList->addOwned(*coefInt) ;      
     }  
 

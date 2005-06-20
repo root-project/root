@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.96 2005/06/16 09:31:23 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.97 2005/06/20 15:44:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -309,9 +309,10 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 
   Double_t ret = _norm->getVal() ;
   if (ret==0.) {
-    cout << "RooAbsPdf::getNorm(" << GetName() << ":: WARNING normalization is zero, nset = " ; 
-    nset->Print("1") ;
-    _norm->Print("v") ;
+    if(++_errorCount <= 10) {
+      cout << "RooAbsPdf::getNorm(" << GetName() << ":: WARNING normalization is zero, nset = " ;  nset->Print("1") ;
+      if(_errorCount == 10) cout << "RooAbsPdf::getNorm(" << GetName() << ") INFO: no more messages will be printed " << endl ;
+    }
   }
 
   return ret ;
@@ -643,7 +644,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("doSave","Save",0,0) ;
   pc.defineInt("doTimer","Timer",0,0) ;
-  pc.defineInt("plevel","PrintLevel",0,0) ;
+  pc.defineInt("plevel","PrintLevel",0,1) ;
   pc.defineInt("strat","Strategy",0,1) ;
   pc.defineInt("initHesse","InitialHesse",0,0) ;
   pc.defineInt("hesse","Hesse",0,1) ;
@@ -738,10 +739,12 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     m.optimizeConst(1) ;
   }
 
+  RooFitResult *ret = 0 ;
+
   if (fitOpt) {
 
     // Play fit options as historically defined
-    m.fit(fitOpt) ;
+    ret = m.fit(fitOpt) ;
     
   } else {
 
@@ -780,17 +783,16 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.minos() ;
       }
     }
+
+    // Optionally return fit result
+    if (doSave) {
+      ret = m.save() ;
+    } 
+
   }
   
-  // Optionally return fit result
-  RooFitResult *ret = 0 ;
-  if (doSave) {
-     ret = m.save() ;
-  } 
-
   // Cleanup
   delete nll ;
-
   return ret ;
 }
 
