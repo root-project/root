@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.rdl,v 1.13 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.14 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,8 @@
 
 class RooTrace {
 public:
+
+  virtual ~RooTrace() {} ;
 
   inline static void create(const TObject* obj) { if (_active) create2(obj) ; }
   inline static void destroy(const TObject* obj) { if (_active) destroy2(obj) ; }

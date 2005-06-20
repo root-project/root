@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumber.rdl,v 1.4 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooNumber.rdl,v 1.5 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,9 @@
 
 class RooNumber {
 public:
+
+  virtual ~RooNumber() {} ;
+
   static Double_t infinity;
   static inline Int_t isInfinite(Double_t x) {
     return (x >= +infinity) ? +1 : ((x <= -infinity) ? -1 : 0);

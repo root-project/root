@@ -10,7 +10,7 @@
 Int_t doBanner()
 {
   cout << endl
-       << "\033[1mRooFit v2.00 -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl 
+       << "\033[1mRooFit v1.99 -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl 
               << "                Copyright (C) 2000-2005 NIKHEF, University of California & Stanford University" << endl 
               << "                All rights reserved, please read http://roofit.sourceforge.net/license.txt" << endl << endl ;
   return 0 ;
