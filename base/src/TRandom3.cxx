@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.5 2003/01/26 21:03:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.6 2004/11/24 17:49:08 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -151,8 +151,9 @@ void TRandom3::SetSeed(UInt_t seed)
       uid.GetUUID(uuid);
       for (i=0;i<8;i++) {
          fMt[i] = uuid[2*i]*256 +uuid[2*i+1];
+         if (i > 1) fMt[i] += fMt[0];
       }
-      j = 9;
+      j = 8;
    }
    for(i=j; i<624; i++) {
      fMt[i] = (69069 * fMt[i-1]) & 0xffffffff;
