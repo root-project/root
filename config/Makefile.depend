@@ -98,8 +98,8 @@ ALIENLIBDEP         = $(XMLLIB)
 ALIENLIBEXTRA       = lib/libXMLIO.lib
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB)\
                       $(MINUITLIB) $(HTMLLIB)
-ROOTFITEXTRA        = lib/libHist lib/libGraf lib/libMatrix lib/libTree \
-                      lib/libMinuit lib/libHtml
+ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
+                      lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib
 
 else
 
@@ -191,6 +191,6 @@ ALIENLIBDEP         = $(XMLLIB)
 ALIENLIBEXTRA       = -Llib -lXMLIO
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB)\
                       $(MINUITLIB) $(HTMLLIB)
-ROOTFITEXTRA        = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
+ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
 
 endif
