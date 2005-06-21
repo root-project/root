@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.21 2005/04/20 15:22:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.22 2005/06/14 15:47:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -134,12 +134,14 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
 // Set radiation/absorbtion lengths
    fRadLen = radlen;
    fIntLen = intlen;
+/*
    if (fA > 0 && fRadLen <= 0) {
       //taken grom Geant3 routine GSMATE
       const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
       fRadLen = fA/(ALR2AV*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
              (AL183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
    }
+*/
 }   
 
 //-----------------------------------------------------------------------------
