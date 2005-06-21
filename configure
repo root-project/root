@@ -29,6 +29,7 @@ options="                    \
    enable_builtin_freetype   \
    enable_cern               \
    enable_chirp              \
+   enable_cintex             \
    enable_clarens            \
    enable_dcache             \
    enable_exceptions         \
@@ -73,6 +74,7 @@ for c in $options ; do eval $c="yes" ; done
 
 enable_afs=no
 enable_explicitlink=no
+enable_cintex=no
 enable_mathcore=no
 enable_mathmore=no
 enable_pythia=no
@@ -115,6 +117,7 @@ GLOBUS_LOCATION  \
 SRP              \
 SSL              \
 AFS              \
+CINTEX           \
 REFLEX           \
 ROOFIT           \
 TABLE            \
@@ -662,6 +665,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-freetype   Built included libfreetype, or use system libfreetype
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
+  cintex             Build the cintex program to test Reflex
   clarens            Clarens RPC support, optionally used by PROOF
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
@@ -2730,6 +2734,19 @@ fi
 
 ######################################################################
 #
+### echo %%% Cintex program - Contributed program
+#
+message "Checking whether to build cintex"
+if test "x$enable_cintex" = "xyes" || test ! "x$CINTEX" = "x"; then
+    enable_cintex="yes"
+    echo "yes"
+else
+    enable_cintex=""
+    echo "no"
+fi
+
+######################################################################
+#
 ### echo %%% Reflex Library - Contributed library
 #
 message "Checking whether to build libReflex"
@@ -3094,6 +3111,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildmathcore@|$enable_mathcore|"    \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
+    -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildtable@|$enable_table|"          \

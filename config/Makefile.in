@@ -191,6 +191,8 @@ BUILDMATHCORE  := @buildmathcore@
 
 BUILDMATHMORE  := @buildmathmore@
 
+BUILDCINTEX    := @buildcintex@
+
 BUILDREFLEX    := @buildreflex@
 
 BUILDROOFIT    := @buildroofit@

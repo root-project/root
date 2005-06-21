@@ -130,6 +130,9 @@ endif
 ifeq ($(BUILDREFLEX),yes)
 MODULES      += reflex
 endif
+ifeq ($(BUILDCINTEX),yes)
+MODULES      += cintex
+endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit
 endif
