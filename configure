@@ -36,6 +36,8 @@ options="                    \
    enable_globus             \
    enable_krb5               \
    enable_ldap               \
+   enable_mathcore           \
+   enable_mathmore           \
    enable_mysql              \
    enable_opengl             \
    enable_oracle             \
@@ -46,6 +48,7 @@ options="                    \
    enable_python             \
    enable_qt                 \
    enable_reflex             \
+   enable_roofit             \
    enable_ruby               \
    enable_rfio               \
    enable_rpath              \
@@ -70,9 +73,12 @@ for c in $options ; do eval $c="yes" ; done
 
 enable_afs=no
 enable_explicitlink=no
+enable_mathcore=no
+enable_mathmore=no
 enable_pythia=no
 enable_qt=no
 enable_reflex=no
+enable_roofit=no
 enable_rpath=no
 enable_ruby=no
 enable_shadowpw=
@@ -87,7 +93,8 @@ enable_xrootd=           # must be set explicitely via --enable-xrootd
 envvars="
 THREAD           \
 OPENGL           \
-IVROOT           \
+MATHCORE         \
+MATHMORE         \
 MYSQL            \
 ORACLE           \
 PGSQL            \
@@ -109,6 +116,7 @@ SRP              \
 SSL              \
 AFS              \
 REFLEX           \
+ROOFIT           \
 TABLE            \
 XMLDIR           \
 "
@@ -661,6 +669,8 @@ enable/disable options, prefix with either --enable- or --disable-
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
+  mathcore           Build the new libMathCore math library
+  mathmore           Build the new libMathMore extended math library
   mysql              MySQL support, requires libmysqlclient
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
@@ -670,8 +680,9 @@ enable/disable options, prefix with either --enable- or --disable-
   pythia6            Pythia6 EG support, requires libPythia6
   python             Python ROOT bindings, requires python >= 2.1
   qt                 Qt graphics backend, requires libqt >= 3
-  reflex             Build libReflex dictionary library
+  reflex             Build the libReflex dictionary library
   rfio               CASTOR support, requires libshift from CASTOR
+  roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
   ruby               Ruby ROOT bindings, requires ruby >= 1.8
   sapdb              SapDB support, requires libsqlod and libsqlrte
@@ -2693,6 +2704,32 @@ echo $enable_shadowpw
 
 ######################################################################
 #
+### echo %%% MathCore Library - Contributed library
+#
+message "Checking whether to build libMathCore"
+if test "x$enable_mathcore" = "xyes" || test ! "x$MATHCORE" = "x"; then
+    enable_mathcore="yes"
+    echo "yes"
+else
+    enable_mathcore=""
+    echo "no"
+fi
+
+######################################################################
+#
+### echo %%% MathMore Library - Contributed library
+#
+message "Checking whether to build libMathMore"
+if test "x$enable_mathmore" = "xyes" || test ! "x$MATHMORE" = "x"; then
+    enable_mathmore="yes"
+    echo "yes"
+else
+    enable_mathmore=""
+    echo "no"
+fi
+
+######################################################################
+#
 ### echo %%% Reflex Library - Contributed library
 #
 message "Checking whether to build libReflex"
@@ -2701,6 +2738,19 @@ if test "x$enable_reflex" = "xyes" || test ! "x$REFLEX" = "x"; then
     echo "yes"
 else
     enable_reflex=""
+    echo "no"
+fi
+
+######################################################################
+#
+### echo %%% RooFit Library - Contributed library
+#
+message "Checking whether to build libRooFit"
+if test "x$enable_roofit" = "xyes" || test ! "x$ROOFIT" = "x"; then
+    enable_roofit="yes"
+    echo "yes"
+else
+    enable_roofit=""
     echo "no"
 fi
 
@@ -3042,7 +3092,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
+    -e "s|@buildmathcore@|$enable_mathcore|"    \
+    -e "s|@buildmathmore@|$enable_mathmore|"    \
     -e "s|@buildreflex@|$enable_reflex|"        \
+    -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \

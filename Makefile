@@ -121,8 +121,17 @@ endif
 ifeq ($(BUILDQT),yes)
 MODULES      += qt qtroot
 endif
+ifeq ($(BUILDMATHCORE),yes)
+MODULES      += mathcore
+endif
+ifeq ($(BUILDMATHMORE),yes)
+MODULES      += mathmore
+endif
 ifeq ($(BUILDREFLEX),yes)
 MODULES      += reflex
+endif
+ifeq ($(BUILDROOFIT),yes)
+MODULES      += roofit
 endif
 ifeq ($(BUILDTABLE),yes)
 MODULES      += table

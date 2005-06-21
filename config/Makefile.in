@@ -187,7 +187,13 @@ SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
+BUILDMATHCORE  := @buildmathcore@
+
+BUILDMATHMORE  := @buildmathmore@
+
 BUILDREFLEX    := @buildreflex@
+
+BUILDROOFIT    := @buildroofit@
 
 BUILDTABLE     := @buildtable@
 

@@ -96,6 +96,10 @@ FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = lib/libHist.lib
 ALIENLIBDEP         = $(XMLLIB)
 ALIENLIBEXTRA       = lib/libXMLIO.lib
+ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB)\
+                      $(MINUITLIB) $(HTMLLIB)
+ROOTFITEXTRA        = lib/libHist lib/libGraf lib/libMatrix lib/libTree \
+                      lib/libMinuit lib/libHtml
 
 else
 
@@ -185,5 +189,8 @@ FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = -Llib -lHist
 ALIENLIBDEP         = $(XMLLIB)
 ALIENLIBEXTRA       = -Llib -lXMLIO
+ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB)\
+                      $(MINUITLIB) $(HTMLLIB)
+ROOTFITEXTRA        = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
 
 endif
