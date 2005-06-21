@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.58 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.59 2005/06/20 15:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -579,8 +579,10 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 	cout << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
 	return kTRUE ;
       }
-      cout << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
-	   << filename << endl ;
+      if (verbose) {
+	cout << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
+	     << filename << endl ;
+      }
       if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
       continue ;
     }

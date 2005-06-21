@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.30 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.31 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -131,7 +131,7 @@ protected:
   RooArgSet *_plotVarSet;    // A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
 
-  const RooPlotable* _normObj ;    // Pointer to normalization object ;
+  const RooPlotable* _normObj ;    //! Pointer to normalization object ;
   Double_t _normNumEvts;     // Number of events in histogram (for normalization)
   Double_t _normBinWidth;    // Histogram bin width (for normalization)
 
@@ -142,7 +142,7 @@ protected:
 
   RooPlot(const RooPlot& other); // object cannot be copied
 
-  ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
+  ClassDef(RooPlot,1)        // Plot frame and container for graphics objects
 };
 
 #endif

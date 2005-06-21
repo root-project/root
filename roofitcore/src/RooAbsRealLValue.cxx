@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.43 2005/06/16 09:31:24 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.44 2005/06/20 15:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -244,11 +244,16 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
   const char* name = pc.getString("name",0,kTRUE) ;
   const char* title = pc.getString("title",0,kTRUE) ;
 
-  if (name && title) {
-    return new RooPlot(name,title,*this,xmin,xmax,nbins) ;
+  RooPlot* frame = new RooPlot(*this,xmin,xmax,nbins) ;
+
+  if (name) {
+    frame->SetName(name) ;
+  }
+  if (title) {
+    frame->SetTitle(title) ;
   }
 
-  return new RooPlot(*this,xmin,xmax,nbins) ;
+  return frame ;
 }
 
 RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {

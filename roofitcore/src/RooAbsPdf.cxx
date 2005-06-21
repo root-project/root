@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.97 2005/06/20 15:44:45 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.98 2005/06/20 18:15:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1322,10 +1322,10 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 	  rangeHi = plotDepVar->getMax("fit") ;
 	  adjustNorm = kTRUE ;
 	  hasCustomRange = kTRUE ;
+	  cout << "RooAbsPdf::plotOn(" << GetName() << ") INFO: pdf has been fit over restricted range, plotting only fitted "
+	       << "part of PDF normalized data in restricted range" << endl ;
 	}
 	delete plotDep ;
-	cout << "RooAbsPdf::plotOn(" << GetName() << ") INFO: pdf has been fit over restricted range, plotting only fitted "
-	     << "part of PDF normalized data in restricted range" << endl ;
       }
       if (hasCustomRange && adjustNorm) {	
 	scaleFactor *= frame->getFitRangeNEvt(rangeLo,rangeHi)/nExpected ;

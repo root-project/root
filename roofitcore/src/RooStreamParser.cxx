@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.29 2005/06/16 09:31:31 wverkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.30 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -293,7 +293,23 @@ void RooStreamParser::zapToEnd()
 {
   // Skip over everything until the end of the current line
   if (_is.peek()!='\n') {
-    _is.ignore(1000,'\n') ;
+
+    char buffer[10240] ;
+    Int_t nfree(10239) ; 
+
+    // Read till end of line
+    _is.getline(buffer,nfree,'\n') ;
+
+    // Look for eventual continuation line sequence  
+    char *pcontseq = strstr(buffer,"\\\\") ;
+    if (pcontseq) nfree -= (pcontseq-buffer) ;
+    while(pcontseq) {
+      _is.getline(pcontseq,nfree,'\n') ;
+      
+      char* nextpcontseq = strstr(pcontseq,"\\\\") ;
+      if (nextpcontseq) nfree -= (nextpcontseq-pcontseq) ;
+      pcontseq = nextpcontseq ;
+    }    
     _is.putback('\n') ;
   }
 }

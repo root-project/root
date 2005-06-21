@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.43 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.44 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -176,7 +176,7 @@ void RooPlot::initialize() {
 
 TString RooPlot::histName() const 
 {
-  return TString(Form("frame(%08x)",this)) ;
+  return TString(Form("frame_%08x",this)) ;
 }
 
 RooPlot::~RooPlot() {
@@ -681,5 +681,7 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   if (_normObj) {
     scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
   }
+  cout << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
+       << xlo << " to " << xhi << ", substituting full event count" << endl ;
   return getFitRangeNEvt()*scaleFactor ;
 }
