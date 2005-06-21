@@ -61,9 +61,9 @@ To see what the are the command actually issued do:
 Adding new test
 
 To add a new test
-   cd roottest; addtest Testname pathname
+   cd roottest; addtest pathname Testname
 For example:
-   cd roottest; addtest vectorOfvector root/io/newstl
+   cd roottest; addtest root/io/newstl vectorOfvector 
 add a new test name vectorOfvector in the directory roottest/root/io/newstl.
 In particular this will update (or create) the makefile and generate 2 files:
 runTestname.C and runTestname.ref.

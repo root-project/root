@@ -1,12 +1,13 @@
 #!/bin/bash
 # Name: addtest
 # Desc: Updates the Makefile
-# Args: $1 -> test Name
-#	$2 -> test directory
+# Args: $1 -> test directory
+#       $2 -> test Name
+#	    
 
 printUSAGE() { 
 		echo "" ;
-		echo "Usage: addtest [test name] [test path]"  ;
+		echo "Usage: addtest test_path test name"  ;
 	       	echo "  where test name is the name of the test to be added"
 		echo "  where test path is the directory path for the test to be added"; 
 	        echo "";
@@ -15,6 +16,14 @@ printUSAGE() {
 	        echo "" ;
 		exit 1; 
 	     }
+
+
+if [ $# -lt 2 ] ; then 
+	printUSAGE ; 
+fi
+
+dir=$1
+testname=$2
 
 printALREADY_EXIST() {
 			echo "" ;
@@ -26,40 +35,35 @@ printERROR() { echo "ERROR: $@." >&2 ;  }
 
 # check whether sufficient args are given
 
-if [ $# -lt 2 ] ; then 
-	printUSAGE ; 
-fi
-
-check_target=`grep -F " $1 " $2/Makefile`
-
+check_target=`grep -F " $testname " $dir/Makefile`
 
 if [ "$check_target" != "" ]; then
-	printALREADY_EXIST $1 $2;
+	printALREADY_EXIST $testname $dir;
 fi
 
 
-check_target2=`grep "^[[:space:]]*$1[[:space:]]*:" $2/Makefile`
+check_target2=`grep "^[[:space:]]*$testname[[:space:]]*:" $dir/Makefile`
 
 if [ "$check_target2" != "" ]; then
-	printALREADY_EXIST $1 $2;
+	printALREADY_EXIST $testname $dir;
 fi
 
 
-if [ ! -d "$2" ] ; then
-	printERROR "The source $2 is not a directory, or does not exist"
-	echo "use 'mktest $2' to add test directory"
+if [ ! -d "$dir" ] ; then
+	printERROR "The source $dir is not a directory, or does not exist"
+	echo "use 'mktest $dir' to add test directory"
 	
-	#mktest $2
+	#mktest $dir
 	selection=
 	until [ "$selection" = "0" ]; do
-	    echo "1 - Create $2 and add test '$1'"
+	    echo "1 - Create $dir and add test '$testname'"
 	    echo "0 - exit"
 	    echo ""
 	    echo -n "Enter selection: "
 	    read selection
 	    echo ""
 	    case $selection in
-	        1 )  mktest $2 ; addtest $1 $2; exit 1;;
+	        1 ) mktest $dir ; addtest $dir $testname; exit 1;;
 	        0 ) exit ;;
 	        * ) echo "Please enter 1 or 0"
 	    esac
@@ -67,26 +71,26 @@ if [ ! -d "$2" ] ; then
 fi
 
 
-cd $2
+cd $dir
 
-sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1 /g" Makefile > Makefile1
+sed -e "s/TEST_TARGETS += /TEST_TARGETS += $testname /g" Makefile > Makefile1
 rm Makefile
 
 mv Makefile1 Makefile
 
 echo "" >> Makefile
-echo "$1: $1.log" >> Makefile
+echo "$testname: $testname.log" >> Makefile
 echo "	\$(TestDiff)" >> Makefile
 
-if [ ! -s $1.ref ]; then
-    echo "" > $1.ref
-    echo "Processing run$1.C..." >> $1.ref
+if [ ! -s $testname.ref ]; then
+    echo "" > $testname.ref
+    echo "Processing run$testname.C..." >> $testname.ref
 fi
 
-if [ ! -s run$1.C ]; then
-    echo "{"  > run$1.C
-    echo "// Fill out the code of the actual test" >> run$1.C 
-    echo "}" >> run$1.C 
+if [ ! -s run$testname.C ]; then
+    echo "{"  > run$testname.C
+    echo "// Fill out the code of the actual test" >> run$testname.C 
+    echo "}" >> run$testname.C 
 fi
 
 echo "Message: Test successfully added"
