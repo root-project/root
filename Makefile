@@ -21,7 +21,7 @@ tests: $(TEST_TARGETS)
 
 clean: $(CLEAN_TARGETS)
 
-cleantest: ($CLEANTEST_TARGETS)
+cleantest: $(CLEANTEST_TARGETS)
 	@echo "All test succeeded"
 
 $(TEST_TARGETS): %.test:
