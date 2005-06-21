@@ -12,7 +12,6 @@ void galaxy_image()
    TFile *gal = new TFile("galaxy.root", "READ");
    TImage *img = (TImage*)gal->Get("n4254");
    img->Draw();
-   img->SetName("n4254");
 
    // open the color editor
    img->StartPaletteEditor();

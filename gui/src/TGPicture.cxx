@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.20 2005/05/27 12:24:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.21 2005/05/30 22:38:39 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -84,6 +84,19 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return 0;
    }
 
+   if ((ext == ".xpm") && gVirtualX->InheritsFrom("TGQt")) { //fixme
+      pic = new TGPicture(pname);
+      pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
+      pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
+      pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+
+      Bool_t ok = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
+                                                   pic->fPic, pic->fMask, pic->fAttributes);
+      if (ok) fPicList->Add(pic);
+      delete [] picnam;
+      return ok ? pic : 0;
+   }
+
    TImage *img = TImage::Open(picnam);
    if (!img) {
       pic = new TGPicture(pname.Data());
@@ -143,6 +156,19 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       pic->fAttributes.fHeight = new_height;
       fPicList->Add(pic);
       return 0;
+   }
+
+   if ((ext == ".xpm") && gVirtualX->InheritsFrom("TGQt")) { //fixme
+      pic = new TGPicture(pname);
+      pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
+      pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
+      pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
+
+      Bool_t ok = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
+                                                   pic->fPic, pic->fMask, pic->fAttributes);
+      if (ok) fPicList->Add(pic);
+      delete [] picnam;
+      return ok ? pic : 0;
    }
 
    TImage *img = TImage::Open(picnam);

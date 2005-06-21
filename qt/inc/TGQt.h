@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.8 2005/03/07 07:44:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.9 2005/03/25 19:41:03 brun Exp $
  // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -239,6 +239,9 @@ public:
       static QString QtFileFormat(const QString &selector);
 #endif
 
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   Pixmap_t       CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
+   Window_t       GetCurrentWindow() const;
 
    ClassDef(TGQt,0)  //Interface to Qt GUI
 };

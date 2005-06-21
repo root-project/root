@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.180 2005/06/02 14:10:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.181 2005/06/02 16:28:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3603,13 +3603,10 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualX->Update(1);
          gSystem->Sleep(30); // syncronize
 
-         if (gVirtualX->InheritsFrom("TGQt")) { // temporary solution
-            gVirtualX->WritePixmap(wid, UtoPixel(1.), VtoPixel(0.), (char*)psname.Data());
-         } else {
-            TImage *img = TImage::Create();
-            img->FromPad(this);
-            img->WriteImage(psname, gtype);
-         }
+         TImage *img = TImage::Create();
+         img->FromPad(this);
+         img->WriteImage(psname, gtype);
+
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "file %s has been created", psname.Data());
          }

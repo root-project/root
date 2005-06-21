@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.12 2004/10/20 22:32:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.13 2005/05/18 16:58:42 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -32,9 +32,6 @@ Atom_t    gROOT_MESSAGE;
 TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
 TVirtualX*   (*gPtr2VirtualX)() = 0; // returns pointer to global object
 
-void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos) = 0;
-unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h) = 0;
-Pixmap_t (*gDIB2Pixmap)(ULong_t bmbits, ULong_t bmi) = 0;
 
 ClassImp(TVirtualX)
 
@@ -2018,3 +2015,34 @@ Window_t TVirtualX::GetCurrentWindow() const
 
    return (Window_t)0;
 }
+
+//______________________________________________________________________________
+unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, 
+                                       UInt_t /*w*/, UInt_t /*h*/)
+{
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // in format:
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // By default all pixels from the whole drawable are returned.
+   //
+   // Note that return array is 32-bit aligned
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Pixmap_t TVirtualX::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/, 
+                                       UInt_t /*height*/)
+{
+   // create pixmap from RGB data. RGB data is in format :
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // Note that data must be 32-bit aligned
+
+   return (Pixmap_t)0;
+}
+
+

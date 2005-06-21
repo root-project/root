@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.4 2004/03/12 00:25:59 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.5 2004/03/24 13:38:02 rdm Exp $
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -72,7 +72,7 @@ Bool_t TToggle::GetState()
    // fOnValue, returns true if they match.
 
    if (fInitialized)
-      fGetter->Execute(fObject, fValue);
+      if (fGetter) fGetter->Execute(fObject, fValue);
    return (fState = (fValue == fOnValue));
 }
 

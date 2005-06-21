@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.5 2005/03/03 08:04:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -118,10 +118,11 @@ public:
 
 protected:
    EImageQuality    fImageQuality;       // *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
-   UInt_t           fImageCompression;   //compression [0 .. 100] 0: no compression
-   Bool_t           fConstRatio;         //keep aspect ratio of image on the screen
-   TImagePalette    fPalette;            //color palette for value -> color conversion
+   UInt_t           fImageCompression;   // compression [0 .. 100] 0: no compression
+   Bool_t           fConstRatio;         // keep aspect ratio of image on the screen
+   TImagePalette    fPalette;            // color palette for value -> color conversion
    TPaletteEditor  *fPaletteEditor;      //! GUI to edit the color palette
+   Bool_t           fPaletteEnabled;     //! kTRUE - palette is drawn on the image
 
 public:
    TAttImage();
@@ -140,6 +141,7 @@ public:
                                         UInt_t comprdef = 0,
                                         Bool_t constRatiodef = kTRUE);
    virtual void     SetConstRatio(Bool_t constRatio = kTRUE); // *TOGGLE*
+   virtual void     SetPaletteEnabled(Bool_t on = kTRUE) {  fPaletteEnabled = on; }
    virtual void     SetImageCompression(UInt_t lcompression)
                        { fImageCompression = (lcompression > 100) ? 100 : lcompression; } // *MENU*
    virtual void     SetImageQuality(EImageQuality lquality)
@@ -147,6 +149,7 @@ public:
    virtual void     SetPalette(const TImagePalette *palette);
    virtual void     StartPaletteEditor(); // *MENU*
    virtual void     EditorClosed() { fPaletteEditor = 0; }
+   Bool_t           IsPaletteEnabled() const { return fPaletteEnabled; }
 
    ClassDef(TAttImage,1)  //Image attributes
 };

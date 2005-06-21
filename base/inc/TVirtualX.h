@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.32 2004/10/20 22:32:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.33 2005/05/18 16:58:42 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -209,6 +209,7 @@ public:
    virtual Bool_t       CreatePictureFromData(Drawable_t id, char **data,
                                               Pixmap_t &pict, Pixmap_t &pict_mask,
                                               PictureAttributes_t &attr);
+   virtual Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
    virtual Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data);
    virtual void         DeletePictureData(void *data);
    virtual void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list,
@@ -300,10 +301,10 @@ public:
    virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    virtual void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
-   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
-                                 Int_t dx, Int_t dy, Int_t x, Int_t y,
-                                 UInt_t w, UInt_t h);
+   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy, 
+                                 Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
+   virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    static TVirtualX    *&Instance();
@@ -316,9 +317,5 @@ public:
 R__EXTERN TVirtualX *(*gPtr2VirtualX)();
 #endif
 R__EXTERN TVirtualX  *gGXBatch;
-
-R__EXTERN void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos);
-R__EXTERN unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h);
-R__EXTERN Pixmap_t (*gDIB2Pixmap)(ULong_t bmbits, ULong_t bmi);
 
 #endif

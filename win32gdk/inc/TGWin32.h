@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.26 2004/10/20 22:32:45 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.27 2005/05/18 16:58:42 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -270,6 +270,7 @@ public:
    Pixmap_t     CreatePixmap(Drawable_t id, const char *bitmap, UInt_t width,
                              UInt_t height, ULong_t forecolor, ULong_t backcolor,
                              Int_t depth);
+   Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
    Pixmap_t     CreateBitmap(Drawable_t id, const char *bitmap,
                              UInt_t width, UInt_t height);
    void         DeletePixmap(Pixmap_t pmap);
@@ -352,7 +353,6 @@ public:
    void         SetForeground(GContext_t gc, ULong_t foreground);
    void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    void         Update(Int_t mode = 0);
-
    Region_t     CreateRegion();
    void         DestroyRegion(Region_t reg);
    void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
@@ -374,11 +374,9 @@ public:
                          Int_t dx, Int_t dy, Int_t x, Int_t y,
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
-   Bool_t       IsCmdThread() const;
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   static void         DrawDIB(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos);
-   static unsigned char *GetBmBits(Drawable_t wid, Int_t w, Int_t h);
-   static Pixmap_t     DIB2Pixmap(ULong_t bmi, ULong_t bmbits);
+   Bool_t       IsCmdThread() const;
 
    static void Lock();
    static void Unlock();

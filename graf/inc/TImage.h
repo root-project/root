@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.8 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.9 2005/05/31 05:42:37 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -141,7 +141,8 @@ public:
    virtual void UnZoom() {}
    virtual void Zoom(UInt_t /*offX*/, UInt_t /*offY*/, UInt_t /*width*/, UInt_t /*height*/) {}
    virtual void Flip(Int_t /*flip*/ = 180) {}
-   virtual void ToGray() {}
+   virtual void Gray(Bool_t /*on*/ = kTRUE) {}
+   virtual Bool_t IsGray() const { return kFALSE; }
    virtual void Mirror(Bool_t /*vert*/ = kTRUE) {}
    virtual void Scale(UInt_t /*width*/, UInt_t /*height*/) {}
    virtual void Tile(UInt_t /*width*/, UInt_t /*height*/) {}
@@ -220,6 +221,8 @@ public:
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return 0; }
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
+   virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/) { }
+   virtual void      FromWindow(Drawable_t wid, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
    static TImage *Create();
    static TImage *Open(const char *file, EImageFileTypes type = kUnknown);

@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.10 2004/08/09 15:35:52 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.11 2005/05/18 16:58:42 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -259,6 +259,8 @@ public:
    void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
                          Int_t dx, Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
+   Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
 
    Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
    void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }

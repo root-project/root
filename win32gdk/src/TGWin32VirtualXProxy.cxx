@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.7 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.8 2004/08/09 15:35:52 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -233,6 +233,8 @@ RETURN_METHOD_ARG2(VirtualX,Bool_t,ReadPictureDataFromFile,const char*,filename,
 RETURN_METHOD_ARG2(VirtualX,Int_t,SetTextFont,char*,fontname,TVirtualX::ETextSetMode,mode)
 RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmap,Drawable_t,wid,UInt_t,w,UInt_t,h)
 RETURN_METHOD_ARG1(VirtualX,ULong_t,GetPixel,Color_t,cindex)
+RETURN_METHOD_ARG5(VirtualX,unsigned char*,GetColorBits,Drawable_t,wid,Int_t,x,Int_t,y,UInt_t,width,UInt_t,height)
+RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmapFromData,unsigned char*,bits,UInt_t,width,UInt_t,height)
 
 //VOID_METHOD_ARG1(VirtualX,CreateOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(VirtualX,DeleteOpenGLContext,Int_t,wid,1)

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.39 2005/06/15 12:50:34 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.40 2005/06/17 06:50:34 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -80,14 +80,13 @@
 extern "C" {
 #ifndef WIN32
 #   include <afterbase.h>
-#   include <afterimage.h>
 #else
 #   include <win32/config.h>
 #   include <win32/afterbase.h>
-#   include <afterimage.h>
-#   include <bmp.h>
 #   define X_DISPLAY_MISSING 1
 #endif
+#   include <afterimage.h>
+#   include <bmp.h>
 #   include <draw.h> 
 
     extern Display *dpy;    // defined in afterbase.c
@@ -101,6 +100,7 @@ ASVisual *TASImage::fgVisual;
 Bool_t TASImage::fgInit = kFALSE;
 
 static ASFontManager *gFontManager = 0;
+static unsigned long kAllPlanes = ~0;
 
 ///////////////////////////// alphablending macros ///////////////////////////////
 typedef struct {
@@ -133,6 +133,26 @@ static __argb32__ *b = new __argb32__;
 ClassImp(TASImage)
 
 //______________________________________________________________________________
+void TASImage::DestroyImage()
+{
+   // helper class
+
+   if (fImage) {
+      destroy_asimage(&fImage);
+   }
+
+   if (fIsGray && fGrayImage) {
+      destroy_asimage(&fGrayImage);
+   }
+
+   fIsGray     = kFALSE;
+   fGrayImage  = 0;
+   fImage      = 0;
+   fPic        = 0;
+   fMask       = 0;
+}
+
+//______________________________________________________________________________
 void TASImage::SetDefaults()
 {
    // set default parameters
@@ -146,6 +166,11 @@ void TASImage::SetDefaults()
    fZoomWidth     = 0;
    fZoomHeight    = 0;
    fZoomUpdate    = kZoomOps;
+   fPic           = 0;
+   fMask          = 0;
+   fGrayImage     = 0;
+   fIsGray        = kFALSE;
+   fPaletteEnabled = kFALSE;
 
    if (!fgInit) {
       set_application_name((char*)(gProgName ? gProgName : "ROOT"));
@@ -167,6 +192,8 @@ TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
    // create an empty image
 
    SetDefaults();
+   fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+   UnZoom();
 }
 
 //______________________________________________________________________________
@@ -224,11 +251,12 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
    // Image copy ctor.
 
    fImage         = 0;
-   fScaledImage   = fScaledImage ? (TASImage*)fScaledImage->Clone("") : 0;
    fPaintMode     = 1;
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
+      fScaledImage   = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : 0;
+      fGrayImage     = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : 0;
 
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
@@ -242,6 +270,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
       fZoomWidth  = img.fZoomWidth;
       fZoomHeight = img.fZoomHeight;
       fEditable   = img.fEditable;
+      fIsGray     = img.fIsGray;
    }
 }
 
@@ -253,14 +282,12 @@ TASImage &TASImage::operator=(const TASImage &img)
    if (this != &img && img.IsValid()) {
       TImage::operator=(img);
 
-      if (fImage) {
-         destroy_asimage(&fImage);
-         fImage = 0;
-      }
-
-      fPaintMode     = 1;
-
+      DestroyImage();
+      delete fScaledImage;
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
+      fScaledImage = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : 0;
+      fGrayImage = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : 0;
+
       if (img.fImage->alt.vector) {
          Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
          fImage->alt.vector = (double*)malloc(size);
@@ -274,6 +301,8 @@ TASImage &TASImage::operator=(const TASImage &img)
       fZoomWidth  = img.fZoomWidth;
       fZoomHeight = img.fZoomHeight;
       fEditable   = img.fEditable;
+      fIsGray     = img.fIsGray;
+      fPaintMode  = 1;
    }
 
    return *this;
@@ -284,11 +313,7 @@ TASImage::~TASImage()
 {
    // Image dtor, clean up image and visual.
 
-   if (fImage) {
-      destroy_asimage(&fImage);
-      fImage = 0;
-   }
-
+   DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 }
@@ -308,10 +333,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // the first input parameter ("filename"), such string  is returned by 
    // GetImageBuffer method.
 
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
-
+   DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 
@@ -604,9 +626,7 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
       return;
    }
 
-   if (fImage)
-      destroy_asimage(&fImage);
-
+   DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 
@@ -649,6 +669,7 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
    fZoomOffY   = 0;
    fZoomWidth  = width;
    fZoomHeight = height;
+   fPaletteEnabled = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -696,11 +717,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    SetName(pad->GetName());
 
-   if (fImage) {
-      destroy_asimage(&fImage);
-      fImage = 0;
-   }
-
+   DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 
@@ -740,12 +757,20 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    Window_t wd = gVirtualX->GetCurrentWindow();
    if (!wd) return;
 
-#ifndef WIN32
-   fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, AllPlanes, 0, 0);
-#else
-   unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(wd, w, h) : 0;
-   fImage = bitmap2asimage(bits, w, h, 0, 0);
-#endif
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) { //use built-in optimized version 
+      fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, kAllPlanes, 0, 0);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, w, h);
+
+      if (!bits) { // error
+         return;
+      }
+      fImage = bitmap2asimage(bits, w, h, 0, 0);
+      delete [] bits;
+   }
 }
 
 //______________________________________________________________________________
@@ -757,7 +782,8 @@ void TASImage::Draw(Option_t *option)
    //                   with this option the zooming is not possible
    //                   and disabled
    // "N"             - display in new canvas (of original image size)
-   // "xxx"           - image is drawn expanded to pad size
+   // "X"             - image is drawn expanded to pad size
+   // "Z"             - image is vectorized and image palette is drawn
    //
    // The default is to display the image in the current gPad.
 
@@ -777,7 +803,7 @@ void TASImage::Draw(Option_t *option)
                   fImage->width+bw, fImage->height+bh);
    }
 
-   if (!opt.Contains("xxx")) {
+   if (!opt.Contains("x")) {
       Double_t left = gPad->GetLeftMargin();
       Double_t right = gPad->GetRightMargin();
       Double_t top = gPad->GetTopMargin();
@@ -800,21 +826,60 @@ void TASImage::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
+{
+   // draw asimage on drawable
+
+   static GCValues_t gv;
+   static GContext_t gc = 0;
+
+   if (!gc) {
+      gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
+   }
+
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) { //use built-in optimized version
+      asimage2drawable(fgVisual, wid, im, (GC)gc, 0, 0, x, y, im->width, im->height, 1);
+   } else {
+      ASImage *img = 0;
+      unsigned char *bits = (unsigned char *)im->alt.argb32;
+      if (!bits) {
+         img = tile_asimage(fgVisual, im, 0, 0, im->width, im->height,
+                            0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
+         bits = (unsigned char *)img->alt.argb32;
+      }
+      
+      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, img->width, img->height);
+      if (pic) gVirtualX->CopyArea(pic, wid, gc, 0, 0, img->width, img->height, x, y);
+
+      if (img) {
+         destroy_asimage(&img);
+      }
+   }
+}
+//______________________________________________________________________________
+void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y)
+{
+   // draw image on drawable wid (pixmap, window ) at x,y position
+
+   Image2Drawable(fImage, wid, x, y);
+}
+
+//______________________________________________________________________________
 void TASImage::Paint(Option_t *option)
 {
-   // Paint image in current pad. See Draw() function for drawing options.
-   //
-   // options:
+   // Paint image. Support the following drawing options:
    // "T[x,y[,tint]]" - tile image (use specified offset and tint),
    //                   e.g. "T100,100,#556655"
    //                   with this option the zooming is not possible
    //                   and disabled
-   // "xxx" - image expanded to pad size
-
-#ifdef WIN32
-   void *bmbits = NULL ;
-   BITMAPINFO *bmi = NULL ;
-#endif
+   // "N"             - display in new canvas (of original image size)
+   // "X"             - image is drawn expanded to pad size
+   // "Z"             - image is vectorized and image palette is drawn
+   //
+   // The default is to display the image in the current gPad.
 
    if (!fImage) {
       Error("Paint", "no image set");
@@ -833,18 +898,25 @@ void TASImage::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
+
    if (opt.Contains("t")) {
       char stint[64];
-      if (sscanf(opt.Data()+opt.Index("t"), "t%d,%d,%s", &tile_x, &tile_y,
+      if (sscanf(opt.Data() + opt.Index("t"), "t%d,%d,%s", &tile_x, &tile_y,
                  stint) <= 3) {
          tile = kTRUE;
-         if (parse_argb_color(stint, (CARD32*) &tile_tint) == stint)
+         if (parse_argb_color(stint, (CARD32*)&tile_tint) == stint)
             tile_tint = 0;
       } else
          Error("Paint", "tile option error");
-   } else if (opt.Contains("xxx")) {
+   } else if (opt.Contains("x")) {
       expand = kTRUE;
       fConstRatio = kFALSE;
+   } else if (opt.Contains("z")) {
+      fPaletteEnabled = kTRUE;
+
+      if (!fImage->alt.vector) {
+         Vectorize(256);
+      }
    }
 
    ASImage *image = fImage;
@@ -885,7 +957,7 @@ void TASImage::Paint(Option_t *option)
 
    ASImage  *grad_im = 0;
 
-   if (fImage->alt.vector) {
+   if (fImage->alt.vector && fPaletteEnabled) {
       // draw the palette
       ASGradient grad;
       const TImagePalette &pal = GetPalette();
@@ -939,7 +1011,7 @@ void TASImage::Paint(Option_t *option)
          if (!fScaledImage) {
             fScaledImage = (TASImage*)TImage::Create();
 
-            if (fImage->width != fZoomWidth || fImage->height != fZoomHeight) {
+            if ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight)) {
                // zoom and scale image
                ASImage *tmpImage = 0;
                tmpImage = tile_asimage(fgVisual, fImage, fZoomOffX,
@@ -972,39 +1044,12 @@ void TASImage::Paint(Option_t *option)
    int toy = expand  ? 0 : int(gPad->VtoPixel(0.) * gPad->GetTopMargin());
 
    if (!gROOT->IsBatch()) {
-
-#ifndef WIN32
       Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
-      static GCValues_t gval;
-      static GContext_t gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gval);
-      asimage2drawable(fgVisual, wid, image, (GC)gc, 0, 0, tox, toy,
-                       image->width, image->height, 1);
+      Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, tox, toy);
 
-#else
-      // Convert ASImage into DIB: 
-      bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits, 0);
-      if(gDrawDIB != 0) {
-         gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, tox, toy);
-         free(bmbits);
-         free(bmi);
-      }
-#endif
-
-      if (grad_im) {
-#ifndef WIN32
+      if (grad_im && fPaletteEnabled) {
          // draw color bar
-         asimage2drawable(fgVisual, wid, grad_im, (GC)gc, 0, 0, pal_x, pal_y, 
-                          grad_im->width, grad_im->height, 1);
-#else
-         // Convert ASImage into DIB: 
-         bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits, 0 );
-
-         if(gDrawDIB != 0) {
-            gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, pal_x, pal_y);
-            free(bmbits);
-            free(bmi);
-         }
-#endif
+         Image2Drawable(grad_im, wid, pal_x, pal_y);
 
          // values of palette
          TGaxis axis;
@@ -1119,8 +1164,9 @@ void TASImage::Paint(Option_t *option)
       }
    }
 
-   if (grad_im)
+   if (grad_im) {
       destroy_asimage(&grad_im);
+   }
 }
 
 //______________________________________________________________________________
@@ -1349,7 +1395,7 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
    ASImage *img = scale_asimage(fgVisual, fImage, toWidth, toHeight,
                                 ASA_ASImage, GetImageCompression(),
                                 GetImageQuality());
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
    UnZoom();
    fZoomUpdate = kZoomOps;
@@ -1381,7 +1427,7 @@ void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
 
    ASImage *img = tile_asimage(fgVisual, fImage, 0, 0, toWidth, toHeight, 0,
                                 ASA_ASImage, GetImageCompression(), GetImageQuality());
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
    UnZoom();
    fZoomUpdate = kZoomOps;
@@ -1467,6 +1513,7 @@ void TASImage::Flip(Int_t flip)
 
    UInt_t w = fImage->width;
    UInt_t h = fImage->height;
+
    if (rflip & 1) {
       w = fImage->height;
       h = fImage->width;
@@ -1475,10 +1522,7 @@ void TASImage::Flip(Int_t flip)
    ASImage *img = flip_asimage(fgVisual, fImage, 0, 0, w, h, rflip,
                                ASA_ASImage, GetImageCompression(),
                                GetImageQuality());
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
-
+   DestroyImage();
    fImage = img;
    UnZoom();
 }
@@ -1515,9 +1559,7 @@ void TASImage::Mirror(Bool_t vert)
                                  fImage->width, fImage->height, vert,
                                  ASA_ASImage, GetImageCompression(),
                                  GetImageQuality());
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
+   DestroyImage();
    fImage = img;
    UnZoom();
 }
@@ -1581,7 +1623,7 @@ Bool_t TASImage::InitVisual()
    fgVisual = create_asvisual_for_id(dpy, screen, depth,
                                      XVisualIDFromVisual(vis), cmap, 0);
 #else
-   fgVisual = create_asvisual( NULL, 0, 0, NULL );
+   fgVisual = create_asvisual(NULL, 0, 0, NULL);
 #endif
 
    return kTRUE;
@@ -1610,7 +1652,7 @@ Pixmap_t TASImage::GetPixmap()
 {
    // returns image pixmap
 
-   Pixmap_t pxmap;
+   if (fPic) return fPic;
 
    if (!InitVisual()) {
       Warning("GetPixmap", "Visual not initiated");
@@ -1619,28 +1661,28 @@ Pixmap_t TASImage::GetPixmap()
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
-#ifndef WIN32
-   pxmap = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
-                                    img, 0, kTRUE);
-#else
-   void *bmbits = NULL ;
-   BITMAPINFO *bmi = NULL ;
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
-   bmi = ASImage2DBI( fgVisual, img, 0, 0, img->width, img->height, &bmbits, 0 );
-   if(gDIB2Pixmap != 0) {
-       pxmap = gDIB2Pixmap((ULong_t)bmi, (ULong_t)bmbits);
-       free(bmbits);
-       free(bmi);
+   if (x11) {   // use builtin version
+      fPic = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), 
+                                       img, 0, kTRUE);
+   } else {
+      if (!fImage->alt.argb32) {
+         BeginPaint();
+      }
+      fPic = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32, fImage->width, fImage->height);
    }
-#endif
-   
-   return pxmap;
+
+   return fPic;
 }
 
 //______________________________________________________________________________
 Pixmap_t TASImage::GetMask()
 {
-   // returns image pixmap 
+   // returns image mask pixmap (alpha channel) 
+
+   if (fMask) return fMask;
 
    Pixmap_t pxmap = 0;
 
@@ -1692,10 +1734,10 @@ Pixmap_t TASImage::GetMask()
    }
 
    stop_image_decoding( &imdec );
-   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
+   fMask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
                                    ww, hh);
    delete [] bits;
-   return pxmap;
+   return fMask;
 }
 
 //______________________________________________________________________________
@@ -1708,10 +1750,7 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
       return;
    }
 
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
-
+   DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 
@@ -1719,21 +1758,29 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    UInt_t w, h;
    gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
 
-#ifndef WIN32
-   fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, AllPlanes, 1, 0);
-#else
-   unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(pxm, w, h) : 0;
    if (fName.IsNull()) fName.Form("img_%dx%d",w, h);
 
-   // no mask
-   if (!mask) {
-      fImage = bitmap2asimage(bits, w, h, 0, 0);
-      return;
-   }
-   unsigned char *mask_bits = (gGetBmBits != 0) ? gGetBmBits(mask, w, h) : 0;
-   fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
-#endif
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
+   if (x11) { //use built-in optimized version 
+      fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
+      if (!bits) {   // error
+         return;
+      }
+
+      // no mask
+      if (!mask) {
+         fImage = bitmap2asimage(bits, w, h, 0, 0);
+         delete [] bits;
+         return;
+      }
+      unsigned char *mask_bits = gVirtualX->GetColorBits(mask, 0, 0, w, h);
+      fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
+      delete [] mask_bits;
+   }
 }
 
 //______________________________________________________________________________
@@ -1888,6 +1935,10 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       Warning("DrawText", "Visual not initiated");
       return;
    }
+   if (!InitVisual()) {
+      Warning("DrawFillArea", "Visual not initiated");
+      return;
+   }
 
    TString fn = font_name;
    fn.Strip();
@@ -1974,7 +2025,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
                                  ASA_ASImage, GetImageCompression(), GetImageQuality());
 
       destroy_asimage(&fore_im);
-      if (fImage) destroy_asimage(&fImage);
+      DestroyImage();
       fImage = rendered_im;
       UnZoom();
    }
@@ -2029,7 +2080,7 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    rendered_im = merge_layers(fgVisual, &(layers[0]), 2, fImage->width, fImage->height,
                               ASA_ASImage, GetImageCompression(), GetImageQuality());
 
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = rendered_im;
    UnZoom();
 }
@@ -2060,9 +2111,7 @@ void TASImage::Blur(Double_t hr, Double_t vr)
    ASImage *rendered_im = blur_asimage_gauss(fgVisual, fImage, hr > 0 ? hr : 3,
                                              vr > 0 ? vr : 3, SCL_DO_ALL,
                                              ASA_ASImage, GetImageCompression(), GetImageQuality());
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
+   DestroyImage();
    fImage = rendered_im;
    UnZoom();
 }
@@ -2258,10 +2307,7 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
       return;
    }
 
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
-
+   DestroyImage();
    fImage = rendered_im;
    UnZoom();
 }
@@ -2453,7 +2499,7 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
    }
 
    destroy_asimage(&rendered_im);
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = merge_im;
    UnZoom();
 }
@@ -2626,7 +2672,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
       return;
    }
 
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = merge_im;
    UnZoom();
 }
@@ -2674,7 +2720,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
       return;
    }
 
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
    UnZoom();
    fZoomUpdate = kZoomOps;
@@ -2745,7 +2791,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    mmx_off();
 #endif
 
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
    UnZoom();
    fZoomUpdate = kZoomOps;
@@ -2822,7 +2868,7 @@ void TASImage::BeginPaint(Bool_t mode)
       return;
    }
 
-   destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
 }
 
@@ -2847,7 +2893,7 @@ void TASImage::EndPaint()
    }
 
    fPaintMode = kFALSE;
-   destroy_asimage(&fImage);
+   DestroyImage();
    fImage = img;
 }
 
@@ -3013,10 +3059,10 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
 
    if (!fImage) {
       fImage = create_asimage(width ? width : 20, height ? height : 20, 0);
-      fImage->back_color = color;
-      return;
+      x = 0;
+      y = 0;
    }
-   BeginPaint();
+
    FillRectangleInternal((UInt_t)color, x, y, width, height);
    UnZoom();
 }
@@ -3270,12 +3316,8 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
       return;
    }
 
-   ARGB32 color;
-   parse_argb_color(col, &color);
-
    if (!fImage) {
-      fImage = create_asimage(w, h, 0);
-      fImage->back_color = color;
+      Warning("DrawRectangle", "no image");
       return;
    }
 
@@ -3287,6 +3329,9 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
       Warning("DrawRectangle", "Failed to get pixel array");
       return;
    }
+
+   ARGB32 color;
+   parse_argb_color(col, &color);
 
    DrawHLine(y, x, x + w, (UInt_t)color, thick);
    DrawVLine(x + w, y, y + h, (UInt_t)color, thick);
@@ -4923,7 +4968,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
    //    TImage *im = TImage::Create();
    //    im->SetImageBuffer(xpm, TImage::kXpm);
 
-   if (fImage) destroy_asimage(&fImage);
+   DestroyImage();
 
 	ASImageImportParams params; 
 	params.flags = 0;
@@ -5357,32 +5402,48 @@ void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/,
 }
 
 //_______________________________________________________________________
-void TASImage::ToGray()
+void TASImage::Gray(Bool_t on)
 {
-   // Converts RGB image to Gray image.
+   // Converts RGB image to Gray image and vice versa.
+
+   if (fIsGray == on) {
+      return;
+   }
 
    if (!IsValid()) {
-      Warning("ToGray", "Image not initiated");
+      Warning("Gray", "Image not initiated");
       return;
    }
 
    if (!InitVisual()) {
-      Warning("ToGray", "Visual not initiated");
+      Warning("Gray", "Visual not initiated");
       return;
    }
 
+   if (!fGrayImage && !on) {
+      return;
+   }
+   ASImage *sav = 0;
    delete fScaledImage;
    fScaledImage = 0;
 
-   ASImage *image = 0;
+   if (fGrayImage)  {
+      sav = fImage;
+      fImage = fGrayImage;
+      fGrayImage = sav;
+      fIsGray = on;
+      return;
+   }
+
+   if (!on) return;
 
    UInt_t l, r, g, b, idx;
    int y = 0;
    UInt_t i, j;
 
    if (fImage->alt.argb32) {
-      image = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
-                           0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
+      fGrayImage = tile_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height,
+                                0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
 
       for (i = 0; i < fImage->height; i++) {
          for (j = 0; j < fImage->width; j++) {
@@ -5392,12 +5453,12 @@ void TASImage::ToGray()
             g = ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
             b = (fImage->alt.argb32[idx] & 0x0000ff);
             l = (57*r + 181*g + 18*b)/256;
-            image->alt.argb32[idx] = (l << 16) + (l << 8) + l;
+            fGrayImage->alt.argb32[idx] = (l << 16) + (l << 8) + l;
          }
          y += fImage->width;
       }
    } else {
-      image = create_asimage(fImage->width, fImage->height, 0);
+      fGrayImage = create_asimage(fImage->width, fImage->height, 0);
 
       ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
                                                    0, 0, fImage->width, fImage->height, 0);
@@ -5408,7 +5469,7 @@ void TASImage::ToGray()
 #ifdef HAVE_MMX
 	mmx_init();
 #endif
-      ASImageOutput *imout = start_image_output(fgVisual, image, ASA_ASImage,
+      ASImageOutput *imout = start_image_output(fgVisual, fGrayImage, ASA_ASImage,
                                                 GetImageCompression(), GetImageQuality());
       if (!imout) {
          Warning("ToGray", "Failed to start image output");
@@ -5446,10 +5507,76 @@ void TASImage::ToGray()
 	mmx_off();
 #endif
    }
-   if (fImage) {
-      destroy_asimage(&fImage);
-   }
-   fImage = image;
+
+   sav = fImage;
+   fImage = fGrayImage;
+   fGrayImage = sav;
+   fIsGray = kTRUE;
 }
+
+//_______________________________________________________________________
+void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // creates an image(screenshot) from  specified window
+
+   Int_t xy;
+
+   x = x < 0 ? 0 : x;
+   y = y < 0 ? 0 : y;
+
+   if (!w || !h) {
+      gVirtualX->GetWindowSize(wid, xy, xy, w, h);
+   }
+
+   if ((x >= (Int_t)w) || (y >= (Int_t)h)) {
+      return;
+   }
+
+   if (!InitVisual()) {
+      Warning("FromWindow", "Visual not initiated");
+      return;
+   }
+
+   DestroyImage();
+   delete fScaledImage;
+   fScaledImage = 0;
+
+   unsigned char *bits = gVirtualX->GetColorBits(wid, x, y, w, h);
+   if (!bits) { // error
+      return;
+   }
+   fImage = bitmap2asimage(bits, w, h, 0, 0);
+   delete [] bits;
+}
+
+//_______________________________________________________________________
+void TASImage::SetPaletteEnabled(Bool_t on)
+{
+   // switch on/off image palette. That also invokes calling vectorizasion of image
+
+   if (!fImage) {
+      return;
+   }
+
+   if (!fImage->alt.vector && on) {
+      Vectorize();
+   }
+   fPaletteEnabled = on;
+
+   if (on) {
+      Double_t left = gPad->GetLeftMargin();
+      Double_t right = gPad->GetRightMargin();
+      Double_t top = gPad->GetTopMargin();
+      Double_t bottom = gPad->GetBottomMargin();
+
+      gPad->Range(-left / (1.0 - left - right), 
+                  -bottom / (1.0 - top - bottom), 
+                  1 + right / (1.0 - left - right),
+                  1 + top / ( 1.0 - top - bottom));
+      gPad->RangeAxis(0, 0, 1, 1);
+   }
+
+}
+
 
 

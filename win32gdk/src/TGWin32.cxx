@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.95 2005/05/18 16:58:42 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.96 2005/05/19 20:39:38 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -100,9 +100,6 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 /////////////////////////////////// globals //////////////////////////////////
 int gdk_debug_level;
-
-//void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos) = 0;
-//unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h) = 0;
 
 GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
@@ -810,9 +807,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
-   gDrawDIB  = &(TGWin32::DrawDIB);
-   gGetBmBits  = &(TGWin32::GetBmBits);
-   gDIB2Pixmap = &(TGWin32::DIB2Pixmap);
    TGWin32SetConsoleWindowName();
 }
 
@@ -6898,44 +6892,18 @@ void TGWin32::DeleteImage(Drawable_t img)
 }
 
 //______________________________________________________________________________
-void TGWin32::DrawDIB(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos)
+unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y, 
+                                     UInt_t width, UInt_t height)
 {
-   // Draws DIB bitmap (added for libAfterImage on Win32)
-   // bmi        - pointer on bitmap info structure
-   // bmbits     - pointer on bitmap bits array
-   // xpos, ypos - position of bitmap
-
-   HDC hdc;
-   int saved_hdc;
-   BITMAPINFO *lpbmi = (BITMAPINFO *)bmi;
-   HWND hwnd = (HWND) GDK_DRAWABLE_XID(gCws->drawing);
-   if (GDK_DRAWABLE_TYPE(gCws->drawing) == GDK_DRAWABLE_PIXMAP) {
-      hdc = ::CreateCompatibleDC(NULL);
-      saved_hdc = ::SaveDC(hdc);
-      ::SelectObject(hdc, hwnd);
-   }
-   else {
-      hdc = ::GetDC(hwnd);
-      saved_hdc = ::SaveDC(hdc);
-   }
-   ::StretchDIBits( hdc, xpos, ypos, lpbmi->bmiHeader.biWidth, lpbmi->bmiHeader.biHeight, 
-                  0, 0, lpbmi->bmiHeader.biWidth, lpbmi->bmiHeader.biHeight,  
-                  (void *)bmbits, lpbmi, DIB_RGB_COLORS, SRCCOPY );
-   ::RestoreDC(hdc, saved_hdc);
-   if (GDK_DRAWABLE_TYPE(gCws->drawing) == GDK_DRAWABLE_PIXMAP) {
-      ::DeleteDC(hdc);
-   } else {
-      ::ReleaseDC(hwnd, hdc);
-   }
-}
-
-//______________________________________________________________________________
-unsigned char *TGWin32::GetBmBits(Drawable_t wid, Int_t width, Int_t height)
-{
-   // Gets DIB bits (added for libAfterImage on Win32)
-   // width, height - position of bitmap
+   // Gets DIB bits
+   // x, y, width, height - position of bitmap
    // returns a pointer on bitmap bits array
-   
+   // in format:
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // By default all pixels from the whole drawable are returned.
+
    HDC hdc, memdc;
    BITMAPINFO bmi;
    HGDIOBJ oldbitmap1, oldbitmap2;
@@ -6964,11 +6932,11 @@ unsigned char *TGWin32::GetBmBits(Drawable_t wid, Int_t width, Int_t height)
    bmi.bmiHeader.biClrUsed = 0;
    bmi.bmiHeader.biClrImportant = 0;
 
-   ximage = ::CreateDIBSection(hdc, (BITMAPINFO *) & bmi, DIB_RGB_COLORS, &bmbits, NULL, 0);
+   ximage = ::CreateDIBSection(hdc, (BITMAPINFO *) &bmi, DIB_RGB_COLORS, &bmbits, NULL, 0);
 
    oldbitmap2 = ::SelectObject(memdc, ximage);
 
-   ::BitBlt(memdc, 0, 0, width, height, hdc, 0, 0, SRCCOPY);
+   ::BitBlt(memdc, x, y, width, height, hdc, 0, 0, SRCCOPY);
    ::SelectObject(memdc, oldbitmap2);
    ::DeleteDC(memdc);
    if (GDK_DRAWABLE_TYPE(wid) == GDK_DRAWABLE_PIXMAP) {
@@ -6981,34 +6949,37 @@ unsigned char *TGWin32::GetBmBits(Drawable_t wid, Int_t width, Int_t height)
 }
 
 //______________________________________________________________________________
-Pixmap_t TGWin32::DIB2Pixmap(ULong_t bmi, ULong_t bmbits)
+Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height)
 {
-   // Converts a DIB (Device Independant Bitmap) into 
-   // a GdkPixmap (added for libAfterImage on Win32)
-   // bmi        - pointer on bitmap info structure
-   // bmbits     - pointer on bitmap bits array
-   // returns Pixmap_t (pointer on a GdkPixmap)
-   GdkPixmap *pixmap = 0;
-   void *pbmbits;
-   BITMAPINFO *lpbmi = (BITMAPINFO *)bmi;
-   SIZE size;
+   // create an image from RGB data. RGB data is in format :
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // Note that data must be 32-bit aligned
 
-   HDC hdc = ::GetDC( NULL );
+   BITMAPINFO bmp_info;
+   bmp_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   bmp_info.bmiHeader.biWidth = width;
+   bmp_info.bmiHeader.biHeight = -height;
+   bmp_info.bmiHeader.biPlanes = 1;
+   bmp_info.bmiHeader.biBitCount = 32;
+   bmp_info.bmiHeader.biCompression = BI_RGB;
+   bmp_info.bmiHeader.biSizeImage = 0;
+   bmp_info.bmiHeader.biClrUsed = 0;
+   bmp_info.bmiHeader.biClrImportant = 0;
 
-   HBITMAP bitmap = ::CreateDIBitmap(hdc, &lpbmi->bmiHeader, CBM_INIT,
-                                (void *)bmbits, lpbmi, DIB_RGB_COLORS);
+   HDC hdc = ::GetDC(NULL);
+   HBITMAP hbitmap = ::CreateDIBitmap(hdc, &bmp_info.bmiHeader, CBM_INIT,
+                                      (void *)bits, &bmp_info, DIB_RGB_COLORS);
    ::ReleaseDC(NULL, hdc);
 
+   SIZE size;
    // For an obscure reason, we have to set the size of the 
    // bitmap this way before to call gdk_pixmap_foreign_new
    // otherwise, it fails...
-   ::SetBitmapDimensionEx(bitmap, lpbmi->bmiHeader.biWidth, 
-                          lpbmi->bmiHeader.biHeight, &size);
+   ::SetBitmapDimensionEx(hbitmap,width, height, &size);
 
-   pixmap = gdk_pixmap_foreign_new((guint32)bitmap);
-
-   return (Pixmap_t) pixmap;
+   return (Pixmap_t)gdk_pixmap_foreign_new((guint32)hbitmap);
 }
-
 
 

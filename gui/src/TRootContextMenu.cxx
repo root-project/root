@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.11 2005/02/16 15:22:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.12 2005/03/31 12:51:43 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -193,7 +193,6 @@ void TRootContextMenu::CreateMenu(TObject *object)
                            t->SetToggledObject(object, method);
                            t->SetOnValue(1);
                            fTrash->Add(t);
-
                            AddEntry(method->GetName(), toggle++, t);
                            if (t->GetState()) CheckEntry(toggle-1);
                         }

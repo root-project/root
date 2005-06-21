@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.13 2005/06/02 00:39:12 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.14 2005/06/02 21:52:33 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -502,27 +502,8 @@ bool TQtGrabPointerFilter::eventFilter( QObject *, QEvent *e)
 void  TGQt::SetOpacity(Int_t) { }
 //______________________________________________________________________________
 Window_t TGQt::GetWindowID(Int_t id) {
-   // Create a "client" wrapper for the "canvas" widget to make Fons happy
-   TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(iwid(id));
-   assert(canvasWidget);
-   TQtClientWidget  *client = 0;
-   // Only one wrapper per "Canvas Qt Widget" is allowed
-   if (! (client = (TQtClientWidget  *)canvasWidget->GetRootID() )  ) {
-      //   QWidget *canvasWidget = (QWidget *)wid(id);
-      QWidget *parent  = canvasWidget->parentWidget();
-      client  = (TQtClientWidget  *)wid(CreateWindow(rootwid(parent)
-         ,0,0,canvasWidget->width(),canvasWidget->height()
-         ,0,0,0,0,0,0));
-      // reparent the canvas
-      canvasWidget->reparent(client,QPoint(0,0));
-      QBoxLayout * l = new QVBoxLayout( client );
-      l->addWidget( canvasWidget );
-      canvasWidget->SetRootID(client);
-      client->SetCanvasWidget(canvasWidget);
-      canvasWidget->setMouseTracking(kFALSE);
-      client->setMouseTracking(kTRUE);
-   }
-   return rootwid(client);
+ 
+   return (Window_t)iwid(id);
 }
 //______________________________________________________________________________
 Window_t  TGQt::GetDefaultRootWindow() const

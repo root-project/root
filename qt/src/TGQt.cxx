@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.17 2005/04/15 07:19:50 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.18 2005/06/03 12:36:03 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -624,7 +624,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.17 2005/04/15 07:19:50 brun Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.18 2005/06/03 12:36:03 rdm Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -2467,7 +2467,6 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
    //               If no or some unknown extension is provided then
    //               the "png" format is used by default
 
-
    if (!wid || (wid == -1) ) return;
 
    QPaintDevice &dev = *iwid(wid);
@@ -2608,3 +2607,88 @@ Int_t TGQt::processQtEvents(Int_t maxtime)
    // QEventLoop::ExcludeUserInput QEventLoop::ExcludeSocketNotifiers
    return 0;
  }
+
+//______________________________________________________________________________
+unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
+{
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // in format:
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // By default all pixels from the whole drawable are returned.
+   //
+   // Note that return array is 32-bit aligned
+
+
+   if (!wid || (int(wid) == -1) ) return 0;
+
+   QPaintDevice &dev = *iwid(wid);
+   QPixmap *pix=0;
+   switch (dev.devType()) {
+   case QInternal::Widget:
+     pix = &((TQtWidget*)&dev)->GetBuffer();
+     break;
+
+   case QInternal::Pixmap: {
+      pix = (QPixmap *)&dev;
+      break;
+                          }
+   case QInternal::Picture:
+   case QInternal::Printer:
+   case QInternal::UndefinedDevice:
+   default: assert(0);
+     break;
+   };
+
+   if (pix) {
+      // Create intermediate pixmap to stretch the original one if any
+      QPixmap outMap(0,0);
+      if ( (h == w) && (w == UInt_t(-1) ) ) outMap.resize(pix->size());
+      else outMap.resize(w,h);
+
+      QImage img = pix->convertToImage();
+      if (!img.isNull()) {
+         UInt_t *bits = new UInt_t[w*h];
+         UInt_t *ibits = (UInt_t *)img.bits();
+
+         int idx = y;
+         int iii = 0;
+         for (UInt_t j = 0; j < h; j++) {
+            for (UInt_t i = 0; i < w; i++) {
+               bits[iii + i] = ibits[idx + x + i];
+            }
+            idx += w;
+            iii += w;
+         }
+         return (unsigned char *)bits;
+      }
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Pixmap_t TGQt::CreatePixmapFromData(unsigned char * bits, UInt_t width, 
+                                       UInt_t height)
+{
+   // create pixmap from RGB data. RGB data is in format :
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // Note that data must be 32-bit aligned
+
+   QImage img(bits, width, height, 32, 0, 0, QImage::LittleEndian);
+   QPixmap *p = new QPixmap(img);
+   fQPixmapGuard.Add(p);
+   return Pixmap_t(rootwid(p));
+}
+
+//______________________________________________________________________________
+Window_t TGQt::GetCurrentWindow() const
+{
+   // Return current/selected window pointer.
+
+   return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
+}
+

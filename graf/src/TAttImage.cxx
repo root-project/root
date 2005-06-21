@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.6 2005/02/28 16:40:03 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.7 2005/05/24 15:46:40 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -379,6 +379,7 @@ TAttImage::TAttImage()
 
    ResetAttImage();
    fPaletteEditor = 0;
+   fPaletteEnabled = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -402,6 +403,7 @@ TAttImage::TAttImage(EImageQuality lquality, UInt_t lcompression,
    fImageCompression = (lcompression > 100) ? 100 : lcompression;
    fConstRatio = constRatio;
    fPaletteEditor = 0;
+   fPaletteEnabled = kTRUE;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.11 2005/05/15 05:53:44 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.12 2005/05/30 22:38:38 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -63,6 +63,7 @@ private:
    void DrawGlyph(void *bitmap, UInt_t color, Int_t x, Int_t y);
    void SetDefaults();
    void CreateThumbnail();
+   void DestroyImage();
 
 protected:
    ASImage  *fImage;        //! pointer to image structure of original image
@@ -76,15 +77,17 @@ protected:
    Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
    Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad 
    Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
+   Pixmap_t  fPic;          //! pixmap
+   Pixmap_t  fMask;         //! mask
+   ASImage  *fGrayImage;    //! gray image
+   Bool_t    fIsGray;       //! kTRUE if image is gray
 
    static ASVisual *fgVisual;  // pointer to visual structure
    static Bool_t    fgInit;    // global flag to init afterimage only once
 
    EImageFileTypes GetFileType(const char *ext);
-   void MapFileTypes(EImageFileTypes &type, UInt_t &astype,
-                     Bool_t toas = kTRUE);
-   void MapQuality(EImageQuality &quality, UInt_t &asquality,
-                   Bool_t toas = kTRUE);
+   void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
+   void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
    static Bool_t InitVisual();
 
@@ -129,8 +132,8 @@ public:
    void  Pad(const char *color = "#00FFFFFF", UInt_t left = 0, 
              UInt_t right = 0, UInt_t top = 0, UInt_t bottom = 0);      //*MENU*
    void  Blur(Double_t hr = 3, Double_t vr = 3);                        //*MENU*
-   void  Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);  //*MENU*
-   void  ToGray();                                                      //*MENU*
+   void  Vectorize(UInt_t max_colors = 256, UInt_t dither = 4, Int_t opaque_threshold = 1);
+   void  Gray(Bool_t on = kTRUE);                                       //*TOGGLE* *GETTER=IsGray
    void  StartPaletteEditor();                                          //*MENU*
    void  HSV(UInt_t hue = 0, UInt_t radius = 360, Int_t H = 0, Int_t S = 0, Int_t V = 0, 
              Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0);
@@ -180,6 +183,7 @@ public:
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(Pixmap_t pxm, Pixmap_t mask = 0);
+   void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
 
    // Utilities
    UInt_t GetWidth() const;
@@ -187,6 +191,7 @@ public:
    UInt_t GetScaledWidth() const;
    UInt_t GetScaledHeight() const;
    Bool_t IsValid() const { return fImage ? kTRUE : kFALSE; }
+   Bool_t IsGray() const { return fIsGray; }
    ASImage         *GetImage() const { return fImage; }
    TImage          *GetScaledImage() const { return fScaledImage; }
    Pixmap_t         GetPixmap();
@@ -197,9 +202,12 @@ public:
    UInt_t          *GetScanline(UInt_t y);
    void             GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
    Bool_t           SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
+   void             PaintImage(Drawable_t wid, Int_t x, Int_t y);
+   void             SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);
+   static void Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y);
 
    ClassDef(TASImage,1)  // image processing class
 };
