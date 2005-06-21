@@ -31,7 +31,6 @@ GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h \
                 TGNumberEntry.h TGTableLayout.h WidgetMessageTypes.h \
                 TGIdleHandler.h
-
 GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
@@ -44,7 +43,8 @@ GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h \
                 TGColorDialog.h TGColorSelect.h TGFontDialog.h \
                 TGDockableFrame.h TGMdi.h TGMdiFrame.h TGMdiMainFrame.h \
-                TGMdiDecorFrame.h TGMdiMenu.h TVirtualDragManager.h TGuiBuilder.h
+                TGMdiDecorFrame.h TGMdiMenu.h TVirtualDragManager.h \
+                TGuiBuilder.h
 
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
