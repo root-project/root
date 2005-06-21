@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooArgSet.cc,v 1.59 2005/06/20 15:44:48 wverkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.60 2005/06/21 16:42:31 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -605,7 +605,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 
     // If section is specified, ignore all data outside specified section
     if (!inSection) {
-      parser.zapToEnd() ;
+      parser.zapToEnd(kTRUE) ;
       continue ;
     }
 
@@ -643,7 +643,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       if (parser.atEOL()) {
 	// simple else: process if nothing else was true
 	condStack[condStackLevel] = !anyCondTrue[condStackLevel] ; 
-	parser.zapToEnd() ;
+	parser.zapToEnd(kFALSE) ;
 	continue ;
       } else {
 	// if anything follows it should be 'if'
@@ -655,7 +655,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 	  if (anyCondTrue[condStackLevel]) {
 	    // No need for further checking, true conditional already processed
 	    condStack[condStackLevel] = kFALSE ;
-	    parser.zapToEnd() ;
+	    parser.zapToEnd(kFALSE) ;
 	    continue ;
 	  } else {
 	    // Process as normal 'if' no true conditional was encountered 
@@ -701,7 +701,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 
       if ((arg = find(token)) && !arg->getAttribute("Dynamic")) {
 	if (parser.expectToken("=",kTRUE)) {
-	  parser.zapToEnd() ;
+	  parser.zapToEnd(kTRUE) ;
 	  retVal=kTRUE ;
 	  cout << "RooArgSet::readFromStream(" << GetName() 
 	       << "): missing '=' sign: " << arg << endl ;
@@ -715,7 +715,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 	  cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
 	       << token << " not in list, ignored" << endl ;
 	}
-	parser.zapToEnd() ;
+	parser.zapToEnd(kTRUE) ;
       }
     } else {
       parser.readLine() ;

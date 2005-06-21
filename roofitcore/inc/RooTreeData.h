@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.37 2005/06/16 09:31:32 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.38 2005/06/20 15:45:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -102,6 +102,7 @@ public:
   void printToStream(ostream& os, PrintOption opt, TString indent) const ;
 
   using RooAbsData::plotOn ;
+  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
 
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
@@ -121,11 +122,14 @@ public:
    Bool_t refreshFrameNorm ;
   } ;
 	
+  // PlotOn implementation
+  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const ;
+  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
+
 
 protected:
 
   friend class RooMCStudy ;
-  virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
 
   // Cache copy feature is not publicly accessible
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 
@@ -160,9 +164,6 @@ protected:
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
   Int_t getBranchBufferSize() const { return _defTreeBufSize ; }
 
-  // PlotOn implementation
-  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
-  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
 
   void checkInit() const {
     if (_defCtor) {

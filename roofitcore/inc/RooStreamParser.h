@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.rdl,v 1.14 2005/03/22 13:05:26 wverkerke Exp $
+ *    File: $Id: RooStreamParser.rdl,v 1.15 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,7 +43,7 @@ public:
 
   inline Bool_t atEOL() { Int_t nc(_is.peek()) ; return (nc=='\n'||nc==-1) ; }
   inline Bool_t atEOF() { return _atEOF ; }
-  void zapToEnd() ;
+  void zapToEnd(Bool_t inclContLines=kFALSE) ;
 
   Bool_t isPunctChar(char c) const ;
   
