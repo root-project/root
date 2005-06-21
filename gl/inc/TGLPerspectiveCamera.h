@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPerspectiveCamera.h,v 1.4 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -31,7 +31,6 @@ private:
    Double_t    fDollyMin;        //!
    Double_t    fDollyDefault;    //!
    Double_t    fDollyMax;        //!
-   Double_t    fVolumeDiag;      //!
 
    Double_t    fFOV;             //!
    Double_t    fDolly;           //!
@@ -50,8 +49,8 @@ public:
 
    virtual void   Setup(const TGLBoundingBox & box);
    virtual void   Reset();
-   virtual Bool_t Dolly(Int_t delta);
-   virtual Bool_t Zoom (Int_t delta);
+   virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0);

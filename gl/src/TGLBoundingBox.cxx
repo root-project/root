@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.4 2005/06/01 17:53:24 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.5 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -231,43 +231,42 @@ Bool_t TGLBoundingBox::AlignedContains(const TGLBoundingBox & other) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & other) const
+Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & a, const TGLBoundingBox & b)
 {
    // TODO: For some reason this intersection test gives incorrect result if first
    // BB is smaller than other - no idea why as should be symetric - need to investigate.
    //assert(Volume() > other.Volume());
 
-   TGLVector3 HL = Extents() / 2.0; // Half length extents
-   TGLVector3 otherHL = other.Extents() / 2.0; // Half length extents
+   TGLVector3 aHL = a.Extents() / 2.0; // Half length extents
+   TGLVector3 bHL = b.Extents() / 2.0; // Half length extents
 
    // Perform seperating axes search - test is greatly simplified
    // if we convert  into our local frame
 
    // Find translation in parent frame
-   TGLVector3 parentT = Center() - other.Center();
+   TGLVector3 parentT = a.Center() - b.Center();
 
-    // Find translation into our frame
-   TGLVector3 aT(Dot(parentT, Axis(0)), Dot(parentT, Axis(1)), Dot(parentT, Axis(2)));
+    // Find translation in A's frame
+   TGLVector3 aT(Dot(parentT, a.Axis(0)), Dot(parentT, a.Axis(1)), Dot(parentT, a.Axis(2)));
 
     // Find B's basis with respect to A's local frame
-    Double_t roaT[3][3];
-    Double_t ra, rb, t;
-    long i, k;
-
     // Get rotation matrix
+    Double_t   roaT[3][3];
+    UInt_t     i, k;
     for (i=0 ; i<3 ; i++) {
        for (k=0; k<3; k++) {
-          roaT[i][k] = Dot(Axis(i), other.Axis(k));
+          roaT[i][k] = Dot(a.Axis(i), b.Axis(k));
        }
     }
 
     // Perform separating axis test for all 15 potential
     // axes. If no seperating axes found, the two boxes overlap.
+    Double_t ra, rb, t;
 
     // A's 3 basis vectors
     for (i=0; i<3; i++) {
-       ra = HL[i];
-       rb = otherHL[0]*fabs(roaT[i][0]) + otherHL[1]*fabs(roaT[i][1]) + otherHL[2]*fabs(roaT[i][2]);
+       ra = aHL[i];
+       rb = bHL[0]*fabs(roaT[i][0]) + bHL[1]*fabs(roaT[i][1]) + bHL[2]*fabs(roaT[i][2]);
        t = fabs(aT[i]);
        if (t > ra + rb)
           return kFALSE;
@@ -275,8 +274,8 @@ Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & other) const
 
     // B's 3 basis vectors
     for (k=0; k<3; k++) {
-       ra = HL[0]*fabs(roaT[0][k]) + HL[1]*fabs(roaT[1][k]) + HL[2]*fabs(roaT[2][k]);
-       rb = otherHL[k];
+       ra = aHL[0]*fabs(roaT[0][k]) + aHL[1]*fabs(roaT[1][k]) + aHL[2]*fabs(roaT[2][k]);
+       rb = bHL[k];
        t = fabs(aT[0]*roaT[0][k] + aT[1]*roaT[1][k] + aT[2]*roaT[2][k]);
        if (t > ra + rb)
           return kFALSE;
@@ -285,64 +284,64 @@ Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & other) const
     // Now the 9 cross products
 
     // A0 x B0
-    ra = HL[1]*fabs(roaT[2][0]) + HL[2]*fabs(roaT[1][0]);
-    rb = otherHL[1]*fabs(roaT[0][2]) + otherHL[2]*fabs(roaT[0][1]);
+    ra = aHL[1]*fabs(roaT[2][0]) + aHL[2]*fabs(roaT[1][0]);
+    rb = bHL[1]*fabs(roaT[0][2]) + bHL[2]*fabs(roaT[0][1]);
     t = fabs(aT[2]*roaT[1][0] - aT[1]*roaT[2][0]);
     if (t > ra + rb)
        return kFALSE;
 
     // A0 x B1
-    ra = HL[1]*fabs(roaT[2][1]) + HL[2]*fabs(roaT[1][1]);
-    rb = otherHL[0]*fabs(roaT[0][2]) + otherHL[2]*fabs(roaT[0][0]);
+    ra = aHL[1]*fabs(roaT[2][1]) + aHL[2]*fabs(roaT[1][1]);
+    rb = bHL[0]*fabs(roaT[0][2]) + bHL[2]*fabs(roaT[0][0]);
     t = fabs(aT[2]*roaT[1][1] - aT[1]*roaT[2][1]);
     if (t > ra + rb)
        return kFALSE;
 
     // A0 x B2
-    ra = HL[1]*fabs(roaT[2][2]) + HL[2]*fabs(roaT[1][2]);
-    rb = otherHL[0]*fabs(roaT[0][1]) + otherHL[1]*fabs(roaT[0][0]);
+    ra = aHL[1]*fabs(roaT[2][2]) + aHL[2]*fabs(roaT[1][2]);
+    rb = bHL[0]*fabs(roaT[0][1]) + bHL[1]*fabs(roaT[0][0]);
     t = fabs(aT[2]*roaT[1][2] - aT[1]*roaT[2][2]);
     if (t > ra + rb)
        return kFALSE;
 
     // A1 x B0
-    ra = HL[0]*fabs(roaT[2][0]) + HL[2]*fabs(roaT[0][0]);
-    rb = otherHL[1]*fabs(roaT[1][2]) + otherHL[2]*fabs(roaT[1][1]);
+    ra = aHL[0]*fabs(roaT[2][0]) + aHL[2]*fabs(roaT[0][0]);
+    rb = bHL[1]*fabs(roaT[1][2]) + bHL[2]*fabs(roaT[1][1]);
     t = fabs(aT[0]*roaT[2][0] - aT[2]*roaT[0][0]);
     if (t > ra + rb)
        return kFALSE;
 
     // A1 x B1
-    ra = HL[0]*fabs(roaT[2][1]) + HL[2]*fabs(roaT[0][1]);
-    rb = otherHL[0]*fabs(roaT[1][2]) + otherHL[2]*fabs(roaT[1][0]);
+    ra = aHL[0]*fabs(roaT[2][1]) + aHL[2]*fabs(roaT[0][1]);
+    rb = bHL[0]*fabs(roaT[1][2]) + bHL[2]*fabs(roaT[1][0]);
     t = fabs(aT[0]*roaT[2][1] - aT[2]*roaT[0][1]);
     if (t > ra + rb)
        return kFALSE;
 
     // A1 x B2
-    ra = HL[0]*fabs(roaT[2][2]) + HL[2]*fabs(roaT[0][2]);
-    rb = otherHL[0]*fabs(roaT[1][1]) + otherHL[1]*fabs(roaT[1][0]);
+    ra = aHL[0]*fabs(roaT[2][2]) + aHL[2]*fabs(roaT[0][2]);
+    rb = bHL[0]*fabs(roaT[1][1]) + bHL[1]*fabs(roaT[1][0]);
     t = fabs(aT[0]*roaT[2][2] - aT[2]*roaT[0][2]);
     if (t > ra + rb)
        return kFALSE;
 
     // A2 x B0
-    ra = HL[0]*fabs(roaT[1][0]) + HL[1]*fabs(roaT[0][0]);
-    rb = otherHL[1]*fabs(roaT[2][2]) + otherHL[2]*fabs(roaT[2][1]);
+    ra = aHL[0]*fabs(roaT[1][0]) + aHL[1]*fabs(roaT[0][0]);
+    rb = bHL[1]*fabs(roaT[2][2]) + bHL[2]*fabs(roaT[2][1]);
     t = fabs(aT[1]*roaT[0][0] - aT[0]*roaT[1][0]);
     if (t > ra + rb)
        return kFALSE;
 
     // A2 x B1
-    ra = HL[0]*fabs(roaT[1][1]) + HL[1]*fabs(roaT[0][1]);
-    rb = otherHL[0] *fabs(roaT[2][2]) + otherHL[2]*fabs(roaT[2][0]);
+    ra = aHL[0]*fabs(roaT[1][1]) + aHL[1]*fabs(roaT[0][1]);
+    rb = bHL[0]*fabs(roaT[2][2]) + bHL[2]*fabs(roaT[2][0]);
     t = fabs(aT[1]*roaT[0][1] - aT[0]*roaT[1][1]);
     if (t > ra + rb)
        return kFALSE;
 
     // A2 x B2
-    ra = HL[0]*fabs(roaT[1][2]) + HL[1]*fabs(roaT[0][2]);
-    rb = otherHL[0]*fabs(roaT[2][1]) + otherHL[1]*fabs(roaT[2][0]);
+    ra = aHL[0]*fabs(roaT[1][2]) + aHL[1]*fabs(roaT[0][2]);
+    rb = bHL[0]*fabs(roaT[2][1]) + bHL[1]*fabs(roaT[2][0]);
     t = fabs(aT[1]*roaT[0][2] - aT[0]*roaT[1][2]);
     if (t > ra + rb)
        return kFALSE;

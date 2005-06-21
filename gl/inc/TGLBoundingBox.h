@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.h,v 1.4 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -91,9 +91,9 @@ public:
    inline Double_t   Volume() const { return fVolume; }
    inline Bool_t     IsEmpty() const;
 
-   EOverlap Overlap(const TGLPlane & plane) const;
-   Bool_t AlignedContains(const TGLBoundingBox & other) const; // we MUST be axis aligned
-   Bool_t Intersect(const TGLBoundingBox & other) const;
+          EOverlap Overlap(const TGLPlane & plane) const;
+          Bool_t   AlignedContains(const TGLBoundingBox & other) const; // we MUST be axis aligned
+   static Bool_t   Intersect(const TGLBoundingBox & a, const TGLBoundingBox & b);
 
    void Draw() const;
    void Dump() const;

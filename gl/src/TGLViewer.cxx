@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.6 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.7 2005/06/17 14:31:08 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -32,7 +32,8 @@ TGLViewer::TGLViewer() :
    fClipPlane(1.0, 0.0, 0.0, 0.0),
    fUseClipPlane(kFALSE),
    fDrawAxes(kFALSE),
-   fInitGL(kFALSE)
+   fInitGL(kFALSE),
+   fDebugMode(kFALSE)
 {
    fRedrawTimer = new TGLRedrawTimer(*this);
 }
@@ -54,7 +55,6 @@ void TGLViewer::Draw()
    if (fScene.CurrentLock() != TGLScene::kDrawLock) {
       if (!fScene.TakeLock(TGLScene::kDrawLock)) {
          Error("TGLViewer::Draw", "scene is %s", TGLScene::LockName(fScene.CurrentLock()));
-         return;
       }
    }
 
@@ -93,6 +93,17 @@ void TGLViewer::Draw()
          // Other (interactive) draws terminate after 100 msec
          drawn = fScene.Draw(*fCurrentCamera, fNextSceneLOD, 100.0);
       }
+
+      // Debug mode - draw some extra boxes
+      if (fDebugMode) {
+         glDisable(GL_LIGHTING);
+         CurrentCamera().DrawDebugAids();
+
+         // Green scene bounding box
+         glColor3d(0.0, 1.0, 0.0);
+         fScene.BoundingBox().Draw();
+         glEnable(GL_LIGHTING);
+       }
    }
 
    PostDraw();
@@ -107,11 +118,14 @@ void TGLViewer::Draw()
    // Release draw lock on scene
    fScene.ReleaseLock(TGLScene::kDrawLock);
 
-   // Scene rebuild required?
-   if (!RebuildScene()) {
-      // Final draw pass required?
-      if (fNextSceneLOD != kHigh) {
-         fRedrawTimer->RequestDraw(100, kHigh);
+   // Debug mode have forced rebuilds only
+   if (!fDebugMode) {
+      // Scene rebuild required?
+      if (!RebuildScene()) {
+         // Final draw pass required?
+         if (fNextSceneLOD != kHigh) {
+            fRedrawTimer->RequestDraw(100, kHigh);
+         }
       }
    }
 }

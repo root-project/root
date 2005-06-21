@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.3 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.4 2005/06/01 12:38:25 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -12,8 +12,6 @@
 
 // TODO: Function descriptions
 // TODO: Class def - same as header
-
-// CREDITS TO TIMUR!
 
 #include "TGLOrthoCamera.h"
 #include "TGLUtil.h"
@@ -95,26 +93,23 @@ void TGLOrthoCamera::Reset()
 }
 
 //______________________________________________________________________________
-Bool_t TGLOrthoCamera::Dolly(Int_t delta)
+Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   return Zoom(delta);
+   return Zoom(delta, mod1, mod2);
 }
 
 //______________________________________________________________________________
-Bool_t TGLOrthoCamera::Zoom (Int_t delta)
+Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
 {
-   Double_t shift = static_cast<Double_t>(delta) / fgZoomDeltaSens;
-
-   fZoom += shift * (fZoomMax - fZoomMin);
-   if (fZoom < fZoomMin) {
-      fZoom = fZoomMin;
+   if (AdjustAndClampVal(fZoom, fZoomMin, fZoomMax, -delta, fgZoomDeltaSens, mod1, mod2))
+   {
+      fCacheDirty = kTRUE;
+      return kTRUE;
    }
-   if (fZoom > fZoomMax) {
-      fZoom = fZoomMax;
+   else
+   {
+      return kFALSE;
    }
-
-   fCacheDirty = kTRUE;
-   return kTRUE;
 }
 
 //______________________________________________________________________________

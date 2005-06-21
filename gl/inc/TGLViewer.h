@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.4 2005/05/26 12:29:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.5 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -71,6 +71,7 @@ protected:
    Bool_t         fUseClipPlane;   //! use current clipping plane
    Bool_t         fDrawAxes;       //! draw scene axes
    Bool_t         fInitGL;         //! has GL been initialised?
+   Bool_t         fDebugMode;      //! viewer in debug mode (forced rebuild + draw scene/frustum/interest boxes)
 
    // Methods
    virtual void   InitGL()                            = 0;

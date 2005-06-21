@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.63 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.64 2005/06/15 15:40:30 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -463,6 +463,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          }
          // RIGHT mouse button
          case(kButton3): {
+            // Shift + Right mouse - select+context menu
             if (event->fState & kKeyShiftMask) {
                DoSelect(event, kTRUE); // with context menu
             } else {
@@ -475,21 +476,22 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
    }
    // Button UP
    else if (event->fType == kButtonRelease) {
-
       // TODO: Check on Linux - on Win32 only see button release events
       // for mouse wheel
       switch(event->fCode) {
          // Buttons 4/5 are mouse wheel
          case(kButton4): {
-            // Dolly out
-            if (CurrentCamera().Dolly(-30)) { //TODO : val static const somewhere
+            // Zoom out (adjust camera FOV)
+            if (CurrentCamera().Zoom(-30, event->fState & kKeyControlMask, 
+                                          event->fState & kKeyMod1Mask)) { //TODO : val static const somewhere
                Invalidate();
             }
             break;
          }
          case(kButton5): {
-            // Dolly in
-            if (CurrentCamera().Dolly(+30)) { //TODO : val static const somewhere
+            // Zoom in (adjust camera FOV)
+            if (CurrentCamera().Zoom(+30, event->fState & kKeyControlMask, 
+                                          event->fState & kKeyMod1Mask)) { //TODO : val static const somewhere
                Invalidate();
             }
             break;
@@ -561,12 +563,14 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_Plus:
    case kKey_J:
    case kKey_j:
-      invalidate = CurrentCamera().Dolly(10); //TODO : val static const somewhere
+      invalidate = CurrentCamera().Dolly(10, event->fState & kKeyControlMask, 
+                                             event->fState & kKeyMod1Mask); //TODO : val static const somewhere
       break;
    case kKey_Minus:
    case kKey_K:
    case kKey_k:
-      invalidate = CurrentCamera().Dolly(-10); //TODO : val static const somewhere
+      invalidate = CurrentCamera().Dolly(-10, event->fState & kKeyControlMask, 
+                                              event->fState & kKeyMod1Mask); //TODO : val static const somewhere
       break;
    case kKey_R:
    case kKey_r:
@@ -607,6 +611,19 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_Right:
       invalidate = CurrentCamera().Truck(fViewport.CenterX(), fViewport.CenterY(), 5, 0);
       break;
+   // Toggle debugging mode
+   case kKey_D:
+   case kKey_d:
+      fDebugMode = !fDebugMode;
+      invalidate = kTRUE;
+      Info("OpenGL viewer debug mode : ", fDebugMode ? "ON" : "OFF");
+      break;
+   // Forced rebuild for debugging mode
+   case kKey_Space:
+      if (fDebugMode) {
+         Info("OpenGL viewer FORCED rebuild", "");
+         RebuildScene();
+      }
    }
 
    if (invalidate) {
@@ -641,7 +658,8 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
    } else if (fAction == kTruck) {
       invalidate = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
    } else if (fAction == kDolly) {
-      invalidate = CurrentCamera().Dolly(xDelta);
+      invalidate = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask, 
+                                                 event->fState & kKeyMod1Mask);
    } else if (fAction == kDrag) {
       TGLPhysicalShape * selected = fScene.GetSelected();
       if (selected) {
@@ -968,7 +986,7 @@ void TViewerOpenGL::BeginScene()
    fAcceptedPhysicals = 0;
    fRejectedPhysicals = 0;
 
-   if (gDebug>3) {
+   if (gDebug>2 || fDebugMode) {
       Info("TViewerOpenGL::BeginScene", "destroyed %d physicals %d logicals", 
             destroyedPhysicals, destroyedLogicals);
       fScene.Dump();
@@ -991,7 +1009,7 @@ void TViewerOpenGL::EndScene()
       fInternalRebuild = kFALSE;
    }      
 
-   if (gDebug>3) {
+   if (gDebug>2 || fDebugMode) {
       Info("TViewerOpenGL::EndScene", "Added %d, rejected %d physicals", fAcceptedPhysicals, fRejectedPhysicals);
       fScene.Dump();
    }
@@ -1000,21 +1018,23 @@ void TViewerOpenGL::EndScene()
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::RebuildScene()
 {
-   if (!CurrentCamera().UpdateInterest()) {
-      if (gDebug>3) {
+   // Update the camera interest (forced in debug mode) - if changed
+   // scene should be rebuilt
+   if (!CurrentCamera().UpdateInterest(fDebugMode)) {
+      if (gDebug>3 || fDebugMode) {
          Info("TViewerOpenGL::RebuildScene", " not required");
       }
       return kFALSE;
    }
    
-   if (gDebug>3) {
+   if (gDebug>3 || fDebugMode) {
       Info("TViewerOpenGL::RebuildScene", "required");
    }
 
    fInternalRebuild = kTRUE;
    
    TGLStopwatch timer;
-   if (gDebug>2) {
+   if (gDebug>2 || fDebugMode) {
       timer.Start();
    }
       
@@ -1022,7 +1042,7 @@ Bool_t TViewerOpenGL::RebuildScene()
    //fPad->Modified();
    fPad->Paint();
 
-   if (gDebug>2) {
+   if (gDebug>2 || fDebugMode) {
       Info("TViewerOpenGL::RebuildScene", "rebuild complete in %f", timer.End());
    }
 
