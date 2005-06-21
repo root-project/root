@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.40 2005/06/17 06:50:34 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.41 2005/06/21 17:09:25 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -71,6 +71,7 @@
 #include "TFrame.h"
 #include "TTF.h"
 #include "TRandom.h"
+#include "Riostream.h"
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -906,8 +907,9 @@ void TASImage::Paint(Option_t *option)
          tile = kTRUE;
          if (parse_argb_color(stint, (CARD32*)&tile_tint) == stint)
             tile_tint = 0;
-      } else
+      } else {
          Error("Paint", "tile option error");
+      }
    } else if (opt.Contains("x")) {
       expand = kTRUE;
       fConstRatio = kFALSE;
@@ -1094,7 +1096,11 @@ void TASImage::Paint(Option_t *option)
                            min, max, ndiv, "+L");
          }
          return;
+      } else if (gVirtualPS->InheritsFrom("TPDF")) {
+         Warning("Paint", "PDF not implemeted yet");
+         return;
       }
+
       // get special color cell to be reused during image printing
       TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
       TColor *color = 0;
@@ -5577,6 +5583,36 @@ void TASImage::SetPaletteEnabled(Bool_t on)
    }
 
 }
+
+//_______________________________________________________________________
+void TASImage::SavePrimitive(ofstream &out, Option_t *)
+{
+    // Save a primitive as a C++ statement(s) on output stream "out"
+
+   char *buf;
+   int sz;
+   GetImageBuffer(&buf, &sz, TImage::kXpm);
+
+   TString name = GetName();
+   TString str = buf;
+
+   str.ReplaceAll("static", "");
+   TString xpm = "xpm_";
+   xpm += name;
+   str.ReplaceAll("asxpm", xpm.Data());
+   out << endl << str << endl << endl;
+
+   if (gROOT->ClassSaved(TASImage::Class())) {
+       out << "   ";
+   } else {
+       out << "   TImage *";
+   }
+   
+   out << name << " = TImage::Create();" << endl;
+   out << "   " << name << "->SetImageBuffer((char**)&" << xpm << ", TImage::kXpm);" << endl;
+   out << "   " << name << "->Draw();" << endl;
+}
+
 
 
 

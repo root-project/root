@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.12 2005/05/30 22:38:38 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.13 2005/06/21 17:09:25 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -204,6 +204,7 @@ public:
    Bool_t           SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
    void             PaintImage(Drawable_t wid, Int_t x, Int_t y);
    void             SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
+   void             SavePrimitive(ofstream &out, Option_t *option);
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.23 2004/08/09 15:35:52 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.24 2005/05/18 16:58:42 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -282,6 +282,8 @@ public:
    Pixmap_t     CreatePixmap(Drawable_t id, const char *bitmap, UInt_t width,
                              UInt_t height, ULong_t forecolor, ULong_t backcolor,
                              Int_t depth);
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
    Pixmap_t     CreateBitmap(Drawable_t id, const char *bitmap,
                              UInt_t width, UInt_t height);
    void         DeletePixmap(Pixmap_t pmap);

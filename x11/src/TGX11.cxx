@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.47 2005/05/18 16:58:42 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.48 2005/05/19 20:39:39 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -3206,3 +3206,34 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
       return (Pixmap_t)gCws->drawing;
    return 0;
 }
+
+//______________________________________________________________________________
+unsigned char *TGX11::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, 
+                                       UInt_t /*w*/, UInt_t /*h*/)
+{
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // in format:
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // By default all pixels from the whole drawable are returned.
+   //
+   // Note that return array is 32-bit aligned
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/, 
+                                       UInt_t /*height*/)
+{
+   // create pixmap from RGB data. RGB data is in format :
+   // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+   //
+   // Pixels are numbered from left to right and from top to bottom.
+   // Note that data must be 32-bit aligned
+
+   return (Pixmap_t)0;
+}
+
+

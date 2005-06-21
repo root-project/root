@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.181 2005/06/02 16:28:27 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.182 2005/06/21 17:09:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3445,6 +3445,27 @@ void TPad::Print(const char *filename) const
 }
 
 //______________________________________________________________________________
+static Bool_t ContainsTImage(TList *li)
+{
+   // auxilary function. Returns kTRUE if list contains an object inherited
+   // from TImage
+
+   TIter next(li);
+   TObject *obj;
+
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TImage::Class())) {
+         return kTRUE;
+      } else if (obj->InheritsFrom(TPad::Class())) {
+         if (ContainsTImage(((TPad*)obj)->GetListOfPrimitives())) {
+            return kTRUE;
+         }
+      }
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 void TPad::Print(const char *filenam, Option_t *option)
 {
 //*-*-*-*-*Save Pad contents on a file in various formats*-*-*-*-*-*
@@ -3585,7 +3606,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t wid=0;
    if (!gROOT->IsBatch() && image) {
-      if (gtype == TImage::kGif) {
+      if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
 
          gVirtualX->SelectWindow(wid);
