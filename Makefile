@@ -13,16 +13,23 @@ export CALLDIR:=.
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
+CLEANTEST_TARGETS = $(SUBDIRS:%=%.cleantest)
+
 
 tests: $(TEST_TARGETS)
 	@echo "All test succeeded"
 
 clean: $(CLEAN_TARGETS)
 
+cleantest: ($CLEANTEST_TARGETS)
+	@echo "All test succeeded"
 
 $(TEST_TARGETS): %.test:
 	@(cd $*; $(MAKE) --no-print-directory test)
 
 $(CLEAN_TARGETS): %.clean:
 	@(cd $*; $(MAKE) --no-print-directory clean)
+
+$(CLEANTEST_TARGETS): %.cleantest:
+	@(cd $*; $(MAKE) --no-print-directory cleantest)
 
