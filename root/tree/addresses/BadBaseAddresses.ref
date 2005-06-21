@@ -6,24 +6,6 @@ Reading
 TFile**		dummy.root	
  TFile*		dummy.root	
   KEY: TTree	T;1	T
-
-StreamerInfo for class: Event, version=1
-  DataObject     BASE            offset=  0 type= 0                     
-  int            m_evt           offset=  8 type= 3                     
-  int            m_run           offset= 12 type= 3                     
-  TimePoint      m_time          offset= 16 type=62                     
-  SmartRefVector<Obj> m_collisions    offset= 32 type=62                     
-   i= 0, DataObject      type=  0, offset=  0, len=1, method=0
-   i= 1, m_evt           type=  3, offset=  8, len=1, method=0
-   i= 2, m_run           type=  3, offset= 12, len=1, method=0
-   i= 3, m_time          type= 62, offset= 16, len=1, method=0
-   i= 4, m_collisions    type= 62, offset= 32, len=1, method=0
-
-StreamerInfo for class: TimePoint, version=1
-  ITime          BASE            offset=  0 type= 0                     
-  Long64_t       m_time          offset=  8 type=16                     
-   i= 0, ITime           type=  0, offset=  0, len=1, method=0
-   i= 1, m_time          type= 16, offset=  8, len=1, method=0
 Reading 10 entries
 Getting 110 Event:0 10 0 9
 Getting 190 Event:1 20 1 9

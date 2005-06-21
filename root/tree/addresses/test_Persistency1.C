@@ -104,8 +104,8 @@ void readTree()  {
   TTree* t = (TTree*)f.Get("T");
   t->GetBranch("Event")->SetAddress(&d);
   int n = t->GetEntries();
-  gROOT->GetClass("Event")->GetStreamerInfo()->ls();
-  gROOT->GetClass("TimePoint")->GetStreamerInfo()->ls();
+  //gROOT->GetClass("Event")->GetStreamerInfo()->ls();
+  //gROOT->GetClass("TimePoint")->GetStreamerInfo()->ls();
   std::cout << "Reading " << n << " entries" << std::endl;
   for ( int i=0; i < n; ++i )  {
     std::cout << "Getting " << t->GetEntry(i);
