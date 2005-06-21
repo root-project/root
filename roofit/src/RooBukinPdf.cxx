@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBukinPdf.cc,v 1.6 2005/02/25 14:25:04 wverkerke Exp $
+ *    File: $Id: RooBukinPdf.cc,v 1.7 2005/06/16 09:37:27 wverkerke Exp $
  * Authors:                                                                  *
  *   RW, Ruddick William  UC Colorado        wor@slac.stanford.edu           *
  *                                                                           *
@@ -36,7 +36,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include <math.h>
-#include <math.h>
+
 
 #include "RooFitModels/RooBukinPdf.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -94,7 +94,7 @@ Double_t RooBukinPdf::evaluate() const
   r4=sqrt(TMath::Power(xi,2)+1);
   r1=xi/r4;  
 
-  if(fabs(xi) > exp(-6.)){
+  if(TMath::Abs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
   }
   else
@@ -111,7 +111,7 @@ Double_t RooBukinPdf::evaluate() const
 
   //--- Center
   else if(x < x2) {
-    if(fabs(xi) > exp(-6.)) {
+    if(TMath::Abs(xi) > exp(-6.)) {
       r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
       r2=-r3*(TMath::Power(r2,2));
     }
@@ -126,7 +126,7 @@ Double_t RooBukinPdf::evaluate() const
     r2=rho2*TMath::Power((x-x2)/(Xp-x2),2)-r3 - 4 * r3 * (x-x2)/hp * r5 * r4/TMath::Power((r4+xi),2);
   }
 
-  if(fabs(r2) > 100){
+  if(TMath::Abs(r2) > 100){
     fit_result = 0;  
   }
   else{

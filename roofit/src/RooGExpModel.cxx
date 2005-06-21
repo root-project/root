@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooGExpModel.cc,v 1.21 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooGExpModel.cc,v 1.22 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -261,14 +261,14 @@ Double_t RooGExpModel::evaluate() const
 
 
 
-Double_t RooGExpModel::logErfC(Double_t x) const
+Double_t RooGExpModel::logErfC(Double_t xx) const
 {
   // Approximation of the log of the complex error function
   Double_t t,z,ans;
-  z=fabs(x);
+  z=fabs(xx);
   t=1.0/(1.0+0.5*z);
   
-  if(x >= 0.0)
+  if(xx >= 0.0)
     ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
 	t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
   else

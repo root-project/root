@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.21 2005/06/16 09:37:28 wverkerke Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.22 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
@@ -387,7 +387,7 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     double a1 = 1 + sqrt(TMath::Power(a_cos_m, 2) + TMath::Power(a_sin_m, 2));
     double a2 = 1 + sqrt(TMath::Power(a_cos_p, 2) + TMath::Power(a_sin_p, 2));
  
-    Double_t maxAcceptProb = (1.10 + fabs(_acp)) * (a1 > a2 ? a1 : a2);
+    Double_t maxAcceptProb = (1.10 + TMath::Abs(_acp)) * (a1 > a2 ? a1 : a2);
     // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00
 
     Double_t rand = RooRandom::uniform();

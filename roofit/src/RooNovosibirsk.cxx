@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooNovosibirsk.cc,v 1.8 2005/02/25 14:25:06 wverkerke Exp $
+ *    File: $Id: RooNovosibirsk.cc,v 1.9 2005/06/16 09:37:28 wverkerke Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -22,7 +22,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include <math.h>
-#include <math.h>
+#include "TMath.h"
 
 #include "RooFitModels/RooNovosibirsk.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -58,7 +58,7 @@ Double_t RooNovosibirsk::evaluate() const {
 
   double qa=0,qb=0,qc=0,qx=0,qy=0;
 
-  if(fabs(tail) < 1.e-7) 
+  if(TMath::Abs(tail) < 1.e-7) 
     qc = 0.5*TMath::Power(((x-peak)/width),2);
   else {
     qa = tail*sqrt(log(4.));

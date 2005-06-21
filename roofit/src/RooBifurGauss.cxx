@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.20 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
@@ -16,7 +16,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include "Riostream.h"
-#include "Riostream.h"
+#include "TMath.h"
 #include <math.h>
 
 #include "RooFitModels/RooBifurGauss.hh"
@@ -26,7 +26,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.19 2005/06/16 09:37:27 wverkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.20 2005/06/20 15:51:06 wverkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
@@ -53,11 +53,11 @@ Double_t RooBifurGauss::evaluate() const {
   Double_t coef(0.0);
 
   if (arg < 0.0){
-    if (fabs(sigmaL) > 1e-30) {
+    if (TMath::Abs(sigmaL) > 1e-30) {
       coef = -0.5/(sigmaL*sigmaL);
     }
   } else {
-    if (fabs(sigmaR) > 1e-30) {
+    if (TMath::Abs(sigmaR) > 1e-30) {
       coef = -0.5/(sigmaR*sigmaR);
     }
   }
@@ -80,11 +80,11 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) co
       static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
       
       Double_t coefL(0.0), coefR(0.0);
-      if (fabs(sigmaL) > 1e-30) {
+      if (TMath::Abs(sigmaL) > 1e-30) {
 	coefL = -0.5/(sigmaL*sigmaL);
       }
 
-      if (fabs(sigmaR) > 1e-30) {
+      if (TMath::Abs(sigmaR) > 1e-30) {
 	coefR = -0.5/(sigmaR*sigmaR);
       }
 

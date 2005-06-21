@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.10 2005/06/16 09:37:27 wverkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.11 2005/06/20 15:51:06 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include "Riostream.h"
-#include "Riostream.h"
+#include "TMath.h"
 #include "RooFitModels/RooBDecay.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRandom.hh"
@@ -131,7 +131,7 @@ void RooBDecay::generateEvent(Int_t code)
     Double_t y;
     Double_t f;
     Double_t w;
-    Double_t gammamin = 1/_tau-fabs(_dgamma)/2;
+    Double_t gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
 
  
     // used rejection method with comparison function: w = (1+sqrt(f2*f2+f3*f3))exp(-abs(t)*gammamin)
