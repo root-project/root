@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.37 2005/06/06 14:50:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.38 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <list>
