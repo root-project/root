@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.cc,v 1.22 2005/06/20 18:15:16 wverkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.23 2005/06/22 12:31:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -66,16 +66,10 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 
 
-  char buf[100] ;
   Int_t i, nMarked(0) ;
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
-#ifdef R__B64
-      sprintf(buf,"%010x : ",(ULong64_t)(void*)_list.At(i)) ;
-#else
-      sprintf(buf,"%010x : ",(ULong_t)(void*)_list.At(i)) ;
-#endif
-      os << buf << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;
+      os << hex << setw(10) << _list.At(i) << " : " << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;
     } else {
       nMarked++ ;
     }

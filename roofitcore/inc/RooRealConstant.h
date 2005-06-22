@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.rdl,v 1.10 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealConstant.rdl,v 1.11 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,6 +27,8 @@ class TIterator ;
 class RooRealConstant {
 public:
 
+  inline RooRealConstant() {} ;
+  virtual ~RooRealConstant() {} ;
   static RooConstVar& value(Double_t value) ;
 
 protected:

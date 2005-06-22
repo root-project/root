@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFit.rdl,v 1.1 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooFit.rdl,v 1.2 2005/06/20 15:44:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -15,6 +15,8 @@
  *****************************************************************************/
 #ifndef ROO_FIT
 #define ROO_FIT
+
+#include "RConfig.h"
 
 // Global include file to fix occasional compiler issues
 // An error in the construction of the system and C++ header files on

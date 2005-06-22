@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.rdl,v 1.11 2005/03/16 15:19:46 wverkerke Exp $
+ *    File: $Id: RooHistError.rdl,v 1.12 2005/04/18 21:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@
 class RooHistError {
 public:
   static const RooHistError &instance();
+  virtual ~RooHistError() {} ;
 
   Bool_t getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
   Bool_t getBinomialInterval(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;

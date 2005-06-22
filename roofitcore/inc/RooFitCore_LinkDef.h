@@ -4,8 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ function RooFit::* ;
-#pragma link C++ function RooFitShortHand::* ;
+#pragma link C++ function Roo* ;
 
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooRealVar- ;

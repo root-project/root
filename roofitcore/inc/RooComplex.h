@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooComplex.rdl,v 1.10 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooComplex.rdl,v 1.11 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,7 @@
 class RooComplex {
 public:
   inline RooComplex(Double_t a=0, Double_t b=0) : _re(a), _im(b) { }
+  virtual ~RooComplex() {} ;
   inline RooComplex& operator=(const RooComplex& other) {
     if (&other==this) return *this ;
     this->_re= other._re;

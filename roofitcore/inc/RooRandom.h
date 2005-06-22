@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRandom.rdl,v 1.6 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooRandom.rdl,v 1.7 2005/02/25 14:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,8 @@ class RooQuasiRandomGenerator;
 
 class RooRandom {
 public:
+
+  virtual ~RooRandom() {} ;
 
   static TRandom *randomGenerator();
   static Double_t uniform(TRandom *generator= randomGenerator());
