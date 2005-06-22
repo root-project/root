@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.5 2003/07/18 15:36:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.6 2003/07/23 19:24:09 brun Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -114,7 +114,10 @@ Short_t TTF::CharToUnicode(UInt_t code)
          if ((platform == 3 && encoding == 1) ||
              (platform == 0 && encoding == 0) ||
              (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf"))) {
+              !strcmp(fgFontName[fgCurFontIdx], "wingding.ttf")) ||
+             (platform == 1 && encoding == 0 &&
+              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf"))) 
+         {
             fgCharMap[fgCurFontIdx] = charmap;
             if (FT_Set_Charmap(fgFace[fgCurFontIdx], fgCharMap[fgCurFontIdx]))
                 Error("TTF::CharToUnicode", "error in FT_Set_CharMap");
