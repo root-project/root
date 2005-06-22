@@ -834,6 +834,10 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
    static GCValues_t gv;
    static GContext_t gc = 0;
 
+   if (!im) {
+      return;
+   }
+
    if (!gc) {
       gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
    }
@@ -852,9 +856,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
          bits = (unsigned char *)img->alt.argb32;
       }
       
-      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, img->width, img->height);
-      if (pic) gVirtualX->CopyArea(pic, wid, gc, 0, 0, img->width, img->height, x, y);
-
+      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, im->width, im->height);
+      if (pic) {
+         gVirtualX->CopyArea(pic, wid, gc, 0, 0, im->width, im->height, x, y);
+      } else {
+         return;
+      }
       if (img) {
          destroy_asimage(&img);
       }
@@ -980,7 +987,7 @@ void TASImage::Paint(Option_t *option)
 
       grad_im = make_gradient(fgVisual, &grad , UInt_t(pal_w),
                               pal_h, SCL_DO_COLOR,
-                              ASA_ASImage, GetImageCompression(), GetImageQuality());
+                              ASA_ARGB32, GetImageCompression(), GetImageQuality());
 
       delete [] grad.color;
       delete [] grad.offset;
@@ -4976,17 +4983,17 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
 
    DestroyImage();
 
-	ASImageImportParams params; 
-	params.flags = 0;
-	params.width = 0;
-	params.height = 0 ;
-	params.filter = SCL_DO_ALL ;
-	params.gamma = 0;
-	params.gamma_table = 0;
-	params.compression = 0;
-	params.format = ASA_ASImage;
-	params.search_path = 0;
-	params.subimage = 0;
+   ASImageImportParams params; 
+   params.flags = 0;
+   params.width = 0;
+   params.height = 0 ;
+   params.filter = SCL_DO_ALL ;
+   params.gamma = 0;
+   params.gamma_table = 0;
+   params.compression = 0;
+   params.format = ASA_ASImage;
+   params.search_path = 0;
+   params.subimage = 0;
 
    switch (type) {
       case TImage::kXpm:
@@ -5473,7 +5480,7 @@ void TASImage::Gray(Bool_t on)
          return;
       }
 #ifdef HAVE_MMX
-	mmx_init();
+   mmx_init();
 #endif
       ASImageOutput *imout = start_image_output(fgVisual, fGrayImage, ASA_ASImage,
                                                 GetImageCompression(), GetImageQuality());
@@ -5495,14 +5502,14 @@ void TASImage::Gray(Bool_t on)
       for (i = 0; i < fImage->height; i++) {
          imdec->decode_image_scanline(imdec);
          result.flags = imdec->buffer.flags;
-		   result.back_color = imdec->buffer.back_color; 
+         result.back_color = imdec->buffer.back_color; 
 
-		   for (j = 0; j < fImage->width; j++) {
+         for (j = 0; j < fImage->width; j++) {
             l = (57*rr[j] + 181*gg[j]+ 18*bb[j])/256;
             result.alpha[j] = aa[j];
-	         result.red[j] = l;
+            result.red[j] = l;
             result.green[j] = l;
-	         result.blue[j] = l;
+            result.blue[j] = l;
          }
          imout->output_image_scanline(imout, &result, 1);
       }
@@ -5510,7 +5517,7 @@ void TASImage::Gray(Bool_t on)
       stop_image_decoding(&imdec);
       stop_image_output(&imout);
 #ifdef HAVE_MMX
-	mmx_off();
+   mmx_off();
 #endif
    }
 
@@ -5594,8 +5601,8 @@ void TASImage::SavePrimitive(ofstream &out, Option_t *)
    GetImageBuffer(&buf, &sz, TImage::kXpm);
 
    TString name = GetName();
-   TString str = buf;
    name.ReplaceAll(".", "_");
+   TString str = buf;
 
    str.ReplaceAll("static", "");
    TString xpm = "xpm_";

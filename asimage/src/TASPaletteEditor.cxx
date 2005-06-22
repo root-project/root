@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.9 2005/06/02 10:05:48 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.10 2005/06/21 17:09:25 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -916,7 +916,7 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
    }
 
    ASImage * grad_im = make_gradient((ASVisual*)TASImage::GetVisual(), &grad , to_w, to_h,
-                                     SCL_DO_COLOR, ASA_ASImage, 0,
+                                     SCL_DO_COLOR, ASA_ARGB32, 0,
                                      fAttImage->GetImageQuality());
    delete [] grad.color;
    delete [] grad.offset;
