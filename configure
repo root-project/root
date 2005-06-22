@@ -665,7 +665,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-freetype   Built included libfreetype, or use system libfreetype
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
-  cintex             Build the cintex program to test Reflex
+  cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
@@ -2734,9 +2734,9 @@ fi
 
 ######################################################################
 #
-### echo %%% Cintex program - Contributed program
+### echo %%% Cintex Library - Contributed library
 #
-message "Checking whether to build cintex"
+message "Checking whether to build libCintex"
 if test "x$enable_cintex" = "xyes" || test ! "x$CINTEX" = "x"; then
     enable_cintex="yes"
     echo "yes"
