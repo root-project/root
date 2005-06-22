@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.50 2005/04/05 15:56:19 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.51 2005/04/19 09:10:59 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1164,7 +1164,7 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 101:  // remove tabs
                      {
                         TString s = fTab->GetTabTab(0)->GetString();
-                        if (s == "Tab 3") {
+                        if ((s == "Tab 3") && (fMain->MustCleanup() != kDeepCleanup)) {
                            // Need to delete the embedded canvases
                            // since RemoveTab() will Destroy the container
                            // window, which in turn will destroy the embedded

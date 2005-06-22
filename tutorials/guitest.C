@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.53 2005/04/19 09:10:59 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.54 2005/06/08 06:14:51 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1276,7 +1276,7 @@ void TestDialog::HandleButtons(Int_t id)
       case 101:  // remove tabs
          {
             TString s = fTab->GetTabTab(0)->GetString();
-            if (s == "Tab 3") {
+            if ((s == "Tab 3") && (fMain->MustCleanup() != kDeepCleanup)) {
                // Need to delete the embedded canvases
                // since RemoveTab() will Destroy the container
                // window, which in turn will destroy the embedded
