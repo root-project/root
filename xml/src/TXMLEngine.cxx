@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.11 2004/12/22 16:50:08 rdm Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.12 2005/02/23 11:46:02 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 //________________________________________________________________________
 //
 //  This class is used to write and read xml files.
-//  It makes simplified parsing of xml files, but does not required 
+//  It makes simplified parsing of xml files, but does not required
 //  any external libraries like libxml2 or other
 //
 //________________________________________________________________________
@@ -25,7 +25,7 @@ ClassImp(TXMLEngine);
 
 struct SXmlAttr {
    SXmlAttr  *next;
-   char      name; // this is first symbol of attribute name, if 0 this is special attribute 
+   char      name; // this is first symbol of attribute name, if 0 this is special attribute
 };
 
 struct SXmlNode {
@@ -49,13 +49,13 @@ struct SXmlDoc {
 
 class TXMLOutputStream {
    protected:
-   
-      ostream *fOut;   
+
+      ostream *fOut;
       char    *fBuf;
       char    *fCurrent;
-      char    *fMaxAddr; 
+      char    *fMaxAddr;
       char    *fLimitAddr;
-   
+
    public:
       TXMLOutputStream(const char* filename, Int_t bufsize = 20000)
       {
@@ -65,26 +65,26 @@ class TXMLOutputStream {
         fMaxAddr = fBuf + bufsize;
         fLimitAddr = fBuf + int(bufsize*0.75);
       }
-      
-      virtual ~TXMLOutputStream() 
+
+      virtual ~TXMLOutputStream()
       {
         if (fCurrent!=fBuf) OutputCurrent();
         delete fOut;
       }
-      
+
       void OutputCurrent()
       {
          if (fCurrent!=fBuf)
            fOut->write(fBuf, fCurrent-fBuf);
-         fCurrent = fBuf;  
+         fCurrent = fBuf;
       }
-      
+
       void Write(const char* str)
       {
          int len = strlen(str);
          if (fCurrent+len>=fMaxAddr) {
            OutputCurrent();
-           fOut->write(str,len); 
+           fOut->write(str,len);
          } else {
            while (*str)
              *fCurrent++ = *str++;
@@ -92,19 +92,19 @@ class TXMLOutputStream {
              OutputCurrent();
          }
       }
-      
+
       void Put(char symb, Int_t cnt=1)
       {
-        if (fCurrent+cnt>=fMaxAddr) 
+        if (fCurrent+cnt>=fMaxAddr)
           OutputCurrent();
         if (fCurrent+cnt>=fMaxAddr)
           for(int n=0;n<cnt;n++)
             fOut->put(symb);
           else {
             for(int n=0;n<cnt;n++)
-              *fCurrent++ = symb;  
+              *fCurrent++ = symb;
             if (fCurrent>fLimitAddr)
-              OutputCurrent();  
+              OutputCurrent();
           }
       }
 };
@@ -115,63 +115,63 @@ class TXMLInputStream {
       char     *fBuf;
       Int_t     fBufSize;
       Int_t     fBufLength;
-      
+
       char     *fMaxAddr;
       char     *fLimitAddr;
-      
+
       Int_t     fTotalPos;
       Int_t     fCurrentLine;
    public:
 
      char      *fCurrent;
-      
-   TXMLInputStream(const char* filename, Int_t ibufsize) 
+
+   TXMLInputStream(const char* filename, Int_t ibufsize)
    {
       fInp = new ifstream(filename);
-      
+
       fBufSize = ibufsize;
       fBuf = (char*) malloc(fBufSize);
       fBufLength = 0;
-      
+
       fCurrent = 0;
       fMaxAddr = 0;
-      
+
       int len = DoRead(fBuf, fBufSize);
       fCurrent = fBuf;
       fMaxAddr = fBuf+len;
       fLimitAddr = fBuf + int(len*0.75);
-            
+
       fTotalPos = 0;
       fCurrentLine = 1;
    }
-   
-   virtual ~TXMLInputStream() 
+
+   virtual ~TXMLInputStream()
    {
       delete fInp;
       free(fBuf);
    }
-   
+
    bool eof() { return fInp->eof(); }
-   
+
    int DoRead(char* buf, int maxsize)
    {
      if (eof()) return 0;
      fInp->get(buf,maxsize-1,0);
      return strlen(buf);
    }
-   
+
    Bool_t ExpandStream() {
      if (eof()) return kFALSE;
      fBufSize*=2;
      int curlength = fMaxAddr - fBuf;
-     realloc(fBuf, fBufSize);
+     fBuf = (char*) realloc(fBuf, fBufSize);
      int len = DoRead(fMaxAddr, fBufSize-curlength);
      if (len==0) return kFALSE;
      fMaxAddr+=len;
      fLimitAddr += int(len*0.75);
      return kTRUE;
    }
-   
+
    Bool_t ShiftStream() {
      if (fCurrent<fLimitAddr) return kTRUE; // everything ok, can cntinue
      if (eof()) return kTRUE;
@@ -187,10 +187,10 @@ class TXMLInputStream {
    }
 
    Int_t  TotalPos() { return fTotalPos; }
-   
+
    Int_t CurrentLine() { return fCurrentLine; }
-   
-   Bool_t ShiftCurrent(Int_t sz = 1) 
+
+   Bool_t ShiftCurrent(Int_t sz = 1)
    {
       for(int n=0;n<sz;n++) {
         if (*fCurrent==10) fCurrentLine++;
@@ -203,73 +203,73 @@ class TXMLInputStream {
       fTotalPos+=sz;
       return kTRUE;
    }
-   
-   Bool_t SkipSpaces(Bool_t tillendl = kFALSE) 
+
+   Bool_t SkipSpaces(Bool_t tillendl = kFALSE)
    {
-     do {  
+     do {
          char symb = *fCurrent;
          if ((symb>26) && (symb!=' ')) return kTRUE;
-         
+
          if (!ShiftCurrent()) return kFALSE;
-         
+
          if (tillendl && (symb==10)) return kTRUE;
      } while (fCurrent<fMaxAddr);
      return kFALSE;
    }
-   
+
    Bool_t CheckFor(const char* str)
    {
-      int len = strlen(str); 
+      int len = strlen(str);
       while (fCurrent+len>fMaxAddr)
          if (!ExpandStream()) return kFALSE;
-      char* curr = fCurrent;   
-      while (*str != 0)     
+      char* curr = fCurrent;
+      while (*str != 0)
         if (*str++ != *curr++) return kFALSE;
-      return ShiftCurrent(len);  
+      return ShiftCurrent(len);
    }
-   
-   Bool_t SearchFor(const char* str) 
+
+   Bool_t SearchFor(const char* str)
    {
-      int len = strlen(str); 
-      
+      int len = strlen(str);
+
       do {
         while (fCurrent+len>fMaxAddr)
          if (!ExpandStream()) return kFALSE;
         char* curr = fCurrent;
         const char* chk = str;
-        Bool_t find = kTRUE;   
-        while (*chk != 0)     
+        Bool_t find = kTRUE;
+        while (*chk != 0)
           if (*chk++ != *curr++) find = kFALSE;
-        if (find) return kTRUE;  
+        if (find) return kTRUE;
         if (!ShiftCurrent()) return kFALSE;
       } while (fCurrent<fMaxAddr);
-      return kFALSE;      
+      return kFALSE;
    }
-   
+
    Int_t LocateIdentifier()
    {
       char symb = *fCurrent;
       bool ok = (((symb>='a') && (symb<='z')) ||
-                 ((symb>='A') && (symb<='Z')) || 
+                 ((symb>='A') && (symb<='Z')) ||
                  (symb=='_'));
      if (!ok) return 0;
-      
+
       char* curr = fCurrent;
-      
+
       do {
         curr++;
         if (curr>=fMaxAddr)
           if (!ExpandStream()) return 0;
         symb = *curr;
         ok = ((symb>='a') && (symb<='z')) ||
-              ((symb>='A') && (symb<='Z')) || 
+              ((symb>='A') && (symb<='Z')) ||
               ((symb>='0') && (symb<='9')) ||
               (symb==':') || (symb=='_');
         if (!ok) return curr-fCurrent;
       } while (curr<fMaxAddr);
       return 0;
    }
-   
+
    Int_t LocateContent()
    {
       char* curr = fCurrent;
@@ -280,9 +280,9 @@ class TXMLInputStream {
          if (curr>=fMaxAddr)
           if (!ExpandStream()) return -1;
       }
-      return -1; 
+      return -1;
    }
-   
+
    Int_t LocateAttributeValue(char* start)
    {
       char* curr = start;
@@ -298,7 +298,7 @@ class TXMLInputStream {
         if (curr>=fMaxAddr)
           if (!ExpandStream()) return 0;
         if (*curr=='"') return curr-start+1;
-      } while (curr<fMaxAddr); 
+      } while (curr<fMaxAddr);
       return 0;
    }
 };
@@ -342,7 +342,7 @@ const char* TXMLEngine::GetAttr(xmlNodePointer xmlnode, const char* name)
 }
 
 //______________________________________________________________________________
-Int_t TXMLEngine::GetIntAttr(xmlNodePointer xmlnode, const char* name) 
+Int_t TXMLEngine::GetIntAttr(xmlNodePointer xmlnode, const char* name)
 {
    if (xmlnode==0) return 0;
    Int_t res = 0;
@@ -356,18 +356,18 @@ xmlAttrPointer TXMLEngine::NewAttr(xmlNodePointer xmlnode, xmlNsPointer,
                                          const char* name, const char* value)
 {
    if (xmlnode==0) return 0;
-   
+
    int namelen = strlen(name), valuelen = strlen(value);
    SXmlAttr* attr = (SXmlAttr*) AllocateAttr(namelen, valuelen, xmlnode);
 
-   char* attrname = &(attr->name);   
+   char* attrname = &(attr->name);
    strcpy(attrname, name);
    attrname += (namelen + 1);
    if ((value!=0) && (valuelen>0))
      strcpy(attrname, value);
    else
-     *attrname=0;  
-   
+     *attrname=0;
+
    return (xmlAttrPointer) attr;
 }
 
@@ -379,7 +379,7 @@ xmlAttrPointer TXMLEngine::NewIntAttr(xmlNodePointer xmlnode,
   char sbuf[30];
   sprintf(sbuf,"%d",value);
   return NewAttr(xmlnode, 0, name, sbuf);
-}                                      
+}
 
 //______________________________________________________________________________
 void TXMLEngine::FreeAttr(xmlNodePointer xmlnode, const char* name)
@@ -391,22 +391,22 @@ void TXMLEngine::FreeAttr(xmlNodePointer xmlnode, const char* name)
      if (strcmp(&(attr->name),name)==0) {
        if (prev!=0) prev->next = attr->next;
                else ((SXmlNode*) xmlnode)->attr = attr->next;
-       //fNumNodes--;        
+       //fNumNodes--;
        free(attr);
        return;
      }
-     
+
      prev = attr;
      attr = attr->next;
    }
 }
-      
+
 //______________________________________________________________________________
 xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent, xmlNsPointer ns,
                                           const char* name, const char* content)
 {
    SXmlNode* node = (SXmlNode*) AllocateNode(strlen(name), parent);
-   
+
    strcpy(&(node->name), name);
    node->ns = (SXmlAttr*) ns;
    if (content!=0) {
@@ -419,7 +419,7 @@ xmlNodePointer TXMLEngine::NewChild(xmlNodePointer parent, xmlNsPointer ns,
          strcpy(cptr,content);
       }
    }
-   
+
    return (xmlNodePointer) node;
 }
 
@@ -431,20 +431,20 @@ xmlNsPointer TXMLEngine::NewNS(xmlNodePointer xmlnode, const char* reference, co
    char* nsname = new char[strlen(name)+7];
    strcpy(nsname, "xmlns:");
    strcat(nsname, name);
-   
+
    SXmlAttr* first = node->attr;
    node->attr = 0;
-   
+
    SXmlAttr* nsattr = (SXmlAttr*) NewAttr(xmlnode, 0, nsname, reference);
-   
+
    node->attr = nsattr;
    nsattr->next = first;
-   
+
    node->ns = nsattr;
    delete[] nsname;
    return (xmlNsPointer) nsattr;
-   
-}      
+
+}
 
 //______________________________________________________________________________
 void TXMLEngine::AddChild(xmlNodePointer parent, xmlNodePointer child)
@@ -469,11 +469,11 @@ void TXMLEngine::UnlinkNode(xmlNodePointer xmlnode)
 {
    if (xmlnode==0) return;
    SXmlNode* node = (SXmlNode*) xmlnode;
-   
+
    SXmlNode* parent = node->parent;
-   
+
    if (parent==0) return;
-   
+
    if (parent->child==node) {
       parent->child = node->next;
       if (parent->lastchild==node)
@@ -492,14 +492,14 @@ void TXMLEngine::FreeNode(xmlNodePointer xmlnode)
 {
    if (xmlnode==0) return;
    SXmlNode* node = (SXmlNode*) xmlnode;
-   
+
    SXmlNode* child = node->child;
    while (child!=0) {
      SXmlNode* next = child->next;
      FreeNode((xmlNodePointer)child);
      child = next;
    }
-   
+
    SXmlAttr* attr = node->attr;
    while (attr!=0) {
      SXmlAttr* next = attr->next;
@@ -507,21 +507,21 @@ void TXMLEngine::FreeNode(xmlNodePointer xmlnode)
      free(attr);
      attr = next;
    }
-   
+
    //delete[] node->name;
    // delete[] node->content;
    free(node);
-   
+
    //fNumNodes--;
 }
 
 //______________________________________________________________________________
 void TXMLEngine::UnlinkFreeNode(xmlNodePointer xmlnode)
 {
-   UnlinkNode(xmlnode); 
+   UnlinkNode(xmlnode);
    FreeNode(xmlnode);
 }
-      
+
 //______________________________________________________________________________
 const char* TXMLEngine::GetNodeName(xmlNodePointer xmlnode)
 {
@@ -557,7 +557,7 @@ xmlNodePointer TXMLEngine::GetNext(xmlNodePointer xmlnode)
 {
    return xmlnode==0 ? 0 : (xmlNodePointer) ((SXmlNode*) xmlnode)->next;
 }
- 
+
 //______________________________________________________________________________
 void TXMLEngine::ShiftToNext(xmlNodePointer &xmlnode)
 {
@@ -569,14 +569,14 @@ void TXMLEngine::CleanNode(xmlNodePointer xmlnode)
 {
    if (xmlnode==0) return;
    SXmlNode* node = (SXmlNode*) xmlnode;
-   
+
    SXmlNode* child = node->child;
    while (child!=0) {
      SXmlNode* next = child->next;
      FreeNode((xmlNodePointer)child);
      child = next;
    }
-   
+
    node->child = 0;
    node->lastchild = 0;
 }
@@ -597,12 +597,12 @@ void TXMLEngine::AssignDtd(xmlDocPointer xmldoc, const char* dtdname, const char
 {
    if (xmldoc==0) return;
    SXmlDoc* doc = (SXmlDoc*) xmldoc;
-   delete[] doc->dtdname; 
+   delete[] doc->dtdname;
    doc->dtdname = makestr(dtdname);
    delete[] doc->dtdroot;
    doc->dtdroot = makestr(rootname);
 }
-            
+
 //______________________________________________________________________________
 void TXMLEngine::FreeDoc(xmlDocPointer xmldoc)
 {
@@ -610,24 +610,24 @@ void TXMLEngine::FreeDoc(xmlDocPointer xmldoc)
    SXmlDoc* doc = (SXmlDoc*) xmldoc;
    FreeNode((xmlNodePointer) doc->fRootNode);
    delete[] doc->version;
-   delete[] doc->dtdname; 
+   delete[] doc->dtdname;
    delete[] doc->dtdroot;
    delete doc;
 }
-      
+
 //______________________________________________________________________________
 void TXMLEngine::SaveDoc(xmlDocPointer xmldoc, const char* filename, Int_t layout)
 {
   if (xmldoc==0) return;
-  
+
   SXmlDoc* doc = (SXmlDoc*) xmldoc;
-  
+
   TXMLOutputStream out(filename, 100000);
   out.Write("<?xml version=\"");
   if (doc->version!=0) out.Write(doc->version);
                   else out.Write("1.0");
   out.Write("\"?>\n");
-  
+
   SaveNode((xmlNodePointer) doc->fRootNode, &out, layout, 0);
 }
 
@@ -650,18 +650,18 @@ xmlNodePointer TXMLEngine::DocGetRootElement(xmlDocPointer xmldoc)
 xmlDocPointer TXMLEngine::ParseFile(const char* filename)
 {
    if ((filename==0) || (strlen(filename)==0)) return 0;
-   
+
    TXMLInputStream inp(filename, 100000);
-   
+
    if (!inp.SkipSpaces()) return 0;
    if (!inp.CheckFor("<?xml")) return 0;
    if (!inp.SkipSpaces()) return 0;
    if (!inp.SearchFor("?>")) return 0;
-   if (!inp.ShiftCurrent(2)) return 0; 
+   if (!inp.ShiftCurrent(2)) return 0;
    inp.SkipSpaces(kTRUE); // locate start of next string
-   
+
    Int_t resvalue = 0;
-   
+
    xmlNodePointer mainnode = ReadNode(0, &inp, resvalue);
 
    if (resvalue<=0) {
@@ -680,13 +680,13 @@ xmlDocPointer TXMLEngine::ParseFile(const char* filename)
      FreeNode(mainnode);
      return 0;
    }
-      
+
    if (mainnode==0) return 0;
    xmlDocPointer xmldoc = NewDoc();
    DocSetRootElement(xmldoc, mainnode);
    return xmldoc;
 }
-      
+
 //______________________________________________________________________________
 char* TXMLEngine::makestr(const char* str)
 {
@@ -701,7 +701,7 @@ char* TXMLEngine::makestr(const char* str)
 //______________________________________________________________________________
 char* TXMLEngine::makenstr(const char* str, int len)
 {
-   if ((str==0) || (len==0)) return 0; 
+   if ((str==0) || (len==0)) return 0;
    char* res = new char[len+1];
    strncpy(res, str, len);
    *(res+len) = 0;
@@ -713,38 +713,38 @@ xmlNodePointer TXMLEngine::AllocateNode(int namelen, xmlNodePointer parent)
 {
    //fNumNodes++;
    SXmlNode* node = (SXmlNode*) malloc(sizeof(SXmlNode) + namelen);
-   
+
    node->parent = 0;
    node->ns = 0;
    node->attr = 0;
    node->child = 0;
    node->lastchild = 0;
    node->next = 0;
-   
+
    if (parent!=0)
      AddChild(parent, (xmlNodePointer) node);
-   
+
    return (xmlNodePointer) node;
 }
 
 //______________________________________________________________________________
 xmlAttrPointer TXMLEngine::AllocateAttr(int namelen, int valuelen, xmlNodePointer xmlnode) {
-   
+
    //fNumNodes++;
    SXmlAttr* attr = (SXmlAttr*) malloc(sizeof(SXmlAttr) + namelen + valuelen + 1);
-   
+
    SXmlNode* node = (SXmlNode*) xmlnode;
-   
+
    attr->next = 0;
-   
-   if (node->attr==0) 
+
+   if (node->attr==0)
       node->attr = attr;
    else {
       SXmlAttr* d = node->attr;
       while (d->next!=0) d = d->next;
       d->next = attr;
-   }   
-   
+   }
+
    return (xmlAttrPointer) attr;
 }
 
@@ -756,7 +756,7 @@ xmlNsPointer TXMLEngine::FindNs(xmlNodePointer xmlnode, const char* name)
       if (node->ns!=0) {
          const char* nsname = &(node->ns->name) + 6;
          if (strcmp(nsname, name)==0) return node->ns;
-      } 
+      }
       node = node->parent;
    }
    return 0;
@@ -769,12 +769,12 @@ void TXMLEngine::TruncateNsExtension(xmlNodePointer xmlnode)
    if (node==0) return;
    char* colon = strchr(&(node->name),':');
    if (colon==0) return;
-   
+
    char* copyname = &(node->name);
-   
+
    while (*colon!=0)
      *(copyname++) = *(++colon);
-   
+
    //cout << "new name = " << &(node->name) << endl;
 }
 
@@ -796,9 +796,9 @@ void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int s
            *target++ = '\"'; source+=6; srclen-=6;
         } else
          { *target++ = *source++; srclen--; }
-      } else { 
-        *target++ = *source++; 
-        srclen--; 
+      } else {
+        *target++ = *source++;
+        srclen--;
       }
    }
    *target = 0;
@@ -807,8 +807,8 @@ void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int s
 //______________________________________________________________________________
 void TXMLEngine::OutputValue(char* value, TXMLOutputStream* out)
 {
-   if (value==0) return; 
-   
+   if (value==0) return;
+
    char* last = value;
    char* find = 0;
    while ((find=strpbrk(last,"<&>\"")) !=0 ) {
@@ -818,9 +818,9 @@ void TXMLEngine::OutputValue(char* value, TXMLOutputStream* out)
       *find = symb;
       last = find+1;
       if (symb=='<') out->Write("&lt;"); else
-      if (symb=='>') out->Write("&gt;"); else 
-      if (symb=='&') out->Write("&amp;"); else 
-                     out->Write("&quot;");  
+      if (symb=='>') out->Write("&gt;"); else
+      if (symb=='&') out->Write("&amp;"); else
+                     out->Write("&quot;");
    }
    if (*last!=0)
      out->Write(last);
@@ -831,13 +831,13 @@ void TXMLEngine::SaveNode(xmlNodePointer xmlnode, TXMLOutputStream* out, Int_t l
 {
    if (xmlnode==0) return;
    SXmlNode* node = (SXmlNode*) xmlnode;
-   
+
    bool issingleline = (node->name!=0) && (node->child==0);
-   
+
    if (layout>0) out->Put(' ', level);
-   
-   if (node->name!=0) {    
-      
+
+   if (node->name!=0) {
+
       out->Put('<');
       // we suppose that ns is always first attribute
       if ((node->ns!=0) && (node->ns!=node->attr)) {
@@ -845,7 +845,7 @@ void TXMLEngine::SaveNode(xmlNodePointer xmlnode, TXMLOutputStream* out, Int_t l
          out->Put(':');
       }
       out->Write(&(node->name));
-      
+
       SXmlAttr* attr = node->attr;
       while (attr!=0) {
          out->Put(' ');
@@ -854,7 +854,7 @@ void TXMLEngine::SaveNode(xmlNodePointer xmlnode, TXMLOutputStream* out, Int_t l
          out->Write("=\"");
          attrname += strlen(attrname) + 1;
          OutputValue(attrname, out);
-         out->Put('\"');      
+         out->Put('\"');
          attr = attr->next;
       }
       if (issingleline) out->Write("/>");
@@ -865,16 +865,16 @@ void TXMLEngine::SaveNode(xmlNodePointer xmlnode, TXMLOutputStream* out, Int_t l
       out->Write(&(node->name)+1);
       return;
    }
-   
+
    if (issingleline) return;
-   
+
    SXmlNode* child = node->child;
    while (child!=0) {
       SaveNode((xmlNodePointer) child, out, layout, level+2);
       child = child->next;
-   }   
-   
-   if (node->name!=0) {    
+   }
+
+   if (node->name!=0) {
      if (layout>0)
         out->Put(' ',level);
      out->Write("</");
@@ -893,11 +893,11 @@ void TXMLEngine::SaveNode(xmlNodePointer xmlnode, TXMLOutputStream* out, Int_t l
 xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* inp, Int_t& resvalue)
 {
 // resvalue <= 0 if error
-// resvalue == 1 if this is endnode of parent 
-// resvalue == 2 if this is child   
-   
-   resvalue = 0; 
-    
+// resvalue == 1 if this is endnode of parent
+// resvalue == 2 if this is child
+
+   resvalue = 0;
+
    if (inp==0) return 0;
    if (!inp->SkipSpaces()) { resvalue = -1; return 0; }
    SXmlNode* parent = (SXmlNode*) xmlparent;
@@ -910,7 +910,7 @@ xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* i
       if ((parent==0) || (parent->child!=0)) { resvalue = -2; return 0; }
       int contlen = inp->LocateContent();
       if (contlen<0) return 0;
-      
+
       SXmlNode* contnode = (SXmlNode*) AllocateNode(contlen+1, xmlparent);
       char* contptr = &(contnode->name);
       *contptr = 0;
@@ -922,7 +922,7 @@ xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* i
    } else
      // skip "<" symbol
      if (!inp->ShiftCurrent()) return 0;
-   
+
    if (*inp->fCurrent=='/') {
       // this is a starting of closing node
       if (!inp->ShiftCurrent()) return 0;
@@ -931,72 +931,72 @@ xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* i
       if (len<=0) { resvalue = -3; return 0; }
 
       if (parent==0) { resvalue = -4; return 0; }
-      
+
       if (strncmp(&(parent->name), inp->fCurrent, len)!=0) {
          resvalue = -5;
-         return 0; 
+         return 0;
       }
-      
+
       if (!inp->ShiftCurrent(len)) return 0;
-      
+
       if (!inp->SkipSpaces()) return 0;
       if (*inp->fCurrent!='>') return 0;
       if (!inp->ShiftCurrent()) return 0;
-      
+
       if (parent->ns!=0)
         TruncateNsExtension((xmlNodePointer)parent);
-      
-      inp->SkipSpaces(kTRUE); // locate start of next string 
-      resvalue = 1; 
+
+      inp->SkipSpaces(kTRUE); // locate start of next string
+      resvalue = 1;
       return 0;
    }
-   
-   
+
+
    if (!inp->SkipSpaces()) return 0;
    Int_t len = inp->LocateIdentifier();
    if (len<=0) return 0;
    node = (SXmlNode*) AllocateNode(len, xmlparent);
    char* nameptr = &(node->name);
-   
+
    strncpy(nameptr, inp->fCurrent, len);
    nameptr+=len;
    *nameptr = 0;
-   
+
    char* colon = strchr(&(node->name),':');
    if ((colon!=0) && (parent!=0)) {
       *colon = 0;
       node->ns = (SXmlAttr*) FindNs(xmlparent, &(node->name));
-      *colon =':';      
+      *colon =':';
    }
-      
+
    if (!inp->ShiftCurrent(len)) return 0;
-   
+
    do {
       if (!inp->SkipSpaces()) return 0;
-    
+
       char nextsymb = *inp->fCurrent;
-        
+
       if (nextsymb=='/') {  // this is end of short node like <node ... />
          if (!inp->ShiftCurrent()) return 0;
          if (*inp->fCurrent=='>') {
-            if (!inp->ShiftCurrent()) return 0; 
-            
+            if (!inp->ShiftCurrent()) return 0;
+
             if (node->ns!=0)
                TruncateNsExtension((xmlNodePointer) node);
-            
-            inp->SkipSpaces(kTRUE); // locate start of next string 
-            resvalue = 2; 
+
+            inp->SkipSpaces(kTRUE); // locate start of next string
+            resvalue = 2;
             return node;
          } else return 0;
-      } else 
+      } else
       if (nextsymb=='>') { // this is end of parent node, lets find all childs
-          
-         if (!inp->ShiftCurrent()) return 0; 
-          
+
+         if (!inp->ShiftCurrent()) return 0;
+
          do {
             ReadNode(node, inp, resvalue);
          } while (resvalue==2);
-         
+
          if (resvalue==1) {
            resvalue = 2;
            return node;
@@ -1004,25 +1004,25 @@ xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* i
       } else {
         Int_t attrlen = inp->LocateIdentifier();
         if (attrlen<=0) { resvalue = -6; return 0; }
-        
+
         char* valuestart = inp->fCurrent+attrlen;
-        
+
         int valuelen = inp->LocateAttributeValue(valuestart);
         if (valuelen<3) { resvalue = -7; return 0; }
-        
+
         SXmlAttr* attr = (SXmlAttr*) AllocateAttr(attrlen, valuelen-3, (xmlNodePointer) node);
-        
+
         char* attrname = &(attr->name);
         strncpy(attrname, inp->fCurrent, attrlen);
         attrname+=attrlen;
         *attrname = 0;
         attrname++;
         UnpackSpecialCharacters(attrname, valuestart+2, valuelen-3);
-        
+
         if (!inp->ShiftCurrent(attrlen+valuelen)) return 0;
-        
+
         attrname = &(attr->name);
-         
+
         if ((strlen(attrname)>6) && (strstr(attrname,"xmlns:")==attrname)) {
           if (strcmp(&(node->name), attrname + 6)!=0) {
              resvalue = -8;
@@ -1030,9 +1030,9 @@ xmlNodePointer TXMLEngine::ReadNode(xmlNodePointer xmlparent, TXMLInputStream* i
           }
           if (node->ns!=0) {
              resvalue = -9;
-             return 0;   
-          }  
-          node->ns = attr;   
+             return 0;
+          }
+          node->ns = attr;
         }
       }
    } while (true);
