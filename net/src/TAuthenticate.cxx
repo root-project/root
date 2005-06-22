@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.72 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/net:$Name: v4-04-02 $:$Id: TAuthenticate.cxx,v 1.73 2005/04/30 01:00:13 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -115,11 +115,14 @@ Int_t          TAuthenticate::fgAuthTO = -2;       // Timeout value
 // 11 -> 12: add random tags to avoid reply attacks (password+token)
 Int_t TAuthenticate::fgClientProtocol = 12;  // increase when client protocol changes
 
+// ID of the main thread as unique identifier
+Int_t TAuthenticate::fgProcessID = -1;
+
+TVirtualMutex *TAuthenticate::fgMutex = 0; 
+
 // Standar version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TSecContext *);
 
-// ID of the main thread as unique identifier
-static Int_t gProcessID = -1;
 
 ClassImp(TAuthenticate)
 
@@ -129,13 +132,13 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
 {
    // Create authentication object.
 
-   if (gDebug > 2 && gAuthMutex)
+   if (gDebug > 2 && fgMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
-   R__LOCKGUARD(gAuthMutex);
+   R__LOCKGUARD2(fgMutex);
 
    // Use the ID of the starting thread as unique identifier
-   if (gProcessID < 0)
-      gProcessID = gSystem->GetPid();
+   if (fgProcessID < 0)
+      fgProcessID = gSystem->GetPid();
 
    if (fgAuthTO == -2)
       fgAuthTO = gEnv->GetValue("Auth.Timeout",-1);
@@ -361,6 +364,10 @@ Bool_t TAuthenticate::Authenticate()
    // Authenticate to remote rootd or proofd server. Return kTRUE if
    // authentication succeeded.
 
+   if (gDebug > 2 && fgMutex)
+      Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
+   R__LOCKGUARD2(fgMutex);
+
    Bool_t rc = kFALSE;
    Int_t st = -1;
    Int_t remMeth = 0, rMth[kMAXSEC], tMth[kMAXSEC] = {0};
@@ -378,10 +385,6 @@ Bool_t TAuthenticate::Authenticate()
 #else
    static TString rootDir = TString(gRootDir) + "/lib";
 #endif
-
-   if (gDebug > 2 && gAuthMutex)
-      Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
-   R__LOCKGUARD(gAuthMutex);
 
    if (gDebug > 2)
       Info("Authenticate", "enter: fUser: %s", fUser.Data());
@@ -811,6 +814,8 @@ void TAuthenticate::SetEnvironment()
 {
    // Set default authentication environment. The values are inferred
    // from fSecurity and fDetails.
+
+   R__LOCKGUARD2(fgMutex);
 
    if (gDebug > 2)
       Info("SetEnvironment",
@@ -1325,6 +1330,8 @@ const char *TAuthenticate::GetAuthMethod(Int_t idx)
 {
    // Static method returning the method corresponding to idx.
 
+   R__LOCKGUARD2(fgMutex);
+
    if (idx < 0 || idx > kMAXSEC-1) {
       ::Error("Authenticate::GetAuthMethod", "idx out of bounds (%d)", idx);
       idx = 0;
@@ -1337,6 +1344,8 @@ Int_t TAuthenticate::GetAuthMethodIdx(const char *meth)
 {
    // Static method returning the method index (which can be used to find
    // the method in GetAuthMethod()). Returns -1 in case meth is not found.
+
+   R__LOCKGUARD2(fgMutex);
 
    if (meth && meth[0]) {
       for (Int_t i = 0; i < kMAXSEC; i++) {
@@ -1355,6 +1364,8 @@ char *TAuthenticate::PromptUser(const char *remote)
    // to rootd or proofd. User is asked to type user name.
    // Returns user name (which must be deleted by caller) or 0.
    // If non-interactive run (eg ProofServ) returns default user.
+
+   R__LOCKGUARD2(fgMutex);
 
    const char *user;
    if (fgDefaultUser != "")
@@ -1457,6 +1468,8 @@ TList *TAuthenticate::GetAuthInfo()
 {
    // Static method returning the list with authentication details.
 
+   R__LOCKGUARD2(fgMutex);
+
    if (!fgAuthInfo)
       fgAuthInfo = new TList;
    return fgAuthInfo;
@@ -1468,6 +1481,8 @@ TList *TAuthenticate::GetProofAuthInfo()
    // Static method returning the list with authentication directives
    // to be sent to proof.
 
+   R__LOCKGUARD2(fgMutex);
+
    if (!fgProofAuthInfo)
       fgProofAuthInfo = new TList;
    return fgProofAuthInfo;
@@ -1477,6 +1492,8 @@ TList *TAuthenticate::GetProofAuthInfo()
 void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
+
+   R__LOCKGUARD2(fgMutex);
 
    Int_t erc = err;
    Bool_t forceprint = kFALSE;
@@ -1506,6 +1523,8 @@ void TAuthenticate::SetGlobalUser(const char *user)
 {
    // Set global user name to be used for authentication to rootd or proofd.
 
+   R__LOCKGUARD2(fgMutex);
+
    if (fgUser != "")
       fgUser = "";
 
@@ -1517,6 +1536,8 @@ void TAuthenticate::SetGlobalUser(const char *user)
 void TAuthenticate::SetGlobalPasswd(const char *passwd)
 {
    // Set global passwd to be used for authentication to rootd or proofd.
+
+   R__LOCKGUARD2(fgMutex);
 
    if (fgPasswd != "")
       fgPasswd = "";
@@ -1678,10 +1699,10 @@ Int_t TAuthenticate::SshAuth(TString &User)
 {
    // SSH client authentication code.
 
-
    // No control on credential forwarding in case of SSH authentication;
    // switched it off on PROOF servers, unless the user knows what (s)he
    // is doing
+
    if (gROOT->IsProofServ()) {
       if (!(gEnv->GetValue("ProofServ.UseSSH",0))) {
          if (gDebug > 0)
@@ -1860,7 +1881,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
             again = SshError(fileErr);
             if (gDebug > 3)
                Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                         gProcessID, ssh_rc, again, ntry);
+                         fgProcessID, ssh_rc, again, ntry);
             if (again)
                gSystem->Sleep(1);
          }
@@ -1916,7 +1937,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
                   again = SshError(fileErr);
                   if (gDebug > 3)
                      Info("SshAuth", "%d: sleeping: rc: %d, again:%d, ntry: %d",
-                               gProcessID, ssh_rc, again, ntry);
+                               fgProcessID, ssh_rc, again, ntry);
                   if (again)
                      // Wait 1 sec before retry
                      gSystem->Sleep(1000);
@@ -1938,7 +1959,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
    }
    if (gDebug > 3)
       Info("SshAuth", "%d: system return code: %d (%d)",
-                      gProcessID, ssh_rc, ntry+1);
+                      fgProcessID, ssh_rc, ntry+1);
 
    if (ssh_rc && sshproto == 0) {
 
@@ -1971,7 +1992,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
          Int_t id3;
          sscanf(cmdinfo, "%s %d %s %s", cd1, &id3, pipe, dum);
          snprintf(SecName, kMAXPATHLEN, "%d -1 0 %s %d %s %d",
-                  -gProcessID, pipe,
+                  -fgProcessID, pipe,
                  (int)strlen(User), User.Data(), fgClientProtocol);
          newsock->Send(SecName, kROOTD_SSH);
          if (level > 1) {
@@ -2125,12 +2146,15 @@ const char *TAuthenticate::GetSshUser(TString User) const
    // Looks first at SSH.Login and finally at env USER.
    // If SSH.LoginPrompt is set to 'yes' it prompts for the 'login name'
 
+   R__LOCKGUARD2(fgMutex);
+
    static TString user = "";
 
    if (User == "") {
       if (fgPromptUser) {
          user = PromptUser(fRemote);
       } else {
+
          user = fgDefaultUser;
          if (user == "")
             user = PromptUser(fRemote);
@@ -2149,6 +2173,8 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
    // this means either equal or "containing" it, even with wild cards *
    // in the first field (in the case 'host' is a name, ie not IP address)
    // Returns kTRUE if the two matches.
+
+   R__LOCKGUARD2(fgMutex);
 
    Bool_t retval = kTRUE;
 
@@ -2302,6 +2328,8 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
    // UsrPwd client authentication code.
    // Returns 0 in case authentication failed
    //         1 in case of success
+
+   R__LOCKGUARD2(fgMutex);
 
    if (gDebug > 2)
       Info("ClearAuth", "enter: User: %s (passwd hashed?: %d)",
@@ -2763,6 +2791,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
 
    if (Exact)
       *Exact = 0;
+
    if (gDebug > 2)
       ::Info("TAuthenticate::GetHostAuth", "enter ... %s ... %s", host, user);
 
@@ -3155,7 +3184,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
    }
 
    // Prepare string to be sent to the server
-   TString sstr(Form("%d %d %s", gProcessID, OffSet, Options));
+   TString sstr(Form("%d %d %s", fgProcessID, OffSet, Options));
 
    // Send Message
    if (fSocket->Send(sstr, *Message) < 0)
@@ -3635,6 +3664,7 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
    if (key == 0) {
       strncpy(buftmp, str, slen);
       buftmp[slen] = 0;
+
       if (enc == 1)
          ttmp = rsa_fun::fg_rsa_encode(buftmp, slen, fgRSAPriKey.n,
                                                      fgRSAPriKey.e);
@@ -3644,6 +3674,7 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
       else
          return nsen;
    } else if (key == 1) {
+
 #ifdef R__SSL
       ttmp = strlen(str);
       if ((ttmp % 8) > 0)           // It should be a multiple of 8!
@@ -3671,7 +3702,6 @@ Int_t TAuthenticate::SecureSend(TSocket *sock, Int_t enc,
       ::Info("TAuthenticate::SecureSend",
              "local: sent %d bytes (expected: %d)", nsen,ttmp);
 
-
    return nsen;
 }
 
@@ -3681,6 +3711,7 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
    // Receive str from sock and decode it using key indicated by key type
    // Return number of received bytes or -1 in case of error.
    // dec = 1 for private decoding, dec = 2 for public decoding
+
 
    char buftmp[kMAXSECBUF];
    char buflen[20];
@@ -4051,7 +4082,10 @@ void TAuthenticate::CleanupSecContextAll(Option_t *opt)
    }
 
    // Clear the list
-   gROOT->GetListOfSecContexts()->Clear();
+   {   
+     R__LOCKGUARD2(TROOT::fgMutex);
+     gROOT->GetListOfSecContexts()->Clear();
+   }
 
    if (opt && !strncasecmp(opt,"k",1)) {
       // We are quitting, so cleanup memory also memory
@@ -4063,6 +4097,7 @@ void TAuthenticate::CleanupSecContextAll(Option_t *opt)
       }
    }
 }
+
 //______________________________________________________________________________
 Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
 {
@@ -4111,11 +4146,11 @@ Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
                news->Send((Int_t)0, (Int_t)0);
 
             if (all || level == 1) {
-               news->Send(Form("%d",gProcessID),
+               news->Send(Form("%d",fgProcessID),
                                kROOTD_CLEANUP);
                cleaned = kTRUE;
             } else {
-               news->Send(Form("%d %d %d %s",gProcessID,ctx->GetMethod(),
+               news->Send(Form("%d %d %d %s",fgProcessID,ctx->GetMethod(),
                                ctx->GetOffSet(),ctx->GetUser()),kROOTD_CLEANUP);
                if (TAuthenticate::SecureSend(news, 1, ctx->GetRSAKey(),
                   (char *)ctx->GetToken()) == -1) {
@@ -4643,7 +4678,6 @@ void TAuthenticate::ReadProofConf(const char *conffile)
       // close file
       fclose(pconf);
    }
-
 }
 
 //______________________________________________________________________________

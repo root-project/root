@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.36 2004/11/03 11:03:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.37 2005/06/06 14:50:36 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <list>
 
 #include "snprintf.h"
 #include "TString.h"
@@ -30,11 +31,15 @@
 #include "TClass.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include <list>
+#include "TVirtualMutex.h"
 
 #ifdef R__GLOBALSTL
 namespace std { using ::list; }
 #endif
+
+// Mutex for string format protection
+
+TVirtualMutex* TString::fgMutex = 0;
 
 // Amount to shift hash values to avoid clustering
 
@@ -1168,9 +1173,9 @@ TString operator+(ULong_t i, const TString &s)
 // -------------------- Static Member Functions ----------------------
 
 // Static member variable initialization:
-Ssiz_t          TString::fgInitialCapac     = 15;
-Ssiz_t          TString::fgResizeInc        = 16;
-Ssiz_t          TString::fgFreeboard        = 15;
+Ssiz_t TString::fgInitialCapac = 15;
+Ssiz_t TString::fgResizeInc    = 16;
+Ssiz_t TString::fgFreeboard    = 15;
 
 //______________________________________________________________________________
 Ssiz_t TString::InitialCapacity(Ssiz_t ic)
@@ -1570,7 +1575,7 @@ again:
 
 //---- Global String Handling Functions ----------------------------------------
 
-static const int cb_size  = 4096;
+static const int cb_size  = 4096*50;
 static const int fld_size = 2048;
 
 // a circular formating buffer
@@ -1586,6 +1591,8 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
 
    static char *slowBuffer  = 0;
    static int   slowBufferSize = 0;
+
+   R__LOCKGUARD2(TString::fgMutex);
 
    if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
@@ -1611,6 +1618,8 @@ static char *Format(const char *format, va_list ap)
 {
    // Format a string in a circular formatting buffer (using a printf style
    // format descriptor).
+
+   R__LOCKGUARD2(TString::fgMutex);
 
    char *buf = bfree;
 

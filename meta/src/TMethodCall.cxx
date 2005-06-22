@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.19 2005/01/12 19:18:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.20 2005/03/13 15:05:31 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "Strlen.h"
 #include "Api.h"
 #include "TVirtualMutex.h"
+#include "TCint.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -162,7 +163,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
    fDtorOnly = kFALSE;
    fRetType  = kNone;
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (cl)
       fFunc->SetFunc(cl->GetClassInfo(), (char *)method, (char *)params, &fOffset);
    else {
@@ -207,7 +208,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    fDtorOnly = kFALSE;
    fRetType  = kNone;
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (cl)
       fFunc->SetFuncProto(cl->GetClassInfo(), (char *)method, (char *)proto, &fOffset);
    else {
@@ -273,7 +274,7 @@ void TMethodCall::Execute(void *object)
 {
    // Execute the method (with preset arguments) for the specified object.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -299,7 +300,7 @@ void TMethodCall::Execute(void *object, const char *params)
 {
    // Execute the method for the specified object and argument values.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -314,7 +315,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 {
    // Execute the method (with preset arguments) for the specified object.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -327,7 +328,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 {
    // Execute the method for the specified object and argument values.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -342,7 +343,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 {
    // Execute the method (with preset arguments) for the specified object.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -355,7 +356,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 {
    // Execute the method for the specified object and argument values.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -370,7 +371,7 @@ void TMethodCall::Execute(void *object, char **retText)
 {
    // Execute the method (with preset arguments) for the specified object.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
@@ -383,7 +384,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 {
    // Execute the method for the specified object and argument values.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgs((char *)params);
 
    void *address = 0;
@@ -471,7 +472,7 @@ void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
    // Nargs is the number of all arguments and NargsOpt is the number
    // of default arguments.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgArray((long *)paramArr, nparam);
 }
 

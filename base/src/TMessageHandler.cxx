@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.3 2002/12/02 18:50:01 rdm Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TMessageHandler.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 
 ClassImp(TMessageHandler)
 
@@ -91,6 +92,7 @@ void TMessageHandler::Add()
 {
    // Add this message handler to the list of messages handlers.
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
 }
 
@@ -225,5 +227,6 @@ void TMessageHandler::Remove()
 {
    // Remove this message handler from the list of messages handlers.
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfMessageHandlers()->Remove(this);
 }

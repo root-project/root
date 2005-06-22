@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.5 2004/07/13 16:48:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.6 2004/07/22 07:17:32 brun Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -83,8 +83,9 @@ UChar_t *TInetAddress::GetAddressBytes() const
    // Returns the raw IP address in host byte order. The highest
    // order byte position is in addr[0]. To be prepared for 64-bit
    // IP addresses an array of bytes is returned.
+   // *** User must delete allocated memory ***
 
-   static UChar_t addr[4];
+   UChar_t *addr = new UChar_t[4];
 
    addr[0] = (UChar_t) ((fAddresses[0] >> 24) & 0xFF);
    addr[1] = (UChar_t) ((fAddresses[0] >> 16) & 0xFF);

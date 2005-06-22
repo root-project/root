@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.6 2005/04/28 16:24:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.7 2005/06/10 17:49:47 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TROOT.h"
 #include "TError.h"
 #include <string>
+#include "TVirtualMutex.h"
 
 // Hook to server authentication wrapper
 SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
@@ -42,6 +43,7 @@ static void setaccopt(UChar_t &Opt, UChar_t Mod)
 {
    // Kind of macro to parse input options
    // Modify Opt according to modifier Mod
+   R__LOCKGUARD2(TAuthenticate::fgMutex);
 
    if (!Mod) return;
 
@@ -83,7 +85,10 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 
    if (port != -1) {
       fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
-      if (fSocket >= 0) gROOT->GetListOfSockets()->Add(this);
+      if (fSocket >= 0) {
+	 R__LOCKGUARD2(TROOT::fgMutex);
+	 gROOT->GetListOfSockets()->Add(this);
+      }
    } else
       fSocket = -1;
 }
@@ -122,7 +127,10 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    SetTitle(fService);
 
    fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
-   if (fSocket >= 0) gROOT->GetListOfSockets()->Add(this);
+   if (fSocket >= 0) {
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfSockets()->Add(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -130,6 +138,7 @@ TServerSocket::~TServerSocket()
 {
    // Destructor: cleanup authentication stuff (if any) and close
 
+   R__LOCKGUARD2(TAuthenticate::fgMutex);
    if (fSecContexts && fgSrvAuthClupHook) {
       TIter next(fSecContexts);
       TSecContext *nsc ;
@@ -190,8 +199,10 @@ TSocket *TServerSocket::Accept(UChar_t Opt)
    socket->fSecContext = 0;
    socket->fService = fService;
    socket->fAddress = gSystem->GetPeerName(socket->fSocket);
-   if (socket->fSocket >= 0) gROOT->GetListOfSockets()->Add(socket);
-
+   if (socket->fSocket >= 0) {
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfSockets()->Add(socket);
+   }
 
    // Perform authentication, if required
    if (Auth) {
@@ -267,6 +278,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    // open connection
 
    if (!fgSrvAuthHook) {
+	R__LOCKGUARD2(TAuthenticate::fgMutex);
 
       // Load libraries needed for (server) authentication ...
 #ifdef ROOTLIBDIR
@@ -353,6 +365,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       if (type == 1) {
          // An existing authentication has been re-used: retrieve
          // the related security context
+	 R__LOCKGUARD2(TROOT::fgMutex);
          TIter next(gROOT->GetListOfSecContexts());
          while ((seccontext = (TSecContext *)next())) {
             if (!(strncmp(seccontext->GetDetails(),"server",6))) {

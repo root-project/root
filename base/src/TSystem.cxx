@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.122 2005/05/03 13:17:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.123 2005/05/17 15:25:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include "TPluginManager.h"
 #include "TNetFile.h"
 #include "TUrl.h"
-
+#include "TVirtualMutex.h"
 #include "compiledata.h"
 
 
@@ -68,7 +68,7 @@ TProcessEventTimer::TProcessEventTimer(Long_t delay) : TTimer(delay, kFALSE)
 //______________________________________________________________________________
 Bool_t TProcessEventTimer::ProcessEvents()
 {
-   // Process events if timer did time out. Returns kTRUE if intterrupt
+   // Process events if timer did time out. Returns kTRUE if interrupt
    // flag is set (by hitting a key in the canvas or selecting the
    // Interrupt menu item in canvas or some other action).
 
@@ -87,6 +87,8 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 
 ClassImp(TSystem)
+
+TVirtualMutex*  TSystem::fgMutex = 0;
 
 //______________________________________________________________________________
 TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
@@ -822,6 +824,8 @@ const char *TSystem::DirName(const char *pathname)
    // Return the directory name in pathname. DirName of /user/root is /user.
 
    if (pathname && strchr(pathname, '/')) {
+      R__LOCKGUARD2(fgMutex);
+
       static char buf[1000];
       strcpy(buf, pathname);
       char *r = strrchr(buf, '/');
@@ -868,6 +872,8 @@ const char *TSystem::ExpandFileName(const char *fname)
    char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*3];
    const char *p;
    static char xname[kBufSize];
+
+   R__LOCKGUARD2(fgMutex);
 
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';

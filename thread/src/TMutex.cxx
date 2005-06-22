@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.3 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.4 2004/12/10 22:27:21 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -124,4 +124,16 @@ Int_t TMutex::CleanUp()
    if (TThread::SelfId() != fId) return 0;
    if (fRef > 0) fRef = 0;
    return UnLock();
+}
+
+//______________________________________________________________________________
+TVirtualMutex* TMutex::Factory(Bool_t recursive)
+{ 
+   // Create mutex and return pointer to it. Calling function must care
+   // about proper deletion. The function is intended to be used in connection 
+   // with the R__LOCKGUARD2 macro for local thread protection. Since "new" is 
+   // used the TStorage class has to be protected by gGlobalMutex.
+
+   TVirtualMutex *ret = new TMutex(recursive); 
+   return ret;
 }

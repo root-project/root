@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.25 2004/10/11 22:58:18 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -45,10 +45,12 @@
 #include "TRegexp.h"
 #include "TVirtualMutex.h"
 
-TCollection  *TCollection::fgCurrentCollection = 0;
-TObjectTable *TCollection::fgGarbageCollection = 0;
-Bool_t        TCollection::fgEmptyingGarbage   = kFALSE;
-Int_t         TCollection::fgGarbageStack      = 0;
+
+TVirtualMutex *TCollection::fgMutex = 0;
+TCollection   *TCollection::fgCurrentCollection = 0;
+TObjectTable  *TCollection::fgGarbageCollection = 0;
+Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
+Int_t          TCollection::fgGarbageStack      = 0;
 
 ClassImp(TCollection)
 ClassImp(TIter)
@@ -426,7 +428,7 @@ void TCollection::SetCurrentCollection()
 //______________________________________________________________________________
 void TCollection::StartGarbageCollection()
 {
-   R__LOCKGUARD(gContainerMutex);
+   R__LOCKGUARD2(fgMutex);
    if (!fgGarbageCollection) {
       fgGarbageCollection = new TObjectTable;
       fgEmptyingGarbage   = kFALSE;
@@ -438,7 +440,7 @@ void TCollection::StartGarbageCollection()
 //______________________________________________________________________________
 void TCollection::EmptyGarbageCollection()
 {
-   R__LOCKGUARD(gContainerMutex);
+   R__LOCKGUARD2(fgMutex);
    if (fgGarbageStack > 0) fgGarbageStack--;
    if (fgGarbageCollection && fgGarbageStack == 0 && fgEmptyingGarbage == kFALSE) {
       fgEmptyingGarbage = kTRUE;
@@ -451,7 +453,7 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
-   R__LOCKGUARD(gContainerMutex);
+   R__LOCKGUARD2(fgMutex);
    if (fgGarbageCollection) {
       if (!fgEmptyingGarbage) {
          fgGarbageCollection->Add(obj);

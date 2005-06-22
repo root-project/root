@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.4 2004/12/15 13:15:14 rdm Exp $
+// @(#)root/base:$Name: v4-04-02 $:$Id: TVirtualMutex.h,v 1.5 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -26,19 +26,22 @@
 #include "TObject.h"
 #endif
 
-
 class TVirtualMutex : public TObject {
 
 public:
    TVirtualMutex(Bool_t /* recursive */ = kFALSE) { }
    virtual ~TVirtualMutex() { }
 
-   virtual Int_t Lock() { return 0; }
-   virtual Int_t TryLock() { return 0; }
-   virtual Int_t UnLock() { return 0; }
-   virtual Int_t CleanUp() { return 0; }
+   virtual Int_t Lock() = 0;
+   virtual Int_t TryLock() = 0;
+   virtual Int_t UnLock() = 0;
+   virtual Int_t CleanUp() = 0;
    Int_t Acquire() { return Lock(); }
    Int_t Release() { return UnLock(); }
+
+   virtual TVirtualMutex* Factory(Bool_t /*recursive*/ = kFALSE) = 0;
+
+   static TVirtualMutex *fgMutex; // Global mutex set in TThread::Init
 
    ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
 };
@@ -73,18 +76,20 @@ public:
    ClassDef(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
-
-R__EXTERN TVirtualMutex *gContainerMutex;
-R__EXTERN TVirtualMutex *gAllocMutex;
-R__EXTERN TVirtualMutex *gCINTMutex;
-R__EXTERN TVirtualMutex *gErrPrintMutex;
-R__EXTERN TVirtualMutex *gAuthMutex;
-
 // Zero overhead macros in case not compiled with thread support
 #ifdef _REENTRANT
 #define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
+#define R__LOCKGUARD2(mutex)                             \
+    if (TVirtualMutex::fgMutex && !mutex) {              \
+      TVirtualMutex::fgMutex->Lock();                    \
+      if (!mutex)                                        \
+         mutex = TVirtualMutex::fgMutex->Factory(kTRUE); \
+      TVirtualMutex::fgMutex->UnLock();                  \
+    }                                                    \
+    R__LOCKGUARD(mutex)
 #else
-#define R__LOCKGUARD(mutex) if (mutex) { }
+#define R__LOCKGUARD(mutex)  if (mutex) { }
+#define R__LOCKGUARD2(mutex) if (mutex) { }
 #endif
 
 #endif

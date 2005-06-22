@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.24 2005/01/28 05:45:41 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.25 2005/03/15 22:13:17 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "TFile.h"
 #include "TObjArray.h"
 #include "TExMap.h"
+#include "TVirtualMutex.h"
 
 TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
@@ -76,9 +77,9 @@ TProcessID::TProcessID()
 //______________________________________________________________________________
 TProcessID::~TProcessID()
 {
-
    delete fObjects;
    fObjects = 0;
+   R__LOCKGUARD2(TROOT::fgMutex);
    fgPIDs->Remove(this);
 }
 
@@ -91,7 +92,9 @@ TProcessID::TProcessID(const TProcessID &ref) : TNamed(ref)
 //______________________________________________________________________________
 TProcessID *TProcessID::AddProcessID()
 {
-// static function to add a new TProcessID to the list of PIDs
+   // static function to add a new TProcessID to the list of PIDs
+
+   R__LOCKGUARD2(TROOT::fgMutex);
 
    TProcessID *pid = new TProcessID();
 
@@ -116,9 +119,11 @@ TProcessID *TProcessID::AddProcessID()
 //______________________________________________________________________________
 UInt_t TProcessID::AssignID(TObject *obj)
 {
-// static function returning the ID assigned to obj
-// If the object is not yet referenced, its kIsReferenced bit is set
-// and its fUniqueID set to the current number of referenced objects so far.
+   // static function returning the ID assigned to obj
+   // If the object is not yet referenced, its kIsReferenced bit is set
+   // and its fUniqueID set to the current number of referenced objects so far.
+
+   R__LOCKGUARD2(TROOT::fgMutex);
 
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == fgPID->GetObjectWithID(uid)) return uid;
@@ -139,6 +144,8 @@ void TProcessID::Cleanup()
 {
    // static function (called by TROOT destructor) to delete all TProcessIDs
 
+   R__LOCKGUARD2(TROOT::fgMutex);
+
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
@@ -147,8 +154,8 @@ void TProcessID::Cleanup()
 //______________________________________________________________________________
 void TProcessID::Clear(Option_t *)
 {
-// delete the TObjArray pointing to referenced objects
-// this function is called by TFile::Close("R")
+   // delete the TObjArray pointing to referenced objects
+   // this function is called by TFile::Close("R")
    
    delete fObjects; fObjects = 0;
 }
@@ -168,7 +175,7 @@ Int_t TProcessID::DecrementCount()
 //______________________________________________________________________________
 TProcessID *TProcessID::GetProcessID(UShort_t pid)
 {
-// static function returning a pointer to TProcessID number pid in fgPIDs
+   // static function returning a pointer to TProcessID number pid in fgPIDs
 
    return (TProcessID*)fgPIDs->At(pid);
 }
@@ -176,8 +183,10 @@ TProcessID *TProcessID::GetProcessID(UShort_t pid)
 //______________________________________________________________________________
 TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
 {
-// static function returning a pointer to TProcessID with its pid
-// encoded in the highest byte of uid
+   // static function returning a pointer to TProcessID with its pid
+   // encoded in the highest byte of uid
+
+   R__LOCKGUARD2(TROOT::fgMutex);
 
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
@@ -192,7 +201,7 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
 //______________________________________________________________________________
 TProcessID *TProcessID::GetSessionProcessID()
 {
-// static function returning the pointer to the session TProcessID
+   // static function returning the pointer to the session TProcessID
 
    return fgPID;
 }
@@ -209,8 +218,8 @@ Int_t TProcessID::IncrementCount()
 //______________________________________________________________________________
 UInt_t TProcessID::GetObjectCount()
 {
-// Return the current referenced object count
-// fgNumber is incremented everytime a new object is referenced
+   // Return the current referenced object count
+   // fgNumber is incremented everytime a new object is referenced
 
    return fgNumber;
 }
@@ -232,6 +241,8 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 {
    // static function. return kTRUE if pid is a valid TProcessID
    
+   R__LOCKGUARD2(TROOT::fgMutex);
+
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
    if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
    return kFALSE;
@@ -265,9 +276,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 //______________________________________________________________________________
 TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
 {
-// static function
-
-   //The TProcessID with number pidf is read from file.
+   //The TProcessID with number pidf is read from file. (static function)
    //If the object is not already entered in the gROOT list, it is added.
 
    if (!file) {
@@ -332,8 +341,8 @@ void TProcessID::RecursiveRemove(TObject *obj)
 //______________________________________________________________________________
 void TProcessID::SetObjectCount(UInt_t number)
 {
-// static function to set the current referenced object count
-// fgNumber is incremented everytime a new object is referenced
+   // static function to set the current referenced object count
+   // fgNumber is incremented everytime a new object is referenced
 
    fgNumber = number;
 }
@@ -341,9 +350,9 @@ void TProcessID::SetObjectCount(UInt_t number)
 //______________________________________________________________________________
 UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
 {
-// static function
-// Check if the ProcessID pid is already in the file.
-// if not, add it and return the index  number in the local file list
+   // static function
+   // Check if the ProcessID pid is already in the file.
+   // if not, add it and return the index  number in the local file list
 
    if (!file) return 0;
    TProcessID *pid = pidd;

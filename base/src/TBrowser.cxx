@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.10 2003/01/20 15:33:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.11 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TTimer.h"
 #include "TContextMenu.h"
 #include "TInterpreter.h"
+#include "TVirtualMutex.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -214,6 +215,7 @@ TBrowser::~TBrowser()
 {
    // Delete the browser.
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
    delete fContextMenu;
    delete fTimer;
@@ -260,6 +262,7 @@ void TBrowser::Create(TObject *obj)
    fTimer = new TBrowserTimer(this);
    gSystem->AddTimer(fTimer);
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfBrowsers()->Add(this);
 
    // Get the list of globals

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.43 2005/05/19 14:56:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.44 2005/06/03 14:50:10 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -48,14 +48,19 @@ class TFolder;
 class TPluginManager;
 class TProcessUUID;
 class TClassGenerator;
+class TVirtualMutex;
 
 namespace ROOT {
    class TMapTypeToTClass;
 }
 
+
 class TROOT : public TDirectory {
 
 friend class TCint;
+
+public:
+   static TVirtualMutex *fgMutex;         //Potection of concurrent gROOT access
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads

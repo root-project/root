@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.149 2005/06/03 14:50:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.150 2005/06/22 17:01:55 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -107,6 +107,7 @@
 #include "TVirtualUtilHist.h"
 #include "TAuthenticate.h"
 #include "TVirtualProof.h"
+#include "TVirtualMutex.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -118,6 +119,9 @@ namespace std {} using namespace std;
 #elif defined(R__VMS)
 #include "TVmsSystem.h"
 #endif
+
+// Mutex for protection of concurrent gROOT access
+TVirtualMutex* TROOT::fgMutex = 0;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
 //______________________________________________________________________________
@@ -169,6 +173,8 @@ static void CleanUpROOTAtExit()
    // Clean up at program termination before global objects go out of scope.
 
    if (gROOT) {
+      R__LOCKGUARD(TROOT::fgMutex);
+
       if (gROOT->GetListOfFiles())
          gROOT->GetListOfFiles()->Delete("slow");
       if (gROOT->GetListOfSockets())
@@ -302,6 +308,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
+
+   R__LOCKGUARD2(TROOT::fgMutex);
 
    gROOT      = this;
    gDirectory = 0;
@@ -490,7 +498,7 @@ TROOT::~TROOT()
 
    if (gROOT == this) {
 
-      fgRootInit = kFALSE;
+      R__LOCKGUARD2(TROOT::fgMutex);
 
       // Return when error occured in TCint, i.e. when setup file(s) are
       // out of date
@@ -547,6 +555,7 @@ TROOT::~TROOT()
       TStorage::PrintStatistics();
 
       gROOT = 0;
+      fgRootInit = kFALSE;
    }
 }
 

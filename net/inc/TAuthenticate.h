@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.27 2004/11/11 18:56:18 rdm Exp $
+// @(#)root/net:$Name: v4-04-02 $:$Id: TAuthenticate.h,v 1.28 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -50,6 +50,7 @@ class THostAuth;
 class TProofServ;
 class TSocket;
 class TSecContext;
+class TVirtualMutex;
 
 typedef Int_t (*CheckSecCtx_t)(const char *subj, TSecContext *ctx);
 typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
@@ -65,6 +66,8 @@ friend class TSocket;
 
 public:
    enum ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
+
+   static TVirtualMutex *fgMutex; //mutex for socket and auth related protection
 
 private:
    TString      fDetails;     // logon details (method dependent ...)
@@ -130,6 +133,7 @@ private:
    static Bool_t         fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
    static Int_t          fgLastError;      // Last error code processed by AuthError()
    static Int_t          fgAuthTO;         // if > 0, timeout in sec
+   static Int_t          fgProcessID;      // ID of the main thread as unique identifier
 
    static Bool_t         CheckHost(const char *Host, const char *host);
    static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);

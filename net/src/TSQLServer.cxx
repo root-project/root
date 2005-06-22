@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.5 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.cxx,v 1.6 2003/06/26 13:53:21 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TSQLServer.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
-
+#include "TVirtualMutex.h"
 
 ClassImp(TSQLServer)
 
@@ -44,6 +44,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    // for the selected system will be loaded. When the connection could not
    // be opened 0 is returned.
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    TPluginHandler *h;
    TSQLServer *serv = 0;
 

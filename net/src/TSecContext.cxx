@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.4 2004/05/30 16:15:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.5 2005/02/18 14:44:40 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TUrl.h"
 #include "TROOT.h"
 #include "TError.h"
+#include "TVirtualMutex.h"
 
 ClassImp(TSecContext)
 ClassImp(TSecContextCleanup)
@@ -60,9 +61,10 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
    fUser    = user;
 
    // Keep official list updated with active TSecContexts
-   if (fOffSet > -1)
+   if (fOffSet > -1) {
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSecContexts()->Add(this);
-
+   }
 }
 
 //______________________________________________________________________________
@@ -94,8 +96,10 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
    fUser    = TUrl(url).GetUser();
 
    // Keep official list updated with active TSecContexts
-   if (fOffSet > -1)
+   if (fOffSet > -1) {
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSecContexts()->Add(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -169,6 +173,7 @@ void TSecContext::DeActivate(Option_t *Opt)
 
    Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
    if (remove && fOffSet > -1){
+      R__LOCKGUARD2(TROOT::fgMutex);
       // Remove from the global list
       gROOT->GetListOfSecContexts()->Remove(this);
       // Remove also from local lists in THostAuth objects
@@ -283,6 +288,8 @@ const char *TSecContext::AsString() const
    // security context
 
    static TString thestring(256);
+
+   R__LOCKGUARD2(TString::fgMutex);
 
    if (fOffSet > -1) {
       if (fDetails.BeginsWith("AFS"))

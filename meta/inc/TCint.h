@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.23 2004/08/13 17:00:29 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.24 2005/01/18 21:04:17 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -45,6 +45,9 @@ class G__ClassInfo;
 class TMethod;
 class TObjArray;
 class TEnv;
+class TVirtualMutex;
+
+R__EXTERN TVirtualMutex *gCINTMutex; 
 
 class TCint : public TInterpreter {
 

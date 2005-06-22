@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.35 2005/04/30 06:44:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.36 2005/05/18 12:31:08 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -46,11 +46,12 @@
 namespace std { using ::string; }
 #endif
 
-
 class TRegexp;
 class TString;
 class TSubString;
 class TObjArray;
+class TVirtualMutex;
+
 
 TString operator+(const TString &s1, const TString &s2);
 TString operator+(const TString &s,  const char *cs);
@@ -155,6 +156,7 @@ public:
    // For detecting null substrings
    Bool_t        IsNull() const          { return fBegin == kNPOS; }
    int           operator!() const       { return fBegin == kNPOS; }
+
 };
 
 
@@ -205,6 +207,8 @@ public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
 
+   static TVirtualMutex* fgMutex;  // Mutex for static buffers
+
    TString();                       // Null string
    TString(Ssiz_t ic);              // Suggested capacity
    TString(const TString &s)        // Copy constructor
@@ -214,9 +218,7 @@ public:
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
    TString(char c) { InitChar(c); }
-
    TString(char c, Ssiz_t s);
-
    TString(const TSubString &sub);
 
    virtual ~TString();
@@ -278,8 +280,8 @@ public:
    TString     &Append(const TString &s);
    TString     &Append(const TString &s, Ssiz_t n);
    TString     &Append(char c, Ssiz_t rep = 1);   // Append c rep times
-   Int_t        Atoi();
-   Double_t     Atof();
+   Int_t        Atoi() const;
+   Double_t     Atof() const;
    Bool_t       BeginsWith(const char *s,      ECaseCompare cmp = kExact) const;
    Bool_t       BeginsWith(const TString &pat, ECaseCompare cmp = kExact) const;
    Ssiz_t       Capacity() const         { return Pref()->Capacity(); }
@@ -404,10 +406,10 @@ extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 inline void TStringRef::UnLink()
 { if (RemoveReference() == 0) delete [] (char*)this; }
 
-inline Int_t TString::Atoi()
+inline Int_t TString::Atoi() const
 { return atoi(fData); }
 
-inline Double_t TString::Atof()
+inline Double_t TString::Atof() const
 { return atof(fData); }
 
 inline void TString::Cow()

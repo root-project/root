@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.5 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.6 2004/12/10 22:27:21 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -52,6 +52,8 @@ public:
    Int_t  TryLock();
    Int_t  UnLock();
    Int_t  CleanUp();
+
+   TVirtualMutex* Factory(Bool_t recursive = kFALSE);
 
    ClassDef(TMutex,0)  // Mutex lock class
 };

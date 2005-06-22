@@ -1,4 +1,5 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.102 2005/04/11 15:55:47 brun Exp $
+
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.103 2005/06/06 12:46:01 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -94,7 +95,6 @@ extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, v
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
 const char *fantomline = "TRint::EndOfLineAction();";
-
 
 ClassImp(TCint)
 
@@ -263,7 +263,7 @@ Int_t TCint::Load(const char *filename, Bool_t system)
    // Load a library file in CINT's memory.
    // if 'system' is true, the library is never unloaded.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    int i;
    if (!system)
       i = G__loadfile(filename);
@@ -488,7 +488,7 @@ void TCint::UpdateListOfGlobals()
    // Update the list of pointers to global variables. This function
    // is called by TROOT::GetListOfGlobals().
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__DataMemberInfo t, *a;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -511,7 +511,7 @@ void TCint::UpdateListOfGlobalFunctions()
    // Update the list of pointers to global functions. This function
    // is called by TROOT::GetListOfGlobalFunctions().
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__MethodInfo t, *a;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -540,7 +540,7 @@ void TCint::UpdateListOfTypes()
    // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__TypedefInfo t;
    while (t.Next()) {
       if (gROOT && gROOT->fTypes && t.IsValid() && t.Name()) {
@@ -560,7 +560,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 {
    // Set pointer to CINT's G__ClassInfo in TClass.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (!cl->fClassInfo || reload) {
 
       delete cl->fClassInfo; cl->fClassInfo = 0;
@@ -653,7 +653,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 {
    // Create list of pointers to base class(es) for TClass cl.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (!cl->fBase) {
 
       cl->fBase = new TList;
@@ -674,7 +674,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 {
    // Create list of pointers to data members for TClass cl.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (!cl->fData) {
 
       cl->fData = new TList;
@@ -695,7 +695,7 @@ void TCint::CreateListOfMethods(TClass *cl)
 {
    // Create list of pointers to methods for TClass cl.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (!cl->fMethod) {
 
       cl->fMethod = new TList;
@@ -716,7 +716,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 {
    // Create list of pointers to method arguments for TMethod m.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (!m->fMethodArgs) {
 
       m->fMethodArgs = new TList;
@@ -740,7 +740,7 @@ TString TCint::GetMangledName(TClass *cl, const char *method,
    // params (params is a string of actual arguments, not formal ones). If the
    // class is 0 the global function list will be searched.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__CallFunc  func;
    Long_t       offset;
 
@@ -761,7 +761,7 @@ TString TCint::GetMangledNameWithPrototype(TClass *cl, const char *method,
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    Long_t             offset;
 
    if (cl)
@@ -778,7 +778,7 @@ void *TCint::GetInterfaceMethod(TClass *cl, const char *method,
    // parameters params (params is a string of actual arguments, not formal
    // ones). If the class is 0 the global function list will be searched.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__CallFunc  func;
    Long_t       offset;
 
@@ -799,7 +799,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
    // function list will be searched.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__InterfaceMethod f;
    Long_t             offset;
 
@@ -835,7 +835,7 @@ void TCint::Execute(const char *function, const char *params, int *error)
 {
    // Execute a global function with arguments params.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__CallFunc  func;
    G__ClassInfo cl;
    Long_t       offset;
@@ -854,7 +854,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
 {
    // Execute a method from class cl with arguments params.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void       *address;
    long        offset;
    G__CallFunc func;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.138 2005/05/31 13:57:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.139 2005/06/10 18:01:36 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TWebFile.h"
 #include "TArchiveFile.h"
 #include "TEnv.h"
+#include "TVirtualMutex.h"
 
 
 TFile *gFile;                 //Pointer to current file
@@ -399,6 +400,7 @@ TFile::~TFile()
    SafeDelete(fCache);
    SafeDelete(fArchive);
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
@@ -593,11 +595,13 @@ void TFile::Init(Bool_t create)
          }
       }
    }
-   gROOT->GetListOfFiles()->Add(this);
-   gROOT->GetUUIDs()->AddUUID(fUUID,this);
+
+   {   
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfFiles()->Add(this);
+      gROOT->GetUUIDs()->AddUUID(fUUID,this);
 
    // Create StreamerInfo index
-   {
       Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
       if (lenIndex < 5000) lenIndex = 5000;
       fClassIndex = new TArrayC(lenIndex);
@@ -706,6 +710,7 @@ void TFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfFiles()->Remove(this);
 
    TCollection::EmptyGarbageCollection();
@@ -765,7 +770,7 @@ void TFile::DrawMap(const char *keys, Option_t *option)
 //______________________________________________________________________________
 void TFile::Flush()
 {
-   // Synchornize a file's in-core and on-disk states.
+   // Synchronize a file's in-core and on-disk states.
 
    if (IsOpen() && fWritable) {
       if (SysSync(fD) < 0) {

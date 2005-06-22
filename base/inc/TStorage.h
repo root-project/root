@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.5 2002/11/15 13:26:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.6 2005/04/07 14:43:35 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,14 +33,14 @@ typedef void *(*ReAllocCFun_t)(void*, size_t, size_t);
 class TStorage {
 
 private:
-   static ULong_t        fgHeapBegin;      // begin address of heap
-   static ULong_t        fgHeapEnd;        // end address of heap
-   static size_t         fgMaxBlockSize;   // largest block allocated
-   static FreeHookFun_t  fgFreeHook;       // function called on free
-   static void          *fgFreeHookData;   // data used by this function
-   static ReAllocFun_t   fgReAllocHook;    // custom ReAlloc
-   static ReAllocCFun_t  fgReAllocCHook;   // custom ReAlloc with length check
-   static Bool_t         fgHasCustomNewDelete; // true if using ROOT's new/delete
+   static ULong_t       fgHeapBegin;          // begin address of heap
+   static ULong_t       fgHeapEnd;            // end address of heap
+   static size_t        fgMaxBlockSize;       // largest block allocated
+   static FreeHookFun_t fgFreeHook;           // function called on free
+   static void         *fgFreeHookData;       // data used by this function
+   static ReAllocFun_t  fgReAllocHook;        // custom ReAlloc
+   static ReAllocCFun_t fgReAllocCHook;       // custom ReAlloc with length check
+   static Bool_t        fgHasCustomNewDelete; // true if using ROOT's new/delete
 
 public:
    virtual ~TStorage() { }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.58 2005/06/03 07:37:05 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.59 2005/06/07 20:28:32 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TProofPlayer.h"
-
 #include "THashList.h"
 #include "TEventIter.h"
 #include "TVirtualPacketizer.h"
@@ -26,6 +25,7 @@
 #include "TSocket.h"
 #include "TProofServ.h"
 #include "TProof.h"
+#include "TProofSuperMaster.h"
 #include "TSlave.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -239,7 +239,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
 
-   HandleTimer(0);
+   if (fFeedbackTimer != 0) HandleTimer(0);
 
    StopFeedback();
 

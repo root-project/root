@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.34 2005/02/11 18:40:09 rdm Exp $
+// @(#)root/thread:$Name: v4-04-02 $:$Id: TThread.cxx,v 1.35 2005/04/28 16:14:28 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -227,17 +227,8 @@ void TThread::Init()
    gThreadTsd  = TThread::Tsd;
    gThreadXAR  = TThread::XARequest;
 
-   // Create the global mutexes
-   if (!gContainerMutex)
-      gContainerMutex = new TMutex(kTRUE);
-   if (!gAllocMutex)
-      gAllocMutex = new TMutex(kTRUE);
-   if (!gCINTMutex)
-      gCINTMutex = new TMutex(kTRUE);
-   if (!gErrPrintMutex)
-      gErrPrintMutex = new TMutex(kTRUE);
-   if (!gAuthMutex)
-      gAuthMutex = new TMutex(kTRUE);
+   // Create the single global mutex
+   TVirtualMutex::fgMutex = new TMutex(kTRUE);
 }
 
 //______________________________________________________________________________

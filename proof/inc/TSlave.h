@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.13 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.14 2005/02/08 22:40:36 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -30,12 +30,14 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TSocket
-#include "TSocket.h"
+#ifndef ROOT_TSecContext
+#include "TSecContext.h"
 #endif
 
 class TFileHandler;
 class TProof;
+class TSocket;
+
 
 class TSlave : public TObject {
 

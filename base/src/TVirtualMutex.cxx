@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.cxx,v 1.3 2004/12/15 13:15:14 rdm Exp $
+// @(#)root/base:$Name: v4-04-02 $:$Id: TVirtualMutex.cxx,v 1.4 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   14/02/2002
 
 /*************************************************************************
@@ -37,9 +37,8 @@
 ClassImp(TVirtualMutex)
 ClassImp(TLockGuard)
 
-
-TVirtualMutex *gContainerMutex = 0;
-TVirtualMutex *gAllocMutex = 0;
-TVirtualMutex *gCINTMutex = 0;
-TVirtualMutex *gErrPrintMutex = 0;
-TVirtualMutex *gAuthMutex = 0;
+// Global mutex set in TThread::Init protecting creation
+// of other (preferrably local) mutexes. Note that in this
+// concept gGlobalMutex must be used in TStorage to prevent 
+// lockup of the system (see TMutex::Factory)
+TVirtualMutex *TVirtualMutex::fgMutex = 0;

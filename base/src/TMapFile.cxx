@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.14 2005/02/28 17:28:11 rdm Exp $
+// @(#)root/base:$Name: v4-04-02 $:$Id: TMapFile.cxx,v 1.15 2005/04/18 16:05:48 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -95,6 +95,7 @@
 #include "TSystem.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TVirtualMutex.h"
 
 #if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
@@ -393,6 +394,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       // store shadow mapfile (it contains the real fFd in case map
       // is not writable)
       fVersion  = -1;   // make this the shadow map file
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    } else {
@@ -425,14 +427,18 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
       // store shadow mapfile
       fVersion  = -1;   // make this the shadow map file
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    }
 
    mapfil->InitDirectory();
-   gROOT->GetListOfMappedFiles()->AddFirst(mapfil);
+   {   
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfMappedFiles()->AddFirst(mapfil);
+   }
 
-   delete [] cleanup;
+   if (cleanup) delete [] cleanup;
 
    newMapFile = mapfil;
 
@@ -884,8 +890,11 @@ void TMapFile::Close(Option_t *option)
       return;
    }
 
-   gROOT->GetListOfMappedFiles()->Remove(shadow);
-   gROOT->GetListOfMappedFiles()->Remove(this);
+   {
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfMappedFiles()->Remove(shadow);
+      gROOT->GetListOfMappedFiles()->Remove(this);
+   }
 
    if (shadow->fWritable) {
       fWritable = kFALSE;
@@ -918,6 +927,7 @@ TMapFile *TMapFile::FindShadowMapFile()
 {
    // Returns shadow map file.
 
+   R__LOCKGUARD2(TROOT::fgMutex);
    TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.3 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.4 2005/03/08 09:19:18 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 
 
 class TList;
-class TObjString;
+//class TObjString;
 
 
 //------------------------------------------------------------------------

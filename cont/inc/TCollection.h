@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.15 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.16 2005/03/24 07:12:07 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@
 
 class TClass;
 class TObjectTable;
-
+class TVirtualMutex;
 
 const Bool_t kIterForward  = kTRUE;
 const Bool_t kIterBackward = !kIterForward;
@@ -50,14 +50,16 @@ private:
    static Bool_t        fgEmptyingGarbage;    //used by garbage collector
    static Int_t         fgGarbageStack;       //used by garbage collector
 
-   TCollection(const TCollection &);    // private and not-implemented, collections
-   void operator=(const TCollection &); // are too sensitive to be automatically copied
+   TCollection(const TCollection &);    //private and not-implemented, collections
+   void operator=(const TCollection &); //are too sensitive to be automatically copied
 
 protected:
    enum { kIsOwner = BIT(14) };
 
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection
+
+   static TVirtualMutex *fgMutex; //mutex for collection objects
 
    TCollection() : fSize(0) { }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.13 2004/08/31 09:36:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.14 2005/03/18 22:33:16 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -83,8 +83,7 @@ struct tm
 typedef struct timespec timespec_t;
 typedef struct tm       tm_t;
 
-
-
+class TVirtualMutex;
 class TTimeStamp;
 ostream &operator<<(ostream &os,  const TTimeStamp &ts);
 TBuffer &operator<<(TBuffer &buf, const TTimeStamp &ts);
@@ -107,8 +106,9 @@ friend Bool_t operator> (const TTimeStamp &lhs, const TTimeStamp &rhs);
 friend Bool_t operator>=(const TTimeStamp &lhs, const TTimeStamp &rhs);
 
 private:
-   Int_t  fSec;           // seconds
-   Int_t  fNanoSec;       // nanoseconds
+   Int_t  fSec;      // seconds
+   Int_t  fNanoSec;  // nanoseconds
+   static TVirtualMutex *fgMutex;  //local mutex
 
    void   NormalizeNanoSec();
 

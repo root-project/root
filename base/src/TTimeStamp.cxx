@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.17 2005/05/27 08:59:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.18 2005/05/27 10:17:11 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -46,11 +46,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 #endif
-
+#include "TVirtualMutex.h"
 
 ClassImp(TTimeStamp);
 
-const Int_t kNsPerSec = 1000000000;
+
+TVirtualMutex *TTimeStamp::fgMutex = 0; // local mutex
 
 //______________________________________________________________________________
 ostream& operator<<(ostream& os, const TTimeStamp& ts)
@@ -177,6 +178,9 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
    static Char_t formatted2[nbuffers][64]; // nanosec field substituted
 
    static Int_t ibuffer = nbuffers;
+
+   R__LOCKGUARD2(fgMutex);
+
    ibuffer = (ibuffer+1)%nbuffers; // each call moves to next buffer
 
    TString opt = option;
@@ -468,8 +472,10 @@ void TTimeStamp::Set()
    fNanoSec = tp.tv_usec*1000;
 #endif
 
-   // ?? what to do to make it thread safe?
    static Int_t sec = 0, nsec = 0, fake_ns = 0;
+
+   R__LOCKGUARD2(fgMutex);
+
    if (fSec == sec && fNanoSec == nsec)
       fNanoSec += ++fake_ns;
    else {
@@ -620,6 +626,7 @@ void TTimeStamp::NormalizeNanoSec()
 {
    // Ensure that the fNanoSec field is in range [0,99999999].
 
+   const Int_t kNsPerSec = 1000000000;
    // deal with negative values
    while (fNanoSec < 0) {
       fNanoSec += kNsPerSec;

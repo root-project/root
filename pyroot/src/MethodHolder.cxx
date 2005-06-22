@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.35 2005/06/06 15:08:40 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.36 2005/06/17 19:14:53 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -17,10 +17,11 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TClassEdit.h"
+#include "TVirtualMutex.h"
 
 // CINT
 #include "Api.h"
-#include "TVirtualMutex.h"
+#include "TCint.h"
 
 // Standard
 #include <assert.h>
@@ -28,7 +29,6 @@
 #include <exception>
 #include <string>
 #include <Riostream.h>
-
 
 //- local helpers ------------------------------------------------------------
 namespace {
@@ -338,7 +338,7 @@ bool PyROOT::MethodHolder::SetMethodArgs( PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::MethodHolder::Execute( void* self )
 {
-   R__LOCKGUARD( gCINTMutex );
+   R__LOCKGUARD2(gCINTMutex);
    TempLevelGuard g;
 
    PyObject* result = 0;

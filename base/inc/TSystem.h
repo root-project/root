@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.46 2004/12/15 16:04:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.47 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 
 class TSeqCollection;
 class TFdSet;
-
+class TVirtualMutex;
 
 enum EAccessMode {
    kFileExists        = 0,
@@ -230,6 +230,8 @@ protected:
    TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
+
+   static TVirtualMutex *fgMutex;      //Local mutex for protection of static variables
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);

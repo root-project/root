@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.9 2004/10/05 23:01:19 rdm Exp $
+// @(#)root/base:$Name: v4-04-02 $:$Id: TError.cxx,v 1.10 2005/04/28 16:14:27 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 // Warning(), Error(), SysError() and Fatal(). They all take a          //
 // location string (where the error happened) and a printf style format //
 // string plus vararg's. In the end these functions call an             //
-// errorhanlder function. By default DefaultErrorHandler() is used.     //
+// errorhandler function. By default DefaultErrorHandler() is used.     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -27,39 +27,45 @@
 
 #include <stdio.h>
 #include "snprintf.h"
-
+#include "Riostream.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TString.h"
+#include "TEnv.h"
 #include "TVirtualMutex.h"
 
-int gErrorIgnoreLevel = 0;
-int gErrorAbortLevel  = kSysError+1;
+// Mutex for error and error format protection
+// (exported to be used for similar cases in other classes)
 
-const char *kAssertMsg = "%s violated at line %d of `%s'";
-const char *kCheckMsg  = "%s not true at line %d of `%s'";
+TVirtualMutex *gErrorMutex = 0;
+
+Int_t gErrorIgnoreLevel = kUnset;
+Int_t gErrorAbortLevel  = kSysError+1;
+
+const Char_t *kAssertMsg = "%s violated at line %d of `%s'";
+const Char_t *kCheckMsg  = "%s not true at line %d of `%s'";
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
 
 //______________________________________________________________________________
-static void DebugPrint(const char *fmt, ...)
+static void DebugPrint(const Char_t *fmt, ...)
 {
    // Print debugging message to stderr and, on Windows, to the system debugger.
 
    static Int_t buf_size = 2048;
-   static char *buf = 0;
+   static Char_t *buf = 0;
 
    va_list arg_ptr;
    va_start(arg_ptr, fmt);
 
-   R__LOCKGUARD(gErrPrintMutex);
+   R__LOCKGUARD2(gErrorMutex);
 
 again:
    if (!buf)
       buf = new char[buf_size];
 
-   int n = vsnprintf(buf, buf_size, fmt, arg_ptr);
+   Int_t n = vsnprintf(buf, buf_size, fmt, arg_ptr);
 
    if (n == -1 || n >= buf_size) {
       buf_size *= 2;
@@ -96,15 +102,36 @@ ErrorHandlerFunc_t GetErrorHandler()
 }
 
 //______________________________________________________________________________
-void DefaultErrorHandler(int level, Bool_t abort, const char *location, const char *msg)
+void DefaultErrorHandler(Int_t level, Bool_t abort, const Char_t *location, const Char_t *msg)
 {
    // The default error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
 
+   if (gErrorIgnoreLevel == kUnset) {
+      R__LOCKGUARD2(gErrorMutex);
+
+      gErrorIgnoreLevel = 0;
+      if (gEnv) {
+         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
+         if (!level.CompareTo("Info",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kInfo;
+	 else if (!level.CompareTo("Warning",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kWarning;
+	 else if (!level.CompareTo("Error",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kError;
+	 else if (!level.CompareTo("Break",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kBreak;
+	 else if (!level.CompareTo("SysError",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kSysError;
+	 else if (!level.CompareTo("Fatal",TString::kIgnoreCase)) 
+	    gErrorIgnoreLevel = kFatal;
+      }
+   }
+
    if (level < gErrorIgnoreLevel)
       return;
 
-   const char *type = 0;
+   const Char_t *type = 0;
 
    if (level >= kInfo)
       type = "Info";
@@ -139,20 +166,22 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
 }
 
 //______________________________________________________________________________
-void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
+void ErrorHandler(Int_t level, const Char_t *location, const Char_t *fmt, va_list ap)
 {
    // General error handler function. It calls the user set error handler.
 
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
+   R__LOCKGUARD2(gErrorMutex);
 
-   char *bp;
+   static Int_t buf_size = 2048;
+   static Char_t *buf = 0;
+
+   Char_t *bp;
 
 again:
    if (!buf)
       buf = new char[buf_size];
 
-   int n = vsnprintf(buf, buf_size, fmt, ap);
+   Int_t n = vsnprintf(buf, buf_size, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buf_size) {
@@ -173,7 +202,7 @@ again:
 }
 
 //______________________________________________________________________________
-void AbstractMethod(const char *method)
+void AbstractMethod(const Char_t *method)
 {
    // This function can be used in abstract base classes in case one does
    // not want to make the class a "real" (in C++ sense) ABC. If this
@@ -184,7 +213,7 @@ void AbstractMethod(const char *method)
 }
 
 //______________________________________________________________________________
-void MayNotUse(const char *method)
+void MayNotUse(const Char_t *method)
 {
    // This function can be used in classes that should override a certain
    // function, but in the inherited class the function makes no sense.
@@ -193,7 +222,7 @@ void MayNotUse(const char *method)
 }
 
 //______________________________________________________________________________
-void Error(const char *location, const char *va_(fmt), ...)
+void Error(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function in case an error occured.
 
@@ -204,7 +233,7 @@ void Error(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void SysError(const char *location, const char *va_(fmt), ...)
+void SysError(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function in case a system (OS or GUI) related error occured.
 
@@ -215,7 +244,7 @@ void SysError(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Break(const char *location, const char *va_(fmt), ...)
+void Break(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function in case an error occured.
 
@@ -226,7 +255,7 @@ void Break(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Info(const char *location, const char *va_(fmt), ...)
+void Info(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function for informational messages.
 
@@ -237,7 +266,7 @@ void Info(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Warning(const char *location, const char *va_(fmt), ...)
+void Warning(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function in warning situations.
 
@@ -248,7 +277,7 @@ void Warning(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Fatal(const char *location, const char *va_(fmt), ...)
+void Fatal(const Char_t *location, const Char_t *va_(fmt), ...)
 {
    // Use this function in case of a fatal error. It will abort the program.
 

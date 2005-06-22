@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.4 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.5 2005/06/10 17:49:47 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TPServerSocket.h"
 #include "TPSocket.h"
 #include "TROOT.h"
-
+#include "TVirtualMutex.h"
 
 ClassImp(TPServerSocket)
 
@@ -125,6 +125,7 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
       for (int i = 0; i < size; i++) {
          pSockets[i] = new TSocket(setupSocket->GetInetAddress(),
                                            port, fTcpWindowSize);
+	 R__LOCKGUARD2(TROOT::fgMutex);
          gROOT->GetListOfSockets()->Remove(pSockets[i]);
       }
 

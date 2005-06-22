@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.63 2005/05/19 17:28:15 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.64 2005/05/31 13:28:32 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TRegexp.h"
 #include "TProcessUUID.h"
+#include "TVirtualMutex.h"
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
 
@@ -104,6 +105,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    }
    TClass *cl = IsA();
    if (strlen(classname) != 0) cl = gROOT->GetClass(classname);
+
    if (!cl) {
       Error("TDirectory","Invalid class name: %s",classname);
       return;
@@ -121,6 +123,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    Int_t cycle = gDirectory->AppendKey(key);
    key->WriteFile(cycle);
    fModified = kFALSE;
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
@@ -308,6 +311,7 @@ Bool_t TDirectory::cd1(const char *apath)
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
+      R__LOCKGUARD2(TROOT::fgMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -428,6 +432,7 @@ Bool_t TDirectory::Cd1(const char *apath)
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
+      R__LOCKGUARD2(TROOT::fgMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -1490,6 +1495,7 @@ void TDirectory::Streamer(TBuffer &b)
       } else if (v > 2) {
          fUUID.Streamer(b);
       }
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
    } else {

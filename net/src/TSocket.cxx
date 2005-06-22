@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.29 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.30 2005/06/10 17:49:47 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -31,10 +31,11 @@
 #include "TROOT.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TString.h"
+#include "TVirtualMutex.h"
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
-
 
 ClassImp(TSocket)
 
@@ -72,7 +73,11 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                         tcpwindowsize);
-      if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
+
+      if (fSocket != -1) {
+    	 R__LOCKGUARD2(TROOT::fgMutex);
+	 gROOT->GetListOfSockets()->Add(this);
+      }
    } else
       fSocket = -1;
 
@@ -114,8 +119,10 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
                                      tcpwindowsize);
    if (fSocket == -1)
       fAddress.fPort = -1;
-   else
+   else {
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Add(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -152,9 +159,10 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-      if (fSocket != -1)
+      if (fSocket != -1) {
+         R__LOCKGUARD2(TROOT::fgMutex);
          gROOT->GetListOfSockets()->Add(this);
-
+      }
    } else
       fSocket = -1;
 }
@@ -201,6 +209,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    if (fSocket == -1) {
       fAddress.fPort = -1;
    } else {
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -223,6 +232,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -244,7 +254,10 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
 
-   if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
+   if (fSocket != -1) {
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfSockets()->Add(this);
+   }
 }
 
 //______________________________________________________________________________
@@ -273,6 +286,7 @@ void TSocket::Close(Option_t *option)
 
    if (fSocket != -1) {
       gSystem->CloseConnection(fSocket, force);
+      R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;
@@ -966,6 +980,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size,
    // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful.
 
+   R__LOCKGUARD2(TAuthenticate::fgMutex);
+
    // Url to be passed to choosen constructor
    TString eurl(url);
 
@@ -1104,6 +1120,8 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //
    // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful.
+
+   R__LOCKGUARD2(TAuthenticate::fgMutex);
 
    // Extended url to be passed to base call
    TString eurl;

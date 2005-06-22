@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.18 2004/04/15 10:13:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.19 2005/03/13 15:05:31 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -35,11 +35,12 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "THashTable.h"
-
+#include "TCint.h"
 
 ClassImpQ(TQConnection)
 
-char *gTQSlotParams;          // used to pass string parameter
+char *gTQSlotParams; // used to pass string parameter
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -55,7 +56,6 @@ protected:
    Long_t         fOffset;    // offset added to object pointer
    TString        fName;      // full name of method
    Int_t          fExecuting; // true if one of this slot's ExecuteMethod methods is being called
-
 public:
    TQSlot(TClass *cl, const char *method, const char *funcname);
    TQSlot(const char *class_name, const char *funcname);
@@ -119,7 +119,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc = new G__CallFunc;
 
    // initiate class method (function) with proto
@@ -183,7 +183,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc = new G__CallFunc;
 
    G__ClassInfo gcl;
@@ -232,7 +232,7 @@ inline void TQSlot::ExecuteMethod(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fExecuting++;
    fFunc->Exec(address);
    fExecuting--;
@@ -262,7 +262,7 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
    }
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
 
    fFunc->ResetArg();
 
@@ -324,7 +324,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -342,7 +342,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -360,7 +360,7 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -377,7 +377,7 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
    // ExecuteMethod the method for the specified object and text param.
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    gTQSlotParams = (char*)param;
    fFunc->SetArgs("gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -400,7 +400,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
    // of default arguments.
 
    void *address = 0;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    fFunc->SetArgArray(paramArr, nparam);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
@@ -479,7 +479,7 @@ TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
 //______________________________________________________________________________
 void TQSlotPool::Free(TQSlot *slot)
 {
-   // Delete slot if there is no refernce to it.
+   // Delete slot if there is no reference to it.
 
    slot->RemoveReference();  // decrease references to slot
 

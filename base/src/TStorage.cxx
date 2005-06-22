@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.13 2002/11/15 13:26:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.14 2004/12/15 13:15:14 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -184,7 +184,8 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
    if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocHook)(ovp, size);
@@ -217,7 +218,8 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
    if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocCHook)(ovp, size, oldsize);
@@ -257,7 +259,8 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) array of chars. Size and oldsize are
    // in number of chars.
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
    static const char *where = "TStorage::ReAllocChar";
 
@@ -289,7 +292,8 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) array of integers. Size and oldsize are
    // number of integers (not number of bytes).
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
    static const char *where = "TStorage::ReAllocInt";
 
@@ -323,7 +327,8 @@ void *TStorage::ObjectAlloc(size_t sz)
    // TStorage::IsOnHeap() to find out if the just created object is on
    // the heap.
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
    ULong_t space;
 
@@ -361,7 +366,8 @@ void TStorage::ObjectDealloc(void *vp)
 {
    // Used to deallocate a TObject on the heap (via TObject::operator delete()).
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
 #ifndef NOCINT
    // to handle delete with placement called via CINT
@@ -409,7 +415,8 @@ void TStorage::PrintStatistics()
 {
    // Print memory usage statistics.
 
-   R__LOCKGUARD(gAllocMutex);
+   // Needs to be protected by global mutex
+   R__LOCKGUARD(TVirtualMutex::fgMutex);
 
 #if defined(MEM_DEBUG) && defined(MEM_STAT)
 

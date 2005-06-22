@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.36 2005/02/10 12:51:55 rdm Exp $
+// @(#)root/proof:$Name: v4-04-02 $:$Id: TSlave.cxx,v 1.37 2005/02/18 14:27:33 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -28,34 +28,25 @@
 #include "TUrl.h"
 #include "TMessage.h"
 #include "TError.h"
+#include "TVirtualMutex.h"
+#include "TThread.h"
+#include "TSocket.h"
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
-TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
-               const char *image, TProof *proof, ESlaveType stype,
-               const char *workdir, const char *conffile, const char *msd)
+TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
+               const Char_t *image, TProof *proof, ESlaveType stype,
+               const Char_t *workdir, const Char_t *conffile, const Char_t *msd)
+  : fName(host), fImage(image), fProofWorkDir(workdir),
+    fWorkDir(workdir), fUser(), fPort(port),
+    fOrdinal(ord), fPerfIdx(perf), fSecContext(0),
+    fProtocol(0), fSocket(0), fProof(proof),
+    fInput(0), fBytesRead(0), fRealTime(0),
+    fCpuTime(0), fSlaveType(stype), fStatus(0),
+    fParallel(0), fMsd(msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
-
-   fName         = host;
-   fPort         = port;
-   fImage        = image;
-   fWorkDir      = workdir;
-   fProofWorkDir = workdir;
-   fOrdinal      = ord;
-   fPerfIdx      = perf;
-   fSecContext   = 0;
-   fProof        = proof;
-   fSocket       = 0;
-   fInput        = 0;
-   fBytesRead    = 0;
-   fRealTime     = 0.;
-   fCpuTime      = 0.;
-   fSlaveType    = stype;
-   fStatus       = 0;
-   fParallel     = 0;
-   fMsd          = msd;
 
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
@@ -87,173 +78,181 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
    // Open authenticated connection to remote PROOF slave server.
    Int_t wsize = 65536;
    fSocket = TSocket::CreateAuthSocket(hurl, 0, wsize);
-   if (fSocket && fSocket->IsAuthenticated()) {
 
-      // Remove socket from global TROOT socket list. Only the TProof object,
-      // representing all slave sockets, will be added to this list. This will
-      // ensure the correct termination of all proof servers in case the
-      // root session terminates.
-      gROOT->GetListOfSockets()->Remove(fSocket);
-
-      // Fill some useful info
-      fSecContext        = fSocket->GetSecContext();
-      fUser              = fSecContext->GetUser();
-      proof->fSecContext = fSecContext;
-      proof->fUser       = fUser;
-      Int_t ProofdProto  = fSocket->GetRemoteProtocol();
-
-      PDB(kGlobal,3) {
-         fSocket->GetSecContext()->Print("e");
-         Info("TSlave",
-              "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
-      }
-
-      TString Details = fSocket->GetSecContext()->GetDetails();
-      Int_t RemoteOffSet = fSocket->GetSecContext()->GetOffSet();
-
-      char buf[512];
-      fSocket->Recv(buf, sizeof(buf));
-
-      if (strcmp(buf, "Okay")) {
-         Printf("%s", buf);
-         SafeDelete(fSocket);
-      } else {
-         // get back startup message of proofserv (we are now talking with
-         // the real proofserver and not anymore with the proofd front-end)
-
-         Int_t what;
-         if (fSocket->Recv(buf, sizeof(buf), what) <= 0) {
-            Error("TSlave", "failed to receive slave startup message");
-            SafeDelete(fSocket);
-            return;
-         }
-
-         if (what == kMESS_NOTOK) {
-            SafeDelete(fSocket);
-            return;
-         }
-
-         // exchange protocol level between client and master and between
-         // master and slave
-         if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
-            Error("TSlave", "failed to send local PROOF protocol");
-            SafeDelete(fSocket);
-            return;
-         }
-         if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
-            Error("TSlave", "failed to receive remote PROOF protocol");
-            SafeDelete(fSocket);
-            return;
-         }
-         // protocols less than 4 are incompatible
-         if (fProtocol < 4) {
-            Error("TSlave", "incompatible PROOF versions (remote version must be >= 4, is %d)", fProtocol);
-            SafeDelete(fSocket);
-            return;
-         }
-
-         fProof->fProtocol = fProtocol;   // on master this is the protocol
-                                          // of the last slave
-         // send user name to remote host
-         // for UsrPwd and SRP methods send also passwd, rsa encoded
-         TMessage pubkey;
-         TString passwd = "";
-         Bool_t  pwhash = kFALSE;
-         Bool_t  srppwd = kFALSE;
-         Bool_t  sndsrp = kFALSE;
-
-         TPwdCtx *pwdctx = 0;
-         if (RemoteOffSet > -1 &&
-            (fSecContext->IsA("UsrPwd") || fSecContext->IsA("SRP")))
-            pwdctx = (TPwdCtx *)(fSecContext->GetContext());
-
-         if (!fProof->IsMaster()) {
-            if (gEnv->GetValue("Proofd.SendSRPPwd",0))
-               if (RemoteOffSet > -1)
-                  sndsrp = kTRUE;
-         } else {
-            if (fSecContext->IsA("SRP") && pwdctx) {
-               if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
-                  sndsrp = kTRUE;
-            }
-         }
-
-         if ((fSecContext->IsA("UsrPwd") && pwdctx) ||
-             (fSecContext->IsA("SRP")    && sndsrp)) {
-
-            // Send offset to identify remotely the public part of RSA key
-            if (fSocket->Send(RemoteOffSet,kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-               Error("TSlave", "failed to send offset in RSA key");
-               SafeDelete(fSocket);
-               return;
-            }
-
-            if (pwdctx) {
-               passwd = pwdctx->GetPasswd();
-               pwhash = pwdctx->IsPwHash();
-            }
-            srppwd = fSecContext->IsA("SRP");
-
-            if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
-               if (RemoteOffSet > -1)
-                  Warning("TSlave","problems secure-sending pass hash %s",
-                          "- may result in failures");
-               // If non RSA encoding available try passwd inversion
-               if (fSecContext->IsA("UsrPwd")) {
-                  for (int i = 0; i < passwd.Length(); i++) {
-                     char inv = ~passwd(i);
-                     passwd.Replace(i, 1, inv);
-                  }
-                  TMessage mess;
-                  mess << passwd;
-                  if (fSocket->Send(mess) < 0) {
-                     Error("TSlave", "failed to send inverted password");
-                     SafeDelete(fSocket);
-                     return;
-                  }
-               }
-            }
-
-         } else {
-
-            // Send notification of no offset to be sent ...
-            if (fSocket->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-               Error("TSlave", "failed to send no offset notification in RSA key");
-               SafeDelete(fSocket);
-               return;
-            }
-         }
-
-         // Send ordinal (and config) info to slave (or master)
-         TMessage mess;
-         if (stype == kMaster)
-            mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
-         else
-            mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
-
-         if (fSocket->Send(mess) < 0) {
-            Error("TSlave", "failed to send ordinal and config info");
-            SafeDelete(fSocket);
-            return;
-         }
-
-         if (ProofdProto > 6) {
-            // Now we send authentication details to access, e.g., data servers
-            // not in the proof cluster and to be propagated to slaves.
-            // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
-            // line in .rootauthrc
-            if (fSocket->SendHostAuth() < 0) {
-               Error("TSlave", "failed to send HostAuth info");
-               SafeDelete(fSocket);
-               return;
-            }
-         }
-
-         // set some socket options
-         fSocket->SetOption(kNoDelay, 1);
-      }
-   } else
+   if (!fSocket || !fSocket->IsAuthenticated()) {
       SafeDelete(fSocket);
+      return;
+   }
+
+   // Remove socket from global TROOT socket list. Only the TProof object,
+   // representing all slave sockets, will be added to this list. This will
+   // ensure the correct termination of all proof servers in case the
+   // root session terminates.
+
+   {   
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfSockets()->Remove(fSocket);
+   }
+
+   R__LOCKGUARD2(TProof::fgMutex);
+
+   // Fill some useful info
+   fSecContext        = fSocket->GetSecContext();
+   fUser              = fSecContext->GetUser();
+   Int_t ProofdProto  = fSocket->GetRemoteProtocol();
+   Int_t RemoteOffSet = fSocket->GetSecContext()->GetOffSet();
+
+   PDB(kGlobal,3) {
+     fSocket->GetSecContext()->Print("e");
+     Info("TSlave",
+	  "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
+   }
+
+   Char_t buf[512];
+   fSocket->Recv(buf, sizeof(buf));
+   if (strcmp(buf, "Okay")) {
+      Printf("%s", buf);
+      SafeDelete(fSocket);
+      return;
+   } 
+
+   // get back startup message of proofserv (we are now talking with
+   // the real proofserver and not anymore with the proofd front-end)
+   Int_t what;
+   if (fSocket->Recv(buf, sizeof(buf), what) <= 0) {
+      Error("TSlave", "failed to receive slave startup message");
+      SafeDelete(fSocket);
+      return;
+   }
+
+   if (what == kMESS_NOTOK) {
+      SafeDelete(fSocket);
+      return;
+   }
+
+   // exchange protocol level between client and master and between
+   // master and slave
+   if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
+      Error("TSlave", "failed to send local PROOF protocol");
+      SafeDelete(fSocket);
+      return;
+   }
+
+   if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
+      Error("TSlave", "failed to receive remote PROOF protocol");
+      SafeDelete(fSocket);
+      return;
+   }
+
+   // protocols less than 4 are incompatible
+   if (fProtocol < 4) {
+      Error("TSlave", "incompatible PROOF versions (remote version must be >= 4, is %d)", fProtocol);
+      SafeDelete(fSocket);
+      return;
+   }
+	 
+   proof->fProtocol   = fProtocol;   // on master this is the protocol
+   proof->fSecContext = fSecContext;
+   proof->fUser       = fUser;
+                                        // of the last slave
+   // send user name to remote host
+   // for UsrPwd and SRP methods send also passwd, rsa encoded
+   TMessage pubkey;
+   TString passwd = "";
+   Bool_t  pwhash = kFALSE;
+   Bool_t  srppwd = kFALSE;
+   Bool_t  sndsrp = kFALSE;
+   
+   Bool_t upwd = fSecContext->IsA("UsrPwd");
+   Bool_t srp = fSecContext->IsA("SRP");
+
+   TPwdCtx *pwdctx = 0;
+   if (RemoteOffSet > -1 && (upwd || srp))
+      pwdctx = (TPwdCtx *)(fSecContext->GetContext());
+   
+   if (!proof->IsMaster()) {
+      if ((gEnv->GetValue("Proofd.SendSRPPwd",0))
+	  && (RemoteOffSet > -1) )
+	sndsrp = kTRUE;
+   } else {
+      if (srp && pwdctx) {
+	 if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
+	    sndsrp = kTRUE;
+      }
+   }
+
+   if ((upwd && pwdctx) || (srp  && sndsrp)) {
+
+      // Send offset to identify remotely the public part of RSA key
+     if (fSocket->Send(RemoteOffSet,kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+        Error("TSlave", "failed to send offset in RSA key");
+	SafeDelete(fSocket);
+	return;
+     }
+
+     if (pwdctx) {
+        passwd = pwdctx->GetPasswd();
+	pwhash = pwdctx->IsPwHash();
+     }
+
+
+     if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
+        if (RemoteOffSet > -1)
+	   Warning("TSlave","problems secure-sending pass hash %s",
+		  "- may result in failures");
+	// If non RSA encoding available try passwd inversion
+	if (upwd) {
+	   for (int i = 0; i < passwd.Length(); i++) {
+	     Char_t inv = ~passwd(i);
+	     passwd.Replace(i, 1, inv);
+	   }
+	   TMessage mess;
+	   mess << passwd;
+	   if (fSocket->Send(mess) < 0) {
+	      Error("TSlave", "failed to send inverted password");
+	      SafeDelete(fSocket);
+	      return;
+	   }
+	}
+     }
+
+   } else {
+
+     // Send notification of no offset to be sent ...
+     if (fSocket->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+        Error("TSlave", "failed to send no offset notification in RSA key");
+	SafeDelete(fSocket);
+	return;
+     }
+   }
+
+   // Send ordinal (and config) info to slave (or master)
+   TMessage mess;
+   if (stype == kMaster)
+      mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
+   else
+      mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
+
+   if (fSocket->Send(mess) < 0) {
+      Error("TSlave", "failed to send ordinal and config info");
+      SafeDelete(fSocket);
+      return;
+   }
+
+   if (ProofdProto > 6) {
+      // Now we send authentication details to access, e.g., data servers
+     // not in the proof cluster and to be propagated to slaves.
+     // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
+     // line in .rootauthrc
+     if (fSocket->SendHostAuth() < 0) {
+        Error("TSlave", "failed to send HostAuth info");
+	SafeDelete(fSocket);
+	return;
+     }
+   }
+
+   // set some socket options
+   fSocket->SetOption(kNoDelay, 1);
 }
 
 //______________________________________________________________________________
@@ -282,8 +281,8 @@ Int_t TSlave::Compare(const TObject *obj) const
 
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
-   const char *myord = GetOrdinal();
-   const char *otherord = sl->GetOrdinal();
+   const Char_t *myord = GetOrdinal();
+   const Char_t *otherord = sl->GetOrdinal();
    while (myord && otherord) {
       Int_t myval = atoi(myord);
       Int_t otherval = atoi(otherord);

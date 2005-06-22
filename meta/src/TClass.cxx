@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.170 2005/06/08 21:13:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.171 2005/06/09 16:41:15 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -56,10 +56,16 @@
 #include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
+#include "TVirtualMutex.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
 #endif
+
+// Mutex to protect CINT operations
+// (exported to be used for similar cases in related classes)
+
+TVirtualMutex *gCINTMutex = 0; 
 
 Int_t  TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
@@ -901,7 +907,7 @@ void TClass::BuildRealData(void *pointer)
          //      realDataObject->ShowMembers(brd, parent);
          //will not work if the class derives from TObject but not as primary
          //inheritance.
-         R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD2(gCINTMutex);
          G__CallFunc func;
          void *address;
          long  offset;
@@ -1144,7 +1150,7 @@ void TClass::Dump(void *obj) const
       //      realDataObject->ShowMembers(brd, parent);
       //will not work if the class derives from TObject but not as primary
       //inheritance.
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD2(gCINTMutex);
       G__CallFunc func;
       void *address;
       long  offset;
@@ -1995,7 +2001,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    // Need to go through those loops to get the signature from
    // the valued params (i.e. from "1.0,3" to "double,int")
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    G__CallFunc  func;
    long         offset;
    func.SetFunc(GetClassInfo(), name, params, &offset);
@@ -2216,7 +2222,7 @@ void *TClass::New(ENewType defConstructor)
    // Let's try one last time, using the interpreter.
    // [This is very unlikely to work, but who knows!]
    fgCallingNew = defConstructor;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *p = GetClassInfo()->New();
    fgCallingNew = kRealNew;
    if (!p) {
@@ -2260,7 +2266,7 @@ void *TClass::New(void *arena, ENewType defConstructor)
    // Let's try one last time, using the interpreter.
    // [This is very unlikely to work, but who knows!]
    fgCallingNew = defConstructor;
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    void *p = GetClassInfo()->New(arena);
    fgCallingNew = kRealNew;
    if (!p) Error("New with placement", "cannot create object of class %s", GetName());
@@ -2295,7 +2301,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    long  offset;
    TString dtor("~");
    dtor += fClassInfo->Name(); // Use just the name (as opposed to the fully qualified name).
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
    func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset));
    address = (void*)((long)obj + offset);
    if (dtorOnly) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.24 2004/11/22 23:37:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.25 2005/03/13 15:05:31 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include "TOrdCollection.h"
 #include "Varargs.h"
 #include "TClass.h"
+#include "TCint.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TDataType.h"
@@ -73,8 +74,6 @@
 #include "TVirtualMutex.h"
 
 ClassImp(TPluginHandler)
-ClassImp(TPluginManager)
-
 
 //______________________________________________________________________________
 TPluginHandler::TPluginHandler(const char *base, const char *regexp,
@@ -242,7 +241,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       return 0;
    }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD2(gCINTMutex);
 
    fCallEnv->ResetParam();
 
@@ -289,6 +288,8 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
 
    return ret;
 }
+
+ClassImp(TPluginManager)
 
 //______________________________________________________________________________
 TPluginManager::~TPluginManager()

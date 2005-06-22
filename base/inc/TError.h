@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.2 2000/11/21 12:21:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.3 2002/11/18 23:02:19 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,44 +33,48 @@
 #include "Varargs.h"
 #endif
 
-const int kInfo     =   0;
-const int kWarning  =   1000;
-const int kError    =   2000;
-const int kBreak    =   3000;
-const int kSysError =   4000;
-const int kFatal    =   5000;
+class TVirtualMutex;
 
+const Int_t kUnset    =  -1;
+const Int_t kInfo     =   0;
+const Int_t kWarning  =   1000;
+const Int_t kError    =   2000;
+const Int_t kBreak    =   3000;
+const Int_t kSysError =   4000;
+const Int_t kFatal    =   5000;
 
-typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const char *location,
-              const char *msg);
+R__EXTERN TVirtualMutex *gErrorMutex;
 
-extern "C" void ErrorHandler(int level, const char *location, const char *fmt,
+typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const Char_t *location,
+              const Char_t *msg);
+
+extern "C" void ErrorHandler(int level, const Char_t *location, const Char_t *fmt,
                              va_list va);
 
-extern void DefaultErrorHandler(int level, Bool_t abort, const char *location,
-                                const char *msg);
+extern void DefaultErrorHandler(int level, Bool_t abort, const Char_t *location,
+                                const Char_t *msg);
 
 extern ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler);
 extern ErrorHandlerFunc_t GetErrorHandler();
 
-extern void Info(const char *location, const char *msgfmt, ...);
-extern void Warning(const char *location, const char *msgfmt, ...);
-extern void Error(const char *location, const char *msgfmt, ...);
-extern void Break(const char *location, const char *msgfmt, ...);
-extern void SysError(const char *location, const char *msgfmt, ...);
-extern void Fatal(const char *location, const char *msgfmt, ...);
+extern void Info(const Char_t *location, const Char_t *msgfmt, ...);
+extern void Warning(const Char_t *location, const Char_t *msgfmt, ...);
+extern void Error(const Char_t *location, const Char_t *msgfmt, ...);
+extern void Break(const Char_t *location, const Char_t *msgfmt, ...);
+extern void SysError(const Char_t *location, const Char_t *msgfmt, ...);
+extern void Fatal(const Char_t *location, const Char_t *msgfmt, ...);
 
-extern void AbstractMethod(const char *method);
-extern void MayNotUse(const char *method);
+extern void AbstractMethod(const Char_t *method);
+extern void MayNotUse(const Char_t *method);
 
-R__EXTERN const char *kAssertMsg;
-R__EXTERN const char *kCheckMsg;
+R__EXTERN const Char_t *kAssertMsg;
+R__EXTERN const Char_t *kCheckMsg;
 #define Assert(e) \
         if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__)
 #define Check(e) \
         if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__)
 
-R__EXTERN int gErrorIgnoreLevel;
-R__EXTERN int gErrorAbortLevel;
+R__EXTERN Int_t gErrorIgnoreLevel;
+R__EXTERN Int_t gErrorAbortLevel;
 
 #endif

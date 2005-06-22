@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.43 2005/06/01 16:15:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.44 2005/06/16 17:53:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TStyle.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TVirtualMutex.h"
 
 TStyle  *gStyle;
 const UInt_t kTakeStyle = BIT(17);
@@ -94,7 +95,10 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 
    Reset();
 
-   gROOT->GetListOfStyles()->Add(this);
+   {
+      R__LOCKGUARD2(TROOT::fgMutex);
+      gROOT->GetListOfStyles()->Add(this);
+   }
 
    //may be a standard style to be initialized
    if (strcmp(name,"Plain") == 0) {
@@ -212,6 +216,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //______________________________________________________________________________
 TStyle::~TStyle()
 {
+   R__LOCKGUARD2(TROOT::fgMutex);
    gROOT->GetListOfStyles()->Remove(this);
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
 }
