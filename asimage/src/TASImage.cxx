@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.41 2005/06/21 17:09:25 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.42 2005/06/21 18:15:13 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs, Valeriy Onuchin   28/11/2001
 
 /*************************************************************************
@@ -5595,19 +5595,14 @@ void TASImage::SavePrimitive(ofstream &out, Option_t *)
 
    TString name = GetName();
    TString str = buf;
+   name.ReplaceAll(".", "_");
 
    str.ReplaceAll("static", "");
    TString xpm = "xpm_";
    xpm += name;
    str.ReplaceAll("asxpm", xpm.Data());
    out << endl << str << endl << endl;
-
-   if (gROOT->ClassSaved(TASImage::Class())) {
-       out << "   ";
-   } else {
-       out << "   TImage *";
-   }
-   
+   out << "   TImage *";
    out << name << " = TImage::Create();" << endl;
    out << "   " << name << "->SetImageBuffer((char**)&" << xpm << ", TImage::kXpm);" << endl;
    out << "   " << name << "->Draw();" << endl;

@@ -39,7 +39,7 @@ void rose_image()
    // tile image
    img2->Tile(img->GetWidth(), img->GetHeight());
 
-   c1 = new TCanvas("rose512.jpg", "examples of image manipulations", 760, 900);
+   c1 = new TCanvas("rose512", "examples of image manipulations", 760, 900);
    c1->Divide(2, 3);
    c1->cd(1);
    img->Draw("xxx");
