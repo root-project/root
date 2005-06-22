@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.31 2004/10/05 07:04:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.32 2004/10/05 15:41:04 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
 #include <stdlib.h>
 #include <string>
 #include <map>

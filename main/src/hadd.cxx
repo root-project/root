@@ -16,6 +16,7 @@
 
  */
 
+#include "RConfig.h"
 #include <string>
 #include "TChain.h"
 #include "TFile.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: String.cxx,v 1.2 2005/06/01 15:40:08 pcanal Exp $
 // Author: Philippe Canal 03/09/2003
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
 #include <string>
 #include "TBuffer.h"
 #include "TString.h"

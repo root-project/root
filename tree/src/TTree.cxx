@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.254 2005/06/09 18:20:02 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.255 2005/06/13 19:21:04 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -256,6 +256,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfig.h"
 #include <string.h>
 #include <stdio.h>
 #include <fstream>
