@@ -7,31 +7,29 @@ MODDIR       := mathcore
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-MATHCOREDIR    := $(MODDIR)
-MATHCOREDIRS   := $(MATHCOREDIR)/src
-MATHCOREDIRI   := $(MATHCOREDIR)/inc
+MATHCOREDIR  := $(MODDIR)
+MATHCOREDIRS := $(MATHCOREDIR)/src
+MATHCOREDIRI := $(MATHCOREDIR)/inc
 
-##### libMathcore #####
-# for dict
+##### libMathCore #####
 MATHCOREL     := $(MODDIRI)/GenVector/LinkDef.h
 MATHCOREDS    := $(MODDIRS)/G__MathCore.cxx
 MATHCOREDO    := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH    := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDICTH := $(MODDIRI)/GenVector/Vector3D.h $(MODDIRI)/GenVector/Point3D.h $(MODDIRI)/GenVector/LorentzVector.h $(MODDIRI)/GenVector/VectorUtil_Cint.h 
+MATHCOREDICTH := $(MODDIRI)/GenVector/Vector3D.h \
+                 $(MODDIRI)/GenVector/Point3D.h \
+                 $(MODDIRI)/GenVector/LorentzVector.h \
+                 $(MODDIRI)/GenVector/VectorUtil_Cint.h
 
+MATHCOREH     := $(filter-out $(MODDIRI)/GenVector/LinkDef%, $(wildcard $(MODDIRI)/GenVector/*.h))
+MATHCORES     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+MATHCOREO     := $(MATHCORES:.cxx=.o)
 
-MATHCOREAH     := $(filter-out $(MODDIRI)/LinkDef%, $(wildcard $(MODDIRI)/GenVector/*.h))
-#MATHCOREBH     := $(wildcard $(MODDIRI)/Mathcore/Builder/*.h)
-MATHCOREH      := $(MATHCOREAH) $(MATHCOREBH)
-MATHCORES      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MATHCOREO      := $(MATHCORES:.cxx=.o)
+MATHCOREDEP   := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
 
-MATHCOREDEP    := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
+MATHCORELIB   := $(LPATH)/libMathCore.$(SOEXT)
 
-MATHCORELIBNAME := libMathCore.$(SOEXT)
-MATHCORELIB    := $(LPATH)/$(MATHCORELIBNAME)
- 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/GenVector/%.h,include/GenVector/%.h,$(MATHCOREH))
 ALLLIBS      += $(MATHCORELIB)
@@ -40,38 +38,35 @@ ALLLIBS      += $(MATHCORELIB)
 INCLUDEFILES += $(MATHCOREDEP)
 
 ##### local rules #####
-include/GenVector/%.h: $(MATHCOREDIRI)/GenVector/%.h 
-		@ ( if [ ! -d "include/GenVector" ] ;         \
-		    then mkdir include/GenVector; fi ) ;      \
+include/GenVector/%.h: $(MATHCOREDIRI)/GenVector/%.h
+		@(if [ ! -d "include/GenVector" ]; then   \
+		   mkdir include/GenVector;               \
+		fi)
 		cp $< $@
 
+$(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
+		   "$(SOFLAGS)" libMathCore.$(SOEXT) $@     \
+		   "$(MATHCOREO) $(MATHCOREDO)"             \
+		   "$(MATHCORELIBEXTRA)"
 
-$(MATHCORELIB):   $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"     \
-		"$(SOFLAGS)" $(MATHCORELIBNAME) $@ "$(MATHCOREO)" "$(MATHCOREDO)"\
-		"$(MATHCORELIBDIR) $(MATHCORECLILIB)"
-
-
-$(MATHCOREDS):   $(MATHCOREH) $(MATHCOREL) $(ROOTCINTTMP)
+$(MATHCOREDS):  $(MATHCOREDICTH) $(MATHCOREL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDICTH) $(MATHCOREL)
 
-$(MATHCOREDO):   $(MATHCOREDS)
+$(MATHCOREDO):  $(MATHCOREDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
+all-mathcore:   $(MATHCORELIB)
 
-
-all-mathcore:    $(MATHCORELIB)
-		echo $(MATHCOREO)
-
-map-mathcore:     $(RLIBMAP)
+map-mathcore:   $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHCORELIB) \
-		-d $(MATHCORELIBDEP) -c $(MATHCOREL)
+		   -d $(MATHCORELIBDEP) -c $(MATHCOREL)
 
 map::           map-mathcore
 
 clean-mathcore:
-		@rm -f $(MATHCOREO) $(MATHCOREDO) 
+		@rm -f $(MATHCOREO) $(MATHCOREDO)
 
 clean::         clean-mathcore
 
@@ -80,7 +75,4 @@ distclean-mathcore: clean-mathcore
 
 distclean::     distclean-mathcore
 
-##### extra rules ######
-#$(MATHCOREO): %.o: %.cxx
-#		$(CXX) $(OPT) $(CXXFLAGS) $(MATHCOREINCDIR:%=-I%) -o $@ -c $<
 
