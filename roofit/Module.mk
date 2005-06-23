@@ -11,7 +11,7 @@ ROOFITDIR    := $(MODDIR)
 ROOFITDIRS   := $(ROOFITDIR)/src
 ROOFITDIRI   := $(ROOFITDIR)/inc
 
-ROOFITVERS   := roofit_2.03
+ROOFITVERS   := roofit_2.04
 ROOFITSRCS   := $(MODDIR)/$(ROOFITVERS).src.tgz
 ROOFITETAG   := $(MODDIR)/headers.d
 
