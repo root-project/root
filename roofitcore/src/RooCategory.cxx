@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.cc,v 1.26 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.27 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,6 +62,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
       typeList->Add(const_cast<RooCatType*>(lookupType(state->GetName()))) ;
     }
     delete iter2 ;
+    _altRanges.Add(typeList) ;
   }
   delete iter ;
 
@@ -240,6 +241,7 @@ Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName)
     cout << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid range name and state name" << endl ;
     return kFALSE ;
   }
+
   
   // Find the list that represents this range
   TList* rangeNameList = static_cast<TList*>(_altRanges.FindObject(rangeName)) ;

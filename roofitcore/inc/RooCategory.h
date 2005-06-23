@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategory.rdl,v 1.22 2005/02/25 14:22:54 wverkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.23 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,7 +49,7 @@ public:
   void setRange(const char* rangeName, const char* stateNameList) ;
   void addToRange(const char* rangeName, const char* stateNameList) ;
   Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
-  virtual Bool_t isInRange(const char* rangeName) const { return isStateInRange(rangeName,getLabel()) ; } 
+  virtual Bool_t inRange(const char* rangeName) const { return isStateInRange(rangeName,getLabel()) ; } 
   virtual Bool_t hasRange(const char* rangeName) const { return _altRanges.FindObject(rangeName) ? kTRUE : kFALSE ; }
  
 protected:

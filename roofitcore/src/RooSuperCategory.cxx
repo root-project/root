@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.cc,v 1.24 2005/06/16 09:31:31 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.25 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -247,14 +247,14 @@ void RooSuperCategory::writeToStream(ostream& os, Bool_t compact) const
 
 
 
-Bool_t RooSuperCategory::isInRange(const char* rangeName) const 
+Bool_t RooSuperCategory::inRange(const char* rangeName) const 
 {
   // Return true of all of the input category states are in the given range
 
   _catIter->Reset() ;
   RooAbsCategoryLValue* cat ;
   while((cat = (RooAbsCategoryLValue*)_catIter->Next())) {
-    if (!cat->isInRange(rangeName)) {
+    if (!cat->inRange(rangeName)) {
       return kFALSE ;
     }
   }

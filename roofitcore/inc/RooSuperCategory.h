@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSuperCategory.rdl,v 1.13 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.14 2005/06/20 15:45:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ public:
   TIterator* MakeIterator() const ;
   const RooArgSet& inputCatList() const { return _catSet ; }
 
-  virtual Bool_t isInRange(const char* rangeName) const ;
+  virtual Bool_t inRange(const char* rangeName) const ;
   virtual Bool_t hasRange(const char* rangeName) const ;
 
 protected:

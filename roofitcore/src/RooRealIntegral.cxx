@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.82 2005/06/16 09:31:30 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.83 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -711,7 +711,7 @@ Double_t RooRealIntegral::sum() const
     RooCatType* type ;
     while((type=(RooCatType*)sumIter->Next())) {
       sumCat.setIndex(type->getVal()) ;
-      if (!_rangeName || sumCat.isInRange(RooNameReg::str(_rangeName))) {
+      if (!_rangeName || sumCat.inRange(RooNameReg::str(_rangeName))) {
 	total += integrate() / jacobianProduct() ;
       }
     }
