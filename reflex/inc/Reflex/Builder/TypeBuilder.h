@@ -1,0 +1,957 @@
+// @(#)root/reflex:$Name:$:$Id:$
+// Author: Stefan Roiser 2004
+
+// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+//
+// Permission to use, copy, modify, and distribute this software for any
+// purpose is hereby granted without fee, provided that this copyright and
+// permissions notice appear in all copies and derivatives.
+//
+// This software is provided "as is" without express or implied warranty.
+
+#ifndef ROOT_Reflex_TypeBuilder
+#define ROOT_Reflex_TypeBuilder
+
+// Include files
+#include "Reflex/Type.h"
+#include "Reflex/Tools.h"
+
+#include <vector>
+
+#if defined(__ICC)
+#define OffsetOf(c1,mem) (int(&(((c1*)0)->mem)))
+#define OffsetOf2(c1,c2,mem) (int(&(((c1,c2*)0)->mem)))
+#define OffsetOf3(c1,c2,c3,mem) (int(&(((c1,c2,c3*)0)->mem)))
+#define OffsetOf4(c1,c2,c3,c4,mem) (int(&(((c1,c2,c3,c4*)0)->mem)))
+#define OffsetOf5(c1,c2,c3,c4,c5,mem) (int(&(((c1,c2,c3,c4,c5*)0)->mem)))
+#define OffsetOf6(c1,c2,c3,c4,c5,c6,mem) (int(&(((c1,c2,c3,c4,c5,c6*)0)->mem)))
+#define OffsetOf7(c1,c2,c3,c4,c5,c6,c7,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7*)0)->mem)))
+#define OffsetOf8(c1,c2,c3,c4,c5,c6,c7,c8,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8*)0)->mem)))
+#define OffsetOf9(c1,c2,c3,c4,c5,c6,c7,c8,c9,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9*)0)->mem)))
+#define OffsetOf10(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10*)0)->mem)))
+#define OffsetOf11(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11*)0)->mem)))
+#define OffsetOf12(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12*)0)->mem)))
+#define OffsetOf13(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13*)0)->mem)))
+#define OffsetOf14(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14*)0)->mem)))
+#define OffsetOf15(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15*)0)->mem)))
+#define OffsetOf16(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,mem) (int(&(((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16*)0)->mem)))
+#else
+#define OffsetOf(c1,mem) ((size_t)(&((c1*)64)->mem)-64)
+#define OffsetOf2(c1,c2,mem) ((size_t)(&((c1,c2*)64)->mem)-64)
+#define OffsetOf3(c1,c2,c3,mem) ((size_t)(&((c1,c2,c3*)64)->mem)-64)
+#define OffsetOf4(c1,c2,c3,c4,mem) ((size_t)(&((c1,c2,c3,c4*)64)->mem)-64)
+#define OffsetOf5(c1,c2,c3,c4,c5,mem) ((size_t)(&((c1,c2,c3,c4,c5*)64)->mem)-64)
+#define OffsetOf6(c1,c2,c3,c4,c5,c6,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6*)64)->mem)-64)
+#define OffsetOf7(c1,c2,c3,c4,c5,c6,c7,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7*)64)->mem)-64)
+#define OffsetOf8(c1,c2,c3,c4,c5,c6,c7,c8,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8*)64)->mem)-64)
+#define OffsetOf9(c1,c2,c3,c4,c5,c6,c7,c8,c9,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9*)64)->mem)-64)
+#define OffsetOf10(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10*)64)->mem)-64)
+#define OffsetOf11(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11*)64)->mem)-64)
+#define OffsetOf12(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12*)64)->mem)-64)
+#define OffsetOf13(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13*)64)->mem)-64)
+#define OffsetOf14(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14*)64)->mem)-64)
+#define OffsetOf15(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15*)64)->mem)-64)
+#define OffsetOf16(c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,mem) ((size_t)(&((c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16*)64)->mem)-64)
+#endif
+
+namespace ROOT{ 
+  namespace Reflex{
+
+    Type TypeBuilder( const char * n,
+                      unsigned int modifiers = 0 );
+
+
+    Type ConstBuilder( const Type & t );
+
+
+    Type VolatileBuilder( const Type & t );
+
+
+    Type PointerBuilder( const Type & t,
+                         const std::type_info & ti = typeid(UnknownType));
+
+
+    Type ReferenceBuilder( const Type & t );
+
+
+    Type ArrayBuilder( const Type & t, 
+                       size_t n,
+                       const std::type_info & ti = typeid(UnknownType));
+
+    Type EnumTypeBuilder( const char *, 
+                          const char *,
+                          const std::type_info & ti = typeid(UnknownType));
+
+    Type TypedefTypeBuilder( const char * Name, 
+                             const Type & t );
+
+
+    Type FunctionTypeBuilder( const Type & r,
+                              const std::vector<Type> & p,
+                              const std::type_info & ti = typeid(UnknownType));
+
+
+    Type FunctionTypeBuilder(const Type & r);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10);
+
+  
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10, 
+                             const Type & t11);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10, 
+                             const Type & t11,
+                             const Type & t12);
+  
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10, 
+                             const Type & t11,
+                             const Type & t12, 
+                             const Type & t13);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10, 
+                             const Type & t11,
+                             const Type & t12, 
+                             const Type & t13, 
+                             const Type & t14);
+
+
+    Type FunctionTypeBuilder(const Type & r, 
+                             const Type & t0, 
+                             const Type & t1, 
+                             const Type & t2, 
+                             const Type & t3,
+                             const Type & t4, 
+                             const Type & t5, 
+                             const Type & t6, 
+                             const Type & t7,
+                             const Type & t8, 
+                             const Type & t9, 
+                             const Type & t10, 
+                             const Type & t11,
+                             const Type & t12, 
+                             const Type & t13, 
+                             const Type & t14, 
+                             const Type & t15);
+  
+
+    /**
+     * offsetOf will calculate the Offset of a data MemberNth relative
+     * to the start of the class
+     * @param MemberNth the pointer to the data MemberNth
+     * @return the Offset of the data MemberNth
+     */
+    template < typename C, typename M >
+      size_t offsetOf( M C::* member )  {
+      return (size_t) & (((C*)0)->*member); 
+    }
+
+
+    /**
+     * @struct BaseOffset TypeBuilder.h Reflex/Builder/TypeBuilder.h
+     * provide the static function that calculates the Offset between  BaseNth classes
+     */
+    template < typename C, typename B >
+      struct baseOffset {
+        static size_t Offset (void * o ) { return (size_t)(B*)(C*)o - (size_t)(C*)o; } 
+        static OffsetFunction Get() { return  & baseOffset::Offset; }
+      };
+
+    
+    /** 
+     * @struct TypeDistiller TypeBuilder.h Reflex/Builder/TypeBuilder.h
+     * @author Pere Mato
+     * @date 29/07/2004
+     * @ingroup RefBld
+     */
+    template<typename T> struct TypeDistiller {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( ! t.Id() ) t = Type::ByName(Tools::Demangle(typeid(T)));
+        if ( t.Id() ) return t;
+        else return TypeBuilder(Tools::Demangle(typeid(T)).c_str());
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<T *> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T*));
+        if ( t ) return t;
+        else return PointerBuilder(TypeDistiller<T>::Get(),typeid(T *));
+      }
+    };
+
+
+    /** */
+    template<typename T, size_t N > struct TypeDistiller<T[N]> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T*));
+        if ( t ) return t;
+        else return ArrayBuilder(TypeDistiller<T>::Get(),N,typeid(NullType));
+      }
+    };
+
+
+    /**  */
+    template<typename T> struct TypeDistiller<const T> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, CONST );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST);
+      }
+    };
+
+
+    /**  */
+    template<typename T> struct TypeDistiller<volatile T> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, VOLATILE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),VOLATILE);
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<const volatile T> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, CONST | VOLATILE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|VOLATILE);
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<T &> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, REFERENCE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),REFERENCE);
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<const T &> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, CONST | REFERENCE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|REFERENCE);
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<volatile T &> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, VOLATILE | REFERENCE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),VOLATILE|REFERENCE);
+      }
+    };
+
+
+    /** */
+    template<typename T> struct TypeDistiller<const volatile T &> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(T));
+        if ( t ) return Type( t, CONST | VOLATILE | REFERENCE );
+        else return TypeBuilder(TypeDistiller<T>::Get().Name().c_str(),CONST|VOLATILE|REFERENCE);
+      }
+    };
+
+
+    /**
+     * getType will return a pointer to a Type (create it if necessery) 
+     * representating the TypeNth of the template ParameterNth
+     * @return pointer to Type
+     */
+    template < typename T > 
+      Type getType() {
+      return TypeDistiller<T>::Get();
+    }
+
+
+    /** 
+     * @struct FuntionDistiller TypeBuilder.h Reflex/Builder/TypeBuilder.h
+     * @author Pere Mato
+     * @date 29/07/2004
+     * @ingroup RefBld
+     */
+    template< typename S > struct FunctionDistiller;
+
+    // This define is necessary for all Sun Forte compilers with version < 5.5 (SunWSpro8)
+#if ( (defined(__SUNPRO_CC)) && (__SUNPRO_CC<0x550) )
+#define __R_TN__ typename
+#else
+#define __R_TN__
+#endif
+
+    /** */
+    template< typename R > 
+      struct FunctionDistiller<R(void)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(void)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(), 
+                                             std::vector<Type>(), 
+                                             typeid(R(void))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0 > 
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(), 
+                                             makeVector( TypeDistiller<T0>::Get() ), 
+                                             typeid(R(T0))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1 > 
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1)));
+        if ( t ) return t;
+        else return FunctionTypeBuilder( TypeDistiller<R>::Get(), 
+                                         makeVector( TypeDistiller<T0>::Get(), 
+                                                     TypeDistiller<T1>::Get()),
+                                         typeid(R(T0, T1))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get()), 
+                                             typeid(R(T0, T1, T2))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get()), 
+                                             typeid(R(T0, T1, T2, T3))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4)> {
+        static Type Get() {
+          Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4)));
+          if ( t ) return t;
+          else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                               makeVector( TypeDistiller<T0>::Get(),
+                                                           TypeDistiller<T1>::Get(),
+                                                           TypeDistiller<T2>::Get(), 
+                                                           TypeDistiller<T3>::Get(), 
+                                                           TypeDistiller<T4>::Get()), 
+                                               typeid(R(T0, T1, T2, T3, T4))); 
+        }
+      };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get()), 
+                                             typeid(R(T0, T1, T2, T3, T4, T5))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get()), 
+                                             typeid(R(T0, T1, T2, T3, T4, T5, T6))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8)> {
+        static Type Get() {
+          Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8)));
+          if ( t ) return t;
+          else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                               makeVector( TypeDistiller<T0>::Get(),
+                                                           TypeDistiller<T1>::Get(),
+                                                           TypeDistiller<T2>::Get(), 
+                                                           TypeDistiller<T3>::Get(), 
+                                                           TypeDistiller<T4>::Get(), 
+                                                           TypeDistiller<T5>::Get(), 
+                                                           TypeDistiller<T6>::Get(),
+                                                           TypeDistiller<T7>::Get(), 
+                                                           TypeDistiller<T8>::Get()), 
+                                               typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8)));
+        }
+      };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get(), 
+                                                         TypeDistiller<T10>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10, typename T11 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10, __R_TN__ T11)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get(), 
+                                                         TypeDistiller<T10>::Get(), 
+                                                         TypeDistiller<T11>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10, typename T11,
+      typename T12 >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10, __R_TN__ T11, 
+                                          __R_TN__ T12)> {
+        static Type Get() {
+          Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)));
+          if ( t ) return t;
+          else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                               makeVector( TypeDistiller<T0>::Get(),
+                                                           TypeDistiller<T1>::Get(),
+                                                           TypeDistiller<T2>::Get(), 
+                                                           TypeDistiller<T3>::Get(), 
+                                                           TypeDistiller<T4>::Get(), 
+                                                           TypeDistiller<T5>::Get(), 
+                                                           TypeDistiller<T6>::Get(),
+                                                           TypeDistiller<T7>::Get(), 
+                                                           TypeDistiller<T8>::Get(), 
+                                                           TypeDistiller<T9>::Get(), 
+                                                           TypeDistiller<T10>::Get(), 
+                                                           TypeDistiller<T11>::Get(), 
+                                                           TypeDistiller<T12>::Get()), 
+                                               typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12))); 
+        }
+      };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10, typename T11,
+      typename T12, typename T13  >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10, __R_TN__ T11, 
+                                          __R_TN__ T12, __R_TN__ T13)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get(), 
+                                                         TypeDistiller<T10>::Get(), 
+                                                         TypeDistiller<T11>::Get(), 
+                                                         TypeDistiller<T12>::Get(), 
+                                                         TypeDistiller<T13>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10, typename T11,
+      typename T12, typename T13, typename T14  >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10, __R_TN__ T11, 
+                                          __R_TN__ T12, __R_TN__ T13, __R_TN__ T14)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get(), 
+                                                         TypeDistiller<T10>::Get(), 
+                                                         TypeDistiller<T11>::Get(), 
+                                                         TypeDistiller<T12>::Get(), 
+                                                         TypeDistiller<T13>::Get(), 
+                                                         TypeDistiller<T14>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14))); 
+      }
+    };
+
+    /** */
+    template < typename R, typename T0, typename T1, typename T2, typename T3,
+      typename T4, typename T5, typename T6, typename T7,
+      typename T8, typename T9, typename T10, typename T11,
+      typename T12, typename T13, typename T14, typename T15  >
+      struct FunctionDistiller<__R_TN__ R(__R_TN__ T0, __R_TN__ T1, __R_TN__ T2, 
+                                          __R_TN__ T3, __R_TN__ T4, __R_TN__ T5, 
+                                          __R_TN__ T6, __R_TN__ T7, __R_TN__ T8, 
+                                          __R_TN__ T9, __R_TN__ T10, __R_TN__ T11, 
+                                          __R_TN__ T12, __R_TN__ T13, __R_TN__ T14, 
+                                          __R_TN__ T15)> {
+      static Type Get() {
+        Type t = Type::ByTypeInfo(typeid(R(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)));
+        if ( t ) return t;
+        else     return FunctionTypeBuilder( TypeDistiller<R>::Get(),
+                                             makeVector( TypeDistiller<T0>::Get(),
+                                                         TypeDistiller<T1>::Get(),
+                                                         TypeDistiller<T2>::Get(), 
+                                                         TypeDistiller<T3>::Get(), 
+                                                         TypeDistiller<T4>::Get(), 
+                                                         TypeDistiller<T5>::Get(), 
+                                                         TypeDistiller<T6>::Get(),
+                                                         TypeDistiller<T7>::Get(), 
+                                                         TypeDistiller<T8>::Get(), 
+                                                         TypeDistiller<T9>::Get(), 
+                                                         TypeDistiller<T10>::Get(), 
+                                                         TypeDistiller<T11>::Get(), 
+                                                         TypeDistiller<T12>::Get(), 
+                                                         TypeDistiller<T13>::Get(), 
+                                                         TypeDistiller<T14>::Get(), 
+                                                         TypeDistiller<T15>::Get()), 
+                                             typeid(R( T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15))); 
+      }
+    };
+
+#undef __R_TN__
+    // end of the Sun Forte CC fix
+
+    /**
+     * makeVector is a utility function to create and initialize a std::vector of
+     * number of items
+     * @param t1 vector element
+     * @return output vector
+     */
+    template <typename T >
+      inline std::vector<T> makeVector(T t0) { 
+      std::vector<T> v; 
+      v.push_back(t0);
+      return v; 
+    }
+  
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1);
+      return v;
+    }
+  
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2);
+      return v;
+    }
+
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10, T t11 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10); v.push_back(t11);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10, T t11, T t12 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10); v.push_back(t11); v.push_back(t12);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10, T t11, T t12, T t13 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10, T t11, T t12, T t13, T t14 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+      return v;
+    }
+    template <typename T >
+      inline std::vector<T> makeVector(T t0, T t1, T t2, T t3, T t4, T t5, T t6, T t7,
+                                       T t8, T t9, T t10, T t11, T t12, T t13, T t14, T t15 ) {
+      std::vector<T> v;
+      v.push_back(t0); v.push_back(t1); v.push_back(t2); v.push_back(t3); v.push_back(t4);
+      v.push_back(t5); v.push_back(t6); v.push_back(t7), v.push_back(t8); v.push_back(t9);
+      v.push_back(t10); v.push_back(t11); v.push_back(t12); v.push_back(t13); v.push_back(t14);
+      v.push_back(t15);
+      return v;
+    }
+
+  } // namespace Reflex 
+} // namespace ROOT
+
+#endif // ROOT_Reflex_TypeBuilder
