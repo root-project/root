@@ -3934,7 +3934,9 @@ char *endoffunc;
 #endif
 
   char *typestring;
+#if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
   char *ptr;
+#endif
   type = ifunc->type[ifn];
   tagnum = ifunc->p_tagtable[ifn];
   typenum = ifunc->p_typetable[ifn];
