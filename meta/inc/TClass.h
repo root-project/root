@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.52 2005/06/08 21:13:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.53 2005/06/22 20:18:11 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -285,9 +285,9 @@ namespace ROOT {
       template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
    #endif
 
-   R__EXTERN TClass *CreateClass(const char *cname, Version_t id,
-                                 const char *dfil, const char *ifil,
-                                 Int_t dl, Int_t il);
+   extern TClass *CreateClass(const char *cname, Version_t id,
+                              const char *dfil, const char *ifil,
+                              Int_t dl, Int_t il);
 }
 
 #endif
