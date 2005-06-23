@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.89 2005/05/25 16:26:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofCondor.cxx,v 1.1 2005/06/22 20:25:28 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -34,8 +34,8 @@
 ClassImp(TProofCondor)
 
 //______________________________________________________________________________
-TProofCondor::TProofCondor(const Char_t *masterurl, const Char_t *conffile,
-                           const Char_t *confdir, Int_t loglevel)
+TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
+                           const char *confdir, Int_t loglevel)
   : fCondor(0), fTimer(0)
 {
    // Start proof using condor
