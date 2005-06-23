@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.39 2005/06/22 20:45:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.40 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1576,7 +1576,7 @@ again:
 
 //---- Global String Handling Functions ----------------------------------------
 
-static const int cb_size  = 4096*50;
+static const int cb_size  = 4096;
 static const int fld_size = 2048;
 
 // a circular formating buffer
