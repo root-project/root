@@ -1,0 +1,104 @@
+// @(#)root/reflex:$Name:$:$Id:$
+// Author: Stefan Roiser 2004
+
+// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+//
+// Permission to use, copy, modify, and distribute this software for any
+// purpose is hereby granted without fee, provided that this copyright and
+// permissions notice appear in all copies and derivatives.
+//
+// This software is provided "as is" without express or implied warranty.
+
+#ifndef ROOT_Reflex_Array
+#define ROOT_Reflex_Array
+
+// Include files
+#include "Reflex/TypeBase.h"
+#include "Reflex/Type.h"
+
+namespace ROOT {
+  namespace Reflex {
+
+    // forward declarations
+
+    /**
+     * @class Array Array.h Reflex/Array.h
+     * @author Stefan Roiser
+     * @date 24/11/2003
+     * @ingroup Ref
+     */
+    class Array : public TypeBase {
+
+    public:
+
+      /** default constructor */
+      Array( const Type & arrayType,
+             size_t Length,
+             const std::type_info & typeinfo );
+
+
+      /** destructor */
+      virtual ~Array() {}
+
+
+      /**
+       * Name will return the string representation of the array TypeNth
+       * @param  typedefexp expand typedefs or not
+       * @return string representation of TypeNth
+       */
+      std::string Name( unsigned int mod = 0 ) const;
+
+
+      /**
+       * size returns the size of the array
+       * @return size of array
+       */
+      size_t Length() const;
+
+
+      /**
+       * arrayType will return a pointer to the TypeNth of the array.
+       * @return pointer to Type of MemberNth et. al.
+       */
+      Type ToType() const;
+
+
+      /** static funtion that composes the TypeNth Name */
+      static std::string BuildTypeName( const Type & TypeNth, 
+                                        size_t Length,
+                                        unsigned int mod = SCOPED | QUALIFIED );
+
+    private:
+
+      /**
+       * TypeNth of the array
+       * @label array TypeNth
+       * @link aggregationByValue
+       * @supplierCardinality 1
+       * @clientCardinality 1
+       */
+      Type fArrayType;
+
+
+      /** the Length of the array */
+      size_t fLength;
+
+    }; // class Array
+  } //namespace Reflex
+} //namespace ROOT
+
+
+//-------------------------------------------------------------------------------
+inline size_t ROOT::Reflex::Array::Length() const { 
+//-------------------------------------------------------------------------------
+  return fLength; 
+}
+
+
+//-------------------------------------------------------------------------------
+inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType() const {
+//-------------------------------------------------------------------------------
+  return fArrayType;
+}
+
+#endif // ROOT_Reflex_Array
