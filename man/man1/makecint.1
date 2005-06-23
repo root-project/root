@@ -19,9 +19,9 @@
 makecint \- C/C++ interpreter-compiler
 .SH SYNOPSIS
 .B makecint
-[ \-mk MAKEFILE ] [ \-o OBJECT ] [ \-H C++HEADER ] [ \-C++ C++SOURCE]
-[ \-m ] [ \-p ] [ \-dl DLL ] [ \-h CHEADER ] [ \-C CSOURCE]
-[ \-l LIB ] [ \-i STUBC] [ \-i++ STUBC++ ]
+[ -mk MAKEFILE ] [ -o OBJECT ] [ -H C++HEADER ] [ -C++ C++SOURCE]
+[ -m ] [ -p ] [ -dl DLL ] [ -h CHEADER ] [ -C CSOURCE]
+[ -l LIB ] [ -i STUBC] [ -i++ STUBC++ ]
 .SH DESCRIPTION
 .B makecint
 is an utility to link compiled C/C++ objects with the Cint C/C++
@@ -58,9 +58,7 @@ Makefile. In following example, makecint will create a
 Makefile which compiles "mycint" executable. The "mycint"
 embeds xxx.C and yyy.o as precompiled library.
 .nf
-
-     $ makecint \-mk Makefile\-o mycint \-H xxx.h yyy.h \-C++ xxx.C yyy.o
-
+     $ makecint -mk Makefile -o mycint -H xxx.h yyy.h -C++ xxx.C yyy.o
 .fi
 Command line options will be explained later in this document.
 
@@ -142,19 +140,19 @@ the interpreter.
 
 .SH OPTIONS
 Space between option specifier and option argument is significant.
-You must put space between them.  For example, '\-o object' is valid
-but '\-oobject' is not. Exceptions are \-D and \-I options which accepts
-arguments like '\-DMACRO1' and '\-I/home/mydir/include'.
+You must put space between them.  For example, '-o object' is valid
+but '-oobject' is not. Exceptions are -D and -I options which accepts
+arguments like '-DMACRO1' and '-I/home/mydir/include'.
 .TP
 .B \-o OBJ
 specify object name (customized C/C++ interpreter).
 .br
-\-o option specifies object name which becomes a customized C/C++
-interpreter.  \-o option can not be omitted, otherwise \-dl option
-must be given.  \-o and \-dl options are exclusive. Only one of them
+-o option specifies object name which becomes a customized C/C++
+interpreter.  -o option can not be omitted, otherwise -dl option
+must be given.  -o and -dl options are exclusive. Only one of them
 must be given.  For example,
 .nf
-    $ makecint \-mk Makefile \-o mycint \-H prog.h \-C++ prog.C
+    $ makecint -mk Makefile -o mycint -H prog.h -C++ prog.C
     $ make
 .fi
 Will make customized cint "mycint" including prog.C user specific
@@ -166,11 +164,11 @@ Generate dynamic link library object.
 This option generates dynamic link library(DLL) which can be
 dynamically linked with cint at run time.  For example,
 .nf
-    $ makecint \-mk Makefile \-dl func.dl \-H func1.h func2.h \-C++ func1.C func2.C
+    $ makecint -mk Makefile -dl func.dl -H func1.h func2.h -C++ func1.C func2.C
     $ make
 .fi
 This will generate a DLL 'func.dl' which includes Position Independent
-Code of func1.C, func2.C.  \-dl option compiles user specific Suffix of
+Code of func1.C, func2.C.  -dl option compiles user specific Suffix of
 the dynamic link library can be either '.dl', '.sl', or '.DLL'.  You
 can link func.dl by passing it to cint.  Multiple DLL can be linked at
 a time if there is no cyclic symbol dependency.
@@ -203,8 +201,8 @@ Create interface routine and makefile, no compilation.
 The '-mk MKFILE' option will specify name of created makefile.  For
 example
 .nf
-    $ makecint \-mk make.prog1 \-o prog1 \-H prog1.h \-C++ prog1.C
-    $ make \-f make.prog1
+    $ makecint -mk make.prog1 -o prog1 -H prog1.h -C++ prog1.C
+    $ make -f make.prog1
     $ prog1
 .fi
 .TP
@@ -213,12 +211,12 @@ Use preprocessor before parsing parameter information files (OLD)
 .br
 If '-p' option is added, parameter information files are preprocessed
 by real preprocessor. Cint does not parse define macro perfectly. It
-is recommended to use \-p option when you link non-trivial library with
+is recommended to use -p option when you link non-trivial library with
 heavy define macro usage.  Name of C/C++ preprocessor must be set in
 the $CINTSYSDIR/MAKEINFO file.
 .nf
-     $ makecint \-mk Makeit \-p \-o mycint \-H prog.h \-C++ prog.C
-     $ make \-f Makeit
+     $ makecint -mk Makeit -p -o mycint -H prog.h -C++ prog.C
+     $ make -f Makeit
 .fi
 This option is being obsoleted. Use +P,-P instead.
 .TP
@@ -232,7 +230,7 @@ from your host program.  (See example below) Header file
 $CINTSYSDIR/G__ci.h has to be included.
 .nf
 /* Example host program host.c
-* $ makecint \-mk Makefile \-o host \-m \-I$CINTSYSDIR \-h host.h \-C host.c
+* $ makecint -mk Makefile -o host -m -I$CINTSYSDIR -h host.h -C host.c
 * $ make
 */
 #include <G__ci.h>
@@ -263,13 +261,13 @@ int G__init_cint(char* command)
 .fi
 This function will initialize Cint. main() is automatically executed
 if it exists and returns 1.  If main() is not found it returns 0.  It
-returns \-1 if initialization fails.
+returns -1 if initialization fails.
 .nf
     int state;
     state=G__init_cint("cint source.c");
     // 0==state : initialized but no main()
     // 1==state : initialized and main() called
-    // \-1==state: initialization failed
+    // -1==state: initialization failed
 .fi
 After the initialization you can use following functions.
 .nf
@@ -305,8 +303,8 @@ int G__loadfile(char* filename)
 This function loads C/C++ source code or Dynamic Link Library(DLL). If
 suffix of the filename is .dl, .sl, .so, .dll or .DLL, the file is
 linked as DLL. Otherwise, C/C++ source file. It returns 0 if the file
-is successfully loaded, 1 if the file is already loaded and \-1 if the
-file can not be loaded.  In case of fatal error, it returns \-2.
+is successfully loaded, 1 if the file is already loaded and -1 if the
+file can not be loaded.  In case of fatal error, it returns -2.
 .nf
     G__init_cint("cint");
     G__loadfile("src1.C");
@@ -321,7 +319,7 @@ int G__unloadfile(char* filename)
 This function unloads C/C++ source code or Dynamic Link
 Library(DLL). In order to keep consistency, all the files loaded after
 the specified file will be unloaded. It returns 0 if files are
-successfully unloaded, \-1 if not.  It first checks if any of the
+successfully unloaded, -1 if not.  It first checks if any of the
 function defined in the unloading files are busy.
 .nf
     G__init_cint("cint src0.c");
@@ -379,22 +377,22 @@ This option defines macro for global variable parameter information
 file.  Global variable parameter informa- tion file will be
 conditionally parsed with '#ifdef MACRO' statement.  You can not put
 multiple macro names after '-D'. '-D' must be given before every
-individual macro name.  Space between \-D and macro name is not
+individual macro name.  Space between -D and macro name is not
 significant.  You can either go '-DMACRO' or '-D MACRO'.
 .nf
-    $ makecint \-mk Makeit \-DONLINE \-o mycint \-H source.h \-C++ source.C
-    $ make \-f Makeit
+    $ makecint -mk Makeit -DONLINE -o mycint -H source.h -C++ source.C
+    $ make -f Makeit
 .fi
 .TP
 .B \-I INCLDPATH
 Include file search path
 .br
 You can not put multiple path after '-I'.  '-I' must be given before
-every individual include path. Space between \-I and pathname is not
+every individual include path. Space between -I and pathname is not
 significant.  You can either go '-Ipath' or '-I path'.
 .nf
-    $ makecint \-mk Makeit \-I/users/include \-I/include \-H src.h \-C++ src.C
-    $ make \-f Makeit
+    $ makecint -mk Makeit -I/users/include -I/include -H src.h -C++ src.C
+    $ make -f Makeit
 .fi
 .TP
 .B \-H SUTPI.h
@@ -408,8 +406,8 @@ enum, public member functions and data members, non-static global
 function and variables, typedefs and macros in precompiled library can
 be used from interpreter.
 .nf
-    $ makecint \-mk Mkit \-o mycint \-H src1.h src2.h \-C++ src1.C src2.C
-    $ make \-f Mkit
+    $ makecint -mk Mkit -o mycint -H src1.h src2.h -C++ src1.C src2.C
+    $ make -f Mkit
 .fi
 SUTPI.h file must be compliant to cint syntax limi tations described
 in /usr/share/doc/cint/limitati.txt.  If SUTPI.h uses C++ language
@@ -437,8 +435,8 @@ style header is not accepted.  struct,union,enum, non-static global
 function and variables, typedefs and macros in precompiled library can
 be used from interpreter.
 .nf
-    $ makecint \-mk Makeit \-A \-o mycint \-h csrc1.h csrc2.h \-C csrc1.c csrc2.c
-    $ make \-f Makeit
+    $ makecint -mk Makeit -A -o mycint -h csrc1.h csrc2.h -C csrc1.c csrc2.c
+    $ make -f Makeit
 .fi
 SUTPI.h file must be compliant to cint syntax limitations described
 /usr/share/doc/cint/limitati.txt.  If SUTPI.h uses C++ language
@@ -450,29 +448,29 @@ for makecint.
 .B \+P, \-P
 Turn preprocessor mode for following header files on/off
 .br
-The +P and \-P are suboptions of \-h , \-H option which turns on/off
+The +P and -P are suboptions of -h , -H option which turns on/off
 preprocessor option on file by file basis.  Files after +P will be
-preprocessed and files after \-P won't be preprocessed.  You can
+preprocessed and files after -P won't be preprocessed.  You can
 selectively use preprocessor in following manner. In this example,
 only C.h and D.h , which are enclosed by +P/-P , will be preprocessed
-by real C/C++ preprocessor.  You must not use \-p option when you use
-+P/-P option.  +P option must always come before \-P , however, \-P can
+by real C/C++ preprocessor.  You must not use -p option when you use
++P/-P option.  +P option must always come before -P , however, -P can
 be omitted if all files after +P are preprocessed. The name of the
 C/C++ preprocessor must be set in the $CINTSYSDIR/MAKEINFO file.
 .nf
-    $ makecint \-mk Makeit \-o mycint \-H A.h B.h +P C.h D.h \-P E.h F.h \-C++ all.C
-    $ make \-f Makeit
+    $ makecint -mk Makeit -o mycint -H A.h B.h +P C.h D.h -P E.h F.h -C++ all.C
+    $ make -f Makeit
 .fi
 .TP
 .B \+V, \-V
 Turn class title loading for following header files on/off
 .br
-The +V and \-V are suboptions for \-h , \-H option which turns on/off
+The +V and -V are suboptions for -h , -H option which turns on/off
 loading class title by file basis. Class title will be loaded for the
-files after +V.  Class title won't be loaded for the files after \-V.
+files after +V.  Class title won't be loaded for the files after -V.
 .nf
-    $ makecint \-mk Makeit \-o mycint \-H A.h B.h +V C.h D.h \-V E.h F.h \-C++ all.C
-    $ make \-f Makeit
+    $ makecint -mk Makeit -o mycint -H A.h B.h +V C.h D.h -V E.h F.h -C++ all.C
+    $ make -f Makeit
 .fi
 Class title has to be described in class/struct defi- nition in header
 file as follows.  Basically, '//' style comment right after each
@@ -487,38 +485,38 @@ member declaration will be loaded as class member comment.
 .fi
 .TP
 .B \-C++ SUT.C
-Link C++ source code or object. Not accessed unless \-H SUT.h is given.
+Link C++ source code or object. Not accessed unless -H SUT.h is given.
 .br
 With the '-C++' option, [sut].C file is used as body of C++ compiled
 object.
 .br
 If appropriate header file is given by '-H' option, those compiled
 object can be accessed from the interpreter.  At least one header file
-must be given by \-H option when using \-C++ option.  Otherwise,
+must be given by -H option when using -C++ option.  Otherwise,
 makecint fails.  Multiple source files can be given after one
 '-C++'.  Suffix of the C++ source files must be  properly set in 
 the $CINTSYSDIR/MAKEINFO file.
 .TP
 .B \-C SUT.c
-Link C source code or object. Not accessed unless \-h SUT.h is given.
+Link C source code or object. Not accessed unless -h SUT.h is given.
 .br
 With the '-C' option, SUT.c file is used as body of C compiled object.
 If the appropriate header file is given by '-h' option, those compiled
 objects can be accessed from the interpreter. At least one header file
-must be given by \-h option when using \-C option.  Multiple source
+must be given by -h option when using -C option.  Multiple source
 files can be given after one '-C'.  Suffix of the C source files must
 be properly set in the $CINTSYSDIR/MAKEINFO file.
 .TP
 .B \-i++ STUB.h
 C++ STUB function parameter information file.
 .br
--i++ option does opposite of \-H option.  While \-H option enables
-access of precompiled object from interpreter, \-i++ option enables
+-i++ option does opposite of -H option.  While -H option enables
+access of precompiled object from interpreter, -i++ option enables
 access of interpreted functions from compiled code.
 .nf
 #### Example is in /usr/share/doc/cint/demo/makecint/Stub directory
-$ makecint \-mk Makefile \-o mycint \-H Src.h \-i++ Stub.h \-C++ Src.C
-$ make \-f Makefile
+$ makecint -mk Makefile -o mycint -H Src.h -i++ Stub.h -C++ Src.C
+$ make -f Makefile
 $ mycint Stub.C
 .fi
 STUB.h file must be compliant to cint syntax limitations described in
@@ -529,12 +527,12 @@ and non-static global variable defined in STUB.h is undefined.
 .B \-i STUB.h
 C STUB function parameter information file.
 .br
-The \-i option does the opposite of the \-h option. While \-h enables
-access of precompiled object from interpreter, \-i enables access of
+The -i option does the opposite of the -h option. While -h enables
+access of precompiled object from interpreter, -i enables access of
 interpreted functions from compiled code.
 .nf
-$ makecint \-mk Makefile \-o mycint \-h Src.h \-i Stub.h \-C Src.c
-$ make \-f Makefile
+$ makecint -mk Makefile -o mycint -h Src.h -i Stub.h -C Src.c
+$ make -f Makefile
 $ mycint Stub.c
 .fi
 STUB.h file must be compliant to cint syntax limitations described in
@@ -543,7 +541,7 @@ functions can be specified in STUB.h file. Behavior of struct, union,
 enum and non-static global variable defined in STUB.h is undefined.
 .TP
 .B \-c SUT.c
-Same as '-h [sut].c \-C [sut].c'
+Same as '-h [sut].c -C [sut].c'
 .TP
 .B \-l \-lLIB
 Compiled object, Library or linker options
@@ -552,14 +550,14 @@ Compiled object, Library or linker options
 Handle undefined typename as class name.
 .br
 Fighting againt undefined typename is a tidious work, especially when
-you do not need public access to those.  \-u option ignores such
+you do not need public access to those.  -u option ignores such
 symbols and generates dummy code to eliminate this kind of problem. It
-handles unknown typename as a class name which is not exposed. \-u
+handles unknown typename as a class name which is not exposed. -u
 option takes output file name as an argument. All of the undefined
 typenames will be written out.
 .nf
-    $ makecint \-mk Makeit \-u undef.h \-H src.h \-C++ src.C
-    $ make \-mk Makeit
+    $ makecint -mk Makeit -u undef.h -H src.h -C++ src.C
+    $ make -mk Makeit
 .fi
 This option is not perfect. If you find problem, you need to fix it
 manually.
@@ -571,8 +569,8 @@ If you give this option, cint/makecint will disable dictionary
 generation for header files exist under given directory. For
 example,
 .nf
-    $ makecint \-mk makefile \-dl src.dll \-I/x/inc \-U/x/inc \-H src.h
-    $ make \-f makefile
+    $ makecint -mk makefile -dl src.dll -I/x/inc -U/x/inc -H src.h
+    $ make -f makefile
     $ cint src.dll
 .fi
 Suppose you have /x/inc/mylib.h and it is included from src.h, things
@@ -585,16 +583,16 @@ Ignore std namespace (default=1:ignore)
 Automatic loading of standard header files
 .br
 If you give this option, cint/makecint will automatically load
-standard header files used in header file given by \-h/-H
-option. Default is off(0). \-Z1 must be given to makecint when making
+standard header files used in header file given by -h/-H
+option. Default is off(0). -Z1 must be given to makecint when making
 dictinoary. For example,
 .nf
     // src.h
     #include <string>     // this will trigger implicit loading
     class myclass { .. };
 
-    $ makecint \-mk makefile \-dl src.dll \-Z1 \-H src.h
-    $ make \-f makefile
+    $ makecint -mk makefile -dl src.dll -Z1 -H src.h
+    $ make -f makefile
     $ cint src.dll
     cint> .file
     0: myheader.dll      // explicitly loaded
@@ -610,16 +608,16 @@ Compiler option
 Cint option
 .br
 This option specifies command line option directly gieven to
-cint. Multiple cint options can be given after \-cint.  There are a few
+cint. Multiple cint options can be given after -cint.  There are a few
 important cint options which I will describe below.
 .TP
-.B \-cint \-M NEWDELMASK
+.B \-cint -M NEWDELMASK
 Mask operator new/delete generation
 .br
 Caution: When making cint dictionary or interface method source code,
 it usually overloads global new and delete operators.  If you have
 yourown new/delete operator, you may want to elimitate new and delete
-from the dictionary source code.  \-M option turns off automatic
+from the dictionary source code.  -M option turns off automatic
 creation of operator new/delete in the dictionary source code. Mask
 flag is given as hex number described below.
 .nf
@@ -640,13 +638,13 @@ dictionary.
   #define G__MASK_OPERATOR_NEW    0x04
 .fi
 Cint does not generate operator new function in the dictionary because
-it is explicitly masked by \-M0x4 command line option.
+it is explicitly masked by -M0x4 command line option.
 .nf
 
   #define G__MASK_OPERATOR_DELETE 0x08
 .fi
 Cint does not generate operator new function in the dictionary because
-it is explicitly masked by \-M0x8 command line option.
+it is explicitly masked by -M0x8 command line option.
 .nf
 
   #define G__NOT_USING_2ARG_NEW   0x10
@@ -658,7 +656,7 @@ From cint5.14.60, a new scheme is introduced. This scmeme is still
 experimmental. In the new method, following flags dominates
 others. This scheme is intended to fix problems associated with global
 operator new/delete.
-Before 5.14.59, \-M0x1c or \-M0x10 was needed for HP-UX aCC, Solaris
+Before 5.14.59, -M0x1c or -M0x10 was needed for HP-UX aCC, Solaris
 CC5 and few other compilers. From 5.14.60, this option is not 
 needed for those platforms any more.
 .nf
@@ -683,10 +681,10 @@ following functions will be generated.
     static void operator delete(void *p,[DLLID]_tag* x);
     static void G__operator_delete(void *p);
 .fi
-Default value is \-M0x100 for pure CINT and \-M0x1c for ROOTCINT.
+Default value is -M0x100 for pure CINT and -M0x1c for ROOTCINT.
 .nf
-    $ makecint \-mk Makeit \-H src.h \-C++ src.C \-cint \-M0x1c
-    $ make \-mk Makeit
+    $ makecint -mk Makeit -H src.h -C++ src.C -cint -M0x1c
+    $ make -mk Makeit
 .fi
 If you have one argument operator new in your source code, your
 operator new should look like below.
@@ -719,20 +717,20 @@ delete should look like below.
     }
 .fi
 .TP
-.B \-cint  \-Z [0|1]
+.B -cint  -Z [0|1]
 Automatic loading of standard header files
 .br
 If you give this option, cint/makecint will automatically load
-standard header files used in header file given by \-h/-H
-option. Default is off(0). \-Z1 must be given to makecint when making
+standard header files used in header file given by -h/-H
+option. Default is off(0). -Z1 must be given to makecint when making
 dictinoary. For example,
 .nf
     // src.h
     #include <string>     // this will trigger implicit loading
     class myclass { .. };
 
-    $ makecint \-mk makefile \-dl src.dll \-H src.h \-cint \-Z1
-    $ make \-f makefile
+    $ makecint -mk makefile -dl src.dll -H src.h -cint -Z1
+    $ make -f makefile
     $ cint src.dll
     cint> .file
     0: myheader.dll      // explicitly loaded
@@ -741,7 +739,7 @@ dictinoary. For example,
     3: bool.h            //      "
 .fi
 .TP
-.B \-B FUNCNAME
+.B -B FUNCNAME
 Initialization function name
 .PP
 

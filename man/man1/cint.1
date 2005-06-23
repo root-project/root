@@ -23,12 +23,12 @@ scripting environment. Precompiled libraries can be dynamically
 loaded/unloaded if they are configured as Dynamic Link Library
 (DLL). See also makecint(1).
 .SH OPTIONS
-(*) : used only with makecint or \-c option
+(*) : used only with makecint or -c option
 .TP
 .B \-A
 ANSI C++ mode(default)
 .br
-Handles given file as C++, regardless of file extension. Otherwise,
+Handles given file as C++, regardless of file extension. Otherwise, 
 .c files are handled as C and .cxx, .C and .cpp files are handled
 as C++.
 .TP
@@ -36,38 +36,38 @@ as C++.
 Set break point
 .br
 Set break point in source file. Break point can be specified by either
-line number or function name. Use \-f option to specify a source file
+line number or function name. Use -f option to specify a source file
 that you want to set break point.
 .nf
-   \-b [line]
-   \-b [funcname]
-   \-b [classname]::[funcname]
+   -b [line]
+   -b [funcname]
+   -b [classname]::[funcname]
 .fi
 .TP
 .B \-c \-1 (*)
 Make C++ precompiled interface method files
 .br
-Cint creates interface method source file. Cint reads C++ header file and
+Cint creates interface method source file. Cint reads C++ header file and 
 analyzes interface that is exported to the interpreter. The information is
 then compiled into an interface method source file which can be compiled
 and lined with user code.
-Default name for the interface method source/header file is G__cpplink.C
+Default name for the interface method source/header file is G__cpplink.C 
 and G__cpplink.h.
-\-c option must be given after \-n, \-N, \-w and \-z option if used simultaneously.
-Normally, \-c\-1 option is used within the 'makecint' tool. In that case, a
+-c option must be given after -n, -N, -w and -z option if used simultaneously.
+Normally, -c-1 option is used within the 'makecint' tool. In that case, a
 user does not need to know the detail.
 .TP
 .B \-c \-2 (*)
 Make C precompiled interface method files
 .br
-Cint creates interface method source file. Cint reads C header file and
+Cint creates interface method source file. Cint reads C header file and 
 analyzes interface that is exported to the interpreter. The information is
 then compiled into an interface method source file which can be compiled
 and lined with user code.
-Default name for the interface method source/header file is G__clink.c
+Default name for the interface method source/header file is G__clink.c 
 and G__clink.h.
-\-c option must be given after \-n, \-N, \-w and \-z option if used simultaneously.
-Normally, \-c\-1 option is used within the 'makecint' tool. In that case, a
+-c option must be given after -n, -N, -w and -z option if used simultaneously.
+Normally, -c-1 option is used within the 'makecint' tool. In that case, a
 user does not need to know the detail.
 .TP
 .B \-C
@@ -91,7 +91,7 @@ Dump core at error
 .B \-f FILE
 Set break file
 .br
-This option is used with \-b option when setting break point to a specified
+This option is used with -b option when setting break point to a specified
 file.
 .TP
 .B \-F EXPRESSION
@@ -113,7 +113,7 @@ files.
 .B \-K
 C mode
 .br
-Handles given file as C, regardless of file extension. Otherwise,
+Handles given file as C, regardless of file extension. Otherwise, 
 .c files are handled as C and .cxx, .C and .cpp files are handled
 as C++.
 .TP
@@ -123,7 +123,7 @@ Link dynamic link library (or shared library)
 .B \-n LINKNAME (*)
 Specify interface method filename
 .br
-This option must be used with \-c, and must be given before the \-c option.
+This option must be used with -c, and must be given before the -c option.
 Cint creates an interface method source file as LINKNAME. If omitted,
 G__cpplink.C, G__cpplink.h are created for C++, and G__clink.c, G__clink.h
 are created for C.
@@ -131,8 +131,8 @@ are created for C.
 .B \-N DLL_NAME (*)
 Specify DLL interface method name
 .br
-This option must be used with \-c, and must be given before the \-c option.
-This option changes function name in the interface method source file,
+This option must be used with -c, and must be given before the -c option.
+This option changes function name in the interface method source file, 
 in order to avoid name conflict. All function names in the interface
 method source file are suffixed by DLL_NAME.
 .TP
@@ -186,7 +186,7 @@ Bytecode compiler debug mode
 .B \-w [0|1] (*)
 Switch between archive library and DLL when creating interface method source
 file. This option is needed only for Windows-NT/9x/200x when cint creates
-.DEF file for precompiled library. This option must be given before \-c option.
+.DEF file for precompiled library. This option must be given before -c option.
 .TP
 .B \-X READLINEDUMPFILE
 Execute readline dumpfile
@@ -202,13 +202,13 @@ This option switches 'std' namespace to be used(0) or ignored(1).
 .B \-z PROJECTNAME (*)
 Specify project name as PROJECTNAME when making interface method source file.
 This option is needed only for Windows-NT/9x/200x when cint creates .DEF file
-for precompiled library. This option must be given before \-c option.
+for precompiled library. This option must be given before -c option.
 .TP
 .B \-Z [0|1]
 Auto loading of standard header files with DLL
 .br
 This option controls automatic loading of standard header files with DLL.
-If \-Z1 is given, standard header files included when making interface method
+If -Z1 is given, standard header files included when making interface method
 source file are automatically loaded when loading DLL.
 .br
 .PP
@@ -223,7 +223,7 @@ files during cint run.
 .PP
 .SH SUBOPTIONS
 .br
-(*) : used only with makecint or \-c option
+(*) : used only with makecint or -c option
 Suboptions are options which appears  in  between  source files.
 .TP
 .B \-A
@@ -244,7 +244,7 @@ turn off preprocessor for following source files
 .B \+STUB (*)
 stub function header begin
 .TP
-.B \-STUB (*)
+.B -STUB (*)
 stub function header end
 
 ARGUMENTS
@@ -253,25 +253,25 @@ Arguments to main(int argc,char *argv[]) function.
 .nf
 $ cint
 $ cint lib1.c lib2.c source.c
-$ cint \-S \-I../include \-DDEBUG source.c
-$ cint \-x 'main(int argc,char *argv[]){printf("%s\n",argv[1]);}'
-$ cint \-qlevel1 myprog.C
+$ cint -S -I../include -DDEBUG source.c
+$ cint -x 'main(int argc,char *argv[]){printf("%s\n",argv[1]);}'
+$ cint -qlevel1 myprog.C
 .fi
 
 .SH DEBUG MODE
 Cint starts debug mode at following situations:
-.br
-\- main() function is not included in the given source file.
-.br
-\- Step execution mode (-S,-s option)
-.br
-\- Program reaches to a break point
-.br
-\- Keyboard interrupt (CTL-C or Break)
-.br
-\- Explicit call of interactive interface function G__pause().
-.br
-\- Bus error or segmentation violation occurred.
+.br 
+- main() function is not included in the given source file.
+.br 
+- Step execution mode (-S,-s option)
+.br 
+- Program reaches to a break point
+.br 
+- Keyboard interrupt (CTL-C or Break)
+.br 
+- Explicit call of interactive interface function G__pause().
+.br 
+- Bus error or segmentation violation occurred.
 
 You can perform step and trace execution, locate as many break points
 as you want, look into function/variable/class information tables,
