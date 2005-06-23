@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: Any.h,v 1.1 2005/06/23 10:21:06 brun Exp $
 // Author: Stefan Roiser 2004
 
 // See http://www.boost.org/libs/any for Documentation.
@@ -11,8 +11,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Boostany
-#define ROOT_Reflex_Boostany
+#ifndef ROOT_Reflex_Any
+#define ROOT_Reflex_Any
 
 // What:  variant TypeNth boost::any
 // who:   contributed by Kevlin Henney,
@@ -151,7 +151,7 @@ namespace ROOT {
       
       /** Query */
       virtual const char * What() const throw() {
-        return "boost::bad_any_cast: failed conversion using boost::any_cast";
+        return "bad_any_cast: failed conversion using any_cast";
       }
     };
     
