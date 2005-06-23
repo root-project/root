@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.30 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.31 2005/06/21 16:54:17 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -85,9 +85,12 @@ private:
    TPoint            fLastPos;
    UInt_t            fActiveButtonID;
 
-   // Scene management
-   Bool_t            fInternalRebuild;
-   UInt_t            fNextPhysicalID; // Remove in end
+   // Scene management - TODO: Most of this can probably be moved down to
+   // TGLViewer?
+   Bool_t            fInternalRebuild;      //! internal scene rebuild in progress?
+   Bool_t            fAcceptedAllPhysicals; //! did we take all physicals offered in AddObject()
+   Bool_t            fInternalPIDs;         //! using internal physical IDs
+   UInt_t            fNextInternalPID;      //! next internal physical ID (from 1 - 0 reserved)
 
    // Lighting
    Int_t             fLightMask;

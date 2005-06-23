@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.10 2005/06/01 12:38:25 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.cxx,v 1.11 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original by Timur Pocheptsov
 
@@ -299,6 +299,11 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box) const
 {
    Bool_t interest = kFALSE;
 
+   // TODO: Investigate why we sometime get objects with zero volume BBs
+   if (box.Volume() == 0.0) {
+      //assert(kFALSE);
+      return kFALSE;
+   }
    // If interest box is empty we take everything with volume larger than
    // 1% of largest seen so far
    if (fInterestBox.IsEmpty()) {
@@ -388,15 +393,6 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
 
    Double_t oldVal = val;
    Double_t shift = static_cast<Double_t>(screenShift) * (val-min) * sens / static_cast<Double_t>(screenShiftRange);
-   
-   // Shift is scaled with current val - ensure always minimum
-   /*if (!mod1 && !mod2 && abs(shift) < range / 1000.0) {
-      shift = range / 1000.0;
-      if (screenShift < 0) {
-         shift = -shift;
-      }
-   }*/
-
    val -= shift;
 
    if (val < min) {
@@ -422,7 +418,7 @@ void TGLCamera::DrawDebugAids() const
    // Draw out some debugging aids for the camera:
    //
    // i) The frustum used to create the current interest box (RED)
-   // ii) The 
+   // ii) The same frustum as a squared off box (ORANGE)
    // iii) The axis aligned version of the frustum used as interest box basis (YELLOW) 
    // iv) The current interest box (BLUE)
 

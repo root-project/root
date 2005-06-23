@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.5 2005/06/01 14:07:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.h,v 1.6 2005/06/15 10:22:57 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLSceneObject Timur Pocheptsov
 
@@ -40,7 +40,7 @@ private:
    Float_t                 fColor[17];    //! GL color array
    Bool_t                  fSelected;     //! selected state
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
-
+   Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
    // TODO: Common UInt_t flags section (in TGLDrawable?) to avoid multiple bools
 protected:
    // Methods
@@ -48,9 +48,11 @@ protected:
 
 public:
    TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
-                    const TGLMatrix & transform, Bool_t invertedWind);
+                    const TGLMatrix & transform, Bool_t invertedWind,
+                    const Float_t rgba[4]);
    TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
-                    const double * transform, Bool_t invertedWind);
+                    const double * transform, Bool_t invertedWind,
+                    const Float_t rgba[4]);
    virtual ~TGLPhysicalShape();
 
    // Associated logical
@@ -60,6 +62,9 @@ public:
    virtual void DrawWireFrame(UInt_t lod) const;
    virtual void DrawOutline(UInt_t lod) const;
    void         InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
+
+   // Modified - selected treated as temporary modification
+   Bool_t          IsModified() const                 { return fModified || IsSelected(); }
 
    // Selection
    Bool_t          IsSelected() const                 { return fSelected; }
@@ -77,8 +82,6 @@ public:
    void            Shift(const TGLVector3 & shift);
    TGLVector3      GetScale() const;
    void            SetScale(const TGLVector3 & scale);
-
-   inline Bool_t operator < (const TGLPhysicalShape & other) const;
 
    ClassDef(TGLPhysicalShape,0) // a physical (placed, global frame) drawable object
 };
@@ -101,6 +104,7 @@ inline void TGLPhysicalShape::Shift(const TGLVector3 & shift)
 {
    fTransform.Shift(shift);
    UpdateBoundingBox();
+   fModified = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -114,12 +118,7 @@ inline void TGLPhysicalShape::SetScale(const TGLVector3 & scale)
 { 
    fTransform.SetScale(scale); 
    UpdateBoundingBox();
-}
-
-//______________________________________________________________________________
-inline Bool_t TGLPhysicalShape::operator < (const TGLPhysicalShape & other) const
-{ 
-   return BoundingBox().Volume() < other.BoundingBox().Volume(); 
+   fModified = kTRUE;
 }
 
 #endif // ROOT_TGLPhysicalShape

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.8 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.9 2005/06/17 14:31:08 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -106,15 +106,14 @@ public:
    // Logical Shape Management
    void                    AdoptLogical(TGLLogicalShape & shape);
    Bool_t                  DestroyLogical(ULong_t ID);
-   UInt_t                  DestroyAllLogicals();
+   UInt_t                  DestroyLogicals();
    void                    PurgeNextLogical() {};
    TGLLogicalShape *       FindLogical(ULong_t ID)  const;
 
    // Physical Shape Management
    void                     AdoptPhysical(TGLPhysicalShape & shape);
    Bool_t                   DestroyPhysical(ULong_t ID);
-   UInt_t                   DestroyPhysicals(const TGLCamera & camera);
-   UInt_t                   DestroyAllPhysicals();
+   UInt_t                   DestroyPhysicals(Bool_t incModified, const TGLCamera * camera = 0);
    TGLPhysicalShape *       FindPhysical(ULong_t ID) const;
    void                     SetPhysicalsColorByLogical(ULong_t logicalID, const Float_t rgba[4]);
    TGLPhysicalShape *       GetSelected() const { return fSelectedPhysical; }

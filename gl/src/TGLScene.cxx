@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.10 2005/06/15 13:08:43 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.11 2005/06/15 15:40:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -40,8 +40,8 @@ TGLScene::TGLScene() :
 TGLScene::~TGLScene()
 {
    TakeLock(kModifyLock);
-   DestroyAllPhysicals();
-   DestroyAllLogicals();
+   DestroyPhysicals(kTRUE); // including modified
+   DestroyLogicals();
    ReleaseLock(kModifyLock);
 
    // Purge out the DL cache - when per drawable done no longer required
@@ -86,7 +86,7 @@ Bool_t TGLScene::DestroyLogical(ULong_t ID)
 }
 
 //______________________________________________________________________________
-UInt_t TGLScene::DestroyAllLogicals()
+UInt_t TGLScene::DestroyLogicals()
 {
    UInt_t count = 0;
    if (fLock != kModifyLock) {
@@ -179,7 +179,7 @@ Bool_t TGLScene::DestroyPhysical(ULong_t ID)
 }
 
 //______________________________________________________________________________
-UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
+UInt_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera * camera)
 {
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysicals", "expected ModifyLock");
@@ -192,23 +192,32 @@ UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
       physical = physicalShapeIt->second;
       if (physical) {
          // Destroy any physical shape no longer of interest to camera
-         if (!camera.OfInterest(physical->BoundingBox())) {
-            fPhysicalShapes.erase(physicalShapeIt++);
+         // If modified options allow this physical to be destoyed
+         if (incModified || (!incModified && !physical->IsModified())) {
+            // and no camera is passed, or it is no longer of interest
+            // to camera
+            if (!camera || (camera && !camera->OfInterest(physical->BoundingBox()))) {
 
-            // Zero the draw list entry - will be erased as part of sorting
-            DrawListIt_t drawIt = find(fDrawList.begin(), fDrawList.end(), physical);
-            if (drawIt != fDrawList.end()) {
-               *drawIt = 0;
-            } else {
-               assert(kFALSE);
-            }
+               // Then we can destroy it - remove from map
+               fPhysicalShapes.erase(physicalShapeIt++);
 
-            delete physical;
-            if (fSelectedPhysical == physical) {
-               fSelectedPhysical = 0;
+               // Zero the draw list entry - will be erased as part of sorting
+               DrawListIt_t drawIt = find(fDrawList.begin(), fDrawList.end(), physical);
+               if (drawIt != fDrawList.end()) {
+                  *drawIt = 0;
+               } else {
+                  assert(kFALSE);
+               }
+
+               // Ensure if selected object this is cleared
+               if (fSelectedPhysical == physical) {
+                  fSelectedPhysical = 0;
+               }
+               // Finally destroy actual object
+               delete physical;
+               ++count;
+               continue; // Incremented the iterator during erase()
             }
-            ++count;
-            continue;
          }
       } else {
          assert(kFALSE);
@@ -220,46 +229,6 @@ UInt_t TGLScene::DestroyPhysicals(const TGLCamera & camera)
       fBoundingBoxValid = kFALSE;
       fDrawListValid = kFALSE;
    }
-
-   return count;
-}
-
-//______________________________________________________________________________
-UInt_t TGLScene::DestroyAllPhysicals()
-{
-   UInt_t count = 0;
-   if (fLock != kModifyLock) {
-      Error("TGLScene::DestroyAllPhysicals", "expected ModifyLock");
-      return count;
-   }
-
-   PhysicalShapeMapIt_t physicalShapeIt = fPhysicalShapes.begin();
-   const TGLPhysicalShape * physical;
-   while (physicalShapeIt != fPhysicalShapes.end()) {
-      physical = physicalShapeIt->second;
-      if (physical) {
-         fPhysicalShapes.erase(physicalShapeIt++);
-         delete physical;
-         ++count;
-         continue;
-      } else {
-         assert(kFALSE);
-      }
-      ++physicalShapeIt;
-   }
-
-   // Empty draw list immediately - no point in setting all
-   // to zero
-   fDrawList.clear();
-
-   if (fSelectedPhysical) {
-      fSelectedPhysical = 0;
-   }
-   if (count > 0) {
-      fBoundingBoxValid = kFALSE;
-      fDrawListValid = kFALSE;
-   }
-
 
    return count;
 }

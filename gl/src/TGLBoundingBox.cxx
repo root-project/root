@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.5 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.6 2005/06/21 16:54:17 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -244,7 +244,7 @@ Bool_t TGLBoundingBox::Intersect(const TGLBoundingBox & a, const TGLBoundingBox 
    // if we convert  into our local frame
 
    // Find translation in parent frame
-   TGLVector3 parentT = a.Center() - b.Center();
+   TGLVector3 parentT = b.Center() - a.Center();
 
     // Find translation in A's frame
    TGLVector3 aT(Dot(parentT, a.Axis(0)), Dot(parentT, a.Axis(1)), Dot(parentT, a.Axis(2)));

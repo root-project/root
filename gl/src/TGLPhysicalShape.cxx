@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.7 2005/06/15 10:22:57 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPhysicalShape.cxx,v 1.8 2005/06/15 15:40:30 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -26,26 +26,33 @@ ClassImp(TGLPhysicalShape)
 
 //______________________________________________________________________________
 TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
-                                   const TGLMatrix & transform, Bool_t invertedWind) :
+                                   const TGLMatrix & transform, Bool_t invertedWind,
+                                   const Float_t rgba[4]) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
    fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
-   fInvertedWind(invertedWind)
+   fInvertedWind(invertedWind),
+   fModified(kFALSE)
 {
    fLogicalShape.AddRef();
-   fBoundingBox.Set(fLogicalShape.BoundingBox());
-   fBoundingBox.Transform(fTransform);
+   UpdateBoundingBox();
+
+   // Set color and reset modified flag as we are just initialising
+   SetColor(rgba);
+   fModified = kFALSE;
 }
 
 //______________________________________________________________________________
 TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalShape,
-                                   const Double_t * transform, Bool_t invertedWind) :
+                                   const Double_t * transform, Bool_t invertedWind,
+                                   const Float_t rgba[4]) :
    TGLDrawable(ID, kFALSE), // Physical shapes not DL cached by default
    fLogicalShape(logicalShape),
    fTransform(transform),
    fSelected(kFALSE),
-   fInvertedWind(invertedWind)
+   fInvertedWind(invertedWind),
+   fModified(kFALSE)
 {
    fLogicalShape.AddRef();
    // Temporary hack - invert the rotation part of martix as TGeo sends this
@@ -53,6 +60,10 @@ TGLPhysicalShape::TGLPhysicalShape(ULong_t ID, const TGLLogicalShape & logicalSh
    // to fix - probably when filling TBuffer3D - should always be OGL convention?
 	fTransform.InvRot();
    UpdateBoundingBox();
+
+   // Set color and reset modified flag as we are just initialising
+   SetColor(rgba);
+   fModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -87,6 +98,8 @@ void TGLPhysicalShape::SetColor(const Float_t rgba[4])
    fColor[7] = fColor[11] = fColor[15] = 1.f;
    //shininess
    fColor[16] = 60.f;
+
+   fModified = kTRUE;
 }
 
 //______________________________________________________________________________

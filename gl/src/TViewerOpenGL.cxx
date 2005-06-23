@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.64 2005/06/15 15:40:30 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.65 2005/06/21 16:54:17 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -149,7 +149,8 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
    fContextMenu(0), fCanvasWindow(0), fCanvasContainer(0),
    fColorEditor(0), fGeomEditor(0), fSceneEditor(0), fLightEditor(0),
    fAction(kNone), fStartPos(0,0), fLastPos(0,0), fActiveButtonID(0),
-   fInternalRebuild(kFALSE), fNextPhysicalID(1), // 0 reserved
+   fInternalRebuild(kFALSE), fAcceptedAllPhysicals(kTRUE),
+   fInternalPIDs(kFALSE), fNextInternalPID(1), // 0 reserved
    fLightMask(0x1b), fPad(pad), fComposite(0), fCSLevel(0),
    fAcceptedPhysicals(0), fRejectedPhysicals(0)
 {
@@ -483,7 +484,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          case(kButton4): {
             // Zoom out (adjust camera FOV)
             if (CurrentCamera().Zoom(-30, event->fState & kKeyControlMask, 
-                                          event->fState & kKeyMod1Mask)) { //TODO : val static const somewhere
+                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
                Invalidate();
             }
             break;
@@ -491,7 +492,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          case(kButton5): {
             // Zoom in (adjust camera FOV)
             if (CurrentCamera().Zoom(+30, event->fState & kKeyControlMask, 
-                                          event->fState & kKeyMod1Mask)) { //TODO : val static const somewhere
+                                          event->fState & kKeyShiftMask)) { //TODO : val static const somewhere
                Invalidate();
             }
             break;
@@ -564,13 +565,13 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_J:
    case kKey_j:
       invalidate = CurrentCamera().Dolly(10, event->fState & kKeyControlMask, 
-                                             event->fState & kKeyMod1Mask); //TODO : val static const somewhere
+                                             event->fState & kKeyShiftMask); //TODO : val static const somewhere
       break;
    case kKey_Minus:
    case kKey_K:
    case kKey_k:
       invalidate = CurrentCamera().Dolly(-10, event->fState & kKeyControlMask, 
-                                              event->fState & kKeyMod1Mask); //TODO : val static const somewhere
+                                              event->fState & kKeyShiftMask); //TODO : val static const somewhere
       break;
    case kKey_R:
    case kKey_r:
@@ -659,7 +660,7 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
       invalidate = CurrentCamera().Truck(event->fX, fViewport.Y() - event->fY, xDelta, -yDelta);
    } else if (fAction == kDolly) {
       invalidate = CurrentCamera().Dolly(xDelta, event->fState & kKeyControlMask, 
-                                                 event->fState & kKeyMod1Mask);
+                                                 event->fState & kKeyShiftMask);
    } else if (fAction == kDrag) {
       TGLPhysicalShape * selected = fScene.GetSelected();
       if (selected) {
@@ -959,36 +960,48 @@ void TViewerOpenGL::BeginScene()
    UInt_t destroyedLogicals = 0;
    UInt_t destroyedPhysicals = 0;
 
+   TGLStopwatch stopwatch;
+   if (gDebug>2 || fDebugMode) {
+      stopwatch.Start();
+   }
+
    // External rebuild?
-   if (!fInternalRebuild) {
+   if (!fInternalRebuild) 
+   {
+      // Potentially using external physical IDs
+      fInternalPIDs = kFALSE;
+
       // Reset camera interest to ensure we respond to
       // new scene range
       CurrentCamera().ResetInterest();
 
       // External rebuilds could potentially invalidate all logical and
-      // physical shapes
+      // physical shapes - including any modified physicals
       // Physicals must be removed first
-      destroyedPhysicals = fScene.DestroyAllPhysicals();
-      destroyedLogicals = fScene.DestroyAllLogicals();
+      destroyedPhysicals = fScene.DestroyPhysicals(kTRUE); // include modified
+      destroyedLogicals = fScene.DestroyLogicals();
 
       // Purge out the DL cache - not required once shapes do this themselves properly
       TGLDisplayListCache::Instance().Purge();
    } else {
-      //Internal rebuilds - destroy all physicals - retain logicals
-      destroyedPhysicals = fScene.DestroyAllPhysicals();
-      //fScene.DestroyPhysicals(CurrentCamera());
+      // Internal rebuilds - destroy all non-modified physicals no longer of
+      // interest to camera - retain logicals
+      destroyedPhysicals = fScene.DestroyPhysicals(kFALSE, &CurrentCamera()); // excluded modified
    }
 
-   // Reset internal ID counter
-   fNextPhysicalID = 1;
+   // Reset internal physical ID counter
+   fNextInternalPID = 1;
    
-   // Reset tracing info
+   // Potentially accepting all physicals from external client
+   fAcceptedAllPhysicals = kTRUE;
+
+  // Reset tracing info
    fAcceptedPhysicals = 0;
    fRejectedPhysicals = 0;
 
    if (gDebug>2 || fDebugMode) {
-      Info("TViewerOpenGL::BeginScene", "destroyed %d physicals %d logicals", 
-            destroyedPhysicals, destroyedLogicals);
+      Info("TViewerOpenGL::BeginScene", "destroyed %d physicals %d logicals in %f msec", 
+            destroyedPhysicals, destroyedLogicals, stopwatch.End());
       fScene.Dump();
    }
 }
@@ -1010,7 +1023,8 @@ void TViewerOpenGL::EndScene()
    }      
 
    if (gDebug>2 || fDebugMode) {
-      Info("TViewerOpenGL::EndScene", "Added %d, rejected %d physicals", fAcceptedPhysicals, fRejectedPhysicals);
+      Info("TViewerOpenGL::EndScene", "Added %d, rejected %d physicals, accepted all:%s", fAcceptedPhysicals, 
+                                       fRejectedPhysicals, fAcceptedAllPhysicals ? "Yes":"No");
       fScene.Dump();
    }
 }
@@ -1018,11 +1032,19 @@ void TViewerOpenGL::EndScene()
 //______________________________________________________________________________
 Bool_t TViewerOpenGL::RebuildScene()
 {
+   // If we accepted all offered physicals into the scene no point in 
+   // rebuilding it
+   if (fAcceptedAllPhysicals) {
+      if (gDebug>3 || fDebugMode) {
+         Info("TViewerOpenGL::RebuildScene", "not required - all physicals previous accepted");
+      }
+      return kFALSE;   
+   }
    // Update the camera interest (forced in debug mode) - if changed
    // scene should be rebuilt
    if (!CurrentCamera().UpdateInterest(fDebugMode)) {
       if (gDebug>3 || fDebugMode) {
-         Info("TViewerOpenGL::RebuildScene", " not required");
+         Info("TViewerOpenGL::RebuildScene", "not required - no camera interest change");
       }
       return kFALSE;
    }
@@ -1056,7 +1078,11 @@ Bool_t TViewerOpenGL::RebuildScene()
 //______________________________________________________________________________
 Int_t TViewerOpenGL::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   Int_t sections = AddObject(fNextPhysicalID, buffer, addChildren);   
+   // Add an object to the viewer, using internal physical IDs
+
+   // If this is called we are generating internal physical IDs
+   fInternalPIDs = kTRUE;
+   Int_t sections = AddObject(fNextInternalPID, buffer, addChildren);   
    return sections;
 }
 
@@ -1064,6 +1090,30 @@ Int_t TViewerOpenGL::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 // TODO: Cleanup addChildren to UInt_t flag for full termination - how returned?
 Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
+   // Add an object to the viewer, using an external physical ID.
+
+   // TODO: Break this up and make easier to understand. This is pretty convoluted
+   // due to the large number of cases it has to deal with:
+   // i) Exisiting physical and/or logical
+   // ii) External provider can supply bounding box or not?
+   // iii) Local/global reference frame
+   // iv) Defered filling of some sections of the buffer
+   // v) Internal or external physical IDs
+   // vi) Composite components as special case
+   //
+   // The buffer filling means the function is re-entrant which adds to complication 
+
+   if (physicalID == 0) {
+      Error("TViewerOpenGL::AddObject", "0 physical ID reserved");
+      return TBuffer3D::kNone;
+   }
+
+   // Internal and external physical IDs cannot be mixed in a scene build
+   if (fInternalPIDs && physicalID != fNextInternalPID) {
+      Error("TViewerOpenGL::AddObject", "invalid next physical ID - mix of internal + external IDs?");
+      return TBuffer3D::kNone;
+   }
+
    if (addChildren) {
       *addChildren = kFALSE;
    }
@@ -1073,9 +1123,6 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
       assert(kFALSE);
       return TBuffer3D::kNone;
    }
-
-   // 0 reserved for detecting re-entry
-   assert(physicalID != 0);
    
    // Note that 'object' here is really a physical/logical pair described
    // in buffer + physical ID.
@@ -1093,23 +1140,35 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
    TGLPhysicalShape * physical = fScene.FindPhysical(physicalID);
 
    // Function can be called twice if extra buffer filling for logical 
-   // is required. TODO: Could mess up as rebuild scene starting with last used physical...
-   static UInt_t lastPhysicalID = 0;
+   // is required - record last physical ID to detect
+   static UInt_t lastPID = 0;
 
-   // First attempt to add this object
-   if (physicalID != lastPhysicalID) {
-      
-      // If we already have physical we do not need this object
+   // First attempt to add this physical 
+   if (physicalID != lastPID) {
+      // Existing physical
       if (physical) {
          assert(logical); // Have physical - should have logical
          
-         // We still check child interest as we may have reject children previously
-         // with a different camera configuration
          if (addChildren) {
-            *addChildren = CurrentCamera().OfInterest(physical->BoundingBox());
+            // For internal PID we request all children even if we will reject them.
+            // This ensures PID always represent same external entity.
+            if (fInternalPIDs) {
+               *addChildren = kTRUE;
+            } else 
+            // For external PIDs we check child interest as we may have reject children previously
+            // with a different camera configuration
+            {
+               *addChildren = CurrentCamera().OfInterest(physical->BoundingBox());
+            }
          }
          
-         // Either way we don't need anything more for this object
+         // Always increment the internal physical ID so they
+         // match external object sequence
+         if (fInternalPIDs) {
+            fNextInternalPID++;
+         }
+
+         // We don't need anything more for this object
          return TBuffer3D::kNone; 
       }
       // New physical 
@@ -1120,15 +1179,19 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
          // If already have logical use it's BB
          if (logical) {
             box = logical->BoundingBox();
+            //assert(!box.IsEmpty());
          }
          // else if bounding box in buffer valid use this
          else if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
             box.Set(buffer.fBBVertex);
+            //assert(!box.IsEmpty());
+
          // otherwise we need to use raw points to build a bounding box with
          // If raw sections not set it will be requested by ValidateObjectBuffer
          // below and we will re-enter here
          } else if (buffer.SectionsValid(TBuffer3D::kRaw)) {
             box.SetAligned(buffer.NbPnts(), buffer.fPnts);
+            //assert(!box.IsEmpty());
          }
       
          // Box is valid?
@@ -1137,10 +1200,26 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
             box.Transform(TGLMatrix(buffer.fLocalMaster));
             Bool_t ofInterest = CurrentCamera().OfInterest(box);
             if (addChildren) {
-               *addChildren = ofInterest;
+               // For internal PID we request all children even if we will reject them.
+               // This ensures PID always represent same external entity.
+               if (fInternalPIDs) {
+                  *addChildren = kTRUE;
+               } else 
+               // For external PID request children if physical of interest
+               {
+                  *addChildren = ofInterest;
+               }
             }            
+            // Physical is of interest?
             if (!ofInterest) {
                ++fRejectedPhysicals;
+               fAcceptedAllPhysicals = kFALSE;
+
+               // Always increment the internal physical ID so they
+               // match external object sequence
+               if (fInternalPIDs) {
+                  fNextInternalPID++;
+               }
                return TBuffer3D::kNone;
             } 
          }
@@ -1152,12 +1231,14 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
       if (extraSections != TBuffer3D::kNone) {         
          return extraSections;
       } else {
-         lastPhysicalID = physicalID;
-      }  
+         lastPID = physicalID; // Will not to re-test interest
+      }
    }
 
-   assert(lastPhysicalID == physicalID);
-   
+   if(lastPID != physicalID)
+   {
+      assert(kFALSE);
+   }
    // By now we should need to add a physical at least
    if (physical) {
       assert(kFALSE);
@@ -1178,8 +1259,7 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
 
    // Finally create the physical, binding it to the logical, and add to scene
    physical = CreateNewPhysical(physicalID, buffer, *logical);
-   fNextPhysicalID++;
-   
+
    if (physical) { 
       fScene.AdoptPhysical(*physical);
       ++fAcceptedPhysicals;
@@ -1190,7 +1270,14 @@ Int_t TViewerOpenGL::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool
       assert(kFALSE);
    }
 
-   lastPhysicalID = 0;
+   // Always increment the internal physical ID so they
+   // match external object sequence
+   if (fInternalPIDs) {
+      fNextInternalPID++;
+   }
+
+   // Reset last physical ID so can detect new one
+   lastPID = 0;
    return TBuffer3D::kNone;
 }
 
@@ -1320,25 +1407,22 @@ TGLPhysicalShape * TViewerOpenGL::CreateNewPhysical(UInt_t ID,
                                                     const TBuffer3D & buffer, 
                                                     const TGLLogicalShape & logical) const
 {
-   TGLPhysicalShape * newPhysical = new TGLPhysicalShape(ID, logical, buffer.fLocalMaster, buffer.fReflection);
-   if (newPhysical) {
-      // Extract indexed color from buffer
-      // TODO: Still required? Better use proper color triplet in buffer?
-      Int_t colorIndex = buffer.fColor;
-      if (colorIndex <= 1) colorIndex = 42; //temporary
-      Float_t rgba[4] = { 0.0 };
-      TColor *rcol = gROOT->GetColor(colorIndex);
+   // Extract indexed color from buffer
+   // TODO: Still required? Better use proper color triplet in buffer?
+   Int_t colorIndex = buffer.fColor;
+   if (colorIndex <= 1) colorIndex = 42; //temporary
+   Float_t rgba[4] = { 0.0 };
+   TColor *rcol = gROOT->GetColor(colorIndex);
 
-      if (rcol) {
-         rcol->GetRGB(rgba[0], rgba[1], rgba[2]);
-      }
-      
-      // Extract transparency component - convert to opacity (alpha)
-      rgba[3] = 1.f - buffer.fTransparency / 100.f;
-
-      // Setup the colors on new physical
-      newPhysical->SetColor(rgba);
+   if (rcol) {
+      rcol->GetRGB(rgba[0], rgba[1], rgba[2]);
    }
+   
+   // Extract transparency component - convert to opacity (alpha)
+   rgba[3] = 1.f - buffer.fTransparency / 100.f;
+
+   TGLPhysicalShape * newPhysical = new TGLPhysicalShape(ID, logical, buffer.fLocalMaster, 
+                                                         buffer.fReflection, rgba);
    return newPhysical;
 }
 
