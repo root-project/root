@@ -62,12 +62,12 @@ map-krb5auth:   $(RLIBMAP)
 map::           map-krb5auth
 
 clean-krb5auth:
-		@rm -f $(KRB5AUTHO)
+		@rm -f $(KRB5AUTHO) $(KRB5AUTHDO)
 
 clean::         clean-krb5auth
 
 distclean-krb5auth: clean-krb5auth
-		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHLIB)
+		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHDS) $(KRB5AUTHDH) $(KRB5AUTHLIB)
 
 distclean::     distclean-krb5auth
 
