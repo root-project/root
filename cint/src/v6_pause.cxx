@@ -1963,7 +1963,7 @@ G__value *rslt;
         G__security |= G__SECURE_GARBAGECOLLECTION;
         fprintf(G__sout,"!!!new/delete reference count control turned on");
       }
-      fprintf(G__sout,"  0x%lx\n",G__security);
+      fprintf(G__sout,"  0x%x\n",G__security);
     }
 
 #endif /* G__SECURITY */
