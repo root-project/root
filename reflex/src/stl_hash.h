@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:$:$Id:$
+// @(#)root/reflex:$Name:  $:$Id: stl_hash.h,v 1.1 2005/06/23 10:23:22 brun Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -15,7 +15,6 @@
 #if defined(__INTEL_COMPILER)
   #include <ext/hash_map>
   #include <ext/hash_set>
-  #define __gnu_cxx              std
 #elif defined(__GNUC__)
   // For gcc, the hash_map and hash_set classes are in the extensions area
   #include <ext/hash_set>
@@ -26,11 +25,6 @@
   #include <hash_set>
   // We normailze everything to __gnu_cxx for windows
   #define __gnu_cxx        stdext
-#elif defined(__ICC) || defined(__ECC)
-  #include <hash_map>
-  #include <hash_set>
-  // We normailze everything to __gnu_cxx for ICC end ECC
-  #define __gnu_cxx              std
 #elif defined(__SUNPRO_CC) || defined(_AIX) || (defined(__alpha)&&!defined(__linux))
   #include <map>
   #define __gnu_cxx              std
@@ -44,11 +38,11 @@
 #if defined (_WIN32)
 
 namespace __gnu_cxx {
-   
+
   inline size_t __gnu_cxx_hash_string(const char* s)  {
-    unsigned long __h = 0; 
-    for ( ; *s; ++s) __h = 5*__h + *s;    
-    return size_t(__h);  
+    unsigned long __h = 0;
+    for ( ; *s; ++s) __h = 5*__h + *s;
+    return size_t(__h);
   }
 
   template<> class hash_compare< const char *> {
@@ -60,7 +54,7 @@ namespace __gnu_cxx {
     bool operator( )( const Key& k1, const Key& k2 ) const { return strcmp(k1 ,k2) < 0; }
   };
 
-} // namespace __gnu_cxx  
+} // namespace __gnu_cxx
 
 #endif // __ICC, __ECC, _WIN32
 
