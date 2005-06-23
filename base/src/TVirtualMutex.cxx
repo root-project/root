@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.cxx,v 1.5 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.cxx,v 1.6 2005/06/23 07:56:15 brun Exp $
 // Author: Fons Rademakers   14/02/2002
 
 /*************************************************************************
@@ -41,12 +41,4 @@ ClassImp(TLockGuard)
 // of other (preferrably local) mutexes. Note that in this
 // concept gGlobalMutex must be used in TStorage to prevent 
 // lockup of the system (see TMutex::Factory)
-TVirtualMutex *TVirtualMutex::fgMutex = 0;
-
-TVirtualMutex *TVirtualMutex::GetGlobalMutex() {
-   return fgMutex;
-}
-
-void TVirtualMutex::SetGlobalMutex(TVirtualMutex *vm) {
-   fgMutex = vm;
-}
+TVirtualMutex *gGlobalMutex = 0;

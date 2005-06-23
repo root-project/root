@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.152 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.153 2005/06/23 10:53:32 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -500,7 +500,7 @@ TROOT::~TROOT()
 
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
-      TVirtualMutex::SetGlobalMutex(0);
+      gGlobalMutex = 0;
 
       // Return when error occured in TCint, i.e. when setup file(s) are
       // out of date
