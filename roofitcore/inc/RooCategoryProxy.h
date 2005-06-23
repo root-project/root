@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCategoryProxy.rdl,v 1.16 2005/04/18 21:44:42 wverkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.17 2005/06/20 15:44:49 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,7 +36,7 @@ public:
   inline operator Int_t() const { return ((RooAbsCategory*)_arg)->getIndex() ; }
   inline operator const char*() const { return ((RooAbsCategory*)_arg)->getLabel() ; }
   inline const RooAbsCategory& arg() const { return (RooAbsCategory&)*_arg ; }
-  inline Bool_t hasRange(const char* rangeName) const { return lvptr()->hasRange(rangeName) ; }
+  inline Bool_t hasRange(const char* rangeName) const { return arg().hasRange(rangeName) ; }
 
 protected:
 
