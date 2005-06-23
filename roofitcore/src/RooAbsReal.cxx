@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.113 2005/06/16 09:31:24 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.114 2005/06/20 15:44:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1163,25 +1163,25 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList, o.projectionRangeName) ;
   //cout << "RooAbsReal::plotOn(" << GetName() << ") end createProjection" << endl ;
 
+  // Always fix RooAddPdf normalizations
+  RooArgSet fullNormSet(*deps) ;
+  fullNormSet.add(projectedVars) ;
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
-    // Optionally fix RooAddPdf normalizations
-    RooArgSet fullNormSet(*deps) ;
-    fullNormSet.add(projectedVars) ;
     fullNormSet.add(*projDataNeededVars) ;
-    RooArgSet* compSet = projection->getComponents() ;
-    TIterator* iter = compSet->createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
-      if (pdf) {
-	pdf->selectNormalization(&fullNormSet) ;
-      } 
-    }
-    delete iter ;
-    delete compSet ;
   }
-
-
+  RooArgSet* compSet = projection->getComponents() ;
+  TIterator* iter = compSet->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+    if (pdf) {
+      pdf->selectNormalization(&fullNormSet) ;
+    } 
+  }
+  delete iter ;
+  delete compSet ;
+  
+  
   // Apply data projection, if requested
   if (o.projData && projDataNeededVars && projDataNeededVars->getSize()>0) {
 

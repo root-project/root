@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooExtendPdf.cc,v 1.16 2005/06/16 09:31:27 wverkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.17 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -115,7 +115,8 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
       if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
     }
 
-    nExp /= (fracInt / normInt) ;
+
+    nExp /= (fracInt / normInt) ;    
   }
 
   // Multiply with original Nexpected, if defined

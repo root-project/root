@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.68 2005/06/16 09:31:25 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.69 2005/06/20 15:44:47 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -482,7 +482,7 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset, const char* rangeName) co
     // coef[i] = expectedEvents[i] / SUM(expectedEvents)
     Double_t coefSum(0) ;
     for (i=0 ; i<_pdfList.getSize() ; i++) {
-      _coefCache[i] = ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(nset) ;
+      _coefCache[i] = ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
       coefSum += _coefCache[i] ;
     }
     if (coefSum==0.) {
@@ -554,7 +554,7 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset, const char* rangeName) co
 //     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "] r1 = " << r1->getVal() << " (" << r1->GetName() << ")" << endl ;
 //     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "] r2 = " << r2->getVal() << " (" << r2->GetName() << ")" << endl ;
 //     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "] proj = " << proj << endl ;
-
+    
     _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMath.rdl,v 1.13 2005/06/16 09:31:28 wverkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.14 2005/06/20 15:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,8 @@ typedef Double_t* pDouble_t ;
 
 class RooMath {
 public:
+
+  virtual ~RooMath() {} ;
 
   // CERNLIB complex error function
   static RooComplex ComplexErrFunc(Double_t re, Double_t im= 0);
