@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.6 2005/06/22 20:18:11 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.7 2005/06/23 06:24:27 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -261,7 +261,7 @@ void TSecContext::Print(Option_t *opt) const
       if (fOffSet > -1) {
          if (fDetails.BeginsWith("AFS"))
             Printf("Security context:     Method: AFS, not reusable");
-         else 
+         else
             Printf("Security context:     Method: %d (%s) expiring on %s",
                    fMethod,TAuthenticate::GetAuthMethod(fMethod),
                    fExpDate.AsString());
@@ -282,37 +282,30 @@ void TSecContext::Print(Option_t *opt) const
 }
 
 //______________________________________________________________________________
-const char *TSecContext::AsString() const
+const char *TSecContext::AsString(TString &out) const
 {
    // Returns short string with relevant information about this
    // security context
 
-   static TString thestring(256);
-
-   R__LOCKGUARD2(gStringMutex);
-
    if (fOffSet > -1) {
       if (fDetails.BeginsWith("AFS"))
-         thestring = Form("Method: AFS, not reusable");
-      else
-         thestring =
-            Form("Method: %d (%s) expiring on %s",
-                 fMethod,TAuthenticate::GetAuthMethod(fMethod),
-                 fExpDate.AsString());
+         out = Form("Method: AFS, not reusable");
+      else {
+         char expdate[32];
+         out = Form("Method: %d (%s) expiring on %s",
+                    fMethod, TAuthenticate::GetAuthMethod(fMethod),
+                    fExpDate.AsString(expdate));
+      }
    } else {
       if (fOffSet == -1)
-         thestring =
-            Form("Method: %d (%s) not reusable",
-                 fMethod,TAuthenticate::GetAuthMethod(fMethod));
+         out = Form("Method: %d (%s) not reusable",
+                    fMethod, TAuthenticate::GetAuthMethod(fMethod));
       else if (fOffSet == -3)
-         thestring =
-            Form("Method: %d (%s) authorized by /etc/hosts.equiv or $HOME/.rhosts",
-                 fMethod,TAuthenticate::GetAuthMethod(fMethod));
+         out = Form("Method: %d (%s) authorized by /etc/hosts.equiv or $HOME/.rhosts",
+                    fMethod, TAuthenticate::GetAuthMethod(fMethod));
       else if (fOffSet == -4)
-         thestring =
-            Form("No authentication required remotely");
+         out = Form("No authentication required remotely");
    }
-
-   return thestring;
+   return out.Data();
 }
 

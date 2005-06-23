@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.2 2005/02/18 14:44:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.3 2005/04/30 01:00:44 rdm Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -59,15 +59,15 @@ private:
 public:
 
    TSecContext(const char *url, Int_t meth, Int_t offset,
-               const char *details, const char *token, 
+               const char *details, const char *token,
                TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
-   TSecContext(const char *user, const char *host, Int_t meth, Int_t offset, 
-               const char *details, const char *token, 
+   TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
+               const char *details, const char *token,
                TDatime expdate = kROOTTZERO, void *ctx = 0, Int_t key = 1);
    virtual    ~TSecContext();
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);
-   const char *AsString() const;
+   const char *AsString(TString &out) const;
    void        Cleanup();
 
    void        DeActivate(Option_t *opt = "CR");
@@ -76,7 +76,7 @@ public:
    TDatime     GetExpDate() const { return fExpDate; }
    const char *GetHost()    const { return fHost; }
    Int_t       GetMethod()  const { return fMethod; }
-   const char *GetMethodName() const 
+   const char *GetMethodName() const
                    { return TAuthenticate::GetAuthMethod(fMethod); }
    Int_t       GetOffSet()  const { return fOffSet; }
    Int_t       GetRSAKey()  const { return fRSAKey; }
@@ -100,13 +100,13 @@ public:
 //
 // TSecContextCleanup
 //
-// When the context is destroyed the remote authentication table 
+// When the context is destroyed the remote authentication table
 // should be updated; also, for globus, remote shared memory segments
 // should be destroyed; for this we need to open a socket to a remote
-// service; we keep track here of port and type of socket needed by 
+// service; we keep track here of port and type of socket needed by
 // the remote service used in connection with this security context.
 // The last used is the first in the list.
-// This info is used in TAuthenticate::CleanupSecContext to trasmit 
+// This info is used in TAuthenticate::CleanupSecContext to trasmit
 // the actual cleanup request
 //
 class TSecContextCleanup : public TObject {
@@ -117,7 +117,7 @@ private:
    Int_t   fServerType;     // 0 = sockd, 1 = rootd, 2 = proofd
 
 public:
-   TSecContextCleanup(Int_t port, Int_t proto, Int_t type) : 
+   TSecContextCleanup(Int_t port, Int_t proto, Int_t type) :
                fPort(port), fServerProtocol(proto), fServerType(type) { };
    virtual ~TSecContextCleanup() { };
 
@@ -125,7 +125,7 @@ public:
    Int_t   GetProtocol() const { return fServerProtocol; }
    Int_t   GetType() const { return fServerType; }
 
-   ClassDef(TSecContextCleanup,0)  
+   ClassDef(TSecContextCleanup,0)
 };
 
 //

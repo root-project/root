@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.6 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.7 2005/04/28 16:14:27 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -733,7 +733,7 @@ TSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
 }
 
 //______________________________________________________________________________
-void THostAuth::AsString(TString &Out)
+void THostAuth::AsString(TString &Out) const
 {
    // Return a static string with all info in a serialized form
 

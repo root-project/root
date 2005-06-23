@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.5 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.6 2005/04/28 16:14:27 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
 
    virtual ~THostAuth();
 
-   void     AsString(TString &out);
+   void     AsString(TString &out) const;
 
    Int_t    NumMethods() const { return fNumMethods; }
    Int_t    GetMethod(Int_t idx) const { return fMethods[idx]; }

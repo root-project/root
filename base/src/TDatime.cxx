@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.8 2003/07/02 11:53:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.9 2004/07/07 22:42:40 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -87,12 +87,39 @@ const char *TDatime::AsString() const
    // Copy result because it points to a statically allocated string.
 
    time_t t = Convert();
-   Char_t *retStr = ctime(&t);
+   char *retStr = ctime(&t);
    if (retStr) {
       *(retStr + 24) = 0;
       return retStr;
    } else {
       static const char *defaulttime = "15/06/96";
+      Error("TDatime::AsString", "could not get time string");
+      return defaulttime;
+   }
+}
+
+//______________________________________________________________________________
+const char *TDatime::AsString(char *out) const
+{
+   // Return the date & time as a string (ctime() format).
+   // Result is copied into out (and out is returned). Make sure
+   // out can at least contain 26 characters. Thread safe.
+
+   time_t t = Convert();
+#ifdef _REENTRANT
+   char *retStr = ctime_r(&t, out);
+#else
+   char *retStr = ctime(&t);
+#endif
+   if (retStr) {
+      *(retStr + 24) = 0;
+#ifndef _REENTRANT
+      strcpy(out, retStr);
+#endif
+      return retStr;
+   } else {
+      static const char *defaulttime = "15/06/96";
+      strcpy(out, defaulttime);
       Error("TDatime::AsString", "could not get time string");
       return defaulttime;
    }
