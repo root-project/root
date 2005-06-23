@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v4-04-02 $:$Id: TAuthenticate.cxx,v 1.73 2005/04/30 01:00:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.74 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -118,7 +118,7 @@ Int_t TAuthenticate::fgClientProtocol = 12;  // increase when client protocol ch
 // ID of the main thread as unique identifier
 Int_t TAuthenticate::fgProcessID = -1;
 
-TVirtualMutex *TAuthenticate::fgMutex = 0; 
+TVirtualMutex *gAuthenticateMutex = 0; 
 
 // Standar version of Sec Context match checking
 Int_t StdCheckSecCtx(const char *, TSecContext *);
@@ -132,9 +132,9 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
 {
    // Create authentication object.
 
-   if (gDebug > 2 && fgMutex)
+   if (gDebug > 2 && gAuthenticateMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    // Use the ID of the starting thread as unique identifier
    if (fgProcessID < 0)
@@ -364,9 +364,9 @@ Bool_t TAuthenticate::Authenticate()
    // Authenticate to remote rootd or proofd server. Return kTRUE if
    // authentication succeeded.
 
-   if (gDebug > 2 && fgMutex)
+   if (gDebug > 2 && gAuthenticateMutex)
       Info("Authenticate", "locking mutex (pid:  %d)",gSystem->GetPid());
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    Bool_t rc = kFALSE;
    Int_t st = -1;
@@ -815,7 +815,7 @@ void TAuthenticate::SetEnvironment()
    // Set default authentication environment. The values are inferred
    // from fSecurity and fDetails.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (gDebug > 2)
       Info("SetEnvironment",
@@ -1330,7 +1330,7 @@ const char *TAuthenticate::GetAuthMethod(Int_t idx)
 {
    // Static method returning the method corresponding to idx.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (idx < 0 || idx > kMAXSEC-1) {
       ::Error("Authenticate::GetAuthMethod", "idx out of bounds (%d)", idx);
@@ -1345,7 +1345,7 @@ Int_t TAuthenticate::GetAuthMethodIdx(const char *meth)
    // Static method returning the method index (which can be used to find
    // the method in GetAuthMethod()). Returns -1 in case meth is not found.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (meth && meth[0]) {
       for (Int_t i = 0; i < kMAXSEC; i++) {
@@ -1365,7 +1365,7 @@ char *TAuthenticate::PromptUser(const char *remote)
    // Returns user name (which must be deleted by caller) or 0.
    // If non-interactive run (eg ProofServ) returns default user.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    const char *user;
    if (fgDefaultUser != "")
@@ -1468,7 +1468,7 @@ TList *TAuthenticate::GetAuthInfo()
 {
    // Static method returning the list with authentication details.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (!fgAuthInfo)
       fgAuthInfo = new TList;
@@ -1481,7 +1481,7 @@ TList *TAuthenticate::GetProofAuthInfo()
    // Static method returning the list with authentication directives
    // to be sent to proof.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (!fgProofAuthInfo)
       fgProofAuthInfo = new TList;
@@ -1493,7 +1493,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    Int_t erc = err;
    Bool_t forceprint = kFALSE;
@@ -1523,7 +1523,7 @@ void TAuthenticate::SetGlobalUser(const char *user)
 {
    // Set global user name to be used for authentication to rootd or proofd.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (fgUser != "")
       fgUser = "";
@@ -1537,7 +1537,7 @@ void TAuthenticate::SetGlobalPasswd(const char *passwd)
 {
    // Set global passwd to be used for authentication to rootd or proofd.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (fgPasswd != "")
       fgPasswd = "";
@@ -2146,7 +2146,7 @@ const char *TAuthenticate::GetSshUser(TString User) const
    // Looks first at SSH.Login and finally at env USER.
    // If SSH.LoginPrompt is set to 'yes' it prompts for the 'login name'
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    static TString user = "";
 
@@ -2174,7 +2174,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
    // in the first field (in the case 'host' is a name, ie not IP address)
    // Returns kTRUE if the two matches.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    Bool_t retval = kTRUE;
 
@@ -2329,7 +2329,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
    // Returns 0 in case authentication failed
    //         1 in case of success
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gAuthenticateMutex);
 
    if (gDebug > 2)
       Info("ClearAuth", "enter: User: %s (passwd hashed?: %d)",
@@ -4083,7 +4083,7 @@ void TAuthenticate::CleanupSecContextAll(Option_t *opt)
 
    // Clear the list
    {   
-     R__LOCKGUARD2(TROOT::fgMutex);
+     R__LOCKGUARD2(gROOTMutex);
      gROOT->GetListOfSecContexts()->Clear();
    }
 

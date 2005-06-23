@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.134 2005/06/10 18:12:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.135 2005/06/14 09:20:57 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TApplication.h"
 #include "TObjString.h"
 #include "Riostream.h"
+#include "TVirtualMutex.h"
 
 //#define G__OLDEXPAND
 
@@ -415,8 +416,10 @@ void TUnixSystem::SetDisplay()
       char *tty = ::ttyname(0);  // device user is logged in on
       if (tty) {
          tty += 5;               // remove "/dev/"
-         STRUCT_UTMP *utmp_entry;
-         utmp_entry = (STRUCT_UTMP *)SearchUtmpEntry(ReadUtmpFile(), tty);
+
+	 R__LOCKGUARD2(gSystemMutex);
+
+         STRUCT_UTMP *utmp_entry = (STRUCT_UTMP *)SearchUtmpEntry(ReadUtmpFile(), tty);
          if (utmp_entry) {
             if (utmp_entry->ut_host[0])
                if (strchr(utmp_entry->ut_host, ':')) {
@@ -492,6 +495,8 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
    // Add a file handler to the list of system file handlers. Only adds
    // the handler if it is not already in the list of file handlers.
 
+   R__LOCKGUARD2(gSystemMutex);
+
    TSystem::AddFileHandler(h);
    if (h) {
       int fd = h->GetFd();
@@ -511,6 +516,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
    // Remove a file handler from the list of file handlers. Returns
    // the handler or 0 if the handler was not in the list of file handlers.
+
+   R__LOCKGUARD2(gSystemMutex);
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -541,6 +548,8 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
    // Add a signal handler to list of system signal handlers. Only adds
    // the handler if it is not already in the list of signal handlers.
 
+   R__LOCKGUARD2(gSystemMutex);
+
    TSystem::AddSignalHandler(h);
    UnixSignal(h->GetSignal(), SigHandler);
 }
@@ -550,6 +559,8 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
    // Remove a signal handler from list of signal handlers. Returns
    // the handler or 0 if the handler was not in the list of signal handlers.
+
+   R__LOCKGUARD2(gSystemMutex);
 
    TSignalHandler *oh = TSystem::RemoveSignalHandler(h);
 
@@ -1087,6 +1098,8 @@ const char *TUnixSystem::WorkingDirectory()
 
    if (fWdpath != "")
       return fWdpath.Data();
+
+   R__LOCKGUARD2(gSystemMutex);
 
    static char cwd[kMAXPATHLEN];
    if (::getcwd(cwd, kMAXPATHLEN) == 0) {
@@ -2208,6 +2221,8 @@ const char *TUnixSystem::GetLinkedLibraries()
 
    static Bool_t once = kFALSE;
    static TString linkedLibs;
+
+   R__LOCKGUARD2(gSystemMutex);
 
    if (!linkedLibs.IsNull())
       return linkedLibs;
@@ -3985,6 +4000,8 @@ int TUnixSystem::ReadUtmpFile()
    FILE  *utmp;
    struct stat file_stats;
    size_t n_read, size;
+
+   R__LOCKGUARD2(gSystemMutex);
 
    gUtmpContents = 0;
 

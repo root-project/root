@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v4-04-02 $:$Id: TAuthenticate.h,v 1.28 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.29 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -58,6 +58,8 @@ typedef Int_t (*Krb5Auth_t)(TAuthenticate *auth, TString &user, TString &det, In
 typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char *passwd,
                               const char *remote, TString &det, Int_t version);
 
+R__EXTERN TVirtualMutex *gAuthenticateMutex;
+
 class TAuthenticate : public TObject {
 
 friend class TProofServ;
@@ -66,8 +68,6 @@ friend class TSocket;
 
 public:
    enum ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
-
-   static TVirtualMutex *fgMutex; //mutex for socket and auth related protection
 
 private:
    TString      fDetails;     // logon details (method dependent ...)

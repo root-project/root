@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.30 2005/06/22 20:18:11 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.31 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -131,7 +131,7 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    // for consistency during the final cleanup
    // (The socket will be delete by us when everything is ok remotely)
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
       gROOT->GetListOfSockets()->Add(this);
    }
@@ -889,7 +889,7 @@ Int_t TFTP::Close()
 
    // Remove from the list of Sockets
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
 

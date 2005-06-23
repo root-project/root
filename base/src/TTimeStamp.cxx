@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.18 2005/05/27 10:17:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.19 2005/06/22 20:18:10 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -51,7 +51,7 @@
 ClassImp(TTimeStamp);
 
 
-TVirtualMutex *TTimeStamp::fgMutex = 0; // local mutex
+TVirtualMutex *gTimeMutex = 0; // local mutex
 
 //______________________________________________________________________________
 ostream& operator<<(ostream& os, const TTimeStamp& ts)
@@ -179,7 +179,7 @@ const Char_t *TTimeStamp::AsString(Option_t *option) const
 
    static Int_t ibuffer = nbuffers;
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gTimeMutex);
 
    ibuffer = (ibuffer+1)%nbuffers; // each call moves to next buffer
 
@@ -474,7 +474,7 @@ void TTimeStamp::Set()
 
    static Int_t sec = 0, nsec = 0, fake_ns = 0;
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gTimeMutex);
 
    if (fSec == sec && fNanoSec == nsec)
       fNanoSec += ++fake_ns;

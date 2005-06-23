@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.91 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.92 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -63,6 +63,8 @@
 #include "TSemaphore.h"
 #include "TMutex.h"
 #include "TObjString.h"
+
+TVirtualMutex *gProofMutex = 0;
 
 // Helper classes used for parallel startup
 //______________________________________________________________________________
@@ -196,7 +198,6 @@ void TSlaveInfo::Print(Option_t *opt) const
 ClassImp(TProof)
 
 TSemaphore    *TProof::fgSemaphore = 0;
-TVirtualMutex *TProof::fgMutex = 0;
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile,
@@ -273,7 +274,7 @@ TProof::~TProof()
    SafeDelete(fFeedback);
 
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
 
@@ -400,7 +401,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    SetActive(kFALSE);
 
    if (IsValid()) {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
    return fActiveSlaves->GetSize();
@@ -3241,7 +3242,7 @@ void *TProof::SlaveStartupThread(void * arg)
                                   ta->perf, ta->image, ta->workdir);
 
    {
-      R__LOCKGUARD2(fgMutex);
+      R__LOCKGUARD2(gProofMutex);
 
 
       // Add to the started slaves list

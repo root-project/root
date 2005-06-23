@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.123 2005/05/17 15:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.124 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 ClassImp(TSystem)
 
-TVirtualMutex*  TSystem::fgMutex = 0;
+TVirtualMutex* gSystemMutex = 0;
 
 //______________________________________________________________________________
 TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
@@ -824,7 +824,7 @@ const char *TSystem::DirName(const char *pathname)
    // Return the directory name in pathname. DirName of /user/root is /user.
 
    if (pathname && strchr(pathname, '/')) {
-      R__LOCKGUARD2(fgMutex);
+      R__LOCKGUARD2(gSystemMutex);
 
       static char buf[1000];
       strcpy(buf, pathname);
@@ -873,7 +873,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    const char *p;
    static char xname[kBufSize];
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gSystemMutex);
 
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';

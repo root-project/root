@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.14 2004/12/15 13:15:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.15 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -185,7 +185,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    // Reallocate (i.e. resize) block of memory.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
    if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocHook)(ovp, size);
@@ -219,7 +219,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    // equal to oldsize. If not memory was overwritten.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
    if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocCHook)(ovp, size, oldsize);
@@ -260,7 +260,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    // in number of chars.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
    static const char *where = "TStorage::ReAllocChar";
 
@@ -293,7 +293,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    // number of integers (not number of bytes).
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
    static const char *where = "TStorage::ReAllocInt";
 
@@ -328,7 +328,7 @@ void *TStorage::ObjectAlloc(size_t sz)
    // the heap.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
    ULong_t space;
 
@@ -367,7 +367,7 @@ void TStorage::ObjectDealloc(void *vp)
    // Used to deallocate a TObject on the heap (via TObject::operator delete()).
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
 #ifndef NOCINT
    // to handle delete with placement called via CINT
@@ -416,7 +416,7 @@ void TStorage::PrintStatistics()
    // Print memory usage statistics.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(TVirtualMutex::fgMutex);
+   R__LOCKGUARD(TVirtualMutex::GetGlobalMutex());
 
 #if defined(MEM_DEBUG) && defined(MEM_STAT)
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.44 2005/06/03 14:50:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.45 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -55,12 +55,11 @@ namespace ROOT {
 }
 
 
+R__EXTERN TVirtualMutex *gROOTMutex;
+
 class TROOT : public TDirectory {
 
 friend class TCint;
-
-public:
-   static TVirtualMutex *fgMutex;         //Potection of concurrent gROOT access
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads

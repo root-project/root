@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.27 2005/06/22 20:18:11 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.28 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -46,7 +46,8 @@
 #include "TVirtualMutex.h"
 
 
-TVirtualMutex *TCollection::fgMutex             = 0;
+TVirtualMutex *gCollectionMutex = 0;
+
 TCollection   *TCollection::fgCurrentCollection = 0;
 TObjectTable  *TCollection::fgGarbageCollection = 0;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
@@ -428,7 +429,7 @@ void TCollection::SetCurrentCollection()
 //______________________________________________________________________________
 void TCollection::StartGarbageCollection()
 {
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gCollectionMutex);
    if (!fgGarbageCollection) {
       fgGarbageCollection = new TObjectTable;
       fgEmptyingGarbage   = kFALSE;
@@ -440,7 +441,7 @@ void TCollection::StartGarbageCollection()
 //______________________________________________________________________________
 void TCollection::EmptyGarbageCollection()
 {
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageStack > 0) fgGarbageStack--;
    if (fgGarbageCollection && fgGarbageStack == 0 && fgEmptyingGarbage == kFALSE) {
       fgEmptyingGarbage = kTRUE;
@@ -453,7 +454,7 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gCollectionMutex);
    if (fgGarbageCollection) {
       if (!fgEmptyingGarbage) {
          fgGarbageCollection->Add(obj);

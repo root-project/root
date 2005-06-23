@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.3 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.4 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -92,7 +92,7 @@ void TMessageHandler::Add()
 {
    // Add this message handler to the list of messages handlers.
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
 }
 
@@ -227,6 +227,6 @@ void TMessageHandler::Remove()
 {
    // Remove this message handler from the list of messages handlers.
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Remove(this);
 }

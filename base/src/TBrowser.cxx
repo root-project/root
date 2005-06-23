@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.11 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.12 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -215,7 +215,7 @@ TBrowser::~TBrowser()
 {
    // Delete the browser.
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
    delete fContextMenu;
    delete fTimer;
@@ -262,7 +262,7 @@ void TBrowser::Create(TObject *obj)
    fTimer = new TBrowserTimer(this);
    gSystem->AddTimer(fTimer);
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfBrowsers()->Add(this);
 
    // Get the list of globals

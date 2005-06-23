@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.150 2005/06/22 17:01:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.151 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -121,7 +121,7 @@ namespace std {} using namespace std;
 #endif
 
 // Mutex for protection of concurrent gROOT access
-TVirtualMutex* TROOT::fgMutex = 0;
+TVirtualMutex* gROOTMutex = 0;
 
 //-------- Names of next three routines are a small homage to CMZ --------------
 //______________________________________________________________________________
@@ -173,7 +173,7 @@ static void CleanUpROOTAtExit()
    // Clean up at program termination before global objects go out of scope.
 
    if (gROOT) {
-      R__LOCKGUARD(TROOT::fgMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       if (gROOT->GetListOfFiles())
          gROOT->GetListOfFiles()->Delete("slow");
@@ -309,7 +309,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       return;
    }
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    gROOT      = this;
    gDirectory = 0;
@@ -498,7 +498,7 @@ TROOT::~TROOT()
 
    if (gROOT == this) {
 
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
 
       // Return when error occured in TCint, i.e. when setup file(s) are
       // out of date

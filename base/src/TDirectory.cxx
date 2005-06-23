@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.64 2005/05/31 13:28:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.65 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -123,7 +123,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    Int_t cycle = gDirectory->AppendKey(key);
    key->WriteFile(cycle);
    fModified = kFALSE;
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
@@ -311,7 +311,7 @@ Bool_t TDirectory::cd1(const char *apath)
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -432,7 +432,7 @@ Bool_t TDirectory::Cd1(const char *apath)
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -1495,7 +1495,7 @@ void TDirectory::Streamer(TBuffer &b)
       } else if (v > 2) {
          fUUID.Streamer(b);
       }
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
    } else {

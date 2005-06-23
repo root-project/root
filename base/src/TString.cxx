@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.38 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.39 2005/06/22 20:45:52 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@ namespace std { using ::list; }
 
 // Mutex for string format protection
 
-TVirtualMutex* TString::fgMutex = 0;
+TVirtualMutex *gStringMutex = 0;
 
 // Amount to shift hash values to avoid clustering
 
@@ -1593,7 +1593,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    static char *slowBuffer  = 0;
    static int   slowBufferSize = 0;
 
-   R__LOCKGUARD2(TString::fgMutex);
+   R__LOCKGUARD2(gStringMutex);
 
    if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
@@ -1620,7 +1620,7 @@ static char *Format(const char *format, va_list ap)
    // Format a string in a circular formatting buffer (using a printf style
    // format descriptor).
 
-   R__LOCKGUARD2(TString::fgMutex);
+   R__LOCKGUARD2(gStringMutex);
 
    char *buf = bfree;
 

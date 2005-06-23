@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.56 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.57 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -92,6 +92,8 @@ const char* const kPROOF_CacheDir = "cache";       // file cache dir, under Work
 const char* const kPROOF_PackDir  = "packages";    // package dir, under WorkDir
 const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
+
+R__EXTERN TVirtualMutex *gProofMutex;
 
 
 // Helper classes used for parallel startup
@@ -251,8 +253,6 @@ private:
    typedef std::map<TString, MD5Mod_t> FileMap_t;
    FileMap_t       fFileMap;        //map keeping track of a file's md5 and mod time
    TDSet          *fDSet;           //current TDSet being validated
-
-   static TVirtualMutex *fgMutex;   //mutex for thread protection within proof
 
 protected:
    enum ESlaves { kAll, kActive, kUnique };

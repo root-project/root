@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.139 2005/06/10 18:01:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.140 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -400,7 +400,7 @@ TFile::~TFile()
    SafeDelete(fCache);
    SafeDelete(fArchive);
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
@@ -597,7 +597,7 @@ void TFile::Init(Bool_t create)
    }
 
    {   
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
 
@@ -710,7 +710,7 @@ void TFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
 
    TCollection::EmptyGarbageCollection();

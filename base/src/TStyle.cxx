@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.44 2005/06/16 17:53:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.45 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
    Reset();
 
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfStyles()->Add(this);
    }
 
@@ -216,7 +216,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //______________________________________________________________________________
 TStyle::~TStyle()
 {
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfStyles()->Remove(this);
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
 }

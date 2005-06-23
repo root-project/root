@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.37 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.38 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -52,6 +52,7 @@ class TSubString;
 class TObjArray;
 class TVirtualMutex;
 
+R__EXTERN TVirtualMutex *gStringMutex;
 
 TString operator+(const TString &s1, const TString &s2);
 TString operator+(const TString &s,  const char *cs);
@@ -205,8 +206,6 @@ protected:
 public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
-
-   static TVirtualMutex *fgMutex;  // Mutex for static buffers
 
    TString();                       // Null string
    TString(Ssiz_t ic);              // Suggested capacity

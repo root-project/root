@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v4-04-02 $:$Id: TMapFile.cxx,v 1.15 2005/04/18 16:05:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.16 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -394,7 +394,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       // store shadow mapfile (it contains the real fFd in case map
       // is not writable)
       fVersion  = -1;   // make this the shadow map file
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    } else {
@@ -427,14 +427,14 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
       // store shadow mapfile
       fVersion  = -1;   // make this the shadow map file
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    }
 
    mapfil->InitDirectory();
    {   
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddFirst(mapfil);
    }
 
@@ -891,7 +891,7 @@ void TMapFile::Close(Option_t *option)
    }
 
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfMappedFiles()->Remove(shadow);
       gROOT->GetListOfMappedFiles()->Remove(this);
    }
@@ -927,7 +927,7 @@ TMapFile *TMapFile::FindShadowMapFile()
 {
    // Returns shadow map file.
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();

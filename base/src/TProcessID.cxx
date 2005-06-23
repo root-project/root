@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.25 2005/03/15 22:13:17 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.26 2005/06/22 20:18:10 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -79,7 +79,7 @@ TProcessID::~TProcessID()
 {
    delete fObjects;
    fObjects = 0;
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
    fgPIDs->Remove(this);
 }
 
@@ -94,7 +94,7 @@ TProcessID *TProcessID::AddProcessID()
 {
    // static function to add a new TProcessID to the list of PIDs
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    TProcessID *pid = new TProcessID();
 
@@ -123,7 +123,7 @@ UInt_t TProcessID::AssignID(TObject *obj)
    // If the object is not yet referenced, its kIsReferenced bit is set
    // and its fUniqueID set to the current number of referenced objects so far.
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == fgPID->GetObjectWithID(uid)) return uid;
@@ -144,7 +144,7 @@ void TProcessID::Cleanup()
 {
    // static function (called by TROOT destructor) to delete all TProcessIDs
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
@@ -186,7 +186,7 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
    // static function returning a pointer to TProcessID with its pid
    // encoded in the highest byte of uid
 
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
@@ -241,7 +241,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 {
    // static function. return kTRUE if pid is a valid TProcessID
    
-   R__LOCKGUARD2(TROOT::fgMutex);
+   R__LOCKGUARD2(gROOTMutex);
 
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
    if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;

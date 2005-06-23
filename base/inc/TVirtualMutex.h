@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.6 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.7 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -28,6 +28,9 @@
 
 class TVirtualMutex : public TObject {
 
+private:
+   static TVirtualMutex *fgMutex; // Global mutex set in TThread::Init
+
 public:
    TVirtualMutex(Bool_t /* recursive */ = kFALSE) { }
    virtual ~TVirtualMutex() { }
@@ -41,7 +44,8 @@ public:
 
    virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
 
-   static TVirtualMutex *fgMutex; // Global mutex set in TThread::Init
+   static void SetGlobalMutex(TVirtualMutex *vm) { fgMutex=vm; }
+   static TVirtualMutex* GetGlobalMutex()        { return fgMutex; }
 
    ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
 };
@@ -80,11 +84,12 @@ public:
 #ifdef _REENTRANT
 #define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
 #define R__LOCKGUARD2(mutex)                             \
-   if (TVirtualMutex::fgMutex && !mutex) {               \
-      TVirtualMutex::fgMutex->Lock();                    \
+   TVirtualMutex *gm=TVirtualMutex::GetGlobalMutex();    \
+   if (gm && !mutex) {                                   \
+      gm->Lock();                                        \
       if (!mutex)                                        \
-         mutex = TVirtualMutex::fgMutex->Factory(kTRUE); \
-      TVirtualMutex::fgMutex->UnLock();                  \
+         mutex = gm->Factory(kTRUE);                     \
+      gm->UnLock();                                      \
    }                                                     \
    R__LOCKGUARD(mutex)
 #else

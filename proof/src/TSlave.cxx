@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.38 2005/06/22 20:18:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.39 2005/06/23 00:29:38 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -90,11 +90,11 @@ TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
    // root session terminates.
 
    {
-      R__LOCKGUARD2(TROOT::fgMutex);
+      R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
 
-   R__LOCKGUARD2(TProof::fgMutex);
+   R__LOCKGUARD2(gProofMutex);
 
    // Fill some useful info
    fSecContext        = fSocket->GetSecContext();

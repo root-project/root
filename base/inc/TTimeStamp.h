@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.14 2005/03/18 22:33:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.15 2005/06/22 20:18:10 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -95,6 +95,7 @@ Bool_t operator<=(const TTimeStamp &lhs, const TTimeStamp &rhs);
 Bool_t operator> (const TTimeStamp &lhs, const TTimeStamp &rhs);
 Bool_t operator>=(const TTimeStamp &lhs, const TTimeStamp &rhs);
 
+R__EXTERN TVirtualMutex *gTimeMutex;
 
 class TTimeStamp {
 
@@ -108,7 +109,6 @@ friend Bool_t operator>=(const TTimeStamp &lhs, const TTimeStamp &rhs);
 private:
    Int_t  fSec;      // seconds
    Int_t  fNanoSec;  // nanoseconds
-   static TVirtualMutex *fgMutex;  //local mutex
 
    void   NormalizeNanoSec();
 

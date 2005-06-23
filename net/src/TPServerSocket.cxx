@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.5 2005/06/10 17:49:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.6 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -125,7 +125,7 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
       for (int i = 0; i < size; i++) {
          pSockets[i] = new TSocket(setupSocket->GetInetAddress(),
                                            port, fTcpWindowSize);
-	 R__LOCKGUARD2(TROOT::fgMutex);
+	 R__LOCKGUARD2(gROOTMutex);
          gROOT->GetListOfSockets()->Remove(pSockets[i]);
       }
 

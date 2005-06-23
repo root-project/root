@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name: v4-04-02 $:$Id: TThread.cxx,v 1.35 2005/04/28 16:14:28 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.36 2005/06/22 20:18:12 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -228,7 +228,7 @@ void TThread::Init()
    gThreadXAR  = TThread::XARequest;
 
    // Create the single global mutex
-   TVirtualMutex::fgMutex = new TMutex(kTRUE);
+   TVirtualMutex::SetGlobalMutex(new TMutex(kTRUE));
 }
 
 //______________________________________________________________________________

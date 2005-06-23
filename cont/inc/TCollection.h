@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.16 2005/03/24 07:12:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.17 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@ class TVirtualMutex;
 const Bool_t kIterForward  = kTRUE;
 const Bool_t kIterBackward = !kIterForward;
 
+R__EXTERN TVirtualMutex *gCollectionMutex;
 
 class TCollection : public TObject {
 
@@ -58,8 +59,6 @@ protected:
 
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection
-
-   static TVirtualMutex *fgMutex; //mutex for collection objects
 
    TCollection() : fSize(0) { }
 

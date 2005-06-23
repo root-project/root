@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.3 2003/06/23 08:04:19 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.4 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
    // Sort array of TObject pointers using a quicksort algorithm.
    // Uses ObjCompare() to compare objects.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gCollectionMutex);
 
    static TObject *tmp;
    static int i;           // "static" to save stack space
@@ -104,7 +104,7 @@ void TSeqCollection::QSort(TObject **a, TObject **b, Int_t first, Int_t last)
    // Array b will be sorted just like a (a determines the sort).
    // Uses ObjCompare() to compare objects.
 
-   R__LOCKGUARD2(fgMutex);
+   R__LOCKGUARD2(gCollectionMutex);
    static TObject *tmp1, *tmp2;
    static int i;           // "static" to save stack space
    int j;
