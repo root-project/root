@@ -20,8 +20,7 @@ REFLEXO      := $(REFLEXS:.cxx=.o)
 
 REFLEXDEP    := $(REFLEXO:.o=.d)
 
-REFLEXLIBNAME := libReflex.$(SOEXT)
-REFLEXLIB    := $(LPATH)/$(REFLEXLIBNAME)
+REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Reflex/%.h,include/Reflex/%.h,$(REFLEXH))
@@ -31,20 +30,18 @@ ALLLIBS      += $(REFLEXLIB)
 INCLUDEFILES += $(REFLEXDEP)
 
 ##### local rules #####
-include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h 
-		@ ( if [ ! -d "include/Reflex" ] ;         \
-		    then mkdir include/Reflex; fi ) ;      \
-		  ( if [ ! -d "include/Reflex/Builder" ] ; \
-		    then mkdir include/Reflex/Builder; fi ) 
+include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
+		@(if [ ! -d "include/Reflex" ]; then    \
+		   mkdir -p include/Reflex/Builder;     \
+		fi)
 		cp $< $@
 
 $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"     \
-		"$(SOFLAGS)" $(REFLEXLIBNAME) $@ "$(REFLEXO)" \
-		"$(REFLEXLIBDIR) $(REFLEXCLILIB)"
+		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"       \
+		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
+		"$(REFLEXLIBEXTRA)"
 
 all-reflex:     $(REFLEXLIB)
-		echo $(REFLEXO)
 
 map-reflex:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(REFLEXLIB) \
@@ -61,8 +58,4 @@ distclean-reflex: clean-reflex
 		@rm -f $(REFLEXDEP) $(REFLEXLIB)
 
 distclean::     distclean-reflex
-
-##### extra rules ######
-$(REFLEXO): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(REFLEXINCDIR:%=-I%) -o $@ -c $<
 

@@ -12,14 +12,13 @@ CINTEXDIRS   := $(CINTEXDIR)/src
 CINTEXDIRI   := $(CINTEXDIR)/inc
 
 ##### libCintex #####
-CINTEXH     := $(wildcard $(MODDIRI)/Cintex/*.h)
+CINTEXH      := $(wildcard $(MODDIRI)/Cintex/*.h)
 CINTEXS      := $(wildcard $(MODDIRS)/*.cxx)
 CINTEXO      := $(CINTEXS:.cxx=.o)
 
 CINTEXDEP    := $(CINTEXO:.o=.d)
 
-CINTEXLIBNAME := libCintex.$(SOEXT)
-CINTEXLIB    := $(LPATH)/$(CINTEXLIBNAME)
+CINTEXLIB    := $(LPATH)/libCintex.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Cintex/%.h,include/Cintex/%.h,$(CINTEXH))
@@ -29,18 +28,18 @@ ALLLIBS      += $(CINTEXLIB)
 INCLUDEFILES += $(CINTEXDEP)
 
 ##### local rules #####
-include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h 
-		@ ( if [ ! -d "include/Cintex" ] ;         \
-		    then mkdir include/Cintex; fi ) 
+include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
+		@(if [ ! -d "include/Cintex" ]; then    \
+		   mkdir include/Cintex;                \
+		fi)
 		cp $< $@
 
-$(CINTEXLIB):   $(CINTEXO) $(MAINLIBS)
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"     \
-		"$(SOFLAGS)" $(CINTEXLIBNAME) $@ "$(CINTEXO)" \
+$(CINTEXLIB):   $(CINTEXO) $(MAINLIBS) $(CINTEXLIBDEP)
+		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"       \
+		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"
 
 all-cintex:     $(CINTEXLIB)
-		echo $(CINTEXO)
 
 map-cintex:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(CINTEXLIB) \
@@ -58,7 +57,4 @@ distclean-cintex: clean-cintex
 
 distclean::     distclean-cintex
 
-##### extra rules ######
-$(CINTEXO): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(CINTEXINCDIR:%=-I%) -o $@ -c $<
 
