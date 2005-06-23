@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.31 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.32 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -155,12 +155,14 @@ void TFTP::Print(Option_t *) const
 {
    // Print some info about the FTP connection.
 
+   TString secCont;
+
    Printf("Local host:           %s", gSystem->HostName());
    Printf("Remote host:          %s [%d]", fHost.Data(), fPort);
    Printf("Remote user:          %s", fUser.Data());
    if (fSocket->IsAuthenticated())
       Printf("Security context:     %s",
-                                      fSocket->GetSecContext()->AsString());
+                                      fSocket->GetSecContext()->AsString(secCont));
    Printf("Rootd protocol vers.: %d", fSocket->GetRemoteProtocol());
    if (fParallel > 1) {
       Printf("Parallel sockets:     %d", fParallel);

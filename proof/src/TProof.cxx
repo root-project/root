@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.92 2005/06/23 00:29:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.93 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1684,12 +1684,14 @@ void TProof::Print(Option_t *option) const
 {
    // Print status of PROOF cluster.
 
+   TString secCont;
+
    if (!IsMaster()) {
       Printf("Connected to:             %s (%s)", GetMaster(),
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Security context:         %s", fSecContext->AsString());
+      Printf("Security context:         %s", fSecContext->AsString(secCont));
       TSlave *sl = (TSlave *)fActiveSlaves->First();
       if (sl)
          Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());

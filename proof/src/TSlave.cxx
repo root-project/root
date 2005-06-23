@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.39 2005/06/23 00:29:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.40 2005/06/23 06:24:27 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -301,12 +301,14 @@ void TSlave::Print(Option_t *) const
 {
    // Printf info about slave.
 
+   TString secCont;
+
    Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
       Printf("    User:                    %s", GetUser());
-      Printf("    Security context:        %s", fSecContext->AsString());
+      Printf("    Security context:        %s", fSecContext->AsString(secCont));
       Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
       Printf("    Image name:              %s", GetImage());
       Printf("    Working directory:       %s", GetWorkDir());
