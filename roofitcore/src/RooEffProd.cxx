@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooEffProd.cc,v 1.1 2005/06/20 15:44:51 wverkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven, NIKHEF/VU                                            *
  *                                                                           *
@@ -18,6 +18,7 @@
 // the event generation in a more efficient for cases where the PDF has an internal
 // generator that is smarter than accept reject. 
 
+#include "RooFitCore/RooFit.hh"
 #include "RooFitCore/RooEffProd.hh"
 #include "RooFitCore/RooEffGenContext.hh"
 
@@ -54,7 +55,7 @@ Double_t RooEffProd::evaluate() const
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                             const RooArgSet* auxProto, Bool_t verbose) const
 {
-  assert(pdf());
-  assert(eff());
+  assert(pdf()!=0);
+  assert(eff()!=0);
   return new RooEffGenContext(*this,*pdf(),*eff(),vars,prototype,auxProto,verbose) ;
 }

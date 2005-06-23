@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.rdl,v 1.11 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooMinuit.rdl,v 1.12 2005/06/20 18:15:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,6 +40,7 @@ public:
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
   void setErrorHandling(Bool_t flag) { _handleLocalErrors = flag ; }
+  void setEps(Double_t eps) ;
   void optimizeConst(Bool_t flag) ;
 
   RooFitResult* fit(const char* options) ;

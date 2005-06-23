@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.58 2005/06/16 09:31:29 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.59 2005/06/20 15:44:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1030,28 +1030,28 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
 
 
-Bool_t RooProdPdf::checkObservables(const RooArgSet* nset) const 
+Bool_t RooProdPdf::checkObservables(const RooArgSet* /*nset*/) const 
 {
   // Check that none of the PDFs have overlapping dependents
   return kFALSE ;
   
-  Bool_t ret(kFALSE) ;
+//   Bool_t ret(kFALSE) ;
   
-  _pdfIter->Reset() ;
-  RooAbsPdf* pdf, *pdf2 ;
-  TIterator* iter2 = _pdfList.createIterator() ;
-  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
-    *iter2 = *_pdfIter ;
-    while((pdf2 = (RooAbsPdf*)iter2->Next())) {
-      if (pdf->observableOverlaps(nset,*pdf2)) {
-	cout << "RooProdPdf::checkObservables(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
-	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
-	ret = kTRUE ;
-      }    
-    }
-  }
-  delete iter2 ;
-  return ret ;
+//   _pdfIter->Reset() ;
+//   RooAbsPdf* pdf, *pdf2 ;
+//   TIterator* iter2 = _pdfList.createIterator() ;
+//   while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
+//     *iter2 = *_pdfIter ;
+//     while((pdf2 = (RooAbsPdf*)iter2->Next())) {
+//       if (pdf->observableOverlaps(nset,*pdf2)) {
+// 	cout << "RooProdPdf::checkObservables(" << GetName() << "): ERROR: PDFs " << pdf->GetName() 
+// 	     << " and " << pdf2->GetName() << " have one or more dependents in common" << endl ;
+// 	ret = kTRUE ;
+//       }    
+//     }
+//   }
+//   delete iter2 ;
+//   return ret ;
 }
 
 

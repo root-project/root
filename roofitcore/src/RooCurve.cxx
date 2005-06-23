@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.46 2005/06/16 09:31:26 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.47 2005/06/20 15:44:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -501,7 +501,7 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
   }
 
   // Get nearest point on other side w.r.t. xvalue
-  Double_t xother,yother ;
+  Double_t xother,yother, retVal(0) ;
   if (xbest<xvalue) {
     if (ibest==n-1) {
       // Value beyond end requested -- return value of last point
@@ -509,7 +509,7 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
     }
     const_cast<RooCurve*>(this)->GetPoint(ibest+1,xother,yother) ;        
     if (xother==xbest) return ybest ;
-    return ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ; 
+    retVal = ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ; 
 
   } else {
     if (ibest==0) {
@@ -518,9 +518,8 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
     }
     const_cast<RooCurve*>(this)->GetPoint(ibest-1,xother,yother) ;    
     if (xother==xbest) return ybest ;
-    return yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
+    retVal = yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
   }
-
  
-  return 0 ;
+  return retVal ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.21 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.22 2005/06/20 18:15:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -168,6 +168,13 @@ void RooMinuit::setStrategy(Int_t istrat)
 void RooMinuit::setErrorLevel(Double_t level)
 {
   _theFitter->ExecuteCommand("SET ERR",&level,1);
+}
+
+
+void RooMinuit::setEps(Double_t eps)
+{
+  // Change MINUIT epsilon 
+  _theFitter->ExecuteCommand("SET EPS",&eps,1) ;  
 }
 
 
@@ -680,9 +687,6 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
   
   return frame;
 }
-
-
-
 
 
 Bool_t RooMinuit::setLogFile(const char* logfile) 
