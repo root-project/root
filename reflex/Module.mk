@@ -37,7 +37,7 @@ include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		cp $< $@
 
 $(REFLEXLIB):   $(REFLEXO) $(MAINLIBS)
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"       \
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
 

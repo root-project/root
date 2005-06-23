@@ -35,7 +35,7 @@ include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		cp $< $@
 
 $(CINTEXLIB):   $(CINTEXO) $(MAINLIBS) $(CINTEXLIBDEP)
-		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"       \
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libCintex.$(SOEXT) $@ "$(CINTEXO)" \
 		"$(CINTEXLIBEXTRA)"
 
