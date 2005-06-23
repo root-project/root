@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.9 2004/07/07 22:42:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.10 2005/06/23 10:49:19 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -107,7 +107,11 @@ const char *TDatime::AsString(char *out) const
 
    time_t t = Convert();
 #ifdef _REENTRANT
+#if defined(R__SOLARIS)
+   char *retStr = ctime_r(&t, out, 26);
+#else
    char *retStr = ctime_r(&t, out);
+#endif
 #else
    char *retStr = ctime(&t);
 #endif
