@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.182 2005/06/21 17:09:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.183 2005/06/21 18:15:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -356,7 +356,7 @@ void TPad::Browse(TBrowser *b)
 
 //______________________________________________________________________________
 TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
-                           char* title)
+                           const char* title)
 {
    //
    // Build a legend from the graphical objects in the pad

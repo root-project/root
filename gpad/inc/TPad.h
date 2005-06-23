@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.34 2005/06/01 13:53:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.35 2005/06/17 08:16:19 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -154,7 +154,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, char *title=""); // *MENU* 
+   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title=""); // *MENU* 
    TVirtualPad*      cd(Int_t subpadnumber=0);
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
