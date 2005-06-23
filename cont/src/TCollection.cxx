@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.27 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 #include "TVirtualMutex.h"
 
 
-TVirtualMutex *TCollection::fgMutex = 0;
+TVirtualMutex *TCollection::fgMutex             = 0;
 TCollection   *TCollection::fgCurrentCollection = 0;
 TObjectTable  *TCollection::fgGarbageCollection = 0;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v4-04-02 $:$Id: TVirtualMutex.h,v 1.5 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.6 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
    Int_t Acquire() { return Lock(); }
    Int_t Release() { return UnLock(); }
 
-   virtual TVirtualMutex* Factory(Bool_t /*recursive*/ = kFALSE) = 0;
+   virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
 
    static TVirtualMutex *fgMutex; // Global mutex set in TThread::Init
 
@@ -80,13 +80,13 @@ public:
 #ifdef _REENTRANT
 #define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
 #define R__LOCKGUARD2(mutex)                             \
-    if (TVirtualMutex::fgMutex && !mutex) {              \
+   if (TVirtualMutex::fgMutex && !mutex) {               \
       TVirtualMutex::fgMutex->Lock();                    \
       if (!mutex)                                        \
          mutex = TVirtualMutex::fgMutex->Factory(kTRUE); \
       TVirtualMutex::fgMutex->UnLock();                  \
-    }                                                    \
-    R__LOCKGUARD(mutex)
+   }                                                     \
+   R__LOCKGUARD(mutex)
 #else
 #define R__LOCKGUARD(mutex)  if (mutex) { }
 #define R__LOCKGUARD2(mutex) if (mutex) { }

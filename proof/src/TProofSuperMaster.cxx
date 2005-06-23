@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.89 2005/05/25 16:26:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.1 2005/06/22 20:25:28 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProof                                                               //
+// TProofSuperMaster                                                    //
 //                                                                      //
 // This class controls a Parallel ROOT Facility, PROOF, cluster.        //
 // It fires the slave servers, it keeps track of how many slaves are    //
@@ -36,10 +36,8 @@
 #include "TProofPlayer.h"
 #include "TMessage.h"
 
-//______________________________________________________________________________
 
 ClassImp(TProofSuperMaster)
-
 
 //______________________________________________________________________________
 TProofSuperMaster::TProofSuperMaster(const Char_t *masterurl, const Char_t *conffile,
@@ -279,15 +277,14 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t parallel)
          }
 
          // We can cleanup now
-	 while (!thrHandlers.empty()) {
-	   i = thrHandlers.end()-1; 
-	   if (*i) {
-	     SafeDelete(*i);
-	     thrHandlers.erase(i);
-	   }
+         while (!thrHandlers.empty()) {
+            i = thrHandlers.end()-1;
+            if (*i) {
+               SafeDelete(*i);
+               thrHandlers.erase(i);
+            }
          }
       }
-
    }
    fclose(pconf);
    Collect(kAll); //Get kPROOF_LOGFILE and kPROOF_LOGDONE messages

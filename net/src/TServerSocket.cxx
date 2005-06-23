@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.7 2005/06/10 17:49:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.cxx,v 1.8 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -86,8 +86,8 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    if (port != -1) {
       fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
       if (fSocket >= 0) {
-	 R__LOCKGUARD2(TROOT::fgMutex);
-	 gROOT->GetListOfSockets()->Add(this);
+         R__LOCKGUARD2(TROOT::fgMutex);
+         gROOT->GetListOfSockets()->Add(this);
       }
    } else
       fSocket = -1;
@@ -278,7 +278,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
    // open connection
 
    if (!fgSrvAuthHook) {
-	R__LOCKGUARD2(TAuthenticate::fgMutex);
+      R__LOCKGUARD2(TAuthenticate::fgMutex);
 
       // Load libraries needed for (server) authentication ...
 #ifdef ROOTLIBDIR
@@ -365,7 +365,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       if (type == 1) {
          // An existing authentication has been re-used: retrieve
          // the related security context
-	 R__LOCKGUARD2(TROOT::fgMutex);
+         R__LOCKGUARD2(TROOT::fgMutex);
          TIter next(gROOT->GetListOfSecContexts());
          while ((seccontext = (TSecContext *)next())) {
             if (!(strncmp(seccontext->GetDetails(),"server",6))) {

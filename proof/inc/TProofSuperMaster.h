@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name: v4-04-02 $:$Id: TProof.h,v 1.55 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.1 2005/06/22 20:25:28 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -39,16 +39,16 @@ class TProofSuperMaster : public TProof {
 friend class TProofPlayerSuperMaster;
 
 protected:
-   Bool_t StartSlaves(Bool_t);
-   Int_t  Process(TDSet *set, const Char_t *selector,
-                  Option_t *option = "", Long64_t nentries = -1,
-                  Long64_t firstentry = 0, TEventList *evl = 0);
-   void   ValidateDSet(TDSet *dset);
+   Bool_t  StartSlaves(Bool_t);
+   Int_t   Process(TDSet *set, const Char_t *selector,
+                   Option_t *option = "", Long64_t nentries = -1,
+                   Long64_t firstentry = 0, TEventList *evl = 0);
+   void    ValidateDSet(TDSet *dset);
    virtual TProofPlayer *MakePlayer();
 
 public:
    TProofSuperMaster(const Char_t *masterurl, const Char_t *conffile = kPROOF_ConfFile,
-                    const Char_t *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
+                     const Char_t *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
    virtual ~TProofSuperMaster() { }
 
    ClassDef(TProofSuperMaster,0) //PROOF control class for making submasters

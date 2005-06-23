@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.94 2005/06/10 18:01:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.95 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -78,17 +78,17 @@
 #include "compiledata.h"
 
 #ifndef R__WIN32
-const Char_t* const kCP     = "/bin/cp -f";
-const Char_t* const kRM     = "/bin/rm -rf";
-const Char_t* const kLS     = "/bin/ls -l";
-const Char_t* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
-const Char_t* const kGUNZIP = "gunzip";
+const char* const kCP     = "/bin/cp -f";
+const char* const kRM     = "/bin/rm -rf";
+const char* const kLS     = "/bin/ls -l";
+const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
+const char* const kGUNZIP = "gunzip";
 #else
-const Char_t* const kCP     = "copy";
-const Char_t* const kRM     = "delete";
-const Char_t* const kLS     = "dir";
-const Char_t* const kUNTAR  = "...";
-const Char_t* const kGUNZIP = "gunzip";
+const char* const kCP     = "copy";
+const char* const kRM     = "delete";
+const char* const kLS     = "dir";
+const char* const kUNTAR  = "...";
+const char* const kGUNZIP = "gunzip";
 #endif
 
 // global proofserv handle
@@ -99,8 +99,8 @@ static volatile Int_t gProofServDebug = 1;
 
 
 //______________________________________________________________________________
-static void ProofServErrorHandler(Int_t level, Bool_t abort, const Char_t *location,
-                                  const Char_t *msg)
+static void ProofServErrorHandler(Int_t level, Bool_t abort, const char *location,
+                                  const char *msg)
 {
    // The PROOF error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
@@ -111,7 +111,7 @@ static void ProofServErrorHandler(Int_t level, Bool_t abort, const Char_t *locat
    if (level < gErrorIgnoreLevel)
       return;
 
-   const Char_t *type   = 0;
+   const char *type   = 0;
    ELogLevel loglevel = kLogInfo;
 
    if (level >= kInfo) {
@@ -141,7 +141,7 @@ static void ProofServErrorHandler(Int_t level, Bool_t abort, const Char_t *locat
 
    TString node = gProofServ->IsMaster() ? "master" : "slave ";
    node += gProofServ->GetOrdinal();
-   Char_t *bp;
+   char *bp;
 
    if (!location || strlen(location) == 0 ||
        (level >= kBreak && level < kSysError)) {
@@ -230,7 +230,7 @@ Bool_t TProofServInputHandler::Notify()
 ClassImp(TProofServ)
 
 //______________________________________________________________________________
-TProofServ::TProofServ(Int_t *argc, Char_t **argv)
+TProofServ::TProofServ(Int_t *argc, char **argv)
        : TApplication("proofserv", argc, argv, 0, -1)
 {
    // Create an application environment. The TProofServ environment provides
@@ -243,7 +243,7 @@ TProofServ::TProofServ(Int_t *argc, Char_t **argv)
          ;
    }
 
-   // crude check on number of arguments 
+   // crude check on number of arguments
    if (*argc<9) {
      Fatal("TProofServ", "Must have at least 8 arguments (see  proofd).");
      exit(1);
@@ -275,24 +275,24 @@ TProofServ::TProofServ(Int_t *argc, Char_t **argv)
       gErrorIgnoreLevel = 0;
       if (gEnv) {
          TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
-         if (!level.CompareTo("Info",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kInfo;
-	 else if (!level.CompareTo("Warning",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kWarning;
-	 else if (!level.CompareTo("Error",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kError;
-	 else if (!level.CompareTo("Break",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kBreak;
-	 else if (!level.CompareTo("SysError",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kSysError;
-	 else if (!level.CompareTo("Fatal",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kFatal;
+         if (!level.CompareTo("Info",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kInfo;
+         else if (!level.CompareTo("Warning",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kWarning;
+         else if (!level.CompareTo("Error",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kError;
+         else if (!level.CompareTo("Break",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kBreak;
+         else if (!level.CompareTo("SysError",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kSysError;
+         else if (!level.CompareTo("Fatal",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kFatal;
       }
    }
 
    gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
    gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
-   if (gProofDebugLevel > 0) 
+   if (gProofDebugLevel > 0)
       Info("TProofServ", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
 
    // debug hooks
@@ -312,9 +312,9 @@ TProofServ::TProofServ(Int_t *argc, Char_t **argv)
 
    GetOptions(argc, argv);
 
-   if (gProofDebugLevel > 0) 
-      Info("TProofServ", "Service %s ConfDir %s IsMaster %d\n", 
-	   fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
+   if (gProofDebugLevel > 0)
+      Info("TProofServ", "Service %s ConfDir %s IsMaster %d\n",
+           fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
    Setup();
    RedirectOutput();
@@ -346,19 +346,19 @@ TProofServ::TProofServ(Int_t *argc, Char_t **argv)
    gROOT->LoadClass("TPostScript", "Postscript");
 
    // Load user functions
-   const Char_t *logon;
-   logon = gEnv->GetValue("Proof.Load", (Char_t* )0);
+   const char *logon;
+   logon = gEnv->GetValue("Proof.Load", (char *)0);
    if (logon) {
-      Char_t *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
          ProcessLine(Form(".L %s", logon), kTRUE);
       delete [] mac;
    }
 
    // Execute logon macro
-   logon = gEnv->GetValue("Proof.Logon", (Char_t* )0);
+   logon = gEnv->GetValue("Proof.Logon", (char *)0);
    if (logon && !NoLogOpt()) {
-      Char_t *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
          ProcessFile(logon);
       delete [] mac;
@@ -460,7 +460,7 @@ Int_t TProofServ::CatMotd()
 
    // get last modification time of the file ~/proof/.prooflast
    lastname = TString(GetWorkDir()) + "/.prooflast";
-   Char_t *last = gSystem->ExpandPathName(lastname.Data());
+   char *last = gSystem->ExpandPathName(lastname.Data());
    Long64_t size;
    Long_t id, flags, modtime, lasttime;
    if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
@@ -492,7 +492,7 @@ Int_t TProofServ::CatMotd()
 }
 
 //______________________________________________________________________________
-TObject *TProofServ::Get(const Char_t *namecycle)
+TObject *TProofServ::Get(const char *namecycle)
 {
    // Get object with name "name;cycle" (e.g. "aap;2") from master or client.
    // This method is called by TDirectory::Get() in case the object can not
@@ -603,7 +603,7 @@ TDSetElement *TProofServ::GetNextPacket()
 }
 
 //______________________________________________________________________________
-void TProofServ::GetOptions(Int_t *argc, Char_t **argv)
+void TProofServ::GetOptions(Int_t *argc, char **argv)
 {
    // Get and handle command line options. Fixed format:
    // "proofserv"|"proofslave" <confdir>
@@ -616,7 +616,7 @@ void TProofServ::GetOptions(Int_t *argc, Char_t **argv)
    if (!strcmp(argv[1], "proofserv")) {
       fService = argv[1];
       fMasterServ = kTRUE;
-   } else if (!strcmp(argv[1], "proofslave")) { 
+   } else if (!strcmp(argv[1], "proofslave")) {
       fMasterServ = kFALSE;
       fService = argv[1];
    } else {
@@ -643,7 +643,7 @@ void TProofServ::HandleSocketInput()
    static TStopwatch timer;
 
    TMessage *mess;
-   Char_t      str[2048];
+   char      str[2048];
    Int_t     what;
 
    if (fSocket->Recv(mess) <= 0)
@@ -862,7 +862,7 @@ void TProofServ::HandleSocketInput()
                      Error("HandleSocketInput:kPROOF_CHECKFILE", "failure executing: %s %s/%s",
                            kRM, fPackageDir.Data(), packnam.Data());
                   // find gunzip...
-                  Char_t *gunzip = gSystem->Which(gSystem->Getenv("PATH"),kGUNZIP,
+                  char *gunzip = gSystem->Which(gSystem->Getenv("PATH"),kGUNZIP,
                                                 kExecutePermission);
                   if (gunzip) {
                      // untar package
@@ -991,7 +991,7 @@ void TProofServ::HandleSocketInput()
          {
             Long_t size;
             Int_t  bin;
-            Char_t  name[1024];
+            char   name[1024];
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
@@ -1267,7 +1267,7 @@ void TProofServ::HandleSocketInput()
 
             TDSet* dset;
             (*mess) >> dset;
-            const Char_t*  name = dset->GetObjName();
+            const char *name = dset->GetObjName();
             dset->Reset();
             TDSetElement *e = dset->Next();
             Long64_t entries = 0;
@@ -1435,11 +1435,11 @@ void TProofServ::HandleUrgentData()
 {
    // Handle Out-Of-Band data sent by the master or client.
 
-   Char_t  oob_byte;
-   Int_t   n, nch, wasted = 0;
+   char  oob_byte;
+   Int_t n, nch, wasted = 0;
 
    const Int_t kBufSize = 1024;
-   Char_t waste[kBufSize];
+   char waste[kBufSize];
 
    PDB(kGlobal, 5)
       Info("HandleUrgentData", "handling oob...");
@@ -1611,7 +1611,7 @@ Int_t TProofServ::LockDir(const TString &lock)
       return -1;
    }
 
-   const Char_t *lfile = lock;
+   const char *lfile = lock;
 
    if (gSystem->AccessPathName(lfile))
       *fid = open(lfile, O_CREAT|O_RDWR, 0644);
@@ -1694,7 +1694,7 @@ void TProofServ::RedirectOutput()
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
 
-   Char_t logfile[512];
+   char logfile[512];
 
    if (IsMaster()) {
       sprintf(logfile, "%s/master.log", fSessionDir.Data());
@@ -1719,7 +1719,7 @@ void TProofServ::RedirectOutput()
 }
 
 //______________________________________________________________________________
-void TProofServ::Reset(const Char_t *dir)
+void TProofServ::Reset(const char *dir)
 {
    // Reset PROOF environment to be ready for execution of next command.
 
@@ -1739,7 +1739,7 @@ void TProofServ::Reset(const Char_t *dir)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::ReceiveFile(const Char_t *file, Bool_t bin, Long_t size)
+Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
 {
    // Receive a file, either sent by a client or a master server.
    // If bin is true it is a binary file, other wise it is an ASCII
@@ -1756,7 +1756,7 @@ Int_t TProofServ::ReceiveFile(const Char_t *file, Bool_t bin, Long_t size)
    }
 
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
-   Char_t buf[kMAXBUF], cpy[kMAXBUF];
+   char buf[kMAXBUF], cpy[kMAXBUF];
 
    Int_t  left, r;
    Long_t filesize = 0;
@@ -1767,7 +1767,7 @@ Int_t TProofServ::ReceiveFile(const Char_t *file, Bool_t bin, Long_t size)
          left = kMAXBUF;
       r = fSocket->RecvRaw(&buf, left);
       if (r > 0) {
-         Char_t *p = buf;
+         char *p = buf;
 
          filesize += r;
          while (r) {
@@ -1775,7 +1775,7 @@ Int_t TProofServ::ReceiveFile(const Char_t *file, Bool_t bin, Long_t size)
 
             if (!bin) {
                Int_t k = 0, i = 0, j = 0;
-               Char_t *q;
+               char *q;
                while (i < r) {
                   if (p[i] == '\r') {
                      i++;
@@ -1839,7 +1839,7 @@ void TProofServ::SendLogFile(Int_t status)
       fSocket->Send(left, kPROOF_LOGFILE);
 
       const Int_t kMAXBUF = 32768;  //16384  //65536;
-      Char_t buf[kMAXBUF];
+      char buf[kMAXBUF];
       Int_t len;
       do {
          while ((len = read(fileno(fLogFile), buf, kMAXBUF)) < 0 &&
@@ -1901,7 +1901,7 @@ void TProofServ::SendParallel()
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::UnloadPackage(const Char_t*  package)
+Int_t TProofServ::UnloadPackage(const char*  package)
 {
    // Removes link to package in working directory
    // Removes entry from include path
@@ -1959,7 +1959,7 @@ void TProofServ::Setup()
 {
    // Print the ProofServ logo on standard output.
 
-   Char_t str[512];
+   char str[512];
 
    if (IsMaster()) {
       sprintf(str, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
@@ -2003,7 +2003,7 @@ void TProofServ::Setup()
             KeyFile += retval;
 
             FILE *fKey = 0;
-            Char_t PubKey[kMAXPATHLEN] = { 0 };
+            char PubKey[kMAXPATHLEN] = { 0 };
             if (!gSystem->AccessPathName(KeyFile.Data(), kReadPermission)) {
                fKey = fopen(KeyFile.Data(), "r");
                if (fKey) {
@@ -2033,7 +2033,7 @@ void TProofServ::Setup()
          delete mess;
 
          for (Int_t i = 0; i < fPasswd.Length(); i++) {
-            Char_t inv = ~fPasswd(i);
+            char inv = ~fPasswd(i);
             fPasswd.Replace(i, 1, inv);
          }
 
@@ -2077,11 +2077,11 @@ void TProofServ::Setup()
       if (!fconf.IsNull()) {
          if (FILE *pconf = fopen(fconf, "r")) {
             // read the config file looking at node lines
-            Char_t line[1024];
+            char line[1024];
             TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
             // check for valid master line
             while (fgets(line, sizeof(line), pconf)) {
-               Char_t word[12][128];
+               char word[12][128];
                if (line[0] == '#') continue;   // skip comment lines
                Int_t nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
                    word[2], word[3], word[4], word[5], word[6],

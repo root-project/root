@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v4-04-02 $:$Id: TError.cxx,v 1.10 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.11 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -42,19 +42,19 @@ TVirtualMutex *gErrorMutex = 0;
 Int_t gErrorIgnoreLevel = kUnset;
 Int_t gErrorAbortLevel  = kSysError+1;
 
-const Char_t *kAssertMsg = "%s violated at line %d of `%s'";
-const Char_t *kCheckMsg  = "%s not true at line %d of `%s'";
+const char *kAssertMsg = "%s violated at line %d of `%s'";
+const char *kCheckMsg  = "%s not true at line %d of `%s'";
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
 
 //______________________________________________________________________________
-static void DebugPrint(const Char_t *fmt, ...)
+static void DebugPrint(const char *fmt, ...)
 {
    // Print debugging message to stderr and, on Windows, to the system debugger.
 
    static Int_t buf_size = 2048;
-   static Char_t *buf = 0;
+   static char *buf = 0;
 
    va_list arg_ptr;
    va_start(arg_ptr, fmt);
@@ -102,7 +102,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 }
 
 //______________________________________________________________________________
-void DefaultErrorHandler(Int_t level, Bool_t abort, const Char_t *location, const Char_t *msg)
+void DefaultErrorHandler(Int_t level, Bool_t abort, const char *location, const char *msg)
 {
    // The default error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
@@ -113,25 +113,25 @@ void DefaultErrorHandler(Int_t level, Bool_t abort, const Char_t *location, cons
       gErrorIgnoreLevel = 0;
       if (gEnv) {
          TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
-         if (!level.CompareTo("Info",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kInfo;
-	 else if (!level.CompareTo("Warning",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kWarning;
-	 else if (!level.CompareTo("Error",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kError;
-	 else if (!level.CompareTo("Break",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kBreak;
-	 else if (!level.CompareTo("SysError",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kSysError;
-	 else if (!level.CompareTo("Fatal",TString::kIgnoreCase)) 
-	    gErrorIgnoreLevel = kFatal;
+         if (!level.CompareTo("Info",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kInfo;
+         else if (!level.CompareTo("Warning",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kWarning;
+         else if (!level.CompareTo("Error",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kError;
+         else if (!level.CompareTo("Break",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kBreak;
+         else if (!level.CompareTo("SysError",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kSysError;
+         else if (!level.CompareTo("Fatal",TString::kIgnoreCase))
+            gErrorIgnoreLevel = kFatal;
       }
    }
 
    if (level < gErrorIgnoreLevel)
       return;
 
-   const Char_t *type = 0;
+   const char *type = 0;
 
    if (level >= kInfo)
       type = "Info";
@@ -166,16 +166,16 @@ void DefaultErrorHandler(Int_t level, Bool_t abort, const Char_t *location, cons
 }
 
 //______________________________________________________________________________
-void ErrorHandler(Int_t level, const Char_t *location, const Char_t *fmt, va_list ap)
+void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap)
 {
    // General error handler function. It calls the user set error handler.
 
    R__LOCKGUARD2(gErrorMutex);
 
    static Int_t buf_size = 2048;
-   static Char_t *buf = 0;
+   static char *buf = 0;
 
-   Char_t *bp;
+   char *bp;
 
 again:
    if (!buf)
@@ -202,7 +202,7 @@ again:
 }
 
 //______________________________________________________________________________
-void AbstractMethod(const Char_t *method)
+void AbstractMethod(const char *method)
 {
    // This function can be used in abstract base classes in case one does
    // not want to make the class a "real" (in C++ sense) ABC. If this
@@ -213,7 +213,7 @@ void AbstractMethod(const Char_t *method)
 }
 
 //______________________________________________________________________________
-void MayNotUse(const Char_t *method)
+void MayNotUse(const char *method)
 {
    // This function can be used in classes that should override a certain
    // function, but in the inherited class the function makes no sense.
@@ -222,7 +222,7 @@ void MayNotUse(const Char_t *method)
 }
 
 //______________________________________________________________________________
-void Error(const Char_t *location, const Char_t *va_(fmt), ...)
+void Error(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in case an error occured.
 
@@ -233,7 +233,7 @@ void Error(const Char_t *location, const Char_t *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void SysError(const Char_t *location, const Char_t *va_(fmt), ...)
+void SysError(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in case a system (OS or GUI) related error occured.
 
@@ -244,7 +244,7 @@ void SysError(const Char_t *location, const Char_t *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Break(const Char_t *location, const Char_t *va_(fmt), ...)
+void Break(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in case an error occured.
 
@@ -255,7 +255,7 @@ void Break(const Char_t *location, const Char_t *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Info(const Char_t *location, const Char_t *va_(fmt), ...)
+void Info(const char *location, const char *va_(fmt), ...)
 {
    // Use this function for informational messages.
 
@@ -266,7 +266,7 @@ void Info(const Char_t *location, const Char_t *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Warning(const Char_t *location, const Char_t *va_(fmt), ...)
+void Warning(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in warning situations.
 
@@ -277,7 +277,7 @@ void Warning(const Char_t *location, const Char_t *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-void Fatal(const Char_t *location, const Char_t *va_(fmt), ...)
+void Fatal(const char *location, const char *va_(fmt), ...)
 {
    // Use this function in case of a fatal error. It will abort the program.
 

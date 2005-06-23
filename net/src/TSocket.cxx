@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.30 2005/06/10 17:49:47 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.31 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -75,8 +75,8 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
                                         tcpwindowsize);
 
       if (fSocket != -1) {
-    	 R__LOCKGUARD2(TROOT::fgMutex);
-	 gROOT->GetListOfSockets()->Add(this);
+         R__LOCKGUARD2(TROOT::fgMutex);
+         gROOT->GetListOfSockets()->Add(this);
       }
    } else
       fSocket = -1;

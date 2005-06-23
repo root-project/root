@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.36 2005/05/18 12:31:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.37 2005/06/22 20:18:10 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -156,7 +156,6 @@ public:
    // For detecting null substrings
    Bool_t        IsNull() const          { return fBegin == kNPOS; }
    int           operator!() const       { return fBegin == kNPOS; }
-
 };
 
 
@@ -207,7 +206,7 @@ public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
 
-   static TVirtualMutex* fgMutex;  // Mutex for static buffers
+   static TVirtualMutex *fgMutex;  // Mutex for static buffers
 
    TString();                       // Null string
    TString(Ssiz_t ic);              // Suggested capacity

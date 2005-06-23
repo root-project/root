@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.4 2004/12/10 22:27:21 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.5 2005/06/22 20:18:12 brun Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -127,7 +127,7 @@ Int_t TMutex::CleanUp()
 }
 
 //______________________________________________________________________________
-TVirtualMutex* TMutex::Factory(Bool_t recursive)
+TVirtualMutex *TMutex::Factory(Bool_t recursive)
 { 
    // Create mutex and return pointer to it. Calling function must care
    // about proper deletion. The function is intended to be used in connection 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name: v4-04-02 $:$Id: TPSocket.cxx,v 1.19 2005/04/28 16:14:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.20 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -135,7 +135,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                Int_t tcpw = (size > 1 ? -1 : tcpwindowsize);
                TSocket *ns = new TSocket(host, port, tcpw);
                if (ns->IsValid()) {
-		  R__LOCKGUARD2(TROOT::fgMutex);
+                  R__LOCKGUARD2(TROOT::fgMutex);
                   gROOT->GetListOfSockets()->Remove(ns);
                   fSocket = ns->GetDescriptor();
                   fSize = size;
@@ -231,7 +231,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
                Int_t tcpw = (size > 1 ? -1 : fTcpWindowSize);
                TSocket *ns = new TSocket(host, port, tcpw);
                if (ns->IsValid()) {
-		  R__LOCKGUARD2(TROOT::fgMutex);
+                  R__LOCKGUARD2(TROOT::fgMutex);
                   gROOT->GetListOfSockets()->Remove(ns);
                   fSocket = ns->GetDescriptor();
                   fSize = size;
@@ -416,7 +416,7 @@ void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
       // establish fSize parallel socket connections between client and server
       for (i = 0; i < fSize; i++) {
          fSockets[i] = ss.Accept();
-	 R__LOCKGUARD2(TROOT::fgMutex);
+         R__LOCKGUARD2(TROOT::fgMutex);
          gROOT->GetListOfSockets()->Remove(fSockets[i]);
       }
 

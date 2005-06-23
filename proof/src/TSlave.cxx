@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name: v4-04-02 $:$Id: TSlave.cxx,v 1.37 2005/02/18 14:27:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.38 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -35,9 +35,9 @@
 ClassImp(TSlave)
 
 //______________________________________________________________________________
-TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
-               const Char_t *image, TProof *proof, ESlaveType stype,
-               const Char_t *workdir, const Char_t *conffile, const Char_t *msd)
+TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
+               const char *image, TProof *proof, ESlaveType stype,
+               const char *workdir, const char *conffile, const char *msd)
   : fName(host), fImage(image), fProofWorkDir(workdir),
     fWorkDir(workdir), fUser(), fPort(port),
     fOrdinal(ord), fPerfIdx(perf), fSecContext(0),
@@ -89,7 +89,7 @@ TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
    // ensure the correct termination of all proof servers in case the
    // root session terminates.
 
-   {   
+   {
       R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
@@ -105,16 +105,16 @@ TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
    PDB(kGlobal,3) {
      fSocket->GetSecContext()->Print("e");
      Info("TSlave",
-	  "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
+         "%s: fUser is .... %s", iam.Data(), proof->fUser.Data());
    }
 
-   Char_t buf[512];
+   char buf[512];
    fSocket->Recv(buf, sizeof(buf));
    if (strcmp(buf, "Okay")) {
       Printf("%s", buf);
       SafeDelete(fSocket);
       return;
-   } 
+   }
 
    // get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
@@ -150,7 +150,7 @@ TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
       SafeDelete(fSocket);
       return;
    }
-	 
+
    proof->fProtocol   = fProtocol;   // on master this is the protocol
    proof->fSecContext = fSecContext;
    proof->fUser       = fUser;
@@ -162,68 +162,66 @@ TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
    Bool_t  pwhash = kFALSE;
    Bool_t  srppwd = kFALSE;
    Bool_t  sndsrp = kFALSE;
-   
+
    Bool_t upwd = fSecContext->IsA("UsrPwd");
    Bool_t srp = fSecContext->IsA("SRP");
 
    TPwdCtx *pwdctx = 0;
    if (RemoteOffSet > -1 && (upwd || srp))
       pwdctx = (TPwdCtx *)(fSecContext->GetContext());
-   
+
    if (!proof->IsMaster()) {
-      if ((gEnv->GetValue("Proofd.SendSRPPwd",0))
-	  && (RemoteOffSet > -1) )
-	sndsrp = kTRUE;
+      if ((gEnv->GetValue("Proofd.SendSRPPwd",0)) && (RemoteOffSet > -1))
+         sndsrp = kTRUE;
    } else {
       if (srp && pwdctx) {
-	 if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
-	    sndsrp = kTRUE;
+         if (pwdctx->GetPasswd() != "" && RemoteOffSet > -1)
+            sndsrp = kTRUE;
       }
    }
 
    if ((upwd && pwdctx) || (srp  && sndsrp)) {
 
       // Send offset to identify remotely the public part of RSA key
-     if (fSocket->Send(RemoteOffSet,kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-        Error("TSlave", "failed to send offset in RSA key");
-	SafeDelete(fSocket);
-	return;
-     }
+      if (fSocket->Send(RemoteOffSet,kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+         Error("TSlave", "failed to send offset in RSA key");
+         SafeDelete(fSocket);
+         return;
+      }
 
-     if (pwdctx) {
-        passwd = pwdctx->GetPasswd();
-	pwhash = pwdctx->IsPwHash();
-     }
+      if (pwdctx) {
+         passwd = pwdctx->GetPasswd();
+         pwhash = pwdctx->IsPwHash();
+      }
 
-
-     if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
-        if (RemoteOffSet > -1)
-	   Warning("TSlave","problems secure-sending pass hash %s",
-		  "- may result in failures");
-	// If non RSA encoding available try passwd inversion
-	if (upwd) {
-	   for (int i = 0; i < passwd.Length(); i++) {
-	     Char_t inv = ~passwd(i);
-	     passwd.Replace(i, 1, inv);
-	   }
-	   TMessage mess;
-	   mess << passwd;
-	   if (fSocket->Send(mess) < 0) {
-	      Error("TSlave", "failed to send inverted password");
-	      SafeDelete(fSocket);
-	      return;
-	   }
-	}
-     }
+      if (fSocket->SecureSend(passwd,1,fSecContext->GetRSAKey()) == -1) {
+         if (RemoteOffSet > -1)
+            Warning("TSlave","problems secure-sending pass hash %s",
+                    "- may result in failures");
+         // If non RSA encoding available try passwd inversion
+         if (upwd) {
+            for (int i = 0; i < passwd.Length(); i++) {
+               char inv = ~passwd(i);
+               passwd.Replace(i, 1, inv);
+            }
+            TMessage mess;
+            mess << passwd;
+            if (fSocket->Send(mess) < 0) {
+               Error("TSlave", "failed to send inverted password");
+               SafeDelete(fSocket);
+               return;
+            }
+         }
+      }
 
    } else {
 
-     // Send notification of no offset to be sent ...
-     if (fSocket->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
-        Error("TSlave", "failed to send no offset notification in RSA key");
-	SafeDelete(fSocket);
-	return;
-     }
+      // Send notification of no offset to be sent ...
+      if (fSocket->Send(-2, kROOTD_RSAKEY) != 2*sizeof(Int_t)) {
+         Error("TSlave", "failed to send no offset notification in RSA key");
+         SafeDelete(fSocket);
+         return;
+      }
    }
 
    // Send ordinal (and config) info to slave (or master)
@@ -241,14 +239,14 @@ TSlave::TSlave(const Char_t *host, Int_t port, const Char_t *ord, Int_t perf,
 
    if (ProofdProto > 6) {
       // Now we send authentication details to access, e.g., data servers
-     // not in the proof cluster and to be propagated to slaves.
-     // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
-     // line in .rootauthrc
-     if (fSocket->SendHostAuth() < 0) {
-        Error("TSlave", "failed to send HostAuth info");
-	SafeDelete(fSocket);
-	return;
-     }
+      // not in the proof cluster and to be propagated to slaves.
+      // This is triggered by the 'proofserv <dserv1> <dserv2> ...'
+      // line in .rootauthrc
+      if (fSocket->SendHostAuth() < 0) {
+         Error("TSlave", "failed to send HostAuth info");
+         SafeDelete(fSocket);
+         return;
+      }
    }
 
    // set some socket options
@@ -281,8 +279,8 @@ Int_t TSlave::Compare(const TObject *obj) const
 
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
-   const Char_t *myord = GetOrdinal();
-   const Char_t *otherord = sl->GetOrdinal();
+   const char *myord = GetOrdinal();
+   const char *otherord = sl->GetOrdinal();
    while (myord && otherord) {
       Int_t myval = atoi(myord);
       Int_t otherval = atoi(otherord);

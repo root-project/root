@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name: v4-04-02 $:$Id: TProofServ.h,v 1.25 2005/05/02 11:00:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.26 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -90,30 +90,30 @@ private:
    Int_t       UnlockCache() { return UnlockDir(fCacheLock); }
    Int_t       LockPackage() { return LockDir(fPackageLock); }
    Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
-   Int_t       UnloadPackage(const Char_t* package);
+   Int_t       UnloadPackage(const char *package);
    Int_t       UnloadPackages();
    void        HandleSocketInputDuringProcess();
 
 public:
-   TProofServ(Int_t *argc, Char_t **argv);
+   TProofServ(Int_t *argc, char **argv);
    virtual ~TProofServ();
 
    TProof        *GetProof()      const { return fProof; }
-   const Char_t  *GetService()    const { return fService; }
-   const Char_t  *GetConfDir()    const { return fConfDir; }
-   const Char_t  *GetConfFile()   const { return fConfFile; }
-   const Char_t  *GetUser()       const { return fUser; }
-   const Char_t  *GetWorkDir()    const { return fWorkDir; }
-   const Char_t  *GetSessionDir() const { return fSessionDir; }
+   const char    *GetService()    const { return fService; }
+   const char    *GetConfDir()    const { return fConfDir; }
+   const char    *GetConfFile()   const { return fConfFile; }
+   const char    *GetUser()       const { return fUser; }
+   const char    *GetWorkDir()    const { return fWorkDir; }
+   const char    *GetSessionDir() const { return fSessionDir; }
    Int_t          GetProtocol()   const { return fProtocol; }
-   const Char_t  *GetOrdinal()    const { return fOrdinal; }
+   const char    *GetOrdinal()    const { return fOrdinal; }
    Int_t          GetGroupId()    const { return fGroupId; }
    Int_t          GetGroupSize()  const { return fGroupSize; }
    Int_t          GetLogLevel()   const { return fLogLevel; }
    TSocket       *GetSocket()     const { return fSocket; }
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
-   void           GetOptions(Int_t *argc, Char_t **argv);
+   void           GetOptions(Int_t *argc, char **argv);
 
    void           HandleSocketInput();
    void           HandleUrgentData();
@@ -127,10 +127,10 @@ public:
 
    void           Print(Option_t *option="") const;
 
-   TObject       *Get(const Char_t *namecycle);
+   TObject       *Get(const char *namecycle);
    TDSetElement  *GetNextPacket();
-   void           Reset(const Char_t *dir);
-   Int_t          ReceiveFile(const Char_t *file, Bool_t bin, Long_t size);
+   void           Reset(const char *dir);
+   Int_t          ReceiveFile(const char *file, Bool_t bin, Long_t size);
    void           SendLogFile(Int_t status = 0);
    void           SendStatistics();
    void           SendParallel();

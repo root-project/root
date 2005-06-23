@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.90 2005/06/07 20:28:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.91 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -66,10 +66,10 @@
 
 // Helper classes used for parallel startup
 //______________________________________________________________________________
-TProofThreadArg::TProofThreadArg(const Char_t *h, Int_t po, const Char_t *o, 
-				 Int_t pe, const Char_t *i, const Char_t *w,
-				 TList *s, TProof *prf) 
-  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0), 
+TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
+                                 Int_t pe, const char *i, const char *w,
+                                 TList *s, TProof *prf)
+  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0),
     perf(pe), image(i ? StrDup(i) : 0), workdir(w ? StrDup(w) : 0),
     msd(0), slaves(s), proof(prf), cslave(0), claims(0)
 {
@@ -77,12 +77,12 @@ TProofThreadArg::TProofThreadArg(const Char_t *h, Int_t po, const Char_t *o,
 
 //______________________________________________________________________________
 TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
-				 TList *s, TProof *prf) 
+                                 TList *s, TProof *prf)
   : host(0), port(-1), ord(0), perf(-1), image(0), workdir(0),
     msd(0), slaves(s), proof(prf), cslave(csl), claims(clist)
 {
    if(csl){
-      host = StrDup(csl->fHostname.Data());		     
+      host = StrDup(csl->fHostname.Data());
       image = StrDup(csl->fImage.Data());
       ord = StrDup(csl->fOrdinal.Data());
       workdir = StrDup(csl->fWorkDir.Data());
@@ -92,23 +92,23 @@ TProofThreadArg::TProofThreadArg(TCondorSlave *csl, TList *clist,
 }
 
 //______________________________________________________________________________
-TProofThreadArg::TProofThreadArg(const Char_t *h, Int_t po, const Char_t *o,
-				 const Char_t *i, const Char_t *w, const Char_t *m,
-				 TList *s, TProof *prf) 
-  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0), 
+TProofThreadArg::TProofThreadArg(const char *h, Int_t po, const char *o,
+                                 const char *i, const char *w, const char *m,
+                                TList *s, TProof *prf)
+  : host(h ? StrDup(h) : 0), port(po), ord(o ? StrDup(o) : 0),
     perf(-1), image(i ? StrDup(i) : 0), workdir(w ? StrDup(w) : 0),
     msd(m ? StrDup(m) : 0), slaves(s), proof(prf), cslave(0), claims(0)
 {
 }
 
 //______________________________________________________________________________
-TProofThreadArg::~TProofThreadArg() 
+TProofThreadArg::~TProofThreadArg()
 {
-   if(host) delete [] (Char_t*)host; 
-   if(ord) delete [] (Char_t*)ord;
-   if(image) delete [] (Char_t*)image; 
-   if(msd) delete[]  (Char_t*)msd;
-   if(workdir) delete [] (Char_t*)workdir;
+   if (host)    delete [] (char*)host;
+   if (ord)     delete [] (char*)ord;
+   if (image)   delete [] (char*)image;
+   if (msd)     delete [] (char*)msd;
+   if (workdir) delete [] (char*)workdir;
 }
 
 //----- PROOF Interrupt signal handler -----------------------------------------
@@ -145,8 +145,8 @@ Int_t TSlaveInfo::Compare(const TObject *obj) const
 
    if (!si) return fOrdinal.CompareTo(obj->GetName());
 
-   const Char_t *myord = GetOrdinal();
-   const Char_t *otherord = si->GetOrdinal();
+   const char *myord = GetOrdinal();
+   const char *otherord = si->GetOrdinal();
    while (myord && otherord) {
       Int_t myval = atoi(myord);
       Int_t otherval = atoi(otherord);
@@ -199,8 +199,8 @@ TSemaphore    *TProof::fgSemaphore = 0;
 TVirtualMutex *TProof::fgMutex = 0;
 
 //______________________________________________________________________________
-TProof::TProof(const Char_t *masterurl, const Char_t *conffile,
-               const Char_t *confdir, Int_t loglevel)
+TProof::TProof(const char *masterurl, const char *conffile,
+               const char *confdir, Int_t loglevel)
 {
    // Create a PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -283,8 +283,8 @@ TProof::~TProof()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Init(const Char_t *masterurl, const Char_t *conffile,
-                   const Char_t *confdir, Int_t loglevel)
+Int_t TProof::Init(const char *masterurl, const char *conffile,
+                   const char *confdir, Int_t loglevel)
 {
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -354,7 +354,7 @@ Int_t TProof::Init(const Char_t *masterurl, const Char_t *conffile,
 #else
          TString threadLib = TString(gRootDir) + "/lib/libThread";
 #endif
-         Char_t *p;
+         char *p;
          if ((p = gSystem->DynamicPathName(threadLib, kTRUE))) {
             delete[]p;
             if (gSystem->Load(threadLib) == -1) {
@@ -372,9 +372,9 @@ Int_t TProof::Init(const Char_t *masterurl, const Char_t *conffile,
       // Get no of parallel requests and set semaphore correspondingly
       Int_t parallelRequests = gEnv->GetValue("Proof.ParallelStartupRequests", 0);
       if (parallelRequests > 0) {
-	 PDB(kGlobal,1) 
-	    Info("Init", "Parallel Startup Requests: %d", parallelRequests);
-	 fgSemaphore = new TSemaphore((UInt_t)(parallelRequests));
+         PDB(kGlobal,1)
+            Info("Init", "Parallel Startup Requests: %d", parallelRequests);
+         fgSemaphore = new TSemaphore((UInt_t)(parallelRequests));
       }
    }
 
@@ -440,14 +440,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          fConfFile = fconf;
 
          // read the config file
-         Char_t line[1024];
-         TString host =
-            gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+         char line[1024];
+         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
 
          int  ord = 0;
          // check for valid master line
          while (fgets(line, sizeof(line), pconf)) {
-            Char_t word[12][128];
+            char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
             int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
                 word[0], word[1],
@@ -462,8 +461,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                TInetAddress a = gSystem->GetHostByName(word[1]);
                if (!host.CompareTo(a.GetHostName()) ||
                    !strcmp(word[1], "localhost")) {
-                  const Char_t *image = word[1];
-                  const Char_t *workdir = kPROOF_WorkDir;
+                  const char *image = word[1];
+                  const char *workdir = kPROOF_WorkDir;
                   for (int i = 2; i < nword; i++) {
 
                      if (!strncmp(word[i], "image=", 6))
@@ -472,7 +471,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                         workdir = word[i]+8;
 
                   }
-                  const Char_t* expworkdir = gSystem->ExpandPathName(workdir);
+                  const char* expworkdir = gSystem->ExpandPathName(workdir);
                   if (!strcmp(expworkdir,gProofServ->GetWorkDir())) {
                      fImage = image;
                   }
@@ -506,7 +505,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
          // check for valid slave lines and start slaves
          rewind(pconf);
          while (fgets(line, sizeof(line), pconf)) {
-            Char_t word[12][128];
+            char word[12][128];
             if (line[0] == '#') continue;   // skip comment lines
             int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
                 word[0], word[1],
@@ -519,8 +518,8 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                int perfidx  = 100;
                int sport    = fPort;
 
-               const Char_t *image = word[1];
-               const Char_t *workdir = 0;
+               const char *image = word[1];
+               const char *workdir = 0;
                for (int i = 2; i < nword; i++) {
 
                   if (!strncmp(word[i], "perf=", 5))
@@ -537,7 +536,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
                // Get slave FQDN ...
                TString SlaveFqdn;
                TInetAddress SlaveAddr =
-                  gSystem->GetHostByName((const Char_t *)word[1]);
+                  gSystem->GetHostByName((const char *)word[1]);
                if (SlaveAddr.IsValid()) {
                   SlaveFqdn = SlaveAddr.GetHostName();
                   if (SlaveFqdn == "UnNamedHost")
@@ -551,7 +550,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
                   // Prepare arguments
                   TProofThreadArg *ta =
-                      new TProofThreadArg((const Char_t *)(word[1]), sport,
+                      new TProofThreadArg((const char *)(word[1]), sport,
                                          fullord, perfidx, image, workdir,
                                          fSlaves, this);
                   if (ta) {
@@ -602,7 +601,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
 
                // Wait on this condition
                if (pt && pt->thread->GetState() == TThread::kRunningState) {
-		 PDB(kGlobal,3)
+                  PDB(kGlobal,3)
                      Info("Init",
                           "parallel startup: waiting for slave %s (%s:%d)",
                            pt->args->ord, pt->args->host, pt->args->port);
@@ -620,19 +619,19 @@ Bool_t TProof::StartSlaves(Bool_t parallel)
             }
 
             // We can cleanup now
-	    while (!thrHandlers.empty()) {
-	      i = thrHandlers.end()-1;
-	      if (*i) {
-		SafeDelete(*i);
-		thrHandlers.erase(i);
-	      }
+            while (!thrHandlers.empty()) {
+               i = thrHandlers.end()-1;
+               if (*i) {
+                  SafeDelete(*i);
+                  thrHandlers.erase(i);
+               }
             }
 
          }
       }
       fclose(pconf);
 
-   } else { 
+   } else {
 
       // create master server
       TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", fConfFile, 0);
@@ -706,8 +705,8 @@ void TProof::Close(Option_t *)
 }
 
 //______________________________________________________________________________
-TSlave *TProof::CreateSlave(const Char_t *host, Int_t port, const Char_t *ord,
-                            Int_t perf, const Char_t *image, const Char_t *workdir)
+TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
+                            Int_t perf, const char *image, const char *workdir)
 {
    // Create a new TSlave of type TSlave::kSlave.
    // Note: constructor of TSlave is private with TProof as a friend.
@@ -727,9 +726,9 @@ TSlave *TProof::CreateSlave(const Char_t *host, Int_t port, const Char_t *ord,
 }
 
 //______________________________________________________________________________
-TSlave *TProof::CreateSubmaster(const Char_t *host, Int_t port, const Char_t *ord,
-                                const Char_t *image, const Char_t *conffile,
-                                const Char_t *msd)
+TSlave *TProof::CreateSubmaster(const char *host, Int_t port, const char *ord,
+                                const char *image, const char *conffile,
+                                const char *msd)
 {
    // Create a new TSlave of type TSlave::kMaster.
    // Note: constructor of TSlave is private with TProof as a friend.
@@ -920,7 +919,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 
    if (!IsValid()) return;
 
-   Char_t oobc = (char) type;
+   char oobc = (char) type;
 
    TList *slaves = 0;
    if (list == kAll)    slaves = fSlaves;
@@ -930,7 +929,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
    if (slaves->GetSize() == 0) return;
 
    const int kBufSize = 1024;
-   Char_t waste[kBufSize];
+   char waste[kBufSize];
 
    TSlave *sl;
    TIter   next(slaves);
@@ -946,7 +945,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
          }
 
          if (type == kHardInterrupt) {
-            Char_t  oob_byte;
+            char  oob_byte;
             int   n, nch, nbytes = 0, nloop = 0;
 
             // Receive the OOB byte
@@ -1172,7 +1171,7 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Broadcast(const Char_t *str, Int_t kind, TList *slaves)
+Int_t TProof::Broadcast(const char *str, Int_t kind, TList *slaves)
 {
    // Broadcast a character string buffer to all slaves in the specified
    // list. Use kind to set the TMessage what field. Returns the number of
@@ -1184,7 +1183,7 @@ Int_t TProof::Broadcast(const Char_t *str, Int_t kind, TList *slaves)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Broadcast(const Char_t *str, Int_t kind, ESlaves list)
+Int_t TProof::Broadcast(const char *str, Int_t kind, ESlaves list)
 {
    // Broadcast a character string buffer to all slaves in the specified
    // list (either all slaves or only the active slaves). Use kind to
@@ -1331,7 +1330,7 @@ Int_t TProof::Collect(TMonitor *mon)
    fCpuTime   = 0.0;
 
    while (loop) {
-      Char_t      str[512];
+      char      str[512];
       TMessage *mess;
       TSocket  *s;
       TSlave   *sl;
@@ -1752,7 +1751,7 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Int_t TProof::Process(TDSet *set, const Char_t *selector, Option_t *option,
+Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
                       Long64_t nentries, Long64_t first, TEventList *evl)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
@@ -1791,7 +1790,7 @@ Int_t TProof::Process(TDSet *set, const Char_t *selector, Option_t *option,
 }
 
 //______________________________________________________________________________
-Int_t TProof::DrawSelect(TDSet *set, const Char_t *varexp, const Char_t *selection, Option_t *option,
+Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
@@ -1850,7 +1849,7 @@ void TProof::ClearInput()
 }
 
 //______________________________________________________________________________
-TObject *TProof::GetOutput(const Char_t *name)
+TObject *TProof::GetOutput(const char *name)
 {
    // Get specified object that has been produced during the processing
    // (see Process()).
@@ -1872,7 +1871,7 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
    // Receive the log file of the slave with socket s.
 
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
-   Char_t buf[kMAXBUF];
+   char buf[kMAXBUF];
 
    Int_t  left, r;
    Long_t filesize = 0;
@@ -1883,7 +1882,7 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
          left = kMAXBUF;
       r = s->RecvRaw(&buf, left);
       if (r > 0) {
-         Char_t *p = buf;
+         char *p = buf;
 
          filesize += r;
          while (r) {
@@ -1921,7 +1920,7 @@ Int_t TProof::SendGroupView()
    TSlave *sl;
 
    int  bad = 0, cnt = 0, size = GetNumberOfActiveSlaves();
-   Char_t str[32];
+   char str[32];
 
    while ((sl = (TSlave *)next())) {
       sprintf(str, "%d %d", cnt, size);
@@ -1941,7 +1940,7 @@ Int_t TProof::SendGroupView()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const Char_t *cmd)
+Int_t TProof::Exec(const char *cmd)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
@@ -1953,7 +1952,7 @@ Int_t TProof::Exec(const Char_t *cmd)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const Char_t *cmd, ESlaves list)
+Int_t TProof::Exec(const char *cmd, ESlaves list)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
@@ -1973,7 +1972,7 @@ Int_t TProof::Exec(const Char_t *cmd, ESlaves list)
       TString file = s(2, s.Length());
       TString acm, arg, io;
       TString filename = gSystem->SplitAclicMode(file, acm, arg, io);
-      Char_t *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
+      char *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
             if (SendFile(fn, kFALSE) < 0) {
@@ -1998,7 +1997,7 @@ Int_t TProof::Exec(const Char_t *cmd, ESlaves list)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendCommand(const Char_t *cmd, ESlaves list)
+Int_t TProof::SendCommand(const char *cmd, ESlaves list)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command, however commands
@@ -2047,7 +2046,7 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Long_t TProof::CheckFile(const Char_t *file, TSlave *slave)
+Long_t TProof::CheckFile(const char *file, TSlave *slave)
 {
    // Check if a file needs to be send to the slave. Use the following
    // algorithm:
@@ -2139,7 +2138,7 @@ Long_t TProof::CheckFile(const Char_t *file, TSlave *slave)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendFile(const Char_t *file, Bool_t bin)
+Int_t TProof::SendFile(const char *file, Bool_t bin)
 {
    // Send a file to master or slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
@@ -2163,7 +2162,7 @@ Int_t TProof::SendFile(const Char_t *file, Bool_t bin)
    }
 
    const Int_t kMAXBUF = 32768;  //16384  //65536;
-   Char_t buf[kMAXBUF];
+   char buf[kMAXBUF];
    Int_t nsl = 0;
 
    TIter next(slaves);
@@ -2256,7 +2255,7 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
 {
    // Set server logging level.
 
-   Char_t str[32];
+   char str[32];
    fLogLevel        = level;
    gProofDebugLevel = level;
    gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
@@ -2500,7 +2499,7 @@ Int_t TProof::ClearPackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::ClearPackage(const Char_t *package)
+Int_t TProof::ClearPackage(const char *package)
 {
    // Remove a specific package.
 
@@ -2527,7 +2526,7 @@ Int_t TProof::ClearPackage(const Char_t *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::DisablePackage(const Char_t *package)
+Int_t TProof::DisablePackage(const char *package)
 {
    // Remove a specific package.
 
@@ -2602,7 +2601,7 @@ Int_t TProof::DisablePackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::BuildPackage(const Char_t *package)
+Int_t TProof::BuildPackage(const char *package)
 {
    // Build specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists on all unique nodes.
@@ -2647,7 +2646,7 @@ Int_t TProof::BuildPackage(const Char_t *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackage(const Char_t *package)
+Int_t TProof::LoadPackage(const char *package)
 {
    // Load specified package. Executes the PROOF-INF/SETUP.C script
    // on all active nodes.
@@ -2675,7 +2674,7 @@ Int_t TProof::LoadPackage(const Char_t *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UnloadPackage(const Char_t *package)
+Int_t TProof::UnloadPackage(const char *package)
 {
    // Unload specified package.
    // Returns 0 in case of success and -1 in case of error.
@@ -2718,7 +2717,7 @@ Int_t TProof::UnloadPackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const Char_t *package)
+Int_t TProof::EnablePackage(const char *package)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
@@ -2747,7 +2746,7 @@ Int_t TProof::EnablePackage(const Char_t *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const Char_t *tpar, Int_t parallel)
+Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -3003,18 +3002,18 @@ void TProof::ValidateDSet(TDSet *dset)
 }
 
 //______________________________________________________________________________
-void TProof::AddFeedback(const Char_t *name)
+void TProof::AddFeedback(const char *name)
 {
    // Add object to feedback list.
 
-   PDB(kFeedback, 3) 
+   PDB(kFeedback, 3)
       Info("AddFeedback", "Adding object \"%s\" to feedback", name);
-   if (fFeedback->FindObject(name) == 0) 
+   if (fFeedback->FindObject(name) == 0)
       fFeedback->Add(new TObjString(name));
 }
 
 //______________________________________________________________________________
-void TProof::RemoveFeedback(const Char_t *name)
+void TProof::RemoveFeedback(const char *name)
 {
    // Remove object from feedback list.
 
@@ -3236,12 +3235,10 @@ void *TProof::SlaveStartupThread(void * arg)
 
    if(ta->msd)
       sl = ta->proof->CreateSubmaster(ta->host, ta->port, ta->ord,
-				      ta->image, ta->workdir, ta->msd);
-   else 
+                                      ta->image, ta->workdir, ta->msd);
+   else
       sl = ta->proof->CreateSlave(ta->host, ta->port, ta->ord,
-				  ta->perf, ta->image, ta->workdir);
-
-   
+                                  ta->perf, ta->image, ta->workdir);
 
    {
       R__LOCKGUARD2(fgMutex);
@@ -3251,9 +3248,9 @@ void *TProof::SlaveStartupThread(void * arg)
       ta->slaves->Add(sl);
 
       if (ta->claims) { // Condor slave
-	// Remove from the pending claims list
-	TCondorSlave *c = ta->cslave;
-	ta->claims->Remove(c);
+         // Remove from the pending claims list
+         TCondorSlave *c = ta->cslave;
+         ta->claims->Remove(c);
       }
 
    }

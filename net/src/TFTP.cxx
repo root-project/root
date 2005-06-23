@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.29 2005/05/20 10:04:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.30 2005/06/22 20:18:11 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -64,7 +64,7 @@ Long64_t TFTP::fgBytesRead  = 0;
 ClassImp(TFTP)
 
 //______________________________________________________________________________
-TFTP::TFTP(const Char_t *url, Int_t par, Int_t wsize)
+TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
 {
    // Open connection to host specified by the url using par parallel sockets.
    // The url has the form: [root[s,k]://]host[:port].
@@ -89,7 +89,7 @@ TFTP::TFTP(const Char_t *url, Int_t par, Int_t wsize)
 }
 
 //______________________________________________________________________________
-void TFTP::Init(const Char_t *surl, Int_t par, Int_t wsize)
+void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
 {
    // Set up the actual connection.
 
@@ -174,7 +174,7 @@ void TFTP::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TFTP::PrintError(const Char_t *where, Int_t err) const
+void TFTP::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 
@@ -217,7 +217,7 @@ void TFTP::SetBlockSize(Int_t blockSize)
 }
 
 //______________________________________________________________________________
-Long64_t TFTP::PutFile(const Char_t *file, const Char_t *remoteName)
+Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 {
    // Transfer file to remote host. Returns number of bytes
    // sent or < 0 in case of error. Error -1 connection is still
@@ -292,7 +292,7 @@ Long64_t TFTP::PutFile(const Char_t *file, const Char_t *remoteName)
    Int_t skip = restartat - pos;
 
 #ifndef HAVE_MMAP
-   Char_t *buf = new char[fBlockSize];
+   char *buf = new char[fBlockSize];
 #if defined(R__SEEK64)
    lseek64(fd, pos, SEEK_SET);
 #elif defined(WIN32)
@@ -308,9 +308,9 @@ Long64_t TFTP::PutFile(const Char_t *file, const Char_t *remoteName)
          left = fBlockSize;
 #ifdef HAVE_MMAP
 #if defined(R__SEEK64)
-      Char_t *buf = (char*) mmap64(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
+      char *buf = (char*) mmap64(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
 #else
-      Char_t *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
+      char *buf = (char*) mmap(0, left, PROT_READ, MAP_FILE | MAP_SHARED, fd, pos);
 #endif
       if (buf == (char *) -1) {
          Error("PutFile", "mmap of file %s failed", file);
@@ -390,7 +390,7 @@ Long64_t TFTP::PutFile(const Char_t *file, const Char_t *remoteName)
 }
 
 //______________________________________________________________________________
-Long64_t TFTP::GetFile(const Char_t *file, const Char_t *localName)
+Long64_t TFTP::GetFile(const char *file, const char *localName)
 {
    // Transfer file from remote host. Returns number of bytes
    // received or < 0 in case of error. Error -1 connection is still
@@ -430,7 +430,7 @@ Long64_t TFTP::GetFile(const Char_t *file, const Char_t *localName)
    // get size of remote file
    Long64_t size;
    Int_t    what;
-   Char_t   mess[128];
+   char     mess[128];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetFile", "error receiving remote file size");
@@ -514,8 +514,8 @@ Long64_t TFTP::GetFile(const Char_t *file, const Char_t *localName)
    TStopwatch timer;
    timer.Start();
 
-   Char_t *buf = new char[fBlockSize];
-   Char_t *buf2 = 0;
+   char *buf = new char[fBlockSize];
+   char *buf2 = 0;
    if (fMode == kAscii)
       buf2 = new char[fBlockSize];
 
@@ -614,7 +614,7 @@ Long64_t TFTP::GetFile(const Char_t *file, const Char_t *localName)
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ChangeDirectory(const Char_t *dir) const
+Int_t TFTP::ChangeDirectory(const char *dir) const
 {
    // Change the remote directory. If the remote directory contains a .message
    // file and it is < 1024 characters then the contents is echoed back.
@@ -633,7 +633,7 @@ Int_t TFTP::ChangeDirectory(const Char_t *dir) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("ChangeDirectory", "error receiving chdir confirmation");
@@ -654,7 +654,7 @@ Int_t TFTP::ChangeDirectory(const Char_t *dir) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::MakeDirectory(const Char_t *dir, Bool_t print) const
+Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
 {
    // Make a remote directory. Anonymous users may not create directories.
    // Returns 0 in case of success and -1 in case of failure.
@@ -672,7 +672,7 @@ Int_t TFTP::MakeDirectory(const Char_t *dir, Bool_t print) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("MakeDirectory", "error receiving mkdir confirmation");
@@ -689,7 +689,7 @@ Int_t TFTP::MakeDirectory(const Char_t *dir, Bool_t print) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::DeleteDirectory(const Char_t *dir) const
+Int_t TFTP::DeleteDirectory(const char *dir) const
 {
    // Delete a remote directory. Anonymous users may not delete directories.
    // Returns 0 in case of success and -1 in case of failure.
@@ -707,7 +707,7 @@ Int_t TFTP::DeleteDirectory(const Char_t *dir) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("DeleteDirectory", "error receiving rmdir confirmation");
@@ -737,7 +737,7 @@ Int_t TFTP::ListDirectory(Option_t *cmd) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    do {
       if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
@@ -764,7 +764,7 @@ Int_t TFTP::PrintDirectory() const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("PrintDirectory", "error receiving pwd confirmation");
@@ -777,7 +777,7 @@ Int_t TFTP::PrintDirectory() const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::RenameFile(const Char_t *file1, const Char_t *file2) const
+Int_t TFTP::RenameFile(const char *file1, const char *file2) const
 {
    // Rename a remote file. Anonymous users may not rename files.
    // Returns 0 in case of success and -1 in case of failure.
@@ -795,7 +795,7 @@ Int_t TFTP::RenameFile(const Char_t *file1, const Char_t *file2) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("RenameFile", "error receiving mv confirmation");
@@ -808,7 +808,7 @@ Int_t TFTP::RenameFile(const Char_t *file1, const Char_t *file2) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::DeleteFile(const Char_t *file) const
+Int_t TFTP::DeleteFile(const char *file) const
 {
    // Delete a remote file. Anonymous users may not delete files.
    // Returns 0 in case of success and -1 in case of failure.
@@ -826,7 +826,7 @@ Int_t TFTP::DeleteFile(const Char_t *file) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("DeleteFile", "error receiving rm confirmation");
@@ -839,7 +839,7 @@ Int_t TFTP::DeleteFile(const Char_t *file) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ChangePermission(const Char_t *file, Int_t mode) const
+Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
 {
    // Change permissions of a remote file. Anonymous users may not
    // chnage permissions. Returns 0 in case of success and -1 in case
@@ -858,7 +858,7 @@ Int_t TFTP::ChangePermission(const Char_t *file, Int_t mode) const
    }
 
    Int_t what;
-   Char_t mess[1024];
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("ChangePermission", "error receiving chmod confirmation");
@@ -888,7 +888,7 @@ Int_t TFTP::Close()
       fSocket->Send(kROOTD_BYE);
 
    // Remove from the list of Sockets
-   {   
+   {
       R__LOCKGUARD2(TROOT::fgMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
@@ -900,7 +900,7 @@ Int_t TFTP::Close()
 }
 
 //______________________________________________________________________________
-Bool_t TFTP::OpenDirectory(const Char_t *dir, Bool_t print)
+Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
 {
    // Open a directory via rootd.
    // Returns kTRUE in case of success.
@@ -926,7 +926,7 @@ Bool_t TFTP::OpenDirectory(const Char_t *dir, Bool_t print)
    }
 
    Int_t what;
-   Char_t mess[1024];;
+   char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("OpenDirectory", "error receiving opendir confirmation");
@@ -961,7 +961,7 @@ void TFTP::FreeDirectory(Bool_t print)
    }
 
    Int_t what;
-   Char_t mess[1024];;
+   char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("FreeDirectory", "error receiving freedir confirmation");
@@ -975,12 +975,12 @@ void TFTP::FreeDirectory(Bool_t print)
 }
 
 //______________________________________________________________________________
-const Char_t *TFTP::GetDirEntry(Bool_t print)
+const char *TFTP::GetDirEntry(Bool_t print)
 {
    // Get directory entry via rootd.
    // Returns 0 in case no more entries or in case of error.
 
-   static Char_t dirent[1024] = {0};
+   static char dirent[1024] = {0};
 
    if (!IsOpen() || !fDir) return 0;
 
@@ -995,7 +995,7 @@ const Char_t *TFTP::GetDirEntry(Bool_t print)
    }
 
    Int_t what;
-   Char_t mess[1024];;
+   char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetDirEntry", "error receiving dir entry confirmation");
@@ -1007,14 +1007,14 @@ const Char_t *TFTP::GetDirEntry(Bool_t print)
 
    if (!strncmp(mess,"OK:",3)) {
       strcpy(dirent,mess+3);
-      return (const Char_t *)dirent;
+      return (const char *)dirent;
    }
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::GetPathInfo(const Char_t *path, FileStat_t &buf, Bool_t print)
+Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
 {
    // Get info about a file. Info is returned in the form of a FileStat_t
    // structure (see TSystem.h).
@@ -1041,7 +1041,7 @@ Int_t TFTP::GetPathInfo(const Char_t *path, FileStat_t &buf, Bool_t print)
    }
 
    Int_t what;
-   Char_t mess[1024];;
+   char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetPathInfo", "error receiving fstat confirmation");
@@ -1088,7 +1088,7 @@ Int_t TFTP::GetPathInfo(const Char_t *path, FileStat_t &buf, Bool_t print)
 }
 
 //______________________________________________________________________________
-Bool_t TFTP::AccessPathName(const Char_t *path, EAccessMode mode, Bool_t print)
+Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
 {
    // Returns kFALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
@@ -1112,7 +1112,7 @@ Bool_t TFTP::AccessPathName(const Char_t *path, EAccessMode mode, Bool_t print)
    }
 
    Int_t what;
-   Char_t mess[1024];;
+   char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("AccessPathName", "error receiving access confirmation");
