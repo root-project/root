@@ -12,23 +12,23 @@ MATHCOREDIRS := $(MATHCOREDIR)/src
 MATHCOREDIRI := $(MATHCOREDIR)/inc
 
 ##### libMathCore #####
-MATHCOREL     := $(MODDIRI)/GenVector/LinkDef.h
-MATHCOREDS    := $(MODDIRS)/G__MathCore.cxx
-MATHCOREDO    := $(MATHCOREDS:.cxx=.o)
-MATHCOREDH    := $(MATHCOREDS:.cxx=.h)
+MATHCOREL    := $(MODDIRI)/GenVector/LinkDef.h
+MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
+MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
+MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDICTH := $(MODDIRI)/GenVector/Vector3D.h \
-                 $(MODDIRI)/GenVector/Point3D.h \
-                 $(MODDIRI)/GenVector/LorentzVector.h \
-                 $(MODDIRI)/GenVector/VectorUtil_Cint.h
+MATHCOREDH1  := $(MODDIRI)/GenVector/Vector3D.h \
+                $(MODDIRI)/GenVector/Point3D.h \
+                $(MODDIRI)/GenVector/LorentzVector.h \
+                $(MODDIRI)/GenVector/VectorUtil_Cint.h
 
-MATHCOREH     := $(filter-out $(MODDIRI)/GenVector/LinkDef%, $(wildcard $(MODDIRI)/GenVector/*.h))
-MATHCORES     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-MATHCOREO     := $(MATHCORES:.cxx=.o)
+MATHCOREH    := $(filter-out $(MODDIRI)/GenVector/LinkDef%, $(wildcard $(MODDIRI)/GenVector/*.h))
+MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+MATHCOREO    := $(MATHCORES:.cxx=.o)
 
-MATHCOREDEP   := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
+MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
 
-MATHCORELIB   := $(LPATH)/libMathCore.$(SOEXT)
+MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/GenVector/%.h,include/GenVector/%.h,$(MATHCOREH))
@@ -50,9 +50,9 @@ $(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MAINLIBS)
 		   "$(MATHCOREO) $(MATHCOREDO)"             \
 		   "$(MATHCORELIBEXTRA)"
 
-$(MATHCOREDS):  $(MATHCOREDICTH) $(MATHCOREL) $(ROOTCINTTMP)
+$(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDICTH) $(MATHCOREL)
+		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
 
 $(MATHCOREDO):  $(MATHCOREDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
